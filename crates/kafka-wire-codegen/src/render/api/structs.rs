@@ -67,7 +67,10 @@ fn struct_reference(ty: &FieldType) -> Option<&StructRef> {
 ///
 /// A struct gets no `KafkaMessage` impl. It has no API key, no supported range,
 /// and no name of its own on the wire; it is a shape its owning message reads
-/// at the version the message already validated.
+/// at the version the message already validated. What it does need is the
+/// flexible window, because its own members and its tagged-field section split
+/// on it — so it carries that one constant inherently, which is also what makes
+/// the `Self::is_flexible(version)` the field emitter writes resolve here.
 fn render_struct(
     rust: &mut RustText,
     rust_type: &str,
@@ -94,8 +97,33 @@ fn render_struct(
             field::rust_type(member, message)?
         ));
     }
+    let flexible = !message.effective_flexible_versions().is_empty();
+    if flexible {
+        rust.line("/// Unknown flexible-version tagged fields retained for forwarding.");
+        rust.line("pub unknown_tagged_fields: TaggedFields,");
+    }
     rust.close("");
     rust.blank();
+
+    if flexible {
+        let range = message
+            .effective_flexible_versions()
+            .single_bounded()
+            .map_or_else(
+                || "None".to_owned(),
+                |(start, end)| format!("Some(VersionRange::new({start}, {end}))"),
+            );
+        rust.open(format!("impl {rust_type}"));
+        rust.line(format!(
+            "const FLEXIBLE_VERSIONS: Option<VersionRange> = {range};"
+        ));
+        rust.blank();
+        rust.open("fn is_flexible(version: ApiVersion) -> bool");
+        rust.line("Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))");
+        rust.close("");
+        rust.close("");
+        rust.blank();
+    }
 
     if !derive_default {
         rust.open(format!("impl Default for {rust_type}"));
@@ -107,6 +135,9 @@ fn render_struct(
                 member.name.rust_field(),
                 field::default_expression(member, message)?
             ));
+        }
+        if flexible {
+            rust.line("unknown_tagged_fields: TaggedFields::default(),");
         }
         rust.close("");
         rust.close("");
@@ -129,6 +160,11 @@ fn body_uses_version(
     fields: &[kafka_wire_schema::Field],
     message: &Message,
 ) -> Result<bool, GenerationError> {
+    // A flexible struct gates its tagged-field section on the version, so the
+    // binding is read whatever its members turn out to be.
+    if !message.effective_flexible_versions().is_empty() {
+        return Ok(true);
+    }
     for field in fields {
         if field::presence_condition(field, message).is_some() {
             return Ok(true);
@@ -169,8 +205,16 @@ pub(super) fn render_struct_decode(
         "fn decode(decoder: &mut Decoder, {version}: ApiVersion) -> Result<Self, DecodeError>"
     ));
     render_reads(rust, fields, message)?;
+    let flexible = !message.effective_flexible_versions().is_empty();
+    if flexible {
+        rust.open("let unknown_tagged_fields = if Self::is_flexible(version)");
+        rust.line("decoder.read_tagged_fields()?");
+        rust.reopen("} else {");
+        rust.line("TaggedFields::default()");
+        rust.close(";");
+    }
     rust.blank();
-    render_construction(rust, fields, false);
+    render_construction(rust, fields, flexible);
     rust.close("");
     rust.close("");
     rust.blank();
@@ -196,6 +240,12 @@ pub(super) fn render_struct_encode(
     rust.line(format!("    {version}: ApiVersion,"));
     rust.open(") -> Result<(), EncodeError>");
     render_writes(rust, fields, message)?;
+    if !message.effective_flexible_versions().is_empty() {
+        rust.blank();
+        rust.open("if Self::is_flexible(version)");
+        rust.line("encoder.write_tagged_fields(&self.unknown_tagged_fields)?;");
+        rust.close("");
+    }
     rust.blank();
     rust.line("Ok(())");
     rust.close("");

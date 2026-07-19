@@ -75,7 +75,8 @@ pub(super) fn render_reads(
     for field in fields {
         if let FieldType::Array(element) = &field.ty {
             let (read, _) = field::element_codec(element, field, message)?;
-            render_array_decode(rust, field.name.rust_field(), &read);
+            let (length, _) = field::array_length_codec(field, message);
+            render_array_decode(rust, field.name.rust_field(), &length, &read);
             continue;
         }
         let expression = field::read_expression(field, message)?;
@@ -103,7 +104,8 @@ pub(super) fn render_writes(
     for field in fields {
         if let FieldType::Array(element) = &field.ty {
             let (_, write) = field::element_codec(element, field, message)?;
-            render_array_encode(rust, field.name.rust_field(), &write);
+            let (_, length) = field::array_length_codec(field, message);
+            render_array_encode(rust, field.name.rust_field(), &length, &write);
             continue;
         }
         let statement = field::write_statement(field, message)?;
@@ -174,16 +176,16 @@ fn render_representability_checks(
     Ok(())
 }
 
-fn render_array_decode(rust: &mut RustText, name: &str, element: &str) {
-    rust.line("let length = decoder.read_array_len()?;");
+fn render_array_decode(rust: &mut RustText, name: &str, length: &str, element: &str) {
+    rust.line(format!("let length = {length};"));
     rust.line(format!("let mut {name} = Vec::with_capacity(length);"));
     rust.open("for _ in 0..length");
     rust.line(format!("{name}.push({element});"));
     rust.close("");
 }
 
-fn render_array_encode(rust: &mut RustText, name: &str, element: &str) {
-    rust.line(format!("encoder.write_array_len(self.{name}.len())?;"));
+fn render_array_encode(rust: &mut RustText, name: &str, length: &str, element: &str) {
+    rust.line(length);
     rust.open(format!("for value in &self.{name}"));
     rust.line(element);
     rust.close("");

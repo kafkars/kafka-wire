@@ -22,29 +22,7 @@ pub(crate) fn validate_supported(message: &Message) -> Result<(), GenerationErro
         );
     }
 
-    // A struct in a flexible message carries a tagged-field section of its own,
-    // which this backend does not emit yet. Refusing at the message rather than
-    // at each member keeps the reason singular and the field walk simple.
-    if !flexible.is_empty() && declares_struct(message) {
-        return unsupported(
-            message,
-            "<message>",
-            "structs in flexible messages are not implemented yet",
-        );
-    }
-
     validate_fields(&message.fields, message)
-}
-
-/// Whether this message declares any struct, by either spelling.
-fn declares_struct(message: &Message) -> bool {
-    !message.common_structs.is_empty() || fields_declare_struct(&message.fields)
-}
-
-fn fields_declare_struct(fields: &[kafka_wire_schema::Field]) -> bool {
-    fields
-        .iter()
-        .any(|field| !field.fields.is_empty() || fields_declare_struct(&field.fields))
 }
 
 /// Checks one field list, recursing into the members of any struct it declares.
@@ -55,7 +33,6 @@ fn validate_fields(
     fields: &[kafka_wire_schema::Field],
     message: &Message,
 ) -> Result<(), GenerationError> {
-    let flexible = message.effective_flexible_versions();
     for field in fields {
         let present = field.versions.intersection(&message.valid_versions);
         // Named before the shape check below, which would otherwise report a
@@ -122,15 +99,11 @@ fn validate_fields(
             | FieldType::Uuid
             | FieldType::Struct(_) => {}
             FieldType::Array(element) if is_supported_element(element) => {
-                let flexible_presence = present.intersection(&flexible);
-                if present != message.valid_versions
-                    || !nullable.is_empty()
-                    || !flexible_presence.is_empty()
-                {
+                if !nullable.is_empty() {
                     return unsupported(
                         message,
                         field.name.protocol(),
-                        "the initial array backend supports only non-null legacy arrays present in every version",
+                        "nullable arrays are not implemented yet",
                     );
                 }
             }

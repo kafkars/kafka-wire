@@ -45,6 +45,30 @@ pub(crate) fn write_statement(field: &Field, message: &Message) -> Result<String
     }
 }
 
+/// Read expression and write statement for an array's own length prefix.
+///
+/// The prefix is the one part of an array that changes with the encoding
+/// regime: compact arrays carry a varint of `len + 1`, legacy arrays a plain
+/// `int32`. Elements are unaffected, which is why this is decided here and not
+/// in `element_codec`.
+pub(crate) fn array_length_codec(field: &Field, message: &Message) -> (String, String) {
+    let name = field.name.rust_field();
+    let compact_read = "decoder.read_compact_array_len()?";
+    let legacy_read = "decoder.read_array_len()?";
+    let compact_write = format!("encoder.write_compact_array_len(self.{name}.len())?;");
+    let legacy_write = format!("encoder.write_array_len(self.{name}.len())?;");
+    match encoding_of(field, message) {
+        Encoding::Compact => (compact_read.to_owned(), compact_write),
+        Encoding::Legacy => (legacy_read.to_owned(), legacy_write),
+        Encoding::VersionGated => (
+            format!("if Self::is_flexible(version) {{ {compact_read} }} else {{ {legacy_read} }}"),
+            format!(
+                "if Self::is_flexible(version) {{ {compact_write} }} else {{ {legacy_write} }}"
+            ),
+        ),
+    }
+}
+
 /// Read expression and write statement for one array element.
 ///
 /// The generated loop binds `value` by reference, so a `Copy` scalar is

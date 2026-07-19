@@ -134,32 +134,33 @@ fn a_known_tagged_field_is_refused() {
 }
 
 #[test]
-fn an_inline_struct_in_a_flexible_message_is_refused() {
-    // Structs themselves are emitted now. What this backend cannot yet write is
-    // the tagged-field section a struct carries inside a flexible message, so
-    // the refusal moved from the construct to that one combination.
-    let mut parent = field("Probe", struct_type("TopicData"), "0+");
-    parent.fields = vec![field("Name", FieldType::String, "0+")];
-    assert_refused(
-        vec![parent],
-        "0-4",
-        "0+",
-        "an inline struct in a flexible message",
-        "structs in flexible messages are not implemented yet",
-    );
+fn an_inline_struct_is_accepted_in_either_encoding_regime() {
+    // A struct carries its own tagged-field section in a flexible message and
+    // none in a legacy one. Both are emitted, so both must be accepted here —
+    // this is the paired positive for the nullable-struct refusal below.
+    for flexible in ["none", "0+"] {
+        let mut parent = field("Probe", struct_type("TopicData"), "0+");
+        parent.fields = vec![field("Name", FieldType::String, "0+")];
+        let message = message("0-4", flexible, vec![parent]);
+
+        assert!(
+            validate_supported(&message).is_ok(),
+            "the backend refused an inline struct with flexibleVersions {flexible}"
+        );
+    }
 }
 
 #[test]
-fn an_inline_struct_in_a_legacy_message_is_accepted() {
-    // The paired accepting shape: without this, the refusal above could pass
-    // because the boundary rejects every struct.
-    let mut parent = field("Probe", struct_type("TopicData"), "0+");
+fn a_nullable_struct_field_is_refused() {
+    let mut parent = nullable(field("Probe", struct_type("TopicData"), "0+"));
     parent.fields = vec![field("Name", FieldType::String, "0+")];
-    let message = message("0-4", "none", vec![parent]);
-
-    assert!(
-        validate_supported(&message).is_ok(),
-        "the backend refused an inline struct in a non-flexible message"
+    parent.default = DefaultValue::Null;
+    assert_refused(
+        vec![parent],
+        "0-4",
+        "none",
+        "a nullable struct field",
+        "nullable struct fields are not implemented yet",
     );
 }
 
@@ -193,34 +194,31 @@ fn a_nullable_field_with_a_non_null_default_is_refused() {
 }
 
 #[test]
-fn an_array_outside_the_legacy_non_null_slice_is_refused() {
+fn a_nullable_array_is_refused_while_gated_and_compact_arrays_are_accepted() {
     let array = || field("Probe", FieldType::Array(Box::new(FieldType::String)), "0+");
-    let cause = "the initial array backend supports only non-null legacy arrays";
 
+    // The length prefix now follows the encoding regime, so an array added at a
+    // later version and an array in a flexible message both emit.
     let mut gated = array();
     gated.versions = versions("2+");
-    assert_refused(
-        vec![gated],
-        "0-4",
-        "none",
-        "a string array added at a later version",
-        cause,
-    );
+    for (fields, situation) in [
+        (vec![gated], "a string array added at a later version"),
+        (vec![array()], "a string array in a flexible message"),
+    ] {
+        let message = message("0-4", "0+", fields);
+        assert!(
+            validate_supported(&message).is_ok(),
+            "the backend refused {situation}"
+        );
+    }
 
+    // What has no representation is the null array itself.
     assert_refused(
         vec![nullable(array())],
         "0-4",
         "none",
         "a nullable string array",
-        cause,
-    );
-
-    assert_refused(
-        vec![array()],
-        "0-4",
-        "0+",
-        "a string array in a flexible message",
-        cause,
+        "nullable arrays are not implemented yet",
     );
 }
 
