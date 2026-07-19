@@ -88,8 +88,11 @@ fn read_method(
         FieldType::String if nullable => Ok("decoder.read_nullable_string()?".to_owned()),
         FieldType::String if compact => Ok("decoder.read_compact_string()?".to_owned()),
         FieldType::String => Ok("decoder.read_string()?".to_owned()),
+        FieldType::Bool => Ok("decoder.read_bool()?".to_owned()),
+        FieldType::Int8 => Ok("decoder.read_i8()?".to_owned()),
         FieldType::Int16 => Ok("decoder.read_i16()?".to_owned()),
         FieldType::Int32 => Ok("decoder.read_i32()?".to_owned()),
+        FieldType::Int64 => Ok("decoder.read_i64()?".to_owned()),
         FieldType::Array(_) => Err(GenerationError::unsupported(
             message,
             field.name.protocol(),
@@ -120,8 +123,11 @@ fn write_method(
         )),
         FieldType::String if compact => Ok(format!("encoder.write_compact_string(&self.{name})?;")),
         FieldType::String => Ok(format!("encoder.write_string(&self.{name})?;")),
+        FieldType::Bool => Ok(format!("encoder.write_bool(self.{name})?;")),
+        FieldType::Int8 => Ok(format!("encoder.write_i8(self.{name})?;")),
         FieldType::Int16 => Ok(format!("encoder.write_i16(self.{name})?;")),
         FieldType::Int32 => Ok(format!("encoder.write_i32(self.{name})?;")),
+        FieldType::Int64 => Ok(format!("encoder.write_i64(self.{name})?;")),
         FieldType::Array(_) => Err(GenerationError::unsupported(
             message,
             field.name.protocol(),

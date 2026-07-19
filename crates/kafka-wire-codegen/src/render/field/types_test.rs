@@ -44,6 +44,16 @@ fn declared_types() -> Vec<TypeCell> {
             declared: "Option<StrBytes>",
         },
         TypeCell {
+            ty: FieldType::Bool,
+            nullable: false,
+            declared: "bool",
+        },
+        TypeCell {
+            ty: FieldType::Int8,
+            nullable: false,
+            declared: "i8",
+        },
+        TypeCell {
             ty: FieldType::Int16,
             nullable: false,
             declared: "i16",
@@ -52,6 +62,11 @@ fn declared_types() -> Vec<TypeCell> {
             ty: FieldType::Int32,
             nullable: false,
             declared: "i32",
+        },
+        TypeCell {
+            ty: FieldType::Int64,
+            nullable: false,
+            declared: "i64",
         },
         TypeCell {
             ty: FieldType::Array(Box::new(FieldType::String)),
@@ -83,16 +98,13 @@ fn every_supported_field_shape_declares_its_exact_rust_type() {
 
 #[test]
 fn a_type_outside_the_slice_fails_generation_instead_of_emitting_a_comment() {
-    // `/* unsupported Int64 */` in a struct-field position is a syntax error,
+    // `/* unsupported Float64 */` in a struct-field position is a syntax error,
     // so rustfmt would have caught it. The same placeholder in a default or a
     // comparison position is valid Rust, which is why all three go through the
     // same refusal.
     for ty in [
-        FieldType::Bool,
-        FieldType::Int8,
         FieldType::Uint16,
         FieldType::Uint32,
-        FieldType::Int64,
         FieldType::Float64,
         FieldType::Uuid,
         FieldType::Bytes,
@@ -184,7 +196,7 @@ fn defaults() -> Vec<DefaultCell> {
             default: DefaultValue::Bool(false),
             initializer: "false",
             non_default: "self.probe != false",
-            derivable: false,
+            derivable: true,
         },
     ]
 }

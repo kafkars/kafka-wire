@@ -210,11 +210,8 @@ fn an_array_outside_the_legacy_non_null_slice_is_refused() {
 #[test]
 fn every_field_type_outside_the_slice_is_refused_by_name() {
     for ty in [
-        FieldType::Bool,
-        FieldType::Int8,
         FieldType::Uint16,
         FieldType::Uint32,
-        FieldType::Int64,
         FieldType::Float64,
         FieldType::Uuid,
         FieldType::Bytes,

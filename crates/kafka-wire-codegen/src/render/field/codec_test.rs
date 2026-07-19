@@ -96,6 +96,18 @@ fn table() -> Vec<Cell> {
                     encoder.write_compact_nullable_string(self.probe.as_ref())?; } \
                     else { encoder.write_nullable_string(self.probe.as_ref())?; }",
         },
+    ]
+}
+
+/// The fixed-width scalar half of the table.
+///
+/// int16, int32, int8, int64, and bool share one wire method on both sides of
+/// the flexible boundary, so their rows differ only in the method name and
+/// carry no nullable or straddling variants. They are split from the
+/// length-prefixed string rows above so neither table function outgrows a
+/// single screen.
+fn fixed_width_cells() -> Vec<Cell> {
+    vec![
         Cell {
             situation: "an int16 in a message with no flexible version",
             ty: FieldType::Int16,
@@ -128,6 +140,46 @@ fn table() -> Vec<Cell> {
             read: "decoder.read_i32()?",
             write: "encoder.write_i32(self.probe)?;",
         },
+        Cell {
+            situation: "a bool in a message with no flexible version",
+            ty: FieldType::Bool,
+            nullable: false,
+            flexible: "none",
+            read: "decoder.read_bool()?",
+            write: "encoder.write_bool(self.probe)?;",
+        },
+        Cell {
+            situation: "a bool present only in flexible versions",
+            ty: FieldType::Bool,
+            nullable: false,
+            flexible: "0+",
+            read: "decoder.read_bool()?",
+            write: "encoder.write_bool(self.probe)?;",
+        },
+        Cell {
+            situation: "an int8 in a message with no flexible version",
+            ty: FieldType::Int8,
+            nullable: false,
+            flexible: "none",
+            read: "decoder.read_i8()?",
+            write: "encoder.write_i8(self.probe)?;",
+        },
+        Cell {
+            situation: "an int64 in a message with no flexible version",
+            ty: FieldType::Int64,
+            nullable: false,
+            flexible: "none",
+            read: "decoder.read_i64()?",
+            write: "encoder.write_i64(self.probe)?;",
+        },
+        Cell {
+            situation: "an int64 present only in flexible versions",
+            ty: FieldType::Int64,
+            nullable: false,
+            flexible: "0+",
+            read: "decoder.read_i64()?",
+            write: "encoder.write_i64(self.probe)?;",
+        },
     ]
 }
 
@@ -149,7 +201,7 @@ fn emit(cell: &Cell) -> (String, String) {
 
 #[test]
 fn every_supported_field_shape_emits_its_exact_codec_call() {
-    for cell in table() {
+    for cell in table().into_iter().chain(fixed_width_cells()) {
         let (read, write) = emit(&cell);
         assert_eq!(read, cell.read, "read expression for {}", cell.situation);
         assert_eq!(write, cell.write, "write statement for {}", cell.situation);
@@ -181,11 +233,8 @@ fn a_fixed_width_field_straddling_the_flexible_boundary_emits_a_tautological_gat
 /// Field types with no scalar codec, each of which must be refused by name.
 fn types_outside_the_scalar_slice() -> Vec<FieldType> {
     vec![
-        FieldType::Bool,
-        FieldType::Int8,
         FieldType::Uint16,
         FieldType::Uint32,
-        FieldType::Int64,
         FieldType::Float64,
         FieldType::Uuid,
         FieldType::Bytes,

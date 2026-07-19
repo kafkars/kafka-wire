@@ -21,8 +21,11 @@ pub(crate) fn rust_type(field: &Field, message: &Message) -> Result<String, Gene
         .is_empty();
     let base = match &field.ty {
         FieldType::String => "StrBytes".to_owned(),
+        FieldType::Bool => "bool".to_owned(),
+        FieldType::Int8 => "i8".to_owned(),
         FieldType::Int16 => "i16".to_owned(),
         FieldType::Int32 => "i32".to_owned(),
+        FieldType::Int64 => "i64".to_owned(),
         FieldType::Array(element) if matches!(element.as_ref(), FieldType::String) => {
             "Vec<StrBytes>".to_owned()
         }
@@ -95,9 +98,12 @@ pub(crate) fn uses_rust_default(field: &Field) -> bool {
     ) || matches!(
         (&field.ty, &field.default),
         (
-            FieldType::Int16 | FieldType::Int32,
+            FieldType::Int8 | FieldType::Int16 | FieldType::Int32 | FieldType::Int64,
             DefaultValue::Integer(0)
         )
+    ) || matches!(
+        (&field.ty, &field.default),
+        (FieldType::Bool, DefaultValue::Bool(false))
     ) || matches!(
         (&field.ty, &field.default),
         (FieldType::Array(_), DefaultValue::Empty)

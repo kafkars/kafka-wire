@@ -76,7 +76,12 @@ pub(crate) fn validate_supported(message: &Message) -> Result<(), GenerationErro
         }
 
         match &field.ty {
-            FieldType::String | FieldType::Int16 | FieldType::Int32 => {}
+            FieldType::String
+            | FieldType::Bool
+            | FieldType::Int8
+            | FieldType::Int16
+            | FieldType::Int32
+            | FieldType::Int64 => {}
             FieldType::Array(element) if matches!(element.as_ref(), FieldType::String) => {
                 let flexible_presence = present.intersection(&flexible);
                 if present != message.valid_versions
