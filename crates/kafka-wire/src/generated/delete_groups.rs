@@ -43,19 +43,22 @@ impl KafkaDecode for DeleteGroupsRequest {
     fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
         crate::message::ensure_decode_version::<Self>(version)?;
 
-        let length = if Self::is_flexible(version) {
-            decoder.read_compact_array_len()?
-        } else {
-            decoder.read_array_len()?
-        };
-        let mut groups_names = Vec::with_capacity(length);
-        for _ in 0..length {
-            groups_names.push(if Self::is_flexible(version) {
-                decoder.read_compact_string()?
+        let groups_names = {
+            let length = if Self::is_flexible(version) {
+                decoder.read_compact_array_len()?
             } else {
-                decoder.read_string()?
-            });
-        }
+                decoder.read_array_len()?
+            };
+            let mut values = Vec::with_capacity(length);
+            for _ in 0..length {
+                values.push(if Self::is_flexible(version) {
+                    decoder.read_compact_string()?
+                } else {
+                    decoder.read_string()?
+                });
+            }
+            values
+        };
         let unknown_tagged_fields = if Self::is_flexible(version) {
             decoder.read_tagged_fields()?
         } else {
@@ -204,17 +207,20 @@ impl KafkaDecode for DeleteGroupsResponse {
         crate::message::ensure_decode_version::<Self>(version)?;
 
         let throttle_time_ms = decoder.read_i32()?;
-        let length = if Self::is_flexible(version) {
-            decoder.read_compact_array_len()?
-        } else {
-            decoder.read_array_len()?
+        let results = {
+            let length = if Self::is_flexible(version) {
+                decoder.read_compact_array_len()?
+            } else {
+                decoder.read_array_len()?
+            };
+            let mut values = Vec::with_capacity(length);
+            for _ in 0..length {
+                values.push(DeleteGroupsResponseDeletableGroupResult::decode(
+                    decoder, version,
+                )?);
+            }
+            values
         };
-        let mut results = Vec::with_capacity(length);
-        for _ in 0..length {
-            results.push(DeleteGroupsResponseDeletableGroupResult::decode(
-                decoder, version,
-            )?);
-        }
         let unknown_tagged_fields = if Self::is_flexible(version) {
             decoder.read_tagged_fields()?
         } else {

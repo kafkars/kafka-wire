@@ -1,0 +1,22 @@
+{
+  "schema": 1,
+  "vectors": [
+    {
+      "name": "synthesized_defaults_v5",
+      "why": "Every field this version declares, at its protocol default. Synthesized so the message is held to Apache Kafka's bytes at all; hand-written cases carry the interesting shapes.",
+      "message": "SyncGroupResponse",
+      "api_key": 14,
+      "direction": "response",
+      "version": 5,
+      "flexible": true,
+      "json_value": {
+        "assignment": "",
+        "errorCode": 0,
+        "protocolName": null,
+        "protocolType": null,
+        "throttleTimeMs": 0
+      },
+      "hex": "00000000000000000100"
+    }
+  ]
+}

@@ -3,28 +3,352 @@
 //! Generated module facade for Apache Kafka commit
 //! `678c0e07e4733c5a592e52046dc2c4e1625587f1`.
 
+mod add_offsets_to_txn;
+mod add_partitions_to_txn;
 mod add_raft_voter;
+mod allocate_producer_ids;
+mod alter_configs;
+mod alter_partition;
+mod alter_partition_reassignments;
+mod alter_replica_log_dirs;
+mod alter_share_group_offsets;
+mod alter_user_scram_credentials;
 mod api_versions;
+mod assign_replicas_to_dirs;
+mod broker_registration;
+mod consumer_group_describe;
+mod controller_registration;
+mod create_acls;
+mod create_delegation_token;
+mod create_partitions;
+mod delete_acls;
 mod delete_groups;
+mod delete_records;
+mod delete_share_group_offsets;
+mod delete_share_group_state;
+mod describe_acls;
+mod describe_cluster;
+mod describe_configs;
+mod describe_delegation_token;
+mod describe_groups;
+mod describe_log_dirs;
+mod describe_producers;
+mod describe_quorum;
+mod describe_share_group_offsets;
+mod describe_transactions;
+mod describe_user_scram_credentials;
+mod elect_leaders;
+mod end_txn;
+mod envelope;
+mod expire_delegation_token;
+mod find_coordinator;
+mod get_telemetry_subscriptions;
+mod heartbeat;
+mod incremental_alter_configs;
+mod init_producer_id;
+mod initialize_share_group_state;
+mod leave_group;
+mod list_config_resources;
+mod list_groups;
+mod list_offsets;
+mod list_partition_reassignments;
+mod list_transactions;
+mod offset_commit;
 mod offset_delete;
+mod offset_for_leader_epoch;
+mod push_telemetry;
+mod read_share_group_state;
+mod read_share_group_state_summary;
 mod registry;
+mod remove_raft_voter;
+mod renew_delegation_token;
+mod sasl_authenticate;
 mod sasl_handshake;
+mod share_acknowledge;
+mod share_group_describe;
+mod streams_group_topology_description_update;
+mod sync_group;
+mod txn_offset_commit;
+mod unregister_broker;
+mod update_features;
+mod write_share_group_state;
+mod write_txn_markers;
 
+pub use add_offsets_to_txn::{
+    ADD_OFFSETS_TO_TXN_REQUEST_DESCRIPTOR, ADD_OFFSETS_TO_TXN_RESPONSE_DESCRIPTOR,
+    AddOffsetsToTxnRequest, AddOffsetsToTxnResponse,
+};
+pub use add_partitions_to_txn::{
+    ADD_PARTITIONS_TO_TXN_REQUEST_DESCRIPTOR, ADD_PARTITIONS_TO_TXN_RESPONSE_DESCRIPTOR,
+    AddPartitionsToTxnRequest, AddPartitionsToTxnResponse,
+};
 pub use add_raft_voter::{
     ADD_RAFT_VOTER_REQUEST_DESCRIPTOR, ADD_RAFT_VOTER_RESPONSE_DESCRIPTOR, AddRaftVoterRequest,
     AddRaftVoterResponse,
 };
+pub use allocate_producer_ids::{
+    ALLOCATE_PRODUCER_IDS_REQUEST_DESCRIPTOR, ALLOCATE_PRODUCER_IDS_RESPONSE_DESCRIPTOR,
+    AllocateProducerIdsRequest, AllocateProducerIdsResponse,
+};
+pub use alter_configs::{
+    ALTER_CONFIGS_REQUEST_DESCRIPTOR, ALTER_CONFIGS_RESPONSE_DESCRIPTOR, AlterConfigsRequest,
+    AlterConfigsResponse,
+};
+pub use alter_partition::{
+    ALTER_PARTITION_REQUEST_DESCRIPTOR, ALTER_PARTITION_RESPONSE_DESCRIPTOR, AlterPartitionRequest,
+    AlterPartitionResponse,
+};
+pub use alter_partition_reassignments::{
+    ALTER_PARTITION_REASSIGNMENTS_REQUEST_DESCRIPTOR,
+    ALTER_PARTITION_REASSIGNMENTS_RESPONSE_DESCRIPTOR, AlterPartitionReassignmentsRequest,
+    AlterPartitionReassignmentsResponse,
+};
+pub use alter_replica_log_dirs::{
+    ALTER_REPLICA_LOG_DIRS_REQUEST_DESCRIPTOR, ALTER_REPLICA_LOG_DIRS_RESPONSE_DESCRIPTOR,
+    AlterReplicaLogDirsRequest, AlterReplicaLogDirsResponse,
+};
+pub use alter_share_group_offsets::{
+    ALTER_SHARE_GROUP_OFFSETS_REQUEST_DESCRIPTOR, ALTER_SHARE_GROUP_OFFSETS_RESPONSE_DESCRIPTOR,
+    AlterShareGroupOffsetsRequest, AlterShareGroupOffsetsResponse,
+};
+pub use alter_user_scram_credentials::{
+    ALTER_USER_SCRAM_CREDENTIALS_REQUEST_DESCRIPTOR,
+    ALTER_USER_SCRAM_CREDENTIALS_RESPONSE_DESCRIPTOR, AlterUserScramCredentialsRequest,
+    AlterUserScramCredentialsResponse,
+};
 pub use api_versions::{API_VERSIONS_REQUEST_DESCRIPTOR, ApiVersionsRequest};
+pub use assign_replicas_to_dirs::{
+    ASSIGN_REPLICAS_TO_DIRS_REQUEST_DESCRIPTOR, ASSIGN_REPLICAS_TO_DIRS_RESPONSE_DESCRIPTOR,
+    AssignReplicasToDirsRequest, AssignReplicasToDirsResponse,
+};
+pub use broker_registration::{
+    BROKER_REGISTRATION_REQUEST_DESCRIPTOR, BROKER_REGISTRATION_RESPONSE_DESCRIPTOR,
+    BrokerRegistrationRequest, BrokerRegistrationResponse,
+};
+pub use consumer_group_describe::{
+    CONSUMER_GROUP_DESCRIBE_REQUEST_DESCRIPTOR, CONSUMER_GROUP_DESCRIBE_RESPONSE_DESCRIPTOR,
+    ConsumerGroupDescribeRequest, ConsumerGroupDescribeResponse,
+};
+pub use controller_registration::{
+    CONTROLLER_REGISTRATION_REQUEST_DESCRIPTOR, CONTROLLER_REGISTRATION_RESPONSE_DESCRIPTOR,
+    ControllerRegistrationRequest, ControllerRegistrationResponse,
+};
+pub use create_acls::{
+    CREATE_ACLS_REQUEST_DESCRIPTOR, CREATE_ACLS_RESPONSE_DESCRIPTOR, CreateAclsRequest,
+    CreateAclsResponse,
+};
+pub use create_delegation_token::{
+    CREATE_DELEGATION_TOKEN_REQUEST_DESCRIPTOR, CREATE_DELEGATION_TOKEN_RESPONSE_DESCRIPTOR,
+    CreateDelegationTokenRequest, CreateDelegationTokenResponse,
+};
+pub use create_partitions::{
+    CREATE_PARTITIONS_REQUEST_DESCRIPTOR, CREATE_PARTITIONS_RESPONSE_DESCRIPTOR,
+    CreatePartitionsRequest, CreatePartitionsResponse,
+};
+pub use delete_acls::{
+    DELETE_ACLS_REQUEST_DESCRIPTOR, DELETE_ACLS_RESPONSE_DESCRIPTOR, DeleteAclsRequest,
+    DeleteAclsResponse,
+};
 pub use delete_groups::{
     DELETE_GROUPS_REQUEST_DESCRIPTOR, DELETE_GROUPS_RESPONSE_DESCRIPTOR, DeleteGroupsRequest,
     DeleteGroupsResponse,
+};
+pub use delete_records::{
+    DELETE_RECORDS_REQUEST_DESCRIPTOR, DELETE_RECORDS_RESPONSE_DESCRIPTOR, DeleteRecordsRequest,
+    DeleteRecordsResponse,
+};
+pub use delete_share_group_offsets::{
+    DELETE_SHARE_GROUP_OFFSETS_REQUEST_DESCRIPTOR, DELETE_SHARE_GROUP_OFFSETS_RESPONSE_DESCRIPTOR,
+    DeleteShareGroupOffsetsRequest, DeleteShareGroupOffsetsResponse,
+};
+pub use delete_share_group_state::{
+    DELETE_SHARE_GROUP_STATE_REQUEST_DESCRIPTOR, DELETE_SHARE_GROUP_STATE_RESPONSE_DESCRIPTOR,
+    DeleteShareGroupStateRequest, DeleteShareGroupStateResponse,
+};
+pub use describe_acls::{
+    DESCRIBE_ACLS_REQUEST_DESCRIPTOR, DESCRIBE_ACLS_RESPONSE_DESCRIPTOR, DescribeAclsRequest,
+    DescribeAclsResponse,
+};
+pub use describe_cluster::{
+    DESCRIBE_CLUSTER_REQUEST_DESCRIPTOR, DESCRIBE_CLUSTER_RESPONSE_DESCRIPTOR,
+    DescribeClusterRequest, DescribeClusterResponse,
+};
+pub use describe_configs::{DESCRIBE_CONFIGS_REQUEST_DESCRIPTOR, DescribeConfigsRequest};
+pub use describe_delegation_token::{
+    DESCRIBE_DELEGATION_TOKEN_REQUEST_DESCRIPTOR, DESCRIBE_DELEGATION_TOKEN_RESPONSE_DESCRIPTOR,
+    DescribeDelegationTokenRequest, DescribeDelegationTokenResponse,
+};
+pub use describe_groups::{
+    DESCRIBE_GROUPS_REQUEST_DESCRIPTOR, DESCRIBE_GROUPS_RESPONSE_DESCRIPTOR, DescribeGroupsRequest,
+    DescribeGroupsResponse,
+};
+pub use describe_log_dirs::{
+    DESCRIBE_LOG_DIRS_REQUEST_DESCRIPTOR, DESCRIBE_LOG_DIRS_RESPONSE_DESCRIPTOR,
+    DescribeLogDirsRequest, DescribeLogDirsResponse,
+};
+pub use describe_producers::{
+    DESCRIBE_PRODUCERS_REQUEST_DESCRIPTOR, DESCRIBE_PRODUCERS_RESPONSE_DESCRIPTOR,
+    DescribeProducersRequest, DescribeProducersResponse,
+};
+pub use describe_quorum::{
+    DESCRIBE_QUORUM_REQUEST_DESCRIPTOR, DESCRIBE_QUORUM_RESPONSE_DESCRIPTOR, DescribeQuorumRequest,
+    DescribeQuorumResponse,
+};
+pub use describe_share_group_offsets::{
+    DESCRIBE_SHARE_GROUP_OFFSETS_REQUEST_DESCRIPTOR,
+    DESCRIBE_SHARE_GROUP_OFFSETS_RESPONSE_DESCRIPTOR, DescribeShareGroupOffsetsRequest,
+    DescribeShareGroupOffsetsResponse,
+};
+pub use describe_transactions::{
+    DESCRIBE_TRANSACTIONS_REQUEST_DESCRIPTOR, DESCRIBE_TRANSACTIONS_RESPONSE_DESCRIPTOR,
+    DescribeTransactionsRequest, DescribeTransactionsResponse,
+};
+pub use describe_user_scram_credentials::{
+    DESCRIBE_USER_SCRAM_CREDENTIALS_REQUEST_DESCRIPTOR,
+    DESCRIBE_USER_SCRAM_CREDENTIALS_RESPONSE_DESCRIPTOR, DescribeUserScramCredentialsRequest,
+    DescribeUserScramCredentialsResponse,
+};
+pub use elect_leaders::{
+    ELECT_LEADERS_REQUEST_DESCRIPTOR, ELECT_LEADERS_RESPONSE_DESCRIPTOR, ElectLeadersRequest,
+    ElectLeadersResponse,
+};
+pub use end_txn::{
+    END_TXN_REQUEST_DESCRIPTOR, END_TXN_RESPONSE_DESCRIPTOR, EndTxnRequest, EndTxnResponse,
+};
+pub use envelope::{
+    ENVELOPE_REQUEST_DESCRIPTOR, ENVELOPE_RESPONSE_DESCRIPTOR, EnvelopeRequest, EnvelopeResponse,
+};
+pub use expire_delegation_token::{
+    EXPIRE_DELEGATION_TOKEN_REQUEST_DESCRIPTOR, EXPIRE_DELEGATION_TOKEN_RESPONSE_DESCRIPTOR,
+    ExpireDelegationTokenRequest, ExpireDelegationTokenResponse,
+};
+pub use find_coordinator::{
+    FIND_COORDINATOR_REQUEST_DESCRIPTOR, FIND_COORDINATOR_RESPONSE_DESCRIPTOR,
+    FindCoordinatorRequest, FindCoordinatorResponse,
+};
+pub use get_telemetry_subscriptions::{
+    GET_TELEMETRY_SUBSCRIPTIONS_REQUEST_DESCRIPTOR,
+    GET_TELEMETRY_SUBSCRIPTIONS_RESPONSE_DESCRIPTOR, GetTelemetrySubscriptionsRequest,
+    GetTelemetrySubscriptionsResponse,
+};
+pub use heartbeat::{
+    HEARTBEAT_REQUEST_DESCRIPTOR, HEARTBEAT_RESPONSE_DESCRIPTOR, HeartbeatRequest,
+    HeartbeatResponse,
+};
+pub use incremental_alter_configs::{
+    INCREMENTAL_ALTER_CONFIGS_REQUEST_DESCRIPTOR, INCREMENTAL_ALTER_CONFIGS_RESPONSE_DESCRIPTOR,
+    IncrementalAlterConfigsRequest, IncrementalAlterConfigsResponse,
+};
+pub use init_producer_id::{
+    INIT_PRODUCER_ID_REQUEST_DESCRIPTOR, INIT_PRODUCER_ID_RESPONSE_DESCRIPTOR,
+    InitProducerIdRequest, InitProducerIdResponse,
+};
+pub use initialize_share_group_state::{
+    INITIALIZE_SHARE_GROUP_STATE_REQUEST_DESCRIPTOR,
+    INITIALIZE_SHARE_GROUP_STATE_RESPONSE_DESCRIPTOR, InitializeShareGroupStateRequest,
+    InitializeShareGroupStateResponse,
+};
+pub use leave_group::{
+    LEAVE_GROUP_REQUEST_DESCRIPTOR, LEAVE_GROUP_RESPONSE_DESCRIPTOR, LeaveGroupRequest,
+    LeaveGroupResponse,
+};
+pub use list_config_resources::{
+    LIST_CONFIG_RESOURCES_REQUEST_DESCRIPTOR, LIST_CONFIG_RESOURCES_RESPONSE_DESCRIPTOR,
+    ListConfigResourcesRequest, ListConfigResourcesResponse,
+};
+pub use list_groups::{
+    LIST_GROUPS_REQUEST_DESCRIPTOR, LIST_GROUPS_RESPONSE_DESCRIPTOR, ListGroupsRequest,
+    ListGroupsResponse,
+};
+pub use list_offsets::{
+    LIST_OFFSETS_REQUEST_DESCRIPTOR, LIST_OFFSETS_RESPONSE_DESCRIPTOR, ListOffsetsRequest,
+    ListOffsetsResponse,
+};
+pub use list_partition_reassignments::{
+    LIST_PARTITION_REASSIGNMENTS_REQUEST_DESCRIPTOR,
+    LIST_PARTITION_REASSIGNMENTS_RESPONSE_DESCRIPTOR, ListPartitionReassignmentsRequest,
+    ListPartitionReassignmentsResponse,
+};
+pub use list_transactions::{
+    LIST_TRANSACTIONS_REQUEST_DESCRIPTOR, LIST_TRANSACTIONS_RESPONSE_DESCRIPTOR,
+    ListTransactionsRequest, ListTransactionsResponse,
+};
+pub use offset_commit::{
+    OFFSET_COMMIT_REQUEST_DESCRIPTOR, OFFSET_COMMIT_RESPONSE_DESCRIPTOR, OffsetCommitRequest,
+    OffsetCommitResponse,
 };
 pub use offset_delete::{
     OFFSET_DELETE_REQUEST_DESCRIPTOR, OFFSET_DELETE_RESPONSE_DESCRIPTOR, OffsetDeleteRequest,
     OffsetDeleteResponse,
 };
+pub use offset_for_leader_epoch::{
+    OFFSET_FOR_LEADER_EPOCH_REQUEST_DESCRIPTOR, OFFSET_FOR_LEADER_EPOCH_RESPONSE_DESCRIPTOR,
+    OffsetForLeaderEpochRequest, OffsetForLeaderEpochResponse,
+};
+pub use push_telemetry::{
+    PUSH_TELEMETRY_REQUEST_DESCRIPTOR, PUSH_TELEMETRY_RESPONSE_DESCRIPTOR, PushTelemetryRequest,
+    PushTelemetryResponse,
+};
+pub use read_share_group_state::{
+    READ_SHARE_GROUP_STATE_REQUEST_DESCRIPTOR, READ_SHARE_GROUP_STATE_RESPONSE_DESCRIPTOR,
+    ReadShareGroupStateRequest, ReadShareGroupStateResponse,
+};
+pub use read_share_group_state_summary::{
+    READ_SHARE_GROUP_STATE_SUMMARY_REQUEST_DESCRIPTOR,
+    READ_SHARE_GROUP_STATE_SUMMARY_RESPONSE_DESCRIPTOR, ReadShareGroupStateSummaryRequest,
+    ReadShareGroupStateSummaryResponse,
+};
 pub use registry::MESSAGE_DESCRIPTORS;
+pub use remove_raft_voter::{
+    REMOVE_RAFT_VOTER_REQUEST_DESCRIPTOR, REMOVE_RAFT_VOTER_RESPONSE_DESCRIPTOR,
+    RemoveRaftVoterRequest, RemoveRaftVoterResponse,
+};
+pub use renew_delegation_token::{
+    RENEW_DELEGATION_TOKEN_REQUEST_DESCRIPTOR, RENEW_DELEGATION_TOKEN_RESPONSE_DESCRIPTOR,
+    RenewDelegationTokenRequest, RenewDelegationTokenResponse,
+};
+pub use sasl_authenticate::{
+    SASL_AUTHENTICATE_REQUEST_DESCRIPTOR, SASL_AUTHENTICATE_RESPONSE_DESCRIPTOR,
+    SaslAuthenticateRequest, SaslAuthenticateResponse,
+};
 pub use sasl_handshake::{
     SASL_HANDSHAKE_REQUEST_DESCRIPTOR, SASL_HANDSHAKE_RESPONSE_DESCRIPTOR, SaslHandshakeRequest,
     SaslHandshakeResponse,
+};
+pub use share_acknowledge::{
+    SHARE_ACKNOWLEDGE_REQUEST_DESCRIPTOR, SHARE_ACKNOWLEDGE_RESPONSE_DESCRIPTOR,
+    ShareAcknowledgeRequest, ShareAcknowledgeResponse,
+};
+pub use share_group_describe::{
+    SHARE_GROUP_DESCRIBE_REQUEST_DESCRIPTOR, SHARE_GROUP_DESCRIBE_RESPONSE_DESCRIPTOR,
+    ShareGroupDescribeRequest, ShareGroupDescribeResponse,
+};
+pub use streams_group_topology_description_update::{
+    STREAMS_GROUP_TOPOLOGY_DESCRIPTION_UPDATE_REQUEST_DESCRIPTOR,
+    STREAMS_GROUP_TOPOLOGY_DESCRIPTION_UPDATE_RESPONSE_DESCRIPTOR,
+    StreamsGroupTopologyDescriptionUpdateRequest, StreamsGroupTopologyDescriptionUpdateResponse,
+};
+pub use sync_group::{
+    SYNC_GROUP_REQUEST_DESCRIPTOR, SYNC_GROUP_RESPONSE_DESCRIPTOR, SyncGroupRequest,
+    SyncGroupResponse,
+};
+pub use txn_offset_commit::{
+    TXN_OFFSET_COMMIT_REQUEST_DESCRIPTOR, TXN_OFFSET_COMMIT_RESPONSE_DESCRIPTOR,
+    TxnOffsetCommitRequest, TxnOffsetCommitResponse,
+};
+pub use unregister_broker::{
+    UNREGISTER_BROKER_REQUEST_DESCRIPTOR, UNREGISTER_BROKER_RESPONSE_DESCRIPTOR,
+    UnregisterBrokerRequest, UnregisterBrokerResponse,
+};
+pub use update_features::{
+    UPDATE_FEATURES_REQUEST_DESCRIPTOR, UPDATE_FEATURES_RESPONSE_DESCRIPTOR, UpdateFeaturesRequest,
+    UpdateFeaturesResponse,
+};
+pub use write_share_group_state::{
+    WRITE_SHARE_GROUP_STATE_REQUEST_DESCRIPTOR, WRITE_SHARE_GROUP_STATE_RESPONSE_DESCRIPTOR,
+    WriteShareGroupStateRequest, WriteShareGroupStateResponse,
+};
+pub use write_txn_markers::{
+    WRITE_TXN_MARKERS_REQUEST_DESCRIPTOR, WRITE_TXN_MARKERS_RESPONSE_DESCRIPTOR,
+    WriteTxnMarkersRequest, WriteTxnMarkersResponse,
 };

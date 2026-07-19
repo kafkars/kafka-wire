@@ -1,0 +1,47 @@
+{
+  "schema": 1,
+  "message": "ShareAcknowledgeResponse",
+  "api_key": 79,
+  "direction": "response",
+  "valid_versions": [
+    1,
+    2
+  ],
+  "flexible_versions": [
+    0,
+    1,
+    2
+  ],
+  "source": "ShareAcknowledgeResponse.json",
+  "cases": [
+    {
+      "name": "synthesized_defaults_v1",
+      "why": "Every field this version declares, at its protocol default. Synthesized so the message is held to Apache Kafka's bytes at all; hand-written cases carry the interesting shapes.",
+      "versions": [
+        1
+      ],
+      "json_value": {
+        "throttleTimeMs": 0,
+        "errorCode": 0,
+        "errorMessage": null,
+        "responses": [],
+        "nodeEndpoints": []
+      }
+    },
+    {
+      "name": "synthesized_defaults_v2",
+      "why": "Every field this version declares, at its protocol default. Synthesized so the message is held to Apache Kafka's bytes at all; hand-written cases carry the interesting shapes.",
+      "versions": [
+        2
+      ],
+      "json_value": {
+        "throttleTimeMs": 0,
+        "errorCode": 0,
+        "errorMessage": null,
+        "acquisitionLockTimeoutMs": 0,
+        "responses": [],
+        "nodeEndpoints": []
+      }
+    }
+  ]
+}

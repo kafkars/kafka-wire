@@ -28,11 +28,14 @@ pub struct OffsetDeleteRequestTopic {
 impl KafkaDecode for OffsetDeleteRequestTopic {
     fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
         let name = decoder.read_string()?;
-        let length = decoder.read_array_len()?;
-        let mut partitions = Vec::with_capacity(length);
-        for _ in 0..length {
-            partitions.push(OffsetDeleteRequestPartition::decode(decoder, version)?);
-        }
+        let partitions = {
+            let length = decoder.read_array_len()?;
+            let mut values = Vec::with_capacity(length);
+            for _ in 0..length {
+                values.push(OffsetDeleteRequestPartition::decode(decoder, version)?);
+            }
+            values
+        };
 
         Ok(Self { name, partitions })
     }
@@ -111,11 +114,14 @@ impl KafkaDecode for OffsetDeleteRequest {
         crate::message::ensure_decode_version::<Self>(version)?;
 
         let group_id = decoder.read_string()?;
-        let length = decoder.read_array_len()?;
-        let mut topics = Vec::with_capacity(length);
-        for _ in 0..length {
-            topics.push(OffsetDeleteRequestTopic::decode(decoder, version)?);
-        }
+        let topics = {
+            let length = decoder.read_array_len()?;
+            let mut values = Vec::with_capacity(length);
+            for _ in 0..length {
+                values.push(OffsetDeleteRequestTopic::decode(decoder, version)?);
+            }
+            values
+        };
 
         Ok(Self { group_id, topics })
     }
@@ -152,11 +158,14 @@ pub struct OffsetDeleteResponseTopic {
 impl KafkaDecode for OffsetDeleteResponseTopic {
     fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
         let name = decoder.read_string()?;
-        let length = decoder.read_array_len()?;
-        let mut partitions = Vec::with_capacity(length);
-        for _ in 0..length {
-            partitions.push(OffsetDeleteResponsePartition::decode(decoder, version)?);
-        }
+        let partitions = {
+            let length = decoder.read_array_len()?;
+            let mut values = Vec::with_capacity(length);
+            for _ in 0..length {
+                values.push(OffsetDeleteResponsePartition::decode(decoder, version)?);
+            }
+            values
+        };
 
         Ok(Self { name, partitions })
     }
@@ -241,11 +250,14 @@ impl KafkaDecode for OffsetDeleteResponse {
 
         let error_code = decoder.read_i16()?;
         let throttle_time_ms = decoder.read_i32()?;
-        let length = decoder.read_array_len()?;
-        let mut topics = Vec::with_capacity(length);
-        for _ in 0..length {
-            topics.push(OffsetDeleteResponseTopic::decode(decoder, version)?);
-        }
+        let topics = {
+            let length = decoder.read_array_len()?;
+            let mut values = Vec::with_capacity(length);
+            for _ in 0..length {
+                values.push(OffsetDeleteResponseTopic::decode(decoder, version)?);
+            }
+            values
+        };
 
         Ok(Self {
             error_code,

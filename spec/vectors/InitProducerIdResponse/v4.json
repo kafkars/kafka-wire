@@ -1,0 +1,21 @@
+{
+  "schema": 1,
+  "vectors": [
+    {
+      "name": "synthesized_defaults_v4",
+      "why": "Every field this version declares, at its protocol default. Synthesized so the message is held to Apache Kafka's bytes at all; hand-written cases carry the interesting shapes.",
+      "message": "InitProducerIdResponse",
+      "api_key": 22,
+      "direction": "response",
+      "version": 4,
+      "flexible": true,
+      "json_value": {
+        "errorCode": 0,
+        "producerEpoch": 0,
+        "producerId": -1,
+        "throttleTimeMs": 0
+      },
+      "hex": "000000000000ffffffffffffffff000000"
+    }
+  ]
+}

@@ -1,0 +1,20 @@
+{
+  "schema": 1,
+  "vectors": [
+    {
+      "name": "synthesized_defaults_v2",
+      "why": "Every field this version declares, at its protocol default. Synthesized so the message is held to Apache Kafka's bytes at all; hand-written cases carry the interesting shapes.",
+      "message": "ExpireDelegationTokenResponse",
+      "api_key": 40,
+      "direction": "response",
+      "version": 2,
+      "flexible": true,
+      "json_value": {
+        "errorCode": 0,
+        "expiryTimestampMs": 0,
+        "throttleTimeMs": 0
+      },
+      "hex": "000000000000000000000000000000"
+    }
+  ]
+}

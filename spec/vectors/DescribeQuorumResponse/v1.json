@@ -1,0 +1,19 @@
+{
+  "schema": 1,
+  "vectors": [
+    {
+      "name": "synthesized_defaults_v1",
+      "why": "Every field this version declares, at its protocol default. Synthesized so the message is held to Apache Kafka's bytes at all; hand-written cases carry the interesting shapes.",
+      "message": "DescribeQuorumResponse",
+      "api_key": 55,
+      "direction": "response",
+      "version": 1,
+      "flexible": true,
+      "json_value": {
+        "errorCode": 0,
+        "topics": []
+      },
+      "hex": "00000100"
+    }
+  ]
+}

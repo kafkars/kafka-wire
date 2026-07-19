@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "vectors": [
+    {
+      "name": "synthesized_defaults_v6",
+      "why": "Every field this version declares, at its protocol default. Synthesized so the message is held to Apache Kafka's bytes at all; hand-written cases carry the interesting shapes.",
+      "message": "InitProducerIdRequest",
+      "api_key": 22,
+      "direction": "request",
+      "version": 6,
+      "flexible": true,
+      "json_value": {
+        "enable2Pc": false,
+        "keepPreparedTxn": false,
+        "producerEpoch": -1,
+        "producerId": -1,
+        "transactionTimeoutMs": 0,
+        "transactionalId": null
+      },
+      "hex": "0000000000ffffffffffffffffffff000000"
+    }
+  ]
+}

@@ -131,11 +131,14 @@ impl KafkaDecode for AddRaftVoterRequest {
         let timeout_ms = decoder.read_i32()?;
         let voter_id = decoder.read_i32()?;
         let voter_directory_id = decoder.read_uuid()?;
-        let length = decoder.read_compact_array_len()?;
-        let mut listeners = Vec::with_capacity(length);
-        for _ in 0..length {
-            listeners.push(AddRaftVoterRequestListener::decode(decoder, version)?);
-        }
+        let listeners = {
+            let length = decoder.read_compact_array_len()?;
+            let mut values = Vec::with_capacity(length);
+            for _ in 0..length {
+                values.push(AddRaftVoterRequestListener::decode(decoder, version)?);
+            }
+            values
+        };
         let ack_when_committed = if version.value() >= 1 {
             decoder.read_bool()?
         } else {

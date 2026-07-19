@@ -86,11 +86,14 @@ impl KafkaDecode for SaslHandshakeResponse {
         crate::message::ensure_decode_version::<Self>(version)?;
 
         let error_code = decoder.read_i16()?;
-        let length = decoder.read_array_len()?;
-        let mut mechanisms = Vec::with_capacity(length);
-        for _ in 0..length {
-            mechanisms.push(decoder.read_string()?);
-        }
+        let mechanisms = {
+            let length = decoder.read_array_len()?;
+            let mut values = Vec::with_capacity(length);
+            for _ in 0..length {
+                values.push(decoder.read_string()?);
+            }
+            values
+        };
 
         Ok(Self {
             error_code,

@@ -1,0 +1,19 @@
+{
+  "schema": 1,
+  "vectors": [
+    {
+      "name": "synthesized_defaults_v0",
+      "why": "Every field this version declares, at its protocol default. Synthesized so the message is held to Apache Kafka's bytes at all; hand-written cases carry the interesting shapes.",
+      "message": "AlterPartitionReassignmentsRequest",
+      "api_key": 45,
+      "direction": "request",
+      "version": 0,
+      "flexible": true,
+      "json_value": {
+        "timeoutMs": 60000,
+        "topics": []
+      },
+      "hex": "0000ea600100"
+    }
+  ]
+}

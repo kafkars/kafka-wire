@@ -1,0 +1,19 @@
+{
+  "schema": 1,
+  "vectors": [
+    {
+      "name": "synthesized_defaults_v4",
+      "why": "Every field this version declares, at its protocol default. Synthesized so the message is held to Apache Kafka's bytes at all; hand-written cases carry the interesting shapes.",
+      "message": "OffsetForLeaderEpochResponse",
+      "api_key": 23,
+      "direction": "response",
+      "version": 4,
+      "flexible": true,
+      "json_value": {
+        "throttleTimeMs": 0,
+        "topics": []
+      },
+      "hex": "000000000100"
+    }
+  ]
+}

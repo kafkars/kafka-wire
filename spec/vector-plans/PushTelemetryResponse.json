@@ -1,0 +1,26 @@
+{
+  "schema": 1,
+  "message": "PushTelemetryResponse",
+  "api_key": 72,
+  "direction": "response",
+  "valid_versions": [
+    0
+  ],
+  "flexible_versions": [
+    0
+  ],
+  "source": "PushTelemetryResponse.json",
+  "cases": [
+    {
+      "name": "synthesized_defaults_v0",
+      "why": "Every field this version declares, at its protocol default. Synthesized so the message is held to Apache Kafka's bytes at all; hand-written cases carry the interesting shapes.",
+      "versions": [
+        0
+      ],
+      "json_value": {
+        "throttleTimeMs": 0,
+        "errorCode": 0
+      }
+    }
+  ]
+}

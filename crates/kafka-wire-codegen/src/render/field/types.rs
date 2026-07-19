@@ -14,6 +14,24 @@ use kafka_wire_schema::{DefaultValue, Field, FieldType, Message};
 
 use crate::GenerationError;
 
+/// Groups an integer literal in threes, as the lints on checked-in output ask.
+fn separated(value: i64) -> String {
+    let negative = value < 0;
+    let digits = value.unsigned_abs().to_string();
+    let mut grouped = String::new();
+    for (index, digit) in digits.chars().enumerate() {
+        if index > 0 && (digits.len() - index) % 3 == 0 {
+            grouped.push('_');
+        }
+        grouped.push(digit);
+    }
+    if negative {
+        format!("-{grouped}")
+    } else {
+        grouped
+    }
+}
+
 /// Whether the field is declared nullable anywhere the message supports, which
 /// is what decides `Option`.
 fn is_nullable(field: &Field, message: &Message) -> bool {
@@ -81,7 +99,7 @@ fn default_value(field: &Field, message: &Message) -> Result<String, GenerationE
     match &field.default {
         DefaultValue::Null => Ok("None".to_owned()),
         DefaultValue::Bool(value) => Ok(value.to_string()),
-        DefaultValue::Integer(value) => Ok(value.to_string()),
+        DefaultValue::Integer(value) => Ok(separated(*value)),
         DefaultValue::String(value) if value.is_empty() => Ok("StrBytes::default()".to_owned()),
         DefaultValue::String(value) => Ok(format!("StrBytes::from({value:?})")),
         DefaultValue::Uuid(bytes) if *bytes == [0_u8; 16] => Ok("Uuid::ZERO".to_owned()),
@@ -92,8 +110,12 @@ fn default_value(field: &Field, message: &Message) -> Result<String, GenerationE
             "{}::default()",
             type_name(&field.ty, field, message)?
         )),
+        // Named by type rather than inferred: `Default::default()` in an
+        // initializer position is correct but says less than the type does.
         DefaultValue::Empty => match &field.ty {
             FieldType::Array(_) => Ok("Vec::new()".to_owned()),
+            FieldType::Bytes => Ok("Bytes::default()".to_owned()),
+            FieldType::String => Ok("StrBytes::default()".to_owned()),
             _ => Ok("Default::default()".to_owned()),
         },
         // `validate_supported` restricts the slice to string, int16, int32, and
@@ -124,7 +146,7 @@ pub(crate) fn non_default_condition(
         // identity; the lints on checked-in output reject both spellings.
         DefaultValue::Bool(false) => Ok(format!("self.{name}")),
         DefaultValue::Bool(true) => Ok(format!("!self.{name}")),
-        DefaultValue::Integer(value) => Ok(format!("self.{name} != {value}")),
+        DefaultValue::Integer(value) => Ok(format!("self.{name} != {}", separated(*value))),
         DefaultValue::String(value) if value.is_empty() => Ok(format!("!self.{name}.is_empty()")),
         DefaultValue::String(value) => Ok(format!("self.{name}.as_str() != {value:?}")),
         DefaultValue::Uuid(bytes) if *bytes == [0_u8; 16] => {
@@ -167,7 +189,10 @@ pub(crate) fn uses_rust_default(field: &Field) -> bool {
         (FieldType::Uuid, DefaultValue::Uuid(bytes)) if *bytes == [0_u8; 16]
     ) || matches!(
         (&field.ty, &field.default),
-        (FieldType::Array(_), DefaultValue::Empty)
+        (
+            FieldType::Array(_) | FieldType::Bytes | FieldType::String,
+            DefaultValue::Empty
+        )
     ) || matches!(
         (&field.ty, &field.default),
         (FieldType::Struct(_), DefaultValue::StructDefaults)

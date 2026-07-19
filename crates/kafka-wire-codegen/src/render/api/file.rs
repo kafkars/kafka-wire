@@ -64,8 +64,13 @@ fn render_imports(rust: &mut RustText, group: &ApiGroup) {
         "Encoder",
         "KafkaDecode",
         "KafkaEncode",
-        "StrBytes",
     ];
+    if group
+        .messages()
+        .any(|source| field::uses_type(&source.message, &FieldType::String))
+    {
+        wire.push("StrBytes");
+    }
     if has_flexible {
         wire.push("TaggedFields");
     }

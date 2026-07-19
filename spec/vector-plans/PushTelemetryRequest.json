@@ -1,0 +1,29 @@
+{
+  "schema": 1,
+  "message": "PushTelemetryRequest",
+  "api_key": 72,
+  "direction": "request",
+  "valid_versions": [
+    0
+  ],
+  "flexible_versions": [
+    0
+  ],
+  "source": "PushTelemetryRequest.json",
+  "cases": [
+    {
+      "name": "synthesized_defaults_v0",
+      "why": "Every field this version declares, at its protocol default. Synthesized so the message is held to Apache Kafka's bytes at all; hand-written cases carry the interesting shapes.",
+      "versions": [
+        0
+      ],
+      "json_value": {
+        "clientInstanceId": "AAAAAAAAAAAAAAAAAAAAAA",
+        "subscriptionId": 0,
+        "terminating": false,
+        "compressionType": 0,
+        "metrics": ""
+      }
+    }
+  ]
+}

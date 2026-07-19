@@ -1,0 +1,64 @@
+{
+  "schema": 1,
+  "message": "DescribeConfigsRequest",
+  "api_key": 32,
+  "direction": "request",
+  "valid_versions": [
+    1,
+    2,
+    3,
+    4
+  ],
+  "flexible_versions": [
+    4
+  ],
+  "source": "DescribeConfigsRequest.json",
+  "cases": [
+    {
+      "name": "synthesized_defaults_v1",
+      "why": "Every field this version declares, at its protocol default. Synthesized so the message is held to Apache Kafka's bytes at all; hand-written cases carry the interesting shapes.",
+      "versions": [
+        1
+      ],
+      "json_value": {
+        "resources": [],
+        "includeSynonyms": false
+      }
+    },
+    {
+      "name": "synthesized_defaults_v2",
+      "why": "Every field this version declares, at its protocol default. Synthesized so the message is held to Apache Kafka's bytes at all; hand-written cases carry the interesting shapes.",
+      "versions": [
+        2
+      ],
+      "json_value": {
+        "resources": [],
+        "includeSynonyms": false
+      }
+    },
+    {
+      "name": "synthesized_defaults_v3",
+      "why": "Every field this version declares, at its protocol default. Synthesized so the message is held to Apache Kafka's bytes at all; hand-written cases carry the interesting shapes.",
+      "versions": [
+        3
+      ],
+      "json_value": {
+        "resources": [],
+        "includeSynonyms": false,
+        "includeDocumentation": false
+      }
+    },
+    {
+      "name": "synthesized_defaults_v4",
+      "why": "Every field this version declares, at its protocol default. Synthesized so the message is held to Apache Kafka's bytes at all; hand-written cases carry the interesting shapes.",
+      "versions": [
+        4
+      ],
+      "json_value": {
+        "resources": [],
+        "includeSynonyms": false,
+        "includeDocumentation": false
+      }
+    }
+  ]
+}

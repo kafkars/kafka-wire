@@ -76,10 +76,24 @@ pub(super) fn render_reads(
         if let FieldType::Array(element) = &field.ty {
             let (read, _) = field::element_codec(element, field, message)?;
             let (length, _) = field::array_length_codec(field, message);
-            if field::is_nullable(field, message) {
-                render_nullable_array_decode(rust, field.name.rust_field(), &length, &read);
-            } else {
-                render_array_decode(rust, field.name.rust_field(), &length, &read);
+            let nullable = field::is_nullable(field, message);
+            let name = field.name.rust_field();
+            // An array is gated by version exactly as a scalar is. Emitting the
+            // block unconditionally read a later version's field out of an
+            // earlier version's bytes, which Apache Kafka's own vectors caught.
+            match field::presence_condition(field, message) {
+                None => {
+                    rust.open(format!("let {name} ="));
+                    render_array_body(rust, &length, &read, nullable);
+                    rust.close(";");
+                }
+                Some(condition) => {
+                    rust.open(format!("let {name} = if {condition}"));
+                    render_array_body(rust, &length, &read, nullable);
+                    rust.reopen("} else {");
+                    rust.line(field::default_expression(field, message)?);
+                    rust.close(";");
+                }
             }
             continue;
         }
@@ -109,10 +123,19 @@ pub(super) fn render_writes(
         if let FieldType::Array(element) = &field.ty {
             let (_, write) = field::element_codec(element, field, message)?;
             let (_, length) = field::array_length_codec(field, message);
-            if field::is_nullable(field, message) {
-                render_nullable_array_encode(rust, field.name.rust_field(), &length, &write);
+            let nullable = field::is_nullable(field, message);
+            let name = field.name.rust_field();
+            let gate = field::presence_condition(field, message);
+            if let Some(condition) = &gate {
+                rust.open(format!("if {condition}"));
+            }
+            if nullable {
+                render_nullable_array_encode(rust, name, &length, &write);
             } else {
-                render_array_encode(rust, field.name.rust_field(), &length, &write);
+                render_array_encode(rust, name, &length, &write);
+            }
+            if gate.is_some() {
+                rust.close("");
             }
             continue;
         }
@@ -184,26 +207,30 @@ fn render_representability_checks(
     Ok(())
 }
 
-fn render_array_decode(rust: &mut RustText, name: &str, length: &str, element: &str) {
+/// The array read as one expression, so a version gate can wrap it.
+///
+/// A nullable array keeps absent and empty distinct: the nullable readers
+/// return `Option<usize>`, and only the present arm allocates.
+fn render_array_body(rust: &mut RustText, length: &str, element: &str, nullable: bool) {
+    if nullable {
+        rust.open(format!("match {length}"));
+        rust.line("None => None,");
+        rust.open("Some(length) =>");
+        rust.line("let mut values = Vec::with_capacity(length);");
+        rust.open("for _ in 0..length");
+        rust.line(format!("values.push({element});"));
+        rust.close("");
+        rust.line("Some(values)");
+        rust.close("");
+        rust.close("");
+        return;
+    }
     rust.line(format!("let length = {length};"));
-    rust.line(format!("let mut {name} = Vec::with_capacity(length);"));
-    rust.open("for _ in 0..length");
-    rust.line(format!("{name}.push({element});"));
-    rust.close("");
-}
-
-/// Decodes an array that may be null, keeping absent and empty distinct.
-fn render_nullable_array_decode(rust: &mut RustText, name: &str, length: &str, element: &str) {
-    rust.open(format!("let {name} = match {length}"));
-    rust.line("None => None,");
-    rust.open("Some(length) =>");
     rust.line("let mut values = Vec::with_capacity(length);");
     rust.open("for _ in 0..length");
     rust.line(format!("values.push({element});"));
     rust.close("");
-    rust.line("Some(values)");
-    rust.close("");
-    rust.close(";");
+    rust.line("values");
 }
 
 /// Writes the prefix once, then the elements only when the array is present.

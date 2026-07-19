@@ -1,0 +1,49 @@
+{
+  "schema": 1,
+  "message": "OffsetForLeaderEpochRequest",
+  "api_key": 23,
+  "direction": "request",
+  "valid_versions": [
+    2,
+    3,
+    4
+  ],
+  "flexible_versions": [
+    4
+  ],
+  "source": "OffsetForLeaderEpochRequest.json",
+  "cases": [
+    {
+      "name": "synthesized_defaults_v2",
+      "why": "Every field this version declares, at its protocol default. Synthesized so the message is held to Apache Kafka's bytes at all; hand-written cases carry the interesting shapes.",
+      "versions": [
+        2
+      ],
+      "json_value": {
+        "topics": []
+      }
+    },
+    {
+      "name": "synthesized_defaults_v3",
+      "why": "Every field this version declares, at its protocol default. Synthesized so the message is held to Apache Kafka's bytes at all; hand-written cases carry the interesting shapes.",
+      "versions": [
+        3
+      ],
+      "json_value": {
+        "replicaId": -2,
+        "topics": []
+      }
+    },
+    {
+      "name": "synthesized_defaults_v4",
+      "why": "Every field this version declares, at its protocol default. Synthesized so the message is held to Apache Kafka's bytes at all; hand-written cases carry the interesting shapes.",
+      "versions": [
+        4
+      ],
+      "json_value": {
+        "replicaId": -2,
+        "topics": []
+      }
+    }
+  ]
+}

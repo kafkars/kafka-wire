@@ -1,0 +1,28 @@
+{
+  "schema": 1,
+  "vectors": [
+    {
+      "name": "synthesized_defaults_v3",
+      "why": "Every field this version declares, at its protocol default. Synthesized so the message is held to Apache Kafka's bytes at all; hand-written cases carry the interesting shapes.",
+      "message": "CreateDelegationTokenResponse",
+      "api_key": 38,
+      "direction": "response",
+      "version": 3,
+      "flexible": true,
+      "json_value": {
+        "errorCode": 0,
+        "expiryTimestampMs": 0,
+        "hmac": "",
+        "issueTimestampMs": 0,
+        "maxTimestampMs": 0,
+        "principalName": "",
+        "principalType": "",
+        "throttleTimeMs": 0,
+        "tokenId": "",
+        "tokenRequesterPrincipalName": "",
+        "tokenRequesterPrincipalType": ""
+      },
+      "hex": "00000101010100000000000000000000000000000000000000000000000001010000000000"
+    }
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "schema": 1,
+  "vectors": [
+    {
+      "name": "synthesized_defaults_v0",
+      "why": "Every field this version declares, at its protocol default. Synthesized so the message is held to Apache Kafka's bytes at all; hand-written cases carry the interesting shapes.",
+      "message": "DescribeClusterResponse",
+      "api_key": 60,
+      "direction": "response",
+      "version": 0,
+      "flexible": true,
+      "json_value": {
+        "brokers": [],
+        "clusterAuthorizedOperations": -2147483648,
+        "clusterId": "",
+        "controllerId": -1,
+        "errorCode": 0,
+        "errorMessage": null,
+        "throttleTimeMs": 0
+      },
+      "hex": "0000000000000001ffffffff018000000000"
+    }
+  ]
+}

@@ -1,0 +1,39 @@
+{
+  "schema": 1,
+  "message": "WriteShareGroupStateRequest",
+  "api_key": 85,
+  "direction": "request",
+  "valid_versions": [
+    0,
+    1
+  ],
+  "flexible_versions": [
+    0,
+    1
+  ],
+  "source": "WriteShareGroupStateRequest.json",
+  "cases": [
+    {
+      "name": "synthesized_defaults_v0",
+      "why": "Every field this version declares, at its protocol default. Synthesized so the message is held to Apache Kafka's bytes at all; hand-written cases carry the interesting shapes.",
+      "versions": [
+        0
+      ],
+      "json_value": {
+        "groupId": "",
+        "topics": []
+      }
+    },
+    {
+      "name": "synthesized_defaults_v1",
+      "why": "Every field this version declares, at its protocol default. Synthesized so the message is held to Apache Kafka's bytes at all; hand-written cases carry the interesting shapes.",
+      "versions": [
+        1
+      ],
+      "json_value": {
+        "groupId": "",
+        "topics": []
+      }
+    }
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "schema": 1,
+  "vectors": [
+    {
+      "name": "synthesized_defaults_v2",
+      "why": "Every field this version declares, at its protocol default. Synthesized so the message is held to Apache Kafka's bytes at all; hand-written cases carry the interesting shapes.",
+      "message": "AlterReplicaLogDirsRequest",
+      "api_key": 34,
+      "direction": "request",
+      "version": 2,
+      "flexible": true,
+      "json_value": {
+        "dirs": []
+      },
+      "hex": "0100"
+    }
+  ]
+}

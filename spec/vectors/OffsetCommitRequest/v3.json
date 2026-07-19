@@ -1,0 +1,22 @@
+{
+  "schema": 1,
+  "vectors": [
+    {
+      "name": "synthesized_defaults_v3",
+      "why": "Every field this version declares, at its protocol default. Synthesized so the message is held to Apache Kafka's bytes at all; hand-written cases carry the interesting shapes.",
+      "message": "OffsetCommitRequest",
+      "api_key": 8,
+      "direction": "request",
+      "version": 3,
+      "flexible": false,
+      "json_value": {
+        "generationIdOrMemberEpoch": -1,
+        "groupId": "",
+        "memberId": "",
+        "retentionTimeMs": -1,
+        "topics": []
+      },
+      "hex": "0000ffffffff0000ffffffffffffffff00000000"
+    }
+  ]
+}

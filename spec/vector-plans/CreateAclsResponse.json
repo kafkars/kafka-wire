@@ -1,0 +1,51 @@
+{
+  "schema": 1,
+  "message": "CreateAclsResponse",
+  "api_key": 30,
+  "direction": "response",
+  "valid_versions": [
+    1,
+    2,
+    3
+  ],
+  "flexible_versions": [
+    2,
+    3
+  ],
+  "source": "CreateAclsResponse.json",
+  "cases": [
+    {
+      "name": "synthesized_defaults_v1",
+      "why": "Every field this version declares, at its protocol default. Synthesized so the message is held to Apache Kafka's bytes at all; hand-written cases carry the interesting shapes.",
+      "versions": [
+        1
+      ],
+      "json_value": {
+        "throttleTimeMs": 0,
+        "results": []
+      }
+    },
+    {
+      "name": "synthesized_defaults_v2",
+      "why": "Every field this version declares, at its protocol default. Synthesized so the message is held to Apache Kafka's bytes at all; hand-written cases carry the interesting shapes.",
+      "versions": [
+        2
+      ],
+      "json_value": {
+        "throttleTimeMs": 0,
+        "results": []
+      }
+    },
+    {
+      "name": "synthesized_defaults_v3",
+      "why": "Every field this version declares, at its protocol default. Synthesized so the message is held to Apache Kafka's bytes at all; hand-written cases carry the interesting shapes.",
+      "versions": [
+        3
+      ],
+      "json_value": {
+        "throttleTimeMs": 0,
+        "results": []
+      }
+    }
+  ]
+}
