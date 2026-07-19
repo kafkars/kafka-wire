@@ -9,6 +9,15 @@ generated-check:
     cargo xtask generated-check
 
 
+# Verify the broker-authored byte vectors. Pure Rust: no Java, no jar, no network.
+vectors-check:
+    cargo xtask vectors --check
+
+# Re-author them from the pinned Apache Kafka jar. Needs Java and the jar named
+# by spec/oracle.lock; run by a human on purpose, never by CI.
+vectors-refresh:
+    cargo xtask vectors --refresh
+
 fmt:
     cargo fmt --all --check
 
@@ -21,7 +30,7 @@ test:
 doc:
     RUSTDOCFLAGS="-D warnings" cargo doc --workspace --all-features --no-deps
 
-check: generated-check fmt lint test doc
+check: generated-check vectors-check fmt lint test doc
 
 tree:
     find crates xtask spec -type f | sort
