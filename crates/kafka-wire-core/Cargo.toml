@@ -1,0 +1,16 @@
+[package]
+name = "kafka-wire-core"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+publish = false
+description = "Sans-I/O Kafka wire primitives."
+
+[dependencies]
+bytes.workspace = true
+thiserror.workspace = true
+
+[lints]
+workspace = true
