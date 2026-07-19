@@ -9,7 +9,7 @@ vendored_root = "spec/upstream/apache-kafka"
 [[kafka.files]]
 path = "AbortedTxn.json"
 sha256 = "b29ff564215e38d6fcef7d67d836dc4607f6b5e5dca841e84363a334c5f6a032"
-status = "pending"
+status = "enabled"
 
 [[kafka.files]]
 path = "AddOffsetsToTxnRequest.json"
@@ -194,17 +194,17 @@ status = "pending"
 [[kafka.files]]
 path = "ConsumerProtocolAssignment.json"
 sha256 = "1e9a6814d0c461c7efe46caf0117d5075efe26ce4399008cbd9ee4b14f73bb42"
-status = "pending"
+status = "enabled"
 
 [[kafka.files]]
 path = "ConsumerProtocolSubscription.json"
 sha256 = "ea96bcaa93b34b365bccba7159b948c69400a9688c67e5f8fc07a962a0559f7e"
-status = "pending"
+status = "enabled"
 
 [[kafka.files]]
 path = "ControlRecordTypeSchema.json"
 sha256 = "9aa165605b79924d6e538184280d11571d206e995b52812ecf4b3aeda51ee324"
-status = "pending"
+status = "enabled"
 
 [[kafka.files]]
 path = "ControlledShutdownRequest.json"
@@ -269,7 +269,7 @@ status = "pending"
 [[kafka.files]]
 path = "DefaultPrincipalData.json"
 sha256 = "84f5d88582befff9250a7aa6959ddc6e729b189bbdc23e506698c19806d7384a"
-status = "pending"
+status = "enabled"
 
 [[kafka.files]]
 path = "DeleteAclsRequest.json"
@@ -484,7 +484,7 @@ status = "pending"
 [[kafka.files]]
 path = "EndTxnMarker.json"
 sha256 = "656c02c45daa1cad47e4213b03a291ed09e4ffb0167c506447fb8d503a328db5"
-status = "pending"
+status = "enabled"
 
 [[kafka.files]]
 path = "EndTxnRequest.json"
@@ -609,7 +609,7 @@ status = "pending"
 [[kafka.files]]
 path = "KRaftVersionRecord.json"
 sha256 = "8961b54d1e68b5021bbd73c5ee4eedc6545f4f36389fe1a6178942d05bfb3f66"
-status = "pending"
+status = "enabled"
 
 [[kafka.files]]
 path = "LeaderAndIsrRequest.json"
@@ -624,7 +624,7 @@ status = "pending"
 [[kafka.files]]
 path = "LeaderChangeMessage.json"
 sha256 = "1660f4b52bc0609fbb85a0721a554762f4e17d7fb27e770e1c65daaad37d07d2"
-status = "pending"
+status = "enabled"
 
 [[kafka.files]]
 path = "LeaveGroupRequest.json"
@@ -799,12 +799,12 @@ status = "enabled"
 [[kafka.files]]
 path = "RequestHeader.json"
 sha256 = "2f4fb9b826ab490879d9412f76e9ac177ec2af917f686d890d57c8f190d5185f"
-status = "pending"
+status = "enabled"
 
 [[kafka.files]]
 path = "ResponseHeader.json"
 sha256 = "0bf02cc9a7663f05848117537e9cf22879770e03a74555ab1c3dd5ab0b517b88"
-status = "pending"
+status = "enabled"
 
 [[kafka.files]]
 path = "SaslAuthenticateRequest.json"
@@ -869,12 +869,12 @@ status = "pending"
 [[kafka.files]]
 path = "SnapshotFooterRecord.json"
 sha256 = "42e98c1f9d45658f11dafebff281f95f65c58108ed7cc562a0f453380d0d5804"
-status = "pending"
+status = "enabled"
 
 [[kafka.files]]
 path = "SnapshotHeaderRecord.json"
 sha256 = "b03615a9078bbc3abf8a62c1c876590ddbbdc61e3751584a494f2729b640a2d3"
-status = "pending"
+status = "enabled"
 
 [[kafka.files]]
 path = "StopReplicaRequest.json"
@@ -989,7 +989,7 @@ status = "pending"
 [[kafka.files]]
 path = "VotersRecord.json"
 sha256 = "f0d564ea97f83225b766716dbaf4f79888b63d3d80ae3031361840cf6e49c731"
-status = "pending"
+status = "enabled"
 
 [[kafka.files]]
 path = "WriteShareGroupStateRequest.json"

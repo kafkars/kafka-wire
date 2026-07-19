@@ -21,18 +21,24 @@ impl ApiGroup {
     }
 }
 
-pub(crate) fn group_sources(sources: Vec<MessageSource>) -> Result<Vec<ApiGroup>, GenerationError> {
+/// One grouping pass: the API pairs, and the schemas that answer to no key.
+pub(crate) struct Grouped {
+    pub(crate) api: Vec<ApiGroup>,
+    /// Headers and data schemas, in protocol order.
+    ///
+    /// A header is not dispatched by API key and carries no descriptor: it is
+    /// the frame around a message, not a message. It is kept out of `ApiGroup`
+    /// so every later stage can still assume a key exists there.
+    pub(crate) unkeyed: Vec<MessageSource>,
+}
+
+pub(crate) fn group_sources(sources: Vec<MessageSource>) -> Result<Grouped, GenerationError> {
     let mut groups: BTreeMap<i16, ApiGroup> = BTreeMap::new();
+    let mut unkeyed = Vec::new();
     for source in sources {
-        // Headers and data schemas are not dispatched by API key, so they have
-        // no group to join. Rejecting them here keeps every later stage able to
-        // assume a key exists.
         let (MessageKind::Request | MessageKind::Response) = source.message.kind else {
-            return Err(GenerationError::UnsupportedSchema {
-                message: source.message.name.protocol().to_owned(),
-                field: "<message>".to_owned(),
-                reason: "only request and response schemas are grouped by API key".to_owned(),
-            });
+            unkeyed.push(source);
+            continue;
         };
         let Some(api_key) = source.message.api_key else {
             return Err(GenerationError::UnsupportedSchema {
@@ -56,7 +62,7 @@ pub(crate) fn group_sources(sources: Vec<MessageSource>) -> Result<Vec<ApiGroup>
             MessageKind::Response => {
                 insert_direction(&mut group.response, source, api_key, "response")?;
             }
-            // Rejected above; the arm keeps the match total.
+            // Routed to `unkeyed` above; the arm keeps the match total.
             MessageKind::Header | MessageKind::Data => {}
         }
 
@@ -71,7 +77,10 @@ pub(crate) fn group_sources(sources: Vec<MessageSource>) -> Result<Vec<ApiGroup>
             group.module_name = module_name_from_stem(&stem);
         }
     }
-    Ok(groups.into_values().collect())
+    Ok(Grouped {
+        api: groups.into_values().collect(),
+        unkeyed,
+    })
 }
 
 fn insert_direction(

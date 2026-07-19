@@ -9,7 +9,7 @@ use crate::{
     lockfile::ProtocolLock,
     manifest::render_manifest,
     output::apply_tree,
-    render::{render_api, render_module_file, render_registry},
+    render::{render_api, render_module_file, render_registry, render_unkeyed},
     source::load_sources,
 };
 
@@ -17,9 +17,16 @@ use crate::{
 pub fn generate(config: &GeneratorConfig) -> Result<GenerationReport, GenerationError> {
     let lock = ProtocolLock::read(&config.lockfile_path())?;
     let sources = load_sources(config.workspace_root(), &lock)?;
-    let groups = group_sources(sources)?;
+    let grouped = group_sources(sources)?;
+    let groups = grouped.api;
 
     let mut rendered = BTreeMap::new();
+    if !grouped.unkeyed.is_empty() {
+        rendered.insert(
+            "framing.rs".to_owned(),
+            render_unkeyed(&grouped.unkeyed, &lock.kafka.commit)?,
+        );
+    }
     for group in &groups {
         rendered.insert(
             format!("{}.rs", group.module_name),

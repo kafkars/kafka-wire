@@ -162,6 +162,10 @@
       "sha256": "9b030a7ec112927ce3a519e4787466455cfc434a419bf6d5140ccf5f3c84a23d"
     },
     {
+      "path": "framing.rs",
+      "sha256": "c7a91a9fa1f1749279b1fc9420e66cf693a0d73f2af912f19f724cd7c3036dce"
+    },
+    {
       "path": "get_telemetry_subscriptions.rs",
       "sha256": "a31dbee1367f89ebaa1840ba2a325d443da7756f4e50825f1185945d17a24f3b"
     },

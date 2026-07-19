@@ -15,8 +15,20 @@ use crate::{
 use super::codec::{render_construction, render_reads, render_writes};
 use super::prose::sentence;
 
+/// Renders one whole schema as a standalone struct.
+///
+/// A header is versioned like a message and split on flexibility like one, but
+/// it is dispatched by nothing, so it gets the struct treatment: definition,
+/// default, its own flexible window, and codecs.
+pub(crate) fn render_standalone(
+    rust: &mut RustText,
+    message: &Message,
+) -> Result<(), GenerationError> {
+    render_struct(rust, message.name.rust_type(), &message.fields, message)
+}
+
 /// Renders every struct this message declares, in protocol declaration order.
-pub(super) fn render_declared_structs(
+pub(crate) fn render_declared_structs(
     rust: &mut RustText,
     message: &Message,
 ) -> Result<(), GenerationError> {

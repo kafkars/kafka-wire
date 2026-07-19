@@ -18,7 +18,7 @@ use crate::{
     format::format_rendered_rust,
     group::{ApiGroup, group_sources},
     lockfile::ProtocolLock,
-    render::{render_api, render_module_file, render_registry},
+    render::{render_api, render_module_file, render_registry, render_unkeyed},
     source::load_every_source,
 };
 
@@ -96,27 +96,38 @@ pub fn render_corpus(workspace_root: impl AsRef<Path>) -> Result<CorpusRender, G
             .insert(filename, CorpusOutcome::NotLoaded { reason });
     }
 
-    // Headers and data schemas carry no API key, so there is no module for them
-    // to join. That is a backend gap, not a schema fault.
-    let mut dispatched = Vec::with_capacity(corpus.sources.len());
-    for source in corpus.sources {
-        if source.message.kind.carries_api_key() {
-            dispatched.push(source);
-            continue;
+    let grouped = group_sources(corpus.sources)?;
+
+    // Headers and data schemas answer to no API key and render into one module
+    // of their own rather than joining a pair.
+    if !grouped.unkeyed.is_empty() {
+        match render_unkeyed(&grouped.unkeyed, &lock.kafka.commit) {
+            Ok(source) => {
+                probe.files.insert("framing.rs".to_owned(), source);
+                for unkeyed in &grouped.unkeyed {
+                    probe.outcomes.insert(
+                        unkeyed.filename.clone(),
+                        CorpusOutcome::Rendered {
+                            module: "framing.rs".to_owned(),
+                        },
+                    );
+                }
+            }
+            Err(error) => {
+                for unkeyed in &grouped.unkeyed {
+                    probe.outcomes.insert(
+                        unkeyed.filename.clone(),
+                        CorpusOutcome::NotRendered {
+                            reason: cause(&error),
+                        },
+                    );
+                }
+            }
         }
-        probe.outcomes.insert(
-            source.filename,
-            CorpusOutcome::NotRendered {
-                reason: "not dispatched by API key: only requests and responses are \
-                         grouped into modules"
-                    .to_owned(),
-            },
-        );
     }
 
-    let groups = group_sources(dispatched)?;
     let mut emitted = Vec::new();
-    for group in groups {
+    for group in grouped.api {
         render_group(
             &group,
             &lock.kafka.commit,

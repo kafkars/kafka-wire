@@ -191,7 +191,15 @@ enum Encoding {
 
 fn encoding_of(field: &Field, message: &Message) -> Encoding {
     let present = field.versions.intersection(&message.valid_versions);
-    let flexible = message.effective_flexible_versions();
+    // A field may pin itself to an encoding its message would not otherwise
+    // use. `RequestHeader.ClientId` declares `flexibleVersions: "none"` and so
+    // keeps the legacy two-byte prefix even in a flexible header, which is what
+    // lets a broker read the header of a request before it knows the version
+    // the client chose. Ignoring the override would put a varint there.
+    let flexible = field
+        .flexible_versions
+        .clone()
+        .unwrap_or_else(|| message.effective_flexible_versions());
     if present.is_subset_of(&flexible) {
         Encoding::Compact
     } else if present.intersection(&flexible).is_empty() {
