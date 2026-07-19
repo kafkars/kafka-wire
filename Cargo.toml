@@ -1,9 +1,11 @@
 [workspace]
 members = [
+    "crates/kafka-wire-codegen",
     "crates/kafka-wire-schema",
     "crates/kafka-wire-core",
 ]
 default-members = [
+    "crates/kafka-wire-codegen",
     "crates/kafka-wire-schema",
     "crates/kafka-wire-core",
 ]
