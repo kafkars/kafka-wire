@@ -17,7 +17,9 @@ mod validate_test;
 #[cfg(test)]
 mod version_test;
 
-pub(crate) use codec::{array_length_codec, element_codec, read_expression, write_statement};
+pub(crate) use codec::{
+    array_length_codec, element_codec, is_nullable, read_expression, write_statement,
+};
 pub(crate) use types::{
     default_expression, non_default_condition, rust_type, uses_rust_default, uses_uuid,
 };

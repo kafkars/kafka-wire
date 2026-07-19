@@ -92,15 +92,7 @@ fn validate_fields(
             | FieldType::Int64
             | FieldType::Uuid
             | FieldType::Struct(_) => {}
-            FieldType::Array(element) if is_supported_element(element) => {
-                if !nullable.is_empty() {
-                    return unsupported(
-                        message,
-                        field.name.protocol(),
-                        "nullable arrays are not implemented yet",
-                    );
-                }
-            }
+            FieldType::Array(element) if is_supported_element(element) => {}
             other => {
                 return unsupported(
                     message,

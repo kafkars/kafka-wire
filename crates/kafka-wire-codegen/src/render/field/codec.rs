@@ -52,11 +52,39 @@ pub(crate) fn write_statement(field: &Field, message: &Message) -> Result<String
 /// `int32`. Elements are unaffected, which is why this is decided here and not
 /// in `element_codec`.
 pub(crate) fn array_length_codec(field: &Field, message: &Message) -> (String, String) {
+    if is_nullable(field, message) {
+        return nullable_array_length_codec(field, message);
+    }
     let name = field.name.rust_field();
     let compact_read = "decoder.read_compact_array_len()?";
     let legacy_read = "decoder.read_array_len()?";
     let compact_write = format!("encoder.write_compact_array_len(self.{name}.len())?;");
     let legacy_write = format!("encoder.write_array_len(self.{name}.len())?;");
+    match encoding_of(field, message) {
+        Encoding::Compact => (compact_read.to_owned(), compact_write),
+        Encoding::Legacy => (legacy_read.to_owned(), legacy_write),
+        Encoding::VersionGated => (
+            format!("if Self::is_flexible(version) {{ {compact_read} }} else {{ {legacy_read} }}"),
+            format!(
+                "if Self::is_flexible(version) {{ {compact_write} }} else {{ {legacy_write} }}"
+            ),
+        ),
+    }
+}
+
+/// The same prefix for an array that may itself be null.
+///
+/// The nullable readers return `Option<usize>`, which is what lets the decode
+/// block tell an absent array from a present empty one — two distinct wire
+/// encodings that a plain length cannot separate.
+fn nullable_array_length_codec(field: &Field, message: &Message) -> (String, String) {
+    let name = field.name.rust_field();
+    let compact_read = "decoder.read_compact_nullable_array_len()?";
+    let legacy_read = "decoder.read_nullable_array_len()?";
+    let compact_write =
+        format!("encoder.write_compact_nullable_array_len(self.{name}.as_ref().map(Vec::len))?;");
+    let legacy_write =
+        format!("encoder.write_nullable_array_len(self.{name}.as_ref().map(Vec::len))?;");
     match encoding_of(field, message) {
         Encoding::Compact => (compact_read.to_owned(), compact_write),
         Encoding::Legacy => (legacy_read.to_owned(), legacy_write),
@@ -131,7 +159,7 @@ fn encoding_of(field: &Field, message: &Message) -> Encoding {
     }
 }
 
-fn is_nullable(field: &Field, message: &Message) -> bool {
+pub(crate) fn is_nullable(field: &Field, message: &Message) -> bool {
     !field
         .nullable_versions
         .intersection(&message.valid_versions)

@@ -196,16 +196,19 @@ fn a_nullable_field_may_default_to_a_real_value() {
 }
 
 #[test]
-fn a_nullable_array_is_refused_while_gated_and_compact_arrays_are_accepted() {
+fn arrays_are_accepted_gated_compact_and_nullable_alike() {
     let array = || field("Probe", FieldType::Array(Box::new(FieldType::String)), "0+");
 
-    // The length prefix now follows the encoding regime, so an array added at a
-    // later version and an array in a flexible message both emit.
+    // The length prefix follows the encoding regime, and the nullable readers
+    // return Option<usize>, so an absent array stays distinct from an empty one.
     let mut gated = array();
     gated.versions = versions("2+");
+    let mut null_default = nullable(array());
+    null_default.default = DefaultValue::Null;
     for (fields, situation) in [
         (vec![gated], "a string array added at a later version"),
         (vec![array()], "a string array in a flexible message"),
+        (vec![null_default], "a nullable string array"),
     ] {
         let message = message("0-4", "0+", fields);
         assert!(
@@ -213,15 +216,6 @@ fn a_nullable_array_is_refused_while_gated_and_compact_arrays_are_accepted() {
             "the backend refused {situation}"
         );
     }
-
-    // What has no representation is the null array itself.
-    assert_refused(
-        vec![nullable(array())],
-        "0-4",
-        "none",
-        "a nullable string array",
-        "nullable arrays are not implemented yet",
-    );
 }
 
 #[test]

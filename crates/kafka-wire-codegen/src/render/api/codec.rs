@@ -76,7 +76,11 @@ pub(super) fn render_reads(
         if let FieldType::Array(element) = &field.ty {
             let (read, _) = field::element_codec(element, field, message)?;
             let (length, _) = field::array_length_codec(field, message);
-            render_array_decode(rust, field.name.rust_field(), &length, &read);
+            if field::is_nullable(field, message) {
+                render_nullable_array_decode(rust, field.name.rust_field(), &length, &read);
+            } else {
+                render_array_decode(rust, field.name.rust_field(), &length, &read);
+            }
             continue;
         }
         let expression = field::read_expression(field, message)?;
@@ -105,7 +109,11 @@ pub(super) fn render_writes(
         if let FieldType::Array(element) = &field.ty {
             let (_, write) = field::element_codec(element, field, message)?;
             let (_, length) = field::array_length_codec(field, message);
-            render_array_encode(rust, field.name.rust_field(), &length, &write);
+            if field::is_nullable(field, message) {
+                render_nullable_array_encode(rust, field.name.rust_field(), &length, &write);
+            } else {
+                render_array_encode(rust, field.name.rust_field(), &length, &write);
+            }
             continue;
         }
         let statement = field::write_statement(field, message)?;
@@ -181,6 +189,30 @@ fn render_array_decode(rust: &mut RustText, name: &str, length: &str, element: &
     rust.line(format!("let mut {name} = Vec::with_capacity(length);"));
     rust.open("for _ in 0..length");
     rust.line(format!("{name}.push({element});"));
+    rust.close("");
+}
+
+/// Decodes an array that may be null, keeping absent and empty distinct.
+fn render_nullable_array_decode(rust: &mut RustText, name: &str, length: &str, element: &str) {
+    rust.open(format!("let {name} = match {length}"));
+    rust.line("None => None,");
+    rust.open("Some(length) =>");
+    rust.line("let mut values = Vec::with_capacity(length);");
+    rust.open("for _ in 0..length");
+    rust.line(format!("values.push({element});"));
+    rust.close("");
+    rust.line("Some(values)");
+    rust.close("");
+    rust.close(";");
+}
+
+/// Writes the prefix once, then the elements only when the array is present.
+fn render_nullable_array_encode(rust: &mut RustText, name: &str, length: &str, element: &str) {
+    rust.line(length);
+    rust.open(format!("if let Some(values) = &self.{name}"));
+    rust.open("for value in values");
+    rust.line(element);
+    rust.close("");
     rust.close("");
 }
 
