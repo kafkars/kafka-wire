@@ -91,6 +91,24 @@ impl<T: EncodeTarget> Encoder<T> {
         self.target.write_slice(&value.to_be_bytes())
     }
 
+    /// Writes an IEEE-754 double in big-endian byte order.
+    #[inline]
+    pub fn write_float64(&mut self, value: f64) -> Result<(), EncodeError> {
+        self.target.write_slice(&value.to_be_bytes())
+    }
+
+    /// Writes a raw byte slice with no length prefix.
+    ///
+    /// This is the encode-side escape hatch: a downstream primitive (records or
+    /// a future codec) that has already framed its own bytes emits them through
+    /// here. The encoder adds no length, so the caller owns any prefix the wire
+    /// format requires. Every higher-level writer that needs raw output routes
+    /// through this method so the sizing and buffer targets stay on one path.
+    #[inline]
+    pub fn write_raw_slice(&mut self, bytes: &[u8]) -> Result<(), EncodeError> {
+        self.target.write_slice(bytes)
+    }
+
     /// Writes an unsigned Kafka varint.
     #[inline]
     pub fn write_unsigned_varint(&mut self, mut value: u32) -> Result<(), EncodeError> {
@@ -151,22 +169,6 @@ impl<T: EncodeTarget> Encoder<T> {
         }
     }
 
-    /// Writes a legacy non-null array length.
-    pub fn write_array_len(&mut self, length: usize) -> Result<(), EncodeError> {
-        let length = i32::try_from(length).map_err(|_| EncodeError::LengthOverflow {
-            kind: "array",
-            length,
-            maximum: usize::try_from(i32::MAX).unwrap_or(usize::MAX),
-        })?;
-        self.write_i32(length)
-    }
-
-    /// Writes a compact non-null array length.
-    pub fn write_compact_array_len(&mut self, length: usize) -> Result<(), EncodeError> {
-        let length = compact_length(length, "compact array")?;
-        self.write_unsigned_varint(length)
-    }
-
     /// Writes unknown tagged fields in their validated order.
     pub fn write_tagged_fields(&mut self, fields: &TaggedFields) -> Result<(), EncodeError> {
         let count = u32::try_from(fields.len()).map_err(|_| EncodeError::LengthOverflow {
@@ -192,7 +194,7 @@ impl<T: EncodeTarget> Encoder<T> {
     }
 }
 
-fn compact_length(length: usize, kind: &'static str) -> Result<u32, EncodeError> {
+pub(super) fn compact_length(length: usize, kind: &'static str) -> Result<u32, EncodeError> {
     let length = u32::try_from(length).map_err(|_| EncodeError::LengthOverflow {
         kind,
         length,

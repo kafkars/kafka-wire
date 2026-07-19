@@ -89,6 +89,18 @@ impl Decoder {
         }
     }
 
+    /// Reads exactly `count` raw bytes, bounded by the unread remainder.
+    ///
+    /// This is the decode-side escape hatch: a downstream primitive (records or
+    /// a future codec) claims a run of bytes it will frame itself. The returned
+    /// `Bytes` is a zero-copy slice of the input cursor, and `count` is checked
+    /// against the bytes that remain before slicing, so a peer cannot drive a
+    /// read past the frame it sent.
+    #[inline]
+    pub fn take_bytes(&mut self, count: usize) -> Result<Bytes, DecodeError> {
+        self.take(count)
+    }
+
     #[inline]
     pub(super) fn take(&mut self, length: usize) -> Result<Bytes, DecodeError> {
         let remaining = self.input.len();

@@ -9,9 +9,11 @@ mod decode;
 mod encode;
 mod string;
 mod tagged;
+mod uuid;
 
 pub use api::{ApiKey, ApiVersion, VersionRange};
 pub use decode::{DecodeError, DecodeLimits, Decoder, KafkaDecode};
 pub use encode::{BufferTarget, EncodeError, EncodeTarget, Encoder, KafkaEncode, SizeTarget};
 pub use string::StrBytes;
 pub use tagged::{TaggedField, TaggedFields, TaggedFieldsError};
+pub use uuid::Uuid;

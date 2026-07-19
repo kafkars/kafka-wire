@@ -59,6 +59,15 @@ impl Decoder {
         ]))
     }
 
+    /// Reads an IEEE-754 double from eight big-endian bytes.
+    #[inline]
+    pub fn read_float64(&mut self) -> Result<f64, DecodeError> {
+        let bytes = self.take(8)?;
+        Ok(f64::from_be_bytes([
+            bytes[0], bytes[1], bytes[2], bytes[3], bytes[4], bytes[5], bytes[6], bytes[7],
+        ]))
+    }
+
     /// Reads an unsigned Kafka varint.
     #[inline]
     pub fn read_unsigned_varint(&mut self) -> Result<u32, DecodeError> {
