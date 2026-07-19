@@ -1,0 +1,82 @@
+{
+  "schema": 1,
+  "message": "DeleteGroupsResponse",
+  "api_key": 42,
+  "direction": "response",
+  "valid_versions": [
+    0,
+    1,
+    2,
+    3
+  ],
+  "flexible_versions": [
+    2,
+    3
+  ],
+  "source": "DeleteGroupsResponse.json",
+  "cases": [
+    {
+      "name": "mixed_results_legacy",
+      "why": "The nested result struct in the legacy regime.",
+      "versions": [
+        0,
+        1
+      ],
+      "json_value": {
+        "throttleTimeMs": 0,
+        "results": [
+          {
+            "groupId": "g1",
+            "errorCode": 0
+          },
+          {
+            "groupId": "g2",
+            "errorCode": 69
+          }
+        ]
+      }
+    },
+    {
+      "name": "mixed_results_flexible",
+      "why": "The same nesting where every struct also carries its own tagged-field section.",
+      "versions": [
+        2
+      ],
+      "json_value": {
+        "throttleTimeMs": 250,
+        "results": [
+          {
+            "groupId": "g1",
+            "errorCode": 0
+          },
+          {
+            "groupId": "g2",
+            "errorCode": 69
+          }
+        ]
+      }
+    },
+    {
+      "name": "v3_error_message_present",
+      "why": "v3 adds ErrorMessage to the nested result struct; the converter requires it for the version it writes, and its nullability is the encoding decision v3 introduces.",
+      "versions": [
+        3
+      ],
+      "json_value": {
+        "throttleTimeMs": 0,
+        "results": [
+          {
+            "groupId": "g1",
+            "errorCode": 0,
+            "errorMessage": null
+          },
+          {
+            "groupId": "g2",
+            "errorCode": 69,
+            "errorMessage": "group is not empty"
+          }
+        ]
+      }
+    }
+  ]
+}

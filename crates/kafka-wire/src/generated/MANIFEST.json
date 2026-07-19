@@ -6,16 +6,28 @@
   "upstream_commit": "678c0e07e4733c5a592e52046dc2c4e1625587f1",
   "files": [
     {
+      "path": "add_raft_voter.rs",
+      "sha256": "98a5d1cf5c31569dd657647f59d361ce1c96ef19617bad5c29be604575bc644a"
+    },
+    {
       "path": "api_versions.rs",
       "sha256": "043bd5715803fef1514bbafb01e04f97f8b5437625fbf63a62d251e8f43dd415"
     },
     {
+      "path": "delete_groups.rs",
+      "sha256": "bc2dd9229ae0caa9693208f42b26b12ac907708771d88e5bb2669ef33744420a"
+    },
+    {
       "path": "mod.rs",
-      "sha256": "f3849ea385cb689740635c7f1a53f4523700a01f9cbce91f9106096544ae3ac8"
+      "sha256": "e63fb56463b794d59f399a92b3b48754024b2cf61c8cc8abf6ac555c6e22c42b"
+    },
+    {
+      "path": "offset_delete.rs",
+      "sha256": "19eab189ed9079f82bc3c8fd7335bd286ef1098be2cc21fc08f5f4cc2c5c082f"
     },
     {
       "path": "registry.rs",
-      "sha256": "e63939a49e51f54a7e7e8a0621fad01c5b31ee7e1b6c562281208495f1182882"
+      "sha256": "03082af7d2a72c0fb1f435794f8f2f5bdb8c5be34f17d9d0759598a854f85298"
     },
     {
       "path": "sasl_handshake.rs",

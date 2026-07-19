@@ -1,0 +1,45 @@
+{
+  "schema": 1,
+  "vectors": [
+    {
+      "name": "zero_uuid_sentinel",
+      "why": "The all-zero UUID is the conventional unset sentinel and must still occupy sixteen bytes.",
+      "message": "AddRaftVoterRequest",
+      "api_key": 80,
+      "direction": "request",
+      "version": 0,
+      "flexible": true,
+      "json_value": {
+        "clusterId": null,
+        "listeners": [],
+        "timeoutMs": 30000,
+        "voterDirectoryId": "AAAAAAAAAAAAAAAAAAAAAA",
+        "voterId": 1
+      },
+      "hex": "000000753000000001000000000000000000000000000000000100"
+    },
+    {
+      "name": "real_uuid_and_listeners",
+      "why": "A non-zero UUID plus a nested listener array, the shape a controller actually sends.",
+      "message": "AddRaftVoterRequest",
+      "api_key": 80,
+      "direction": "request",
+      "version": 0,
+      "flexible": true,
+      "json_value": {
+        "clusterId": "cluster-1",
+        "listeners": [
+          {
+            "host": "broker-1.example.com",
+            "name": "CONTROLLER",
+            "port": 9093
+          }
+        ],
+        "timeoutMs": 30000,
+        "voterDirectoryId": "MkU3OEVGRjRDMTk0M0Q2OA",
+        "voterId": 2
+      },
+      "hex": "0a636c75737465722d31000075300000000232453738454646344331393433443638020b434f4e54524f4c4c45521562726f6b65722d312e6578616d706c652e636f6d23850000"
+    }
+  ]
+}

@@ -34,12 +34,12 @@ status = "pending"
 [[kafka.files]]
 path = "AddRaftVoterRequest.json"
 sha256 = "87864c1ff7c35c695985adb362092108c196185b7f5011b4089ec84b0331ac40"
-status = "pending"
+status = "enabled"
 
 [[kafka.files]]
 path = "AddRaftVoterResponse.json"
 sha256 = "b1c9fcebf6c11392b9d627b1369a5c41da6e275300f6e06b85320bed240ddbf5"
-status = "pending"
+status = "enabled"
 
 [[kafka.files]]
 path = "AllocateProducerIdsRequest.json"
@@ -284,12 +284,12 @@ status = "pending"
 [[kafka.files]]
 path = "DeleteGroupsRequest.json"
 sha256 = "a0a6939c3be99a93825870e22a2513e0ccd533f9283eacc1edeee9e44ee0770a"
-status = "pending"
+status = "enabled"
 
 [[kafka.files]]
 path = "DeleteGroupsResponse.json"
 sha256 = "ef48fe4b4d03a886cd2de420b194bcf2c6822ffd456076771f0071e720187d35"
-status = "pending"
+status = "enabled"
 
 [[kafka.files]]
 path = "DeleteRecordsRequest.json"
@@ -709,12 +709,12 @@ status = "pending"
 [[kafka.files]]
 path = "OffsetDeleteRequest.json"
 sha256 = "9508470c5727082e6212e8ca43e6966a79874495ead10cf724824b5934ee2a39"
-status = "pending"
+status = "enabled"
 
 [[kafka.files]]
 path = "OffsetDeleteResponse.json"
 sha256 = "ea99e5b080ad9ed6b56d19e9e749b9a4e5c37dbcd6aa69a663e97ff9fc7a1656"
-status = "pending"
+status = "enabled"
 
 [[kafka.files]]
 path = "OffsetFetchRequest.json"

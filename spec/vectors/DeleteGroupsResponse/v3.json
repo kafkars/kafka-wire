@@ -1,0 +1,30 @@
+{
+  "schema": 1,
+  "vectors": [
+    {
+      "name": "v3_error_message_present",
+      "why": "v3 adds ErrorMessage to the nested result struct; the converter requires it for the version it writes, and its nullability is the encoding decision v3 introduces.",
+      "message": "DeleteGroupsResponse",
+      "api_key": 42,
+      "direction": "response",
+      "version": 3,
+      "flexible": true,
+      "json_value": {
+        "results": [
+          {
+            "errorCode": 0,
+            "errorMessage": null,
+            "groupId": "g1"
+          },
+          {
+            "errorCode": 69,
+            "errorMessage": "group is not empty",
+            "groupId": "g2"
+          }
+        ],
+        "throttleTimeMs": 0
+      },
+      "hex": "00000000030367310000000003673200451367726f7570206973206e6f7420656d7074790000"
+    }
+  ]
+}

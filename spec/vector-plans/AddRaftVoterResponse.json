@@ -1,0 +1,43 @@
+{
+  "schema": 1,
+  "message": "AddRaftVoterResponse",
+  "api_key": 80,
+  "direction": "response",
+  "valid_versions": [
+    0,
+    1
+  ],
+  "flexible_versions": [
+    0,
+    1
+  ],
+  "source": "AddRaftVoterResponse.json",
+  "cases": [
+    {
+      "name": "success",
+      "why": "The ordinary success response in a fully flexible message.",
+      "versions": [
+        0,
+        1
+      ],
+      "json_value": {
+        "throttleTimeMs": 0,
+        "errorCode": 0,
+        "errorMessage": null
+      }
+    },
+    {
+      "name": "error_with_message",
+      "why": "A nullable string carrying a value, distinct from the null case above.",
+      "versions": [
+        0,
+        1
+      ],
+      "json_value": {
+        "throttleTimeMs": 0,
+        "errorCode": 81,
+        "errorMessage": "voter already present"
+      }
+    }
+  ]
+}

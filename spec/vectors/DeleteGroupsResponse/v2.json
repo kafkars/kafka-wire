@@ -1,0 +1,28 @@
+{
+  "schema": 1,
+  "vectors": [
+    {
+      "name": "mixed_results_flexible",
+      "why": "The same nesting where every struct also carries its own tagged-field section.",
+      "message": "DeleteGroupsResponse",
+      "api_key": 42,
+      "direction": "response",
+      "version": 2,
+      "flexible": true,
+      "json_value": {
+        "results": [
+          {
+            "errorCode": 0,
+            "groupId": "g1"
+          },
+          {
+            "errorCode": 69,
+            "groupId": "g2"
+          }
+        ],
+        "throttleTimeMs": 250
+      },
+      "hex": "000000fa0303673100000003673200450000"
+    }
+  ]
+}

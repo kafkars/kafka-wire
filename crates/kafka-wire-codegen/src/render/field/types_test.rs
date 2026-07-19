@@ -221,7 +221,7 @@ fn defaults() -> Vec<DefaultCell> {
             ty: FieldType::Bool,
             default: DefaultValue::Bool(false),
             initializer: "false",
-            non_default: "self.probe != false",
+            non_default: "self.probe",
             derivable: true,
             nullable: false,
         },

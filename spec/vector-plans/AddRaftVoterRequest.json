@@ -1,0 +1,87 @@
+{
+  "schema": 1,
+  "message": "AddRaftVoterRequest",
+  "api_key": 80,
+  "direction": "request",
+  "valid_versions": [
+    0,
+    1
+  ],
+  "flexible_versions": [
+    0,
+    1
+  ],
+  "source": "AddRaftVoterRequest.json",
+  "cases": [
+    {
+      "name": "zero_uuid_sentinel",
+      "why": "The all-zero UUID is the conventional unset sentinel and must still occupy sixteen bytes.",
+      "versions": [
+        0
+      ],
+      "json_value": {
+        "clusterId": null,
+        "timeoutMs": 30000,
+        "voterId": 1,
+        "voterDirectoryId": "AAAAAAAAAAAAAAAAAAAAAA",
+        "listeners": []
+      }
+    },
+    {
+      "name": "real_uuid_and_listeners",
+      "why": "A non-zero UUID plus a nested listener array, the shape a controller actually sends.",
+      "versions": [
+        0
+      ],
+      "json_value": {
+        "clusterId": "cluster-1",
+        "timeoutMs": 30000,
+        "voterId": 2,
+        "voterDirectoryId": "MkU3OEVGRjRDMTk0M0Q2OA",
+        "listeners": [
+          {
+            "name": "CONTROLLER",
+            "host": "broker-1.example.com",
+            "port": 9093
+          }
+        ]
+      }
+    },
+    {
+      "name": "v1_ack_when_committed_true",
+      "why": "v1 adds AckWhenCommitted, whose protocol default is true; the converter requires it present for the version it writes.",
+      "versions": [
+        1
+      ],
+      "json_value": {
+        "clusterId": null,
+        "timeoutMs": 30000,
+        "voterId": 3,
+        "voterDirectoryId": "AAAAAAAAAAAAAAAAAAAAAA",
+        "listeners": [],
+        "ackWhenCommitted": true
+      }
+    },
+    {
+      "name": "v1_ack_when_committed_false",
+      "why": "The non-default value of the field v1 introduced, so its byte is asserted rather than assumed.",
+      "versions": [
+        1
+      ],
+      "json_value": {
+        "clusterId": "cluster-1",
+        "timeoutMs": 1000,
+        "voterId": 4,
+        "voterDirectoryId": "MkU3OEVGRjRDMTk0M0Q2OA",
+        "listeners": [
+          {
+            "name": "CONTROLLER",
+            "host": "h1",
+            "port": 9093
+          }
+        ],
+        "ackWhenCommitted": false
+      }
+    }
+  ]
+}

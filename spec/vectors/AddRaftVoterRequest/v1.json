@@ -1,0 +1,47 @@
+{
+  "schema": 1,
+  "vectors": [
+    {
+      "name": "v1_ack_when_committed_true",
+      "why": "v1 adds AckWhenCommitted, whose protocol default is true; the converter requires it present for the version it writes.",
+      "message": "AddRaftVoterRequest",
+      "api_key": 80,
+      "direction": "request",
+      "version": 1,
+      "flexible": true,
+      "json_value": {
+        "ackWhenCommitted": true,
+        "clusterId": null,
+        "listeners": [],
+        "timeoutMs": 30000,
+        "voterDirectoryId": "AAAAAAAAAAAAAAAAAAAAAA",
+        "voterId": 3
+      },
+      "hex": "00000075300000000300000000000000000000000000000000010100"
+    },
+    {
+      "name": "v1_ack_when_committed_false",
+      "why": "The non-default value of the field v1 introduced, so its byte is asserted rather than assumed.",
+      "message": "AddRaftVoterRequest",
+      "api_key": 80,
+      "direction": "request",
+      "version": 1,
+      "flexible": true,
+      "json_value": {
+        "ackWhenCommitted": false,
+        "clusterId": "cluster-1",
+        "listeners": [
+          {
+            "host": "h1",
+            "name": "CONTROLLER",
+            "port": 9093
+          }
+        ],
+        "timeoutMs": 1000,
+        "voterDirectoryId": "MkU3OEVGRjRDMTk0M0Q2OA",
+        "voterId": 4
+      },
+      "hex": "0a636c75737465722d31000003e80000000432453738454646344331393433443638020b434f4e54524f4c4c45520368312385000000"
+    }
+  ]
+}

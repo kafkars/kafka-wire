@@ -157,7 +157,7 @@ fn render_representability_checks(
         .fields
         .iter()
         .filter_map(|candidate| {
-            field::presence_condition(candidate, message)
+            field::absence_condition(candidate, message)
                 .filter(|_| !candidate.ignorable)
                 .map(|condition| (candidate, condition))
         })
@@ -170,7 +170,7 @@ fn render_representability_checks(
     rust.blank();
     for (candidate, condition) in conditional {
         rust.open(format!(
-            "if !({condition}) && {}",
+            "if {condition} && {}",
             field::non_default_condition(candidate, message)?
         ));
         rust.open("return Err(EncodeError::FieldNotRepresentable");

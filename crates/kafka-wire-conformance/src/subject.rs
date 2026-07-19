@@ -12,8 +12,9 @@
 
 use bytes::Bytes;
 use kafka_wire::{
-    ApiVersionsRequest, KafkaMessage, KafkaRequest, KafkaResponse, MessageDirection,
-    SaslHandshakeRequest, SaslHandshakeResponse,
+    AddRaftVoterRequest, AddRaftVoterResponse, ApiVersionsRequest, DeleteGroupsRequest,
+    DeleteGroupsResponse, KafkaMessage, KafkaRequest, KafkaResponse, MessageDirection,
+    OffsetDeleteRequest, OffsetDeleteResponse, SaslHandshakeRequest, SaslHandshakeResponse,
 };
 use kafka_wire_core::{ApiVersion, DecodeLimits, KafkaDecode, KafkaEncode, VersionRange};
 
@@ -22,16 +23,41 @@ use crate::json_value::{
     self, Fields, api_versions_request, sasl_handshake_request, sasl_handshake_response,
 };
 
-/// One generated message, held as the concrete type the vector names.
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub enum Subject {
-    /// `ApiVersions` request body.
-    ApiVersionsRequest(ApiVersionsRequest),
-    /// `SaslHandshake` request body.
-    SaslHandshakeRequest(SaslHandshakeRequest),
-    /// `SaslHandshake` response body.
-    SaslHandshakeResponse(SaslHandshakeResponse),
+/// Every message the corpus can judge, as one arm per generated type.
+///
+/// The arms are declared once here and expanded into the enum and into the
+/// decode, encode, facts, and flexibility dispatches below. Adding an enabled
+/// message is therefore a single line rather than five parallel edits that can
+/// disagree with one another.
+macro_rules! subjects {
+    ($mac:ident) => {
+        $mac! {
+            ApiVersionsRequest => Request,
+            SaslHandshakeRequest => Request,
+            SaslHandshakeResponse => Response,
+            OffsetDeleteRequest => Request,
+            OffsetDeleteResponse => Response,
+            DeleteGroupsRequest => Request,
+            DeleteGroupsResponse => Response,
+            AddRaftVoterRequest => Request,
+            AddRaftVoterResponse => Response,
+        }
+    };
 }
+
+macro_rules! declare_subject {
+    ($($name:ident => $direction:ident,)*) => {
+        /// One generated message, held as the concrete type the vector names.
+        #[derive(Clone, Debug, Eq, PartialEq)]
+        pub enum Subject {
+            $(
+                #[doc = concat!("`", stringify!($name), "` body.")]
+                $name($name),
+            )*
+        }
+    };
+}
+subjects!(declare_subject);
 
 /// Static protocol facts this repository generated for one message.
 #[derive(Clone, Copy, Debug)]
@@ -45,37 +71,51 @@ pub struct Facts {
 }
 
 /// Report what this repository believes about `message`.
-pub fn facts(message: &str) -> Result<Facts, String> {
-    match message {
-        "ApiVersionsRequest" => Ok(Facts {
-            api_key: <ApiVersionsRequest as KafkaRequest>::API_KEY.value(),
-            direction: MessageDirection::Request,
-            supported_versions: ApiVersionsRequest::SUPPORTED_VERSIONS,
-        }),
-        "SaslHandshakeRequest" => Ok(Facts {
-            api_key: <SaslHandshakeRequest as KafkaRequest>::API_KEY.value(),
-            direction: MessageDirection::Request,
-            supported_versions: SaslHandshakeRequest::SUPPORTED_VERSIONS,
-        }),
-        "SaslHandshakeResponse" => Ok(Facts {
-            api_key: <SaslHandshakeResponse as KafkaResponse>::API_KEY.value(),
-            direction: MessageDirection::Response,
-            supported_versions: SaslHandshakeResponse::SUPPORTED_VERSIONS,
-        }),
-        _ => Err(unknown(message)),
-    }
+macro_rules! declare_facts {
+    ($($name:ident => $direction:ident,)*) => {
+        /// Report what this repository believes about `message`.
+        pub fn facts(message: &str) -> Result<Facts, String> {
+            match message {
+                $(
+                    stringify!($name) => Ok(Facts {
+                        api_key: direction_api_key!($name, $direction),
+                        direction: MessageDirection::$direction,
+                        supported_versions: $name::SUPPORTED_VERSIONS,
+                    }),
+                )*
+                _ => Err(unknown(message)),
+            }
+        }
+    };
 }
 
-/// Report whether this repository encodes `message` flexibly at `version`.
-pub fn is_flexible(message: &str, version: i16) -> Result<bool, String> {
-    let version = ApiVersion::new(version);
-    match message {
-        "ApiVersionsRequest" => Ok(ApiVersionsRequest::is_flexible(version)),
-        "SaslHandshakeRequest" => Ok(SaslHandshakeRequest::is_flexible(version)),
-        "SaslHandshakeResponse" => Ok(SaslHandshakeResponse::is_flexible(version)),
-        _ => Err(unknown(message)),
-    }
+/// The API key constant lives on a different trait per direction.
+macro_rules! direction_api_key {
+    ($name:ident, Request) => {
+        <$name as KafkaRequest>::API_KEY.value()
+    };
+    ($name:ident, Response) => {
+        <$name as KafkaResponse>::API_KEY.value()
+    };
 }
+
+subjects!(declare_facts);
+
+/// Report whether this repository encodes `message` flexibly at `version`.
+macro_rules! declare_is_flexible {
+    ($($name:ident => $direction:ident,)*) => {
+        /// Report whether this repository encodes `message` flexibly at `version`.
+        pub fn is_flexible(message: &str, version: i16) -> Result<bool, String> {
+            let version = ApiVersion::new(version);
+            match message {
+                $(stringify!($name) => Ok($name::is_flexible(version)),)*
+                _ => Err(unknown(message)),
+            }
+        }
+    };
+}
+
+subjects!(declare_is_flexible);
 
 impl Subject {
     /// Build the message a vector describes from its canonical JSON value.
@@ -102,31 +142,32 @@ impl Subject {
     pub fn decode(message: &str, version: i16, bytes: Bytes) -> Result<Self, String> {
         let version = ApiVersion::new(version);
         let limits = DecodeLimits::default();
-        match message {
-            "ApiVersionsRequest" => ApiVersionsRequest::decode_from_bytes(bytes, version, limits)
-                .map(Self::ApiVersionsRequest),
-            "SaslHandshakeRequest" => {
-                SaslHandshakeRequest::decode_from_bytes(bytes, version, limits)
-                    .map(Self::SaslHandshakeRequest)
-            }
-            "SaslHandshakeResponse" => {
-                SaslHandshakeResponse::decode_from_bytes(bytes, version, limits)
-                    .map(Self::SaslHandshakeResponse)
-            }
-            other => return Err(unknown(other)),
+        macro_rules! declare_decode {
+            ($($name:ident => $direction:ident,)*) => {
+                match message {
+                    $(
+                        stringify!($name) => {
+                            $name::decode_from_bytes(bytes, version, limits).map(Self::$name)
+                        }
+                    )*
+                    other => return Err(unknown(other)),
+                }
+            };
         }
-        .map_err(|error| error.to_string())
+        subjects!(declare_decode).map_err(|error| error.to_string())
     }
 
     /// Encode this message at `version`.
     pub fn encode(&self, version: i16) -> Result<Bytes, String> {
         let version = ApiVersion::new(version);
-        match self {
-            Self::ApiVersionsRequest(message) => message.encode_to_bytes(version),
-            Self::SaslHandshakeRequest(message) => message.encode_to_bytes(version),
-            Self::SaslHandshakeResponse(message) => message.encode_to_bytes(version),
+        macro_rules! declare_encode {
+            ($($name:ident => $direction:ident,)*) => {
+                match self {
+                    $(Self::$name(message) => message.encode_to_bytes(version),)*
+                }
+            };
         }
-        .map_err(|error| error.to_string())
+        subjects!(declare_encode).map_err(|error| error.to_string())
     }
 }
 

@@ -1,0 +1,102 @@
+{
+  "schema": 1,
+  "vectors": [
+    {
+      "name": "empty_topic_array",
+      "why": "An empty legacy array is an int32 zero, not an absent field; it is the shape a nested-struct array must not confuse with null.",
+      "message": "OffsetDeleteRequest",
+      "api_key": 47,
+      "direction": "request",
+      "version": 0,
+      "flexible": false,
+      "json_value": {
+        "groupId": "g1",
+        "topics": []
+      },
+      "hex": "0002673100000000"
+    },
+    {
+      "name": "one_topic_one_partition",
+      "why": "The minimal nested case: an array of structs, each carrying its own array of structs.",
+      "message": "OffsetDeleteRequest",
+      "api_key": 47,
+      "direction": "request",
+      "version": 0,
+      "flexible": false,
+      "json_value": {
+        "groupId": "g1",
+        "topics": [
+          {
+            "name": "t1",
+            "partitions": [
+              {
+                "partitionIndex": 0
+              }
+            ]
+          }
+        ]
+      },
+      "hex": "0002673100000001000274310000000100000000"
+    },
+    {
+      "name": "two_topics_many_partitions",
+      "why": "Proves the inner array length is written per outer element rather than once for the message.",
+      "message": "OffsetDeleteRequest",
+      "api_key": 47,
+      "direction": "request",
+      "version": 0,
+      "flexible": false,
+      "json_value": {
+        "groupId": "consumer-group",
+        "topics": [
+          {
+            "name": "topic-a",
+            "partitions": [
+              {
+                "partitionIndex": 0
+              },
+              {
+                "partitionIndex": 1
+              },
+              {
+                "partitionIndex": 2
+              }
+            ]
+          },
+          {
+            "name": "topic-b",
+            "partitions": [
+              {
+                "partitionIndex": 7
+              }
+            ]
+          }
+        ]
+      },
+      "hex": "000e636f6e73756d65722d67726f7570000000020007746f7069632d61000000030000000000000001000000020007746f7069632d620000000100000007"
+    },
+    {
+      "name": "unicode_group_and_topic",
+      "why": "A legacy string length is a byte count, not a character count.",
+      "message": "OffsetDeleteRequest",
+      "api_key": 47,
+      "direction": "request",
+      "version": 0,
+      "flexible": false,
+      "json_value": {
+        "groupId": "grupo-café",
+        "topics": [
+          {
+            "name": "tópico-ü",
+            "partitions": [
+              {
+                "partitionIndex": 1
+              }
+            ]
+          }
+        ]
+      },
+      "hex": "000b677275706f2d636166c3a900000001000a74c3b37069636f2dc3bc0000000100000001"
+    }
+  ]
+}

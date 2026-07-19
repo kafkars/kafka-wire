@@ -23,9 +23,7 @@ pub(crate) fn read_expression(field: &Field, message: &Message) -> Result<String
         Encoding::VersionGated => {
             let compact = read_method(field, message, nullable, true)?;
             let legacy = read_method(field, message, nullable, false)?;
-            Ok(format!(
-                "if Self::is_flexible(version) {{ {compact} }} else {{ {legacy} }}"
-            ))
+            Ok(gate(&compact, &legacy))
         }
     }
 }
@@ -38,11 +36,22 @@ pub(crate) fn write_statement(field: &Field, message: &Message) -> Result<String
         Encoding::VersionGated => {
             let compact = write_method(field, message, nullable, true)?;
             let legacy = write_method(field, message, nullable, false)?;
-            Ok(format!(
-                "if Self::is_flexible(version) {{ {compact} }} else {{ {legacy} }}"
-            ))
+            Ok(gate(&compact, &legacy))
         }
     }
+}
+
+/// Emits the flexible/legacy choice, or just the one form when both agree.
+///
+/// A fixed-width type has one encoding on both sides of the boundary. Emitting
+/// the gate anyway produced two identical branches in generated source — dead
+/// branching that says a decision was made where none was, and that the lints
+/// applied to checked-in output reject outright.
+fn gate(compact: &str, legacy: &str) -> String {
+    if compact == legacy {
+        return compact.to_owned();
+    }
+    format!("if Self::is_flexible(version) {{ {compact} }} else {{ {legacy} }}")
 }
 
 /// Read expression and write statement for an array's own length prefix.
@@ -64,10 +73,8 @@ pub(crate) fn array_length_codec(field: &Field, message: &Message) -> (String, S
         Encoding::Compact => (compact_read.to_owned(), compact_write),
         Encoding::Legacy => (legacy_read.to_owned(), legacy_write),
         Encoding::VersionGated => (
-            format!("if Self::is_flexible(version) {{ {compact_read} }} else {{ {legacy_read} }}"),
-            format!(
-                "if Self::is_flexible(version) {{ {compact_write} }} else {{ {legacy_write} }}"
-            ),
+            gate(compact_read, legacy_read),
+            gate(&compact_write, &legacy_write),
         ),
     }
 }
@@ -89,10 +96,8 @@ fn nullable_array_length_codec(field: &Field, message: &Message) -> (String, Str
         Encoding::Compact => (compact_read.to_owned(), compact_write),
         Encoding::Legacy => (legacy_read.to_owned(), legacy_write),
         Encoding::VersionGated => (
-            format!("if Self::is_flexible(version) {{ {compact_read} }} else {{ {legacy_read} }}"),
-            format!(
-                "if Self::is_flexible(version) {{ {compact_write} }} else {{ {legacy_write} }}"
-            ),
+            gate(compact_read, legacy_read),
+            gate(&compact_write, &legacy_write),
         ),
     }
 }
@@ -101,16 +106,22 @@ fn nullable_array_length_codec(field: &Field, message: &Message) -> (String, Str
 ///
 /// The generated loop binds `value` by reference, so a `Copy` scalar is
 /// dereferenced at the call and a borrowed type is passed straight through.
-/// Element codecs carry no length prefix of their own, so unlike the scalar
-/// path this makes no compact/legacy choice: that decision belongs to the
-/// array's own length prefix.
+///
+/// A length-prefixed element carries its own prefix, and that prefix follows
+/// the message's encoding regime exactly as a top-level field's does: a string
+/// inside a compact array is a compact string. Apache Kafka's own bytes caught
+/// this — reading `02 03 6731 00` with a legacy element reader takes `0x0367`
+/// as an int16 length and asks for 871 bytes. Only fixed-width elements are
+/// regime-independent.
 pub(crate) fn element_codec(
     element: &FieldType,
     field: &Field,
     message: &Message,
 ) -> Result<(String, String), GenerationError> {
+    if let Some(pair) = length_prefixed_element(element, field, message) {
+        return Ok(pair);
+    }
     let pair = match element {
-        FieldType::String => ("decoder.read_string()?", "encoder.write_string(value)?;"),
         FieldType::Bool => ("decoder.read_bool()?", "encoder.write_bool(*value)?;"),
         FieldType::Int8 => ("decoder.read_i8()?", "encoder.write_i8(*value)?;"),
         FieldType::Int16 => ("decoder.read_i16()?", "encoder.write_i16(*value)?;"),
@@ -119,7 +130,6 @@ pub(crate) fn element_codec(
         FieldType::Int32 => ("decoder.read_i32()?", "encoder.write_i32(*value)?;"),
         FieldType::Int64 => ("decoder.read_i64()?", "encoder.write_i64(*value)?;"),
         FieldType::Uuid => ("decoder.read_uuid()?", "encoder.write_uuid(*value)?;"),
-        FieldType::Bytes => ("decoder.read_bytes()?", "encoder.write_bytes(value)?;"),
         FieldType::Struct(reference) => {
             return Ok((
                 format!("{}::decode(decoder, version)?", reference.rust_type()),
@@ -135,6 +145,37 @@ pub(crate) fn element_codec(
         }
     };
     Ok((pair.0.to_owned(), pair.1.to_owned()))
+}
+
+/// The regime-dependent codec for an element that carries its own length.
+fn length_prefixed_element(
+    element: &FieldType,
+    field: &Field,
+    message: &Message,
+) -> Option<(String, String)> {
+    let (compact_read, legacy_read, compact_write, legacy_write) = match element {
+        FieldType::String => (
+            "decoder.read_compact_string()?",
+            "decoder.read_string()?",
+            "encoder.write_compact_string(value)?;",
+            "encoder.write_string(value)?;",
+        ),
+        FieldType::Bytes => (
+            "decoder.read_compact_bytes()?",
+            "decoder.read_bytes()?",
+            "encoder.write_compact_bytes(value)?;",
+            "encoder.write_bytes(value)?;",
+        ),
+        _ => return None,
+    };
+    Some(match encoding_of(field, message) {
+        Encoding::Compact => (compact_read.to_owned(), compact_write.to_owned()),
+        Encoding::Legacy => (legacy_read.to_owned(), legacy_write.to_owned()),
+        Encoding::VersionGated => (
+            gate(compact_read, legacy_read),
+            gate(compact_write, legacy_write),
+        ),
+    })
 }
 
 /// Which length prefix a field uses across the versions it is present in.

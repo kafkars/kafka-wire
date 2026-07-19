@@ -120,7 +120,10 @@ pub(crate) fn non_default_condition(
     }
     match &field.default {
         DefaultValue::Null => Ok(format!("self.{name}.is_some()")),
-        DefaultValue::Bool(value) => Ok(format!("self.{name} != {value}")),
+        // `self.x != false` and `self.x != true` are a negation and an
+        // identity; the lints on checked-in output reject both spellings.
+        DefaultValue::Bool(false) => Ok(format!("self.{name}")),
+        DefaultValue::Bool(true) => Ok(format!("!self.{name}")),
         DefaultValue::Integer(value) => Ok(format!("self.{name} != {value}")),
         DefaultValue::String(value) if value.is_empty() => Ok(format!("!self.{name}.is_empty()")),
         DefaultValue::String(value) => Ok(format!("self.{name}.as_str() != {value:?}")),

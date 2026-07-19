@@ -1,0 +1,35 @@
+{
+  "schema": 1,
+  "vectors": [
+    {
+      "name": "success",
+      "why": "The ordinary success response in a fully flexible message.",
+      "message": "AddRaftVoterResponse",
+      "api_key": 80,
+      "direction": "response",
+      "version": 0,
+      "flexible": true,
+      "json_value": {
+        "errorCode": 0,
+        "errorMessage": null,
+        "throttleTimeMs": 0
+      },
+      "hex": "0000000000000000"
+    },
+    {
+      "name": "error_with_message",
+      "why": "A nullable string carrying a value, distinct from the null case above.",
+      "message": "AddRaftVoterResponse",
+      "api_key": 80,
+      "direction": "response",
+      "version": 0,
+      "flexible": true,
+      "json_value": {
+        "errorCode": 81,
+        "errorMessage": "voter already present",
+        "throttleTimeMs": 0
+      },
+      "hex": "00000000005116766f74657220616c72656164792070726573656e7400"
+    }
+  ]
+}

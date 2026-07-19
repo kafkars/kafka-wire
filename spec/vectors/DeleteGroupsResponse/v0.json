@@ -1,0 +1,28 @@
+{
+  "schema": 1,
+  "vectors": [
+    {
+      "name": "mixed_results_legacy",
+      "why": "The nested result struct in the legacy regime.",
+      "message": "DeleteGroupsResponse",
+      "api_key": 42,
+      "direction": "response",
+      "version": 0,
+      "flexible": false,
+      "json_value": {
+        "results": [
+          {
+            "errorCode": 0,
+            "groupId": "g1"
+          },
+          {
+            "errorCode": 69,
+            "groupId": "g2"
+          }
+        ],
+        "throttleTimeMs": 0
+      },
+      "hex": "0000000000000002000267310000000267320045"
+    }
+  ]
+}

@@ -1,0 +1,49 @@
+{
+  "schema": 1,
+  "vectors": [
+    {
+      "name": "top_level_error",
+      "why": "A failure carries the error at the top level with an empty topic array beneath it.",
+      "message": "OffsetDeleteResponse",
+      "api_key": 47,
+      "direction": "response",
+      "version": 0,
+      "flexible": false,
+      "json_value": {
+        "errorCode": 15,
+        "throttleTimeMs": 0,
+        "topics": []
+      },
+      "hex": "000f0000000000000000"
+    },
+    {
+      "name": "per_partition_errors",
+      "why": "Errors live on the innermost struct, so this walks the full nesting on the response side.",
+      "message": "OffsetDeleteResponse",
+      "api_key": 47,
+      "direction": "response",
+      "version": 0,
+      "flexible": false,
+      "json_value": {
+        "errorCode": 0,
+        "throttleTimeMs": 100,
+        "topics": [
+          {
+            "name": "t1",
+            "partitions": [
+              {
+                "errorCode": 0,
+                "partitionIndex": 0
+              },
+              {
+                "errorCode": 3,
+                "partitionIndex": 1
+              }
+            ]
+          }
+        ]
+      },
+      "hex": "000000000064000000010002743100000002000000000000000000010003"
+    }
+  ]
+}

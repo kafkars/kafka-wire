@@ -3,11 +3,26 @@
 //! Generated module facade for Apache Kafka commit
 //! `678c0e07e4733c5a592e52046dc2c4e1625587f1`.
 
+mod add_raft_voter;
 mod api_versions;
+mod delete_groups;
+mod offset_delete;
 mod registry;
 mod sasl_handshake;
 
+pub use add_raft_voter::{
+    ADD_RAFT_VOTER_REQUEST_DESCRIPTOR, ADD_RAFT_VOTER_RESPONSE_DESCRIPTOR, AddRaftVoterRequest,
+    AddRaftVoterResponse,
+};
 pub use api_versions::{API_VERSIONS_REQUEST_DESCRIPTOR, ApiVersionsRequest};
+pub use delete_groups::{
+    DELETE_GROUPS_REQUEST_DESCRIPTOR, DELETE_GROUPS_RESPONSE_DESCRIPTOR, DeleteGroupsRequest,
+    DeleteGroupsResponse,
+};
+pub use offset_delete::{
+    OFFSET_DELETE_REQUEST_DESCRIPTOR, OFFSET_DELETE_RESPONSE_DESCRIPTOR, OffsetDeleteRequest,
+    OffsetDeleteResponse,
+};
 pub use registry::MESSAGE_DESCRIPTORS;
 pub use sasl_handshake::{
     SASL_HANDSHAKE_REQUEST_DESCRIPTOR, SASL_HANDSHAKE_RESPONSE_DESCRIPTOR, SaslHandshakeRequest,

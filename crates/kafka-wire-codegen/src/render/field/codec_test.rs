@@ -241,24 +241,24 @@ fn every_supported_field_shape_emits_its_exact_codec_call() {
 }
 
 #[test]
-fn a_fixed_width_field_straddling_the_flexible_boundary_emits_a_tautological_gate() {
-    // int16 and int32 have one encoding on both sides of the boundary, but the
-    // regime is chosen before the type is consulted, so the gate is emitted
-    // anyway and both arms are identical. This is dead branching in generated
-    // source, not a wrong encoding. It is recorded rather than asserted away so
-    // that collapsing it later is a visible change to this file.
+fn a_fixed_width_field_straddling_the_flexible_boundary_emits_no_gate() {
+    // int16 and int32 have one encoding on both sides of the boundary. The
+    // regime is still chosen before the type is consulted, but a gate whose
+    // arms agree says a decision was made where none was, and the lints applied
+    // to checked-in output reject the identical branches outright. The
+    // collapse is asserted here so that reintroducing the gate is a visible
+    // change to this file.
     let probe = field("Probe", FieldType::Int32, "0+");
     let message = message(VALID, "3+", vec![probe]);
     let probe = &message.fields[0];
 
     assert_eq!(
         read_expression(probe, &message).unwrap_or_else(|error| panic!("{error}")),
-        "if Self::is_flexible(version) { decoder.read_i32()? } else { decoder.read_i32()? }"
+        "decoder.read_i32()?"
     );
     assert_eq!(
         write_statement(probe, &message).unwrap_or_else(|error| panic!("{error}")),
-        "if Self::is_flexible(version) { encoder.write_i32(self.probe)?; } \
-         else { encoder.write_i32(self.probe)?; }"
+        "encoder.write_i32(self.probe)?;"
     );
 }
 
