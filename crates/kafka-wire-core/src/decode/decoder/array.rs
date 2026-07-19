@@ -21,6 +21,7 @@ impl Decoder {
             offset,
         })?;
         Self::check_limit("array", length, self.limits.max_array_elements, offset)?;
+        self.check_element_count("array", length, offset)?;
         Ok(length)
     }
 
@@ -45,6 +46,7 @@ impl Decoder {
             self.limits.max_array_elements,
             offset,
         )?;
+        self.check_element_count("compact array", length, offset)?;
         Ok(length)
     }
 }

@@ -8,6 +8,7 @@ use thiserror::Error;
 use crate::{ApiVersion, VersionRange};
 
 /// Kafka wire encoding failure.
+#[non_exhaustive]
 #[derive(Clone, Debug, Error, Eq, PartialEq)]
 pub enum EncodeError {
     /// A generated message does not support the requested version.

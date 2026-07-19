@@ -8,6 +8,7 @@ use thiserror::Error;
 use crate::{ApiVersion, VersionRange};
 
 /// Kafka wire decoding failure.
+#[non_exhaustive]
 #[derive(Clone, Debug, Error, Eq, PartialEq)]
 pub enum DecodeError {
     /// A generated message does not support the requested version.
@@ -72,6 +73,22 @@ pub enum DecodeError {
         length: usize,
         /// Configured maximum.
         limit: usize,
+        /// Byte offset of the prefix.
+        offset: usize,
+    },
+
+    /// A claimed element count cannot be backed by the bytes that remain.
+    ///
+    /// Every array element and every tagged field occupies at least one wire
+    /// byte, so this rejects an unbacked count before it reaches a reservation.
+    #[error("{kind} count {count} exceeds the {remaining} bytes remaining at byte {offset}")]
+    CountExceedsFrame {
+        /// Kind of counted value.
+        kind: &'static str,
+        /// Claimed element count.
+        count: usize,
+        /// Unread bytes left after the prefix.
+        remaining: usize,
         /// Byte offset of the prefix.
         offset: usize,
     },

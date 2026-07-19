@@ -5,6 +5,7 @@ use super::Decoder;
 
 impl Decoder {
     /// Reads a Kafka boolean.
+    #[inline]
     pub fn read_bool(&mut self) -> Result<bool, DecodeError> {
         let offset = self.offset();
         match self.read_u8()? {
@@ -15,36 +16,42 @@ impl Decoder {
     }
 
     /// Reads a signed 8-bit integer.
+    #[inline]
     pub fn read_i8(&mut self) -> Result<i8, DecodeError> {
         let byte = self.read_u8()?;
         Ok(i8::from_be_bytes([byte]))
     }
 
     /// Reads a signed 16-bit integer.
+    #[inline]
     pub fn read_i16(&mut self) -> Result<i16, DecodeError> {
         let bytes = self.take(2)?;
         Ok(i16::from_be_bytes([bytes[0], bytes[1]]))
     }
 
     /// Reads an unsigned 16-bit integer.
+    #[inline]
     pub fn read_u16(&mut self) -> Result<u16, DecodeError> {
         let bytes = self.take(2)?;
         Ok(u16::from_be_bytes([bytes[0], bytes[1]]))
     }
 
     /// Reads a signed 32-bit integer.
+    #[inline]
     pub fn read_i32(&mut self) -> Result<i32, DecodeError> {
         let bytes = self.take(4)?;
         Ok(i32::from_be_bytes([bytes[0], bytes[1], bytes[2], bytes[3]]))
     }
 
     /// Reads an unsigned 32-bit integer.
+    #[inline]
     pub fn read_u32(&mut self) -> Result<u32, DecodeError> {
         let bytes = self.take(4)?;
         Ok(u32::from_be_bytes([bytes[0], bytes[1], bytes[2], bytes[3]]))
     }
 
     /// Reads a signed 64-bit integer.
+    #[inline]
     pub fn read_i64(&mut self) -> Result<i64, DecodeError> {
         let bytes = self.take(8)?;
         Ok(i64::from_be_bytes([
@@ -53,6 +60,7 @@ impl Decoder {
     }
 
     /// Reads an unsigned Kafka varint.
+    #[inline]
     pub fn read_unsigned_varint(&mut self) -> Result<u32, DecodeError> {
         let offset = self.offset();
         let mut value = 0_u32;
@@ -72,6 +80,7 @@ impl Decoder {
         Err(DecodeError::MalformedVarint { offset })
     }
 
+    #[inline]
     fn read_u8(&mut self) -> Result<u8, DecodeError> {
         let bytes = self.take(1)?;
         Ok(bytes[0])

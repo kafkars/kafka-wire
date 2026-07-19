@@ -25,21 +25,47 @@ pub trait KafkaEncode {
         Ok(encoder.len())
     }
 
+    /// Appends the encoded value to `buffer` and returns the bytes it wrote.
+    ///
+    /// The buffer may already hold earlier frames; a pipelining client reuses one
+    /// buffer for a size prefix, a request header, and a body. Only this value's
+    /// bytes are counted, so the predicted-versus-written self-check keeps
+    /// working across every message in the stream.
+    ///
+    /// On failure the buffer is truncated back to its previous length, so a
+    /// rejected message never leaves a partial frame behind for the next write.
+    fn encode_into(
+        &self,
+        buffer: &mut BytesMut,
+        version: ApiVersion,
+    ) -> Result<usize, EncodeError> {
+        let predicted = self.encoded_len(version)?;
+        let start = buffer.len();
+        buffer.reserve(predicted);
+
+        let written = {
+            let mut encoder = Encoder::new(buffer);
+            let outcome = self.encode(&mut encoder, version);
+            outcome.map(|()| encoder.len())
+        };
+
+        match written {
+            Ok(actual) if actual == predicted => Ok(actual),
+            Ok(actual) => {
+                buffer.truncate(start);
+                Err(EncodeError::SizeMismatch { predicted, actual })
+            }
+            Err(error) => {
+                buffer.truncate(start);
+                Err(error)
+            }
+        }
+    }
+
     /// Encodes the value into a newly allocated immutable byte buffer.
     fn encode_to_bytes(&self, version: ApiVersion) -> Result<Bytes, EncodeError> {
-        let predicted = self.encoded_len(version)?;
-        let mut buffer = BytesMut::with_capacity(predicted);
-
-        {
-            let mut encoder = Encoder::new(&mut buffer);
-            self.encode(&mut encoder, version)?;
-        }
-
-        let actual = buffer.len();
-        if actual != predicted {
-            return Err(EncodeError::SizeMismatch { predicted, actual });
-        }
-
+        let mut buffer = BytesMut::new();
+        self.encode_into(&mut buffer, version)?;
         Ok(buffer.freeze())
     }
 }

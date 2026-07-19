@@ -75,6 +75,7 @@ impl TaggedFields {
 }
 
 /// Tagged-field construction failure.
+#[non_exhaustive]
 #[derive(Clone, Debug, Error, Eq, PartialEq)]
 pub enum TaggedFieldsError {
     /// Two fields used the same numeric tag.

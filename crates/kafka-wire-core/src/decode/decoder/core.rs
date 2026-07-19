@@ -24,11 +24,13 @@ impl Decoder {
     }
 
     /// Returns the current byte offset.
+    #[inline]
     pub fn offset(&self) -> usize {
         self.initial_len - self.input.len()
     }
 
     /// Returns the unread byte count.
+    #[inline]
     pub fn remaining(&self) -> usize {
         self.input.len()
     }
@@ -61,6 +63,33 @@ impl Decoder {
         }
     }
 
+    /// Rejects a claimed element count that the unread bytes cannot back.
+    ///
+    /// Every array element and every tagged field occupies at least one wire
+    /// byte, so a count larger than the remainder of the frame is malformed
+    /// input no matter how `DecodeLimits` is configured. Rejecting it at the
+    /// prefix keeps a peer from driving a caller's `Vec::with_capacity` with a
+    /// length that no frame of this size could ever deliver.
+    pub(super) fn check_element_count(
+        &self,
+        kind: &'static str,
+        count: usize,
+        offset: usize,
+    ) -> Result<(), DecodeError> {
+        let remaining = self.remaining();
+        if count <= remaining {
+            Ok(())
+        } else {
+            Err(DecodeError::CountExceedsFrame {
+                kind,
+                count,
+                remaining,
+                offset,
+            })
+        }
+    }
+
+    #[inline]
     pub(super) fn take(&mut self, length: usize) -> Result<Bytes, DecodeError> {
         let remaining = self.input.len();
         if length > remaining {

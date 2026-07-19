@@ -20,6 +20,7 @@ impl Decoder {
             self.limits.max_tagged_fields,
             count_offset,
         )?;
+        self.check_element_count("tagged field count", count, count_offset)?;
 
         let mut fields = Vec::with_capacity(count);
         let mut previous = None;

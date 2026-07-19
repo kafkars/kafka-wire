@@ -34,52 +34,65 @@ impl Encoder<SizeTarget> {
 }
 
 impl<T: EncodeTarget> Encoder<T> {
-    /// Returns the number of bytes emitted so far.
+    /// Returns the number of bytes this encoder has emitted.
+    ///
+    /// Bytes the target already held when the encoder was created belong to an
+    /// earlier frame and are not counted.
+    #[inline]
     pub fn len(&self) -> usize {
         self.target.len()
     }
 
-    /// Returns whether no bytes have been emitted.
+    /// Returns whether this encoder has emitted no bytes.
+    #[inline]
     pub fn is_empty(&self) -> bool {
         self.target.is_empty()
     }
 
     /// Writes a Kafka boolean.
+    #[inline]
     pub fn write_bool(&mut self, value: bool) -> Result<(), EncodeError> {
         self.target.write_slice(&[u8::from(value)])
     }
 
     /// Writes a signed 8-bit integer.
+    #[inline]
     pub fn write_i8(&mut self, value: i8) -> Result<(), EncodeError> {
         self.target.write_slice(&value.to_be_bytes())
     }
 
     /// Writes a signed 16-bit integer.
+    #[inline]
     pub fn write_i16(&mut self, value: i16) -> Result<(), EncodeError> {
         self.target.write_slice(&value.to_be_bytes())
     }
 
     /// Writes an unsigned 16-bit integer.
+    #[inline]
     pub fn write_u16(&mut self, value: u16) -> Result<(), EncodeError> {
         self.target.write_slice(&value.to_be_bytes())
     }
 
     /// Writes a signed 32-bit integer.
+    #[inline]
     pub fn write_i32(&mut self, value: i32) -> Result<(), EncodeError> {
         self.target.write_slice(&value.to_be_bytes())
     }
 
     /// Writes an unsigned 32-bit integer.
+    #[inline]
     pub fn write_u32(&mut self, value: u32) -> Result<(), EncodeError> {
         self.target.write_slice(&value.to_be_bytes())
     }
 
     /// Writes a signed 64-bit integer.
+    #[inline]
     pub fn write_i64(&mut self, value: i64) -> Result<(), EncodeError> {
         self.target.write_slice(&value.to_be_bytes())
     }
 
     /// Writes an unsigned Kafka varint.
+    #[inline]
     pub fn write_unsigned_varint(&mut self, mut value: u32) -> Result<(), EncodeError> {
         let mut encoded = [0_u8; 5];
         let mut length = 0_usize;
