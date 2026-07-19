@@ -11,7 +11,7 @@
 //! deciding that the backend can compile a message is a separate reviewed edit.
 
 use std::{
-    collections::BTreeSet,
+    collections::{BTreeMap, BTreeSet},
     fs,
     path::{Path, PathBuf},
 };
@@ -21,6 +21,7 @@ use serde::Deserialize;
 use crate::{
     fetch::{self, Accept},
     protocol_lock::{ProtocolLock, SourceStatus, VendoredFile, digest},
+    upstream_name::{is_schema_file, plain_filename, repository_slug},
 };
 
 /// What one vendoring run changed on disk.
@@ -71,14 +72,7 @@ pub(crate) fn vendor(workspace: &Path) -> Result<VendorReport, String> {
         let path = destination.join(filename);
         fs::write(&path, &bytes)
             .map_err(|error| format!("could not write {}: {error}", path.display()))?;
-        files.push(VendoredFile {
-            sha256: digest(&bytes),
-            status: recorded
-                .get(filename.as_str())
-                .copied()
-                .unwrap_or(SourceStatus::Pending),
-            path: filename.clone(),
-        });
+        files.push(relock(filename, &bytes, &recorded));
     }
 
     let removed = prune(&destination, &filenames)?;
@@ -105,7 +99,15 @@ fn discover(slug: &str, commit: &str, message_root: &str) -> Result<Vec<String>,
         message_root.replace('/', "%2F")
     );
     let body = fetch::get(&url, Accept::GithubJson)?;
-    let listing: TreeListing = serde_json::from_slice(&body)
+    schema_filenames(&body, commit)
+}
+
+/// Sorted schema filenames named by one git-tree listing.
+///
+/// Split from the request above so every judgement about a listing is decidable
+/// without a network round trip, and therefore testable.
+pub(crate) fn schema_filenames(listing: &[u8], commit: &str) -> Result<Vec<String>, String> {
+    let listing: TreeListing = serde_json::from_slice(listing)
         .map_err(|error| format!("could not parse the message tree listing: {error}"))?;
 
     // A truncated listing would vendor a partial corpus and record it as if it
@@ -135,6 +137,25 @@ fn discover(slug: &str, commit: &str, message_root: &str) -> Result<Vec<String>,
     Ok(filenames)
 }
 
+/// Records one vendored file, carrying forward any status already reviewed.
+///
+/// A file upstream added since the last run has no recorded status and becomes
+/// `pending`: vendoring never promotes a message into the compiled set.
+pub(crate) fn relock(
+    filename: &str,
+    bytes: &[u8],
+    recorded: &BTreeMap<&str, SourceStatus>,
+) -> VendoredFile {
+    VendoredFile {
+        sha256: digest(bytes),
+        status: recorded
+            .get(filename)
+            .copied()
+            .unwrap_or(SourceStatus::Pending),
+        path: filename.to_owned(),
+    }
+}
+
 /// Removes vendored schema files the pinned commit no longer contains.
 fn prune(destination: &Path, expected: &[String]) -> Result<Vec<String>, String> {
     let expected = expected.iter().map(String::as_str).collect::<BTreeSet<_>>();
@@ -162,13 +183,6 @@ fn prune(destination: &Path, expected: &[String]) -> Result<Vec<String>, String>
     Ok(removed)
 }
 
-/// Whether a listing or directory entry names a JSON schema definition.
-fn is_schema_file(name: &str) -> bool {
-    Path::new(name)
-        .extension()
-        .is_some_and(|extension| extension.eq_ignore_ascii_case("json"))
-}
-
 /// Directory mirroring the pinned commit's message tree, named as upstream names it.
 fn vendored_message_root(workspace: &Path, lock: &ProtocolLock) -> Result<PathBuf, String> {
     let directory = Path::new(&lock.kafka.upstream_message_root)
@@ -184,41 +198,4 @@ fn vendored_message_root(workspace: &Path, lock: &ProtocolLock) -> Result<PathBu
         .join(&lock.kafka.vendored_root)
         .join(&lock.kafka.commit)
         .join(directory))
-}
-
-/// `owner/repo` for the pinned upstream repository URL.
-fn repository_slug(repository: &str) -> Result<String, String> {
-    let slug = repository
-        .trim_end_matches('/')
-        .strip_prefix("https://github.com/")
-        .ok_or_else(|| format!("kafka.repository is not a GitHub URL: {repository}"))?;
-    if slug.split('/').filter(|part| !part.is_empty()).count() == 2 {
-        Ok(slug.to_owned())
-    } else {
-        Err(format!("kafka.repository is not owner/repo: {repository}"))
-    }
-}
-
-/// Accepts a listing entry only if it is one ordinary, quotable filename.
-///
-/// The name becomes both a path component and a TOML string, so a separator, a
-/// traversal segment, or a quote is rejected here rather than escaped later.
-fn plain_filename(candidate: &str) -> Result<String, String> {
-    let ordinary = !candidate.is_empty()
-        && candidate != "."
-        && candidate != ".."
-        && Path::new(candidate)
-            .file_name()
-            .and_then(|name| name.to_str())
-            == Some(candidate)
-        && candidate
-            .chars()
-            .all(|character| character.is_ascii_graphic() && character != '"' && character != '\\');
-    if ordinary {
-        Ok(candidate.to_owned())
-    } else {
-        Err(format!(
-            "upstream listed an unusable schema filename: {candidate}"
-        ))
-    }
 }

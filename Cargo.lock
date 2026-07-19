@@ -118,6 +118,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "kafka-wire-conformance"
+version = "0.1.0"
+dependencies = [
+ "bytes",
+ "kafka-wire",
+ "kafka-wire-core",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "kafka-wire-core"
 version = "0.1.0"
 dependencies = [

@@ -1,0 +1,16 @@
+{
+  "schema": 1,
+  "vectors": [
+    {
+      "name": "absent_optional_fields",
+      "why": "Versions 0-2 predate every field; an empty JSON object must encode to an empty body, proving the version gate drops fields rather than defaulting them.",
+      "message": "ApiVersionsRequest",
+      "api_key": 18,
+      "direction": "request",
+      "version": 1,
+      "flexible": false,
+      "json_value": {},
+      "hex": ""
+    }
+  ]
+}

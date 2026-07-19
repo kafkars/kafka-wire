@@ -3,9 +3,23 @@
 mod cli;
 mod commands;
 mod fetch;
+mod probe;
 mod protocol_lock;
+mod upstream_name;
+mod vectors;
 mod vendor;
 mod workspace;
+
+#[cfg(test)]
+mod cli_test;
+#[cfg(test)]
+mod probe_test;
+#[cfg(test)]
+mod protocol_lock_test;
+#[cfg(test)]
+mod upstream_name_test;
+#[cfg(test)]
+mod vendor_test;
 
 use std::process::ExitCode;
 

@@ -1,6 +1,7 @@
 [workspace]
 members = [
     "crates/kafka-wire-codegen",
+    "crates/kafka-wire-conformance",
     "crates/kafka-wire",
     "crates/kafka-wire-schema",
     "crates/kafka-wire-core",

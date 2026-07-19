@@ -1,0 +1,22 @@
+[package]
+name = "kafka-wire-conformance"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+publish = false
+
+# This crate judges `kafka-wire` against bytes Apache Kafka authored. It is
+# deliberately a leaf: nothing depends on it, it is excluded from the workspace
+# default members, and it never appears in a consumer's dependency graph.
+
+[dependencies]
+bytes.workspace = true
+kafka-wire = { path = "../kafka-wire" }
+kafka-wire-core = { path = "../kafka-wire-core" }
+serde.workspace = true
+serde_json.workspace = true
+
+[lints]
+workspace = true

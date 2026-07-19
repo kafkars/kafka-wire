@@ -1,0 +1,44 @@
+schema = 1
+
+# Which Apache Kafka build authored the byte vectors under `spec/vectors/`.
+#
+# Every vector in this repository is produced by Kafka's own generated
+# `<Message>DataJsonConverter` and `MessageUtil`, not by the Rust encoder the
+# vectors judge. That is the whole point: a vector authored by the implementation
+# under test can only prove self-consistency, and a shared misreading between
+# encoder and test is invisible.
+#
+# `source_commit` MUST equal the commit pinned in `spec/protocol.lock`. The
+# vendored JSONC schemas and the oracle jar are generated from the same tree, so
+# any drift between the two locks means the oracle is answering questions about a
+# protocol definition this repository does not implement.
+#
+# A Maven release jar is NOT an acceptable substitute. The pinned commit is trunk
+# and is ahead of every release: it declares ApiVersionsRequest through version 5,
+# while the 4.0.0 release jar stops at version 4 with differently shaped fields.
+# Swapping in a release jar does not merely weaken the oracle, it invalidates it.
+
+[oracle]
+source_repository = "https://github.com/apache/kafka"
+source_commit = "678c0e07e4733c5a592e52046dc2c4e1625587f1"
+gradle_task = ":clients:jar"
+jar_name = "kafka-clients-4.4.0-SNAPSHOT.jar"
+jar_sha256 = "82a80dfc1e57e6e9b822955be5ddfb65a0a49c166fcc2e5b4babcea5af9bcaa5"
+jdk_version = "21.0.5"
+jdk_build = "Oracle GraalVM 21.0.5+9.1 (build 21.0.5+9-LTS-jvmci-23.1-b48)"
+
+# Kafka's build.gradle sets `preserveFileTimestamps = true` and
+# `reproducibleFileOrder = false`, so rebuilding this commit produces a jar with
+# the same classes and a different digest. `jar_sha256` therefore identifies one
+# artifact, not one source tree; `source_commit` is the claim that carries the
+# protocol meaning. A refresh against a differing digest fails deliberately so
+# that re-recording it is a decision rather than a side effect.
+jar_is_reproducible = false
+
+note = """
+`:clients:jar` is satisfied by `:clients:shadowJar` on this commit; the task \
+emits clients/build/libs/kafka-clients-4.4.0-SNAPSHOT.jar and skips the plain \
+`jar` task. Jackson is a compileOnly dependency of `clients` and is not bundled, \
+so KAFKA_ORACLE_CLASSPATH must supply jackson-databind, jackson-core, and \
+jackson-annotations from the same resolved compile classpath.
+"""

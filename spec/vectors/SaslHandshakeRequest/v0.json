@@ -1,0 +1,70 @@
+{
+  "schema": 1,
+  "vectors": [
+    {
+      "name": "plain",
+      "why": "The ordinary mechanism, and the repository's third hand-authored byte assertion.",
+      "message": "SaslHandshakeRequest",
+      "api_key": 17,
+      "direction": "request",
+      "version": 0,
+      "flexible": false,
+      "json_value": {
+        "mechanism": "PLAIN"
+      },
+      "hex": "0005504c41494e"
+    },
+    {
+      "name": "empty_mechanism",
+      "why": "A legacy empty string is a zero length prefix followed by nothing, which must not be confused with the -1 null prefix.",
+      "message": "SaslHandshakeRequest",
+      "api_key": 17,
+      "direction": "request",
+      "version": 0,
+      "flexible": false,
+      "json_value": {
+        "mechanism": ""
+      },
+      "hex": "0000"
+    },
+    {
+      "name": "scram_sha_512",
+      "why": "A longer ordinary mechanism name.",
+      "message": "SaslHandshakeRequest",
+      "api_key": 17,
+      "direction": "request",
+      "version": 0,
+      "flexible": false,
+      "json_value": {
+        "mechanism": "SCRAM-SHA-512"
+      },
+      "hex": "000d534352414d2d5348412d353132"
+    },
+    {
+      "name": "unicode_mechanism",
+      "why": "A 10-character, 20-byte mechanism: the legacy int16 prefix counts bytes.",
+      "message": "SaslHandshakeRequest",
+      "api_key": 17,
+      "direction": "request",
+      "version": 0,
+      "flexible": false,
+      "json_value": {
+        "mechanism": "café-日本語-🎉"
+      },
+      "hex": "0014636166c3a92de697a5e69cace8aa9e2df09f8e89"
+    },
+    {
+      "name": "mechanism_longer_than_a_single_byte_length",
+      "why": "A 300-byte mechanism needs both bytes of the int16 prefix (0x01 0x2c); a single-byte length would truncate it.",
+      "message": "SaslHandshakeRequest",
+      "api_key": 17,
+      "direction": "request",
+      "version": 0,
+      "flexible": false,
+      "json_value": {
+        "mechanism": "MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM"
+      },
+      "hex": "012c4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d"
+    }
+  ]
+}

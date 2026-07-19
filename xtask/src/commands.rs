@@ -4,17 +4,22 @@ use std::process::Command as Process;
 
 use kafka_wire_codegen::{GenerationMode, GeneratorConfig};
 
-use crate::{cli::Command, vendor, workspace};
+use crate::{
+    cli::{Command, CorpusMode},
+    probe, vectors, vendor, workspace,
+};
 
 pub(crate) fn run(command: Command) -> Result<(), String> {
     match command {
         Command::Vendor => vendor(),
         Command::Generate => generate(GenerationMode::Write),
         Command::GeneratedCheck => generate(GenerationMode::Check),
+        Command::GenerateAll(CorpusMode::CheckOnly) => generate_all(),
         Command::Verify => {
             generate(GenerationMode::Check)?;
             cargo(&["test", "-p", "xtask"])
         }
+        Command::Vectors(mode) => vectors::run(mode),
         Command::Doctor => doctor(),
     }
 }
@@ -47,10 +52,44 @@ fn generate(mode: GenerationMode) -> Result<(), String> {
     Ok(())
 }
 
+/// Renders the whole pinned corpus under `target/` and compiles it.
+///
+/// The report is printed before `cargo check` runs, because the two answers are
+/// independent: a schema the backend cannot render never reaches the compiler,
+/// and a schema it renders may still emit Rust that does not build. Both are
+/// work queues, and a failure in the second must not hide the first.
+fn generate_all() -> Result<(), String> {
+    let probe = probe::render(&workspace::root())?;
+
+    println!(
+        "rendered {} of {} pinned schemas into {} file(s), \
+         counting the module facade and registry",
+        probe.rendered,
+        probe.rendered + probe.refused,
+        probe.files
+    );
+    if probe.refused > 0 {
+        println!("{} schema(s) were not rendered:", probe.refused);
+        for (reason, files) in &probe.taxonomy {
+            println!("  {:>3}  {reason}", files.len());
+        }
+    }
+
+    println!(
+        "compiling the probe crate at {}",
+        probe.crate_root.display()
+    );
+    cargo_in(&probe.crate_root, &["check", "--quiet"])
+}
+
 fn cargo(arguments: &[&str]) -> Result<(), String> {
+    cargo_in(&workspace::root(), arguments)
+}
+
+fn cargo_in(directory: &std::path::Path, arguments: &[&str]) -> Result<(), String> {
     let status = Process::new("cargo")
         .args(arguments)
-        .current_dir(workspace::root())
+        .current_dir(directory)
         .status()
         .map_err(|error| format!("could not launch cargo: {error}"))?;
     if status.success() {
