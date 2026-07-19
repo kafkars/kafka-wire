@@ -1,0 +1,787 @@
+{
+  "schema": 1,
+  "message": "ApiVersionsRequest",
+  "api_key": 18,
+  "direction": "request",
+  "valid_versions": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5
+  ],
+  "flexible_versions": [
+    3,
+    4,
+    5
+  ],
+  "source": "ApiVersionsRequest.json",
+  "cases": [
+    {
+      "name": "absent_optional_fields",
+      "why": "Versions 0-2 predate every field; an empty JSON object must encode to an empty body, proving the version gate drops fields rather than defaulting them.",
+      "versions": [
+        0,
+        1,
+        2
+      ],
+      "json_value": {}
+    },
+    {
+      "name": "empty_client_identity",
+      "why": "Empty compact strings encode as the varint 1, not as a null and not as a zero-length legacy prefix.",
+      "versions": [
+        3,
+        4
+      ],
+      "json_value": {
+        "clientSoftwareName": "",
+        "clientSoftwareVersion": ""
+      }
+    },
+    {
+      "name": "empty_client_identity_v5",
+      "why": "The same empty strings once ClusterId and NodeId join the layout.",
+      "versions": [
+        5
+      ],
+      "json_value": {
+        "clientSoftwareName": "",
+        "clientSoftwareVersion": "",
+        "clusterId": null,
+        "nodeId": -1
+      }
+    },
+    {
+      "name": "named_client",
+      "why": "The ordinary case, and the vector the repository's first hand-authored byte assertion claimed.",
+      "versions": [
+        3,
+        4
+      ],
+      "json_value": {
+        "clientSoftwareName": "acme",
+        "clientSoftwareVersion": "1.0"
+      }
+    },
+    {
+      "name": "named_client_v5",
+      "why": "The v5 layout with a null ClusterId and the default NodeId of -1.",
+      "versions": [
+        5
+      ],
+      "json_value": {
+        "clientSoftwareName": "acme",
+        "clientSoftwareVersion": "1.0",
+        "clusterId": null,
+        "nodeId": -1
+      }
+    },
+    {
+      "name": "unicode_client_identity",
+      "why": "A 10-character, 20-byte identity: a length prefix counted in characters rather than UTF-8 bytes would be off by ten.",
+      "versions": [
+        3,
+        4
+      ],
+      "json_value": {
+        "clientSoftwareName": "café-日本語-🎉",
+        "clientSoftwareVersion": "café-日本語-🎉"
+      }
+    },
+    {
+      "name": "unicode_client_identity_v5",
+      "why": "The same multi-byte identity carried alongside a unicode cluster id.",
+      "versions": [
+        5
+      ],
+      "json_value": {
+        "clientSoftwareName": "café-日本語-🎉",
+        "clientSoftwareVersion": "café-日本語-🎉",
+        "clusterId": "café-日本語-🎉",
+        "nodeId": 3
+      }
+    },
+    {
+      "name": "present_cluster_id",
+      "why": "A non-null ClusterId distinguishes the nullable-string present case from the null case, which share no bytes.",
+      "versions": [
+        5
+      ],
+      "json_value": {
+        "clientSoftwareName": "acme",
+        "clientSoftwareVersion": "1.0",
+        "clusterId": "kafka-cluster-1",
+        "nodeId": 7
+      }
+    },
+    {
+      "name": "empty_cluster_id",
+      "why": "An empty ClusterId is not a null ClusterId: varint 1 against varint 0.",
+      "versions": [
+        5
+      ],
+      "json_value": {
+        "clientSoftwareName": "acme",
+        "clientSoftwareVersion": "1.0",
+        "clusterId": "",
+        "nodeId": 0
+      }
+    },
+    {
+      "name": "node_id_maximum",
+      "why": "int32 upper bound, big-endian.",
+      "versions": [
+        5
+      ],
+      "json_value": {
+        "clientSoftwareName": "acme",
+        "clientSoftwareVersion": "1.0",
+        "clusterId": null,
+        "nodeId": 2147483647
+      }
+    },
+    {
+      "name": "node_id_minimum",
+      "why": "int32 lower bound; a sign-extension or varint mistake shows here.",
+      "versions": [
+        5
+      ],
+      "json_value": {
+        "clientSoftwareName": "acme",
+        "clientSoftwareVersion": "1.0",
+        "clusterId": null,
+        "nodeId": -2147483648
+      }
+    },
+    {
+      "name": "compact_string_varint_below_boundary",
+      "why": "A 126-byte name encodes length 127: the largest single-byte varint.",
+      "versions": [
+        3,
+        4
+      ],
+      "json_value": {
+        "clientSoftwareName": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "clientSoftwareVersion": "1.0"
+      }
+    },
+    {
+      "name": "compact_string_varint_at_boundary",
+      "why": "A 127-byte name encodes length 128, the first two-byte varint (0x80 0x01). Before this corpus no test in the repository exercised a multi-byte varint.",
+      "versions": [
+        3,
+        4
+      ],
+      "json_value": {
+        "clientSoftwareName": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "clientSoftwareVersion": "1.0"
+      }
+    },
+    {
+      "name": "compact_string_varint_above_boundary",
+      "why": "A 128-byte name encodes length 129 (0x81 0x01), confirming the boundary was crossed rather than merely touched.",
+      "versions": [
+        3,
+        4
+      ],
+      "json_value": {
+        "clientSoftwareName": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "clientSoftwareVersion": "1.0"
+      }
+    },
+    {
+      "name": "compact_string_varint_at_boundary_v5",
+      "why": "The two-byte length varint in the widest layout, ahead of a nullable string and an int32.",
+      "versions": [
+        5
+      ],
+      "json_value": {
+        "clientSoftwareName": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "clientSoftwareVersion": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "clusterId": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+        "nodeId": 1
+      }
+    },
+    {
+      "name": "one_unknown_tagged_field",
+      "why": "A single unknown tag must survive re-encoding byte for byte; a broker forwards tags it does not understand.",
+      "versions": [
+        3,
+        4,
+        5
+      ],
+      "json_value": {
+        "clientSoftwareName": "acme",
+        "clientSoftwareVersion": "1.0",
+        "clusterId": null,
+        "nodeId": -1
+      },
+      "unknown_tagged_fields": [
+        {
+          "tag": 42,
+          "data_hex": "deadbeef"
+        }
+      ]
+    },
+    {
+      "name": "unknown_tagged_field_with_multibyte_tag_and_length",
+      "why": "Tag 1000 is a two-byte varint (0xe8 0x07) and a 200-byte payload is a two-byte length (0xc8 0x01): both varints in the tag header cross 0x80.",
+      "versions": [
+        3,
+        4,
+        5
+      ],
+      "json_value": {
+        "clientSoftwareName": "acme",
+        "clientSoftwareVersion": "1.0",
+        "clusterId": null,
+        "nodeId": -1
+      },
+      "unknown_tagged_fields": [
+        {
+          "tag": 1000,
+          "data_hex": "5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a"
+        }
+      ]
+    },
+    {
+      "name": "unknown_tagged_fields_crossing_the_count_boundary",
+      "why": "130 tagged fields make the tag COUNT a two-byte varint (0x82 0x01), and tags 128 and 129 make individual tags multi-byte too. This is the one count in these three messages that can cross 127 at all.",
+      "versions": [
+        3,
+        4,
+        5
+      ],
+      "json_value": {
+        "clientSoftwareName": "acme",
+        "clientSoftwareVersion": "1.0",
+        "clusterId": null,
+        "nodeId": -1
+      },
+      "unknown_tagged_fields": [
+        {
+          "tag": 0,
+          "data_hex": "00"
+        },
+        {
+          "tag": 1,
+          "data_hex": "01"
+        },
+        {
+          "tag": 2,
+          "data_hex": "02"
+        },
+        {
+          "tag": 3,
+          "data_hex": "03"
+        },
+        {
+          "tag": 4,
+          "data_hex": "04"
+        },
+        {
+          "tag": 5,
+          "data_hex": "05"
+        },
+        {
+          "tag": 6,
+          "data_hex": "06"
+        },
+        {
+          "tag": 7,
+          "data_hex": "07"
+        },
+        {
+          "tag": 8,
+          "data_hex": "08"
+        },
+        {
+          "tag": 9,
+          "data_hex": "09"
+        },
+        {
+          "tag": 10,
+          "data_hex": "0a"
+        },
+        {
+          "tag": 11,
+          "data_hex": "0b"
+        },
+        {
+          "tag": 12,
+          "data_hex": "0c"
+        },
+        {
+          "tag": 13,
+          "data_hex": "0d"
+        },
+        {
+          "tag": 14,
+          "data_hex": "0e"
+        },
+        {
+          "tag": 15,
+          "data_hex": "0f"
+        },
+        {
+          "tag": 16,
+          "data_hex": "10"
+        },
+        {
+          "tag": 17,
+          "data_hex": "11"
+        },
+        {
+          "tag": 18,
+          "data_hex": "12"
+        },
+        {
+          "tag": 19,
+          "data_hex": "13"
+        },
+        {
+          "tag": 20,
+          "data_hex": "14"
+        },
+        {
+          "tag": 21,
+          "data_hex": "15"
+        },
+        {
+          "tag": 22,
+          "data_hex": "16"
+        },
+        {
+          "tag": 23,
+          "data_hex": "17"
+        },
+        {
+          "tag": 24,
+          "data_hex": "18"
+        },
+        {
+          "tag": 25,
+          "data_hex": "19"
+        },
+        {
+          "tag": 26,
+          "data_hex": "1a"
+        },
+        {
+          "tag": 27,
+          "data_hex": "1b"
+        },
+        {
+          "tag": 28,
+          "data_hex": "1c"
+        },
+        {
+          "tag": 29,
+          "data_hex": "1d"
+        },
+        {
+          "tag": 30,
+          "data_hex": "1e"
+        },
+        {
+          "tag": 31,
+          "data_hex": "1f"
+        },
+        {
+          "tag": 32,
+          "data_hex": "20"
+        },
+        {
+          "tag": 33,
+          "data_hex": "21"
+        },
+        {
+          "tag": 34,
+          "data_hex": "22"
+        },
+        {
+          "tag": 35,
+          "data_hex": "23"
+        },
+        {
+          "tag": 36,
+          "data_hex": "24"
+        },
+        {
+          "tag": 37,
+          "data_hex": "25"
+        },
+        {
+          "tag": 38,
+          "data_hex": "26"
+        },
+        {
+          "tag": 39,
+          "data_hex": "27"
+        },
+        {
+          "tag": 40,
+          "data_hex": "28"
+        },
+        {
+          "tag": 41,
+          "data_hex": "29"
+        },
+        {
+          "tag": 42,
+          "data_hex": "2a"
+        },
+        {
+          "tag": 43,
+          "data_hex": "2b"
+        },
+        {
+          "tag": 44,
+          "data_hex": "2c"
+        },
+        {
+          "tag": 45,
+          "data_hex": "2d"
+        },
+        {
+          "tag": 46,
+          "data_hex": "2e"
+        },
+        {
+          "tag": 47,
+          "data_hex": "2f"
+        },
+        {
+          "tag": 48,
+          "data_hex": "30"
+        },
+        {
+          "tag": 49,
+          "data_hex": "31"
+        },
+        {
+          "tag": 50,
+          "data_hex": "32"
+        },
+        {
+          "tag": 51,
+          "data_hex": "33"
+        },
+        {
+          "tag": 52,
+          "data_hex": "34"
+        },
+        {
+          "tag": 53,
+          "data_hex": "35"
+        },
+        {
+          "tag": 54,
+          "data_hex": "36"
+        },
+        {
+          "tag": 55,
+          "data_hex": "37"
+        },
+        {
+          "tag": 56,
+          "data_hex": "38"
+        },
+        {
+          "tag": 57,
+          "data_hex": "39"
+        },
+        {
+          "tag": 58,
+          "data_hex": "3a"
+        },
+        {
+          "tag": 59,
+          "data_hex": "3b"
+        },
+        {
+          "tag": 60,
+          "data_hex": "3c"
+        },
+        {
+          "tag": 61,
+          "data_hex": "3d"
+        },
+        {
+          "tag": 62,
+          "data_hex": "3e"
+        },
+        {
+          "tag": 63,
+          "data_hex": "3f"
+        },
+        {
+          "tag": 64,
+          "data_hex": "40"
+        },
+        {
+          "tag": 65,
+          "data_hex": "41"
+        },
+        {
+          "tag": 66,
+          "data_hex": "42"
+        },
+        {
+          "tag": 67,
+          "data_hex": "43"
+        },
+        {
+          "tag": 68,
+          "data_hex": "44"
+        },
+        {
+          "tag": 69,
+          "data_hex": "45"
+        },
+        {
+          "tag": 70,
+          "data_hex": "46"
+        },
+        {
+          "tag": 71,
+          "data_hex": "47"
+        },
+        {
+          "tag": 72,
+          "data_hex": "48"
+        },
+        {
+          "tag": 73,
+          "data_hex": "49"
+        },
+        {
+          "tag": 74,
+          "data_hex": "4a"
+        },
+        {
+          "tag": 75,
+          "data_hex": "4b"
+        },
+        {
+          "tag": 76,
+          "data_hex": "4c"
+        },
+        {
+          "tag": 77,
+          "data_hex": "4d"
+        },
+        {
+          "tag": 78,
+          "data_hex": "4e"
+        },
+        {
+          "tag": 79,
+          "data_hex": "4f"
+        },
+        {
+          "tag": 80,
+          "data_hex": "50"
+        },
+        {
+          "tag": 81,
+          "data_hex": "51"
+        },
+        {
+          "tag": 82,
+          "data_hex": "52"
+        },
+        {
+          "tag": 83,
+          "data_hex": "53"
+        },
+        {
+          "tag": 84,
+          "data_hex": "54"
+        },
+        {
+          "tag": 85,
+          "data_hex": "55"
+        },
+        {
+          "tag": 86,
+          "data_hex": "56"
+        },
+        {
+          "tag": 87,
+          "data_hex": "57"
+        },
+        {
+          "tag": 88,
+          "data_hex": "58"
+        },
+        {
+          "tag": 89,
+          "data_hex": "59"
+        },
+        {
+          "tag": 90,
+          "data_hex": "5a"
+        },
+        {
+          "tag": 91,
+          "data_hex": "5b"
+        },
+        {
+          "tag": 92,
+          "data_hex": "5c"
+        },
+        {
+          "tag": 93,
+          "data_hex": "5d"
+        },
+        {
+          "tag": 94,
+          "data_hex": "5e"
+        },
+        {
+          "tag": 95,
+          "data_hex": "5f"
+        },
+        {
+          "tag": 96,
+          "data_hex": "60"
+        },
+        {
+          "tag": 97,
+          "data_hex": "61"
+        },
+        {
+          "tag": 98,
+          "data_hex": "62"
+        },
+        {
+          "tag": 99,
+          "data_hex": "63"
+        },
+        {
+          "tag": 100,
+          "data_hex": "64"
+        },
+        {
+          "tag": 101,
+          "data_hex": "65"
+        },
+        {
+          "tag": 102,
+          "data_hex": "66"
+        },
+        {
+          "tag": 103,
+          "data_hex": "67"
+        },
+        {
+          "tag": 104,
+          "data_hex": "68"
+        },
+        {
+          "tag": 105,
+          "data_hex": "69"
+        },
+        {
+          "tag": 106,
+          "data_hex": "6a"
+        },
+        {
+          "tag": 107,
+          "data_hex": "6b"
+        },
+        {
+          "tag": 108,
+          "data_hex": "6c"
+        },
+        {
+          "tag": 109,
+          "data_hex": "6d"
+        },
+        {
+          "tag": 110,
+          "data_hex": "6e"
+        },
+        {
+          "tag": 111,
+          "data_hex": "6f"
+        },
+        {
+          "tag": 112,
+          "data_hex": "70"
+        },
+        {
+          "tag": 113,
+          "data_hex": "71"
+        },
+        {
+          "tag": 114,
+          "data_hex": "72"
+        },
+        {
+          "tag": 115,
+          "data_hex": "73"
+        },
+        {
+          "tag": 116,
+          "data_hex": "74"
+        },
+        {
+          "tag": 117,
+          "data_hex": "75"
+        },
+        {
+          "tag": 118,
+          "data_hex": "76"
+        },
+        {
+          "tag": 119,
+          "data_hex": "77"
+        },
+        {
+          "tag": 120,
+          "data_hex": "78"
+        },
+        {
+          "tag": 121,
+          "data_hex": "79"
+        },
+        {
+          "tag": 122,
+          "data_hex": "7a"
+        },
+        {
+          "tag": 123,
+          "data_hex": "7b"
+        },
+        {
+          "tag": 124,
+          "data_hex": "7c"
+        },
+        {
+          "tag": 125,
+          "data_hex": "7d"
+        },
+        {
+          "tag": 126,
+          "data_hex": "7e"
+        },
+        {
+          "tag": 127,
+          "data_hex": "7f"
+        },
+        {
+          "tag": 128,
+          "data_hex": "80"
+        },
+        {
+          "tag": 129,
+          "data_hex": "81"
+        }
+      ]
+    }
+  ]
+}

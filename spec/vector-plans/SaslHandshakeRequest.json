@@ -1,0 +1,69 @@
+{
+  "schema": 1,
+  "message": "SaslHandshakeRequest",
+  "api_key": 17,
+  "direction": "request",
+  "valid_versions": [
+    0,
+    1
+  ],
+  "flexible_versions": [],
+  "source": "SaslHandshakeRequest.json",
+  "cases": [
+    {
+      "name": "plain",
+      "why": "The ordinary mechanism, and the repository's third hand-authored byte assertion.",
+      "versions": [
+        0,
+        1
+      ],
+      "json_value": {
+        "mechanism": "PLAIN"
+      }
+    },
+    {
+      "name": "empty_mechanism",
+      "why": "A legacy empty string is a zero length prefix followed by nothing, which must not be confused with the -1 null prefix.",
+      "versions": [
+        0,
+        1
+      ],
+      "json_value": {
+        "mechanism": ""
+      }
+    },
+    {
+      "name": "scram_sha_512",
+      "why": "A longer ordinary mechanism name.",
+      "versions": [
+        0,
+        1
+      ],
+      "json_value": {
+        "mechanism": "SCRAM-SHA-512"
+      }
+    },
+    {
+      "name": "unicode_mechanism",
+      "why": "A 10-character, 20-byte mechanism: the legacy int16 prefix counts bytes.",
+      "versions": [
+        0,
+        1
+      ],
+      "json_value": {
+        "mechanism": "café-日本語-🎉"
+      }
+    },
+    {
+      "name": "mechanism_longer_than_a_single_byte_length",
+      "why": "A 300-byte mechanism needs both bytes of the int16 prefix (0x01 0x2c); a single-byte length would truncate it.",
+      "versions": [
+        0,
+        1
+      ],
+      "json_value": {
+        "mechanism": "MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM"
+      }
+    }
+  ]
+}
