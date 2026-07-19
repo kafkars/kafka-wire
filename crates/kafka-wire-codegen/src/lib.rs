@@ -5,12 +5,14 @@
 
 mod config;
 mod error;
+mod format;
 mod group;
 mod identity;
 mod lockfile;
 mod manifest;
 mod output;
 mod pipeline;
+mod provenance;
 mod render;
 mod source;
 

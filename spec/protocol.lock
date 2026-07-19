@@ -9,14 +9,17 @@ vendored_root = "spec/upstream/apache-kafka"
 [[kafka.files]]
 path = "ApiVersionsRequest.json"
 sha256 = "22d9d577e79f6088f3cc3a23f88bf7536021473f7ebbc1ccfe7ddd14035df18d"
+status = "enabled"
 
 [[kafka.files]]
 path = "SaslHandshakeRequest.json"
 sha256 = "2316215be78ce0bc79f5ce08f825cf317f3c104ac38ee609581454de7634df47"
+status = "enabled"
 
 [[kafka.files]]
 path = "SaslHandshakeResponse.json"
 sha256 = "a7aa00f2fa01ecf31674a39a243bd4d2d284c9cd1993ce6501f93b57c1f90ba9"
+status = "enabled"
 
 [generator]
 ir_version = 1

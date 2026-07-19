@@ -4,7 +4,7 @@ use std::collections::BTreeMap;
 
 use serde::Serialize;
 
-use crate::{GenerationError, source::hex_digest};
+use crate::{GenerationError, provenance::GENERATOR, source::hex_digest};
 
 /// JSON manifest checked beside generated Rust files.
 #[derive(Debug, Serialize)]
@@ -32,7 +32,7 @@ pub(crate) fn render_manifest(
 ) -> Result<String, GenerationError> {
     let manifest = GeneratedManifest {
         schema: 1,
-        generator: "kafka-wire-codegen 0.1.0",
+        generator: GENERATOR,
         ir_version,
         upstream_repository: repository.to_owned(),
         upstream_commit: commit.to_owned(),

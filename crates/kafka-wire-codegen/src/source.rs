@@ -1,11 +1,21 @@
 //! Locked source verification and schema-front-end invocation.
+//!
+//! Two obligations meet here and are deliberately kept apart. Every file pinned
+//! by `spec/protocol.lock` is byte verified against its recorded digest, so
+//! vendored drift fails generation regardless of what the backend can compile.
+//! Only an `enabled` file is then handed to the schema front end, so the
+//! vendored corpus may grow ahead of generation capability without breaking a
+//! green tree.
 
 use std::{fs, path::Path};
 
 use kafka_wire_schema::Message;
 use sha2::{Digest, Sha256};
 
-use crate::{GenerationError, lockfile::ProtocolLock};
+use crate::{
+    GenerationError,
+    lockfile::{ProtocolLock, SourceStatus},
+};
 
 /// Validated message paired with exact source provenance.
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -19,11 +29,14 @@ pub(crate) fn load_sources(
     workspace: &Path,
     lock: &ProtocolLock,
 ) -> Result<Vec<MessageSource>, GenerationError> {
-    let source_root = workspace
-        .join(&lock.kafka.vendored_root)
-        .join(&lock.kafka.commit)
-        .join("message");
-    let mut sources = Vec::with_capacity(lock.kafka.files.len());
+    let source_root = lock.kafka.vendored_message_root(workspace)?;
+    let enabled = lock
+        .kafka
+        .files
+        .iter()
+        .filter(|locked| locked.status == SourceStatus::Enabled)
+        .count();
+    let mut sources = Vec::with_capacity(enabled);
     for locked in &lock.kafka.files {
         let path = source_root.join(&locked.path);
         let bytes = fs::read(&path).map_err(|error| GenerationError::io(&path, error))?;
@@ -35,6 +48,11 @@ pub(crate) fn load_sources(
                 actual,
             });
         }
+
+        if locked.status == SourceStatus::Pending {
+            continue;
+        }
+
         let message = kafka_wire_schema::load_message(&path)?;
         sources.push(MessageSource {
             message,

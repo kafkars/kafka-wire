@@ -90,6 +90,27 @@ pub enum GenerationError {
         /// Unsupported construct.
         reason: String,
     },
+    /// The formatter that owns generated layout could not be launched.
+    #[error(
+        "could not run `{program}` to format generated Rust: {source}\n\
+         rustfmt owns generated layout; install it for the toolchain pinned in \
+         rust-toolchain.toml with `rustup component add rustfmt`, or set RUSTFMT to its path"
+    )]
+    FormatterUnavailable {
+        /// Formatter program that could not be launched.
+        program: String,
+        /// Spawn or pipe failure.
+        #[source]
+        source: io::Error,
+    },
+    /// The formatter rejected one rendered file.
+    #[error("rustfmt rejected generated {path}:\n{details}")]
+    Formatter {
+        /// Generated file name.
+        path: String,
+        /// Formatter exit status and diagnostics.
+        details: String,
+    },
     /// Generated manifest JSON serialization failed.
     #[error("could not serialize generated manifest: {0}")]
     Manifest(#[from] serde_json::Error),

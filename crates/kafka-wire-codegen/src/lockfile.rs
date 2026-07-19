@@ -1,8 +1,13 @@
 //! Deserialization and validation of the pinned protocol input contract.
+//!
+//! This module owns the reader half of `spec/protocol.lock`: the schema the
+//! generator will accept, the paths it will trust, and the per-file declaration
+//! of whether a pinned message is compiled or merely vendored. It deliberately
+//! owns no fetching and no writing; `xtask` owns the writer half.
 
 use std::{
     fs,
-    path::{Component, Path},
+    path::{Component, Path, PathBuf},
 };
 
 use serde::Deserialize;
@@ -32,6 +37,23 @@ pub(crate) struct KafkaLock {
 pub(crate) struct LockedFile {
     pub(crate) path: String,
     pub(crate) sha256: String,
+    pub(crate) status: SourceStatus,
+}
+
+/// Whether the backend compiles a pinned message or only pins its bytes.
+///
+/// Vendoring the upstream corpus and being able to generate from it are separate
+/// capabilities. `status` is the seam between them: every pinned file is byte
+/// verified, and only an `enabled` file is handed to the schema front end. There
+/// is no default — a new entry must state which of the two it is, so a message
+/// can never join or leave the compiled set by accident.
+#[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq)]
+#[serde(rename_all = "lowercase")]
+pub(crate) enum SourceStatus {
+    /// Parsed, lowered, validated, and rendered into checked-in Rust.
+    Enabled,
+    /// Vendored and hashed, but not yet within the backend's capability.
+    Pending,
 }
 
 /// Versioned compiler-model metadata.
@@ -57,10 +79,40 @@ impl ProtocolLock {
         )?;
         validate_relative_path("kafka.vendored_root", &lock.kafka.vendored_root)?;
         validate_relative_path("generator.output", &lock.generator.output)?;
+        lock.kafka.message_directory()?;
         for file in &lock.kafka.files {
             validate_plain_filename(&file.path)?;
         }
         Ok(lock)
+    }
+}
+
+impl KafkaLock {
+    /// Directory holding the vendored copy of the pinned message corpus.
+    ///
+    /// The vendored tree mirrors upstream's leaf directory under the pinned
+    /// commit, so `upstream_message_root` names both where the bytes came from
+    /// and what the local directory is called. Without this the configured
+    /// upstream path would be recorded and then ignored.
+    pub(crate) fn vendored_message_root(
+        &self,
+        workspace: &Path,
+    ) -> Result<PathBuf, GenerationError> {
+        Ok(workspace
+            .join(&self.vendored_root)
+            .join(&self.commit)
+            .join(self.message_directory()?))
+    }
+
+    /// Leaf directory name shared by the upstream and vendored message trees.
+    fn message_directory(&self) -> Result<&str, GenerationError> {
+        Path::new(&self.upstream_message_root)
+            .file_name()
+            .and_then(|name| name.to_str())
+            .ok_or_else(|| GenerationError::UnsafeConfiguredPath {
+                field: "kafka.upstream_message_root",
+                path: self.upstream_message_root.clone(),
+            })
     }
 }
 

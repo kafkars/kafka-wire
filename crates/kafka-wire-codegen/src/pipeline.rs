@@ -4,6 +4,7 @@ use std::collections::BTreeMap;
 
 use crate::{
     GenerationError, GenerationReport, GeneratorConfig,
+    format::format_rendered_rust,
     group::group_sources,
     lockfile::ProtocolLock,
     manifest::render_manifest,
@@ -18,21 +19,25 @@ pub fn generate(config: &GeneratorConfig) -> Result<GenerationReport, Generation
     let sources = load_sources(config.workspace_root(), &lock)?;
     let groups = group_sources(sources)?;
 
-    let mut files = BTreeMap::new();
+    let mut rendered = BTreeMap::new();
     for group in &groups {
-        files.insert(
+        rendered.insert(
             format!("{}.rs", group.module_name),
             render_api(group, &lock.kafka.commit)?,
         );
     }
-    files.insert(
+    rendered.insert(
         "mod.rs".to_owned(),
         render_module_file(&groups, &lock.kafka.commit),
     );
-    files.insert(
+    rendered.insert(
         "registry.rs".to_owned(),
         render_registry(&groups, &lock.kafka.commit),
     );
+
+    // Layout belongs to rustfmt, so the manifest must hash formatted bytes.
+    let mut files = format_rendered_rust(rendered, config.workspace_root())?;
+
     let manifest = render_manifest(
         &files,
         lock.generator.ir_version,
