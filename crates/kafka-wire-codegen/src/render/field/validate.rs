@@ -91,6 +91,7 @@ fn validate_fields(
             | FieldType::Int32
             | FieldType::Int64
             | FieldType::Uuid
+            | FieldType::Bytes
             | FieldType::Struct(_) => {}
             FieldType::Array(element) if is_supported_element(element) => {}
             other => {
@@ -123,6 +124,7 @@ fn is_supported_element(element: &FieldType) -> bool {
             | FieldType::Int32
             | FieldType::Int64
             | FieldType::Uuid
+            | FieldType::Bytes
             | FieldType::Struct(_)
     )
 }

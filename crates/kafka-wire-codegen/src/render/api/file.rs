@@ -1,5 +1,7 @@
 //! Complete-file orchestration, provenance, and import rendering for one API key.
 
+use kafka_wire_schema::FieldType;
+
 use crate::{GenerationError, group::ApiGroup, provenance::generated_banner};
 
 use super::{descriptor::render_descriptor, message::render_message};
@@ -69,7 +71,13 @@ fn render_imports(rust: &mut RustText, group: &ApiGroup) {
     }
     if group
         .messages()
-        .any(|source| field::uses_uuid(&source.message))
+        .any(|source| field::uses_type(&source.message, &FieldType::Bytes))
+    {
+        wire.push("Bytes");
+    }
+    if group
+        .messages()
+        .any(|source| field::uses_type(&source.message, &FieldType::Uuid))
     {
         wire.push("Uuid");
     }

@@ -86,6 +86,16 @@ fn declared_types() -> Vec<TypeCell> {
             declared: "Vec<i32>",
         },
         TypeCell {
+            ty: FieldType::Bytes,
+            nullable: false,
+            declared: "Bytes",
+        },
+        TypeCell {
+            ty: FieldType::Bytes,
+            nullable: true,
+            declared: "Option<Bytes>",
+        },
+        TypeCell {
             ty: struct_type("TopicData"),
             nullable: false,
             declared: "ProbeRequestTopicData",
@@ -119,7 +129,7 @@ fn a_type_outside_the_slice_fails_generation_instead_of_emitting_a_comment() {
     // so rustfmt would have caught it. The same placeholder in a default or a
     // comparison position is valid Rust, which is why all three go through the
     // same refusal.
-    for ty in [FieldType::Float64, FieldType::Bytes, FieldType::Records] {
+    for ty in [FieldType::Float64, FieldType::Records] {
         let probe = field("Probe", ty.clone(), "0+");
         let message = message(VALID, "none", vec![probe]);
         let error = rust_type(&message.fields[0], &message)

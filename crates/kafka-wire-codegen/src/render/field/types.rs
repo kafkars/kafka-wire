@@ -48,6 +48,7 @@ fn type_name(ty: &FieldType, field: &Field, message: &Message) -> Result<String,
         FieldType::Int32 => Ok("i32".to_owned()),
         FieldType::Int64 => Ok("i64".to_owned()),
         FieldType::Uuid => Ok("Uuid".to_owned()),
+        FieldType::Bytes => Ok("Bytes".to_owned()),
         FieldType::Struct(reference) => Ok(reference.rust_type().to_owned()),
         FieldType::Array(element) => Ok(format!("Vec<{}>", type_name(element, field, message)?)),
         other => Err(GenerationError::unsupported(
@@ -170,19 +171,28 @@ pub(crate) fn uses_rust_default(field: &Field) -> bool {
     ) || matches!(&field.default, DefaultValue::Null)
 }
 
-/// Whether any field this message emits carries a `Uuid`, directly or as an
-/// array element.
+/// Whether any field this message emits carries the named wire type, directly,
+/// as an array element, or inside a struct it declares.
 ///
-/// The file import list pulls `Uuid` in only when it is used, so a message
-/// built from integers and strings alone does not name a type it never writes.
-pub(crate) fn uses_uuid(message: &Message) -> bool {
-    message.fields.iter().any(|field| ty_uses_uuid(&field.ty))
+/// The file import list pulls a type in only when it is used, so a message
+/// built from integers and strings alone does not name one it never writes.
+pub(crate) fn uses_type(message: &Message, wanted: &FieldType) -> bool {
+    fields_use_type(&message.fields, wanted)
+        || message
+            .common_structs
+            .iter()
+            .any(|common| fields_use_type(&common.fields, wanted))
 }
 
-fn ty_uses_uuid(ty: &FieldType) -> bool {
+fn fields_use_type(fields: &[Field], wanted: &FieldType) -> bool {
+    fields
+        .iter()
+        .any(|field| ty_uses_type(&field.ty, wanted) || fields_use_type(&field.fields, wanted))
+}
+
+fn ty_uses_type(ty: &FieldType, wanted: &FieldType) -> bool {
     match ty {
-        FieldType::Uuid => true,
-        FieldType::Array(element) => ty_uses_uuid(element),
-        _ => false,
+        FieldType::Array(element) => ty_uses_type(element, wanted),
+        other => std::mem::discriminant(other) == std::mem::discriminant(wanted),
     }
 }

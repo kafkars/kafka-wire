@@ -96,6 +96,22 @@ fn table() -> Vec<Cell> {
                     encoder.write_compact_nullable_string(self.probe.as_ref())?; } \
                     else { encoder.write_nullable_string(self.probe.as_ref())?; }",
         },
+        Cell {
+            situation: "non-null bytes in a message with no flexible version",
+            ty: FieldType::Bytes,
+            nullable: false,
+            flexible: "none",
+            read: "decoder.read_bytes()?",
+            write: "encoder.write_bytes(&self.probe)?;",
+        },
+        Cell {
+            situation: "nullable bytes present only in flexible versions",
+            ty: FieldType::Bytes,
+            nullable: true,
+            flexible: "0+",
+            read: "decoder.read_compact_nullable_bytes()?",
+            write: "encoder.write_compact_nullable_bytes(self.probe.as_deref())?;",
+        },
     ]
 }
 
@@ -248,7 +264,7 @@ fn a_fixed_width_field_straddling_the_flexible_boundary_emits_a_tautological_gat
 
 /// Field types with no scalar codec, each of which must be refused by name.
 fn types_outside_the_scalar_slice() -> Vec<FieldType> {
-    vec![FieldType::Float64, FieldType::Bytes, FieldType::Records]
+    vec![FieldType::Float64, FieldType::Records]
 }
 
 #[test]

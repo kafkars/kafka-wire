@@ -119,6 +119,7 @@ pub(crate) fn element_codec(
         FieldType::Int32 => ("decoder.read_i32()?", "encoder.write_i32(*value)?;"),
         FieldType::Int64 => ("decoder.read_i64()?", "encoder.write_i64(*value)?;"),
         FieldType::Uuid => ("decoder.read_uuid()?", "encoder.write_uuid(*value)?;"),
+        FieldType::Bytes => ("decoder.read_bytes()?", "encoder.write_bytes(value)?;"),
         FieldType::Struct(reference) => {
             return Ok((
                 format!("{}::decode(decoder, version)?", reference.rust_type()),
@@ -187,6 +188,12 @@ fn read_method(
         FieldType::Int32 => Ok("decoder.read_i32()?".to_owned()),
         FieldType::Int64 => Ok("decoder.read_i64()?".to_owned()),
         FieldType::Uuid => Ok("decoder.read_uuid()?".to_owned()),
+        FieldType::Bytes if nullable && compact => {
+            Ok("decoder.read_compact_nullable_bytes()?".to_owned())
+        }
+        FieldType::Bytes if nullable => Ok("decoder.read_nullable_bytes()?".to_owned()),
+        FieldType::Bytes if compact => Ok("decoder.read_compact_bytes()?".to_owned()),
+        FieldType::Bytes => Ok("decoder.read_bytes()?".to_owned()),
         FieldType::Struct(reference) => Ok(format!(
             "{}::decode(decoder, version)?",
             reference.rust_type()
@@ -229,6 +236,14 @@ fn write_method(
         FieldType::Int32 => Ok(format!("encoder.write_i32(self.{name})?;")),
         FieldType::Int64 => Ok(format!("encoder.write_i64(self.{name})?;")),
         FieldType::Uuid => Ok(format!("encoder.write_uuid(self.{name})?;")),
+        FieldType::Bytes if nullable && compact => Ok(format!(
+            "encoder.write_compact_nullable_bytes(self.{name}.as_deref())?;"
+        )),
+        FieldType::Bytes if nullable => Ok(format!(
+            "encoder.write_nullable_bytes(self.{name}.as_deref())?;"
+        )),
+        FieldType::Bytes if compact => Ok(format!("encoder.write_compact_bytes(&self.{name})?;")),
+        FieldType::Bytes => Ok(format!("encoder.write_bytes(&self.{name})?;")),
         FieldType::Struct(_) => Ok(format!("self.{name}.encode(encoder, version)?;")),
         FieldType::Array(_) => Err(GenerationError::unsupported(
             message,
