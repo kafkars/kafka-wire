@@ -181,15 +181,17 @@ fn partial_version_nullability_is_refused() {
 }
 
 #[test]
-fn a_nullable_field_with_a_non_null_default_is_refused() {
+fn a_nullable_field_may_default_to_a_real_value() {
+    // Upstream writes both `Option<T>` holding a value and `None`. Collapsing
+    // them would encode an absent field where the protocol declares a present
+    // one, so the backend carries the distinction rather than refusing it.
     let mut probe = nullable(field("Probe", FieldType::String, "0+"));
     probe.default = DefaultValue::String("PLAINTEXT".to_owned());
-    assert_refused(
-        vec![probe],
-        "0-4",
-        "none",
-        "a nullable field defaulting to a literal",
-        "nullable fields currently require a null protocol default",
+    let message = message("0-4", "none", vec![probe]);
+
+    assert!(
+        validate_supported(&message).is_ok(),
+        "the backend refused a nullable field defaulting to a literal"
     );
 }
 

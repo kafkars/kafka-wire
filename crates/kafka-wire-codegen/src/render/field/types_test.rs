@@ -152,6 +152,8 @@ struct DefaultCell {
     non_default: &'static str,
     /// Whether `#[derive(Default)]` alone reproduces this default.
     derivable: bool,
+    /// Whether `nullableVersions` covers the field.
+    nullable: bool,
 }
 
 fn defaults() -> Vec<DefaultCell> {
@@ -163,6 +165,7 @@ fn defaults() -> Vec<DefaultCell> {
             initializer: "None",
             non_default: "self.probe.is_some()",
             derivable: true,
+            nullable: false,
         },
         DefaultCell {
             situation: "an int16 defaulting to zero",
@@ -171,6 +174,7 @@ fn defaults() -> Vec<DefaultCell> {
             initializer: "0",
             non_default: "self.probe != 0",
             derivable: true,
+            nullable: false,
         },
         DefaultCell {
             situation: "an int32 defaulting to the sentinel -1",
@@ -179,6 +183,7 @@ fn defaults() -> Vec<DefaultCell> {
             initializer: "-1",
             non_default: "self.probe != -1",
             derivable: false,
+            nullable: false,
         },
         DefaultCell {
             situation: "a string defaulting to empty",
@@ -187,6 +192,7 @@ fn defaults() -> Vec<DefaultCell> {
             initializer: "StrBytes::default()",
             non_default: "!self.probe.is_empty()",
             derivable: true,
+            nullable: false,
         },
         DefaultCell {
             situation: "a string defaulting to a protocol literal",
@@ -195,6 +201,7 @@ fn defaults() -> Vec<DefaultCell> {
             initializer: "StrBytes::from(\"PLAINTEXT\")",
             non_default: "self.probe.as_str() != \"PLAINTEXT\"",
             derivable: false,
+            nullable: false,
         },
         DefaultCell {
             situation: "an array defaulting to empty",
@@ -203,6 +210,7 @@ fn defaults() -> Vec<DefaultCell> {
             initializer: "Vec::new()",
             non_default: "!self.probe.is_empty()",
             derivable: true,
+            nullable: false,
         },
         DefaultCell {
             situation: "a bool defaulting to false",
@@ -211,6 +219,7 @@ fn defaults() -> Vec<DefaultCell> {
             initializer: "false",
             non_default: "self.probe != false",
             derivable: true,
+            nullable: false,
         },
         DefaultCell {
             situation: "a uuid defaulting to the all-zero sentinel",
@@ -219,6 +228,16 @@ fn defaults() -> Vec<DefaultCell> {
             initializer: "Uuid::ZERO",
             non_default: "self.probe != Uuid::ZERO",
             derivable: true,
+            nullable: false,
+        },
+        DefaultCell {
+            situation: "a nullable string defaulting to a protocol literal",
+            ty: FieldType::String,
+            default: DefaultValue::String("PLAINTEXT".to_owned()),
+            initializer: "Some(StrBytes::from(\"PLAINTEXT\"))",
+            non_default: "self.probe != Some(StrBytes::from(\"PLAINTEXT\"))",
+            derivable: false,
+            nullable: true,
         },
         DefaultCell {
             situation: "a non-nullable struct, absent as every member at its own default",
@@ -227,6 +246,7 @@ fn defaults() -> Vec<DefaultCell> {
             initializer: "ProbeRequestTopicData::default()",
             non_default: "self.probe != ProbeRequestTopicData::default()",
             derivable: true,
+            nullable: false,
         },
     ]
 }
@@ -235,6 +255,9 @@ fn defaults() -> Vec<DefaultCell> {
 fn every_supported_default_emits_its_exact_initializer_and_comparison() {
     for cell in defaults() {
         let mut probe = field("Probe", cell.ty.clone(), "0+");
+        if cell.nullable {
+            probe = nullable(probe);
+        }
         probe.default = cell.default.clone();
         let message = message(VALID, "none", vec![probe]);
         let probe = &message.fields[0];

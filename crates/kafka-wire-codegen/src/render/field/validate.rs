@@ -1,6 +1,6 @@
 //! Explicit capability boundary for the first Rust rendering backend.
 
-use kafka_wire_schema::{DefaultValue, FieldType, Message};
+use kafka_wire_schema::{FieldType, Message};
 
 use crate::GenerationError;
 
@@ -70,14 +70,6 @@ fn validate_fields(
                 "partial-version nullability is not implemented yet",
             );
         }
-        if !nullable.is_empty() && field.default != DefaultValue::Null {
-            return unsupported(
-                message,
-                field.name.protocol(),
-                "nullable fields currently require a null protocol default",
-            );
-        }
-
         // Checked before the shape match so that the scalar arm stays a plain
         // type list: folding this into a guard there would drop nullable
         // strings, which the backend does support, into the refusal arm.

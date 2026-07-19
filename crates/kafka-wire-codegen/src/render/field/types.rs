@@ -14,11 +14,17 @@ use kafka_wire_schema::{DefaultValue, Field, FieldType, Message};
 
 use crate::GenerationError;
 
-pub(crate) fn rust_type(field: &Field, message: &Message) -> Result<String, GenerationError> {
-    let nullable = !field
+/// Whether the field is declared nullable anywhere the message supports, which
+/// is what decides `Option`.
+fn is_nullable(field: &Field, message: &Message) -> bool {
+    !field
         .nullable_versions
         .intersection(&message.valid_versions)
-        .is_empty();
+        .is_empty()
+}
+
+pub(crate) fn rust_type(field: &Field, message: &Message) -> Result<String, GenerationError> {
+    let nullable = is_nullable(field, message);
     let base = type_name(&field.ty, field, message)?;
     if nullable {
         Ok(format!("Option<{base}>"))
@@ -54,6 +60,21 @@ pub(crate) fn default_expression(
     field: &Field,
     message: &Message,
 ) -> Result<String, GenerationError> {
+    if matches!(field.default, DefaultValue::Null) {
+        return Ok("None".to_owned());
+    }
+    let value = default_value(field, message)?;
+    if is_nullable(field, message) {
+        // A nullable field declaring a real default is `Option<T>` holding that
+        // value, not `None`: upstream writes both, and collapsing them would
+        // encode an absent field where the protocol says a present one.
+        return Ok(format!("Some({value})"));
+    }
+    Ok(value)
+}
+
+/// The default as the underlying type spells it, before nullability wraps it.
+fn default_value(field: &Field, message: &Message) -> Result<String, GenerationError> {
     match &field.default {
         DefaultValue::Null => Ok("None".to_owned()),
         DefaultValue::Bool(value) => Ok(value.to_string()),
@@ -90,6 +111,10 @@ pub(crate) fn non_default_condition(
     message: &Message,
 ) -> Result<String, GenerationError> {
     let name = field.name.rust_field();
+    if !matches!(field.default, DefaultValue::Null) && is_nullable(field, message) {
+        let value = default_value(field, message)?;
+        return Ok(format!("self.{name} != Some({value})"));
+    }
     match &field.default {
         DefaultValue::Null => Ok(format!("self.{name}.is_some()")),
         DefaultValue::Bool(value) => Ok(format!("self.{name} != {value}")),
