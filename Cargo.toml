@@ -1,8 +1,10 @@
 [workspace]
 members = [
+    "crates/kafka-wire-schema",
     "crates/kafka-wire-core",
 ]
 default-members = [
+    "crates/kafka-wire-schema",
     "crates/kafka-wire-core",
 ]
 resolver = "2"
