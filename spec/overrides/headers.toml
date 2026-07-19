@@ -1,0 +1,12 @@
+schema = 1
+
+# Header-version mappings are intentionally data, not renderer name checks.
+# The initial vertical slice does not yet emit request frames; this file reserves
+# the seam for the next milestone.
+
+[[response_header_exceptions]]
+api_key = 18
+versions = "3+"
+header_version = 0
+reason = "ApiVersionsResponse keeps the legacy response header for compatibility."
+source = "clients/src/main/resources/common/message/ApiVersionsResponse.json"
