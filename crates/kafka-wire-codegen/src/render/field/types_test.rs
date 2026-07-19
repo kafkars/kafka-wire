@@ -119,13 +119,7 @@ fn a_type_outside_the_slice_fails_generation_instead_of_emitting_a_comment() {
     // so rustfmt would have caught it. The same placeholder in a default or a
     // comparison position is valid Rust, which is why all three go through the
     // same refusal.
-    for ty in [
-        FieldType::Uint16,
-        FieldType::Uint32,
-        FieldType::Float64,
-        FieldType::Bytes,
-        FieldType::Records,
-    ] {
+    for ty in [FieldType::Float64, FieldType::Bytes, FieldType::Records] {
         let probe = field("Probe", ty.clone(), "0+");
         let message = message(VALID, "none", vec![probe]);
         let error = rust_type(&message.fields[0], &message)

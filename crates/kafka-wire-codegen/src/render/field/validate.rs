@@ -86,6 +86,8 @@ fn validate_fields(
             | FieldType::Bool
             | FieldType::Int8
             | FieldType::Int16
+            | FieldType::Uint16
+            | FieldType::Uint32
             | FieldType::Int32
             | FieldType::Int64
             | FieldType::Uuid
@@ -124,6 +126,8 @@ fn is_supported_element(element: &FieldType) -> bool {
             | FieldType::Bool
             | FieldType::Int8
             | FieldType::Int16
+            | FieldType::Uint16
+            | FieldType::Uint32
             | FieldType::Int32
             | FieldType::Int64
             | FieldType::Uuid

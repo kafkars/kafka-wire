@@ -43,6 +43,8 @@ fn type_name(ty: &FieldType, field: &Field, message: &Message) -> Result<String,
         FieldType::Bool => Ok("bool".to_owned()),
         FieldType::Int8 => Ok("i8".to_owned()),
         FieldType::Int16 => Ok("i16".to_owned()),
+        FieldType::Uint16 => Ok("u16".to_owned()),
+        FieldType::Uint32 => Ok("u32".to_owned()),
         FieldType::Int32 => Ok("i32".to_owned()),
         FieldType::Int64 => Ok("i64".to_owned()),
         FieldType::Uuid => Ok("Uuid".to_owned()),
@@ -145,7 +147,12 @@ pub(crate) fn uses_rust_default(field: &Field) -> bool {
     ) || matches!(
         (&field.ty, &field.default),
         (
-            FieldType::Int8 | FieldType::Int16 | FieldType::Int32 | FieldType::Int64,
+            FieldType::Int8
+                | FieldType::Int16
+                | FieldType::Uint16
+                | FieldType::Int32
+                | FieldType::Uint32
+                | FieldType::Int64,
             DefaultValue::Integer(0)
         )
     ) || matches!(

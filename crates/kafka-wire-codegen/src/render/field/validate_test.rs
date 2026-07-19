@@ -226,13 +226,7 @@ fn a_nullable_array_is_refused_while_gated_and_compact_arrays_are_accepted() {
 
 #[test]
 fn every_field_type_outside_the_slice_is_refused_by_name() {
-    for ty in [
-        FieldType::Uint16,
-        FieldType::Uint32,
-        FieldType::Float64,
-        FieldType::Bytes,
-        FieldType::Records,
-    ] {
+    for ty in [FieldType::Float64, FieldType::Bytes, FieldType::Records] {
         let message = message("0-4", "none", vec![field("Probe", ty.clone(), "0+")]);
         let diagnostic = refusal(&message, &format!("a {ty:?} field"));
 

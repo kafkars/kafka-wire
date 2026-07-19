@@ -248,13 +248,7 @@ fn a_fixed_width_field_straddling_the_flexible_boundary_emits_a_tautological_gat
 
 /// Field types with no scalar codec, each of which must be refused by name.
 fn types_outside_the_scalar_slice() -> Vec<FieldType> {
-    vec![
-        FieldType::Uint16,
-        FieldType::Uint32,
-        FieldType::Float64,
-        FieldType::Bytes,
-        FieldType::Records,
-    ]
+    vec![FieldType::Float64, FieldType::Bytes, FieldType::Records]
 }
 
 #[test]
