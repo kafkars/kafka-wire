@@ -386,6 +386,10 @@ name = "xtask"
 version = "0.1.0"
 dependencies = [
  "kafka-wire-codegen",
+ "serde",
+ "serde_json",
+ "sha2",
+ "toml",
 ]
 
 [[package]]

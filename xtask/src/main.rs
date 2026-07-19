@@ -2,6 +2,9 @@
 
 mod cli;
 mod commands;
+mod fetch;
+mod protocol_lock;
+mod vendor;
 mod workspace;
 
 use std::process::ExitCode;

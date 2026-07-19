@@ -3,6 +3,11 @@
 /// Supported repository maintenance command.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub(crate) enum Command {
+    /// Refresh the vendored upstream corpus for the pinned commit.
+    ///
+    /// This is the only command that reaches the network, and it is run by a
+    /// human on purpose. Building, testing, and generating stay offline.
+    Vendor,
     /// Regenerate checked-in protocol Rust.
     Generate,
     /// Verify generated Rust without writing.
@@ -24,6 +29,7 @@ impl Command {
         }
 
         match command.as_str() {
+            "vendor" => Ok(Self::Vendor),
             "generate" => Ok(Self::Generate),
             "generated-check" => Ok(Self::GeneratedCheck),
             "verify" => Ok(Self::Verify),
@@ -38,6 +44,7 @@ fn usage() -> String {
         "usage: cargo xtask <command>",
         "",
         "commands:",
+        "  vendor           re-download the pinned upstream corpus (network)",
         "  generate         replace checked-in generated protocol files",
         "  generated-check  verify generated files without modifying them",
         "  verify           run generated-check and repository guards",

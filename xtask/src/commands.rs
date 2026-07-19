@@ -4,10 +4,11 @@ use std::process::Command as Process;
 
 use kafka_wire_codegen::{GenerationMode, GeneratorConfig};
 
-use crate::{cli::Command, workspace};
+use crate::{cli::Command, vendor, workspace};
 
 pub(crate) fn run(command: Command) -> Result<(), String> {
     match command {
+        Command::Vendor => vendor(),
         Command::Generate => generate(GenerationMode::Write),
         Command::GeneratedCheck => generate(GenerationMode::Check),
         Command::Verify => {
@@ -16,6 +17,18 @@ pub(crate) fn run(command: Command) -> Result<(), String> {
         }
         Command::Doctor => doctor(),
     }
+}
+
+fn vendor() -> Result<(), String> {
+    let report = vendor::vendor(&workspace::root())?;
+    println!(
+        "vendored upstream corpus: {} files ({} enabled, {} pending)",
+        report.vendored, report.enabled, report.pending
+    );
+    for removed in &report.removed {
+        println!("removed no-longer-upstream schema: {removed}");
+    }
+    Ok(())
 }
 
 fn generate(mode: GenerationMode) -> Result<(), String> {
@@ -59,7 +72,12 @@ fn doctor() -> Result<(), String> {
     println!("upstream:  {}", identity.repository);
     println!("commit:    {}", identity.commit);
     println!("IR:        {}", identity.ir_version);
-    println!("sources:   {}", identity.source_files);
+    println!(
+        "pinned:    {} vendored message files",
+        identity.source_files
+    );
+    println!("enabled:   {} compiled into Rust", identity.enabled_files);
+    println!("vendor:    cargo xtask vendor");
     println!("generate:  cargo xtask generate");
     println!("verify:    cargo xtask verify");
     println!("full CI:   just check");
