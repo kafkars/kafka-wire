@@ -1,0 +1,18 @@
+[package]
+name = "kafka-wire"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Generated, version-aware Kafka wire messages"
+publish = false
+
+[dependencies]
+kafka-wire-core = { path = "../kafka-wire-core" }
+
+[dev-dependencies]
+bytes.workspace = true
+
+[lints]
+workspace = true
