@@ -67,6 +67,12 @@ fn render_imports(rust: &mut RustText, group: &ApiGroup) {
     if has_flexible {
         wire.push("TaggedFields");
     }
+    if group
+        .messages()
+        .any(|source| field::uses_uuid(&source.message))
+    {
+        wire.push("Uuid");
+    }
     wire.push("VersionRange");
     render_braced_use(rust, "kafka_wire_core", &wire);
     rust.blank();

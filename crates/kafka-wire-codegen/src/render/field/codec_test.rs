@@ -180,6 +180,14 @@ fn fixed_width_cells() -> Vec<Cell> {
             read: "decoder.read_i64()?",
             write: "encoder.write_i64(self.probe)?;",
         },
+        Cell {
+            situation: "a uuid in a message with no flexible version",
+            ty: FieldType::Uuid,
+            nullable: false,
+            flexible: "none",
+            read: "decoder.read_uuid()?",
+            write: "encoder.write_uuid(self.probe)?;",
+        },
     ]
 }
 
@@ -236,7 +244,6 @@ fn types_outside_the_scalar_slice() -> Vec<FieldType> {
         FieldType::Uint16,
         FieldType::Uint32,
         FieldType::Float64,
-        FieldType::Uuid,
         FieldType::Bytes,
         FieldType::Records,
         struct_type("TopicData"),

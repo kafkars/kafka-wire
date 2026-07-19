@@ -213,7 +213,6 @@ fn every_field_type_outside_the_slice_is_refused_by_name() {
         FieldType::Uint16,
         FieldType::Uint32,
         FieldType::Float64,
-        FieldType::Uuid,
         FieldType::Bytes,
         FieldType::Records,
         struct_type("TopicData"),

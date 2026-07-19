@@ -26,6 +26,7 @@ pub(crate) fn rust_type(field: &Field, message: &Message) -> Result<String, Gene
         FieldType::Int16 => "i16".to_owned(),
         FieldType::Int32 => "i32".to_owned(),
         FieldType::Int64 => "i64".to_owned(),
+        FieldType::Uuid => "Uuid".to_owned(),
         FieldType::Array(element) if matches!(element.as_ref(), FieldType::String) => {
             "Vec<StrBytes>".to_owned()
         }
@@ -54,6 +55,8 @@ pub(crate) fn default_expression(
         DefaultValue::Integer(value) => Ok(value.to_string()),
         DefaultValue::String(value) if value.is_empty() => Ok("StrBytes::default()".to_owned()),
         DefaultValue::String(value) => Ok(format!("StrBytes::from({value:?})")),
+        DefaultValue::Uuid(bytes) if *bytes == [0_u8; 16] => Ok("Uuid::ZERO".to_owned()),
+        DefaultValue::Uuid(bytes) => Ok(format!("Uuid::from_bytes({bytes:?})")),
         DefaultValue::Empty => match &field.ty {
             FieldType::Array(_) => Ok("Vec::new()".to_owned()),
             _ => Ok("Default::default()".to_owned()),
@@ -82,6 +85,10 @@ pub(crate) fn non_default_condition(
         DefaultValue::Integer(value) => Ok(format!("self.{name} != {value}")),
         DefaultValue::String(value) if value.is_empty() => Ok(format!("!self.{name}.is_empty()")),
         DefaultValue::String(value) => Ok(format!("self.{name}.as_str() != {value:?}")),
+        DefaultValue::Uuid(bytes) if *bytes == [0_u8; 16] => {
+            Ok(format!("self.{name} != Uuid::ZERO"))
+        }
+        DefaultValue::Uuid(bytes) => Ok(format!("self.{name} != Uuid::from_bytes({bytes:?})")),
         DefaultValue::Empty => Ok(format!("!self.{name}.is_empty()")),
         other => Err(GenerationError::unsupported(
             message,
@@ -106,6 +113,9 @@ pub(crate) fn uses_rust_default(field: &Field) -> bool {
         (FieldType::Bool, DefaultValue::Bool(false))
     ) || matches!(
         (&field.ty, &field.default),
+        (FieldType::Uuid, DefaultValue::Uuid(bytes)) if *bytes == [0_u8; 16]
+    ) || matches!(
+        (&field.ty, &field.default),
         (FieldType::Array(_), DefaultValue::Empty)
     ) || matches!(&field.default, DefaultValue::Null)
 }
@@ -115,4 +125,21 @@ pub(crate) fn is_legacy_string_array(field: &Field) -> bool {
         &field.ty,
         FieldType::Array(element) if matches!(element.as_ref(), FieldType::String)
     )
+}
+
+/// Whether any field this message emits carries a `Uuid`, directly or as an
+/// array element.
+///
+/// The file import list pulls `Uuid` in only when it is used, so a message
+/// built from integers and strings alone does not name a type it never writes.
+pub(crate) fn uses_uuid(message: &Message) -> bool {
+    message.fields.iter().any(|field| ty_uses_uuid(&field.ty))
+}
+
+fn ty_uses_uuid(ty: &FieldType) -> bool {
+    match ty {
+        FieldType::Uuid => true,
+        FieldType::Array(element) => ty_uses_uuid(element),
+        _ => false,
+    }
 }

@@ -19,7 +19,8 @@ mod version_test;
 
 pub(crate) use codec::{read_expression, write_statement};
 pub(crate) use types::{
-    default_expression, is_legacy_string_array, non_default_condition, rust_type, uses_rust_default,
+    default_expression, is_legacy_string_array, non_default_condition, rust_type,
+    uses_rust_default, uses_uuid,
 };
 pub(crate) use validate::validate_supported;
 pub(crate) use version::presence_condition;

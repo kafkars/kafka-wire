@@ -81,7 +81,8 @@ pub(crate) fn validate_supported(message: &Message) -> Result<(), GenerationErro
             | FieldType::Int8
             | FieldType::Int16
             | FieldType::Int32
-            | FieldType::Int64 => {}
+            | FieldType::Int64
+            | FieldType::Uuid => {}
             FieldType::Array(element) if matches!(element.as_ref(), FieldType::String) => {
                 let flexible_presence = present.intersection(&flexible);
                 if present != message.valid_versions

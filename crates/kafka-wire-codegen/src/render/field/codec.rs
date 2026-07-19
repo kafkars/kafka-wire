@@ -93,6 +93,7 @@ fn read_method(
         FieldType::Int16 => Ok("decoder.read_i16()?".to_owned()),
         FieldType::Int32 => Ok("decoder.read_i32()?".to_owned()),
         FieldType::Int64 => Ok("decoder.read_i64()?".to_owned()),
+        FieldType::Uuid => Ok("decoder.read_uuid()?".to_owned()),
         FieldType::Array(_) => Err(GenerationError::unsupported(
             message,
             field.name.protocol(),
@@ -128,6 +129,7 @@ fn write_method(
         FieldType::Int16 => Ok(format!("encoder.write_i16(self.{name})?;")),
         FieldType::Int32 => Ok(format!("encoder.write_i32(self.{name})?;")),
         FieldType::Int64 => Ok(format!("encoder.write_i64(self.{name})?;")),
+        FieldType::Uuid => Ok(format!("encoder.write_uuid(self.{name})?;")),
         FieldType::Array(_) => Err(GenerationError::unsupported(
             message,
             field.name.protocol(),

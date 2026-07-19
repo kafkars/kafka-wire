@@ -69,6 +69,11 @@ fn declared_types() -> Vec<TypeCell> {
             declared: "i64",
         },
         TypeCell {
+            ty: FieldType::Uuid,
+            nullable: false,
+            declared: "Uuid",
+        },
+        TypeCell {
             ty: FieldType::Array(Box::new(FieldType::String)),
             nullable: false,
             declared: "Vec<StrBytes>",
@@ -106,7 +111,6 @@ fn a_type_outside_the_slice_fails_generation_instead_of_emitting_a_comment() {
         FieldType::Uint16,
         FieldType::Uint32,
         FieldType::Float64,
-        FieldType::Uuid,
         FieldType::Bytes,
         FieldType::Records,
         struct_type("TopicData"),
@@ -198,6 +202,14 @@ fn defaults() -> Vec<DefaultCell> {
             non_default: "self.probe != false",
             derivable: true,
         },
+        DefaultCell {
+            situation: "a uuid defaulting to the all-zero sentinel",
+            ty: FieldType::Uuid,
+            default: DefaultValue::Uuid([0; 16]),
+            initializer: "Uuid::ZERO",
+            non_default: "self.probe != Uuid::ZERO",
+            derivable: true,
+        },
     ]
 }
 
@@ -235,14 +247,14 @@ fn every_supported_default_emits_its_exact_initializer_and_comparison() {
 
 #[test]
 fn a_default_with_no_rust_form_fails_generation_instead_of_emitting_a_comment() {
-    // These three arrived with wave 1's front end, which now lowers uuid,
-    // float64, and non-nullable struct fields to typed defaults. The backend
-    // has no Rust form for any of them yet. Emitting `/* unsupported */` as the
-    // initializer of a `Default` impl is valid Rust in exactly the position
-    // where being wrong is unobservable, so it must fail instead.
+    // These arrived with wave 1's front end, which now lowers float64 and
+    // non-nullable struct fields to typed defaults. The backend has no Rust
+    // form for either yet. Emitting `/* unsupported */` as the initializer of a
+    // `Default` impl is valid Rust in exactly the position where being wrong is
+    // unobservable, so it must fail instead. (Uuid defaults now render, so they
+    // have moved to the positive default table above.)
     for default in [
         DefaultValue::Float(FloatDefault::new(1.0)),
-        DefaultValue::Uuid([0; 16]),
         DefaultValue::StructDefaults,
     ] {
         let mut probe = field("Probe", FieldType::String, "0+");
