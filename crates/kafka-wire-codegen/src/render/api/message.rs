@@ -3,16 +3,24 @@
 use kafka_wire_schema::{Message, MessageKind};
 
 use crate::{
+    GenerationError,
     group::ApiGroup,
     render::{field, text::RustText},
 };
 
 use super::codec::{render_decode, render_encode};
 
-pub(super) fn render_message(rust: &mut RustText, message: &Message, group: &ApiGroup) {
+pub(super) fn render_message(
+    rust: &mut RustText,
+    message: &Message,
+    group: &ApiGroup,
+) -> Result<(), GenerationError> {
+    // Grouping already rejected every kind without a direction, so this is a
+    // totality guard rather than a policy decision.
     let direction = match message.kind {
         MessageKind::Request => "Request",
         MessageKind::Response => "Response",
+        MessageKind::Header | MessageKind::Data => return Ok(()),
     };
     rust.line(format!(
         "/// {direction} body for the `{}` API.",
@@ -31,7 +39,7 @@ pub(super) fn render_message(rust: &mut RustText, message: &Message, group: &Api
         rust.line(format!(
             "pub {}: {},",
             field.name.rust_field(),
-            field::rust_type(field, message)
+            field::rust_type(field, message)?
         ));
     }
     if !message.effective_flexible_versions().is_empty() {
@@ -42,14 +50,15 @@ pub(super) fn render_message(rust: &mut RustText, message: &Message, group: &Api
     rust.blank();
 
     if !derive_default {
-        render_default(rust, message);
+        render_default(rust, message)?;
     }
     render_metadata_impls(rust, message, group);
-    render_decode(rust, message);
-    render_encode(rust, message);
+    render_decode(rust, message)?;
+    render_encode(rust, message)?;
+    Ok(())
 }
 
-fn render_default(rust: &mut RustText, message: &Message) {
+fn render_default(rust: &mut RustText, message: &Message) -> Result<(), GenerationError> {
     rust.open(format!("impl Default for {}", message.name.rust_type()));
     rust.open("fn default() -> Self");
     rust.open("Self");
@@ -57,7 +66,7 @@ fn render_default(rust: &mut RustText, message: &Message) {
         rust.line(format!(
             "{}: {},",
             field.name.rust_field(),
-            field::default_expression(field)
+            field::default_expression(field, message)?
         ));
     }
     if !message.effective_flexible_versions().is_empty() {
@@ -67,6 +76,7 @@ fn render_default(rust: &mut RustText, message: &Message) {
     rust.close("");
     rust.close("");
     rust.blank();
+    Ok(())
 }
 
 fn render_metadata_impls(rust: &mut RustText, message: &Message, group: &ApiGroup) {
@@ -98,11 +108,13 @@ fn render_metadata_impls(rust: &mut RustText, message: &Message, group: &ApiGrou
             ));
             rust.line(format!(
                 "const API_KEY: ApiKey = ApiKey::new({});",
-                message.api_key
+                group.api_key
             ));
             rust.close("");
             rust.blank();
         }
+        // Rejected during grouping; the arm keeps the match total.
+        MessageKind::Header | MessageKind::Data => {}
     }
 }
 
@@ -113,7 +125,7 @@ fn render_request_metadata(rust: &mut RustText, message: &Message, group: &ApiGr
     ));
     rust.line(format!(
         "const API_KEY: ApiKey = ApiKey::new({});",
-        message.api_key
+        group.api_key
     ));
     rust.close("");
     rust.blank();

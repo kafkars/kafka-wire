@@ -2,9 +2,12 @@
 
 use kafka_wire_schema::Message;
 
-use crate::render::{field, text::RustText};
+use crate::{
+    GenerationError,
+    render::{field, text::RustText},
+};
 
-pub(super) fn render_decode(rust: &mut RustText, message: &Message) {
+pub(super) fn render_decode(rust: &mut RustText, message: &Message) -> Result<(), GenerationError> {
     rust.open(format!("impl KafkaDecode for {}", message.name.rust_type()));
     rust.open("fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError>");
     rust.line("crate::message::ensure_decode_version::<Self>(version)?;");
@@ -15,14 +18,14 @@ pub(super) fn render_decode(rust: &mut RustText, message: &Message) {
             render_array_decode(rust, field.name.rust_field());
             continue;
         }
-        let expression = field::read_expression(field, message);
+        let expression = field::read_expression(field, message)?;
         match field::presence_condition(field, message) {
             None => rust.line(format!("let {} = {expression};", field.name.rust_field())),
             Some(condition) => {
                 rust.open(format!("let {} = if {condition}", field.name.rust_field()));
                 rust.line(expression);
                 rust.reopen("} else {");
-                rust.line(field::default_expression(field));
+                rust.line(field::default_expression(field, message)?);
                 rust.close(";");
             }
         }
@@ -55,9 +58,10 @@ pub(super) fn render_decode(rust: &mut RustText, message: &Message) {
     rust.close("");
     rust.close("");
     rust.blank();
+    Ok(())
 }
 
-pub(super) fn render_encode(rust: &mut RustText, message: &Message) {
+pub(super) fn render_encode(rust: &mut RustText, message: &Message) -> Result<(), GenerationError> {
     rust.open(format!("impl KafkaEncode for {}", message.name.rust_type()));
     rust.line("fn encode<T: EncodeTarget>(");
     rust.line("    &self,");
@@ -65,14 +69,14 @@ pub(super) fn render_encode(rust: &mut RustText, message: &Message) {
     rust.line("    version: ApiVersion,");
     rust.open(") -> Result<(), EncodeError>");
     rust.line("crate::message::ensure_encode_version::<Self>(version)?;");
-    render_representability_checks(rust, message);
+    render_representability_checks(rust, message)?;
 
     for field in &message.fields {
         if field::is_legacy_string_array(field) {
             render_array_encode(rust, field.name.rust_field());
             continue;
         }
-        let statement = field::write_statement(field, message);
+        let statement = field::write_statement(field, message)?;
         match field::presence_condition(field, message) {
             None => rust.line(statement),
             Some(condition) => {
@@ -99,9 +103,13 @@ pub(super) fn render_encode(rust: &mut RustText, message: &Message) {
     rust.close("");
     rust.close("");
     rust.blank();
+    Ok(())
 }
 
-fn render_representability_checks(rust: &mut RustText, message: &Message) {
+fn render_representability_checks(
+    rust: &mut RustText,
+    message: &Message,
+) -> Result<(), GenerationError> {
     let conditional = message
         .fields
         .iter()
@@ -113,14 +121,14 @@ fn render_representability_checks(rust: &mut RustText, message: &Message) {
         .collect::<Vec<_>>();
     if conditional.is_empty() {
         rust.blank();
-        return;
+        return Ok(());
     }
 
     rust.blank();
     for (candidate, condition) in conditional {
         rust.open(format!(
             "if !({condition}) && {}",
-            field::non_default_condition(candidate)
+            field::non_default_condition(candidate, message)?
         ));
         rust.open("return Err(EncodeError::FieldNotRepresentable");
         rust.line("message: Self::NAME,");
@@ -130,6 +138,7 @@ fn render_representability_checks(rust: &mut RustText, message: &Message) {
         rust.close("");
     }
     rust.blank();
+    Ok(())
 }
 
 fn render_array_decode(rust: &mut RustText, name: &str) {

@@ -24,6 +24,17 @@ pub(crate) fn validate_supported(message: &Message) -> Result<(), GenerationErro
 
     for field in &message.fields {
         let present = field.versions.intersection(&message.valid_versions);
+        // Named before the shape check below, which would otherwise report a
+        // field that exists nowhere as merely having the wrong number of
+        // intervals. Upstream does write these: a field kept in the schema
+        // after every version carrying it was retired has an empty presence.
+        if present.is_empty() {
+            return unsupported(
+                message,
+                field.name.protocol(),
+                "the field is declared in no version this message supports",
+            );
+        }
         if present.single_bounded().is_none() {
             return unsupported(
                 message,
@@ -92,9 +103,5 @@ pub(crate) fn validate_supported(message: &Message) -> Result<(), GenerationErro
 }
 
 fn unsupported<T>(message: &Message, field: &str, reason: &str) -> Result<T, GenerationError> {
-    Err(GenerationError::UnsupportedSchema {
-        message: message.name.protocol().to_owned(),
-        field: field.to_owned(),
-        reason: reason.to_owned(),
-    })
+    Err(GenerationError::unsupported(message, field, reason))
 }

@@ -1,14 +1,50 @@
-//! Field-level type, version, and default lowering.
+//! Field-level type, version, and metadata lowering.
+//!
+//! This file owns the walk from a raw field tree to a normalized one, including
+//! the bound on how deep that walk may go. It deliberately does not own default
+//! interpretation (`default.rs`), the struct-naming rule
+//! (`ir/struct_ref.rs`), or any cross-field invariant (`validate/`).
+//!
+//! The owning message is threaded through the whole walk because a struct
+//! spelling at any depth is qualified by its message and by nothing else — not
+//! by the field that carries it and not by its ancestors — so the same owner
+//! that names a root field's struct also names one five levels down.
 
 use std::path::Path;
 
-use serde_json::Value;
+use crate::{EntityType, Field, FieldName, FieldType, MessageName, RawField, VersionSet};
 
-use crate::{DefaultValue, Field, FieldName, FieldType, RawField, VersionSet};
+use super::{LowerError, default::lower_default};
 
-use super::LowerError;
+/// Deepest inline field nesting this adapter will lower.
+///
+/// The pinned corpus nests five levels. The cap is well above that so it never
+/// rejects a real schema, and exists only so a crafted file cannot drive the
+/// recursion below into a stack overflow — this walk is the one place where an
+/// input file chooses how deep the front end recurses.
+const NESTING_LIMIT: usize = 32;
 
-pub(super) fn lower_field(raw: RawField, path: &Path) -> Result<Field, LowerError> {
+pub(super) fn lower_field(
+    raw: RawField,
+    owner: &MessageName,
+    path: &Path,
+) -> Result<Field, LowerError> {
+    lower_nested_field(raw, owner, path, 0)
+}
+
+fn lower_nested_field(
+    raw: RawField,
+    owner: &MessageName,
+    path: &Path,
+    depth: usize,
+) -> Result<Field, LowerError> {
+    if depth > NESTING_LIMIT {
+        return Err(LowerError::NestingDepth {
+            path: path.to_path_buf(),
+            field: raw.name,
+            limit: NESTING_LIMIT,
+        });
+    }
     if !raw.extra.is_empty() {
         return Err(LowerError::FieldProperties {
             path: path.to_path_buf(),
@@ -17,7 +53,13 @@ pub(super) fn lower_field(raw: RawField, path: &Path) -> Result<Field, LowerErro
         });
     }
 
-    let ty = FieldType::parse(&raw.field_type);
+    let ty = FieldType::parse(&raw.field_type, owner).map_err(|error| LowerError::FieldType {
+        path: path.to_path_buf(),
+        field: raw.name.clone(),
+        reason: error.to_string(),
+    })?;
+    let entity_type = lower_entity_type(path, &raw.name, raw.entity_type.as_deref())?;
+
     let versions = parse_versions(path, "presence", &raw.name, &raw.versions)?;
     let nullable_versions = parse_versions(
         path,
@@ -31,11 +73,17 @@ pub(super) fn lower_field(raw: RawField, path: &Path) -> Result<Field, LowerErro
         &raw.name,
         raw.tagged_versions.as_deref().unwrap_or("none"),
     )?;
+    let flexible_versions = raw
+        .flexible_versions
+        .as_deref()
+        .map(|value| parse_versions(path, "flexible", &raw.name, value))
+        .transpose()?;
+
     let default = lower_default(path, &raw.name, &ty, raw.default.as_ref())?;
     let fields = raw
         .fields
         .into_iter()
-        .map(|field| lower_field(field, path))
+        .map(|field| lower_nested_field(field, owner, path, depth + 1))
         .collect::<Result<Vec<_>, _>>()?;
 
     Ok(Field {
@@ -48,9 +96,30 @@ pub(super) fn lower_field(raw: RawField, path: &Path) -> Result<Field, LowerErro
         default,
         ignorable: raw.ignorable,
         map_key: raw.map_key,
+        entity_type,
+        zero_copy: raw.zero_copy,
+        flexible_versions,
         about: normalize_docs(&raw.about),
         fields,
     })
+}
+
+fn lower_entity_type(
+    path: &Path,
+    field: &str,
+    spelling: Option<&str>,
+) -> Result<Option<EntityType>, LowerError> {
+    spelling
+        .map(|spelling| {
+            spelling
+                .parse::<EntityType>()
+                .map_err(|error| LowerError::EntityType {
+                    path: path.to_path_buf(),
+                    field: field.to_owned(),
+                    reason: error.to_string(),
+                })
+        })
+        .transpose()
 }
 
 pub(super) fn parse_versions(
@@ -68,65 +137,6 @@ pub(super) fn parse_versions(
             value: value.to_owned(),
             reason: error.to_string(),
         })
-}
-
-fn lower_default(
-    path: &Path,
-    field: &str,
-    ty: &FieldType,
-    value: Option<&Value>,
-) -> Result<DefaultValue, LowerError> {
-    let invalid = |reason: String| LowerError::Default {
-        path: path.to_path_buf(),
-        field: field.to_owned(),
-        reason,
-    };
-
-    match (ty, value) {
-        (_, Some(Value::String(value))) if value == "null" => Ok(DefaultValue::Null),
-        (FieldType::Bool, Some(Value::Bool(value))) => Ok(DefaultValue::Bool(*value)),
-        (FieldType::Bool, Some(Value::String(value))) => value
-            .parse::<bool>()
-            .map(DefaultValue::Bool)
-            .map_err(|error| invalid(error.to_string())),
-        (FieldType::String, Some(Value::String(value))) => Ok(DefaultValue::String(value.clone())),
-        (FieldType::Array(_), Some(Value::Array(values))) if values.is_empty() => {
-            Ok(DefaultValue::Empty)
-        }
-        (FieldType::Bytes | FieldType::Records, Some(Value::String(value))) if value.is_empty() => {
-            Ok(DefaultValue::Empty)
-        }
-        (ty, Some(Value::Number(value))) if is_integer(ty) => value
-            .as_i64()
-            .map(DefaultValue::Integer)
-            .ok_or_else(|| invalid(format!("`{value}` is not a signed integer"))),
-        (ty, Some(Value::String(value))) if is_integer(ty) => value
-            .parse::<i64>()
-            .map(DefaultValue::Integer)
-            .map_err(|error| invalid(error.to_string())),
-        (FieldType::Bool, None) => Ok(DefaultValue::Bool(false)),
-        (FieldType::String, None) => Ok(DefaultValue::String(String::new())),
-        (FieldType::Array(_) | FieldType::Bytes | FieldType::Records, None) => {
-            Ok(DefaultValue::Empty)
-        }
-        (ty, None) if is_integer(ty) => Ok(DefaultValue::Integer(0)),
-        (_, Some(Value::Null) | None) => Ok(DefaultValue::Null),
-        (_, Some(value)) => Err(invalid(format!(
-            "value {value} is incompatible with type {ty:?}"
-        ))),
-    }
-}
-
-fn is_integer(ty: &FieldType) -> bool {
-    matches!(
-        ty,
-        FieldType::Int8
-            | FieldType::Int16
-            | FieldType::Uint16
-            | FieldType::Int32
-            | FieldType::Uint32
-            | FieldType::Int64
-    )
 }
 
 fn normalize_docs(source: &str) -> String {

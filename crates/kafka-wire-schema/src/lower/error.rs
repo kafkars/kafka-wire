@@ -6,6 +6,7 @@ use thiserror::Error;
 
 /// Failure while lowering raw Kafka source into the normalized IR.
 #[derive(Clone, Debug, Error, Eq, PartialEq)]
+#[non_exhaustive]
 pub enum LowerError {
     /// The adapter encountered new message-level source properties.
     #[error("{path}: unmodeled message properties: {properties}")]
@@ -25,13 +26,45 @@ pub enum LowerError {
         /// Sorted property names.
         properties: String,
     },
-    /// A request or response omitted its API key.
-    #[error("{path}: message {message} is missing apiKey")]
-    MissingApiKey {
+    /// The adapter encountered new `commonStructs` properties.
+    #[error("{path}: common struct {declaration} has unmodeled properties: {properties}")]
+    CommonStructProperties {
         /// Source path.
         path: PathBuf,
-        /// Protocol message name.
-        message: String,
+        /// Struct declaration name.
+        declaration: String,
+        /// Sorted property names.
+        properties: String,
+    },
+    /// A field declared a type spelling the adapter cannot interpret.
+    #[error("{path}: field {field} has an uninterpretable type: {reason}")]
+    FieldType {
+        /// Source path.
+        path: PathBuf,
+        /// Protocol field name.
+        field: String,
+        /// Type-parser diagnostic.
+        reason: String,
+    },
+    /// A field named a domain entity the adapter does not model.
+    #[error("{path}: field {field} has an unmodeled entityType: {reason}")]
+    EntityType {
+        /// Source path.
+        path: PathBuf,
+        /// Protocol field name.
+        field: String,
+        /// Entity-parser diagnostic.
+        reason: String,
+    },
+    /// Inline field nesting exceeded the adapter's bound.
+    #[error("{path}: field {field} nests deeper than {limit} levels")]
+    NestingDepth {
+        /// Source path.
+        path: PathBuf,
+        /// Protocol field name at the offending depth.
+        field: String,
+        /// The enforced nesting limit.
+        limit: usize,
     },
     /// A version expression was invalid.
     #[error("{path}: invalid {role} versions `{value}` for {owner}: {reason}")]

@@ -11,11 +11,16 @@ mod source;
 mod validate;
 
 pub use ir::{
-    DefaultValue, Field, FieldName, FieldType, Message, MessageKind, MessageName,
-    VersionParseError, VersionRange, VersionSet,
+    CommonStruct, DefaultValue, EntityType, EntityTypeParseError, Field, FieldName, FieldType,
+    FloatDefault, Message, MessageKind, MessageName, Qualification, StructDeclaration,
+    StructOrigin, StructRef, StructTable, TypeParseError, VersionParseError, VersionRange,
+    VersionSet,
 };
-pub use load::{SchemaError, load_message};
+pub use load::{SchemaError, load_message, load_message_with};
 pub use lower::{LowerError, lower_message};
-pub use raw::{RawField, RawMessage, RawMessageKind};
+pub use raw::{RawCommonStruct, RawField, RawMessage, RawMessageKind};
 pub use source::{SourceError, SourceFile, parse_jsonc};
-pub use validate::{ValidationError, ValidationErrors, validate_message};
+pub use validate::{
+    SchemaException, SchemaExceptions, ValidationError, ValidationErrors, validate_message,
+    validate_message_with, validate_struct_names,
+};

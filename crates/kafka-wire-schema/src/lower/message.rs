@@ -1,12 +1,19 @@
 //! Message-level source lowering.
 
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
-use crate::{Message, MessageKind, MessageName, RawMessage, RawMessageKind};
+use crate::{
+    CommonStruct, Message, MessageKind, MessageName, RawCommonStruct, RawMessage, RawMessageKind,
+    StructRef,
+};
 
-use super::{LowerError, field::lower_field, field::parse_versions};
+use super::{LowerError, field::lower_field, field::parse_versions, structs::collect_struct_table};
 
 /// Lowers one raw Kafka message definition into backend-neutral semantics.
+///
+/// The message name is normalized first because everything below it is named
+/// relative to it: the earlier flat naming rule qualifies every nested struct by its owning message,
+/// so the owner has to exist before a single field type can be parsed.
 pub fn lower_message(raw: RawMessage, source: PathBuf) -> Result<Message, LowerError> {
     if !raw.extra.is_empty() {
         return Err(LowerError::MessageProperties {
@@ -15,29 +22,74 @@ pub fn lower_message(raw: RawMessage, source: PathBuf) -> Result<Message, LowerE
         });
     }
 
-    let api_key = raw.api_key.ok_or_else(|| LowerError::MissingApiKey {
-        path: source.clone(),
-        message: raw.name.clone(),
-    })?;
-    let valid_versions = parse_versions(&source, "valid", &raw.name, &raw.valid_versions)?;
-    let flexible_versions = parse_versions(&source, "flexible", &raw.name, &raw.flexible_versions)?;
+    let name = MessageName::new(raw.name);
+
+    let valid_versions = parse_versions(&source, "valid", name.protocol(), &raw.valid_versions)?;
+    // A schema that omits `flexibleVersions` predates the tagged-field
+    // encoding, so it is flexible at no version rather than at all of them.
+    let flexible_versions = parse_versions(
+        &source,
+        "flexible",
+        name.protocol(),
+        raw.flexible_versions.as_deref().unwrap_or("none"),
+    )?;
+
+    let common_structs = raw
+        .common_structs
+        .into_iter()
+        .map(|declaration| lower_common_struct(declaration, &name, &source))
+        .collect::<Result<Vec<_>, _>>()?;
     let fields = raw
         .fields
         .into_iter()
-        .map(|field| lower_field(field, &source))
+        .map(|field| lower_field(field, &name, &source))
         .collect::<Result<Vec<_>, _>>()?;
+
+    let structs = collect_struct_table(&common_structs, &fields);
 
     Ok(Message {
         source,
-        api_key,
+        api_key: raw.api_key,
         kind: match raw.kind {
             RawMessageKind::Request => MessageKind::Request,
             RawMessageKind::Response => MessageKind::Response,
+            RawMessageKind::Header => MessageKind::Header,
+            RawMessageKind::Data => MessageKind::Data,
         },
         listeners: raw.listeners,
-        name: MessageName::new(raw.name),
+        name,
         valid_versions,
         flexible_versions,
+        latest_version_unstable: raw.latest_version_unstable,
+        common_structs,
+        fields,
+        structs,
+    })
+}
+
+fn lower_common_struct(
+    raw: RawCommonStruct,
+    owner: &MessageName,
+    source: &Path,
+) -> Result<CommonStruct, LowerError> {
+    if !raw.extra.is_empty() {
+        return Err(LowerError::CommonStructProperties {
+            path: source.to_path_buf(),
+            declaration: raw.name,
+            properties: raw.extra.keys().cloned().collect::<Vec<_>>().join(", "),
+        });
+    }
+
+    let versions = parse_versions(source, "common struct", &raw.name, &raw.versions)?;
+    let fields = raw
+        .fields
+        .into_iter()
+        .map(|field| lower_field(field, owner, source))
+        .collect::<Result<Vec<_>, _>>()?;
+
+    Ok(CommonStruct {
+        name: StructRef::qualify(owner, raw.name),
+        versions,
         fields,
     })
 }

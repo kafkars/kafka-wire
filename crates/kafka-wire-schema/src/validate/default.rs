@@ -1,19 +1,22 @@
 //! Type compatibility and range checks for normalized protocol defaults.
 
-use crate::{DefaultValue, Field, FieldType, Message};
+use crate::{DefaultValue, Field, FieldType, Message, VersionSet};
 
 use super::{ValidationError, error::diagnostic};
 
 pub(super) fn validate_default(
     message: &Message,
     field: &Field,
-    nullable: &crate::VersionSet,
+    nullable: &VersionSet,
     errors: &mut Vec<ValidationError>,
 ) {
     let valid = match (&field.ty, &field.default) {
         (_, DefaultValue::Null) => !nullable.is_empty() && field.ty.permits_null(),
         (FieldType::Bool, DefaultValue::Bool(_))
         | (FieldType::String, DefaultValue::String(_))
+        | (FieldType::Uuid, DefaultValue::Uuid(_))
+        | (FieldType::Float64, DefaultValue::Float(_))
+        | (FieldType::Struct(_), DefaultValue::StructDefaults)
         | (FieldType::Array(_) | FieldType::Bytes | FieldType::Records, DefaultValue::Empty) => {
             true
         }

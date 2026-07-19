@@ -4,10 +4,13 @@ use kafka_wire_schema::{Message, MessageKind};
 
 use crate::render::text::RustText;
 
-pub(super) fn render_descriptor(rust: &mut RustText, message: &Message) {
+pub(super) fn render_descriptor(rust: &mut RustText, message: &Message, api_key: i16) {
+    // Grouping already rejected every kind without a direction and a key, so
+    // this is a totality guard rather than a policy decision.
     let direction = match message.kind {
         MessageKind::Request => "Request",
         MessageKind::Response => "Response",
+        MessageKind::Header | MessageKind::Data => return,
     };
     let constant = descriptor_name(message);
     let (start, end) = message.valid_versions.single_bounded().unwrap_or((0, 0));
@@ -18,7 +21,7 @@ pub(super) fn render_descriptor(rust: &mut RustText, message: &Message) {
     rust.line(format!(
         "pub const {constant}: MessageDescriptor = MessageDescriptor::new("
     ));
-    rust.line(format!("    {},", message.api_key));
+    rust.line(format!("    {api_key},"));
     rust.line(format!("    {:?},", message.name.protocol()));
     rust.line(format!("    MessageDirection::{direction},"));
     rust.line(format!("    VersionRange::new({start}, {end}),"));

@@ -34,6 +34,15 @@ pub struct RawField {
     /// Whether this field acts as an in-memory map key.
     #[serde(default)]
     pub map_key: bool,
+    /// Domain entity named by this field's value.
+    #[serde(default)]
+    pub entity_type: Option<String>,
+    /// Whether upstream marks this `bytes` field as safe to alias in place.
+    #[serde(default)]
+    pub zero_copy: bool,
+    /// Per-field override of the message's flexible-version encoding.
+    #[serde(default)]
+    pub flexible_versions: Option<String>,
     /// Human-facing field documentation.
     #[serde(default)]
     pub about: String,

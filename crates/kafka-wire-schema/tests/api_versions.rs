@@ -15,7 +15,7 @@ fn loads_the_pinned_api_versions_request() {
 
     let message = load_message(path).unwrap();
 
-    assert_eq!(message.api_key, 18);
+    assert_eq!(message.api_key, Some(18));
     assert_eq!(message.valid_versions.to_string(), "0-5");
     assert_eq!(message.effective_flexible_versions().to_string(), "3-5");
     assert_eq!(message.fields.len(), 4);

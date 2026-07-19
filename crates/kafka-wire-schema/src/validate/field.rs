@@ -1,24 +1,79 @@
-//! Sibling names, version relations, tags, defaults, and nested field shape.
+//! Sibling names, version relations, and nested field shape.
+//!
+//! This file owns the presence window every per-field invariant is judged
+//! against, and the checks that depend directly on it. It deliberately does not
+//! own the tagged-field contract (`tag.rs`), annotation placement
+//! (`annotation.rs`), default ranges (`default.rs`), or struct resolution
+//! (`structs.rs`).
 
 use std::collections::{BTreeMap, BTreeSet};
 
-use crate::{Field, FieldType, Message};
+use crate::{Field, Message, VersionSet};
 
-use super::{ValidationError, default::validate_default, error::diagnostic};
+use super::{
+    ValidationError, annotation::validate_annotations, default::validate_default,
+    error::diagnostic, tag::validate_tag,
+};
+
+/// Deepest field nesting validation will walk.
+///
+/// Lowering already rejects anything deeper, so reaching this bound means the
+/// two limits drifted apart rather than that a schema is legitimately deep.
+const NESTING_LIMIT: usize = 32;
+
+/// The version window a field is judged against.
+///
+/// A nested field exists only where its parent exists, so `versions` for a
+/// field two levels down means "of the versions where my parent is present".
+/// Judging it against the message instead silently accepts a child declared
+/// `0+` under a parent introduced at version 3, and then reports the resulting
+/// absence as a message-level fault or not at all.
+pub(super) struct Presence<'a> {
+    /// Versions in which the enclosing scope exists.
+    pub(super) parent: &'a VersionSet,
+    /// How deep this scope sits below the message root.
+    pub(super) depth: usize,
+}
+
+impl<'a> Presence<'a> {
+    /// Returns the presence window at the message root.
+    pub(super) const fn root(valid_versions: &'a VersionSet) -> Self {
+        Self {
+            parent: valid_versions,
+            depth: 0,
+        }
+    }
+
+    /// Returns the presence window inside a struct declared at message level.
+    ///
+    /// A `commonStructs` body is reached only through a field that refers to
+    /// it, so its members sit one level down even though the declaration is
+    /// written at the top of the file.
+    pub(super) const fn member(versions: &'a VersionSet) -> Self {
+        Self {
+            parent: versions,
+            depth: 1,
+        }
+    }
+}
 
 pub(super) fn validate_fields(
     message: &Message,
     fields: &[Field],
-    depth: usize,
+    scope: &Presence<'_>,
     errors: &mut Vec<ValidationError>,
 ) {
+    if scope.depth > NESTING_LIMIT {
+        return;
+    }
+
     let mut protocol_names = BTreeSet::new();
     let mut rust_names = BTreeSet::new();
     let mut tags = BTreeMap::new();
 
     for field in fields {
         validate_sibling_names(message, field, &mut protocol_names, &mut rust_names, errors);
-        validate_field(message, field, depth, &mut tags, errors);
+        validate_field(message, field, scope, &mut tags, errors);
     }
 }
 
@@ -50,29 +105,31 @@ fn validate_sibling_names<'a>(
 fn validate_field<'a>(
     message: &Message,
     field: &'a Field,
-    depth: usize,
+    scope: &Presence<'_>,
     tags: &mut BTreeMap<u32, &'a str>,
     errors: &mut Vec<ValidationError>,
 ) {
-    let present = field.versions.intersection(&message.valid_versions);
-    if present.is_empty() {
+    let present = field.versions.intersection(scope.parent);
+    // Absence is only a defect when the parent is reachable at all. Under a
+    // retired message or an already-unused parent every descendant is trivially
+    // absent, and reporting each one buries the one fault that is real.
+    if present.is_empty() && !scope.parent.is_empty() {
         errors.push(diagnostic(
             message,
             Some(field),
             "KAFKA_SCHEMA_UNUSED_FIELD",
-            "field is absent from every valid message version",
+            "field is absent from every version in which its parent exists",
         ));
     }
 
-    let nullable = field
-        .nullable_versions
-        .intersection(&message.valid_versions);
+    let nullable = field.nullable_versions.intersection(scope.parent);
     validate_nullability(message, field, &present, &nullable, errors);
     validate_tag(message, field, &present, tags, errors);
     validate_default(message, field, &nullable, errors);
     validate_nested_shape(message, field, errors);
+    validate_annotations(message, field, errors);
 
-    if field.map_key && depth == 0 {
+    if field.map_key && scope.depth == 0 {
         errors.push(diagnostic(
             message,
             Some(field),
@@ -80,16 +137,21 @@ fn validate_field<'a>(
             "mapKey is meaningful only inside a structured array element",
         ));
     }
-    if !field.fields.is_empty() {
-        validate_fields(message, &field.fields, depth + 1, errors);
+
+    if field.declares_struct() {
+        let nested = Presence {
+            parent: &present,
+            depth: scope.depth + 1,
+        };
+        validate_fields(message, &field.fields, &nested, errors);
     }
 }
 
 fn validate_nullability(
     message: &Message,
     field: &Field,
-    present: &crate::VersionSet,
-    nullable: &crate::VersionSet,
+    present: &VersionSet,
+    nullable: &VersionSet,
     errors: &mut Vec<ValidationError>,
 ) {
     if !nullable.is_subset_of(present) {
@@ -110,75 +172,11 @@ fn validate_nullability(
     }
 }
 
-fn validate_tag<'a>(
-    message: &Message,
-    field: &'a Field,
-    present: &crate::VersionSet,
-    tags: &mut BTreeMap<u32, &'a str>,
-    errors: &mut Vec<ValidationError>,
-) {
-    let tagged = field.tagged_versions.intersection(&message.valid_versions);
-    match (field.tag, tagged.is_empty()) {
-        (Some(tag), false) => {
-            if let Some(previous) = tags.insert(tag, field.name.protocol()) {
-                errors.push(diagnostic(
-                    message,
-                    Some(field),
-                    "KAFKA_SCHEMA_DUPLICATE_TAG",
-                    &format!("tag {tag} is already owned by sibling {previous}"),
-                ));
-            }
-            if !tagged.is_subset_of(present) {
-                errors.push(diagnostic(
-                    message,
-                    Some(field),
-                    "KAFKA_SCHEMA_TAG_OUTSIDE_FIELD",
-                    "tagged versions are not a subset of field-presence versions",
-                ));
-            }
-            if !tagged.is_subset_of(&message.effective_flexible_versions()) {
-                errors.push(diagnostic(
-                    message,
-                    Some(field),
-                    "KAFKA_SCHEMA_TAG_OUTSIDE_FLEXIBLE",
-                    "tagged versions are not a subset of flexible versions",
-                ));
-            }
-            if !is_one_open_range(&field.tagged_versions) {
-                errors.push(diagnostic(
-                    message,
-                    Some(field),
-                    "KAFKA_SCHEMA_TAG_NOT_OPEN_ENDED",
-                    "taggedVersions must be one open-ended range so a tag is never reused",
-                ));
-            }
-        }
-        (Some(_), true) => errors.push(diagnostic(
-            message,
-            Some(field),
-            "KAFKA_SCHEMA_UNUSED_TAG",
-            "tag is present but taggedVersions is empty",
-        )),
-        (None, false) => errors.push(diagnostic(
-            message,
-            Some(field),
-            "KAFKA_SCHEMA_MISSING_TAG",
-            "taggedVersions is present but tag is missing",
-        )),
-        (None, true) => {}
-    }
-}
-
 fn validate_nested_shape(message: &Message, field: &Field, errors: &mut Vec<ValidationError>) {
-    if field.fields.is_empty() {
+    if !field.declares_struct() {
         return;
     }
-    let owns_struct = match &field.ty {
-        FieldType::Struct(_) => true,
-        FieldType::Array(element) => matches!(element.as_ref(), FieldType::Struct(_)),
-        _ => false,
-    };
-    if !owns_struct {
+    if field.ty.struct_reference().is_none() {
         errors.push(diagnostic(
             message,
             Some(field),
@@ -186,8 +184,4 @@ fn validate_nested_shape(message: &Message, field: &Field, errors: &mut Vec<Vali
             "inline fields require a struct or array-of-struct type",
         ));
     }
-}
-
-fn is_one_open_range(versions: &crate::VersionSet) -> bool {
-    matches!(versions.ranges(), [range] if range.end().is_none())
 }

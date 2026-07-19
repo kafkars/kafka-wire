@@ -14,10 +14,10 @@ pub(crate) fn render_api(group: &ApiGroup, commit: &str) -> Result<String, Gener
     render_header(&mut rust, group, commit);
     render_imports(&mut rust, group);
     for source in group.messages() {
-        render_message(&mut rust, &source.message, group);
+        render_message(&mut rust, &source.message, group)?;
     }
     for source in group.messages() {
-        render_descriptor(&mut rust, &source.message);
+        render_descriptor(&mut rust, &source.message, group.api_key);
     }
     Ok(rust.finish())
 }

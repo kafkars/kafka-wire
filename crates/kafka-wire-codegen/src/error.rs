@@ -129,4 +129,22 @@ impl GenerationError {
             source,
         }
     }
+
+    /// Reports one normalized construct the backend has no emission rule for.
+    ///
+    /// Every renderer that reaches an unhandled construct must come here rather
+    /// than emit a placeholder. A comment in place of a codec produces a file
+    /// that can still compile while encoding nothing, which is a wrong-bytes
+    /// bug wearing a green build.
+    pub(crate) fn unsupported(
+        message: &kafka_wire_schema::Message,
+        field: &str,
+        reason: impl Into<String>,
+    ) -> Self {
+        Self::UnsupportedSchema {
+            message: message.name.protocol().to_owned(),
+            field: field.to_owned(),
+            reason: reason.into(),
+        }
+    }
 }

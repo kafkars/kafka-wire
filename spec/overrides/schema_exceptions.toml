@@ -1,0 +1,40 @@
+schema = 1
+
+# Upstream schema defects this repository accepts rather than enforces.
+#
+# Each entry names one message, one field, and one diagnostic code. Nothing here
+# loosens a rule: the invariant still runs against every message in the corpus,
+# and an entry only subtracts the single finding it names. A rule that needed a
+# blanket exemption would be the wrong rule and belongs fixed in `validate/`.
+#
+# Both entries below were confirmed against the pinned commit
+# 678c0e07e4733c5a592e52046dc2c4e1625587f1 by measuring the whole corpus, not by
+# inspecting the two files that failed.
+
+[[accepted]]
+message = "DescribeConfigsResponse"
+field = "Documentation"
+code = "KAFKA_SCHEMA_NULLABLE_OUTSIDE_FIELD"
+reason = """
+Documentation is declared `"versions": "3+"` with `"nullableVersions": "0+"`, so
+it claims to be nullable in versions 1 and 2 where the field does not exist. The
+claim is inert — nullability is only ever consulted where a field is present —
+but it is not idiomatic: of 1670 fields in the corpus only three write
+nullableVersions starting before their presence, and this is the only one whose
+message validVersions range makes the excess reachable. Clipping it to "3+"
+upstream would be a no-op change to the wire format.
+"""
+upstream = "clients/src/main/resources/common/message/DescribeConfigsResponse.json"
+
+[[accepted]]
+message = "ShareFetchRequest"
+field = "PartitionMaxBytes"
+code = "KAFKA_SCHEMA_UNUSED_FIELD"
+reason = """
+PartitionMaxBytes is declared `"versions": "0"` while the message declares
+`"validVersions": "1-2"`, so the field exists in no supported version. It is
+dead weight left behind when KIP-932 dropped ShareFetch v0 on the way from early
+access to general availability. Keeping the diagnostic and exempting this one
+field preserves the check for the next field that goes stale this way.
+"""
+upstream = "clients/src/main/resources/common/message/ShareFetchRequest.json"

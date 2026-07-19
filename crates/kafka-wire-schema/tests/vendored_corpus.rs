@@ -6,12 +6,18 @@
 //! represent. Vendoring the corpus and being able to compile it are separate
 //! capabilities; this file is the instrument that measures the gap between them.
 //!
-//! Two tests share that walk. `the_front_end_reads_the_whole_vendored_corpus`
-//! is the capability tripwire and is `#[ignore]`d because it is known-failing:
-//! `commonStructs`, non-message `"type"` values, and unmodeled field properties
-//! are still fatal. Un-ignore it when the census reaches zero.
-//! `front_end_coverage_does_not_regress` is the ratchet that runs in CI: it
-//! pins how many messages load today so coverage can only grow.
+//! Three tests share that walk. `the_front_end_reads_the_whole_vendored_corpus`
+//! is the capability tripwire: it now passes, so it runs unconditionally and any
+//! new upstream construct the front end cannot represent fails CI on arrival.
+//! `front_end_coverage_does_not_regress` is the ratchet that pins how many
+//! messages load today so coverage can only grow.
+//! `every_documented_exception_is_still_needed` keeps the override file honest.
+//!
+//! The walk runs with the reviewed exceptions from
+//! `spec/overrides/schema_exceptions.toml`, loaded by `support::corpus`. Two
+//! upstream files violate an invariant this front end is right to enforce, so
+//! they are accepted by name rather than by weakening the rule; the third test
+//! below fails if either entry stops being necessary.
 //!
 //! Read the census as *first blocking construct per file*, not as a usage count.
 //! The front end stops at the first phase that fails, so a file blocked on an
@@ -19,24 +25,24 @@
 //! would have hit there. Counts therefore shrink as earlier blockers are fixed
 //! and later ones surface; the census is a work queue, not an inventory.
 //!
-//! Run the census with:
-//! `cargo test -p kafka-wire-schema --test vendored_corpus -- --ignored --nocapture`
+//! Read the census with:
+//! `cargo test -p kafka-wire-schema --test vendored_corpus -- --nocapture`
 
 #![allow(clippy::unwrap_used)]
 
-use std::{
-    collections::BTreeMap,
-    fs,
-    path::{Path, PathBuf},
-};
+mod support;
 
-use kafka_wire_schema::{LowerError, SchemaError, SourceError, load_message};
+use std::{collections::BTreeMap, path::PathBuf};
+
+use kafka_wire_schema::{LowerError, SchemaError, SourceError, load_message, load_message_with};
+
+use support::{corpus_root, exceptions, schema_files};
 
 /// Messages that load cleanly today.
 ///
 /// This is a floor, not a target. Raise it whenever the front end learns a new
 /// construct; never lower it to make a change pass.
-const COVERAGE_FLOOR: usize = 51;
+const COVERAGE_FLOOR: usize = 201;
 
 /// One reason a vendored message did not survive the front end.
 struct Finding {
@@ -57,9 +63,6 @@ struct Coverage {
 }
 
 #[test]
-#[ignore = "known-failing capability tripwire: the front end cannot yet read the \
-            whole vendored corpus. Run with --ignored for the current census, and \
-            delete this attribute when it reaches zero failures."]
 fn the_front_end_reads_the_whole_vendored_corpus() {
     let coverage = survey_corpus();
 
@@ -99,15 +102,50 @@ fn the_vendored_corpus_is_the_whole_upstream_message_tree() {
     );
 }
 
+/// Every declared exception must still be load-bearing.
+///
+/// An override that no longer changes any outcome is worse than no override: it
+/// documents a defect that may already be fixed upstream and quietly widens what
+/// the next reader believes is tolerated. Each entry is therefore replayed
+/// against its own file with exceptions off, and must reproduce exactly the
+/// finding it claims to accept.
+#[test]
+fn every_documented_exception_is_still_needed() {
+    let corpus = corpus_root();
+
+    for exception in exceptions().entries() {
+        let path = corpus.join(format!("{}.json", exception.message));
+        let Err(SchemaError::Validation(errors)) = load_message(&path) else {
+            panic!(
+                "{} no longer fails validation, so the `{}` exception for field {:?} is stale",
+                path.display(),
+                exception.code,
+                exception.field,
+            );
+        };
+
+        assert!(
+            errors.0.iter().any(|error| error.code == exception.code
+                && error.field.as_deref() == exception.field.as_deref()),
+            "{} no longer reports {} for field {:?}; the exception is stale.\nstill reports: {:?}",
+            path.display(),
+            exception.code,
+            exception.field,
+            errors.0.iter().map(|error| error.code).collect::<Vec<_>>(),
+        );
+    }
+}
+
 /// Runs read, parse, lower, and validate over every vendored message.
 fn survey_corpus() -> Coverage {
     let corpus = corpus_root();
+    let exceptions = exceptions();
     let mut loaded = Vec::new();
     let mut failed = 0;
     let mut census = Census::new();
     let mut total = 0;
 
-    for path in schema_files(&corpus) {
+    for path in schema_files() {
         let filename = path
             .file_name()
             .and_then(|name| name.to_str())
@@ -115,7 +153,7 @@ fn survey_corpus() -> Coverage {
             .to_owned();
         total += 1;
 
-        match load_message(&path) {
+        match load_message_with(&path, &exceptions) {
             Ok(_) => loaded.push(filename),
             Err(error) => {
                 failed += 1;
@@ -185,6 +223,10 @@ fn findings(error: &SchemaError) -> Vec<Finding> {
                 detail: error.message.clone(),
             })
             .collect(),
+        other => vec![Finding {
+            code: "SCHEMA_UNCLASSIFIED",
+            detail: other.to_string(),
+        }],
     }
 }
 
@@ -215,9 +257,21 @@ fn lower_finding(error: &LowerError) -> Finding {
             code: "LOWER_FIELD_PROPERTIES",
             detail: properties.clone(),
         },
-        LowerError::MissingApiKey { .. } => Finding {
-            code: "LOWER_MISSING_API_KEY",
-            detail: "message declares no apiKey".to_owned(),
+        LowerError::CommonStructProperties { properties, .. } => Finding {
+            code: "LOWER_COMMON_STRUCT_PROPERTIES",
+            detail: properties.clone(),
+        },
+        LowerError::FieldType { reason, .. } => Finding {
+            code: "LOWER_FIELD_TYPE",
+            detail: reason.clone(),
+        },
+        LowerError::EntityType { reason, .. } => Finding {
+            code: "LOWER_ENTITY_TYPE",
+            detail: reason.clone(),
+        },
+        LowerError::NestingDepth { limit, .. } => Finding {
+            code: "LOWER_NESTING_DEPTH",
+            detail: format!("inline fields nest deeper than {limit} levels"),
         },
         LowerError::Versions { role, reason, .. } => Finding {
             code: "LOWER_VERSIONS",
@@ -227,50 +281,11 @@ fn lower_finding(error: &LowerError) -> Finding {
             code: "LOWER_DEFAULT",
             detail: reason.clone(),
         },
+        other => Finding {
+            code: "LOWER_UNCLASSIFIED",
+            detail: other.to_string(),
+        },
     }
-}
-
-/// The single vendored commit tree, discovered rather than spelled out.
-///
-/// Hardcoding the pinned SHA here would let this instrument keep surveying an
-/// abandoned corpus after `cargo xtask vendor` moved the pin.
-fn corpus_root() -> PathBuf {
-    let vendored = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../..")
-        .join("spec/upstream/apache-kafka");
-    let mut commits = fs::read_dir(&vendored)
-        .unwrap_or_else(|error| panic!("read {}: {error}", vendored.display()))
-        .filter_map(Result::ok)
-        .map(|entry| entry.path())
-        .filter(|path| path.is_dir())
-        .collect::<Vec<_>>();
-    commits.sort();
-
-    assert_eq!(
-        commits.len(),
-        1,
-        "expected exactly one vendored commit tree under {}, found {:?}",
-        vendored.display(),
-        commits,
-    );
-    commits.remove(0).join("message")
-}
-
-/// Every vendored schema file, in a stable order.
-fn schema_files(corpus: &Path) -> Vec<PathBuf> {
-    let mut files = fs::read_dir(corpus)
-        .unwrap_or_else(|error| panic!("read {}: {error}", corpus.display()))
-        .filter_map(Result::ok)
-        .map(|entry| entry.path())
-        .filter(|path| {
-            path.is_file()
-                && path
-                    .extension()
-                    .is_some_and(|extension| extension.eq_ignore_ascii_case("json"))
-        })
-        .collect::<Vec<_>>();
-    files.sort();
-    files
 }
 
 /// Drops the trailing position from a serde diagnostic so like reasons group.

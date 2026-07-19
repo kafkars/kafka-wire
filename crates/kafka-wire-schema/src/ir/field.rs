@@ -1,68 +1,10 @@
-//! Normalized field types and versioned field metadata.
+//! One normalized message field and the upstream metadata attached to it.
+//!
+//! This file owns the field record. It deliberately does not own the type
+//! language (`field_type.rs`), default values (`value.rs`), or the invariants
+//! that relate a field's version sets to its parent's (`validate/`).
 
-use super::{DefaultValue, FieldName, VersionSet};
-
-/// Backend-neutral Kafka field type.
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub enum FieldType {
-    /// Boolean.
-    Bool,
-    /// Signed 8-bit integer.
-    Int8,
-    /// Signed 16-bit integer.
-    Int16,
-    /// Unsigned 16-bit integer.
-    Uint16,
-    /// Signed 32-bit integer.
-    Int32,
-    /// Unsigned 32-bit integer.
-    Uint32,
-    /// Signed 64-bit integer.
-    Int64,
-    /// UUID.
-    Uuid,
-    /// UTF-8 protocol string.
-    String,
-    /// Opaque bytes.
-    Bytes,
-    /// Opaque record set.
-    Records,
-    /// Ordered array.
-    Array(Box<Self>),
-    /// Named inline or common struct.
-    Struct(String),
-}
-
-impl FieldType {
-    /// Parses a Kafka source type spelling.
-    pub fn parse(source: &str) -> Self {
-        if let Some(element) = source.strip_prefix("[]") {
-            return Self::Array(Box::new(Self::parse(element)));
-        }
-        match source {
-            "bool" => Self::Bool,
-            "int8" => Self::Int8,
-            "int16" => Self::Int16,
-            "uint16" => Self::Uint16,
-            "int32" => Self::Int32,
-            "uint32" => Self::Uint32,
-            "int64" => Self::Int64,
-            "uuid" => Self::Uuid,
-            "string" => Self::String,
-            "bytes" => Self::Bytes,
-            "records" => Self::Records,
-            other => Self::Struct(other.to_owned()),
-        }
-    }
-
-    /// Returns whether Kafka permits this shape to be nullable.
-    pub const fn permits_null(&self) -> bool {
-        matches!(
-            self,
-            Self::String | Self::Bytes | Self::Records | Self::Array(_) | Self::Struct(_)
-        )
-    }
-}
+use super::{DefaultValue, EntityType, FieldName, FieldType, VersionSet};
 
 /// One normalized message field.
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -85,8 +27,38 @@ pub struct Field {
     pub ignorable: bool,
     /// In-memory map key metadata.
     pub map_key: bool,
+    /// The domain entity this field's value names, when upstream says so.
+    ///
+    /// Preserved rather than discarded because it is the only machine-readable
+    /// statement that a given `int32` is a broker id: a client routing a
+    /// request or validating a topic name has no other source for that fact.
+    pub entity_type: Option<EntityType>,
+    /// Whether upstream marks this `bytes` field as safe to alias in place.
+    ///
+    /// A hint, not an obligation. It says a copy is avoidable here, which lets
+    /// a decoder hand out a borrowed slice instead of an owned buffer.
+    pub zero_copy: bool,
+    /// Per-field override of the message's flexible versions.
+    ///
+    /// Present only where upstream pins a field to an encoding its message
+    /// version would not otherwise use — `RequestHeader.ClientId` keeps the
+    /// legacy two-byte length prefix in flexible versions so that a broker can
+    /// read the header of an `ApiVersionsRequest` before it knows which version
+    /// the client chose.
+    pub flexible_versions: Option<VersionSet>,
     /// Human-facing documentation.
     pub about: String,
-    /// Inline struct fields, when present.
+    /// Inline struct fields, when this field declares its element shape.
     pub fields: Vec<Self>,
+}
+
+impl Field {
+    /// Returns whether this field declares the struct it refers to, inline.
+    ///
+    /// A struct-typed field either carries the declaration (`fields` present)
+    /// or refers to one made elsewhere in the same message; the two cases
+    /// resolve differently and every caller has to tell them apart.
+    pub fn declares_struct(&self) -> bool {
+        !self.fields.is_empty()
+    }
 }

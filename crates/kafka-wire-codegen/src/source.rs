@@ -7,7 +7,7 @@
 //! vendored corpus may grow ahead of generation capability without breaking a
 //! green tree.
 
-use std::{fs, path::Path};
+use std::{collections::BTreeMap, fs, path::Path};
 
 use kafka_wire_schema::Message;
 use sha2::{Digest, Sha256};
@@ -23,6 +23,54 @@ pub(crate) struct MessageSource {
     pub(crate) message: Message,
     pub(crate) filename: String,
     pub(crate) sha256: String,
+}
+
+/// Every locked file, byte verified, with the front end's answer for each.
+///
+/// The all-or-nothing `load_sources` above is what generation uses: a corpus
+/// with one unreadable schema is not a corpus to generate from. This one exists
+/// for measurement, where a rejected file is a data point rather than a fault,
+/// and `status` is deliberately ignored so the answer covers everything pinned.
+#[derive(Clone, Debug, Default)]
+pub(crate) struct LoadedCorpus {
+    /// Files the front end accepted, in lockfile order.
+    pub(crate) sources: Vec<MessageSource>,
+    /// Files the front end rejected, by filename, with its diagnostic.
+    pub(crate) rejected: BTreeMap<String, String>,
+}
+
+pub(crate) fn load_every_source(
+    workspace: &Path,
+    lock: &ProtocolLock,
+) -> Result<LoadedCorpus, GenerationError> {
+    let source_root = lock.kafka.vendored_message_root(workspace)?;
+    let mut corpus = LoadedCorpus::default();
+    for locked in &lock.kafka.files {
+        let path = source_root.join(&locked.path);
+        let bytes = fs::read(&path).map_err(|error| GenerationError::io(&path, error))?;
+        let actual = hex_digest(&bytes);
+        if actual != locked.sha256 {
+            return Err(GenerationError::SourceHash {
+                path,
+                expected: locked.sha256.clone(),
+                actual,
+            });
+        }
+
+        match kafka_wire_schema::load_message(&path) {
+            Ok(message) => corpus.sources.push(MessageSource {
+                message,
+                filename: locked.path.clone(),
+                sha256: locked.sha256.clone(),
+            }),
+            Err(error) => {
+                corpus
+                    .rejected
+                    .insert(locked.path.clone(), error.to_string());
+            }
+        }
+    }
+    Ok(corpus)
 }
 
 pub(crate) fn load_sources(

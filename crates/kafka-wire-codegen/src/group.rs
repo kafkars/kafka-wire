@@ -24,7 +24,23 @@ impl ApiGroup {
 pub(crate) fn group_sources(sources: Vec<MessageSource>) -> Result<Vec<ApiGroup>, GenerationError> {
     let mut groups: BTreeMap<i16, ApiGroup> = BTreeMap::new();
     for source in sources {
-        let api_key = source.message.api_key;
+        // Headers and data schemas are not dispatched by API key, so they have
+        // no group to join. Rejecting them here keeps every later stage able to
+        // assume a key exists.
+        let (MessageKind::Request | MessageKind::Response) = source.message.kind else {
+            return Err(GenerationError::UnsupportedSchema {
+                message: source.message.name.protocol().to_owned(),
+                field: "<message>".to_owned(),
+                reason: "only request and response schemas are grouped by API key".to_owned(),
+            });
+        };
+        let Some(api_key) = source.message.api_key else {
+            return Err(GenerationError::UnsupportedSchema {
+                message: source.message.name.protocol().to_owned(),
+                field: "<message>".to_owned(),
+                reason: "message declares no apiKey".to_owned(),
+            });
+        };
         let stem = source.message.name.api_stem().to_owned();
         let module_name = module_name(&source);
         let group = groups.entry(api_key).or_insert_with(|| ApiGroup {
@@ -40,6 +56,8 @@ pub(crate) fn group_sources(sources: Vec<MessageSource>) -> Result<Vec<ApiGroup>
             MessageKind::Response => {
                 insert_direction(&mut group.response, source, api_key, "response")?;
             }
+            // Rejected above; the arm keeps the match total.
+            MessageKind::Header | MessageKind::Data => {}
         }
 
         if let (Some(request), Some(response)) = (&group.request, &group.response) {
