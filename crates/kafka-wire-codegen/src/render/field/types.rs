@@ -19,29 +19,34 @@ pub(crate) fn rust_type(field: &Field, message: &Message) -> Result<String, Gene
         .nullable_versions
         .intersection(&message.valid_versions)
         .is_empty();
-    let base = match &field.ty {
-        FieldType::String => "StrBytes".to_owned(),
-        FieldType::Bool => "bool".to_owned(),
-        FieldType::Int8 => "i8".to_owned(),
-        FieldType::Int16 => "i16".to_owned(),
-        FieldType::Int32 => "i32".to_owned(),
-        FieldType::Int64 => "i64".to_owned(),
-        FieldType::Uuid => "Uuid".to_owned(),
-        FieldType::Array(element) if matches!(element.as_ref(), FieldType::String) => {
-            "Vec<StrBytes>".to_owned()
-        }
-        other => {
-            return Err(GenerationError::unsupported(
-                message,
-                field.name.protocol(),
-                format!("field type {other:?} has no Rust type in this backend"),
-            ));
-        }
-    };
+    let base = type_name(&field.ty, field, message)?;
     if nullable {
         Ok(format!("Option<{base}>"))
     } else {
         Ok(base)
+    }
+}
+
+/// Maps one type to its Rust spelling, recursing through array elements.
+///
+/// A struct reference is emitted under the owner-qualified name the earlier flat naming rule
+/// resolved during lowering, never a name this file re-derives.
+fn type_name(ty: &FieldType, field: &Field, message: &Message) -> Result<String, GenerationError> {
+    match ty {
+        FieldType::String => Ok("StrBytes".to_owned()),
+        FieldType::Bool => Ok("bool".to_owned()),
+        FieldType::Int8 => Ok("i8".to_owned()),
+        FieldType::Int16 => Ok("i16".to_owned()),
+        FieldType::Int32 => Ok("i32".to_owned()),
+        FieldType::Int64 => Ok("i64".to_owned()),
+        FieldType::Uuid => Ok("Uuid".to_owned()),
+        FieldType::Struct(reference) => Ok(reference.rust_type().to_owned()),
+        FieldType::Array(element) => Ok(format!("Vec<{}>", type_name(element, field, message)?)),
+        other => Err(GenerationError::unsupported(
+            message,
+            field.name.protocol(),
+            format!("field type {other:?} has no Rust type in this backend"),
+        )),
     }
 }
 
@@ -57,6 +62,12 @@ pub(crate) fn default_expression(
         DefaultValue::String(value) => Ok(format!("StrBytes::from({value:?})")),
         DefaultValue::Uuid(bytes) if *bytes == [0_u8; 16] => Ok("Uuid::ZERO".to_owned()),
         DefaultValue::Uuid(bytes) => Ok(format!("Uuid::from_bytes({bytes:?})")),
+        // A non-nullable struct field is absent from a version as every member
+        // at its own default, which is what the generated struct derives.
+        DefaultValue::StructDefaults => Ok(format!(
+            "{}::default()",
+            type_name(&field.ty, field, message)?
+        )),
         DefaultValue::Empty => match &field.ty {
             FieldType::Array(_) => Ok("Vec::new()".to_owned()),
             _ => Ok("Default::default()".to_owned()),
@@ -66,7 +77,7 @@ pub(crate) fn default_expression(
         // should reach the renderer. Should is not a guarantee, so widening the
         // slice without widening this match fails generation instead of
         // emitting an initializer that is not the protocol default.
-        other => Err(GenerationError::unsupported(
+        other @ DefaultValue::Float(_) => Err(GenerationError::unsupported(
             message,
             field.name.protocol(),
             format!("protocol default {other:?} has no Rust initializer in this backend"),
@@ -89,8 +100,12 @@ pub(crate) fn non_default_condition(
             Ok(format!("self.{name} != Uuid::ZERO"))
         }
         DefaultValue::Uuid(bytes) => Ok(format!("self.{name} != Uuid::from_bytes({bytes:?})")),
+        DefaultValue::StructDefaults => Ok(format!(
+            "self.{name} != {}::default()",
+            type_name(&field.ty, field, message)?
+        )),
         DefaultValue::Empty => Ok(format!("!self.{name}.is_empty()")),
-        other => Err(GenerationError::unsupported(
+        other @ DefaultValue::Float(_) => Err(GenerationError::unsupported(
             message,
             field.name.protocol(),
             format!("protocol default {other:?} has no equality test in this backend"),
@@ -117,14 +132,10 @@ pub(crate) fn uses_rust_default(field: &Field) -> bool {
     ) || matches!(
         (&field.ty, &field.default),
         (FieldType::Array(_), DefaultValue::Empty)
+    ) || matches!(
+        (&field.ty, &field.default),
+        (FieldType::Struct(_), DefaultValue::StructDefaults)
     ) || matches!(&field.default, DefaultValue::Null)
-}
-
-pub(crate) fn is_legacy_string_array(field: &Field) -> bool {
-    matches!(
-        &field.ty,
-        FieldType::Array(element) if matches!(element.as_ref(), FieldType::String)
-    )
 }
 
 /// Whether any field this message emits carries a `Uuid`, directly or as an

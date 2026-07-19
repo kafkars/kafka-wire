@@ -134,15 +134,32 @@ fn a_known_tagged_field_is_refused() {
 }
 
 #[test]
-fn an_inline_struct_field_is_refused() {
+fn an_inline_struct_in_a_flexible_message_is_refused() {
+    // Structs themselves are emitted now. What this backend cannot yet write is
+    // the tagged-field section a struct carries inside a flexible message, so
+    // the refusal moved from the construct to that one combination.
     let mut parent = field("Probe", struct_type("TopicData"), "0+");
     parent.fields = vec![field("Name", FieldType::String, "0+")];
     assert_refused(
         vec![parent],
         "0-4",
-        "none",
-        "a field declaring an inline struct",
-        "inline structs are not implemented yet",
+        "0+",
+        "an inline struct in a flexible message",
+        "structs in flexible messages are not implemented yet",
+    );
+}
+
+#[test]
+fn an_inline_struct_in_a_legacy_message_is_accepted() {
+    // The paired accepting shape: without this, the refusal above could pass
+    // because the boundary rejects every struct.
+    let mut parent = field("Probe", struct_type("TopicData"), "0+");
+    parent.fields = vec![field("Name", FieldType::String, "0+")];
+    let message = message("0-4", "none", vec![parent]);
+
+    assert!(
+        validate_supported(&message).is_ok(),
+        "the backend refused an inline struct in a non-flexible message"
     );
 }
 
@@ -215,8 +232,6 @@ fn every_field_type_outside_the_slice_is_refused_by_name() {
         FieldType::Float64,
         FieldType::Bytes,
         FieldType::Records,
-        struct_type("TopicData"),
-        FieldType::Array(Box::new(FieldType::Int32)),
     ] {
         let message = message("0-4", "none", vec![field("Probe", ty.clone(), "0+")]);
         let diagnostic = refusal(&message, &format!("a {ty:?} field"));

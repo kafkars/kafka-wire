@@ -8,7 +8,11 @@ use crate::{
     render::{field, text::RustText},
 };
 
-use super::codec::{render_decode, render_encode};
+use super::{
+    codec::{render_decode, render_encode},
+    prose::sentence,
+    structs::render_declared_structs,
+};
 
 pub(super) fn render_message(
     rust: &mut RustText,
@@ -22,6 +26,8 @@ pub(super) fn render_message(
         MessageKind::Response => "Response",
         MessageKind::Header | MessageKind::Data => return Ok(()),
     };
+    render_declared_structs(rust, message)?;
+
     rust.line(format!(
         "/// {direction} body for the `{}` API.",
         message.name.api_stem()
@@ -149,42 +155,4 @@ fn option_range(versions: &kafka_wire_schema::VersionSet) -> String {
         || "None".to_owned(),
         |(start, end)| format!("Some(VersionRange::new({start}, {end}))"),
     )
-}
-
-fn sentence(source: &str) -> String {
-    let source = source
-        .split_whitespace()
-        .map(mark_protocol_identifier)
-        .collect::<Vec<_>>()
-        .join(" ");
-    if source.ends_with('.') || source.ends_with('!') || source.ends_with('?') {
-        source
-    } else {
-        format!("{source}.")
-    }
-}
-
-fn mark_protocol_identifier(token: &str) -> String {
-    if token.contains('`') {
-        return token.to_owned();
-    }
-    let is_identifier = |character: char| character.is_alphanumeric() || character == '_';
-    let Some(start) = token.find(is_identifier) else {
-        return token.to_owned();
-    };
-    let Some(last) = token.rfind(is_identifier) else {
-        return token.to_owned();
-    };
-    let end = last + token[last..].chars().next().map_or(0, char::len_utf8);
-    let identifier = &token[start..end];
-    let mut characters = identifier.chars();
-    let _ = characters.next();
-    let has_internal_uppercase = characters.any(char::is_uppercase);
-    let has_lowercase = identifier.chars().any(char::is_lowercase);
-    let is_plain_identifier = identifier.chars().all(is_identifier);
-    if has_internal_uppercase && has_lowercase && is_plain_identifier {
-        format!("{}`{identifier}`{}", &token[..start], &token[end..])
-    } else {
-        token.to_owned()
-    }
 }

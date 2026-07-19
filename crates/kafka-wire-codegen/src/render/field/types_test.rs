@@ -14,10 +14,7 @@ use kafka_wire_schema::{DefaultValue, FieldType, FloatDefault};
 
 use super::{
     probe::{field, message, nullable, struct_type},
-    types::{
-        default_expression, is_legacy_string_array, non_default_condition, rust_type,
-        uses_rust_default,
-    },
+    types::{default_expression, non_default_condition, rust_type, uses_rust_default},
 };
 
 const VALID: &str = "0-4";
@@ -83,6 +80,21 @@ fn declared_types() -> Vec<TypeCell> {
             nullable: true,
             declared: "Option<Vec<StrBytes>>",
         },
+        TypeCell {
+            ty: FieldType::Array(Box::new(FieldType::Int32)),
+            nullable: false,
+            declared: "Vec<i32>",
+        },
+        TypeCell {
+            ty: struct_type("TopicData"),
+            nullable: false,
+            declared: "ProbeRequestTopicData",
+        },
+        TypeCell {
+            ty: FieldType::Array(Box::new(struct_type("TopicData"))),
+            nullable: false,
+            declared: "Vec<ProbeRequestTopicData>",
+        },
     ]
 }
 
@@ -113,8 +125,6 @@ fn a_type_outside_the_slice_fails_generation_instead_of_emitting_a_comment() {
         FieldType::Float64,
         FieldType::Bytes,
         FieldType::Records,
-        struct_type("TopicData"),
-        FieldType::Array(Box::new(FieldType::Int32)),
     ] {
         let probe = field("Probe", ty.clone(), "0+");
         let message = message(VALID, "none", vec![probe]);
@@ -210,6 +220,14 @@ fn defaults() -> Vec<DefaultCell> {
             non_default: "self.probe != Uuid::ZERO",
             derivable: true,
         },
+        DefaultCell {
+            situation: "a non-nullable struct, absent as every member at its own default",
+            ty: struct_type("TopicData"),
+            default: DefaultValue::StructDefaults,
+            initializer: "ProbeRequestTopicData::default()",
+            non_default: "self.probe != ProbeRequestTopicData::default()",
+            derivable: true,
+        },
     ]
 }
 
@@ -253,10 +271,7 @@ fn a_default_with_no_rust_form_fails_generation_instead_of_emitting_a_comment() 
     // `Default` impl is valid Rust in exactly the position where being wrong is
     // unobservable, so it must fail instead. (Uuid defaults now render, so they
     // have moved to the positive default table above.)
-    for default in [
-        DefaultValue::Float(FloatDefault::new(1.0)),
-        DefaultValue::StructDefaults,
-    ] {
+    for default in [DefaultValue::Float(FloatDefault::new(1.0))] {
         let mut probe = field("Probe", FieldType::String, "0+");
         probe.default = default.clone();
         let message = message(VALID, "none", vec![probe]);
@@ -274,28 +289,6 @@ fn a_default_with_no_rust_form_fails_generation_instead_of_emitting_a_comment() 
                 "the {role} rejection must name the message and field: {error}"
             );
         }
-    }
-}
-
-#[test]
-fn only_a_string_array_takes_the_structured_array_path() {
-    // This predicate is what routes a field away from the scalar codec. If it
-    // ever answered yes for a shape the array block cannot emit, the generator
-    // would render a `read_string` loop for something that is not a string.
-    let string_array = field("Probe", FieldType::Array(Box::new(FieldType::String)), "0+");
-    assert!(is_legacy_string_array(&string_array));
-
-    for ty in [
-        FieldType::String,
-        FieldType::Int32,
-        FieldType::Array(Box::new(FieldType::Int32)),
-        FieldType::Array(Box::new(struct_type("TopicData"))),
-    ] {
-        let probe = field("Probe", ty.clone(), "0+");
-        assert!(
-            !is_legacy_string_array(&probe),
-            "{ty:?} must not be routed to the legacy string-array block"
-        );
     }
 }
 

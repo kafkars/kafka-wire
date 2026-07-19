@@ -1,6 +1,6 @@
 //! Generated encode/decode bodies with visible version and representability gates.
 
-use kafka_wire_schema::Message;
+use kafka_wire_schema::{FieldType, Message};
 
 use crate::{
     GenerationError,
@@ -13,23 +13,7 @@ pub(super) fn render_decode(rust: &mut RustText, message: &Message) -> Result<()
     rust.line("crate::message::ensure_decode_version::<Self>(version)?;");
     rust.blank();
 
-    for field in &message.fields {
-        if field::is_legacy_string_array(field) {
-            render_array_decode(rust, field.name.rust_field());
-            continue;
-        }
-        let expression = field::read_expression(field, message)?;
-        match field::presence_condition(field, message) {
-            None => rust.line(format!("let {} = {expression};", field.name.rust_field())),
-            Some(condition) => {
-                rust.open(format!("let {} = if {condition}", field.name.rust_field()));
-                rust.line(expression);
-                rust.reopen("} else {");
-                rust.line(field::default_expression(field, message)?);
-                rust.close(";");
-            }
-        }
-    }
+    render_reads(rust, &message.fields, message)?;
     if !message.effective_flexible_versions().is_empty() {
         rust.open("let unknown_tagged_fields = if Self::is_flexible(version)");
         rust.line("decoder.read_tagged_fields()?");
@@ -40,21 +24,7 @@ pub(super) fn render_decode(rust: &mut RustText, message: &Message) -> Result<()
 
     rust.blank();
     let has_tagged_fields = !message.effective_flexible_versions().is_empty();
-    if message.fields.len() == 1 && !has_tagged_fields {
-        rust.line(format!(
-            "Ok(Self {{ {} }})",
-            message.fields[0].name.rust_field()
-        ));
-    } else {
-        rust.open("Ok(Self");
-        for field in &message.fields {
-            rust.line(format!("{},", field.name.rust_field()));
-        }
-        if has_tagged_fields {
-            rust.line("unknown_tagged_fields,");
-        }
-        rust.close(")");
-    }
+    render_construction(rust, &message.fields, has_tagged_fields);
     rust.close("");
     rust.close("");
     rust.blank();
@@ -71,21 +41,7 @@ pub(super) fn render_encode(rust: &mut RustText, message: &Message) -> Result<()
     rust.line("crate::message::ensure_encode_version::<Self>(version)?;");
     render_representability_checks(rust, message)?;
 
-    for field in &message.fields {
-        if field::is_legacy_string_array(field) {
-            render_array_encode(rust, field.name.rust_field());
-            continue;
-        }
-        let statement = field::write_statement(field, message)?;
-        match field::presence_condition(field, message) {
-            None => rust.line(statement),
-            Some(condition) => {
-                rust.open(format!("if {condition}"));
-                rust.line(statement);
-                rust.close("");
-            }
-        }
-    }
+    render_writes(rust, &message.fields, message)?;
     if !message.effective_flexible_versions().is_empty() {
         rust.blank();
         rust.open("if Self::is_flexible(version)");
@@ -104,6 +60,83 @@ pub(super) fn render_encode(rust: &mut RustText, message: &Message) -> Result<()
     rust.close("");
     rust.blank();
     Ok(())
+}
+
+/// Emits one `let` per field, reading it or substituting its default.
+///
+/// Shared by messages and by the structs they declare: a struct's members are
+/// versioned against the same message, so the presence gates and defaults are
+/// decided by exactly the same rules.
+pub(super) fn render_reads(
+    rust: &mut RustText,
+    fields: &[kafka_wire_schema::Field],
+    message: &Message,
+) -> Result<(), GenerationError> {
+    for field in fields {
+        if let FieldType::Array(element) = &field.ty {
+            let (read, _) = field::element_codec(element, field, message)?;
+            render_array_decode(rust, field.name.rust_field(), &read);
+            continue;
+        }
+        let expression = field::read_expression(field, message)?;
+        match field::presence_condition(field, message) {
+            None => rust.line(format!("let {} = {expression};", field.name.rust_field())),
+            Some(condition) => {
+                rust.open(format!("let {} = if {condition}", field.name.rust_field()));
+                rust.line(expression);
+                rust.reopen("} else {");
+                rust.line(field::default_expression(field, message)?);
+                rust.close(";");
+            }
+        }
+    }
+    Ok(())
+}
+
+/// Emits one write per field, gated where the field is not present in every
+/// version. The counterpart of `render_reads`.
+pub(super) fn render_writes(
+    rust: &mut RustText,
+    fields: &[kafka_wire_schema::Field],
+    message: &Message,
+) -> Result<(), GenerationError> {
+    for field in fields {
+        if let FieldType::Array(element) = &field.ty {
+            let (_, write) = field::element_codec(element, field, message)?;
+            render_array_encode(rust, field.name.rust_field(), &write);
+            continue;
+        }
+        let statement = field::write_statement(field, message)?;
+        match field::presence_condition(field, message) {
+            None => rust.line(statement),
+            Some(condition) => {
+                rust.open(format!("if {condition}"));
+                rust.line(statement);
+                rust.close("");
+            }
+        }
+    }
+    Ok(())
+}
+
+/// Emits the `Ok(Self { .. })` that closes a decode body.
+pub(super) fn render_construction(
+    rust: &mut RustText,
+    fields: &[kafka_wire_schema::Field],
+    tagged: bool,
+) {
+    if fields.len() == 1 && !tagged {
+        rust.line(format!("Ok(Self {{ {} }})", fields[0].name.rust_field()));
+        return;
+    }
+    rust.open("Ok(Self");
+    for field in fields {
+        rust.line(format!("{},", field.name.rust_field()));
+    }
+    if tagged {
+        rust.line("unknown_tagged_fields,");
+    }
+    rust.close(")");
 }
 
 fn render_representability_checks(
@@ -141,17 +174,17 @@ fn render_representability_checks(
     Ok(())
 }
 
-fn render_array_decode(rust: &mut RustText, name: &str) {
+fn render_array_decode(rust: &mut RustText, name: &str, element: &str) {
     rust.line("let length = decoder.read_array_len()?;");
     rust.line(format!("let mut {name} = Vec::with_capacity(length);"));
     rust.open("for _ in 0..length");
-    rust.line(format!("{name}.push(decoder.read_string()?);"));
+    rust.line(format!("{name}.push({element});"));
     rust.close("");
 }
 
-fn render_array_encode(rust: &mut RustText, name: &str) {
+fn render_array_encode(rust: &mut RustText, name: &str, element: &str) {
     rust.line(format!("encoder.write_array_len(self.{name}.len())?;"));
     rust.open(format!("for value in &self.{name}"));
-    rust.line("encoder.write_string(value)?;");
+    rust.line(element);
     rust.close("");
 }

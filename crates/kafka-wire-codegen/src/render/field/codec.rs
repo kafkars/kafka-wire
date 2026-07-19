@@ -45,6 +45,43 @@ pub(crate) fn write_statement(field: &Field, message: &Message) -> Result<String
     }
 }
 
+/// Read expression and write statement for one array element.
+///
+/// The generated loop binds `value` by reference, so a `Copy` scalar is
+/// dereferenced at the call and a borrowed type is passed straight through.
+/// Element codecs carry no length prefix of their own, so unlike the scalar
+/// path this makes no compact/legacy choice: that decision belongs to the
+/// array's own length prefix.
+pub(crate) fn element_codec(
+    element: &FieldType,
+    field: &Field,
+    message: &Message,
+) -> Result<(String, String), GenerationError> {
+    let pair = match element {
+        FieldType::String => ("decoder.read_string()?", "encoder.write_string(value)?;"),
+        FieldType::Bool => ("decoder.read_bool()?", "encoder.write_bool(*value)?;"),
+        FieldType::Int8 => ("decoder.read_i8()?", "encoder.write_i8(*value)?;"),
+        FieldType::Int16 => ("decoder.read_i16()?", "encoder.write_i16(*value)?;"),
+        FieldType::Int32 => ("decoder.read_i32()?", "encoder.write_i32(*value)?;"),
+        FieldType::Int64 => ("decoder.read_i64()?", "encoder.write_i64(*value)?;"),
+        FieldType::Uuid => ("decoder.read_uuid()?", "encoder.write_uuid(*value)?;"),
+        FieldType::Struct(reference) => {
+            return Ok((
+                format!("{}::decode(decoder, version)?", reference.rust_type()),
+                "value.encode(encoder, version)?;".to_owned(),
+            ));
+        }
+        other => {
+            return Err(GenerationError::unsupported(
+                message,
+                field.name.protocol(),
+                format!("array element type {other:?} has no codec in this backend"),
+            ));
+        }
+    };
+    Ok((pair.0.to_owned(), pair.1.to_owned()))
+}
+
 /// Which length prefix a field uses across the versions it is present in.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 enum Encoding {
@@ -94,6 +131,10 @@ fn read_method(
         FieldType::Int32 => Ok("decoder.read_i32()?".to_owned()),
         FieldType::Int64 => Ok("decoder.read_i64()?".to_owned()),
         FieldType::Uuid => Ok("decoder.read_uuid()?".to_owned()),
+        FieldType::Struct(reference) => Ok(format!(
+            "{}::decode(decoder, version)?",
+            reference.rust_type()
+        )),
         FieldType::Array(_) => Err(GenerationError::unsupported(
             message,
             field.name.protocol(),
@@ -130,6 +171,7 @@ fn write_method(
         FieldType::Int32 => Ok(format!("encoder.write_i32(self.{name})?;")),
         FieldType::Int64 => Ok(format!("encoder.write_i64(self.{name})?;")),
         FieldType::Uuid => Ok(format!("encoder.write_uuid(self.{name})?;")),
+        FieldType::Struct(_) => Ok(format!("self.{name}.encode(encoder, version)?;")),
         FieldType::Array(_) => Err(GenerationError::unsupported(
             message,
             field.name.protocol(),

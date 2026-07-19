@@ -188,6 +188,14 @@ fn fixed_width_cells() -> Vec<Cell> {
             read: "decoder.read_uuid()?",
             write: "encoder.write_uuid(self.probe)?;",
         },
+        Cell {
+            situation: "a struct field, which delegates to the struct's own codec",
+            ty: struct_type("TopicData"),
+            nullable: false,
+            flexible: "none",
+            read: "ProbeRequestTopicData::decode(decoder, version)?",
+            write: "self.probe.encode(encoder, version)?;",
+        },
     ]
 }
 
@@ -246,7 +254,6 @@ fn types_outside_the_scalar_slice() -> Vec<FieldType> {
         FieldType::Float64,
         FieldType::Bytes,
         FieldType::Records,
-        struct_type("TopicData"),
     ]
 }
 
