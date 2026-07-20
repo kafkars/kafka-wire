@@ -1,0 +1,22 @@
+{
+  "schema": 1,
+  "message": "ControlRecordTypeSchema",
+  "direction": "framing",
+  "valid_versions": [
+    0
+  ],
+  "flexible_versions": [],
+  "source": "ControlRecordTypeSchema.json",
+  "cases": [
+    {
+      "name": "synthesized_defaults_v0",
+      "why": "Every field this version declares, at its protocol default. Synthesized so the message is held to Apache Kafka's bytes at all; hand-written cases carry the interesting shapes.",
+      "versions": [
+        0
+      ],
+      "json_value": {
+        "type": 0
+      }
+    }
+  ]
+}

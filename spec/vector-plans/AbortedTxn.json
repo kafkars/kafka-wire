@@ -1,0 +1,25 @@
+{
+  "schema": 1,
+  "message": "AbortedTxn",
+  "direction": "framing",
+  "valid_versions": [
+    0
+  ],
+  "flexible_versions": [],
+  "source": "AbortedTxn.json",
+  "cases": [
+    {
+      "name": "synthesized_defaults_v0",
+      "why": "Every field this version declares, at its protocol default. Synthesized so the message is held to Apache Kafka's bytes at all; hand-written cases carry the interesting shapes.",
+      "versions": [
+        0
+      ],
+      "json_value": {
+        "producerId": 0,
+        "firstOffset": 0,
+        "lastOffset": 0,
+        "lastStableOffset": 0
+      }
+    }
+  ]
+}

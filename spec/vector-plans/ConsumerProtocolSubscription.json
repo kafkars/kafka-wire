@@ -1,0 +1,65 @@
+{
+  "schema": 1,
+  "message": "ConsumerProtocolSubscription",
+  "direction": "framing",
+  "valid_versions": [
+    0,
+    1,
+    2,
+    3
+  ],
+  "flexible_versions": [],
+  "source": "ConsumerProtocolSubscription.json",
+  "cases": [
+    {
+      "name": "synthesized_defaults_v0",
+      "why": "Every field this version declares, at its protocol default. Synthesized so the message is held to Apache Kafka's bytes at all; hand-written cases carry the interesting shapes.",
+      "versions": [
+        0
+      ],
+      "json_value": {
+        "topics": [],
+        "userData": null
+      }
+    },
+    {
+      "name": "synthesized_defaults_v1",
+      "why": "Every field this version declares, at its protocol default. Synthesized so the message is held to Apache Kafka's bytes at all; hand-written cases carry the interesting shapes.",
+      "versions": [
+        1
+      ],
+      "json_value": {
+        "topics": [],
+        "userData": null,
+        "ownedPartitions": []
+      }
+    },
+    {
+      "name": "synthesized_defaults_v2",
+      "why": "Every field this version declares, at its protocol default. Synthesized so the message is held to Apache Kafka's bytes at all; hand-written cases carry the interesting shapes.",
+      "versions": [
+        2
+      ],
+      "json_value": {
+        "topics": [],
+        "userData": null,
+        "ownedPartitions": [],
+        "generationId": -1
+      }
+    },
+    {
+      "name": "synthesized_defaults_v3",
+      "why": "Every field this version declares, at its protocol default. Synthesized so the message is held to Apache Kafka's bytes at all; hand-written cases carry the interesting shapes.",
+      "versions": [
+        3
+      ],
+      "json_value": {
+        "topics": [],
+        "userData": null,
+        "ownedPartitions": [],
+        "generationId": -1,
+        "rackId": null
+      }
+    }
+  ]
+}
