@@ -195,7 +195,7 @@
     },
     {
       "path": "fetch_snapshot.rs",
-      "sha256": "88f5a699a1ba2d54c6350e6f8625da1fd08d1cae4e929effaafe39ff6bd6a057"
+      "sha256": "8ea7fa08f28d006a9d3004d60a73793dd9ecbdc6ad84a97b543973ae05c28384"
     },
     {
       "path": "find_coordinator.rs",
@@ -311,7 +311,7 @@
     },
     {
       "path": "share_fetch.rs",
-      "sha256": "0dd3c6cc5ddc91af70dfe98032ab69dec1d47c42ada4cb5be92d2d41cc71c878"
+      "sha256": "b9c4ab432f47569a398b215ac81c2554b2cf959a5b4b2f3db987f2527ea5565e"
     },
     {
       "path": "share_group_describe.rs",

@@ -474,7 +474,7 @@ impl KafkaEncode for FetchSnapshotResponsePartitionSnapshot {
         self.snapshot_id.encode(encoder, version)?;
         encoder.write_i64(self.size)?;
         encoder.write_i64(self.position)?;
-        encoder.write_bytes(&self.unaligned_records)?;
+        encoder.write_compact_bytes(&self.unaligned_records)?;
 
         if Self::is_flexible(version) {
             let mut known = KnownTags::new();

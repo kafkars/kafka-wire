@@ -307,7 +307,15 @@ fn write_method(
         FieldType::Bytes | FieldType::Records if nullable => Ok(format!(
             "encoder.write_nullable_bytes(self.{name}.as_deref())?;"
         )),
-        FieldType::Bytes if compact => Ok(format!("encoder.write_compact_bytes(&self.{name})?;")),
+        // `Records` belongs beside `Bytes` in every arm, and was missing from
+        // this one alone. The read path had it, so a non-nullable records field
+        // in a flexible message was read with a compact prefix and written with
+        // a legacy one — the exact encode/decode divergence this repository's
+        // single-encode-path design exists to make impossible, reintroduced by
+        // one absent variant in one match arm.
+        FieldType::Bytes | FieldType::Records if compact => {
+            Ok(format!("encoder.write_compact_bytes(&self.{name})?;"))
+        }
         FieldType::Bytes | FieldType::Records => Ok(format!("encoder.write_bytes(&self.{name})?;")),
         FieldType::Struct(_) if nullable => Ok(format!(
             "if let Some(value) = &self.{name} {{ encoder.write_struct_presence(true)?; \

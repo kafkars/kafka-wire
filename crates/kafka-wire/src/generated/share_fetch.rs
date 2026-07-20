@@ -157,7 +157,7 @@ impl KafkaEncode for ShareFetchResponsePartitionData {
         encoder.write_i16(self.acknowledge_error_code)?;
         encoder.write_compact_nullable_string(self.acknowledge_error_message.as_ref())?;
         self.current_leader.encode(encoder, version)?;
-        encoder.write_bytes(&self.records)?;
+        encoder.write_compact_bytes(&self.records)?;
         encoder.write_compact_array_len(self.acquired_records.len())?;
         for value in &self.acquired_records {
             value.encode(encoder, version)?;
