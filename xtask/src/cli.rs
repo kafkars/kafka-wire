@@ -18,6 +18,8 @@ pub(crate) enum Command {
     Verify,
     /// Author or verify the broker-authored byte-vector corpus.
     Vectors(VectorsMode),
+    /// Author or verify the broker-authored record-batch corpus.
+    Records(RecordsMode),
     /// Print the pinned source and command map.
     Doctor,
 }
@@ -45,6 +47,18 @@ pub(crate) enum VectorsMode {
     Check,
 }
 
+/// Which half of the record corpus command to run.
+///
+/// Split for the same reason `VectorsMode` is: refresh reaches a Java toolchain
+/// and the pinned jar, check never does.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub(crate) enum RecordsMode {
+    /// Re-ask Kafka's `MemoryRecordsBuilder` for every batch. Needs the jar.
+    Refresh,
+    /// Verify the checked-in corpus in pure Rust. This is what CI runs.
+    Check,
+}
+
 impl Command {
     pub(crate) fn parse(arguments: impl IntoIterator<Item = String>) -> Result<Self, String> {
         let mut arguments = arguments.into_iter();
@@ -62,6 +76,16 @@ impl Command {
                 _ => Err(format!(
                     "`generate-all` needs --check-only; rendering the whole corpus \
                      into the checked-in tree is not a decision this command makes\n\n{}",
+                    usage()
+                )),
+            };
+        }
+        if command.as_str() == "records" {
+            return match option.as_deref() {
+                Some("--refresh") => Ok(Self::Records(RecordsMode::Refresh)),
+                Some("--check") => Ok(Self::Records(RecordsMode::Check)),
+                _ => Err(format!(
+                    "`records` needs --refresh or --check\n\n{}",
                     usage()
                 )),
             };
@@ -104,6 +128,8 @@ fn usage() -> String {
         "  verify             run generated-check and repository guards",
         "  vectors --check    verify the checked-in byte-vector corpus (offline)",
         "  vectors --refresh  re-author it from the pinned Kafka jar (needs Java)",
+        "  records --check    verify the checked-in record-batch corpus (offline)",
+        "  records --refresh  re-author it from the pinned Kafka jar (needs Java)",
         "  doctor             print pinned inputs and common commands",
     ]
     .join("\n")

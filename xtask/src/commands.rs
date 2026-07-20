@@ -20,6 +20,7 @@ pub(crate) fn run(command: Command) -> Result<(), String> {
             cargo(&["test", "-p", "xtask"])
         }
         Command::Vectors(mode) => vectors::run(mode),
+        Command::Records(mode) => crate::records::run(mode),
         Command::Doctor => doctor(),
     }
 }

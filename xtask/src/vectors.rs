@@ -14,7 +14,7 @@
 mod check;
 mod corpus;
 mod oracle;
-mod oracle_lock;
+pub(crate) mod oracle_lock;
 mod refresh;
 
 use crate::cli::VectorsMode;

@@ -5,6 +5,7 @@ mod commands;
 mod fetch;
 mod probe;
 mod protocol_lock;
+mod records;
 mod upstream_name;
 mod vectors;
 mod vendor;
