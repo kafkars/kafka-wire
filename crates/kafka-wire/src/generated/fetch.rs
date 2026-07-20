@@ -857,7 +857,7 @@ pub mod fetch_response {
                 snapshot_id: SnapshotId::default(),
                 aborted_transactions: Some(Vec::new()),
                 preferred_read_replica: -1,
-                records: Some(Bytes::default()),
+                records: None,
                 unknown_tagged_fields: TaggedFields::default(),
             }
         }

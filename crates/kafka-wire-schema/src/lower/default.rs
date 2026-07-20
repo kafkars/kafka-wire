@@ -2,8 +2,12 @@
 //!
 //! This file owns the source-language question — what does this JSON literal
 //! mean for a field of this type — including the spellings upstream permits for
-//! a number. It deliberately does not own whether the resulting value is legal:
-//! range and nullability checks belong to `validate/default.rs`.
+//! a number. One implicit default reads a field's nullability window as well as
+//! its type: a records field's is null where the field is nullable in range and
+//! the empty batch otherwise, so the caller passes that one fact in.
+//!
+//! It deliberately does not own whether the resulting value is legal: range and
+//! nullability checks belong to `validate/default.rs`.
 
 use std::path::Path;
 
@@ -14,11 +18,17 @@ use crate::{DefaultValue, FieldType, FloatDefault};
 use super::LowerError;
 
 /// Lowers one `default` literal, or the type's implicit default when absent.
+///
+/// `nullable_in_range` says whether the field's Rust type is `Option`, which
+/// only a records field's implicit default consults: Kafka defaults every
+/// records field to null unconditionally, so this repository matches it where an
+/// `Option` can hold the null and keeps the empty batch where it cannot.
 pub(super) fn lower_default(
     path: &Path,
     field: &str,
     ty: &FieldType,
     value: Option<&Value>,
+    nullable_in_range: bool,
 ) -> Result<DefaultValue, LowerError> {
     let invalid = |reason: String| LowerError::Default {
         path: path.to_path_buf(),
@@ -68,9 +78,19 @@ pub(super) fn lower_default(
         {
             Ok(DefaultValue::Empty)
         }
-        (FieldType::Array(_) | FieldType::Bytes | FieldType::Records, None) => {
-            Ok(DefaultValue::Empty)
-        }
+        // Kafka's generator returns `null` for a records field unconditionally —
+        // `FieldSpec.fieldDefault`'s `type.isRecords()` arm ignores the declared
+        // default entirely. This repository can only carry that null where the
+        // field is nullable across the message's supported range and so lowers to
+        // an `Option`; where it is not, the type is a bare `Bytes` that has no
+        // `None`, and the empty batch is kept as a deliberate, recorded
+        // divergence rather than a value the type cannot hold.
+        (FieldType::Records, None) => Ok(if nullable_in_range {
+            DefaultValue::Null
+        } else {
+            DefaultValue::Empty
+        }),
+        (FieldType::Array(_) | FieldType::Bytes, None) => Ok(DefaultValue::Empty),
 
         // A struct field that upstream leaves undefaulted defaults to a struct
         // whose members are themselves defaulted, not to null. Only an explicit

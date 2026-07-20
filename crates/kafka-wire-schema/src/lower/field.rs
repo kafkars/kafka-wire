@@ -27,14 +27,16 @@ const NESTING_LIMIT: usize = 32;
 pub(super) fn lower_field(
     raw: RawField,
     owner: &MessageName,
+    valid_versions: &VersionSet,
     path: &Path,
 ) -> Result<Field, LowerError> {
-    lower_nested_field(raw, owner, path, 0)
+    lower_nested_field(raw, owner, valid_versions, path, 0)
 }
 
 fn lower_nested_field(
     raw: RawField,
     owner: &MessageName,
+    valid_versions: &VersionSet,
     path: &Path,
     depth: usize,
 ) -> Result<Field, LowerError> {
@@ -79,11 +81,22 @@ fn lower_nested_field(
         .map(|value| parse_versions(path, "flexible", &raw.name, value))
         .transpose()?;
 
-    let default = lower_default(path, &raw.name, &ty, raw.default.as_ref())?;
+    // Whether this field's Rust type is `Option`, which is the same window the
+    // renderer decides it on: nullable anywhere the message is supported. A
+    // records field's default hinges on it, because Kafka defaults every records
+    // field to null and only an `Option` can hold that.
+    let nullable_in_range = !nullable_versions.intersection(valid_versions).is_empty();
+    let default = lower_default(
+        path,
+        &raw.name,
+        &ty,
+        raw.default.as_ref(),
+        nullable_in_range,
+    )?;
     let fields = raw
         .fields
         .into_iter()
-        .map(|field| lower_nested_field(field, owner, path, depth + 1))
+        .map(|field| lower_nested_field(field, owner, valid_versions, path, depth + 1))
         .collect::<Result<Vec<_>, _>>()?;
 
     Ok(Field {

@@ -199,7 +199,7 @@
     },
     {
       "path": "fetch.rs",
-      "sha256": "9cc7d1d56942245d5100e624fd25653e3186d25b4006753799638f9b0c853c61"
+      "sha256": "30f2b9f4569e14f1ae990af179292bee76caa491750eae6c5fe17a64bf1037dd"
     },
     {
       "path": "fetch_snapshot.rs",
@@ -291,7 +291,7 @@
     },
     {
       "path": "produce.rs",
-      "sha256": "a79e38c1752e01339058dcbc6e3c4c958a60a08cc6189a9ee7e28110f3d3ca48"
+      "sha256": "f08195d287ebbc8f7d29cd227be7d8d2657cabbad5dd84e98fea6f51291b1443"
     },
     {
       "path": "push_telemetry.rs",

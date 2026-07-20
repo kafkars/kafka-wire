@@ -4,7 +4,7 @@ use std::path::{Path, PathBuf};
 
 use crate::{
     CommonStruct, Message, MessageKind, MessageName, RawCommonStruct, RawMessage, RawMessageKind,
-    StructRef,
+    StructRef, VersionSet,
 };
 
 use super::{LowerError, field::lower_field, field::parse_versions, structs::collect_struct_table};
@@ -37,12 +37,12 @@ pub fn lower_message(raw: RawMessage, source: PathBuf) -> Result<Message, LowerE
     let common_structs = raw
         .common_structs
         .into_iter()
-        .map(|declaration| lower_common_struct(declaration, &name, &source))
+        .map(|declaration| lower_common_struct(declaration, &name, &valid_versions, &source))
         .collect::<Result<Vec<_>, _>>()?;
     let fields = raw
         .fields
         .into_iter()
-        .map(|field| lower_field(field, &name, &source))
+        .map(|field| lower_field(field, &name, &valid_versions, &source))
         .collect::<Result<Vec<_>, _>>()?;
 
     let structs = collect_struct_table(&common_structs, &fields);
@@ -70,6 +70,7 @@ pub fn lower_message(raw: RawMessage, source: PathBuf) -> Result<Message, LowerE
 fn lower_common_struct(
     raw: RawCommonStruct,
     owner: &MessageName,
+    valid_versions: &VersionSet,
     source: &Path,
 ) -> Result<CommonStruct, LowerError> {
     if !raw.extra.is_empty() {
@@ -84,7 +85,7 @@ fn lower_common_struct(
     let fields = raw
         .fields
         .into_iter()
-        .map(|field| lower_field(field, owner, source))
+        .map(|field| lower_field(field, owner, valid_versions, source))
         .collect::<Result<Vec<_>, _>>()?;
 
     Ok(CommonStruct {

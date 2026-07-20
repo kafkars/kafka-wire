@@ -120,7 +120,7 @@ pub mod produce_request {
 
     /// `PartitionProduceData` as declared by the `Produce` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Eq, PartialEq)]
+    #[derive(Clone, Debug, Default, Eq, PartialEq)]
     pub struct PartitionProduceData {
         /// The partition index.
         pub index: i32,
@@ -135,16 +135,6 @@ pub mod produce_request {
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
-        }
-    }
-
-    impl Default for PartitionProduceData {
-        fn default() -> Self {
-            Self {
-                index: 0,
-                records: Some(Bytes::default()),
-                unknown_tagged_fields: TaggedFields::default(),
-            }
         }
     }
 
