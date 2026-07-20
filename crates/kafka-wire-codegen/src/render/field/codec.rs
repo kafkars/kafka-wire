@@ -256,6 +256,13 @@ fn read_method(
             Ok("decoder.read_compact_bytes()?".to_owned())
         }
         FieldType::Bytes | FieldType::Records => Ok("decoder.read_bytes()?".to_owned()),
+        // The presence marker is regime-independent, which is why `compact` is
+        // not consulted here: it is a raw int8 in a flexible message too.
+        FieldType::Struct(reference) if nullable => Ok(format!(
+            "if decoder.read_struct_presence()? {{ Some({}::decode(decoder, version)?) }} \
+             else {{ None }}",
+            reference.rust_type()
+        )),
         FieldType::Struct(reference) => Ok(format!(
             "{}::decode(decoder, version)?",
             reference.rust_type()
@@ -302,6 +309,11 @@ fn write_method(
         )),
         FieldType::Bytes if compact => Ok(format!("encoder.write_compact_bytes(&self.{name})?;")),
         FieldType::Bytes | FieldType::Records => Ok(format!("encoder.write_bytes(&self.{name})?;")),
+        FieldType::Struct(_) if nullable => Ok(format!(
+            "if let Some(value) = &self.{name} {{ encoder.write_struct_presence(true)?; \
+             value.encode(encoder, version)?; }} \
+             else {{ encoder.write_struct_presence(false)?; }}"
+        )),
         FieldType::Struct(_) => Ok(format!("self.{name}.encode(encoder, version)?;")),
         FieldType::Array(_) => Err(GenerationError::unsupported(
             message,

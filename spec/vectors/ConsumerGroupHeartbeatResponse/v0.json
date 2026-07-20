@@ -1,0 +1,74 @@
+{
+  "schema": 1,
+  "vectors": [
+    {
+      "name": "synthesized_defaults_v0",
+      "why": "Every field this version declares, at its protocol default. Synthesized so the message is held to Apache Kafka's bytes at all; hand-written cases carry the interesting shapes.",
+      "message": "ConsumerGroupHeartbeatResponse",
+      "api_key": 68,
+      "direction": "response",
+      "version": 0,
+      "flexible": true,
+      "json_value": {
+        "assignment": null,
+        "errorCode": 0,
+        "errorMessage": null,
+        "heartbeatIntervalMs": 0,
+        "memberEpoch": 0,
+        "memberId": null,
+        "throttleTimeMs": 0
+      },
+      "hex": "00000000000000000000000000000000ff00"
+    },
+    {
+      "name": "a_present_assignment",
+      "why": "The nullable struct is present, so the wire carries the one-byte marker followed by the struct body. This is the half no synthesized case reaches, and it is where a marker spelled as a varint would diverge from Kafka: both spellings are one byte, so only Kafka's own encoder can tell them apart.",
+      "message": "ConsumerGroupHeartbeatResponse",
+      "api_key": 68,
+      "direction": "response",
+      "version": 0,
+      "flexible": true,
+      "json_value": {
+        "assignment": {
+          "topicPartitions": [
+            {
+              "partitions": [
+                0,
+                1
+              ],
+              "topicId": "MkU3OEVGRjRDMTk0M0Q2OA"
+            }
+          ]
+        },
+        "errorCode": 0,
+        "errorMessage": null,
+        "heartbeatIntervalMs": 5000,
+        "memberEpoch": 4,
+        "memberId": "m-1",
+        "throttleTimeMs": 0
+      },
+      "hex": "00000000000000046d2d310000000400001388010232453738454646344331393433443638030000000000000001000000"
+    },
+    {
+      "name": "an_assignment_present_but_empty",
+      "why": "An empty struct is not a null struct: the marker says present and the body is an empty array. Absent and empty are two different frames and must stay two different frames.",
+      "message": "ConsumerGroupHeartbeatResponse",
+      "api_key": 68,
+      "direction": "response",
+      "version": 0,
+      "flexible": true,
+      "json_value": {
+        "assignment": {
+          "topicPartitions": []
+        },
+        "errorCode": 0,
+        "errorMessage": null,
+        "heartbeatIntervalMs": 5000,
+        "memberEpoch": 4,
+        "memberId": "m-1",
+        "throttleTimeMs": 0
+      },
+      "hex": "00000000000000046d2d31000000040000138801010000"
+    }
+  ]
+}

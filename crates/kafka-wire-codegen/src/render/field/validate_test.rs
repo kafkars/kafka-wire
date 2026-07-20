@@ -200,16 +200,39 @@ fn an_inline_struct_is_accepted_in_either_encoding_regime() {
 }
 
 #[test]
-fn a_nullable_struct_field_is_refused() {
-    let mut parent = nullable(field("Probe", struct_type("TopicData"), "0+"));
+fn an_inline_nullable_struct_is_accepted_in_either_encoding_regime() {
+    // The presence marker ahead of the body is a raw int8 whichever regime the
+    // message is in, so both sides of the flexible boundary are emitted and
+    // both must be accepted. This is the paired positive for the tagged
+    // refusal below.
+    for flexible in ["none", "0+"] {
+        let mut parent = nullable(field("Probe", struct_type("TopicData"), "0+"));
+        parent.fields = vec![field("Name", FieldType::String, "0+")];
+        parent.default = DefaultValue::Null;
+        let message = message("0-4", flexible, vec![parent]);
+
+        assert!(
+            validate_supported(&message).is_ok(),
+            "the backend refused an inline nullable struct with flexibleVersions {flexible}"
+        );
+    }
+}
+
+#[test]
+fn a_nullable_tagged_struct_field_is_refused() {
+    // Apache Kafka spells the marker as a varint when the struct travels in the
+    // tagged section and as an int8 when it is inline, and no pinned schema
+    // declares the tagged form. Emitting it would be a guess about bytes
+    // nothing in this repository can check.
+    let mut parent = nullable(tagged(field("Probe", struct_type("TopicData"), "0+"), 0));
     parent.fields = vec![field("Name", FieldType::String, "0+")];
     parent.default = DefaultValue::Null;
     assert_refused(
         vec![parent],
         "0-4",
-        "none",
-        "a nullable struct field",
-        "nullable struct fields are not implemented yet",
+        "0+",
+        "a nullable struct field carrying a tag",
+        "nullable tagged struct fields are not implemented yet",
     );
 }
 

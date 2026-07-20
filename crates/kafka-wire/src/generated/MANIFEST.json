@@ -74,6 +74,10 @@
       "sha256": "e69523acc0c4c5172c25331398580ff9f2450f8dba16f45b713815e1887b6671"
     },
     {
+      "path": "consumer_group_heartbeat.rs",
+      "sha256": "38de298e5eaacb8069b2f46963e88ab2627190f7c60071ce14c4a619128b0844"
+    },
+    {
       "path": "controller_registration.rs",
       "sha256": "e43ebc37a2dcf884a4c1019028b418424c835b323252f080fbe1eb351c31ae22"
     },
@@ -152,6 +156,10 @@
     {
       "path": "describe_share_group_offsets.rs",
       "sha256": "e1ecb6e0084ad14ddb6965a8055ce96349e3e1cb9bd65e6fdbfa5e4d17b63f88"
+    },
+    {
+      "path": "describe_topic_partitions.rs",
+      "sha256": "e4f0a4234d14be15ad6d75c022804904a7f098ebbf372768719775ed88b6c4c1"
     },
     {
       "path": "describe_transactions.rs",
@@ -247,7 +255,7 @@
     },
     {
       "path": "mod.rs",
-      "sha256": "8812a848715112b57f8647d2bb47124f67a44e969b7a59703dea61c2a47beb19"
+      "sha256": "025b6ad256c3515a63bc1b77c1f46391a5d663469f1f3e3167482a186107f166"
     },
     {
       "path": "offset_commit.rs",
@@ -279,7 +287,7 @@
     },
     {
       "path": "registry.rs",
-      "sha256": "fcaf8619a998f4095fa94d3f1d615fd086929ab0e302c6b62fe9cbb6d05fe8fb"
+      "sha256": "56e2d0bdc96c791fd14457408d479d81ebf45aa68ccd3ac5b66f51a1fec441b6"
     },
     {
       "path": "remove_raft_voter.rs",
@@ -308,6 +316,18 @@
     {
       "path": "share_group_describe.rs",
       "sha256": "353003ad7daa6a9ded8fa311fdec3eba640c938ec30a3c5811ab6a0f22276bb8"
+    },
+    {
+      "path": "share_group_heartbeat.rs",
+      "sha256": "aacb421dde23e7d7d525a8ad534116feabbbb342538dcfc7a2b7f47d91f87154"
+    },
+    {
+      "path": "streams_group_describe.rs",
+      "sha256": "c2cf7f8bd949558c88e155a1fca3a1168fcf48d5f82970abfc590b3dbf98e8e4"
+    },
+    {
+      "path": "streams_group_heartbeat.rs",
+      "sha256": "a9a6f4478824790b1c51258ca2cd43442d1be737878621c1b3b0e020f08f7c86"
     },
     {
       "path": "streams_group_topology_description_update.rs",

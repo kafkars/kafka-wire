@@ -1,0 +1,113 @@
+{
+  "schema": 1,
+  "message": "StreamsGroupHeartbeatRequest",
+  "api_key": 88,
+  "direction": "request",
+  "valid_versions": [
+    0,
+    1
+  ],
+  "flexible_versions": [
+    0,
+    1
+  ],
+  "source": "StreamsGroupHeartbeatRequest.json",
+  "cases": [
+    {
+      "name": "synthesized_defaults_v0",
+      "why": "Every field this version declares, at its protocol default. Synthesized so the message is held to Apache Kafka's bytes at all; hand-written cases carry the interesting shapes.",
+      "versions": [
+        0
+      ],
+      "json_value": {
+        "groupId": "",
+        "memberId": "",
+        "memberEpoch": 0,
+        "endpointInformationEpoch": 0,
+        "instanceId": null,
+        "rackId": null,
+        "rebalanceTimeoutMs": -1,
+        "topology": null,
+        "activeTasks": null,
+        "standbyTasks": null,
+        "warmupTasks": null,
+        "processId": null,
+        "userEndpoint": null,
+        "clientTags": null,
+        "taskOffsets": null,
+        "taskEndOffsets": null,
+        "shutdownApplication": false
+      }
+    },
+    {
+      "name": "synthesized_defaults_v1",
+      "why": "Every field this version declares, at its protocol default. Synthesized so the message is held to Apache Kafka's bytes at all; hand-written cases carry the interesting shapes.",
+      "versions": [
+        1
+      ],
+      "json_value": {
+        "groupId": "",
+        "memberId": "",
+        "memberEpoch": 0,
+        "endpointInformationEpoch": 0,
+        "instanceId": null,
+        "rackId": null,
+        "rebalanceTimeoutMs": -1,
+        "topology": null,
+        "activeTasks": null,
+        "standbyTasks": null,
+        "warmupTasks": null,
+        "processId": null,
+        "userEndpoint": null,
+        "clientTags": null,
+        "taskOffsets": null,
+        "taskEndOffsets": null,
+        "shutdownApplication": false
+      }
+    },
+    {
+      "name": "a_present_topology_and_endpoint",
+      "why": "The nullable struct is present, so the wire carries the one-byte marker followed by the struct body. This is the half no synthesized case reaches, and it is where a marker spelled as a varint would diverge from Kafka: both spellings are one byte, so only Kafka's own encoder can tell them apart. Two nullable structs in one message, one of them deeply nested, so the markers must not be confused for each other's body.",
+      "versions": [
+        0
+      ],
+      "json_value": {
+        "groupId": "g",
+        "memberId": "m",
+        "memberEpoch": 1,
+        "endpointInformationEpoch": -1,
+        "instanceId": null,
+        "rackId": null,
+        "rebalanceTimeoutMs": -1,
+        "topology": {
+          "epoch": 2,
+          "subtopologies": [
+            {
+              "subtopologyId": "s0",
+              "sourceTopics": [
+                "in"
+              ],
+              "sourceTopicRegex": [],
+              "stateChangelogTopics": [],
+              "repartitionSinkTopics": [],
+              "repartitionSourceTopics": [],
+              "copartitionGroups": []
+            }
+          ]
+        },
+        "activeTasks": null,
+        "standbyTasks": null,
+        "warmupTasks": null,
+        "processId": null,
+        "userEndpoint": {
+          "host": "worker-1",
+          "port": 8080
+        },
+        "clientTags": null,
+        "taskOffsets": null,
+        "taskEndOffsets": null,
+        "shutdownApplication": false
+      }
+    }
+  ]
+}

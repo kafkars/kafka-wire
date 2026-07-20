@@ -1,0 +1,34 @@
+{
+  "schema": 1,
+  "vectors": [
+    {
+      "name": "synthesized_defaults_v1",
+      "why": "Every field this version declares, at its protocol default. Synthesized so the message is held to Apache Kafka's bytes at all; hand-written cases carry the interesting shapes.",
+      "message": "StreamsGroupHeartbeatRequest",
+      "api_key": 88,
+      "direction": "request",
+      "version": 1,
+      "flexible": true,
+      "json_value": {
+        "activeTasks": null,
+        "clientTags": null,
+        "endpointInformationEpoch": 0,
+        "groupId": "",
+        "instanceId": null,
+        "memberEpoch": 0,
+        "memberId": "",
+        "processId": null,
+        "rackId": null,
+        "rebalanceTimeoutMs": -1,
+        "shutdownApplication": false,
+        "standbyTasks": null,
+        "taskEndOffsets": null,
+        "taskOffsets": null,
+        "topology": null,
+        "userEndpoint": null,
+        "warmupTasks": null
+      },
+      "hex": "010100000000000000000000ffffffffff00000000ff0000000000"
+    }
+  ]
+}

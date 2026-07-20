@@ -3,6 +3,8 @@
 //! Generated module facade for Apache Kafka commit
 //! `678c0e07e4733c5a592e52046dc2c4e1625587f1`.
 
+#![allow(clippy::too_many_lines)]
+
 mod add_offsets_to_txn;
 mod add_partitions_to_txn;
 mod add_raft_voter;
@@ -20,6 +22,7 @@ mod begin_quorum_epoch;
 mod broker_heartbeat;
 mod broker_registration;
 mod consumer_group_describe;
+mod consumer_group_heartbeat;
 mod controller_registration;
 mod create_acls;
 mod create_delegation_token;
@@ -40,6 +43,7 @@ mod describe_log_dirs;
 mod describe_producers;
 mod describe_quorum;
 mod describe_share_group_offsets;
+mod describe_topic_partitions;
 mod describe_transactions;
 mod describe_user_scram_credentials;
 mod elect_leaders;
@@ -78,6 +82,9 @@ mod sasl_handshake;
 mod share_acknowledge;
 mod share_fetch;
 mod share_group_describe;
+mod share_group_heartbeat;
+mod streams_group_describe;
+mod streams_group_heartbeat;
 mod streams_group_topology_description_update;
 mod sync_group;
 mod txn_offset_commit;
@@ -158,6 +165,10 @@ pub use consumer_group_describe::{
     CONSUMER_GROUP_DESCRIBE_REQUEST_DESCRIPTOR, CONSUMER_GROUP_DESCRIBE_RESPONSE_DESCRIPTOR,
     ConsumerGroupDescribeRequest, ConsumerGroupDescribeResponse,
 };
+pub use consumer_group_heartbeat::{
+    CONSUMER_GROUP_HEARTBEAT_REQUEST_DESCRIPTOR, CONSUMER_GROUP_HEARTBEAT_RESPONSE_DESCRIPTOR,
+    ConsumerGroupHeartbeatRequest, ConsumerGroupHeartbeatResponse,
+};
 pub use controller_registration::{
     CONTROLLER_REGISTRATION_REQUEST_DESCRIPTOR, CONTROLLER_REGISTRATION_RESPONSE_DESCRIPTOR,
     ControllerRegistrationRequest, ControllerRegistrationResponse,
@@ -235,6 +246,10 @@ pub use describe_share_group_offsets::{
     DESCRIBE_SHARE_GROUP_OFFSETS_REQUEST_DESCRIPTOR,
     DESCRIBE_SHARE_GROUP_OFFSETS_RESPONSE_DESCRIPTOR, DescribeShareGroupOffsetsRequest,
     DescribeShareGroupOffsetsResponse,
+};
+pub use describe_topic_partitions::{
+    DESCRIBE_TOPIC_PARTITIONS_REQUEST_DESCRIPTOR, DESCRIBE_TOPIC_PARTITIONS_RESPONSE_DESCRIPTOR,
+    DescribeTopicPartitionsRequest, DescribeTopicPartitionsResponse,
 };
 pub use describe_transactions::{
     DESCRIBE_TRANSACTIONS_REQUEST_DESCRIPTOR, DESCRIBE_TRANSACTIONS_RESPONSE_DESCRIPTOR,
@@ -378,6 +393,18 @@ pub use share_fetch::{SHARE_FETCH_RESPONSE_DESCRIPTOR, ShareFetchResponse};
 pub use share_group_describe::{
     SHARE_GROUP_DESCRIBE_REQUEST_DESCRIPTOR, SHARE_GROUP_DESCRIBE_RESPONSE_DESCRIPTOR,
     ShareGroupDescribeRequest, ShareGroupDescribeResponse,
+};
+pub use share_group_heartbeat::{
+    SHARE_GROUP_HEARTBEAT_REQUEST_DESCRIPTOR, SHARE_GROUP_HEARTBEAT_RESPONSE_DESCRIPTOR,
+    ShareGroupHeartbeatRequest, ShareGroupHeartbeatResponse,
+};
+pub use streams_group_describe::{
+    STREAMS_GROUP_DESCRIBE_REQUEST_DESCRIPTOR, STREAMS_GROUP_DESCRIBE_RESPONSE_DESCRIPTOR,
+    StreamsGroupDescribeRequest, StreamsGroupDescribeResponse,
+};
+pub use streams_group_heartbeat::{
+    STREAMS_GROUP_HEARTBEAT_REQUEST_DESCRIPTOR, STREAMS_GROUP_HEARTBEAT_RESPONSE_DESCRIPTOR,
+    StreamsGroupHeartbeatRequest, StreamsGroupHeartbeatResponse,
 };
 pub use streams_group_topology_description_update::{
     STREAMS_GROUP_TOPOLOGY_DESCRIPTION_UPDATE_REQUEST_DESCRIPTOR,

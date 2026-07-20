@@ -45,34 +45,56 @@ fn escape_link_brackets(source: &str) -> String {
     escaped
 }
 
+fn is_identifier_character(character: char) -> bool {
+    character.is_alphanumeric() || character == '_'
+}
+
+/// Marks every bare protocol identifier inside one whitespace-delimited token.
+///
+/// Walks the token's runs of identifier characters rather than the single span
+/// between its first and last one. Upstream writes `0=NOT_REQUESTED` to
+/// enumerate a status, and a span-based reading takes the whole thing —
+/// punctuation included — decides it is not a plain identifier, and leaves
+/// `NOT_REQUESTED` bare for the lints on checked-in output to reject.
 fn mark_protocol_identifier(token: &str) -> String {
     if token.contains('`') {
         return token.to_owned();
     }
-    let is_identifier = |character: char| character.is_alphanumeric() || character == '_';
-    let Some(start) = token.find(is_identifier) else {
-        return token.to_owned();
-    };
-    let Some(last) = token.rfind(is_identifier) else {
-        return token.to_owned();
-    };
-    let end = last + token[last..].chars().next().map_or(0, char::len_utf8);
-    let identifier = &token[start..end];
-    let mut characters = identifier.chars();
-    let _ = characters.next();
-    let has_internal_uppercase = characters.any(char::is_uppercase);
-    let has_lowercase = identifier.chars().any(char::is_lowercase);
-    let is_plain_identifier = identifier.chars().all(is_identifier);
+    let mut marked = String::with_capacity(token.len());
+    let mut rest = token;
+    while !rest.is_empty() {
+        let Some(start) = rest.find(is_identifier_character) else {
+            marked.push_str(rest);
+            break;
+        };
+        marked.push_str(&rest[..start]);
+        let tail = &rest[start..];
+        let end = tail
+            .find(|character| !is_identifier_character(character))
+            .unwrap_or(tail.len());
+        let (run, remainder) = tail.split_at(end);
+        if is_protocol_identifier(run) {
+            marked.push('`');
+            marked.push_str(run);
+            marked.push('`');
+        } else {
+            marked.push_str(run);
+        }
+        rest = remainder;
+    }
+    marked
+}
+
+/// Whether one unbroken run of identifier characters names a protocol item.
+fn is_protocol_identifier(run: &str) -> bool {
     // An underscored word is an item too, in either case: rustdoc's lint reads
     // READ_UNCOMMITTED and isolation_level alike as identifiers, and upstream
-    // prose names both.
-    let is_snake_cased = identifier.contains('_') && identifier.chars().any(char::is_alphabetic);
-    if is_snake_cased && is_plain_identifier {
-        return format!("{}`{identifier}`{}", &token[..start], &token[end..]);
+    // prose names both. A run of digits joined by underscores is not one.
+    if run.contains('_') && run.chars().any(char::is_alphabetic) {
+        return true;
     }
-    if has_internal_uppercase && has_lowercase && is_plain_identifier {
-        format!("{}`{identifier}`{}", &token[..start], &token[end..])
-    } else {
-        token.to_owned()
-    }
+    let mut characters = run.chars();
+    let _ = characters.next();
+    let has_internal_uppercase = characters.any(char::is_uppercase);
+    has_internal_uppercase && run.chars().any(char::is_lowercase)
 }

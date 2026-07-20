@@ -1,0 +1,81 @@
+{
+  "schema": 1,
+  "vectors": [
+    {
+      "name": "synthesized_defaults_v0",
+      "why": "Every field this version declares, at its protocol default. Synthesized so the message is held to Apache Kafka's bytes at all; hand-written cases carry the interesting shapes.",
+      "message": "StreamsGroupHeartbeatRequest",
+      "api_key": 88,
+      "direction": "request",
+      "version": 0,
+      "flexible": true,
+      "json_value": {
+        "activeTasks": null,
+        "clientTags": null,
+        "endpointInformationEpoch": 0,
+        "groupId": "",
+        "instanceId": null,
+        "memberEpoch": 0,
+        "memberId": "",
+        "processId": null,
+        "rackId": null,
+        "rebalanceTimeoutMs": -1,
+        "shutdownApplication": false,
+        "standbyTasks": null,
+        "taskEndOffsets": null,
+        "taskOffsets": null,
+        "topology": null,
+        "userEndpoint": null,
+        "warmupTasks": null
+      },
+      "hex": "010100000000000000000000ffffffffff00000000ff0000000000"
+    },
+    {
+      "name": "a_present_topology_and_endpoint",
+      "why": "The nullable struct is present, so the wire carries the one-byte marker followed by the struct body. This is the half no synthesized case reaches, and it is where a marker spelled as a varint would diverge from Kafka: both spellings are one byte, so only Kafka's own encoder can tell them apart. Two nullable structs in one message, one of them deeply nested, so the markers must not be confused for each other's body.",
+      "message": "StreamsGroupHeartbeatRequest",
+      "api_key": 88,
+      "direction": "request",
+      "version": 0,
+      "flexible": true,
+      "json_value": {
+        "activeTasks": null,
+        "clientTags": null,
+        "endpointInformationEpoch": -1,
+        "groupId": "g",
+        "instanceId": null,
+        "memberEpoch": 1,
+        "memberId": "m",
+        "processId": null,
+        "rackId": null,
+        "rebalanceTimeoutMs": -1,
+        "shutdownApplication": false,
+        "standbyTasks": null,
+        "taskEndOffsets": null,
+        "taskOffsets": null,
+        "topology": {
+          "epoch": 2,
+          "subtopologies": [
+            {
+              "copartitionGroups": [],
+              "repartitionSinkTopics": [],
+              "repartitionSourceTopics": [],
+              "sourceTopicRegex": [],
+              "sourceTopics": [
+                "in"
+              ],
+              "stateChangelogTopics": [],
+              "subtopologyId": "s0"
+            }
+          ]
+        },
+        "userEndpoint": {
+          "host": "worker-1",
+          "port": 8080
+        },
+        "warmupTasks": null
+      },
+      "hex": "0267026d00000001ffffffff0000ffffffff0100000002020373300203696e01010101010000000000000109776f726b65722d311f90000000000000"
+    }
+  ]
+}

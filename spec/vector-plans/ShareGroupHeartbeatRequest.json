@@ -1,0 +1,30 @@
+{
+  "schema": 1,
+  "message": "ShareGroupHeartbeatRequest",
+  "api_key": 76,
+  "direction": "request",
+  "valid_versions": [
+    1
+  ],
+  "flexible_versions": [
+    0,
+    1
+  ],
+  "source": "ShareGroupHeartbeatRequest.json",
+  "cases": [
+    {
+      "name": "synthesized_defaults_v1",
+      "why": "Every field this version declares, at its protocol default. Synthesized so the message is held to Apache Kafka's bytes at all; hand-written cases carry the interesting shapes.",
+      "versions": [
+        1
+      ],
+      "json_value": {
+        "groupId": "",
+        "memberId": "",
+        "memberEpoch": 0,
+        "rackId": null,
+        "subscribedTopicNames": null
+      }
+    }
+  ]
+}

@@ -22,6 +22,28 @@ impl Decoder {
         Ok(i8::from_be_bytes([byte]))
     }
 
+    /// Reads the marker that introduces a nullable struct, reporting presence.
+    ///
+    /// A struct carries no length prefix, so nullability cannot be spelled the
+    /// way a nullable string's is. It is a marker byte ahead of the body:
+    /// negative for absent, non-negative for present.
+    ///
+    /// **This is a raw `int8` even in a flexible structure.** Every other
+    /// length-like quantity in a flexible message is a varint, and this one is
+    /// not — Apache Kafka keys the marker on the field's nullability alone,
+    /// never on its flexible window. The two spellings are both one byte, so an
+    /// implementation that reached for a varint here would round-trip against
+    /// itself perfectly and be read by a real broker as *present*, which then
+    /// parses the bytes after it as the struct body.
+    ///
+    /// Any negative value means absent, not `-1` alone. That is what Kafka's
+    /// generated reader tests, so accepting only `-1` would reject a frame the
+    /// protocol permits.
+    #[inline]
+    pub fn read_struct_presence(&mut self) -> Result<bool, DecodeError> {
+        Ok(self.read_i8()? >= 0)
+    }
+
     /// Reads a signed 16-bit integer.
     #[inline]
     pub fn read_i16(&mut self) -> Result<i16, DecodeError> {

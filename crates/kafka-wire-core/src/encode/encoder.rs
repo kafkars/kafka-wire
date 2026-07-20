@@ -61,6 +61,21 @@ impl<T: EncodeTarget> Encoder<T> {
         self.target.write_slice(&value.to_be_bytes())
     }
 
+    /// Writes the marker that introduces a nullable struct.
+    ///
+    /// The counterpart of `Decoder::read_struct_presence`, and a raw `int8` for
+    /// the same reason: Apache Kafka keys this marker on the field's
+    /// nullability, never on its flexible window, so it stays one plain byte in
+    /// a message where every other length is a varint.
+    ///
+    /// `1` and `-1` are written because that is what Kafka writes. The reader
+    /// accepts any non-negative byte as present, but a writer that exploited
+    /// that would produce bytes no broker emits.
+    #[inline]
+    pub fn write_struct_presence(&mut self, present: bool) -> Result<(), EncodeError> {
+        self.write_i8(if present { 1 } else { -1 })
+    }
+
     /// Writes a signed 16-bit integer.
     #[inline]
     pub fn write_i16(&mut self, value: i16) -> Result<(), EncodeError> {

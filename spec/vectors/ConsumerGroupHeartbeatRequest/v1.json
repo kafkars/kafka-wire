@@ -1,0 +1,27 @@
+{
+  "schema": 1,
+  "vectors": [
+    {
+      "name": "synthesized_defaults_v1",
+      "why": "Every field this version declares, at its protocol default. Synthesized so the message is held to Apache Kafka's bytes at all; hand-written cases carry the interesting shapes.",
+      "message": "ConsumerGroupHeartbeatRequest",
+      "api_key": 68,
+      "direction": "request",
+      "version": 1,
+      "flexible": true,
+      "json_value": {
+        "groupId": "",
+        "instanceId": null,
+        "memberEpoch": 0,
+        "memberId": "",
+        "rackId": null,
+        "rebalanceTimeoutMs": -1,
+        "serverAssignor": null,
+        "subscribedTopicNames": null,
+        "subscribedTopicRegex": null,
+        "topicPartitions": null
+      },
+      "hex": "0101000000000000ffffffff0000000000"
+    }
+  ]
+}

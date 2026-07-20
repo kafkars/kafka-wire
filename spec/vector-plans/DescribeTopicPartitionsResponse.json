@@ -1,0 +1,42 @@
+{
+  "schema": 1,
+  "message": "DescribeTopicPartitionsResponse",
+  "api_key": 75,
+  "direction": "response",
+  "valid_versions": [
+    0
+  ],
+  "flexible_versions": [
+    0
+  ],
+  "source": "DescribeTopicPartitionsResponse.json",
+  "cases": [
+    {
+      "name": "synthesized_defaults_v0",
+      "why": "Every field this version declares, at its protocol default. Synthesized so the message is held to Apache Kafka's bytes at all; hand-written cases carry the interesting shapes.",
+      "versions": [
+        0
+      ],
+      "json_value": {
+        "throttleTimeMs": 0,
+        "topics": [],
+        "nextCursor": null
+      }
+    },
+    {
+      "name": "a_present_next_cursor",
+      "why": "The nullable struct is present, so the wire carries the one-byte marker followed by the struct body. This is the half no synthesized case reaches, and it is where a marker spelled as a varint would diverge from Kafka: both spellings are one byte, so only Kafka's own encoder can tell them apart.",
+      "versions": [
+        0
+      ],
+      "json_value": {
+        "throttleTimeMs": 0,
+        "topics": [],
+        "nextCursor": {
+          "topicName": "orders",
+          "partitionIndex": 3
+        }
+      }
+    }
+  ]
+}

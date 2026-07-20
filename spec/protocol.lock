@@ -184,12 +184,12 @@ status = "enabled"
 [[kafka.files]]
 path = "ConsumerGroupHeartbeatRequest.json"
 sha256 = "3b5443e4779a4a438432ba3dd3cb226fc77cbe7d8179f3e6caaa60c5b8099f18"
-status = "pending"
+status = "enabled"
 
 [[kafka.files]]
 path = "ConsumerGroupHeartbeatResponse.json"
 sha256 = "4d5fd8051195674b0abd484b1c91329211d6e193f3d9fcd5f42f37df8427b1f9"
-status = "pending"
+status = "enabled"
 
 [[kafka.files]]
 path = "ConsumerProtocolAssignment.json"
@@ -434,12 +434,12 @@ status = "enabled"
 [[kafka.files]]
 path = "DescribeTopicPartitionsRequest.json"
 sha256 = "315ee63211edd8aa21f9c5695f46a2b21bb964ee8be39b509a9bfe46915343b8"
-status = "pending"
+status = "enabled"
 
 [[kafka.files]]
 path = "DescribeTopicPartitionsResponse.json"
 sha256 = "c3968b9ccce25dda201aaca3e6be7561eae44d494bad20fc6c9d671a2dceb898"
-status = "pending"
+status = "enabled"
 
 [[kafka.files]]
 path = "DescribeTransactionsRequest.json"
@@ -859,12 +859,12 @@ status = "enabled"
 [[kafka.files]]
 path = "ShareGroupHeartbeatRequest.json"
 sha256 = "199cf57ffa9ccafe4ae8aa2dd35cefbf5c36a3ce69864ce08c8b5982bf25cf8f"
-status = "pending"
+status = "enabled"
 
 [[kafka.files]]
 path = "ShareGroupHeartbeatResponse.json"
 sha256 = "f8284acb296a502e7f16d2b0cae7bb3e0160cc8cfa0726c69dc88d1b7698255d"
-status = "pending"
+status = "enabled"
 
 [[kafka.files]]
 path = "SnapshotFooterRecord.json"
@@ -889,22 +889,22 @@ status = "pending"
 [[kafka.files]]
 path = "StreamsGroupDescribeRequest.json"
 sha256 = "2029a0fcc237bd78b03d4e6e43bb63d8fc1a27ee70870682572bccc050c881e0"
-status = "pending"
+status = "enabled"
 
 [[kafka.files]]
 path = "StreamsGroupDescribeResponse.json"
 sha256 = "66cfe73a682342c8e7e8de19b6a094cc6f9ef3481879c94259110c2fd309d19a"
-status = "pending"
+status = "enabled"
 
 [[kafka.files]]
 path = "StreamsGroupHeartbeatRequest.json"
 sha256 = "1318238857eec6af5c43d142936d92da23d0cbba967b4bf51131d8c0934e3d01"
-status = "pending"
+status = "enabled"
 
 [[kafka.files]]
 path = "StreamsGroupHeartbeatResponse.json"
 sha256 = "c8583e7b25b6fc1c80f8f189bfd39d2a5dcbf7ca008d1ce45d7e5058aeeeb292"
-status = "pending"
+status = "enabled"
 
 [[kafka.files]]
 path = "StreamsGroupTopologyDescriptionUpdateRequest.json"

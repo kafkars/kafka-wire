@@ -67,11 +67,17 @@ fn validate_fields(
         // Checked before the shape match so that the scalar arm stays a plain
         // type list: folding this into a guard there would drop nullable
         // strings, which the backend does support, into the refusal arm.
-        if !nullable.is_empty() && matches!(field.ty, FieldType::Struct(_)) {
+        //
+        // An inline nullable struct is emitted: it carries a one-byte presence
+        // marker ahead of its body. A tagged one spells that marker as a varint
+        // rather than an int8, and no pinned schema declares one — all nine
+        // nullable structs in the corpus are inline — so it stays refused
+        // rather than emitted on a guess about bytes nothing here can check.
+        if !nullable.is_empty() && matches!(field.ty, FieldType::Struct(_)) && field.tag.is_some() {
             return unsupported(
                 message,
                 field.name.protocol(),
-                "nullable struct fields are not implemented yet",
+                "nullable tagged struct fields are not implemented yet",
             );
         }
 
