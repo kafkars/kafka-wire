@@ -22,6 +22,10 @@
       "sha256": "93276419604b7bfd9765753e9d10bb976149eabc4f23e206175714a29e048417"
     },
     {
+      "path": "alter_client_quotas.rs",
+      "sha256": "7a07236de551a19daeb74828985c568ec4318401f94c2bf9db436af46895ba0b"
+    },
+    {
       "path": "alter_configs.rs",
       "sha256": "469c7007b4877454435abe6ac1bff064f9e0009c650fab527453859f13b4343f"
     },
@@ -100,6 +104,10 @@
     {
       "path": "describe_acls.rs",
       "sha256": "567848acf4a681ac2a72de1ed6eeef88f688669be663bcf2ca6ff953e35662c3"
+    },
+    {
+      "path": "describe_client_quotas.rs",
+      "sha256": "761b671c108d41eef765d4e2d106d7ea83c6682c040c145a092fc4078b11fe83"
     },
     {
       "path": "describe_cluster.rs",
@@ -211,7 +219,7 @@
     },
     {
       "path": "mod.rs",
-      "sha256": "f2f8cb56540a666a611635b6a691a0a9758ac63a6081ccfec52c049866dd5874"
+      "sha256": "c1930292b5ed3117bd393bce2d2ec6ebe46950d926a39bfa6f0c1cec74382fac"
     },
     {
       "path": "offset_commit.rs",
@@ -239,7 +247,7 @@
     },
     {
       "path": "registry.rs",
-      "sha256": "0e24f28999d0caa4dacdbd81fb15ec0bf39c944eb9ad035e5d4e41b3bc1e484e"
+      "sha256": "f56560556409558564afe8a5aa07c4419ab1ced4df242278b9c5224583a61f30"
     },
     {
       "path": "remove_raft_voter.rs",

@@ -1,0 +1,38 @@
+{
+  "schema": 1,
+  "message": "AlterClientQuotasResponse",
+  "api_key": 49,
+  "direction": "response",
+  "valid_versions": [
+    0,
+    1
+  ],
+  "flexible_versions": [
+    1
+  ],
+  "source": "AlterClientQuotasResponse.json",
+  "cases": [
+    {
+      "name": "synthesized_defaults_v0",
+      "why": "Every field this version declares, at its protocol default. Synthesized so the message is held to Apache Kafka's bytes at all; hand-written cases carry the interesting shapes.",
+      "versions": [
+        0
+      ],
+      "json_value": {
+        "throttleTimeMs": 0,
+        "entries": []
+      }
+    },
+    {
+      "name": "synthesized_defaults_v1",
+      "why": "Every field this version declares, at its protocol default. Synthesized so the message is held to Apache Kafka's bytes at all; hand-written cases carry the interesting shapes.",
+      "versions": [
+        1
+      ],
+      "json_value": {
+        "throttleTimeMs": 0,
+        "entries": []
+      }
+    }
+  ]
+}

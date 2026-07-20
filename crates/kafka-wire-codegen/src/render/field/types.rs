@@ -14,6 +14,22 @@ use kafka_wire_schema::{DefaultValue, Field, FieldType, Message};
 
 use crate::GenerationError;
 
+/// Renders a double so the emitted literal round-trips as `f64`.
+fn float_literal(value: f64) -> String {
+    let rendered = format!("{value}");
+    // An integral double formats without a point, which would emit an integer
+    // literal into an `f64` position. Decided on the rendered text rather than
+    // by comparing the double, which the lints reject and which says nothing
+    // useful about how it will be written.
+    if rendered
+        .bytes()
+        .all(|byte| byte.is_ascii_digit() || byte == b'-')
+    {
+        return format!("{rendered}.0");
+    }
+    rendered
+}
+
 /// Groups an integer literal in threes, as the lints on checked-in output ask.
 fn separated(value: i64) -> String {
     let negative = value < 0;
@@ -66,10 +82,11 @@ fn type_name(ty: &FieldType, field: &Field, message: &Message) -> Result<String,
         FieldType::Int32 => Ok("i32".to_owned()),
         FieldType::Int64 => Ok("i64".to_owned()),
         FieldType::Uuid => Ok("Uuid".to_owned()),
+        FieldType::Float64 => Ok("f64".to_owned()),
         FieldType::Bytes => Ok("Bytes".to_owned()),
         FieldType::Struct(reference) => Ok(reference.rust_type().to_owned()),
         FieldType::Array(element) => Ok(format!("Vec<{}>", type_name(element, field, message)?)),
-        other => Err(GenerationError::unsupported(
+        other @ FieldType::Records => Err(GenerationError::unsupported(
             message,
             field.name.protocol(),
             format!("field type {other:?} has no Rust type in this backend"),
@@ -118,16 +135,9 @@ fn default_value(field: &Field, message: &Message) -> Result<String, GenerationE
             FieldType::String => Ok("StrBytes::default()".to_owned()),
             _ => Ok("Default::default()".to_owned()),
         },
-        // `validate_supported` restricts the slice to string, int16, int32, and
-        // legacy string arrays, so no field carrying one of these defaults
-        // should reach the renderer. Should is not a guarantee, so widening the
-        // slice without widening this match fails generation instead of
-        // emitting an initializer that is not the protocol default.
-        other @ DefaultValue::Float(_) => Err(GenerationError::unsupported(
-            message,
-            field.name.protocol(),
-            format!("protocol default {other:?} has no Rust initializer in this backend"),
-        )),
+        // Rendered so the literal always carries a decimal point and parses
+        // back as `f64`; an integral default would otherwise emit as an int.
+        DefaultValue::Float(value) => Ok(float_literal(value.get())),
     }
 }
 
@@ -158,10 +168,12 @@ pub(crate) fn non_default_condition(
             type_name(&field.ty, field, message)?
         )),
         DefaultValue::Empty => Ok(format!("!self.{name}.is_empty()")),
-        other @ DefaultValue::Float(_) => Err(GenerationError::unsupported(
-            message,
-            field.name.protocol(),
-            format!("protocol default {other:?} has no equality test in this backend"),
+        // A float default compares by bits rather than by `==`: the protocol
+        // question is whether the value was left alone, and NaN is not equal to
+        // itself under the operator the lints would otherwise demand.
+        DefaultValue::Float(value) => Ok(format!(
+            "self.{name}.to_bits() != {}_f64.to_bits()",
+            float_literal(value.get())
         )),
     }
 }

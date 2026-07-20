@@ -54,12 +54,12 @@ status = "enabled"
 [[kafka.files]]
 path = "AlterClientQuotasRequest.json"
 sha256 = "195bd3af15a5d91037d3394db88d433c9c62985e04a896310fe4074638cc3526"
-status = "pending"
+status = "enabled"
 
 [[kafka.files]]
 path = "AlterClientQuotasResponse.json"
 sha256 = "db655393cbc6485bf10575f0dc4d29b3c47883a16a4162d190c74f4000cb6b6a"
-status = "pending"
+status = "enabled"
 
 [[kafka.files]]
 path = "AlterConfigsRequest.json"
@@ -344,12 +344,12 @@ status = "enabled"
 [[kafka.files]]
 path = "DescribeClientQuotasRequest.json"
 sha256 = "16451280b34bfdb2dc706ee793ff85ab9553d10b1f57268652bcb244d0a9c270"
-status = "pending"
+status = "enabled"
 
 [[kafka.files]]
 path = "DescribeClientQuotasResponse.json"
 sha256 = "8835639bb0223508cdaa9b0eded648e5394c5311276995ff401ea9b58514a100"
-status = "pending"
+status = "enabled"
 
 [[kafka.files]]
 path = "DescribeClusterRequest.json"

@@ -14,10 +14,11 @@ use bytes::Bytes;
 use kafka_wire::{
     AddOffsetsToTxnRequest, AddOffsetsToTxnResponse, AddPartitionsToTxnRequest,
     AddPartitionsToTxnResponse, AddRaftVoterRequest, AddRaftVoterResponse,
-    AllocateProducerIdsRequest, AllocateProducerIdsResponse, AlterConfigsRequest,
-    AlterConfigsResponse, AlterPartitionReassignmentsRequest, AlterPartitionReassignmentsResponse,
-    AlterPartitionRequest, AlterPartitionResponse, AlterReplicaLogDirsRequest,
-    AlterReplicaLogDirsResponse, AlterShareGroupOffsetsRequest, AlterShareGroupOffsetsResponse,
+    AllocateProducerIdsRequest, AllocateProducerIdsResponse, AlterClientQuotasRequest,
+    AlterClientQuotasResponse, AlterConfigsRequest, AlterConfigsResponse,
+    AlterPartitionReassignmentsRequest, AlterPartitionReassignmentsResponse, AlterPartitionRequest,
+    AlterPartitionResponse, AlterReplicaLogDirsRequest, AlterReplicaLogDirsResponse,
+    AlterShareGroupOffsetsRequest, AlterShareGroupOffsetsResponse,
     AlterUserScramCredentialsRequest, AlterUserScramCredentialsResponse, ApiVersionsRequest,
     AssignReplicasToDirsRequest, AssignReplicasToDirsResponse, BrokerRegistrationRequest,
     BrokerRegistrationResponse, ConsumerGroupDescribeRequest, ConsumerGroupDescribeResponse,
@@ -27,11 +28,12 @@ use kafka_wire::{
     DeleteGroupsRequest, DeleteGroupsResponse, DeleteRecordsRequest, DeleteRecordsResponse,
     DeleteShareGroupOffsetsRequest, DeleteShareGroupOffsetsResponse, DeleteShareGroupStateRequest,
     DeleteShareGroupStateResponse, DescribeAclsRequest, DescribeAclsResponse,
-    DescribeClusterRequest, DescribeClusterResponse, DescribeConfigsRequest,
-    DescribeDelegationTokenRequest, DescribeDelegationTokenResponse, DescribeGroupsRequest,
-    DescribeGroupsResponse, DescribeLogDirsRequest, DescribeLogDirsResponse,
-    DescribeProducersRequest, DescribeProducersResponse, DescribeQuorumRequest,
-    DescribeQuorumResponse, DescribeShareGroupOffsetsRequest, DescribeShareGroupOffsetsResponse,
+    DescribeClientQuotasRequest, DescribeClientQuotasResponse, DescribeClusterRequest,
+    DescribeClusterResponse, DescribeConfigsRequest, DescribeDelegationTokenRequest,
+    DescribeDelegationTokenResponse, DescribeGroupsRequest, DescribeGroupsResponse,
+    DescribeLogDirsRequest, DescribeLogDirsResponse, DescribeProducersRequest,
+    DescribeProducersResponse, DescribeQuorumRequest, DescribeQuorumResponse,
+    DescribeShareGroupOffsetsRequest, DescribeShareGroupOffsetsResponse,
     DescribeTransactionsRequest, DescribeTransactionsResponse, DescribeUserScramCredentialsRequest,
     DescribeUserScramCredentialsResponse, ElectLeadersRequest, ElectLeadersResponse, EndTxnRequest,
     EndTxnResponse, EnvelopeRequest, EnvelopeResponse, ExpireDelegationTokenRequest,
@@ -81,6 +83,8 @@ macro_rules! subjects {
             AddRaftVoterResponse => Response,
             AllocateProducerIdsRequest => Request,
             AllocateProducerIdsResponse => Response,
+            AlterClientQuotasRequest => Request,
+            AlterClientQuotasResponse => Response,
             AlterConfigsRequest => Request,
             AlterConfigsResponse => Response,
             AlterPartitionReassignmentsRequest => Request,
@@ -120,6 +124,8 @@ macro_rules! subjects {
             DeleteShareGroupStateResponse => Response,
             DescribeAclsRequest => Request,
             DescribeAclsResponse => Response,
+            DescribeClientQuotasRequest => Request,
+            DescribeClientQuotasResponse => Response,
             DescribeClusterRequest => Request,
             DescribeClusterResponse => Response,
             DescribeConfigsRequest => Request,
@@ -216,7 +222,10 @@ macro_rules! subjects {
 macro_rules! declare_subject {
     ($($name:ident => $direction:ident,)*) => {
         /// One generated message, held as the concrete type the vector names.
-        #[derive(Clone, Debug, Eq, PartialEq)]
+        ///
+        /// `PartialEq` without `Eq`: the client-quota messages carry an `f64`,
+        /// which is not `Eq`, and this enum can be no stronger than its arms.
+        #[derive(Clone, Debug, PartialEq)]
         pub enum Subject {
             $(
                 #[doc = concat!("`", stringify!($name), "` body.")]

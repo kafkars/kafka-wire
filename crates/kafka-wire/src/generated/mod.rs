@@ -7,6 +7,7 @@ mod add_offsets_to_txn;
 mod add_partitions_to_txn;
 mod add_raft_voter;
 mod allocate_producer_ids;
+mod alter_client_quotas;
 mod alter_configs;
 mod alter_partition;
 mod alter_partition_reassignments;
@@ -27,6 +28,7 @@ mod delete_records;
 mod delete_share_group_offsets;
 mod delete_share_group_state;
 mod describe_acls;
+mod describe_client_quotas;
 mod describe_cluster;
 mod describe_configs;
 mod describe_delegation_token;
@@ -89,6 +91,10 @@ pub use add_raft_voter::{
 pub use allocate_producer_ids::{
     ALLOCATE_PRODUCER_IDS_REQUEST_DESCRIPTOR, ALLOCATE_PRODUCER_IDS_RESPONSE_DESCRIPTOR,
     AllocateProducerIdsRequest, AllocateProducerIdsResponse,
+};
+pub use alter_client_quotas::{
+    ALTER_CLIENT_QUOTAS_REQUEST_DESCRIPTOR, ALTER_CLIENT_QUOTAS_RESPONSE_DESCRIPTOR,
+    AlterClientQuotasRequest, AlterClientQuotasResponse,
 };
 pub use alter_configs::{
     ALTER_CONFIGS_REQUEST_DESCRIPTOR, ALTER_CONFIGS_RESPONSE_DESCRIPTOR, AlterConfigsRequest,
@@ -168,6 +174,10 @@ pub use delete_share_group_state::{
 pub use describe_acls::{
     DESCRIBE_ACLS_REQUEST_DESCRIPTOR, DESCRIBE_ACLS_RESPONSE_DESCRIPTOR, DescribeAclsRequest,
     DescribeAclsResponse,
+};
+pub use describe_client_quotas::{
+    DESCRIBE_CLIENT_QUOTAS_REQUEST_DESCRIPTOR, DESCRIBE_CLIENT_QUOTAS_RESPONSE_DESCRIPTOR,
+    DescribeClientQuotasRequest, DescribeClientQuotasResponse,
 };
 pub use describe_cluster::{
     DESCRIBE_CLUSTER_REQUEST_DESCRIPTOR, DESCRIBE_CLUSTER_RESPONSE_DESCRIPTOR,

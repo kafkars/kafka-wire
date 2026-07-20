@@ -130,13 +130,19 @@ pub(crate) fn element_codec(
         FieldType::Int32 => ("decoder.read_i32()?", "encoder.write_i32(*value)?;"),
         FieldType::Int64 => ("decoder.read_i64()?", "encoder.write_i64(*value)?;"),
         FieldType::Uuid => ("decoder.read_uuid()?", "encoder.write_uuid(*value)?;"),
+        FieldType::Float64 => ("decoder.read_float64()?", "encoder.write_float64(*value)?;"),
         FieldType::Struct(reference) => {
             return Ok((
                 format!("{}::decode(decoder, version)?", reference.rust_type()),
                 "value.encode(encoder, version)?;".to_owned(),
             ));
         }
-        other => {
+        // String and Bytes returned above through `length_prefixed_element`;
+        // they are named here only because the match must stay total.
+        other @ (FieldType::String
+        | FieldType::Bytes
+        | FieldType::Array(_)
+        | FieldType::Records) => {
             return Err(GenerationError::unsupported(
                 message,
                 field.name.protocol(),
@@ -237,6 +243,7 @@ fn read_method(
         FieldType::Int32 => Ok("decoder.read_i32()?".to_owned()),
         FieldType::Int64 => Ok("decoder.read_i64()?".to_owned()),
         FieldType::Uuid => Ok("decoder.read_uuid()?".to_owned()),
+        FieldType::Float64 => Ok("decoder.read_float64()?".to_owned()),
         FieldType::Bytes if nullable && compact => {
             Ok("decoder.read_compact_nullable_bytes()?".to_owned())
         }
@@ -253,7 +260,7 @@ fn read_method(
             "an array is read by a structured block; the scalar read path has no \
              expression for one",
         )),
-        other => Err(GenerationError::unsupported(
+        other @ FieldType::Records => Err(GenerationError::unsupported(
             message,
             field.name.protocol(),
             format!("field type {other:?} has no read expression in this backend"),
@@ -285,6 +292,7 @@ fn write_method(
         FieldType::Int32 => Ok(format!("encoder.write_i32(self.{name})?;")),
         FieldType::Int64 => Ok(format!("encoder.write_i64(self.{name})?;")),
         FieldType::Uuid => Ok(format!("encoder.write_uuid(self.{name})?;")),
+        FieldType::Float64 => Ok(format!("encoder.write_float64(self.{name})?;")),
         FieldType::Bytes if nullable && compact => Ok(format!(
             "encoder.write_compact_nullable_bytes(self.{name}.as_deref())?;"
         )),
@@ -300,7 +308,7 @@ fn write_method(
             "an array is written by a structured block; the scalar write path has \
              no statement for one",
         )),
-        other => Err(GenerationError::unsupported(
+        other @ FieldType::Records => Err(GenerationError::unsupported(
             message,
             field.name.protocol(),
             format!("field type {other:?} has no write statement in this backend"),

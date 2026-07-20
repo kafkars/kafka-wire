@@ -86,6 +86,11 @@ fn declared_types() -> Vec<TypeCell> {
             declared: "Vec<i32>",
         },
         TypeCell {
+            ty: FieldType::Float64,
+            nullable: false,
+            declared: "f64",
+        },
+        TypeCell {
             ty: FieldType::Bytes,
             nullable: false,
             declared: "Bytes",
@@ -129,7 +134,8 @@ fn a_type_outside_the_slice_fails_generation_instead_of_emitting_a_comment() {
     // so rustfmt would have caught it. The same placeholder in a default or a
     // comparison position is valid Rust, which is why all three go through the
     // same refusal.
-    for ty in [FieldType::Float64, FieldType::Records] {
+    {
+        let ty = FieldType::Records;
         let probe = field("Probe", ty.clone(), "0+");
         let message = message(VALID, "none", vec![probe]);
         let error = rust_type(&message.fields[0], &message)
@@ -243,6 +249,35 @@ fn defaults() -> Vec<DefaultCell> {
             derivable: false,
             nullable: true,
         },
+    ]
+}
+
+/// Defaults whose Rust form is not a literal of the field's own type.
+///
+/// A double compares by bits rather than by `==`, and a struct stands in for
+/// every member at its own default; both answer the "is this still the protocol
+/// default" question differently from a scalar, which is why they are pinned
+/// apart from the scalar rows above.
+fn structured_defaults() -> Vec<DefaultCell> {
+    vec![
+        DefaultCell {
+            situation: "a double defaulting to an integral value",
+            ty: FieldType::Float64,
+            default: DefaultValue::Float(FloatDefault::new(1.0)),
+            initializer: "1.0",
+            non_default: "self.probe.to_bits() != 1.0_f64.to_bits()",
+            derivable: false,
+            nullable: false,
+        },
+        DefaultCell {
+            situation: "a double defaulting to a fractional value",
+            ty: FieldType::Float64,
+            default: DefaultValue::Float(FloatDefault::new(0.25)),
+            initializer: "0.25",
+            non_default: "self.probe.to_bits() != 0.25_f64.to_bits()",
+            derivable: false,
+            nullable: false,
+        },
         DefaultCell {
             situation: "a non-nullable struct, absent as every member at its own default",
             ty: struct_type("TopicData"),
@@ -257,7 +292,7 @@ fn defaults() -> Vec<DefaultCell> {
 
 #[test]
 fn every_supported_default_emits_its_exact_initializer_and_comparison() {
-    for cell in defaults() {
+    for cell in defaults().into_iter().chain(structured_defaults()) {
         let mut probe = field("Probe", cell.ty.clone(), "0+");
         if cell.nullable {
             probe = nullable(probe);
@@ -287,35 +322,6 @@ fn every_supported_default_emits_its_exact_initializer_and_comparison() {
             "derive(Default) suitability for {}",
             cell.situation
         );
-    }
-}
-
-#[test]
-fn a_default_with_no_rust_form_fails_generation_instead_of_emitting_a_comment() {
-    // These arrived with wave 1's front end, which now lowers float64 and
-    // non-nullable struct fields to typed defaults. The backend has no Rust
-    // form for either yet. Emitting `/* unsupported */` as the initializer of a
-    // `Default` impl is valid Rust in exactly the position where being wrong is
-    // unobservable, so it must fail instead. (Uuid defaults now render, so they
-    // have moved to the positive default table above.)
-    for default in [DefaultValue::Float(FloatDefault::new(1.0))] {
-        let mut probe = field("Probe", FieldType::String, "0+");
-        probe.default = default.clone();
-        let message = message(VALID, "none", vec![probe]);
-        let probe = &message.fields[0];
-
-        for (role, error) in [
-            ("initializer", default_expression(probe, &message).err()),
-            ("comparison", non_default_condition(probe, &message).err()),
-        ] {
-            let error = error.unwrap_or_else(|| {
-                panic!("{default:?} rendered a {role} instead of failing generation")
-            });
-            assert!(
-                error.to_string().contains("ProbeRequest.Probe"),
-                "the {role} rejection must name the message and field: {error}"
-            );
-        }
     }
 }
 

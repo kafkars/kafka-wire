@@ -264,7 +264,7 @@ fn a_fixed_width_field_straddling_the_flexible_boundary_emits_no_gate() {
 
 /// Field types with no scalar codec, each of which must be refused by name.
 fn types_outside_the_scalar_slice() -> Vec<FieldType> {
-    vec![FieldType::Float64, FieldType::Records]
+    vec![FieldType::Records]
 }
 
 #[test]

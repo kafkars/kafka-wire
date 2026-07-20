@@ -1,6 +1,6 @@
 //! Struct, default, and direction-trait rendering for one normalized message.
 
-use kafka_wire_schema::{Message, MessageKind};
+use kafka_wire_schema::{FieldType, Message, MessageKind};
 
 use crate::{
     GenerationError,
@@ -34,10 +34,20 @@ pub(super) fn render_message(
     ));
     rust.line("#[non_exhaustive]");
     let derive_default = message.fields.iter().all(field::uses_rust_default);
-    if derive_default {
-        rust.line("#[derive(Clone, Debug, Default, Eq, PartialEq)]");
+    // `f64` is not `Eq`, and `Eq` does not propagate: a struct holding a
+    // `Vec<T>` where `T` is not `Eq` cannot be either. Asked of the whole
+    // message rather than these fields alone, so a container and the struct it
+    // holds always agree. Conservative for a struct in a float-carrying message
+    // that holds no float itself, which costs a derive and nothing else.
+    let equality = if field::uses_type(message, &FieldType::Float64) {
+        "PartialEq"
     } else {
-        rust.line("#[derive(Clone, Debug, Eq, PartialEq)]");
+        "Eq, PartialEq"
+    };
+    if derive_default {
+        rust.line(format!("#[derive(Clone, Debug, Default, {equality})]"));
+    } else {
+        rust.line(format!("#[derive(Clone, Debug, {equality})]"));
     }
     rust.open(format!("pub struct {}", message.name.rust_type()));
     for field in &message.fields {
