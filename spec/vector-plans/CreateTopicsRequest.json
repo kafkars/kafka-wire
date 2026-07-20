@@ -89,6 +89,198 @@
         "timeoutMs": 60000,
         "validateOnly": false
       }
+    },
+    {
+      "name": "synthesized_populated_v2",
+      "why": "Every field this version declares, present and non-default: one element in every array, every nullable thing supplied. The defaults case leaves arrays empty, which hides every field of the struct the array would have held \u2014 a records field encoded with the wrong length prefix survived the whole corpus that way, because nothing ever reached the struct holding it.",
+      "versions": [
+        2
+      ],
+      "json_value": {
+        "topics": [
+          {
+            "name": "v",
+            "numPartitions": 1,
+            "replicationFactor": 1,
+            "assignments": [
+              {
+                "partitionIndex": 1,
+                "brokerIds": [
+                  1
+                ]
+              }
+            ],
+            "configs": [
+              {
+                "name": "v",
+                "value": "v"
+              }
+            ]
+          }
+        ],
+        "timeoutMs": 1,
+        "validateOnly": true
+      }
+    },
+    {
+      "name": "synthesized_populated_v3",
+      "why": "Every field this version declares, present and non-default: one element in every array, every nullable thing supplied. The defaults case leaves arrays empty, which hides every field of the struct the array would have held \u2014 a records field encoded with the wrong length prefix survived the whole corpus that way, because nothing ever reached the struct holding it.",
+      "versions": [
+        3
+      ],
+      "json_value": {
+        "topics": [
+          {
+            "name": "v",
+            "numPartitions": 1,
+            "replicationFactor": 1,
+            "assignments": [
+              {
+                "partitionIndex": 1,
+                "brokerIds": [
+                  1
+                ]
+              }
+            ],
+            "configs": [
+              {
+                "name": "v",
+                "value": "v"
+              }
+            ]
+          }
+        ],
+        "timeoutMs": 1,
+        "validateOnly": true
+      }
+    },
+    {
+      "name": "synthesized_populated_v4",
+      "why": "Every field this version declares, present and non-default: one element in every array, every nullable thing supplied. The defaults case leaves arrays empty, which hides every field of the struct the array would have held \u2014 a records field encoded with the wrong length prefix survived the whole corpus that way, because nothing ever reached the struct holding it.",
+      "versions": [
+        4
+      ],
+      "json_value": {
+        "topics": [
+          {
+            "name": "v",
+            "numPartitions": 1,
+            "replicationFactor": 1,
+            "assignments": [
+              {
+                "partitionIndex": 1,
+                "brokerIds": [
+                  1
+                ]
+              }
+            ],
+            "configs": [
+              {
+                "name": "v",
+                "value": "v"
+              }
+            ]
+          }
+        ],
+        "timeoutMs": 1,
+        "validateOnly": true
+      }
+    },
+    {
+      "name": "synthesized_populated_v5",
+      "why": "Every field this version declares, present and non-default: one element in every array, every nullable thing supplied. The defaults case leaves arrays empty, which hides every field of the struct the array would have held \u2014 a records field encoded with the wrong length prefix survived the whole corpus that way, because nothing ever reached the struct holding it.",
+      "versions": [
+        5
+      ],
+      "json_value": {
+        "topics": [
+          {
+            "name": "v",
+            "numPartitions": 1,
+            "replicationFactor": 1,
+            "assignments": [
+              {
+                "partitionIndex": 1,
+                "brokerIds": [
+                  1
+                ]
+              }
+            ],
+            "configs": [
+              {
+                "name": "v",
+                "value": "v"
+              }
+            ]
+          }
+        ],
+        "timeoutMs": 1,
+        "validateOnly": true
+      }
+    },
+    {
+      "name": "synthesized_populated_v6",
+      "why": "Every field this version declares, present and non-default: one element in every array, every nullable thing supplied. The defaults case leaves arrays empty, which hides every field of the struct the array would have held \u2014 a records field encoded with the wrong length prefix survived the whole corpus that way, because nothing ever reached the struct holding it.",
+      "versions": [
+        6
+      ],
+      "json_value": {
+        "topics": [
+          {
+            "name": "v",
+            "numPartitions": 1,
+            "replicationFactor": 1,
+            "assignments": [
+              {
+                "partitionIndex": 1,
+                "brokerIds": [
+                  1
+                ]
+              }
+            ],
+            "configs": [
+              {
+                "name": "v",
+                "value": "v"
+              }
+            ]
+          }
+        ],
+        "timeoutMs": 1,
+        "validateOnly": true
+      }
+    },
+    {
+      "name": "synthesized_populated_v7",
+      "why": "Every field this version declares, present and non-default: one element in every array, every nullable thing supplied. The defaults case leaves arrays empty, which hides every field of the struct the array would have held \u2014 a records field encoded with the wrong length prefix survived the whole corpus that way, because nothing ever reached the struct holding it.",
+      "versions": [
+        7
+      ],
+      "json_value": {
+        "topics": [
+          {
+            "name": "v",
+            "numPartitions": 1,
+            "replicationFactor": 1,
+            "assignments": [
+              {
+                "partitionIndex": 1,
+                "brokerIds": [
+                  1
+                ]
+              }
+            ],
+            "configs": [
+              {
+                "name": "v",
+                "value": "v"
+              }
+            ]
+          }
+        ],
+        "timeoutMs": 1,
+        "validateOnly": true
+      }
     }
   ]
 }

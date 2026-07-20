@@ -28,6 +28,20 @@
         "type": "User"
       },
       "hex": "055573657206616c6963650100"
+    },
+    {
+      "name": "synthesized_populated_v0",
+      "why": "Every field this version declares, present and non-default: one element in every array, every nullable thing supplied. The defaults case leaves arrays empty, which hides every field of the struct the array would have held — a records field encoded with the wrong length prefix survived the whole corpus that way, because nothing ever reached the struct holding it.",
+      "message": "DefaultPrincipalData",
+      "direction": "framing",
+      "version": 0,
+      "flexible": true,
+      "json_value": {
+        "name": "v",
+        "tokenAuthenticated": true,
+        "type": "v"
+      },
+      "hex": "027602760100"
     }
   ]
 }

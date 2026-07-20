@@ -38,6 +38,38 @@
         ]
       },
       "hex": "0000000002076f726465727300000000000003000201010002002900"
+    },
+    {
+      "name": "synthesized_populated_v5",
+      "why": "Every field this version declares, present and non-default: one element in every array, every nullable thing supplied. The defaults case leaves arrays empty, which hides every field of the struct the array would have held — a records field encoded with the wrong length prefix survived the whole corpus that way, because nothing ever reached the struct holding it.",
+      "message": "CreateTopicsResponse",
+      "api_key": 19,
+      "direction": "response",
+      "version": 5,
+      "flexible": true,
+      "json_value": {
+        "throttleTimeMs": 1,
+        "topics": [
+          {
+            "configs": [
+              {
+                "configSource": 1,
+                "isSensitive": true,
+                "name": "v",
+                "readOnly": true,
+                "value": "v"
+              }
+            ],
+            "errorCode": 1,
+            "errorMessage": "v",
+            "name": "v",
+            "numPartitions": 1,
+            "replicationFactor": 1,
+            "topicConfigErrorCode": 1
+          }
+        ]
+      },
+      "hex": "0000000102027600010276000000010001020276027601010100010002000100"
     }
   ]
 }

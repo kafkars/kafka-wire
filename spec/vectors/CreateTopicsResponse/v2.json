@@ -14,6 +14,26 @@
         "topics": []
       },
       "hex": "0000000000000000"
+    },
+    {
+      "name": "synthesized_populated_v2",
+      "why": "Every field this version declares, present and non-default: one element in every array, every nullable thing supplied. The defaults case leaves arrays empty, which hides every field of the struct the array would have held — a records field encoded with the wrong length prefix survived the whole corpus that way, because nothing ever reached the struct holding it.",
+      "message": "CreateTopicsResponse",
+      "api_key": 19,
+      "direction": "response",
+      "version": 2,
+      "flexible": false,
+      "json_value": {
+        "throttleTimeMs": 1,
+        "topics": [
+          {
+            "errorCode": 1,
+            "errorMessage": "v",
+            "name": "v"
+          }
+        ]
+      },
+      "hex": "00000001000000010001760001000176"
     }
   ]
 }
