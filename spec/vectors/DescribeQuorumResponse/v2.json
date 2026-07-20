@@ -16,6 +16,65 @@
         "topics": []
       },
       "hex": "000000010100"
+    },
+    {
+      "name": "synthesized_populated_v2",
+      "why": "Every field this version declares, present and non-default: one element in every array, every nullable thing supplied. The defaults case leaves arrays empty, which hides every field of the struct the array would have held — a records field encoded with the wrong length prefix survived the whole corpus that way, because nothing ever reached the struct holding it.",
+      "message": "DescribeQuorumResponse",
+      "api_key": 55,
+      "direction": "response",
+      "version": 2,
+      "flexible": true,
+      "json_value": {
+        "errorCode": 1,
+        "errorMessage": "v",
+        "nodes": [
+          {
+            "listeners": [
+              {
+                "host": "v",
+                "name": "v",
+                "port": 1
+              }
+            ],
+            "nodeId": 1
+          }
+        ],
+        "topics": [
+          {
+            "partitions": [
+              {
+                "currentVoters": [
+                  {
+                    "lastCaughtUpTimestamp": 1,
+                    "lastFetchTimestamp": 1,
+                    "logEndOffset": 1,
+                    "replicaDirectoryId": "MkU3OEVGRjRDMTk0M0Q2OA",
+                    "replicaId": 1
+                  }
+                ],
+                "errorCode": 1,
+                "errorMessage": "v",
+                "highWatermark": 1,
+                "leaderEpoch": 1,
+                "leaderId": 1,
+                "observers": [
+                  {
+                    "lastCaughtUpTimestamp": 1,
+                    "lastFetchTimestamp": 1,
+                    "logEndOffset": 1,
+                    "replicaDirectoryId": "MkU3OEVGRjRDMTk0M0Q2OA",
+                    "replicaId": 1
+                  }
+                ],
+                "partitionIndex": 1
+              }
+            ],
+            "topicName": "v"
+          }
+        ]
+      },
+      "hex": "000102760202760200000001000102760000000100000001000000000000000102000000013245373845464634433139343344363800000000000000010000000000000001000000000000000100020000000132453738454646344331393433443638000000000000000100000000000000010000000000000001000000020000000102027602760001000000"
     }
   ]
 }

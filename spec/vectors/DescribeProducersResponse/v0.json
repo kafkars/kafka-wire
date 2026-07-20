@@ -14,6 +14,41 @@
         "topics": []
       },
       "hex": "000000000100"
+    },
+    {
+      "name": "synthesized_populated_v0",
+      "why": "Every field this version declares, present and non-default: one element in every array, every nullable thing supplied. The defaults case leaves arrays empty, which hides every field of the struct the array would have held — a records field encoded with the wrong length prefix survived the whole corpus that way, because nothing ever reached the struct holding it.",
+      "message": "DescribeProducersResponse",
+      "api_key": 61,
+      "direction": "response",
+      "version": 0,
+      "flexible": true,
+      "json_value": {
+        "throttleTimeMs": 1,
+        "topics": [
+          {
+            "name": "v",
+            "partitions": [
+              {
+                "activeProducers": [
+                  {
+                    "coordinatorEpoch": 1,
+                    "currentTxnStartOffset": 1,
+                    "lastSequence": 1,
+                    "lastTimestamp": 1,
+                    "producerEpoch": 1,
+                    "producerId": 1
+                  }
+                ],
+                "errorCode": 1,
+                "errorMessage": "v",
+                "partitionIndex": 1
+              }
+            ]
+          }
+        ]
+      },
+      "hex": "000000010202760200000001000102760200000000000000010000000100000001000000000000000100000001000000000000000100000000"
     }
   ]
 }

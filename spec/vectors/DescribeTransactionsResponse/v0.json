@@ -14,6 +14,38 @@
         "transactionStates": []
       },
       "hex": "000000000100"
+    },
+    {
+      "name": "synthesized_populated_v0",
+      "why": "Every field this version declares, present and non-default: one element in every array, every nullable thing supplied. The defaults case leaves arrays empty, which hides every field of the struct the array would have held — a records field encoded with the wrong length prefix survived the whole corpus that way, because nothing ever reached the struct holding it.",
+      "message": "DescribeTransactionsResponse",
+      "api_key": 65,
+      "direction": "response",
+      "version": 0,
+      "flexible": true,
+      "json_value": {
+        "throttleTimeMs": 1,
+        "transactionStates": [
+          {
+            "errorCode": 1,
+            "producerEpoch": 1,
+            "producerId": 1,
+            "topics": [
+              {
+                "partitions": [
+                  1
+                ],
+                "topic": "v"
+              }
+            ],
+            "transactionStartTimeMs": 1,
+            "transactionState": "v",
+            "transactionTimeoutMs": 1,
+            "transactionalId": "v"
+          }
+        ]
+      },
+      "hex": "0000000102000102760276000000010000000000000001000000000000000100010202760200000001000000"
     }
   ]
 }

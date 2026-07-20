@@ -49,6 +49,138 @@
         "topics": [],
         "nodes": []
       }
+    },
+    {
+      "name": "synthesized_populated_v0",
+      "why": "Every field this version declares, present and non-default: one element in every array, every nullable thing supplied. The defaults case leaves arrays empty, which hides every field of the struct the array would have held \u2014 a records field encoded with the wrong length prefix survived the whole corpus that way, because nothing ever reached the struct holding it.",
+      "versions": [
+        0
+      ],
+      "json_value": {
+        "errorCode": 1,
+        "topics": [
+          {
+            "topicName": "v",
+            "partitions": [
+              {
+                "partitionIndex": 1,
+                "errorCode": 1,
+                "leaderId": 1,
+                "leaderEpoch": 1,
+                "highWatermark": 1,
+                "currentVoters": [
+                  {
+                    "replicaId": 1,
+                    "logEndOffset": 1
+                  }
+                ],
+                "observers": [
+                  {
+                    "replicaId": 1,
+                    "logEndOffset": 1
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "synthesized_populated_v1",
+      "why": "Every field this version declares, present and non-default: one element in every array, every nullable thing supplied. The defaults case leaves arrays empty, which hides every field of the struct the array would have held \u2014 a records field encoded with the wrong length prefix survived the whole corpus that way, because nothing ever reached the struct holding it.",
+      "versions": [
+        1
+      ],
+      "json_value": {
+        "errorCode": 1,
+        "topics": [
+          {
+            "topicName": "v",
+            "partitions": [
+              {
+                "partitionIndex": 1,
+                "errorCode": 1,
+                "leaderId": 1,
+                "leaderEpoch": 1,
+                "highWatermark": 1,
+                "currentVoters": [
+                  {
+                    "replicaId": 1,
+                    "logEndOffset": 1,
+                    "lastFetchTimestamp": 1,
+                    "lastCaughtUpTimestamp": 1
+                  }
+                ],
+                "observers": [
+                  {
+                    "replicaId": 1,
+                    "logEndOffset": 1,
+                    "lastFetchTimestamp": 1,
+                    "lastCaughtUpTimestamp": 1
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "synthesized_populated_v2",
+      "why": "Every field this version declares, present and non-default: one element in every array, every nullable thing supplied. The defaults case leaves arrays empty, which hides every field of the struct the array would have held \u2014 a records field encoded with the wrong length prefix survived the whole corpus that way, because nothing ever reached the struct holding it.",
+      "versions": [
+        2
+      ],
+      "json_value": {
+        "errorCode": 1,
+        "errorMessage": "v",
+        "topics": [
+          {
+            "topicName": "v",
+            "partitions": [
+              {
+                "partitionIndex": 1,
+                "errorCode": 1,
+                "errorMessage": "v",
+                "leaderId": 1,
+                "leaderEpoch": 1,
+                "highWatermark": 1,
+                "currentVoters": [
+                  {
+                    "replicaId": 1,
+                    "replicaDirectoryId": "MkU3OEVGRjRDMTk0M0Q2OA",
+                    "logEndOffset": 1,
+                    "lastFetchTimestamp": 1,
+                    "lastCaughtUpTimestamp": 1
+                  }
+                ],
+                "observers": [
+                  {
+                    "replicaId": 1,
+                    "replicaDirectoryId": "MkU3OEVGRjRDMTk0M0Q2OA",
+                    "logEndOffset": 1,
+                    "lastFetchTimestamp": 1,
+                    "lastCaughtUpTimestamp": 1
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "nodes": [
+          {
+            "nodeId": 1,
+            "listeners": [
+              {
+                "name": "v",
+                "host": "v",
+                "port": 1
+              }
+            ]
+          }
+        ]
+      }
     }
   ]
 }
