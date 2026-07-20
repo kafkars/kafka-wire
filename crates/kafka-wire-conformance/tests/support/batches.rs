@@ -9,7 +9,7 @@ use std::{fs, path::PathBuf};
 
 use serde::Deserialize;
 
-/// One batch, and the bytes Apache Kafka's own producer laid out for it.
+/// One batch, and the bytes Apache Kafka's own record writer laid out for it.
 #[derive(Clone, Debug, Deserialize)]
 pub(crate) struct Batch {
     /// Plan case that produced this batch.

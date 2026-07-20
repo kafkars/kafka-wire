@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "about": "Byte vectors authored by Apache Kafka's own MemoryRecordsBuilder, the class its producer uses to lay out a batch. Regenerate with `cargo xtask records --refresh`; never edit a hex by hand.",
+  "about": "Byte vectors authored by Apache Kafka's own record-batch writers. Ordinary and compacted non-empty batches use MemoryRecordsBuilder; empty compacted batches use DefaultRecordBatch.writeEmptyHeader. Regenerate with `cargo xtask records --refresh`; never edit a hex by hand.",
   "vectors": [
     {
       "name": "one_record_no_key",
@@ -26,6 +26,16 @@
       "name": "three_records_with_deltas",
       "why": "Offset and timestamp deltas are per-record and relative to the batch, so a batch of one can never show whether the base is being subtracted. maxTimestamp must land on the largest, not the last.",
       "hex": "000000000000006400000053ffffffff02688d24ee0000000000020000018bcfe568000000018bcfe569f4ffffffffffffffffffffffffffff000000031200000001066f6e65001400e80702010674776f001800900304010a746872656500"
+    },
+    {
+      "name": "compacted_records_keep_offset_gaps",
+      "why": "Log compaction removes records without renumbering the survivors. Two remaining records at deltas 0 and 2 therefore carry a lastOffsetDelta of 2 while recordsCount is only 2; deriving one from the other rejects valid broker output.",
+      "hex": "00000000000000640000004affffffff028a42d95b0000000000020000018bcfe568000000018bcfe568c8ffffffffffffffffffffffffffff0000000216000000046b31066f6c64001800900304046b32066e657700"
+    },
+    {
+      "name": "empty_compacted_batch_keeps_last_offset",
+      "why": "Kafka may retain only a batch header after compaction removes every record so producer sequence state survives. recordsCount is zero while the original last offset remains independently represented.",
+      "hex": "0000000000000064000000310000002a02b0575b09000000000002ffffffffffffffff0000018bcfe568c8000000000000303900070000006400000000"
     },
     {
       "name": "headers_on_one_record",

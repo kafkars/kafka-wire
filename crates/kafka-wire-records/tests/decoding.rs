@@ -6,6 +6,7 @@
 #![allow(clippy::field_reassign_with_default, clippy::unwrap_used)]
 
 use bytes::{Bytes, BytesMut};
+use kafka_wire_core::DecodeError;
 use kafka_wire_records::{
     Compression, Record, RecordBatch, RecordDecodeLimits, RecordError, RecordHeader, TimestampType,
 };
@@ -19,6 +20,7 @@ const EMPTY_HEADER_KEY_OFFSET: usize = 68;
 fn batch(compression: Compression, base_offset: i64) -> RecordBatch {
     RecordBatch {
         base_offset,
+        last_offset_delta: 0,
         partition_leader_epoch: 2,
         compression,
         timestamp_type: TimestampType::CreateTime,
@@ -35,7 +37,7 @@ fn batch(compression: Compression, base_offset: i64) -> RecordBatch {
             timestamp_delta: 0,
             offset_delta: 0,
             key: None,
-            value: Some(Bytes::from(vec![b'x'; 1_024])),
+            value: Some(Bytes::from(vec![b'x'; 512])),
             headers: Vec::new(),
         }],
     }
@@ -92,12 +94,17 @@ fn every_codec_obeys_the_decompressed_byte_limit() {
         let mut limits = RecordDecodeLimits::default();
         limits.max_decompressed_records_bytes = 32;
 
+        let error = RecordBatch::decode(&mut cursor, limits).unwrap_err();
         assert!(
-            matches!(
-                RecordBatch::decode(&mut cursor, limits),
-                Err(RecordError::DecompressionLimitExceeded { .. })
-            ),
-            "{} ignored the decompression limit",
+            matches!(error, RecordError::DecompressionLimitExceeded { .. })
+                || matches!(
+                    (compression, &error),
+                    (
+                        Compression::Zstd,
+                        RecordError::CompressionFailed { codec: "zstd", .. }
+                    )
+                ),
+            "{} ignored the decompression limit: {error}",
             compression.name()
         );
         assert_eq!(
@@ -160,4 +167,53 @@ fn a_record_field_length_below_the_null_sentinel_is_rejected() {
         RecordBatch::decode(&mut cursor, RecordDecodeLimits::default()),
         Err(RecordError::InvalidRecordFieldLength { length: -2 })
     ));
+}
+
+#[test]
+fn a_record_count_above_the_element_budget_is_rejected_before_allocation() {
+    let mut cursor = batch(Compression::None, 10).encode_to_bytes().unwrap();
+    let original = cursor.clone();
+    let mut limits = RecordDecodeLimits::default();
+    limits.wire.max_array_elements = 0;
+
+    assert!(matches!(
+        RecordBatch::decode(&mut cursor, limits),
+        Err(RecordError::Wire(DecodeError::LimitExceeded {
+            kind: "record batch records",
+            length: 1,
+            limit: 0,
+            ..
+        }))
+    ));
+    assert_eq!(cursor, original);
+}
+
+#[test]
+fn a_header_count_above_the_element_budget_is_rejected_before_allocation() {
+    let mut source = batch(Compression::None, 10);
+    source.records[0].headers = vec![
+        RecordHeader {
+            key: "first".to_owned(),
+            value: None,
+        },
+        RecordHeader {
+            key: "second".to_owned(),
+            value: None,
+        },
+    ];
+    let mut cursor = source.encode_to_bytes().unwrap();
+    let original = cursor.clone();
+    let mut limits = RecordDecodeLimits::default();
+    limits.wire.max_array_elements = 1;
+
+    assert!(matches!(
+        RecordBatch::decode(&mut cursor, limits),
+        Err(RecordError::Wire(DecodeError::LimitExceeded {
+            kind: "record headers",
+            length: 2,
+            limit: 1,
+            ..
+        }))
+    ));
+    assert_eq!(cursor, original);
 }

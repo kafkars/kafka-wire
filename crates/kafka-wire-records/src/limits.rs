@@ -14,7 +14,8 @@ pub struct RecordDecodeLimits {
     pub max_batch_bytes: usize,
     /// Maximum byte length of the records payload after decompression.
     pub max_decompressed_records_bytes: usize,
-    /// Primitive, string, array, and tagged-field limits used inside records.
+    /// Wire limits used inside records; `max_array_elements` bounds both records
+    /// per batch and headers per record before either collection allocates.
     pub wire: DecodeLimits,
 }
 

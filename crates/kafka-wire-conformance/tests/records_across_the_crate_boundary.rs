@@ -1,6 +1,6 @@
 //! A `records` field carries a real Kafka batch between the two crates that own it.
 //!
-//! Scenario: take a batch Apache Kafka's own producer laid out, put it in the
+//! Scenario: take a batch Apache Kafka's own record writer laid out, put it in the
 //! `records` field of a `ProduceRequest` and of a `FetchResponse`, encode the
 //! message, decode it back, and hand the recovered blob to
 //! `kafka_wire_records::RecordBatch::decode`.

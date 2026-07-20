@@ -61,7 +61,7 @@ pub(super) fn self_test(workspace: &Path) -> Result<String, String> {
     Ok(String::from_utf8_lossy(&output.stdout).trim().to_owned())
 }
 
-/// Ask Kafka's producer machinery to lay out every batch the plans call for.
+/// Ask Kafka's record writers to lay out every batch the plans call for.
 pub(super) fn encode(workspace: &Path, plans: &str) -> Result<String, String> {
     ask(workspace, &[], plans, "the record oracle refused the plans")
 }

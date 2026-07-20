@@ -43,6 +43,10 @@ use crate::error::RecordError;
 /// back, which is exactly why the corpus decides it.
 const XERIAL_MAGIC: [u8; 8] = [0x82, b'S', b'N', b'A', b'P', b'P', b'Y', 0x00];
 
+/// Zstd's supported streaming window range in the linked implementation.
+const ZSTD_MIN_WINDOW_LOG: u32 = 10;
+const ZSTD_MAX_WINDOW_LOG: u32 = 31;
+
 impl Compression {
     /// Decompresses one records payload.
     pub(crate) fn decompress(self, payload: &[u8], limit: usize) -> Result<Vec<u8>, RecordError> {
@@ -52,7 +56,10 @@ impl Compression {
             Self::Snappy => decompress_xerial(payload, limit),
             Self::Lz4 => read_bounded("lz4", lz4_flex::frame::FrameDecoder::new(payload), limit),
             Self::Zstd => {
-                let decoder = zstd::stream::read::Decoder::new(payload)
+                let mut decoder = zstd::stream::read::Decoder::new(payload)
+                    .map_err(|error| Self::failed("zstd", &error))?;
+                decoder
+                    .window_log_max(zstd_window_log(limit))
                     .map_err(|error| Self::failed("zstd", &error))?;
                 read_bounded("zstd", decoder, limit)
             }
@@ -97,6 +104,12 @@ impl Compression {
             detail: error.to_string(),
         }
     }
+}
+
+pub(crate) fn zstd_window_log(limit: usize) -> u32 {
+    let bytes = limit.max(1);
+    let ceiling = usize::BITS - bytes.saturating_sub(1).leading_zeros();
+    ceiling.clamp(ZSTD_MIN_WINDOW_LOG, ZSTD_MAX_WINDOW_LOG)
 }
 
 fn checked_uncompressed(payload: &[u8], limit: usize) -> Result<Vec<u8>, RecordError> {

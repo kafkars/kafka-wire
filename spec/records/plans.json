@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "about": "Record-batch situations worth holding this repository to. Every `hex` in the sibling vectors.json is authored by Apache Kafka's own MemoryRecordsBuilder, never by this repository. Keys, values, and header values are base64.",
+  "about": "Record-batch situations worth holding this repository to. Every `hex` in the sibling vectors.json is authored by Apache Kafka's own record writers, never by this repository. Keys, values, and header values are base64.",
   "batches": [
     {
       "name": "one_record_no_key",
@@ -71,6 +71,39 @@
           "value": "dGhyZWU="
         }
       ]
+    },
+    {
+      "name": "compacted_records_keep_offset_gaps",
+      "why": "Log compaction removes records without renumbering the survivors. Two remaining records at deltas 0 and 2 therefore carry a lastOffsetDelta of 2 while recordsCount is only 2; deriving one from the other rejects valid broker output.",
+      "compression": "none",
+      "baseOffset": 100,
+      "records": [
+        {
+          "offsetDelta": 0,
+          "timestamp": 1700000000000,
+          "key": "azE=",
+          "value": "b2xk"
+        },
+        {
+          "offsetDelta": 2,
+          "timestamp": 1700000000200,
+          "key": "azI=",
+          "value": "bmV3"
+        }
+      ]
+    },
+    {
+      "name": "empty_compacted_batch_keeps_last_offset",
+      "why": "Kafka may retain only a batch header after compaction removes every record so producer sequence state survives. recordsCount is zero while the original last offset remains independently represented.",
+      "compression": "none",
+      "baseOffset": 100,
+      "lastOffsetDelta": 2,
+      "producerId": 12345,
+      "producerEpoch": 7,
+      "baseSequence": 100,
+      "partitionLeaderEpoch": 42,
+      "maxTimestamp": 1700000000200,
+      "records": []
     },
     {
       "name": "headers_on_one_record",

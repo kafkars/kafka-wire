@@ -3,7 +3,7 @@
 //! A `records` field is opaque to Kafka's generated JSON converters — they take
 //! it as base64 and hand it back untouched — so the message oracle structurally
 //! cannot author a batch. This corpus has one of its own, driving Kafka's
-//! `MemoryRecordsBuilder`, and this module owns the `cargo xtask records`
+//! record-batch writers, and this module owns the `cargo xtask records`
 //! surface around it.
 //!
 //! The split mirrors `vectors`: `--refresh` needs a Java toolchain and the
@@ -195,9 +195,10 @@ fn refresh(workspace: &Path) -> Result<(), String> {
 
     let written = Corpus {
         schema: SCHEMA,
-        about: "Byte vectors authored by Apache Kafka's own MemoryRecordsBuilder, the class its \
-                producer uses to lay out a batch. Regenerate with `cargo xtask records --refresh`; \
-                never edit a hex by hand."
+        about: "Byte vectors authored by Apache Kafka's own record-batch writers. Ordinary and \
+                compacted non-empty batches use MemoryRecordsBuilder; empty compacted batches use \
+                DefaultRecordBatch.writeEmptyHeader. Regenerate with `cargo xtask records \
+                --refresh`; never edit a hex by hand."
             .to_owned(),
         vectors,
     };

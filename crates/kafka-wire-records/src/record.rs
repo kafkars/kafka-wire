@@ -58,12 +58,14 @@ impl Record {
         let key = read_varint_bytes(decoder)?;
         let value = read_varint_bytes(decoder)?;
 
+        let header_count_offset = decoder.offset();
         let header_count = decoder.read_varint()?;
         let header_count =
             usize::try_from(header_count).map_err(|_| RecordError::RecordSizeMismatch {
                 declared,
                 consumed: start - decoder.remaining(),
             })?;
+        decoder.check_collection_limit("record headers", header_count, header_count_offset)?;
         let mut headers = Vec::with_capacity(header_count.min(start));
         for _ in 0..header_count {
             headers.push(RecordHeader::decode(decoder)?);

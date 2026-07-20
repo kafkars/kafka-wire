@@ -38,6 +38,12 @@ const HEADER_AFTER_LENGTH: usize = 49;
 pub struct RecordBatch {
     /// Absolute offset of the first record.
     pub base_offset: i64,
+    /// Offset of the original batch's last record relative to `base_offset`.
+    ///
+    /// This is independent of the number of records still present: log
+    /// compaction preserves the original last offset while removing records and
+    /// may leave an empty batch behind.
+    pub last_offset_delta: i32,
     /// Leader epoch of the partition when this batch was appended, or `-1`.
     pub partition_leader_epoch: i32,
     /// Codec the records payload uses.
@@ -120,11 +126,17 @@ impl RecordBatch {
         let producer_id = decoder.read_i64()?;
         let producer_epoch = decoder.read_i16()?;
         let base_sequence = decoder.read_i32()?;
+        let records_count_offset = decoder.offset();
         let records_count_wire = decoder.read_i32()?;
         let records_count =
             usize::try_from(records_count_wire).map_err(|_| RecordError::NegativeRecordCount {
                 count: records_count_wire,
             })?;
+        decoder.check_collection_limit(
+            "record batch records",
+            records_count,
+            records_count_offset,
+        )?;
 
         let payload = decoder.take_bytes(end - (CRC_COVERAGE_START + 40))?;
         let payload = attributes
@@ -132,23 +144,9 @@ impl RecordBatch {
             .decompress(&payload, limits.max_decompressed_records_bytes)?;
         let records = record::decode_all(Bytes::from(payload), records_count, limits.wire)?;
 
-        // Kafka derives this from the records rather than trusting it, and so
-        // must anything that re-encodes the batch. Checking it here means a
-        // header that disagrees with its own payload cannot round-trip
-        // undetected.
-        let expected_last = records_count_wire - 1;
-        if last_offset_delta != expected_last {
-            return Err(RecordError::RecordCountMismatch {
-                declared: last_offset_delta
-                    .checked_add(1)
-                    .and_then(|count| usize::try_from(count).ok())
-                    .unwrap_or(0),
-                actual: records.len(),
-            });
-        }
-
         let batch = Self {
             base_offset,
+            last_offset_delta,
             partition_leader_epoch,
             compression: attributes.compression,
             timestamp_type: attributes.timestamp_type,
@@ -208,7 +206,7 @@ impl RecordBatch {
                 length: self.records.len(),
                 maximum: usize::try_from(i32::MAX).unwrap_or(usize::MAX),
             })?;
-        inner.write_i32(record_count - 1)?;
+        inner.write_i32(self.last_offset_delta)?;
         inner.write_i64(self.base_timestamp)?;
         inner.write_i64(self.max_timestamp)?;
         inner.write_i64(self.producer_id)?;

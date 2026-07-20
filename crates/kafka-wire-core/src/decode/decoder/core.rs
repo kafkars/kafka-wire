@@ -63,6 +63,22 @@ impl Decoder {
         }
     }
 
+    /// Checks a downstream collection count against the configured element budget.
+    ///
+    /// Kafka containers such as record batches have their own count encodings,
+    /// so they cannot call the standard array-length readers. This is the shared
+    /// pre-allocation seam: the downstream parser supplies the count and its
+    /// prefix offset, while `Decoder` remains the sole owner of how
+    /// `max_array_elements` is enforced.
+    pub fn check_collection_limit(
+        &self,
+        kind: &'static str,
+        count: usize,
+        offset: usize,
+    ) -> Result<(), DecodeError> {
+        Self::check_limit(kind, count, self.limits.max_array_elements, offset)
+    }
+
     /// Rejects a claimed element count that the unread bytes cannot back.
     ///
     /// Every array element and every tagged field occupies at least one wire

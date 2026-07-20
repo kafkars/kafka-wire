@@ -1,11 +1,15 @@
 //! Compression framing failures remain errors rather than plausible output.
 //!
-//! These scenarios exercise size decisions that cannot be reached by allocating
-//! a multi-gigabyte test buffer.
+//! These scenarios exercise framing and decoder-memory decisions that ordinary
+//! round trips cannot reach without impractical allocations.
+
+use std::io::Write as _;
 
 use kafka_wire_core::EncodeError;
 
-use crate::compression::xerial_block_length;
+use crate::attributes::Compression;
+use crate::compression::{xerial_block_length, zstd_window_log};
+use crate::error::RecordError;
 
 #[test]
 fn the_largest_xerial_block_length_is_representable() {
@@ -26,4 +30,27 @@ fn an_xerial_block_past_u32_is_rejected() {
             ..
         })
     ));
+}
+
+#[test]
+fn zstd_window_budget_rounds_up_without_exceeding_the_codec_domain() {
+    assert_eq!(zstd_window_log(0), 10);
+    assert_eq!(zstd_window_log(1_024), 10);
+    assert_eq!(zstd_window_log(1_025), 11);
+    assert_eq!(zstd_window_log(100 * 1024 * 1024), 27);
+    assert_eq!(zstd_window_log(usize::MAX), 31);
+}
+
+#[test]
+fn zstd_refuses_an_oversized_window() -> Result<(), Box<dyn std::error::Error>> {
+    let mut encoder = zstd::stream::write::Encoder::new(Vec::new(), 3)?;
+    encoder.window_log(20)?;
+    encoder.write_all(b"one byte")?;
+    let frame = encoder.finish()?;
+
+    assert!(matches!(
+        Compression::Zstd.decompress(&frame, 1_024),
+        Err(RecordError::CompressionFailed { codec: "zstd", .. })
+    ));
+    Ok(())
 }

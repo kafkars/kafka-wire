@@ -1,7 +1,7 @@
-//! Record batches agree with Apache Kafka's own producer, byte for byte.
+//! Record batches agree with Apache Kafka's own writers, byte for byte.
 //!
 //! Scenario: for every vector under `spec/records/`, decode the bytes Kafka's
-//! `MemoryRecordsBuilder` produced and re-encode them to the identical bytes.
+//! record-batch writers produced and re-encode them to the identical bytes.
 //!
 //! This is the only direction available here, and it is stronger than it looks
 //! precisely because this repository did not author the bytes. A batch carries a
@@ -74,7 +74,7 @@ fn every_uncompressed_batch_decodes_and_re_encodes_to_the_same_bytes() {
         failures.join("\n\n")
     );
     assert!(
-        checked >= 9,
+        checked >= 11,
         "only {checked} uncompressed batch(es) were checked; the corpus should carry more"
     );
 }
@@ -213,6 +213,18 @@ fn the_uncompressed_vectors_carry_the_shapes_that_discriminate() {
         "maxTimestamp must be the largest timestamp, not the last record's"
     );
     assert_eq!(deltas.records[2].timestamp_delta, 200);
+
+    // Compaction preserves offsets while removing records, including all of
+    // them. The last offset is therefore metadata of its own, not count - 1.
+    let compacted = named("compacted_records_keep_offset_gaps");
+    assert_eq!(compacted.records.len(), 2);
+    assert_eq!(compacted.records[0].offset_delta, 0);
+    assert_eq!(compacted.records[1].offset_delta, 2);
+    assert_eq!(compacted.last_offset_delta, 2);
+    let empty = named("empty_compacted_batch_keeps_last_offset");
+    assert!(empty.records.is_empty());
+    assert_eq!(empty.base_offset, 100);
+    assert_eq!(empty.last_offset_delta, 2);
 
     // The producer identity and the transactional bit travel in the header.
     let txn = named("transactional_with_producer_identity");

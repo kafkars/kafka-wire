@@ -43,7 +43,7 @@ impl Decoder {
             kind: "array",
             offset,
         })?;
-        Self::check_limit("array", length, self.limits.max_array_elements, offset)?;
+        self.check_collection_limit("array", length, offset)?;
         self.check_element_count("array", length, offset)?;
         Ok(length)
     }
@@ -63,12 +63,7 @@ impl Decoder {
             kind: "compact array",
             offset,
         })?;
-        Self::check_limit(
-            "compact array",
-            length,
-            self.limits.max_array_elements,
-            offset,
-        )?;
+        self.check_collection_limit("compact array", length, offset)?;
         self.check_element_count("compact array", length, offset)?;
         Ok(length)
     }
@@ -96,12 +91,7 @@ impl Decoder {
             kind: "nullable array",
             offset,
         })?;
-        Self::check_limit(
-            "nullable array",
-            length,
-            self.limits.max_array_elements,
-            offset,
-        )?;
+        self.check_collection_limit("nullable array", length, offset)?;
         self.check_element_count("nullable array", length, offset)?;
         Ok(Some(length))
     }
@@ -121,12 +111,7 @@ impl Decoder {
             kind: "compact nullable array",
             offset,
         })?;
-        Self::check_limit(
-            "compact nullable array",
-            length,
-            self.limits.max_array_elements,
-            offset,
-        )?;
+        self.check_collection_limit("compact nullable array", length, offset)?;
         self.check_element_count("compact nullable array", length, offset)?;
         Ok(Some(length))
     }

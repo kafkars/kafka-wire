@@ -11,11 +11,13 @@
  * which is weaker than no evidence at all — the misreading would be its own and
  * Kafka would never see it.
  *
- * So this program drives `MemoryRecordsBuilder`, the same class Kafka's producer
- * uses to lay out a batch, and reports the bytes it produced. Every field of the
- * v2 header, the CRC32C over them, the zigzag-varint record framing, and each
- * compression codec's exact framing are then Kafka's statements rather than this
- * repository's.
+ * So this program drives Kafka's own record writers and reports the bytes they
+ * produced. Ordinary and compacted non-empty batches go through
+ * `MemoryRecordsBuilder`, the same class Kafka's producer uses; empty compacted
+ * batches go through `DefaultRecordBatch.writeEmptyHeader`, the writer Kafka
+ * provides specifically for that retained header. Every field of the v2 header,
+ * the CRC32C over them, the zigzag-varint record framing, and each compression
+ * codec's exact framing are then Kafka's statements rather than this repository's.
  *
  * DETERMINISM IS A REQUIREMENT, NOT A CONVENIENCE. Several `MemoryRecords.builder`
  * overloads call `System.currentTimeMillis()` for the log-append timestamp, which
@@ -47,6 +49,7 @@ import org.apache.kafka.common.compress.Compression;
 import org.apache.kafka.common.header.Header;
 import org.apache.kafka.common.header.internals.RecordHeader;
 import org.apache.kafka.common.record.TimestampType;
+import org.apache.kafka.common.record.internal.DefaultRecordBatch;
 import org.apache.kafka.common.record.internal.MemoryRecords;
 import org.apache.kafka.common.record.internal.MemoryRecordsBuilder;
 import org.apache.kafka.common.record.internal.MutableRecordBatch;
@@ -236,8 +239,16 @@ public final class RecordOracle {
         return value == null ? null : HexFormat.of().formatHex(value);
     }
 
-    /** Lay out one batch exactly as Kafka's producer would. */
+    /** Lay out one batch through the Kafka writer that owns its shape. */
     private static byte[] build(JsonNode batch) {
+        JsonNode records = required(batch, "records");
+        if (!records.isArray()) {
+            throw new OracleException("`records` must be an array");
+        }
+        if (records.isEmpty()) {
+            return buildEmpty(batch);
+        }
+
         ByteBuffer buffer = ByteBuffer.allocate(BUFFER_BYTES);
         // The fullest overload, with every field supplied. The shorter ones
         // default the log-append timestamp from the wall clock.
@@ -254,10 +265,6 @@ public final class RecordOracle {
                 boolAt(batch, "transactional"),
                 intAt(batch, "partitionLeaderEpoch", RecordBatch.NO_PARTITION_LEADER_EPOCH));
 
-        JsonNode records = required(batch, "records");
-        if (!records.isArray() || records.isEmpty()) {
-            throw new OracleException("`records` must be a non-empty array");
-        }
         long offset = longAt(batch, "baseOffset", 0L);
         int index = 0;
         for (JsonNode record : records) {
@@ -276,6 +283,42 @@ public final class RecordOracle {
         ByteBuffer written = builder.build().buffer();
         byte[] out = new byte[written.remaining()];
         written.get(out);
+        return out;
+    }
+
+    /** Lay out the header Kafka retains when compaction removes every record. */
+    private static byte[] buildEmpty(JsonNode batch) {
+        String codec = text(batch, "compression", "none");
+        if (!codec.equals("none")) {
+            throw new OracleException("an empty retained batch cannot declare compression `" + codec + "`");
+        }
+
+        long baseOffset = longAt(batch, "baseOffset", 0L);
+        int lastOffsetDelta = required(batch, "lastOffsetDelta").asInt();
+        long lastOffset;
+        try {
+            lastOffset = Math.addExact(baseOffset, lastOffsetDelta);
+        } catch (ArithmeticException overflow) {
+            throw new OracleException("baseOffset plus lastOffsetDelta overflows int64");
+        }
+
+        ByteBuffer buffer = ByteBuffer.allocate(DefaultRecordBatch.RECORD_BATCH_OVERHEAD);
+        DefaultRecordBatch.writeEmptyHeader(
+                buffer,
+                RecordBatch.MAGIC_VALUE_V2,
+                longAt(batch, "producerId", RecordBatch.NO_PRODUCER_ID),
+                (short) intAt(batch, "producerEpoch", RecordBatch.NO_PRODUCER_EPOCH),
+                intAt(batch, "baseSequence", RecordBatch.NO_SEQUENCE),
+                baseOffset,
+                lastOffset,
+                intAt(batch, "partitionLeaderEpoch", RecordBatch.NO_PARTITION_LEADER_EPOCH),
+                timestampType(text(batch, "timestampType", "CreateTime")),
+                longAt(batch, "maxTimestamp", RecordBatch.NO_TIMESTAMP),
+                boolAt(batch, "transactional"),
+                boolAt(batch, "control"));
+        buffer.flip();
+        byte[] out = new byte[buffer.remaining()];
+        buffer.get(out);
         return out;
     }
 
