@@ -5,12 +5,26 @@ use kafka_wire_schema::{FieldType, Message};
 use crate::GenerationError;
 
 pub(crate) fn validate_supported(message: &Message) -> Result<(), GenerationError> {
-    if message.valid_versions.single_bounded().is_none() {
+    // Three structurally different declarations used to land in one diagnostic,
+    // and the one that actually occurs was described by the wrong half of it.
+    if message.valid_versions.is_empty() {
         return unsupported(
             message,
             "<message>",
-            "the initial backend requires one bounded valid version interval",
+            "upstream retired this message: validVersions is \"none\", so it has no \
+             wire format to emit. Apache Kafka generates no code for it either — \
+             the pinned clients jar contains neither a Data class nor a JSON \
+             converter — so this is a permanent refusal rather than an unfinished \
+             one, and nothing could verify a struct emitted here",
         );
+    }
+    if message.valid_versions.single_bounded().is_none() {
+        let reason = if message.valid_versions.ranges().len() == 1 {
+            "the initial backend requires a closed upper bound on validVersions"
+        } else {
+            "the initial backend requires one bounded valid version interval"
+        };
+        return unsupported(message, "<message>", reason);
     }
 
     let flexible = message.effective_flexible_versions();

@@ -60,14 +60,17 @@ fn the_supported_shape_is_accepted() {
 }
 
 #[test]
-fn a_message_without_one_bounded_valid_interval_is_refused() {
+fn each_unusable_valid_version_declaration_is_refused_by_its_own_cause() {
+    // Three structurally different declarations, each of which `single_bounded`
+    // answers `None` for. They were once one diagnostic, which described a
+    // retired message as a limitation of this backend.
     let mut open = message("0+", "none", vec![field("Probe", FieldType::Int32, "0+")]);
     open.valid_versions = versions("0+");
     assert!(
-        validate_supported(&open).err().is_some_and(|error| error
-            .to_string()
-            .contains("one bounded valid version interval")),
-        "an open-ended validVersions was accepted"
+        validate_supported(&open)
+            .err()
+            .is_some_and(|error| error.to_string().contains("closed upper bound")),
+        "an open-ended validVersions was accepted, or blamed on the wrong cause"
     );
 
     let disjoint = message(
@@ -82,6 +85,18 @@ fn a_message_without_one_bounded_valid_interval_is_refused() {
                 .contains("one bounded valid version interval")
         }),
         "a disjoint validVersions was accepted"
+    );
+
+    // The one that actually occurs: eight upstream schemas are tombstones for
+    // RPCs Kafka removed. Refusing them is a decision, and the diagnostic has to
+    // say so, or a reader takes it for unfinished work.
+    let mut retired = message("0-4", "none", vec![field("Probe", FieldType::Int32, "0+")]);
+    retired.valid_versions = versions("none");
+    assert!(
+        validate_supported(&retired)
+            .err()
+            .is_some_and(|error| error.to_string().contains("upstream retired this message")),
+        "a retired message was accepted, or reported as a backend limitation"
     );
 }
 
