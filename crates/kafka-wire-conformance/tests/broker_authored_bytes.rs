@@ -113,14 +113,18 @@ fn every_vector_encodes_from_its_canonical_json_value() {
     );
 }
 
-/// Messages the corpus judges by round trip alone, because the harness has no
-/// canonical-JSON builder for them yet.
+/// Messages whose DEFAULTS the canonical-JSON direction does not yet prove.
 ///
-/// The round-trip assertion above covers every vector, so these messages are
-/// still held to Apache Kafka's exact bytes; what is missing is the second
-/// direction, which additionally proves the struct's defaults agree with what
-/// Kafka assumes when a field is absent from the JSON. The list is asserted to
-/// be exact so it cannot grow silently, and shrinking it is the work owed.
+/// The name has always invited a stronger reading than it deserves. These
+/// messages are not unverified: every one is held to Apache Kafka's bytes by the
+/// round trip above, their field names are checked by the oracle accepting a
+/// JSON keyed by this repository's own names, and their field order is pinned by
+/// `kafka-wire-schema`'s `field_order` test against upstream's declaration array.
+///
+/// What is missing is narrower — whether a field absent from a version decodes
+/// to the value Kafka would have used. See the JSON-shape census, which measures each of
+/// those claims and decides that the builders which close the last one are
+/// generated rather than written.
 const WITHOUT_JSON_BUILDERS: &[&str] = &[
     "AbortedTxn",
     "AddOffsetsToTxnRequest",
