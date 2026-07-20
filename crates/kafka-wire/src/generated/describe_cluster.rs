@@ -275,13 +275,9 @@ impl KafkaDecode for DescribeClusterResponse {
         let controller_id = decoder.read_i32()?;
         let brokers = {
             let length = decoder.read_compact_array_len()?;
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(DescribeClusterResponseDescribeClusterBroker::decode(
-                    decoder, version,
-                )?);
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                DescribeClusterResponseDescribeClusterBroker::decode(decoder, version)
+            })?
         };
         let cluster_authorized_operations = decoder.read_i32()?;
         let unknown_tagged_fields = if Self::is_flexible(version) {

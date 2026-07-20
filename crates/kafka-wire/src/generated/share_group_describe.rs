@@ -47,11 +47,7 @@ impl KafkaDecode for ShareGroupDescribeRequest {
 
         let group_ids = {
             let length = decoder.read_compact_array_len()?;
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(decoder.read_compact_string()?);
-            }
-            values
+            decoder.read_vec(length, Decoder::read_compact_string)?
         };
         let include_authorized_operations = decoder.read_bool()?;
         let unknown_tagged_fields = if Self::is_flexible(version) {
@@ -123,11 +119,7 @@ impl KafkaDecode for ShareGroupDescribeResponseTopicPartitions {
         let topic_name = decoder.read_compact_string()?;
         let partitions = {
             let length = decoder.read_compact_array_len()?;
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(decoder.read_i32()?);
-            }
-            values
+            decoder.read_vec(length, Decoder::read_i32)?
         };
         let unknown_tagged_fields = if Self::is_flexible(version) {
             decoder.read_tagged_fields()?
@@ -192,13 +184,9 @@ impl KafkaDecode for ShareGroupDescribeResponseAssignment {
     fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
         let topic_partitions = {
             let length = decoder.read_compact_array_len()?;
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(ShareGroupDescribeResponseTopicPartitions::decode(
-                    decoder, version,
-                )?);
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                ShareGroupDescribeResponseTopicPartitions::decode(decoder, version)
+            })?
         };
         let unknown_tagged_fields = if Self::is_flexible(version) {
             decoder.read_tagged_fields()?
@@ -299,11 +287,9 @@ impl KafkaDecode for ShareGroupDescribeResponseDescribedGroup {
         let assignor_name = decoder.read_compact_string()?;
         let members = {
             let length = decoder.read_compact_array_len()?;
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(ShareGroupDescribeResponseMember::decode(decoder, version)?);
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                ShareGroupDescribeResponseMember::decode(decoder, version)
+            })?
         };
         let authorized_operations = decoder.read_i32()?;
         let unknown_tagged_fields = if Self::is_flexible(version) {
@@ -398,11 +384,7 @@ impl KafkaDecode for ShareGroupDescribeResponseMember {
         let client_host = decoder.read_compact_string()?;
         let subscribed_topic_names = {
             let length = decoder.read_compact_array_len()?;
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(decoder.read_compact_string()?);
-            }
-            values
+            decoder.read_vec(length, Decoder::read_compact_string)?
         };
         let assignment = ShareGroupDescribeResponseAssignment::decode(decoder, version)?;
         let unknown_tagged_fields = if Self::is_flexible(version) {
@@ -483,13 +465,9 @@ impl KafkaDecode for ShareGroupDescribeResponse {
         let throttle_time_ms = decoder.read_i32()?;
         let groups = {
             let length = decoder.read_compact_array_len()?;
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(ShareGroupDescribeResponseDescribedGroup::decode(
-                    decoder, version,
-                )?);
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                ShareGroupDescribeResponseDescribedGroup::decode(decoder, version)
+            })?
         };
         let unknown_tagged_fields = if Self::is_flexible(version) {
             decoder.read_tagged_fields()?

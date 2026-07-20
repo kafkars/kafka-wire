@@ -155,13 +155,9 @@ impl KafkaDecode for UpdateFeaturesRequest {
         let timeout_ms = decoder.read_i32()?;
         let feature_updates = {
             let length = decoder.read_compact_array_len()?;
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(UpdateFeaturesRequestFeatureUpdateKey::decode(
-                    decoder, version,
-                )?);
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                UpdateFeaturesRequestFeatureUpdateKey::decode(decoder, version)
+            })?
         };
         let validate_only = if version.value() >= 1 {
             decoder.read_bool()?
@@ -344,13 +340,9 @@ impl KafkaDecode for UpdateFeaturesResponse {
         let error_message = decoder.read_compact_nullable_string()?;
         let results = if version.value() <= 1 {
             let length = decoder.read_compact_array_len()?;
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(UpdateFeaturesResponseUpdatableFeatureResult::decode(
-                    decoder, version,
-                )?);
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                UpdateFeaturesResponseUpdatableFeatureResult::decode(decoder, version)
+            })?
         } else {
             Vec::new()
         };

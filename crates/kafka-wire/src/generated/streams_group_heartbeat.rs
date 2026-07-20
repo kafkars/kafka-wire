@@ -106,13 +106,9 @@ impl KafkaDecode for StreamsGroupHeartbeatRequestTopicInfo {
         let replication_factor = decoder.read_i16()?;
         let topic_configs = {
             let length = decoder.read_compact_array_len()?;
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(StreamsGroupHeartbeatRequestKeyValue::decode(
-                    decoder, version,
-                )?);
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                StreamsGroupHeartbeatRequestKeyValue::decode(decoder, version)
+            })?
         };
         let unknown_tagged_fields = if Self::is_flexible(version) {
             decoder.read_tagged_fields()?
@@ -307,11 +303,7 @@ impl KafkaDecode for StreamsGroupHeartbeatRequestTaskIds {
         let subtopology_id = decoder.read_compact_string()?;
         let partitions = {
             let length = decoder.read_compact_array_len()?;
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(decoder.read_i32()?);
-            }
-            values
+            decoder.read_vec(length, Decoder::read_i32)?
         };
         let unknown_tagged_fields = if Self::is_flexible(version) {
             decoder.read_tagged_fields()?
@@ -377,13 +369,9 @@ impl KafkaDecode for StreamsGroupHeartbeatRequestTopology {
         let epoch = decoder.read_i32()?;
         let subtopologies = {
             let length = decoder.read_compact_array_len()?;
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(StreamsGroupHeartbeatRequestSubtopology::decode(
-                    decoder, version,
-                )?);
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                StreamsGroupHeartbeatRequestSubtopology::decode(decoder, version)
+            })?
         };
         let unknown_tagged_fields = if Self::is_flexible(version) {
             decoder.read_tagged_fields()?
@@ -459,57 +447,33 @@ impl KafkaDecode for StreamsGroupHeartbeatRequestSubtopology {
         let subtopology_id = decoder.read_compact_string()?;
         let source_topics = {
             let length = decoder.read_compact_array_len()?;
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(decoder.read_compact_string()?);
-            }
-            values
+            decoder.read_vec(length, Decoder::read_compact_string)?
         };
         let source_topic_regex = {
             let length = decoder.read_compact_array_len()?;
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(decoder.read_compact_string()?);
-            }
-            values
+            decoder.read_vec(length, Decoder::read_compact_string)?
         };
         let state_changelog_topics = {
             let length = decoder.read_compact_array_len()?;
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(StreamsGroupHeartbeatRequestTopicInfo::decode(
-                    decoder, version,
-                )?);
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                StreamsGroupHeartbeatRequestTopicInfo::decode(decoder, version)
+            })?
         };
         let repartition_sink_topics = {
             let length = decoder.read_compact_array_len()?;
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(decoder.read_compact_string()?);
-            }
-            values
+            decoder.read_vec(length, Decoder::read_compact_string)?
         };
         let repartition_source_topics = {
             let length = decoder.read_compact_array_len()?;
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(StreamsGroupHeartbeatRequestTopicInfo::decode(
-                    decoder, version,
-                )?);
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                StreamsGroupHeartbeatRequestTopicInfo::decode(decoder, version)
+            })?
         };
         let copartition_groups = {
             let length = decoder.read_compact_array_len()?;
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(StreamsGroupHeartbeatRequestCopartitionGroup::decode(
-                    decoder, version,
-                )?);
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                StreamsGroupHeartbeatRequestCopartitionGroup::decode(decoder, version)
+            })?
         };
         let unknown_tagged_fields = if Self::is_flexible(version) {
             decoder.read_tagged_fields()?
@@ -601,27 +565,15 @@ impl KafkaDecode for StreamsGroupHeartbeatRequestCopartitionGroup {
     fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
         let source_topics = {
             let length = decoder.read_compact_array_len()?;
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(decoder.read_i16()?);
-            }
-            values
+            decoder.read_vec(length, Decoder::read_i16)?
         };
         let source_topic_regex = {
             let length = decoder.read_compact_array_len()?;
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(decoder.read_i16()?);
-            }
-            values
+            decoder.read_vec(length, Decoder::read_i16)?
         };
         let repartition_source_topics = {
             let length = decoder.read_compact_array_len()?;
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(decoder.read_i16()?);
-            }
-            values
+            decoder.read_vec(length, Decoder::read_i16)?
         };
         let unknown_tagged_fields = if Self::is_flexible(version) {
             decoder.read_tagged_fields()?
@@ -770,46 +722,34 @@ impl KafkaDecode for StreamsGroupHeartbeatRequest {
             None
         };
         let active_tasks = {
-            match decoder.read_compact_nullable_array_len()? {
-                None => None,
-                Some(length) => {
-                    let mut values = Vec::with_capacity(length);
-                    for _ in 0..length {
-                        values.push(StreamsGroupHeartbeatRequestTaskIds::decode(
-                            decoder, version,
-                        )?);
-                    }
-                    Some(values)
-                }
-            }
+            let length = decoder.read_compact_nullable_array_len()?;
+            length
+                .map(|length| {
+                    decoder.read_vec(length, |decoder| {
+                        StreamsGroupHeartbeatRequestTaskIds::decode(decoder, version)
+                    })
+                })
+                .transpose()?
         };
         let standby_tasks = {
-            match decoder.read_compact_nullable_array_len()? {
-                None => None,
-                Some(length) => {
-                    let mut values = Vec::with_capacity(length);
-                    for _ in 0..length {
-                        values.push(StreamsGroupHeartbeatRequestTaskIds::decode(
-                            decoder, version,
-                        )?);
-                    }
-                    Some(values)
-                }
-            }
+            let length = decoder.read_compact_nullable_array_len()?;
+            length
+                .map(|length| {
+                    decoder.read_vec(length, |decoder| {
+                        StreamsGroupHeartbeatRequestTaskIds::decode(decoder, version)
+                    })
+                })
+                .transpose()?
         };
         let warmup_tasks = {
-            match decoder.read_compact_nullable_array_len()? {
-                None => None,
-                Some(length) => {
-                    let mut values = Vec::with_capacity(length);
-                    for _ in 0..length {
-                        values.push(StreamsGroupHeartbeatRequestTaskIds::decode(
-                            decoder, version,
-                        )?);
-                    }
-                    Some(values)
-                }
-            }
+            let length = decoder.read_compact_nullable_array_len()?;
+            length
+                .map(|length| {
+                    decoder.read_vec(length, |decoder| {
+                        StreamsGroupHeartbeatRequestTaskIds::decode(decoder, version)
+                    })
+                })
+                .transpose()?
         };
         let process_id = decoder.read_compact_nullable_string()?;
         let user_endpoint = if decoder.read_struct_presence()? {
@@ -820,46 +760,34 @@ impl KafkaDecode for StreamsGroupHeartbeatRequest {
             None
         };
         let client_tags = {
-            match decoder.read_compact_nullable_array_len()? {
-                None => None,
-                Some(length) => {
-                    let mut values = Vec::with_capacity(length);
-                    for _ in 0..length {
-                        values.push(StreamsGroupHeartbeatRequestKeyValue::decode(
-                            decoder, version,
-                        )?);
-                    }
-                    Some(values)
-                }
-            }
+            let length = decoder.read_compact_nullable_array_len()?;
+            length
+                .map(|length| {
+                    decoder.read_vec(length, |decoder| {
+                        StreamsGroupHeartbeatRequestKeyValue::decode(decoder, version)
+                    })
+                })
+                .transpose()?
         };
         let task_offsets = {
-            match decoder.read_compact_nullable_array_len()? {
-                None => None,
-                Some(length) => {
-                    let mut values = Vec::with_capacity(length);
-                    for _ in 0..length {
-                        values.push(StreamsGroupHeartbeatRequestTaskOffset::decode(
-                            decoder, version,
-                        )?);
-                    }
-                    Some(values)
-                }
-            }
+            let length = decoder.read_compact_nullable_array_len()?;
+            length
+                .map(|length| {
+                    decoder.read_vec(length, |decoder| {
+                        StreamsGroupHeartbeatRequestTaskOffset::decode(decoder, version)
+                    })
+                })
+                .transpose()?
         };
         let task_end_offsets = {
-            match decoder.read_compact_nullable_array_len()? {
-                None => None,
-                Some(length) => {
-                    let mut values = Vec::with_capacity(length);
-                    for _ in 0..length {
-                        values.push(StreamsGroupHeartbeatRequestTaskOffset::decode(
-                            decoder, version,
-                        )?);
-                    }
-                    Some(values)
-                }
-            }
+            let length = decoder.read_compact_nullable_array_len()?;
+            length
+                .map(|length| {
+                    decoder.read_vec(length, |decoder| {
+                        StreamsGroupHeartbeatRequestTaskOffset::decode(decoder, version)
+                    })
+                })
+                .transpose()?
         };
         let shutdown_application = decoder.read_bool()?;
         let unknown_tagged_fields = if Self::is_flexible(version) {
@@ -1055,11 +983,7 @@ impl KafkaDecode for StreamsGroupHeartbeatResponseTopicPartition {
         let topic = decoder.read_compact_string()?;
         let partitions = {
             let length = decoder.read_compact_array_len()?;
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(decoder.read_i32()?);
-            }
-            values
+            decoder.read_vec(length, Decoder::read_i32)?
         };
         let unknown_tagged_fields = if Self::is_flexible(version) {
             decoder.read_tagged_fields()?
@@ -1125,11 +1049,7 @@ impl KafkaDecode for StreamsGroupHeartbeatResponseTaskIds {
         let subtopology_id = decoder.read_compact_string()?;
         let partitions = {
             let length = decoder.read_compact_array_len()?;
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(decoder.read_i32()?);
-            }
-            values
+            decoder.read_vec(length, Decoder::read_i32)?
         };
         let unknown_tagged_fields = if Self::is_flexible(version) {
             decoder.read_tagged_fields()?
@@ -1257,23 +1177,15 @@ impl KafkaDecode for StreamsGroupHeartbeatResponseEndpointToPartitions {
         let user_endpoint = StreamsGroupHeartbeatResponseEndpoint::decode(decoder, version)?;
         let active_partitions = {
             let length = decoder.read_compact_array_len()?;
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(StreamsGroupHeartbeatResponseTopicPartition::decode(
-                    decoder, version,
-                )?);
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                StreamsGroupHeartbeatResponseTopicPartition::decode(decoder, version)
+            })?
         };
         let standby_partitions = {
             let length = decoder.read_compact_array_len()?;
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(StreamsGroupHeartbeatResponseTopicPartition::decode(
-                    decoder, version,
-                )?);
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                StreamsGroupHeartbeatResponseTopicPartition::decode(decoder, version)
+            })?
         };
         let unknown_tagged_fields = if Self::is_flexible(version) {
             decoder.read_tagged_fields()?
@@ -1415,60 +1327,44 @@ impl KafkaDecode for StreamsGroupHeartbeatResponse {
             -1
         };
         let status = {
-            match decoder.read_compact_nullable_array_len()? {
-                None => None,
-                Some(length) => {
-                    let mut values = Vec::with_capacity(length);
-                    for _ in 0..length {
-                        values.push(StreamsGroupHeartbeatResponseStatus::decode(
-                            decoder, version,
-                        )?);
-                    }
-                    Some(values)
-                }
-            }
+            let length = decoder.read_compact_nullable_array_len()?;
+            length
+                .map(|length| {
+                    decoder.read_vec(length, |decoder| {
+                        StreamsGroupHeartbeatResponseStatus::decode(decoder, version)
+                    })
+                })
+                .transpose()?
         };
         let active_tasks = {
-            match decoder.read_compact_nullable_array_len()? {
-                None => None,
-                Some(length) => {
-                    let mut values = Vec::with_capacity(length);
-                    for _ in 0..length {
-                        values.push(StreamsGroupHeartbeatResponseTaskIds::decode(
-                            decoder, version,
-                        )?);
-                    }
-                    Some(values)
-                }
-            }
+            let length = decoder.read_compact_nullable_array_len()?;
+            length
+                .map(|length| {
+                    decoder.read_vec(length, |decoder| {
+                        StreamsGroupHeartbeatResponseTaskIds::decode(decoder, version)
+                    })
+                })
+                .transpose()?
         };
         let standby_tasks = {
-            match decoder.read_compact_nullable_array_len()? {
-                None => None,
-                Some(length) => {
-                    let mut values = Vec::with_capacity(length);
-                    for _ in 0..length {
-                        values.push(StreamsGroupHeartbeatResponseTaskIds::decode(
-                            decoder, version,
-                        )?);
-                    }
-                    Some(values)
-                }
-            }
+            let length = decoder.read_compact_nullable_array_len()?;
+            length
+                .map(|length| {
+                    decoder.read_vec(length, |decoder| {
+                        StreamsGroupHeartbeatResponseTaskIds::decode(decoder, version)
+                    })
+                })
+                .transpose()?
         };
         let warmup_tasks = {
-            match decoder.read_compact_nullable_array_len()? {
-                None => None,
-                Some(length) => {
-                    let mut values = Vec::with_capacity(length);
-                    for _ in 0..length {
-                        values.push(StreamsGroupHeartbeatResponseTaskIds::decode(
-                            decoder, version,
-                        )?);
-                    }
-                    Some(values)
-                }
-            }
+            let length = decoder.read_compact_nullable_array_len()?;
+            length
+                .map(|length| {
+                    decoder.read_vec(length, |decoder| {
+                        StreamsGroupHeartbeatResponseTaskIds::decode(decoder, version)
+                    })
+                })
+                .transpose()?
         };
         let topology_description_required = if version.value() >= 1 {
             decoder.read_bool()?
@@ -1477,18 +1373,14 @@ impl KafkaDecode for StreamsGroupHeartbeatResponse {
         };
         let endpoint_information_epoch = decoder.read_i32()?;
         let partitions_by_user_endpoint = {
-            match decoder.read_compact_nullable_array_len()? {
-                None => None,
-                Some(length) => {
-                    let mut values = Vec::with_capacity(length);
-                    for _ in 0..length {
-                        values.push(StreamsGroupHeartbeatResponseEndpointToPartitions::decode(
-                            decoder, version,
-                        )?);
-                    }
-                    Some(values)
-                }
-            }
+            let length = decoder.read_compact_nullable_array_len()?;
+            length
+                .map(|length| {
+                    decoder.read_vec(length, |decoder| {
+                        StreamsGroupHeartbeatResponseEndpointToPartitions::decode(decoder, version)
+                    })
+                })
+                .transpose()?
         };
         let unknown_tagged_fields = if Self::is_flexible(version) {
             decoder.read_tagged_fields()?

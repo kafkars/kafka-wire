@@ -47,11 +47,7 @@ impl KafkaDecode for ConsumerGroupDescribeRequest {
 
         let group_ids = {
             let length = decoder.read_compact_array_len()?;
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(decoder.read_compact_string()?);
-            }
-            values
+            decoder.read_vec(length, Decoder::read_compact_string)?
         };
         let include_authorized_operations = decoder.read_bool()?;
         let unknown_tagged_fields = if Self::is_flexible(version) {
@@ -123,11 +119,7 @@ impl KafkaDecode for ConsumerGroupDescribeResponseTopicPartitions {
         let topic_name = decoder.read_compact_string()?;
         let partitions = {
             let length = decoder.read_compact_array_len()?;
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(decoder.read_i32()?);
-            }
-            values
+            decoder.read_vec(length, Decoder::read_i32)?
         };
         let unknown_tagged_fields = if Self::is_flexible(version) {
             decoder.read_tagged_fields()?
@@ -192,13 +184,9 @@ impl KafkaDecode for ConsumerGroupDescribeResponseAssignment {
     fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
         let topic_partitions = {
             let length = decoder.read_compact_array_len()?;
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(ConsumerGroupDescribeResponseTopicPartitions::decode(
-                    decoder, version,
-                )?);
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                ConsumerGroupDescribeResponseTopicPartitions::decode(decoder, version)
+            })?
         };
         let unknown_tagged_fields = if Self::is_flexible(version) {
             decoder.read_tagged_fields()?
@@ -299,13 +287,9 @@ impl KafkaDecode for ConsumerGroupDescribeResponseDescribedGroup {
         let assignor_name = decoder.read_compact_string()?;
         let members = {
             let length = decoder.read_compact_array_len()?;
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(ConsumerGroupDescribeResponseMember::decode(
-                    decoder, version,
-                )?);
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                ConsumerGroupDescribeResponseMember::decode(decoder, version)
+            })?
         };
         let authorized_operations = decoder.read_i32()?;
         let unknown_tagged_fields = if Self::is_flexible(version) {
@@ -428,11 +412,7 @@ impl KafkaDecode for ConsumerGroupDescribeResponseMember {
         let client_host = decoder.read_compact_string()?;
         let subscribed_topic_names = {
             let length = decoder.read_compact_array_len()?;
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(decoder.read_compact_string()?);
-            }
-            values
+            decoder.read_vec(length, Decoder::read_compact_string)?
         };
         let subscribed_topic_regex = decoder.read_compact_nullable_string()?;
         let assignment = ConsumerGroupDescribeResponseAssignment::decode(decoder, version)?;
@@ -530,13 +510,9 @@ impl KafkaDecode for ConsumerGroupDescribeResponse {
         let throttle_time_ms = decoder.read_i32()?;
         let groups = {
             let length = decoder.read_compact_array_len()?;
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(ConsumerGroupDescribeResponseDescribedGroup::decode(
-                    decoder, version,
-                )?);
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                ConsumerGroupDescribeResponseDescribedGroup::decode(decoder, version)
+            })?
         };
         let unknown_tagged_fields = if Self::is_flexible(version) {
             decoder.read_tagged_fields()?

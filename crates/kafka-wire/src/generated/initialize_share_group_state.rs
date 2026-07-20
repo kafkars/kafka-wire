@@ -40,13 +40,9 @@ impl KafkaDecode for InitializeShareGroupStateRequestInitializeStateData {
         let topic_id = decoder.read_uuid()?;
         let partitions = {
             let length = decoder.read_compact_array_len()?;
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(InitializeShareGroupStateRequestPartitionData::decode(
-                    decoder, version,
-                )?);
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                InitializeShareGroupStateRequestPartitionData::decode(decoder, version)
+            })?
         };
         let unknown_tagged_fields = if Self::is_flexible(version) {
             decoder.read_tagged_fields()?
@@ -185,13 +181,9 @@ impl KafkaDecode for InitializeShareGroupStateRequest {
         let group_id = decoder.read_compact_string()?;
         let topics = {
             let length = decoder.read_compact_array_len()?;
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(InitializeShareGroupStateRequestInitializeStateData::decode(
-                    decoder, version,
-                )?);
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                InitializeShareGroupStateRequestInitializeStateData::decode(decoder, version)
+            })?
         };
         let unknown_tagged_fields = if Self::is_flexible(version) {
             decoder.read_tagged_fields()?
@@ -259,13 +251,9 @@ impl KafkaDecode for InitializeShareGroupStateResponseInitializeStateResult {
         let topic_id = decoder.read_uuid()?;
         let partitions = {
             let length = decoder.read_compact_array_len()?;
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(InitializeShareGroupStateResponsePartitionResult::decode(
-                    decoder, version,
-                )?);
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                InitializeShareGroupStateResponsePartitionResult::decode(decoder, version)
+            })?
         };
         let unknown_tagged_fields = if Self::is_flexible(version) {
             decoder.read_tagged_fields()?
@@ -397,15 +385,9 @@ impl KafkaDecode for InitializeShareGroupStateResponse {
 
         let results = {
             let length = decoder.read_compact_array_len()?;
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(
-                    InitializeShareGroupStateResponseInitializeStateResult::decode(
-                        decoder, version,
-                    )?,
-                );
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                InitializeShareGroupStateResponseInitializeStateResult::decode(decoder, version)
+            })?
         };
         let unknown_tagged_fields = if Self::is_flexible(version) {
             decoder.read_tagged_fields()?

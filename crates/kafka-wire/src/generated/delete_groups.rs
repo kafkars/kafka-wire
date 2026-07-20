@@ -49,15 +49,13 @@ impl KafkaDecode for DeleteGroupsRequest {
             } else {
                 decoder.read_array_len()?
             };
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(if Self::is_flexible(version) {
+            decoder.read_vec(length, |decoder| {
+                Ok(if Self::is_flexible(version) {
                     decoder.read_compact_string()?
                 } else {
                     decoder.read_string()?
-                });
-            }
-            values
+                })
+            })?
         };
         let unknown_tagged_fields = if Self::is_flexible(version) {
             decoder.read_tagged_fields()?
@@ -218,13 +216,9 @@ impl KafkaDecode for DeleteGroupsResponse {
             } else {
                 decoder.read_array_len()?
             };
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(DeleteGroupsResponseDeletableGroupResult::decode(
-                    decoder, version,
-                )?);
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                DeleteGroupsResponseDeletableGroupResult::decode(decoder, version)
+            })?
         };
         let unknown_tagged_fields = if Self::is_flexible(version) {
             decoder.read_tagged_fields()?

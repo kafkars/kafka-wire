@@ -108,18 +108,14 @@ impl KafkaDecode for DescribeUserScramCredentialsRequest {
         crate::message::ensure_decode_version::<Self>(version)?;
 
         let users = {
-            match decoder.read_compact_nullable_array_len()? {
-                None => None,
-                Some(length) => {
-                    let mut values = Vec::with_capacity(length);
-                    for _ in 0..length {
-                        values.push(DescribeUserScramCredentialsRequestUserName::decode(
-                            decoder, version,
-                        )?);
-                    }
-                    Some(values)
-                }
-            }
+            let length = decoder.read_compact_nullable_array_len()?;
+            length
+                .map(|length| {
+                    decoder.read_vec(length, |decoder| {
+                        DescribeUserScramCredentialsRequestUserName::decode(decoder, version)
+                    })
+                })
+                .transpose()?
         };
         let unknown_tagged_fields = if Self::is_flexible(version) {
             decoder.read_tagged_fields()?
@@ -205,13 +201,9 @@ impl KafkaDecode for DescribeUserScramCredentialsResponseDescribeUserScramCreden
         let error_message = decoder.read_compact_nullable_string()?;
         let credential_infos = {
             let length = decoder.read_compact_array_len()?;
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(DescribeUserScramCredentialsResponseCredentialInfo::decode(
-                    decoder, version,
-                )?);
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                DescribeUserScramCredentialsResponseCredentialInfo::decode(decoder, version)
+            })?
         };
         let unknown_tagged_fields = if Self::is_flexible(version) {
             decoder.read_tagged_fields()?
@@ -363,15 +355,11 @@ impl KafkaDecode for DescribeUserScramCredentialsResponse {
         let error_message = decoder.read_compact_nullable_string()?;
         let results = {
             let length = decoder.read_compact_array_len()?;
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(
-                    DescribeUserScramCredentialsResponseDescribeUserScramCredentialsResult::decode(
-                        decoder, version,
-                    )?,
-                );
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                DescribeUserScramCredentialsResponseDescribeUserScramCredentialsResult::decode(
+                    decoder, version,
+                )
+            })?
         };
         let unknown_tagged_fields = if Self::is_flexible(version) {
             decoder.read_tagged_fields()?

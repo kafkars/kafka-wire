@@ -57,24 +57,22 @@ impl KafkaDecode for DescribeConfigsRequestDescribeConfigsResource {
             decoder.read_string()?
         };
         let configuration_keys = {
-            match if Self::is_flexible(version) {
+            let length = if Self::is_flexible(version) {
                 decoder.read_compact_nullable_array_len()?
             } else {
                 decoder.read_nullable_array_len()?
-            } {
-                None => None,
-                Some(length) => {
-                    let mut values = Vec::with_capacity(length);
-                    for _ in 0..length {
-                        values.push(if Self::is_flexible(version) {
+            };
+            length
+                .map(|length| {
+                    decoder.read_vec(length, |decoder| {
+                        Ok(if Self::is_flexible(version) {
                             decoder.read_compact_string()?
                         } else {
                             decoder.read_string()?
-                        });
-                    }
-                    Some(values)
-                }
-            }
+                        })
+                    })
+                })
+                .transpose()?
         };
         let unknown_tagged_fields = if Self::is_flexible(version) {
             decoder.read_tagged_fields()?
@@ -170,13 +168,9 @@ impl KafkaDecode for DescribeConfigsRequest {
             } else {
                 decoder.read_array_len()?
             };
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(DescribeConfigsRequestDescribeConfigsResource::decode(
-                    decoder, version,
-                )?);
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                DescribeConfigsRequestDescribeConfigsResource::decode(decoder, version)
+            })?
         };
         let include_synonyms = decoder.read_bool()?;
         let include_documentation = if version.value() >= 3 {
@@ -300,13 +294,9 @@ impl KafkaDecode for DescribeConfigsResponseDescribeConfigsResult {
             } else {
                 decoder.read_array_len()?
             };
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(
-                    DescribeConfigsResponseDescribeConfigsResourceResult::decode(decoder, version)?,
-                );
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                DescribeConfigsResponseDescribeConfigsResourceResult::decode(decoder, version)
+            })?
         };
         let unknown_tagged_fields = if Self::is_flexible(version) {
             decoder.read_tagged_fields()?
@@ -434,13 +424,9 @@ impl KafkaDecode for DescribeConfigsResponseDescribeConfigsResourceResult {
             } else {
                 decoder.read_array_len()?
             };
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(DescribeConfigsResponseDescribeConfigsSynonym::decode(
-                    decoder, version,
-                )?);
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                DescribeConfigsResponseDescribeConfigsSynonym::decode(decoder, version)
+            })?
         };
         let config_type = if version.value() >= 3 {
             decoder.read_i8()?
@@ -652,13 +638,9 @@ impl KafkaDecode for DescribeConfigsResponse {
             } else {
                 decoder.read_array_len()?
             };
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(DescribeConfigsResponseDescribeConfigsResult::decode(
-                    decoder, version,
-                )?);
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                DescribeConfigsResponseDescribeConfigsResult::decode(decoder, version)
+            })?
         };
         let unknown_tagged_fields = if Self::is_flexible(version) {
             decoder.read_tagged_fields()?

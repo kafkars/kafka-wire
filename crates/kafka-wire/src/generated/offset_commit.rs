@@ -59,11 +59,9 @@ impl KafkaDecode for OffsetCommitRequestTopic {
             } else {
                 decoder.read_array_len()?
             };
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(OffsetCommitRequestPartition::decode(decoder, version)?);
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                OffsetCommitRequestPartition::decode(decoder, version)
+            })?
         };
         let unknown_tagged_fields = if Self::is_flexible(version) {
             decoder.read_tagged_fields()?
@@ -297,11 +295,9 @@ impl KafkaDecode for OffsetCommitRequest {
             } else {
                 decoder.read_array_len()?
             };
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(OffsetCommitRequestTopic::decode(decoder, version)?);
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                OffsetCommitRequestTopic::decode(decoder, version)
+            })?
         };
         let unknown_tagged_fields = if Self::is_flexible(version) {
             decoder.read_tagged_fields()?
@@ -424,11 +420,9 @@ impl KafkaDecode for OffsetCommitResponseTopic {
             } else {
                 decoder.read_array_len()?
             };
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(OffsetCommitResponsePartition::decode(decoder, version)?);
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                OffsetCommitResponsePartition::decode(decoder, version)
+            })?
         };
         let unknown_tagged_fields = if Self::is_flexible(version) {
             decoder.read_tagged_fields()?
@@ -580,11 +574,9 @@ impl KafkaDecode for OffsetCommitResponse {
             } else {
                 decoder.read_array_len()?
             };
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(OffsetCommitResponseTopic::decode(decoder, version)?);
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                OffsetCommitResponseTopic::decode(decoder, version)
+            })?
         };
         let unknown_tagged_fields = if Self::is_flexible(version) {
             decoder.read_tagged_fields()?

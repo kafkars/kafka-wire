@@ -51,13 +51,9 @@ impl KafkaDecode for AlterConfigsRequestAlterConfigsResource {
             } else {
                 decoder.read_array_len()?
             };
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(AlterConfigsRequestAlterableConfig::decode(
-                    decoder, version,
-                )?);
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                AlterConfigsRequestAlterableConfig::decode(decoder, version)
+            })?
         };
         let unknown_tagged_fields = if Self::is_flexible(version) {
             decoder.read_tagged_fields()?
@@ -230,13 +226,9 @@ impl KafkaDecode for AlterConfigsRequest {
             } else {
                 decoder.read_array_len()?
             };
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(AlterConfigsRequestAlterConfigsResource::decode(
-                    decoder, version,
-                )?);
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                AlterConfigsRequestAlterConfigsResource::decode(decoder, version)
+            })?
         };
         let validate_only = decoder.read_bool()?;
         let unknown_tagged_fields = if Self::is_flexible(version) {
@@ -415,13 +407,9 @@ impl KafkaDecode for AlterConfigsResponse {
             } else {
                 decoder.read_array_len()?
             };
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(AlterConfigsResponseAlterConfigsResourceResponse::decode(
-                    decoder, version,
-                )?);
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                AlterConfigsResponseAlterConfigsResourceResponse::decode(decoder, version)
+            })?
         };
         let unknown_tagged_fields = if Self::is_flexible(version) {
             decoder.read_tagged_fields()?

@@ -40,11 +40,7 @@ impl KafkaDecode for ListPartitionReassignmentsRequestListPartitionReassignments
         let name = decoder.read_compact_string()?;
         let partition_indexes = {
             let length = decoder.read_compact_array_len()?;
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(decoder.read_i32()?);
-            }
-            values
+            decoder.read_vec(length, Decoder::read_i32)?
         };
         let unknown_tagged_fields = if Self::is_flexible(version) {
             decoder.read_tagged_fields()?
@@ -127,16 +123,16 @@ impl KafkaDecode for ListPartitionReassignmentsRequest {
 
         let timeout_ms = decoder.read_i32()?;
         let topics = {
-            match decoder.read_compact_nullable_array_len()? {
-                None => None,
-                Some(length) => {
-                    let mut values = Vec::with_capacity(length);
-                    for _ in 0..length {
-                        values.push(ListPartitionReassignmentsRequestListPartitionReassignmentsTopics::decode(decoder, version)?);
-                    }
-                    Some(values)
-                }
-            }
+            let length = decoder.read_compact_nullable_array_len()?;
+            length
+                .map(|length| {
+                    decoder.read_vec(length, |decoder| {
+                        ListPartitionReassignmentsRequestListPartitionReassignmentsTopics::decode(
+                            decoder, version,
+                        )
+                    })
+                })
+                .transpose()?
         };
         let unknown_tagged_fields = if Self::is_flexible(version) {
             decoder.read_tagged_fields()?
@@ -206,15 +202,11 @@ impl KafkaDecode for ListPartitionReassignmentsResponseOngoingTopicReassignment 
         let name = decoder.read_compact_string()?;
         let partitions = {
             let length = decoder.read_compact_array_len()?;
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(
-                    ListPartitionReassignmentsResponseOngoingPartitionReassignment::decode(
-                        decoder, version,
-                    )?,
-                );
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                ListPartitionReassignmentsResponseOngoingPartitionReassignment::decode(
+                    decoder, version,
+                )
+            })?
         };
         let unknown_tagged_fields = if Self::is_flexible(version) {
             decoder.read_tagged_fields()?
@@ -284,27 +276,15 @@ impl KafkaDecode for ListPartitionReassignmentsResponseOngoingPartitionReassignm
         let partition_index = decoder.read_i32()?;
         let replicas = {
             let length = decoder.read_compact_array_len()?;
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(decoder.read_i32()?);
-            }
-            values
+            decoder.read_vec(length, Decoder::read_i32)?
         };
         let adding_replicas = {
             let length = decoder.read_compact_array_len()?;
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(decoder.read_i32()?);
-            }
-            values
+            decoder.read_vec(length, Decoder::read_i32)?
         };
         let removing_replicas = {
             let length = decoder.read_compact_array_len()?;
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(decoder.read_i32()?);
-            }
-            values
+            decoder.read_vec(length, Decoder::read_i32)?
         };
         let unknown_tagged_fields = if Self::is_flexible(version) {
             decoder.read_tagged_fields()?
@@ -402,15 +382,9 @@ impl KafkaDecode for ListPartitionReassignmentsResponse {
         let error_message = decoder.read_compact_nullable_string()?;
         let topics = {
             let length = decoder.read_compact_array_len()?;
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(
-                    ListPartitionReassignmentsResponseOngoingTopicReassignment::decode(
-                        decoder, version,
-                    )?,
-                );
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                ListPartitionReassignmentsResponseOngoingTopicReassignment::decode(decoder, version)
+            })?
         };
         let unknown_tagged_fields = if Self::is_flexible(version) {
             decoder.read_tagged_fields()?

@@ -126,22 +126,14 @@ impl KafkaDecode for GetTelemetrySubscriptionsResponse {
         let subscription_id = decoder.read_i32()?;
         let accepted_compression_types = {
             let length = decoder.read_compact_array_len()?;
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(decoder.read_i8()?);
-            }
-            values
+            decoder.read_vec(length, Decoder::read_i8)?
         };
         let push_interval_ms = decoder.read_i32()?;
         let telemetry_max_bytes = decoder.read_i32()?;
         let delta_temporality = decoder.read_bool()?;
         let requested_metrics = {
             let length = decoder.read_compact_array_len()?;
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(decoder.read_compact_string()?);
-            }
-            values
+            decoder.read_vec(length, Decoder::read_compact_string)?
         };
         let unknown_tagged_fields = if Self::is_flexible(version) {
             decoder.read_tagged_fields()?

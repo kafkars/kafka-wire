@@ -40,11 +40,9 @@ impl KafkaDecode for ShareFetchRequestFetchTopic {
         let topic_id = decoder.read_uuid()?;
         let partitions = {
             let length = decoder.read_compact_array_len()?;
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(ShareFetchRequestFetchPartition::decode(decoder, version)?);
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                ShareFetchRequestFetchPartition::decode(decoder, version)
+            })?
         };
         let unknown_tagged_fields = if Self::is_flexible(version) {
             decoder.read_tagged_fields()?
@@ -110,13 +108,9 @@ impl KafkaDecode for ShareFetchRequestFetchPartition {
         let partition_index = decoder.read_i32()?;
         let acknowledgement_batches = {
             let length = decoder.read_compact_array_len()?;
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(ShareFetchRequestAcknowledgementBatch::decode(
-                    decoder, version,
-                )?);
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                ShareFetchRequestAcknowledgementBatch::decode(decoder, version)
+            })?
         };
         let unknown_tagged_fields = if Self::is_flexible(version) {
             decoder.read_tagged_fields()?
@@ -185,11 +179,7 @@ impl KafkaDecode for ShareFetchRequestAcknowledgementBatch {
         let last_offset = decoder.read_i64()?;
         let acknowledge_types = {
             let length = decoder.read_compact_array_len()?;
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(decoder.read_i8()?);
-            }
-            values
+            decoder.read_vec(length, Decoder::read_i8)?
         };
         let unknown_tagged_fields = if Self::is_flexible(version) {
             decoder.read_tagged_fields()?
@@ -257,11 +247,7 @@ impl KafkaDecode for ShareFetchRequestForgottenTopic {
         let topic_id = decoder.read_uuid()?;
         let partitions = {
             let length = decoder.read_compact_array_len()?;
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(decoder.read_i32()?);
-            }
-            values
+            decoder.read_vec(length, Decoder::read_i32)?
         };
         let unknown_tagged_fields = if Self::is_flexible(version) {
             decoder.read_tagged_fields()?
@@ -392,19 +378,15 @@ impl KafkaDecode for ShareFetchRequest {
         };
         let topics = {
             let length = decoder.read_compact_array_len()?;
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(ShareFetchRequestFetchTopic::decode(decoder, version)?);
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                ShareFetchRequestFetchTopic::decode(decoder, version)
+            })?
         };
         let forgotten_topics_data = {
             let length = decoder.read_compact_array_len()?;
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(ShareFetchRequestForgottenTopic::decode(decoder, version)?);
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                ShareFetchRequestForgottenTopic::decode(decoder, version)
+            })?
         };
         let unknown_tagged_fields = if Self::is_flexible(version) {
             decoder.read_tagged_fields()?
@@ -507,11 +489,9 @@ impl KafkaDecode for ShareFetchResponseShareFetchableTopicResponse {
         let topic_id = decoder.read_uuid()?;
         let partitions = {
             let length = decoder.read_compact_array_len()?;
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(ShareFetchResponsePartitionData::decode(decoder, version)?);
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                ShareFetchResponsePartitionData::decode(decoder, version)
+            })?
         };
         let unknown_tagged_fields = if Self::is_flexible(version) {
             decoder.read_tagged_fields()?
@@ -595,11 +575,9 @@ impl KafkaDecode for ShareFetchResponsePartitionData {
         let records = decoder.read_compact_bytes()?;
         let acquired_records = {
             let length = decoder.read_compact_array_len()?;
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(ShareFetchResponseAcquiredRecords::decode(decoder, version)?);
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                ShareFetchResponseAcquiredRecords::decode(decoder, version)
+            })?
         };
         let unknown_tagged_fields = if Self::is_flexible(version) {
             decoder.read_tagged_fields()?
@@ -887,21 +865,15 @@ impl KafkaDecode for ShareFetchResponse {
         let acquisition_lock_timeout_ms = decoder.read_i32()?;
         let responses = {
             let length = decoder.read_compact_array_len()?;
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(ShareFetchResponseShareFetchableTopicResponse::decode(
-                    decoder, version,
-                )?);
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                ShareFetchResponseShareFetchableTopicResponse::decode(decoder, version)
+            })?
         };
         let node_endpoints = {
             let length = decoder.read_compact_array_len()?;
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(ShareFetchResponseNodeEndpoint::decode(decoder, version)?);
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                ShareFetchResponseNodeEndpoint::decode(decoder, version)
+            })?
         };
         let unknown_tagged_fields = if Self::is_flexible(version) {
             decoder.read_tagged_fields()?

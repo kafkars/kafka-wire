@@ -216,19 +216,15 @@ impl KafkaDecode for BrokerRegistrationRequest {
         let incarnation_id = decoder.read_uuid()?;
         let listeners = {
             let length = decoder.read_compact_array_len()?;
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(BrokerRegistrationRequestListener::decode(decoder, version)?);
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                BrokerRegistrationRequestListener::decode(decoder, version)
+            })?
         };
         let features = {
             let length = decoder.read_compact_array_len()?;
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(BrokerRegistrationRequestFeature::decode(decoder, version)?);
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                BrokerRegistrationRequestFeature::decode(decoder, version)
+            })?
         };
         let rack = decoder.read_compact_nullable_string()?;
         let is_migrating_zk_broker = if version.value() >= 1 {
@@ -238,11 +234,7 @@ impl KafkaDecode for BrokerRegistrationRequest {
         };
         let log_dirs = if version.value() >= 2 {
             let length = decoder.read_compact_array_len()?;
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(decoder.read_uuid()?);
-            }
-            values
+            decoder.read_vec(length, Decoder::read_uuid)?
         } else {
             Vec::new()
         };

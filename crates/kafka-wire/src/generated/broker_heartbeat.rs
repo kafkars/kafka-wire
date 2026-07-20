@@ -83,26 +83,16 @@ impl KafkaDecode for BrokerHeartbeatRequest {
                 0 if version.value() >= 1 => {
                     offline_log_dirs = {
                         let length = decoder.read_compact_array_len()?;
-                        let mut values = Vec::with_capacity(length);
-                        for _ in 0..length {
-                            values.push(decoder.read_uuid()?);
-                        }
-                        values
+                        decoder.read_vec(length, Decoder::read_uuid)?
                     };
                     Ok(TagOutcome::Decoded)
                 }
                 1 if version.value() >= 2 => {
                     cordoned_log_dirs = {
-                        match decoder.read_compact_nullable_array_len()? {
-                            None => None,
-                            Some(length) => {
-                                let mut values = Vec::with_capacity(length);
-                                for _ in 0..length {
-                                    values.push(decoder.read_uuid()?);
-                                }
-                                Some(values)
-                            }
-                        }
+                        let length = decoder.read_compact_nullable_array_len()?;
+                        length
+                            .map(|length| decoder.read_vec(length, Decoder::read_uuid))
+                            .transpose()?
                     };
                     Ok(TagOutcome::Decoded)
                 }

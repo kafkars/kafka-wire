@@ -305,28 +305,48 @@ fn render_representability_checks(rust: &mut RustText, message: &Message) {
 
 /// The array read as one expression, so a version gate can wrap it.
 ///
-/// A nullable array keeps absent and empty distinct: the nullable readers
-/// return `Option<usize>`, and only the present arm allocates.
+/// The regime is stated once by the length reader and the elements are read by
+/// `Decoder::read_vec`, rather than every array restating the same collect loop.
+/// A nullable array keeps absent and empty distinct: the nullable readers return
+/// `Option<usize>`, and only the present arm allocates.
 pub(super) fn render_array_body(rust: &mut RustText, length: &str, element: &str, nullable: bool) {
+    let read = element_closure(element);
+    rust.line(format!("let length = {length};"));
     if nullable {
-        rust.open(format!("match {length}"));
-        rust.line("None => None,");
-        rust.open("Some(length) =>");
-        rust.line("let mut values = Vec::with_capacity(length);");
-        rust.open("for _ in 0..length");
-        rust.line(format!("values.push({element});"));
-        rust.close("");
-        rust.line("Some(values)");
-        rust.close("");
-        rust.close("");
+        rust.line(format!(
+            "length.map(|length| decoder.read_vec(length, {read})).transpose()?"
+        ));
         return;
     }
-    rust.line(format!("let length = {length};"));
-    rust.line("let mut values = Vec::with_capacity(length);");
-    rust.open("for _ in 0..length");
-    rust.line(format!("values.push({element});"));
-    rust.close("");
-    rust.line("values");
+    rust.line(format!("decoder.read_vec(length, {read})?"));
+}
+
+/// One element read, as a closure returning the `Result` `read_vec` wants.
+///
+/// Every element expression is a fallible call the field emitter has already
+/// suffixed with `?`. Dropping that suffix hands back the `Result` itself, which
+/// is exactly the closure body — wrapping it instead would emit `Ok(x?)`, which
+/// says nothing and which the lints on checked-in output reject. A gated element
+/// puts its `?` inside each arm rather than at the end, so it keeps the wrapper.
+fn element_closure(element: &str) -> String {
+    let Some(fallible) = element.strip_suffix('?') else {
+        return format!("|decoder| Ok({element})");
+    };
+    // A scalar element is a bare method call on the decoder, and naming the
+    // method is both shorter and what the lints on checked-in output ask for:
+    // `Decoder::read_i32` rather than a closure that only forwards to it.
+    if let Some(method) = fallible
+        .strip_prefix("decoder.")
+        .and_then(|call| call.strip_suffix("()"))
+        .filter(|method| {
+            method
+                .chars()
+                .all(|c| c.is_ascii_alphanumeric() || c == '_')
+        })
+    {
+        return format!("Decoder::{method}");
+    }
+    format!("|decoder| {fallible}")
 }
 
 /// Writes the prefix once, then the elements only when the array is present.

@@ -40,13 +40,9 @@ impl KafkaDecode for ShareAcknowledgeRequestAcknowledgeTopic {
         let topic_id = decoder.read_uuid()?;
         let partitions = {
             let length = decoder.read_compact_array_len()?;
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(ShareAcknowledgeRequestAcknowledgePartition::decode(
-                    decoder, version,
-                )?);
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                ShareAcknowledgeRequestAcknowledgePartition::decode(decoder, version)
+            })?
         };
         let unknown_tagged_fields = if Self::is_flexible(version) {
             decoder.read_tagged_fields()?
@@ -112,13 +108,9 @@ impl KafkaDecode for ShareAcknowledgeRequestAcknowledgePartition {
         let partition_index = decoder.read_i32()?;
         let acknowledgement_batches = {
             let length = decoder.read_compact_array_len()?;
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(ShareAcknowledgeRequestAcknowledgementBatch::decode(
-                    decoder, version,
-                )?);
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                ShareAcknowledgeRequestAcknowledgementBatch::decode(decoder, version)
+            })?
         };
         let unknown_tagged_fields = if Self::is_flexible(version) {
             decoder.read_tagged_fields()?
@@ -187,11 +179,7 @@ impl KafkaDecode for ShareAcknowledgeRequestAcknowledgementBatch {
         let last_offset = decoder.read_i64()?;
         let acknowledge_types = {
             let length = decoder.read_compact_array_len()?;
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(decoder.read_i8()?);
-            }
-            values
+            decoder.read_vec(length, Decoder::read_i8)?
         };
         let unknown_tagged_fields = if Self::is_flexible(version) {
             decoder.read_tagged_fields()?
@@ -293,13 +281,9 @@ impl KafkaDecode for ShareAcknowledgeRequest {
         };
         let topics = {
             let length = decoder.read_compact_array_len()?;
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(ShareAcknowledgeRequestAcknowledgeTopic::decode(
-                    decoder, version,
-                )?);
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                ShareAcknowledgeRequestAcknowledgeTopic::decode(decoder, version)
+            })?
         };
         let unknown_tagged_fields = if Self::is_flexible(version) {
             decoder.read_tagged_fields()?
@@ -383,13 +367,9 @@ impl KafkaDecode for ShareAcknowledgeResponseShareAcknowledgeTopicResponse {
         let topic_id = decoder.read_uuid()?;
         let partitions = {
             let length = decoder.read_compact_array_len()?;
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(ShareAcknowledgeResponsePartitionData::decode(
-                    decoder, version,
-                )?);
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                ShareAcknowledgeResponsePartitionData::decode(decoder, version)
+            })?
         };
         let unknown_tagged_fields = if Self::is_flexible(version) {
             decoder.read_tagged_fields()?
@@ -674,25 +654,15 @@ impl KafkaDecode for ShareAcknowledgeResponse {
         };
         let responses = {
             let length = decoder.read_compact_array_len()?;
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(
-                    ShareAcknowledgeResponseShareAcknowledgeTopicResponse::decode(
-                        decoder, version,
-                    )?,
-                );
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                ShareAcknowledgeResponseShareAcknowledgeTopicResponse::decode(decoder, version)
+            })?
         };
         let node_endpoints = {
             let length = decoder.read_compact_array_len()?;
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(ShareAcknowledgeResponseNodeEndpoint::decode(
-                    decoder, version,
-                )?);
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                ShareAcknowledgeResponseNodeEndpoint::decode(decoder, version)
+            })?
         };
         let unknown_tagged_fields = if Self::is_flexible(version) {
             decoder.read_tagged_fields()?

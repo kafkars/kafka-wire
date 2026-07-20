@@ -56,13 +56,9 @@ impl KafkaDecode for CreateTopicsRequestCreatableTopic {
             } else {
                 decoder.read_array_len()?
             };
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(CreateTopicsRequestCreatableReplicaAssignment::decode(
-                    decoder, version,
-                )?);
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                CreateTopicsRequestCreatableReplicaAssignment::decode(decoder, version)
+            })?
         };
         let configs = {
             let length = if Self::is_flexible(version) {
@@ -70,13 +66,9 @@ impl KafkaDecode for CreateTopicsRequestCreatableTopic {
             } else {
                 decoder.read_array_len()?
             };
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(CreateTopicsRequestCreatableTopicConfig::decode(
-                    decoder, version,
-                )?);
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                CreateTopicsRequestCreatableTopicConfig::decode(decoder, version)
+            })?
         };
         let unknown_tagged_fields = if Self::is_flexible(version) {
             decoder.read_tagged_fields()?
@@ -167,11 +159,7 @@ impl KafkaDecode for CreateTopicsRequestCreatableReplicaAssignment {
             } else {
                 decoder.read_array_len()?
             };
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(decoder.read_i32()?);
-            }
-            values
+            decoder.read_vec(length, Decoder::read_i32)?
         };
         let unknown_tagged_fields = if Self::is_flexible(version) {
             decoder.read_tagged_fields()?
@@ -351,11 +339,9 @@ impl KafkaDecode for CreateTopicsRequest {
             } else {
                 decoder.read_array_len()?
             };
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(CreateTopicsRequestCreatableTopic::decode(decoder, version)?);
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                CreateTopicsRequestCreatableTopic::decode(decoder, version)
+            })?
         };
         let timeout_ms = decoder.read_i32()?;
         let validate_only = decoder.read_bool()?;
@@ -483,18 +469,14 @@ impl KafkaDecode for CreateTopicsResponseCreatableTopicResult {
             -1
         };
         let configs = if version.value() >= 5 {
-            match decoder.read_compact_nullable_array_len()? {
-                None => None,
-                Some(length) => {
-                    let mut values = Vec::with_capacity(length);
-                    for _ in 0..length {
-                        values.push(CreateTopicsResponseCreatableTopicConfigs::decode(
-                            decoder, version,
-                        )?);
-                    }
-                    Some(values)
-                }
-            }
+            let length = decoder.read_compact_nullable_array_len()?;
+            length
+                .map(|length| {
+                    decoder.read_vec(length, |decoder| {
+                        CreateTopicsResponseCreatableTopicConfigs::decode(decoder, version)
+                    })
+                })
+                .transpose()?
         } else {
             Some(Vec::new())
         };
@@ -730,13 +712,9 @@ impl KafkaDecode for CreateTopicsResponse {
             } else {
                 decoder.read_array_len()?
             };
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(CreateTopicsResponseCreatableTopicResult::decode(
-                    decoder, version,
-                )?);
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                CreateTopicsResponseCreatableTopicResult::decode(decoder, version)
+            })?
         };
         let unknown_tagged_fields = if Self::is_flexible(version) {
             decoder.read_tagged_fields()?

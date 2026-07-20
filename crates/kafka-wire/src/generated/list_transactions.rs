@@ -63,19 +63,11 @@ impl KafkaDecode for ListTransactionsRequest {
 
         let state_filters = {
             let length = decoder.read_compact_array_len()?;
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(decoder.read_compact_string()?);
-            }
-            values
+            decoder.read_vec(length, Decoder::read_compact_string)?
         };
         let producer_id_filters = {
             let length = decoder.read_compact_array_len()?;
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(decoder.read_i64()?);
-            }
-            values
+            decoder.read_vec(length, Decoder::read_i64)?
         };
         let duration_filter = if version.value() >= 1 {
             decoder.read_i64()?
@@ -253,21 +245,13 @@ impl KafkaDecode for ListTransactionsResponse {
         let error_code = decoder.read_i16()?;
         let unknown_state_filters = {
             let length = decoder.read_compact_array_len()?;
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(decoder.read_compact_string()?);
-            }
-            values
+            decoder.read_vec(length, Decoder::read_compact_string)?
         };
         let transaction_states = {
             let length = decoder.read_compact_array_len()?;
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(ListTransactionsResponseTransactionState::decode(
-                    decoder, version,
-                )?);
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                ListTransactionsResponseTransactionState::decode(decoder, version)
+            })?
         };
         let unknown_tagged_fields = if Self::is_flexible(version) {
             decoder.read_tagged_fields()?

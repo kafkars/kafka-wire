@@ -48,13 +48,9 @@ impl KafkaDecode for AlterReplicaLogDirsRequestAlterReplicaLogDir {
             } else {
                 decoder.read_array_len()?
             };
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(AlterReplicaLogDirsRequestAlterReplicaLogDirTopic::decode(
-                    decoder, version,
-                )?);
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                AlterReplicaLogDirsRequestAlterReplicaLogDirTopic::decode(decoder, version)
+            })?
         };
         let unknown_tagged_fields = if Self::is_flexible(version) {
             decoder.read_tagged_fields()?
@@ -136,11 +132,7 @@ impl KafkaDecode for AlterReplicaLogDirsRequestAlterReplicaLogDirTopic {
             } else {
                 decoder.read_array_len()?
             };
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(decoder.read_i32()?);
-            }
-            values
+            decoder.read_vec(length, Decoder::read_i32)?
         };
         let unknown_tagged_fields = if Self::is_flexible(version) {
             decoder.read_tagged_fields()?
@@ -223,13 +215,9 @@ impl KafkaDecode for AlterReplicaLogDirsRequest {
             } else {
                 decoder.read_array_len()?
             };
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(AlterReplicaLogDirsRequestAlterReplicaLogDir::decode(
-                    decoder, version,
-                )?);
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                AlterReplicaLogDirsRequestAlterReplicaLogDir::decode(decoder, version)
+            })?
         };
         let unknown_tagged_fields = if Self::is_flexible(version) {
             decoder.read_tagged_fields()?
@@ -307,15 +295,11 @@ impl KafkaDecode for AlterReplicaLogDirsResponseAlterReplicaLogDirTopicResult {
             } else {
                 decoder.read_array_len()?
             };
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(
-                    AlterReplicaLogDirsResponseAlterReplicaLogDirPartitionResult::decode(
-                        decoder, version,
-                    )?,
-                );
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                AlterReplicaLogDirsResponseAlterReplicaLogDirPartitionResult::decode(
+                    decoder, version,
+                )
+            })?
         };
         let unknown_tagged_fields = if Self::is_flexible(version) {
             decoder.read_tagged_fields()?
@@ -457,15 +441,9 @@ impl KafkaDecode for AlterReplicaLogDirsResponse {
             } else {
                 decoder.read_array_len()?
             };
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(
-                    AlterReplicaLogDirsResponseAlterReplicaLogDirTopicResult::decode(
-                        decoder, version,
-                    )?,
-                );
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                AlterReplicaLogDirsResponseAlterReplicaLogDirTopicResult::decode(decoder, version)
+            })?
         };
         let unknown_tagged_fields = if Self::is_flexible(version) {
             decoder.read_tagged_fields()?

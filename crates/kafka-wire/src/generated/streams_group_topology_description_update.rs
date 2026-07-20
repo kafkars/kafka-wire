@@ -41,19 +41,19 @@ impl KafkaDecode for StreamsGroupTopologyDescriptionUpdateRequestTopologyDescrip
     fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
         let subtopologies = {
             let length = decoder.read_compact_array_len()?;
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(StreamsGroupTopologyDescriptionUpdateRequestTopologyDescriptionSubtopology::decode(decoder, version)?);
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                StreamsGroupTopologyDescriptionUpdateRequestTopologyDescriptionSubtopology::decode(
+                    decoder, version,
+                )
+            })?
         };
         let global_stores = {
             let length = decoder.read_compact_array_len()?;
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(StreamsGroupTopologyDescriptionUpdateRequestTopologyDescriptionGlobalStore::decode(decoder, version)?);
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                StreamsGroupTopologyDescriptionUpdateRequestTopologyDescriptionGlobalStore::decode(
+                    decoder, version,
+                )
+            })?
         };
         let unknown_tagged_fields = if Self::is_flexible(version) {
             decoder.read_tagged_fields()?
@@ -122,15 +122,11 @@ impl KafkaDecode for StreamsGroupTopologyDescriptionUpdateRequestTopologyDescrip
         let subtopology_id = decoder.read_compact_string()?;
         let nodes = {
             let length = decoder.read_compact_array_len()?;
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(
-                    StreamsGroupTopologyDescriptionUpdateRequestTopologyDescriptionNode::decode(
-                        decoder, version,
-                    )?,
-                );
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                StreamsGroupTopologyDescriptionUpdateRequestTopologyDescriptionNode::decode(
+                    decoder, version,
+                )
+            })?
         };
         let unknown_tagged_fields = if Self::is_flexible(version) {
             decoder.read_tagged_fields()?
@@ -205,28 +201,16 @@ impl KafkaDecode for StreamsGroupTopologyDescriptionUpdateRequestTopologyDescrip
         let node_type = decoder.read_i8()?;
         let source_topics = {
             let length = decoder.read_compact_array_len()?;
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(decoder.read_compact_string()?);
-            }
-            values
+            decoder.read_vec(length, Decoder::read_compact_string)?
         };
         let sink_topic = decoder.read_compact_nullable_string()?;
         let stores = {
             let length = decoder.read_compact_array_len()?;
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(decoder.read_compact_string()?);
-            }
-            values
+            decoder.read_vec(length, Decoder::read_compact_string)?
         };
         let successors = {
             let length = decoder.read_compact_array_len()?;
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(decoder.read_compact_string()?);
-            }
-            values
+            decoder.read_vec(length, Decoder::read_compact_string)?
         };
         let unknown_tagged_fields = if Self::is_flexible(version) {
             decoder.read_tagged_fields()?

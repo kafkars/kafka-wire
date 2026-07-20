@@ -45,11 +45,7 @@ impl KafkaDecode for ListConfigResourcesRequest {
 
         let resource_types = if version.value() >= 1 {
             let length = decoder.read_compact_array_len()?;
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(decoder.read_i8()?);
-            }
-            values
+            decoder.read_vec(length, Decoder::read_i8)?
         } else {
             Vec::new()
         };
@@ -210,13 +206,9 @@ impl KafkaDecode for ListConfigResourcesResponse {
         let error_code = decoder.read_i16()?;
         let config_resources = {
             let length = decoder.read_compact_array_len()?;
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(ListConfigResourcesResponseConfigResource::decode(
-                    decoder, version,
-                )?);
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                ListConfigResourcesResponseConfigResource::decode(decoder, version)
+            })?
         };
         let unknown_tagged_fields = if Self::is_flexible(version) {
             decoder.read_tagged_fields()?

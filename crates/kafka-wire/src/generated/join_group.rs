@@ -185,11 +185,9 @@ impl KafkaDecode for JoinGroupRequest {
             } else {
                 decoder.read_array_len()?
             };
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(JoinGroupRequestProtocol::decode(decoder, version)?);
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                JoinGroupRequestProtocol::decode(decoder, version)
+            })?
         };
         let reason = if version.value() >= 8 {
             decoder.read_compact_nullable_string()?
@@ -477,11 +475,9 @@ impl KafkaDecode for JoinGroupResponse {
             } else {
                 decoder.read_array_len()?
             };
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(JoinGroupResponseMember::decode(decoder, version)?);
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                JoinGroupResponseMember::decode(decoder, version)
+            })?
         };
         let unknown_tagged_fields = if Self::is_flexible(version) {
             decoder.read_tagged_fields()?

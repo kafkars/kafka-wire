@@ -198,11 +198,9 @@ impl KafkaDecode for UpdateRaftVoterRequest {
         let voter_directory_id = decoder.read_uuid()?;
         let listeners = {
             let length = decoder.read_compact_array_len()?;
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(UpdateRaftVoterRequestListener::decode(decoder, version)?);
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                UpdateRaftVoterRequestListener::decode(decoder, version)
+            })?
         };
         let k_raft_version_feature =
             UpdateRaftVoterRequestKRaftVersionFeature::decode(decoder, version)?;

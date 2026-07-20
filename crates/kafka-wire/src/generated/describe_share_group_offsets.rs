@@ -49,18 +49,14 @@ impl KafkaDecode for DescribeShareGroupOffsetsRequestGroup {
     fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
         let group_id = decoder.read_compact_string()?;
         let topics = {
-            match decoder.read_compact_nullable_array_len()? {
-                None => None,
-                Some(length) => {
-                    let mut values = Vec::with_capacity(length);
-                    for _ in 0..length {
-                        values.push(DescribeShareGroupOffsetsRequestTopic::decode(
-                            decoder, version,
-                        )?);
-                    }
-                    Some(values)
-                }
-            }
+            let length = decoder.read_compact_nullable_array_len()?;
+            length
+                .map(|length| {
+                    decoder.read_vec(length, |decoder| {
+                        DescribeShareGroupOffsetsRequestTopic::decode(decoder, version)
+                    })
+                })
+                .transpose()?
         };
         let unknown_tagged_fields = if Self::is_flexible(version) {
             decoder.read_tagged_fields()?
@@ -128,11 +124,7 @@ impl KafkaDecode for DescribeShareGroupOffsetsRequestTopic {
         let topic_name = decoder.read_compact_string()?;
         let partitions = {
             let length = decoder.read_compact_array_len()?;
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(decoder.read_i32()?);
-            }
-            values
+            decoder.read_vec(length, Decoder::read_i32)?
         };
         let unknown_tagged_fields = if Self::is_flexible(version) {
             decoder.read_tagged_fields()?
@@ -203,13 +195,9 @@ impl KafkaDecode for DescribeShareGroupOffsetsRequest {
 
         let groups = {
             let length = decoder.read_compact_array_len()?;
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(DescribeShareGroupOffsetsRequestGroup::decode(
-                    decoder, version,
-                )?);
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                DescribeShareGroupOffsetsRequestGroup::decode(decoder, version)
+            })?
         };
         let unknown_tagged_fields = if Self::is_flexible(version) {
             decoder.read_tagged_fields()?
@@ -279,13 +267,9 @@ impl KafkaDecode for DescribeShareGroupOffsetsResponseGroup {
         let group_id = decoder.read_compact_string()?;
         let topics = {
             let length = decoder.read_compact_array_len()?;
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(DescribeShareGroupOffsetsResponseTopic::decode(
-                    decoder, version,
-                )?);
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                DescribeShareGroupOffsetsResponseTopic::decode(decoder, version)
+            })?
         };
         let error_code = decoder.read_i16()?;
         let error_message = decoder.read_compact_nullable_string()?;
@@ -360,13 +344,9 @@ impl KafkaDecode for DescribeShareGroupOffsetsResponseTopic {
         let topic_id = decoder.read_uuid()?;
         let partitions = {
             let length = decoder.read_compact_array_len()?;
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(DescribeShareGroupOffsetsResponsePartition::decode(
-                    decoder, version,
-                )?);
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                DescribeShareGroupOffsetsResponsePartition::decode(decoder, version)
+            })?
         };
         let unknown_tagged_fields = if Self::is_flexible(version) {
             decoder.read_tagged_fields()?
@@ -538,13 +518,9 @@ impl KafkaDecode for DescribeShareGroupOffsetsResponse {
         let throttle_time_ms = decoder.read_i32()?;
         let groups = {
             let length = decoder.read_compact_array_len()?;
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(DescribeShareGroupOffsetsResponseGroup::decode(
-                    decoder, version,
-                )?);
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                DescribeShareGroupOffsetsResponseGroup::decode(decoder, version)
+            })?
         };
         let unknown_tagged_fields = if Self::is_flexible(version) {
             decoder.read_tagged_fields()?

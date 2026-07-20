@@ -173,11 +173,9 @@ impl KafkaDecode for DeleteAclsRequest {
             } else {
                 decoder.read_array_len()?
             };
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(DeleteAclsRequestDeleteAclsFilter::decode(decoder, version)?);
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                DeleteAclsRequestDeleteAclsFilter::decode(decoder, version)
+            })?
         };
         let unknown_tagged_fields = if Self::is_flexible(version) {
             decoder.read_tagged_fields()?
@@ -269,13 +267,9 @@ impl KafkaDecode for DeleteAclsResponseDeleteAclsFilterResult {
             } else {
                 decoder.read_array_len()?
             };
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(DeleteAclsResponseDeleteAclsMatchingAcl::decode(
-                    decoder, version,
-                )?);
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                DeleteAclsResponseDeleteAclsMatchingAcl::decode(decoder, version)
+            })?
         };
         let unknown_tagged_fields = if Self::is_flexible(version) {
             decoder.read_tagged_fields()?
@@ -503,13 +497,9 @@ impl KafkaDecode for DeleteAclsResponse {
             } else {
                 decoder.read_array_len()?
             };
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(DeleteAclsResponseDeleteAclsFilterResult::decode(
-                    decoder, version,
-                )?);
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                DeleteAclsResponseDeleteAclsFilterResult::decode(decoder, version)
+            })?
         };
         let unknown_tagged_fields = if Self::is_flexible(version) {
             decoder.read_tagged_fields()?

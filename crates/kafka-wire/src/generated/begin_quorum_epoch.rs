@@ -48,13 +48,9 @@ impl KafkaDecode for BeginQuorumEpochRequestTopicData {
             } else {
                 decoder.read_array_len()?
             };
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(BeginQuorumEpochRequestPartitionData::decode(
-                    decoder, version,
-                )?);
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                BeginQuorumEpochRequestPartitionData::decode(decoder, version)
+            })?
         };
         let unknown_tagged_fields = if Self::is_flexible(version) {
             decoder.read_tagged_fields()?
@@ -324,21 +320,15 @@ impl KafkaDecode for BeginQuorumEpochRequest {
             } else {
                 decoder.read_array_len()?
             };
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(BeginQuorumEpochRequestTopicData::decode(decoder, version)?);
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                BeginQuorumEpochRequestTopicData::decode(decoder, version)
+            })?
         };
         let leader_endpoints = if version.value() >= 1 {
             let length = decoder.read_compact_array_len()?;
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(BeginQuorumEpochRequestLeaderEndpoint::decode(
-                    decoder, version,
-                )?);
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                BeginQuorumEpochRequestLeaderEndpoint::decode(decoder, version)
+            })?
         } else {
             Vec::new()
         };
@@ -435,13 +425,9 @@ impl KafkaDecode for BeginQuorumEpochResponseTopicData {
             } else {
                 decoder.read_array_len()?
             };
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(BeginQuorumEpochResponsePartitionData::decode(
-                    decoder, version,
-                )?);
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                BeginQuorumEpochResponsePartitionData::decode(decoder, version)
+            })?
         };
         let unknown_tagged_fields = if Self::is_flexible(version) {
             decoder.read_tagged_fields()?
@@ -678,11 +664,9 @@ impl KafkaDecode for BeginQuorumEpochResponse {
             } else {
                 decoder.read_array_len()?
             };
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(BeginQuorumEpochResponseTopicData::decode(decoder, version)?);
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                BeginQuorumEpochResponseTopicData::decode(decoder, version)
+            })?
         };
         let mut node_endpoints: Vec<BeginQuorumEpochResponseNodeEndpoint> = Vec::new();
         let mut unknown_tagged_fields = TaggedFields::default();
@@ -691,13 +675,9 @@ impl KafkaDecode for BeginQuorumEpochResponse {
                 0 => {
                     node_endpoints = {
                         let length = decoder.read_compact_array_len()?;
-                        let mut values = Vec::with_capacity(length);
-                        for _ in 0..length {
-                            values.push(BeginQuorumEpochResponseNodeEndpoint::decode(
-                                decoder, version,
-                            )?);
-                        }
-                        values
+                        decoder.read_vec(length, |decoder| {
+                            BeginQuorumEpochResponseNodeEndpoint::decode(decoder, version)
+                        })?
                     };
                     Ok(TagOutcome::Decoded)
                 }

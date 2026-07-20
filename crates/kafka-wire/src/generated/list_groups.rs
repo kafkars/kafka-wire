@@ -47,21 +47,13 @@ impl KafkaDecode for ListGroupsRequest {
 
         let states_filter = if version.value() >= 4 {
             let length = decoder.read_compact_array_len()?;
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(decoder.read_compact_string()?);
-            }
-            values
+            decoder.read_vec(length, Decoder::read_compact_string)?
         } else {
             Vec::new()
         };
         let types_filter = if version.value() >= 5 {
             let length = decoder.read_compact_array_len()?;
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(decoder.read_compact_string()?);
-            }
-            values
+            decoder.read_vec(length, Decoder::read_compact_string)?
         } else {
             Vec::new()
         };
@@ -266,11 +258,9 @@ impl KafkaDecode for ListGroupsResponse {
             } else {
                 decoder.read_array_len()?
             };
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(ListGroupsResponseListedGroup::decode(decoder, version)?);
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                ListGroupsResponseListedGroup::decode(decoder, version)
+            })?
         };
         let unknown_tagged_fields = if Self::is_flexible(version) {
             decoder.read_tagged_fields()?

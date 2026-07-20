@@ -48,13 +48,9 @@ impl KafkaDecode for DeleteRecordsRequestDeleteRecordsTopic {
             } else {
                 decoder.read_array_len()?
             };
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(DeleteRecordsRequestDeleteRecordsPartition::decode(
-                    decoder, version,
-                )?);
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                DeleteRecordsRequestDeleteRecordsPartition::decode(decoder, version)
+            })?
         };
         let unknown_tagged_fields = if Self::is_flexible(version) {
             decoder.read_tagged_fields()?
@@ -199,13 +195,9 @@ impl KafkaDecode for DeleteRecordsRequest {
             } else {
                 decoder.read_array_len()?
             };
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(DeleteRecordsRequestDeleteRecordsTopic::decode(
-                    decoder, version,
-                )?);
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                DeleteRecordsRequestDeleteRecordsTopic::decode(decoder, version)
+            })?
         };
         let timeout_ms = decoder.read_i32()?;
         let unknown_tagged_fields = if Self::is_flexible(version) {
@@ -286,13 +278,9 @@ impl KafkaDecode for DeleteRecordsResponseDeleteRecordsTopicResult {
             } else {
                 decoder.read_array_len()?
             };
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(DeleteRecordsResponseDeleteRecordsPartitionResult::decode(
-                    decoder, version,
-                )?);
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                DeleteRecordsResponseDeleteRecordsPartitionResult::decode(decoder, version)
+            })?
         };
         let unknown_tagged_fields = if Self::is_flexible(version) {
             decoder.read_tagged_fields()?
@@ -439,13 +427,9 @@ impl KafkaDecode for DeleteRecordsResponse {
             } else {
                 decoder.read_array_len()?
             };
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(DeleteRecordsResponseDeleteRecordsTopicResult::decode(
-                    decoder, version,
-                )?);
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                DeleteRecordsResponseDeleteRecordsTopicResult::decode(decoder, version)
+            })?
         };
         let unknown_tagged_fields = if Self::is_flexible(version) {
             decoder.read_tagged_fields()?

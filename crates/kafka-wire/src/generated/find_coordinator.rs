@@ -63,11 +63,7 @@ impl KafkaDecode for FindCoordinatorRequest {
         };
         let coordinator_keys = if version.value() >= 4 {
             let length = decoder.read_compact_array_len()?;
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(decoder.read_compact_string()?);
-            }
-            values
+            decoder.read_vec(length, Decoder::read_compact_string)?
         } else {
             Vec::new()
         };
@@ -367,13 +363,9 @@ impl KafkaDecode for FindCoordinatorResponse {
         };
         let coordinators = if version.value() >= 4 {
             let length = decoder.read_compact_array_len()?;
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(FindCoordinatorResponseCoordinator::decode(
-                    decoder, version,
-                )?);
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                FindCoordinatorResponseCoordinator::decode(decoder, version)
+            })?
         } else {
             Vec::new()
         };

@@ -40,13 +40,9 @@ impl KafkaDecode for AlterShareGroupOffsetsRequestTopic {
         let topic_name = decoder.read_compact_string()?;
         let partitions = {
             let length = decoder.read_compact_array_len()?;
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(AlterShareGroupOffsetsRequestPartition::decode(
-                    decoder, version,
-                )?);
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                AlterShareGroupOffsetsRequestPartition::decode(decoder, version)
+            })?
         };
         let unknown_tagged_fields = if Self::is_flexible(version) {
             decoder.read_tagged_fields()?
@@ -180,13 +176,9 @@ impl KafkaDecode for AlterShareGroupOffsetsRequest {
         let group_id = decoder.read_compact_string()?;
         let topics = {
             let length = decoder.read_compact_array_len()?;
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(AlterShareGroupOffsetsRequestTopic::decode(
-                    decoder, version,
-                )?);
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                AlterShareGroupOffsetsRequestTopic::decode(decoder, version)
+            })?
         };
         let unknown_tagged_fields = if Self::is_flexible(version) {
             decoder.read_tagged_fields()?
@@ -257,13 +249,9 @@ impl KafkaDecode for AlterShareGroupOffsetsResponseTopic {
         let topic_id = decoder.read_uuid()?;
         let partitions = {
             let length = decoder.read_compact_array_len()?;
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(AlterShareGroupOffsetsResponsePartition::decode(
-                    decoder, version,
-                )?);
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                AlterShareGroupOffsetsResponsePartition::decode(decoder, version)
+            })?
         };
         let unknown_tagged_fields = if Self::is_flexible(version) {
             decoder.read_tagged_fields()?
@@ -406,13 +394,9 @@ impl KafkaDecode for AlterShareGroupOffsetsResponse {
         let error_message = decoder.read_compact_nullable_string()?;
         let responses = {
             let length = decoder.read_compact_array_len()?;
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(AlterShareGroupOffsetsResponseTopic::decode(
-                    decoder, version,
-                )?);
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                AlterShareGroupOffsetsResponseTopic::decode(decoder, version)
+            })?
         };
         let unknown_tagged_fields = if Self::is_flexible(version) {
             decoder.read_tagged_fields()?

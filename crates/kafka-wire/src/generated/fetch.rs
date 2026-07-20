@@ -141,11 +141,9 @@ impl KafkaDecode for FetchRequestFetchTopic {
             } else {
                 decoder.read_array_len()?
             };
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(FetchRequestFetchPartition::decode(decoder, version)?);
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                FetchRequestFetchPartition::decode(decoder, version)
+            })?
         };
         let unknown_tagged_fields = if Self::is_flexible(version) {
             decoder.read_tagged_fields()?
@@ -388,11 +386,7 @@ impl KafkaDecode for FetchRequestForgottenTopic {
             } else {
                 decoder.read_array_len()?
             };
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(decoder.read_i32()?);
-            }
-            values
+            decoder.read_vec(length, Decoder::read_i32)?
         } else {
             Vec::new()
         };
@@ -546,11 +540,9 @@ impl KafkaDecode for FetchRequest {
             } else {
                 decoder.read_array_len()?
             };
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(FetchRequestFetchTopic::decode(decoder, version)?);
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                FetchRequestFetchTopic::decode(decoder, version)
+            })?
         };
         let forgotten_topics_data = if version.value() >= 7 {
             let length = if Self::is_flexible(version) {
@@ -558,11 +550,9 @@ impl KafkaDecode for FetchRequest {
             } else {
                 decoder.read_array_len()?
             };
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(FetchRequestForgottenTopic::decode(decoder, version)?);
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                FetchRequestForgottenTopic::decode(decoder, version)
+            })?
         } else {
             Vec::new()
         };
@@ -749,11 +739,9 @@ impl KafkaDecode for FetchResponseFetchableTopicResponse {
             } else {
                 decoder.read_array_len()?
             };
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(FetchResponsePartitionData::decode(decoder, version)?);
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                FetchResponsePartitionData::decode(decoder, version)
+            })?
         };
         let unknown_tagged_fields = if Self::is_flexible(version) {
             decoder.read_tagged_fields()?
@@ -877,20 +865,18 @@ impl KafkaDecode for FetchResponsePartitionData {
             -1
         };
         let aborted_transactions = {
-            match if Self::is_flexible(version) {
+            let length = if Self::is_flexible(version) {
                 decoder.read_compact_nullable_array_len()?
             } else {
                 decoder.read_nullable_array_len()?
-            } {
-                None => None,
-                Some(length) => {
-                    let mut values = Vec::with_capacity(length);
-                    for _ in 0..length {
-                        values.push(FetchResponseAbortedTransaction::decode(decoder, version)?);
-                    }
-                    Some(values)
-                }
-            }
+            };
+            length
+                .map(|length| {
+                    decoder.read_vec(length, |decoder| {
+                        FetchResponseAbortedTransaction::decode(decoder, version)
+                    })
+                })
+                .transpose()?
         };
         let preferred_read_replica = if version.value() >= 11 {
             decoder.read_i32()?
@@ -1446,13 +1432,9 @@ impl KafkaDecode for FetchResponse {
             } else {
                 decoder.read_array_len()?
             };
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(FetchResponseFetchableTopicResponse::decode(
-                    decoder, version,
-                )?);
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                FetchResponseFetchableTopicResponse::decode(decoder, version)
+            })?
         };
         let mut node_endpoints: Vec<FetchResponseNodeEndpoint> = Vec::new();
         let mut unknown_tagged_fields = TaggedFields::default();
@@ -1461,11 +1443,9 @@ impl KafkaDecode for FetchResponse {
                 0 if version.value() >= 16 => {
                     node_endpoints = {
                         let length = decoder.read_compact_array_len()?;
-                        let mut values = Vec::with_capacity(length);
-                        for _ in 0..length {
-                            values.push(FetchResponseNodeEndpoint::decode(decoder, version)?);
-                        }
-                        values
+                        decoder.read_vec(length, |decoder| {
+                            FetchResponseNodeEndpoint::decode(decoder, version)
+                        })?
                     };
                     Ok(TagOutcome::Decoded)
                 }

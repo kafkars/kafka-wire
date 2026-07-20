@@ -40,13 +40,9 @@ impl KafkaDecode for AssignReplicasToDirsRequestDirectoryData {
         let id = decoder.read_uuid()?;
         let topics = {
             let length = decoder.read_compact_array_len()?;
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(AssignReplicasToDirsRequestTopicData::decode(
-                    decoder, version,
-                )?);
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                AssignReplicasToDirsRequestTopicData::decode(decoder, version)
+            })?
         };
         let unknown_tagged_fields = if Self::is_flexible(version) {
             decoder.read_tagged_fields()?
@@ -112,13 +108,9 @@ impl KafkaDecode for AssignReplicasToDirsRequestTopicData {
         let topic_id = decoder.read_uuid()?;
         let partitions = {
             let length = decoder.read_compact_array_len()?;
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(AssignReplicasToDirsRequestPartitionData::decode(
-                    decoder, version,
-                )?);
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                AssignReplicasToDirsRequestPartitionData::decode(decoder, version)
+            })?
         };
         let unknown_tagged_fields = if Self::is_flexible(version) {
             decoder.read_tagged_fields()?
@@ -261,13 +253,9 @@ impl KafkaDecode for AssignReplicasToDirsRequest {
         let broker_epoch = decoder.read_i64()?;
         let directories = {
             let length = decoder.read_compact_array_len()?;
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(AssignReplicasToDirsRequestDirectoryData::decode(
-                    decoder, version,
-                )?);
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                AssignReplicasToDirsRequestDirectoryData::decode(decoder, version)
+            })?
         };
         let unknown_tagged_fields = if Self::is_flexible(version) {
             decoder.read_tagged_fields()?
@@ -337,13 +325,9 @@ impl KafkaDecode for AssignReplicasToDirsResponseDirectoryData {
         let id = decoder.read_uuid()?;
         let topics = {
             let length = decoder.read_compact_array_len()?;
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(AssignReplicasToDirsResponseTopicData::decode(
-                    decoder, version,
-                )?);
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                AssignReplicasToDirsResponseTopicData::decode(decoder, version)
+            })?
         };
         let unknown_tagged_fields = if Self::is_flexible(version) {
             decoder.read_tagged_fields()?
@@ -409,13 +393,9 @@ impl KafkaDecode for AssignReplicasToDirsResponseTopicData {
         let topic_id = decoder.read_uuid()?;
         let partitions = {
             let length = decoder.read_compact_array_len()?;
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(AssignReplicasToDirsResponsePartitionData::decode(
-                    decoder, version,
-                )?);
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                AssignReplicasToDirsResponsePartitionData::decode(decoder, version)
+            })?
         };
         let unknown_tagged_fields = if Self::is_flexible(version) {
             decoder.read_tagged_fields()?
@@ -548,13 +528,9 @@ impl KafkaDecode for AssignReplicasToDirsResponse {
         let error_code = decoder.read_i16()?;
         let directories = {
             let length = decoder.read_compact_array_len()?;
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(AssignReplicasToDirsResponseDirectoryData::decode(
-                    decoder, version,
-                )?);
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                AssignReplicasToDirsResponseDirectoryData::decode(decoder, version)
+            })?
         };
         let unknown_tagged_fields = if Self::is_flexible(version) {
             decoder.read_tagged_fields()?

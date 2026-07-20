@@ -162,11 +162,9 @@ impl KafkaDecode for LeaveGroupRequest {
             } else {
                 decoder.read_array_len()?
             };
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(LeaveGroupRequestMemberIdentity::decode(decoder, version)?);
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                LeaveGroupRequestMemberIdentity::decode(decoder, version)
+            })?
         } else {
             Vec::new()
         };
@@ -390,11 +388,9 @@ impl KafkaDecode for LeaveGroupResponse {
             } else {
                 decoder.read_array_len()?
             };
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(LeaveGroupResponseMemberResponse::decode(decoder, version)?);
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                LeaveGroupResponseMemberResponse::decode(decoder, version)
+            })?
         } else {
             Vec::new()
         };

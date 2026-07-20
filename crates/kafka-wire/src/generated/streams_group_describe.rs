@@ -49,11 +49,7 @@ impl KafkaDecode for StreamsGroupDescribeRequest {
 
         let group_ids = {
             let length = decoder.read_compact_array_len()?;
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(decoder.read_compact_string()?);
-            }
-            values
+            decoder.read_vec(length, Decoder::read_compact_string)?
         };
         let include_authorized_operations = decoder.read_bool()?;
         let include_topology_description = if version.value() >= 1 {
@@ -265,33 +261,21 @@ impl KafkaDecode for StreamsGroupDescribeResponseAssignment {
     fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
         let active_tasks = {
             let length = decoder.read_compact_array_len()?;
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(StreamsGroupDescribeResponseTaskIds::decode(
-                    decoder, version,
-                )?);
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                StreamsGroupDescribeResponseTaskIds::decode(decoder, version)
+            })?
         };
         let standby_tasks = {
             let length = decoder.read_compact_array_len()?;
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(StreamsGroupDescribeResponseTaskIds::decode(
-                    decoder, version,
-                )?);
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                StreamsGroupDescribeResponseTaskIds::decode(decoder, version)
+            })?
         };
         let warmup_tasks = {
             let length = decoder.read_compact_array_len()?;
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(StreamsGroupDescribeResponseTaskIds::decode(
-                    decoder, version,
-                )?);
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                StreamsGroupDescribeResponseTaskIds::decode(decoder, version)
+            })?
         };
         let unknown_tagged_fields = if Self::is_flexible(version) {
             decoder.read_tagged_fields()?
@@ -365,11 +349,7 @@ impl KafkaDecode for StreamsGroupDescribeResponseTaskIds {
         let subtopology_id = decoder.read_compact_string()?;
         let partitions = {
             let length = decoder.read_compact_array_len()?;
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(decoder.read_i32()?);
-            }
-            values
+            decoder.read_vec(length, Decoder::read_i32)?
         };
         let unknown_tagged_fields = if Self::is_flexible(version) {
             decoder.read_tagged_fields()?
@@ -501,13 +481,9 @@ impl KafkaDecode for StreamsGroupDescribeResponseTopicInfo {
         let replication_factor = decoder.read_i16()?;
         let topic_configs = {
             let length = decoder.read_compact_array_len()?;
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(StreamsGroupDescribeResponseKeyValue::decode(
-                    decoder, version,
-                )?);
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                StreamsGroupDescribeResponseKeyValue::decode(decoder, version)
+            })?
         };
         let unknown_tagged_fields = if Self::is_flexible(version) {
             decoder.read_tagged_fields()?
@@ -576,29 +552,17 @@ impl KafkaDecode for StreamsGroupDescribeResponseTopologyDescription {
     fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
         let subtopologies = if version.value() >= 1 {
             let length = decoder.read_compact_array_len()?;
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(
-                    StreamsGroupDescribeResponseTopologyDescriptionSubtopology::decode(
-                        decoder, version,
-                    )?,
-                );
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                StreamsGroupDescribeResponseTopologyDescriptionSubtopology::decode(decoder, version)
+            })?
         } else {
             Vec::new()
         };
         let global_stores = if version.value() >= 1 {
             let length = decoder.read_compact_array_len()?;
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(
-                    StreamsGroupDescribeResponseTopologyDescriptionGlobalStore::decode(
-                        decoder, version,
-                    )?,
-                );
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                StreamsGroupDescribeResponseTopologyDescriptionGlobalStore::decode(decoder, version)
+            })?
         } else {
             Vec::new()
         };
@@ -677,13 +641,9 @@ impl KafkaDecode for StreamsGroupDescribeResponseTopologyDescriptionSubtopology 
         };
         let nodes = if version.value() >= 1 {
             let length = decoder.read_compact_array_len()?;
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(StreamsGroupDescribeResponseTopologyDescriptionNode::decode(
-                    decoder, version,
-                )?);
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                StreamsGroupDescribeResponseTopologyDescriptionNode::decode(decoder, version)
+            })?
         } else {
             Vec::new()
         };
@@ -772,11 +732,7 @@ impl KafkaDecode for StreamsGroupDescribeResponseTopologyDescriptionNode {
         };
         let source_topics = if version.value() >= 1 {
             let length = decoder.read_compact_array_len()?;
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(decoder.read_compact_string()?);
-            }
-            values
+            decoder.read_vec(length, Decoder::read_compact_string)?
         } else {
             Vec::new()
         };
@@ -787,21 +743,13 @@ impl KafkaDecode for StreamsGroupDescribeResponseTopologyDescriptionNode {
         };
         let stores = if version.value() >= 1 {
             let length = decoder.read_compact_array_len()?;
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(decoder.read_compact_string()?);
-            }
-            values
+            decoder.read_vec(length, Decoder::read_compact_string)?
         } else {
             Vec::new()
         };
         let successors = if version.value() >= 1 {
             let length = decoder.read_compact_array_len()?;
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(decoder.read_compact_string()?);
-            }
-            values
+            decoder.read_vec(length, Decoder::read_compact_string)?
         } else {
             Vec::new()
         };
@@ -1016,13 +964,9 @@ impl KafkaDecode for StreamsGroupDescribeResponseDescribedGroup {
         };
         let members = {
             let length = decoder.read_compact_array_len()?;
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(StreamsGroupDescribeResponseMember::decode(
-                    decoder, version,
-                )?);
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                StreamsGroupDescribeResponseMember::decode(decoder, version)
+            })?
         };
         let authorized_operations = decoder.read_i32()?;
         let topology_description = if version.value() >= 1 {
@@ -1136,18 +1080,14 @@ impl KafkaDecode for StreamsGroupDescribeResponseTopology {
     fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
         let epoch = decoder.read_i32()?;
         let subtopologies = {
-            match decoder.read_compact_nullable_array_len()? {
-                None => None,
-                Some(length) => {
-                    let mut values = Vec::with_capacity(length);
-                    for _ in 0..length {
-                        values.push(StreamsGroupDescribeResponseSubtopology::decode(
-                            decoder, version,
-                        )?);
-                    }
-                    Some(values)
-                }
-            }
+            let length = decoder.read_compact_nullable_array_len()?;
+            length
+                .map(|length| {
+                    decoder.read_vec(length, |decoder| {
+                        StreamsGroupDescribeResponseSubtopology::decode(decoder, version)
+                    })
+                })
+                .transpose()?
         };
         let unknown_tagged_fields = if Self::is_flexible(version) {
             decoder.read_tagged_fields()?
@@ -1221,39 +1161,23 @@ impl KafkaDecode for StreamsGroupDescribeResponseSubtopology {
         let subtopology_id = decoder.read_compact_string()?;
         let source_topics = {
             let length = decoder.read_compact_array_len()?;
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(decoder.read_compact_string()?);
-            }
-            values
+            decoder.read_vec(length, Decoder::read_compact_string)?
         };
         let repartition_sink_topics = {
             let length = decoder.read_compact_array_len()?;
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(decoder.read_compact_string()?);
-            }
-            values
+            decoder.read_vec(length, Decoder::read_compact_string)?
         };
         let state_changelog_topics = {
             let length = decoder.read_compact_array_len()?;
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(StreamsGroupDescribeResponseTopicInfo::decode(
-                    decoder, version,
-                )?);
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                StreamsGroupDescribeResponseTopicInfo::decode(decoder, version)
+            })?
         };
         let repartition_source_topics = {
             let length = decoder.read_compact_array_len()?;
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(StreamsGroupDescribeResponseTopicInfo::decode(
-                    decoder, version,
-                )?);
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                StreamsGroupDescribeResponseTopicInfo::decode(decoder, version)
+            })?
         };
         let unknown_tagged_fields = if Self::is_flexible(version) {
             decoder.read_tagged_fields()?
@@ -1374,33 +1298,21 @@ impl KafkaDecode for StreamsGroupDescribeResponseMember {
         };
         let client_tags = {
             let length = decoder.read_compact_array_len()?;
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(StreamsGroupDescribeResponseKeyValue::decode(
-                    decoder, version,
-                )?);
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                StreamsGroupDescribeResponseKeyValue::decode(decoder, version)
+            })?
         };
         let task_offsets = {
             let length = decoder.read_compact_array_len()?;
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(StreamsGroupDescribeResponseTaskOffset::decode(
-                    decoder, version,
-                )?);
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                StreamsGroupDescribeResponseTaskOffset::decode(decoder, version)
+            })?
         };
         let task_end_offsets = {
             let length = decoder.read_compact_array_len()?;
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(StreamsGroupDescribeResponseTaskOffset::decode(
-                    decoder, version,
-                )?);
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                StreamsGroupDescribeResponseTaskOffset::decode(decoder, version)
+            })?
         };
         let assignment = StreamsGroupDescribeResponseAssignment::decode(decoder, version)?;
         let target_assignment = StreamsGroupDescribeResponseAssignment::decode(decoder, version)?;
@@ -1510,13 +1422,9 @@ impl KafkaDecode for StreamsGroupDescribeResponse {
         let throttle_time_ms = decoder.read_i32()?;
         let groups = {
             let length = decoder.read_compact_array_len()?;
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(StreamsGroupDescribeResponseDescribedGroup::decode(
-                    decoder, version,
-                )?);
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                StreamsGroupDescribeResponseDescribedGroup::decode(decoder, version)
+            })?
         };
         let unknown_tagged_fields = if Self::is_flexible(version) {
             decoder.read_tagged_fields()?

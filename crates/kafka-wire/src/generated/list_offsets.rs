@@ -48,13 +48,9 @@ impl KafkaDecode for ListOffsetsRequestListOffsetsTopic {
             } else {
                 decoder.read_array_len()?
             };
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(ListOffsetsRequestListOffsetsPartition::decode(
-                    decoder, version,
-                )?);
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                ListOffsetsRequestListOffsetsPartition::decode(decoder, version)
+            })?
         };
         let unknown_tagged_fields = if Self::is_flexible(version) {
             decoder.read_tagged_fields()?
@@ -231,13 +227,9 @@ impl KafkaDecode for ListOffsetsRequest {
             } else {
                 decoder.read_array_len()?
             };
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(ListOffsetsRequestListOffsetsTopic::decode(
-                    decoder, version,
-                )?);
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                ListOffsetsRequestListOffsetsTopic::decode(decoder, version)
+            })?
         };
         let timeout_ms = if version.value() >= 10 {
             decoder.read_i32()?
@@ -338,13 +330,9 @@ impl KafkaDecode for ListOffsetsResponseListOffsetsTopicResponse {
             } else {
                 decoder.read_array_len()?
             };
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(ListOffsetsResponseListOffsetsPartitionResponse::decode(
-                    decoder, version,
-                )?);
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                ListOffsetsResponseListOffsetsPartitionResponse::decode(decoder, version)
+            })?
         };
         let unknown_tagged_fields = if Self::is_flexible(version) {
             decoder.read_tagged_fields()?
@@ -524,13 +512,9 @@ impl KafkaDecode for ListOffsetsResponse {
             } else {
                 decoder.read_array_len()?
             };
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(ListOffsetsResponseListOffsetsTopicResponse::decode(
-                    decoder, version,
-                )?);
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                ListOffsetsResponseListOffsetsTopicResponse::decode(decoder, version)
+            })?
         };
         let unknown_tagged_fields = if Self::is_flexible(version) {
             decoder.read_tagged_fields()?

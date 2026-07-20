@@ -59,13 +59,9 @@ impl KafkaDecode for ProduceRequestTopicProduceData {
             } else {
                 decoder.read_array_len()?
             };
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(ProduceRequestPartitionProduceData::decode(
-                    decoder, version,
-                )?);
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                ProduceRequestPartitionProduceData::decode(decoder, version)
+            })?
         };
         let unknown_tagged_fields = if Self::is_flexible(version) {
             decoder.read_tagged_fields()?
@@ -245,11 +241,9 @@ impl KafkaDecode for ProduceRequest {
             } else {
                 decoder.read_array_len()?
             };
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(ProduceRequestTopicProduceData::decode(decoder, version)?);
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                ProduceRequestTopicProduceData::decode(decoder, version)
+            })?
         };
         let unknown_tagged_fields = if Self::is_flexible(version) {
             decoder.read_tagged_fields()?
@@ -348,13 +342,9 @@ impl KafkaDecode for ProduceResponseTopicProduceResponse {
             } else {
                 decoder.read_array_len()?
             };
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(ProduceResponsePartitionProduceResponse::decode(
-                    decoder, version,
-                )?);
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                ProduceResponsePartitionProduceResponse::decode(decoder, version)
+            })?
         };
         let unknown_tagged_fields = if Self::is_flexible(version) {
             decoder.read_tagged_fields()?
@@ -474,13 +464,9 @@ impl KafkaDecode for ProduceResponsePartitionProduceResponse {
             } else {
                 decoder.read_array_len()?
             };
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(ProduceResponseBatchIndexAndErrorMessage::decode(
-                    decoder, version,
-                )?);
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                ProduceResponseBatchIndexAndErrorMessage::decode(decoder, version)
+            })?
         } else {
             Vec::new()
         };
@@ -863,13 +849,9 @@ impl KafkaDecode for ProduceResponse {
             } else {
                 decoder.read_array_len()?
             };
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(ProduceResponseTopicProduceResponse::decode(
-                    decoder, version,
-                )?);
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                ProduceResponseTopicProduceResponse::decode(decoder, version)
+            })?
         };
         let throttle_time_ms = decoder.read_i32()?;
         let mut node_endpoints: Vec<ProduceResponseNodeEndpoint> = Vec::new();
@@ -879,11 +861,9 @@ impl KafkaDecode for ProduceResponse {
                 0 if version.value() >= 10 => {
                     node_endpoints = {
                         let length = decoder.read_compact_array_len()?;
-                        let mut values = Vec::with_capacity(length);
-                        for _ in 0..length {
-                            values.push(ProduceResponseNodeEndpoint::decode(decoder, version)?);
-                        }
-                        values
+                        decoder.read_vec(length, |decoder| {
+                            ProduceResponseNodeEndpoint::decode(decoder, version)
+                        })?
                     };
                     Ok(TagOutcome::Decoded)
                 }

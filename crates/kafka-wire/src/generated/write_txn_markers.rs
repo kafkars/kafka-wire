@@ -50,13 +50,9 @@ impl KafkaDecode for WriteTxnMarkersRequestWritableTxnMarker {
         let transaction_result = decoder.read_bool()?;
         let topics = {
             let length = decoder.read_compact_array_len()?;
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(WriteTxnMarkersRequestWritableTxnMarkerTopic::decode(
-                    decoder, version,
-                )?);
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                WriteTxnMarkersRequestWritableTxnMarkerTopic::decode(decoder, version)
+            })?
         };
         let coordinator_epoch = decoder.read_i32()?;
         let transaction_version = if version.value() >= 2 {
@@ -138,11 +134,7 @@ impl KafkaDecode for WriteTxnMarkersRequestWritableTxnMarkerTopic {
         let name = decoder.read_compact_string()?;
         let partition_indexes = {
             let length = decoder.read_compact_array_len()?;
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(decoder.read_i32()?);
-            }
-            values
+            decoder.read_vec(length, Decoder::read_i32)?
         };
         let unknown_tagged_fields = if Self::is_flexible(version) {
             decoder.read_tagged_fields()?
@@ -213,13 +205,9 @@ impl KafkaDecode for WriteTxnMarkersRequest {
 
         let markers = {
             let length = decoder.read_compact_array_len()?;
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(WriteTxnMarkersRequestWritableTxnMarker::decode(
-                    decoder, version,
-                )?);
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                WriteTxnMarkersRequestWritableTxnMarker::decode(decoder, version)
+            })?
         };
         let unknown_tagged_fields = if Self::is_flexible(version) {
             decoder.read_tagged_fields()?
@@ -285,13 +273,9 @@ impl KafkaDecode for WriteTxnMarkersResponseWritableTxnMarkerResult {
         let producer_id = decoder.read_i64()?;
         let topics = {
             let length = decoder.read_compact_array_len()?;
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(WriteTxnMarkersResponseWritableTxnMarkerTopicResult::decode(
-                    decoder, version,
-                )?);
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                WriteTxnMarkersResponseWritableTxnMarkerTopicResult::decode(decoder, version)
+            })?
         };
         let unknown_tagged_fields = if Self::is_flexible(version) {
             decoder.read_tagged_fields()?
@@ -357,15 +341,9 @@ impl KafkaDecode for WriteTxnMarkersResponseWritableTxnMarkerTopicResult {
         let name = decoder.read_compact_string()?;
         let partitions = {
             let length = decoder.read_compact_array_len()?;
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(
-                    WriteTxnMarkersResponseWritableTxnMarkerPartitionResult::decode(
-                        decoder, version,
-                    )?,
-                );
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                WriteTxnMarkersResponseWritableTxnMarkerPartitionResult::decode(decoder, version)
+            })?
         };
         let unknown_tagged_fields = if Self::is_flexible(version) {
             decoder.read_tagged_fields()?
@@ -492,13 +470,9 @@ impl KafkaDecode for WriteTxnMarkersResponse {
 
         let markers = {
             let length = decoder.read_compact_array_len()?;
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(WriteTxnMarkersResponseWritableTxnMarkerResult::decode(
-                    decoder, version,
-                )?);
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                WriteTxnMarkersResponseWritableTxnMarkerResult::decode(decoder, version)
+            })?
         };
         let unknown_tagged_fields = if Self::is_flexible(version) {
             decoder.read_tagged_fields()?

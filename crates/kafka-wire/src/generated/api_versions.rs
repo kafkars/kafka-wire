@@ -420,11 +420,9 @@ impl KafkaDecode for ApiVersionsResponse {
             } else {
                 decoder.read_array_len()?
             };
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(ApiVersionsResponseApiVersion::decode(decoder, version)?);
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                ApiVersionsResponseApiVersion::decode(decoder, version)
+            })?
         };
         let throttle_time_ms = if version.value() >= 1 {
             decoder.read_i32()?
@@ -441,13 +439,9 @@ impl KafkaDecode for ApiVersionsResponse {
                 0 => {
                     supported_features = {
                         let length = decoder.read_compact_array_len()?;
-                        let mut values = Vec::with_capacity(length);
-                        for _ in 0..length {
-                            values.push(ApiVersionsResponseSupportedFeatureKey::decode(
-                                decoder, version,
-                            )?);
-                        }
-                        values
+                        decoder.read_vec(length, |decoder| {
+                            ApiVersionsResponseSupportedFeatureKey::decode(decoder, version)
+                        })?
                     };
                     Ok(TagOutcome::Decoded)
                 }
@@ -458,13 +452,9 @@ impl KafkaDecode for ApiVersionsResponse {
                 2 => {
                     finalized_features = {
                         let length = decoder.read_compact_array_len()?;
-                        let mut values = Vec::with_capacity(length);
-                        for _ in 0..length {
-                            values.push(ApiVersionsResponseFinalizedFeatureKey::decode(
-                                decoder, version,
-                            )?);
-                        }
-                        values
+                        decoder.read_vec(length, |decoder| {
+                            ApiVersionsResponseFinalizedFeatureKey::decode(decoder, version)
+                        })?
                     };
                     Ok(TagOutcome::Decoded)
                 }

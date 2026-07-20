@@ -52,11 +52,7 @@ impl KafkaDecode for OffsetFetchRequestTopic {
             } else {
                 decoder.read_array_len()?
             };
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(decoder.read_i32()?);
-            }
-            values
+            decoder.read_vec(length, Decoder::read_i32)?
         } else {
             Vec::new()
         };
@@ -165,16 +161,14 @@ impl KafkaDecode for OffsetFetchRequestGroup {
             -1
         };
         let topics = if version.value() >= 8 {
-            match decoder.read_compact_nullable_array_len()? {
-                None => None,
-                Some(length) => {
-                    let mut values = Vec::with_capacity(length);
-                    for _ in 0..length {
-                        values.push(OffsetFetchRequestTopics::decode(decoder, version)?);
-                    }
-                    Some(values)
-                }
-            }
+            let length = decoder.read_compact_nullable_array_len()?;
+            length
+                .map(|length| {
+                    decoder.read_vec(length, |decoder| {
+                        OffsetFetchRequestTopics::decode(decoder, version)
+                    })
+                })
+                .transpose()?
         } else {
             Some(Vec::new())
         };
@@ -267,11 +261,7 @@ impl KafkaDecode for OffsetFetchRequestTopics {
         };
         let partition_indexes = if version.value() >= 8 {
             let length = decoder.read_compact_array_len()?;
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(decoder.read_i32()?);
-            }
-            values
+            decoder.read_vec(length, Decoder::read_i32)?
         } else {
             Vec::new()
         };
@@ -378,7 +368,7 @@ impl KafkaDecode for OffsetFetchRequest {
             StrBytes::default()
         };
         let topics = if version.value() <= 7 {
-            match if version.value() >= 2 && version.value() <= 7 {
+            let length = if version.value() >= 2 && version.value() <= 7 {
                 if Self::is_flexible(version) {
                     decoder.read_compact_nullable_array_len()?
                 } else {
@@ -386,26 +376,22 @@ impl KafkaDecode for OffsetFetchRequest {
                 }
             } else {
                 Some(decoder.read_array_len()?)
-            } {
-                None => None,
-                Some(length) => {
-                    let mut values = Vec::with_capacity(length);
-                    for _ in 0..length {
-                        values.push(OffsetFetchRequestTopic::decode(decoder, version)?);
-                    }
-                    Some(values)
-                }
-            }
+            };
+            length
+                .map(|length| {
+                    decoder.read_vec(length, |decoder| {
+                        OffsetFetchRequestTopic::decode(decoder, version)
+                    })
+                })
+                .transpose()?
         } else {
             Some(Vec::new())
         };
         let groups = if version.value() >= 8 {
             let length = decoder.read_compact_array_len()?;
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(OffsetFetchRequestGroup::decode(decoder, version)?);
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                OffsetFetchRequestGroup::decode(decoder, version)
+            })?
         } else {
             Vec::new()
         };
@@ -553,11 +539,9 @@ impl KafkaDecode for OffsetFetchResponseTopic {
             } else {
                 decoder.read_array_len()?
             };
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(OffsetFetchResponsePartition::decode(decoder, version)?);
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                OffsetFetchResponsePartition::decode(decoder, version)
+            })?
         } else {
             Vec::new()
         };
@@ -769,11 +753,9 @@ impl KafkaDecode for OffsetFetchResponseGroup {
         };
         let topics = if version.value() >= 8 {
             let length = decoder.read_compact_array_len()?;
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(OffsetFetchResponseTopics::decode(decoder, version)?);
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                OffsetFetchResponseTopics::decode(decoder, version)
+            })?
         } else {
             Vec::new()
         };
@@ -865,11 +847,9 @@ impl KafkaDecode for OffsetFetchResponseTopics {
         };
         let partitions = if version.value() >= 8 {
             let length = decoder.read_compact_array_len()?;
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(OffsetFetchResponsePartitions::decode(decoder, version)?);
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                OffsetFetchResponsePartitions::decode(decoder, version)
+            })?
         } else {
             Vec::new()
         };
@@ -1079,11 +1059,9 @@ impl KafkaDecode for OffsetFetchResponse {
             } else {
                 decoder.read_array_len()?
             };
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(OffsetFetchResponseTopic::decode(decoder, version)?);
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                OffsetFetchResponseTopic::decode(decoder, version)
+            })?
         } else {
             Vec::new()
         };
@@ -1094,11 +1072,9 @@ impl KafkaDecode for OffsetFetchResponse {
         };
         let groups = if version.value() >= 8 {
             let length = decoder.read_compact_array_len()?;
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(OffsetFetchResponseGroup::decode(decoder, version)?);
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                OffsetFetchResponseGroup::decode(decoder, version)
+            })?
         } else {
             Vec::new()
         };

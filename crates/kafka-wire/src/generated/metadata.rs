@@ -157,7 +157,7 @@ impl KafkaDecode for MetadataRequest {
         crate::message::ensure_decode_version::<Self>(version)?;
 
         let topics = {
-            match if version.value() >= 1 {
+            let length = if version.value() >= 1 {
                 if Self::is_flexible(version) {
                     decoder.read_compact_nullable_array_len()?
                 } else {
@@ -165,16 +165,14 @@ impl KafkaDecode for MetadataRequest {
                 }
             } else {
                 Some(decoder.read_array_len()?)
-            } {
-                None => None,
-                Some(length) => {
-                    let mut values = Vec::with_capacity(length);
-                    for _ in 0..length {
-                        values.push(MetadataRequestTopic::decode(decoder, version)?);
-                    }
-                    Some(values)
-                }
-            }
+            };
+            length
+                .map(|length| {
+                    decoder.read_vec(length, |decoder| {
+                        MetadataRequestTopic::decode(decoder, version)
+                    })
+                })
+                .transpose()?
         };
         let allow_auto_topic_creation = if version.value() >= 4 {
             decoder.read_bool()?
@@ -442,11 +440,9 @@ impl KafkaDecode for MetadataResponseTopic {
             } else {
                 decoder.read_array_len()?
             };
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(MetadataResponsePartition::decode(decoder, version)?);
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                MetadataResponsePartition::decode(decoder, version)
+            })?
         };
         let topic_authorized_operations = if version.value() >= 8 {
             decoder.read_i32()?
@@ -582,11 +578,7 @@ impl KafkaDecode for MetadataResponsePartition {
             } else {
                 decoder.read_array_len()?
             };
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(decoder.read_i32()?);
-            }
-            values
+            decoder.read_vec(length, Decoder::read_i32)?
         };
         let isr_nodes = {
             let length = if Self::is_flexible(version) {
@@ -594,11 +586,7 @@ impl KafkaDecode for MetadataResponsePartition {
             } else {
                 decoder.read_array_len()?
             };
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(decoder.read_i32()?);
-            }
-            values
+            decoder.read_vec(length, Decoder::read_i32)?
         };
         let offline_replicas = if version.value() >= 5 {
             let length = if Self::is_flexible(version) {
@@ -606,11 +594,7 @@ impl KafkaDecode for MetadataResponsePartition {
             } else {
                 decoder.read_array_len()?
             };
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(decoder.read_i32()?);
-            }
-            values
+            decoder.read_vec(length, Decoder::read_i32)?
         } else {
             Vec::new()
         };
@@ -747,11 +731,9 @@ impl KafkaDecode for MetadataResponse {
             } else {
                 decoder.read_array_len()?
             };
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(MetadataResponseBroker::decode(decoder, version)?);
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                MetadataResponseBroker::decode(decoder, version)
+            })?
         };
         let cluster_id = if version.value() >= 2 {
             if Self::is_flexible(version) {
@@ -773,11 +755,9 @@ impl KafkaDecode for MetadataResponse {
             } else {
                 decoder.read_array_len()?
             };
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(MetadataResponseTopic::decode(decoder, version)?);
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                MetadataResponseTopic::decode(decoder, version)
+            })?
         };
         let cluster_authorized_operations = if version.value() >= 8 && version.value() <= 10 {
             decoder.read_i32()?

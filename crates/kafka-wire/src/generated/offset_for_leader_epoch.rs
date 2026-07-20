@@ -48,13 +48,9 @@ impl KafkaDecode for OffsetForLeaderEpochRequestOffsetForLeaderTopic {
             } else {
                 decoder.read_array_len()?
             };
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(OffsetForLeaderEpochRequestOffsetForLeaderPartition::decode(
-                    decoder, version,
-                )?);
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                OffsetForLeaderEpochRequestOffsetForLeaderPartition::decode(decoder, version)
+            })?
         };
         let unknown_tagged_fields = if Self::is_flexible(version) {
             decoder.read_tagged_fields()?
@@ -230,13 +226,9 @@ impl KafkaDecode for OffsetForLeaderEpochRequest {
             } else {
                 decoder.read_array_len()?
             };
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(OffsetForLeaderEpochRequestOffsetForLeaderTopic::decode(
-                    decoder, version,
-                )?);
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                OffsetForLeaderEpochRequestOffsetForLeaderTopic::decode(decoder, version)
+            })?
         };
         let unknown_tagged_fields = if Self::is_flexible(version) {
             decoder.read_tagged_fields()?
@@ -318,13 +310,9 @@ impl KafkaDecode for OffsetForLeaderEpochResponseOffsetForLeaderTopicResult {
             } else {
                 decoder.read_array_len()?
             };
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(OffsetForLeaderEpochResponseEpochEndOffset::decode(
-                    decoder, version,
-                )?);
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                OffsetForLeaderEpochResponseEpochEndOffset::decode(decoder, version)
+            })?
         };
         let unknown_tagged_fields = if Self::is_flexible(version) {
             decoder.read_tagged_fields()?
@@ -488,15 +476,9 @@ impl KafkaDecode for OffsetForLeaderEpochResponse {
             } else {
                 decoder.read_array_len()?
             };
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(
-                    OffsetForLeaderEpochResponseOffsetForLeaderTopicResult::decode(
-                        decoder, version,
-                    )?,
-                );
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                OffsetForLeaderEpochResponseOffsetForLeaderTopicResult::decode(decoder, version)
+            })?
         };
         let unknown_tagged_fields = if Self::is_flexible(version) {
             decoder.read_tagged_fields()?

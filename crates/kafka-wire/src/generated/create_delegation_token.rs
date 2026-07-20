@@ -153,13 +153,9 @@ impl KafkaDecode for CreateDelegationTokenRequest {
             } else {
                 decoder.read_array_len()?
             };
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(CreateDelegationTokenRequestCreatableRenewers::decode(
-                    decoder, version,
-                )?);
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                CreateDelegationTokenRequestCreatableRenewers::decode(decoder, version)
+            })?
         };
         let max_lifetime_ms = decoder.read_i64()?;
         let unknown_tagged_fields = if Self::is_flexible(version) {

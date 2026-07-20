@@ -182,27 +182,15 @@ impl KafkaDecode for AlterUserScramCredentialsRequest {
 
         let deletions = {
             let length = decoder.read_compact_array_len()?;
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(
-                    AlterUserScramCredentialsRequestScramCredentialDeletion::decode(
-                        decoder, version,
-                    )?,
-                );
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                AlterUserScramCredentialsRequestScramCredentialDeletion::decode(decoder, version)
+            })?
         };
         let upsertions = {
             let length = decoder.read_compact_array_len()?;
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(
-                    AlterUserScramCredentialsRequestScramCredentialUpsertion::decode(
-                        decoder, version,
-                    )?,
-                );
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                AlterUserScramCredentialsRequestScramCredentialUpsertion::decode(decoder, version)
+            })?
         };
         let unknown_tagged_fields = if Self::is_flexible(version) {
             decoder.read_tagged_fields()?
@@ -353,15 +341,11 @@ impl KafkaDecode for AlterUserScramCredentialsResponse {
         let throttle_time_ms = decoder.read_i32()?;
         let results = {
             let length = decoder.read_compact_array_len()?;
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(
-                    AlterUserScramCredentialsResponseAlterUserScramCredentialsResult::decode(
-                        decoder, version,
-                    )?,
-                );
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                AlterUserScramCredentialsResponseAlterUserScramCredentialsResult::decode(
+                    decoder, version,
+                )
+            })?
         };
         let unknown_tagged_fields = if Self::is_flexible(version) {
             decoder.read_tagged_fields()?

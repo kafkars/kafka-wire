@@ -51,13 +51,9 @@ impl KafkaDecode for IncrementalAlterConfigsRequestAlterConfigsResource {
             } else {
                 decoder.read_array_len()?
             };
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(IncrementalAlterConfigsRequestAlterableConfig::decode(
-                    decoder, version,
-                )?);
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                IncrementalAlterConfigsRequestAlterableConfig::decode(decoder, version)
+            })?
         };
         let unknown_tagged_fields = if Self::is_flexible(version) {
             decoder.read_tagged_fields()?
@@ -236,13 +232,9 @@ impl KafkaDecode for IncrementalAlterConfigsRequest {
             } else {
                 decoder.read_array_len()?
             };
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(IncrementalAlterConfigsRequestAlterConfigsResource::decode(
-                    decoder, version,
-                )?);
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                IncrementalAlterConfigsRequestAlterConfigsResource::decode(decoder, version)
+            })?
         };
         let validate_only = decoder.read_bool()?;
         let unknown_tagged_fields = if Self::is_flexible(version) {
@@ -421,15 +413,11 @@ impl KafkaDecode for IncrementalAlterConfigsResponse {
             } else {
                 decoder.read_array_len()?
             };
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(
-                    IncrementalAlterConfigsResponseAlterConfigsResourceResponse::decode(
-                        decoder, version,
-                    )?,
-                );
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                IncrementalAlterConfigsResponseAlterConfigsResourceResponse::decode(
+                    decoder, version,
+                )
+            })?
         };
         let unknown_tagged_fields = if Self::is_flexible(version) {
             decoder.read_tagged_fields()?

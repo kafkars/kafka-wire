@@ -51,15 +51,13 @@ impl KafkaDecode for DescribeGroupsRequest {
             } else {
                 decoder.read_array_len()?
             };
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(if Self::is_flexible(version) {
+            decoder.read_vec(length, |decoder| {
+                Ok(if Self::is_flexible(version) {
                     decoder.read_compact_string()?
                 } else {
                     decoder.read_string()?
-                });
-            }
-            values
+                })
+            })?
         };
         let include_authorized_operations = if version.value() >= 3 {
             decoder.read_bool()?
@@ -207,13 +205,9 @@ impl KafkaDecode for DescribeGroupsResponseDescribedGroup {
             } else {
                 decoder.read_array_len()?
             };
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(DescribeGroupsResponseDescribedGroupMember::decode(
-                    decoder, version,
-                )?);
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                DescribeGroupsResponseDescribedGroupMember::decode(decoder, version)
+            })?
         };
         let authorized_operations = if version.value() >= 3 {
             decoder.read_i32()?
@@ -466,13 +460,9 @@ impl KafkaDecode for DescribeGroupsResponse {
             } else {
                 decoder.read_array_len()?
             };
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(DescribeGroupsResponseDescribedGroup::decode(
-                    decoder, version,
-                )?);
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                DescribeGroupsResponseDescribedGroup::decode(decoder, version)
+            })?
         };
         let unknown_tagged_fields = if Self::is_flexible(version) {
             decoder.read_tagged_fields()?

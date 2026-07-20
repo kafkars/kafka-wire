@@ -40,13 +40,9 @@ impl KafkaDecode for DescribeQuorumRequestTopicData {
         let topic_name = decoder.read_compact_string()?;
         let partitions = {
             let length = decoder.read_compact_array_len()?;
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(DescribeQuorumRequestPartitionData::decode(
-                    decoder, version,
-                )?);
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                DescribeQuorumRequestPartitionData::decode(decoder, version)
+            })?
         };
         let unknown_tagged_fields = if Self::is_flexible(version) {
             decoder.read_tagged_fields()?
@@ -172,11 +168,9 @@ impl KafkaDecode for DescribeQuorumRequest {
 
         let topics = {
             let length = decoder.read_compact_array_len()?;
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(DescribeQuorumRequestTopicData::decode(decoder, version)?);
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                DescribeQuorumRequestTopicData::decode(decoder, version)
+            })?
         };
         let unknown_tagged_fields = if Self::is_flexible(version) {
             decoder.read_tagged_fields()?
@@ -348,13 +342,9 @@ impl KafkaDecode for DescribeQuorumResponseTopicData {
         let topic_name = decoder.read_compact_string()?;
         let partitions = {
             let length = decoder.read_compact_array_len()?;
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(DescribeQuorumResponsePartitionData::decode(
-                    decoder, version,
-                )?);
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                DescribeQuorumResponsePartitionData::decode(decoder, version)
+            })?
         };
         let unknown_tagged_fields = if Self::is_flexible(version) {
             decoder.read_tagged_fields()?
@@ -457,23 +447,15 @@ impl KafkaDecode for DescribeQuorumResponsePartitionData {
         let high_watermark = decoder.read_i64()?;
         let current_voters = {
             let length = decoder.read_compact_array_len()?;
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(DescribeQuorumResponseReplicaState::decode(
-                    decoder, version,
-                )?);
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                DescribeQuorumResponseReplicaState::decode(decoder, version)
+            })?
         };
         let observers = {
             let length = decoder.read_compact_array_len()?;
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(DescribeQuorumResponseReplicaState::decode(
-                    decoder, version,
-                )?);
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                DescribeQuorumResponseReplicaState::decode(decoder, version)
+            })?
         };
         let unknown_tagged_fields = if Self::is_flexible(version) {
             decoder.read_tagged_fields()?
@@ -560,11 +542,9 @@ impl KafkaDecode for DescribeQuorumResponseNode {
         };
         let listeners = if version.value() >= 2 {
             let length = decoder.read_compact_array_len()?;
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(DescribeQuorumResponseListener::decode(decoder, version)?);
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                DescribeQuorumResponseListener::decode(decoder, version)
+            })?
         } else {
             Vec::new()
         };
@@ -744,19 +724,15 @@ impl KafkaDecode for DescribeQuorumResponse {
         };
         let topics = {
             let length = decoder.read_compact_array_len()?;
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(DescribeQuorumResponseTopicData::decode(decoder, version)?);
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                DescribeQuorumResponseTopicData::decode(decoder, version)
+            })?
         };
         let nodes = if version.value() >= 2 {
             let length = decoder.read_compact_array_len()?;
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(DescribeQuorumResponseNode::decode(decoder, version)?);
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                DescribeQuorumResponseNode::decode(decoder, version)
+            })?
         } else {
             Vec::new()
         };

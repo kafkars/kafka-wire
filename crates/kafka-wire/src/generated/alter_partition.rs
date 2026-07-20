@@ -40,13 +40,9 @@ impl KafkaDecode for AlterPartitionRequestTopicData {
         let topic_id = decoder.read_uuid()?;
         let partitions = {
             let length = decoder.read_compact_array_len()?;
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(AlterPartitionRequestPartitionData::decode(
-                    decoder, version,
-                )?);
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                AlterPartitionRequestPartitionData::decode(decoder, version)
+            })?
         };
         let unknown_tagged_fields = if Self::is_flexible(version) {
             decoder.read_tagged_fields()?
@@ -121,21 +117,15 @@ impl KafkaDecode for AlterPartitionRequestPartitionData {
         let leader_epoch = decoder.read_i32()?;
         let new_isr = if version.value() <= 2 {
             let length = decoder.read_compact_array_len()?;
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(decoder.read_i32()?);
-            }
-            values
+            decoder.read_vec(length, Decoder::read_i32)?
         } else {
             Vec::new()
         };
         let new_isr_with_epochs = if version.value() >= 3 {
             let length = decoder.read_compact_array_len()?;
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(AlterPartitionRequestBrokerState::decode(decoder, version)?);
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                AlterPartitionRequestBrokerState::decode(decoder, version)
+            })?
         } else {
             Vec::new()
         };
@@ -324,11 +314,9 @@ impl KafkaDecode for AlterPartitionRequest {
         let broker_epoch = decoder.read_i64()?;
         let topics = {
             let length = decoder.read_compact_array_len()?;
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(AlterPartitionRequestTopicData::decode(decoder, version)?);
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                AlterPartitionRequestTopicData::decode(decoder, version)
+            })?
         };
         let unknown_tagged_fields = if Self::is_flexible(version) {
             decoder.read_tagged_fields()?
@@ -398,13 +386,9 @@ impl KafkaDecode for AlterPartitionResponseTopicData {
         let topic_id = decoder.read_uuid()?;
         let partitions = {
             let length = decoder.read_compact_array_len()?;
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(AlterPartitionResponsePartitionData::decode(
-                    decoder, version,
-                )?);
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                AlterPartitionResponsePartitionData::decode(decoder, version)
+            })?
         };
         let unknown_tagged_fields = if Self::is_flexible(version) {
             decoder.read_tagged_fields()?
@@ -483,11 +467,7 @@ impl KafkaDecode for AlterPartitionResponsePartitionData {
         let leader_epoch = decoder.read_i32()?;
         let isr = {
             let length = decoder.read_compact_array_len()?;
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(decoder.read_i32()?);
-            }
-            values
+            decoder.read_vec(length, Decoder::read_i32)?
         };
         let leader_recovery_state = decoder.read_i8()?;
         let partition_epoch = decoder.read_i32()?;
@@ -572,11 +552,9 @@ impl KafkaDecode for AlterPartitionResponse {
         let error_code = decoder.read_i16()?;
         let topics = {
             let length = decoder.read_compact_array_len()?;
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(AlterPartitionResponseTopicData::decode(decoder, version)?);
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                AlterPartitionResponseTopicData::decode(decoder, version)
+            })?
         };
         let unknown_tagged_fields = if Self::is_flexible(version) {
             decoder.read_tagged_fields()?

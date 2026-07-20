@@ -48,11 +48,7 @@ impl KafkaDecode for AddPartitionsToTxnRequestAddPartitionsToTxnTopic {
             } else {
                 decoder.read_array_len()?
             };
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(decoder.read_i32()?);
-            }
-            values
+            decoder.read_vec(length, Decoder::read_i32)?
         };
         let unknown_tagged_fields = if Self::is_flexible(version) {
             decoder.read_tagged_fields()?
@@ -151,13 +147,9 @@ impl KafkaDecode for AddPartitionsToTxnRequestAddPartitionsToTxnTransaction {
         };
         let topics = if version.value() >= 4 {
             let length = decoder.read_compact_array_len()?;
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(AddPartitionsToTxnRequestAddPartitionsToTxnTopic::decode(
-                    decoder, version,
-                )?);
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                AddPartitionsToTxnRequestAddPartitionsToTxnTopic::decode(decoder, version)
+            })?
         } else {
             Vec::new()
         };
@@ -254,15 +246,9 @@ impl KafkaDecode for AddPartitionsToTxnRequest {
 
         let transactions = if version.value() >= 4 {
             let length = decoder.read_compact_array_len()?;
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(
-                    AddPartitionsToTxnRequestAddPartitionsToTxnTransaction::decode(
-                        decoder, version,
-                    )?,
-                );
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                AddPartitionsToTxnRequestAddPartitionsToTxnTransaction::decode(decoder, version)
+            })?
         } else {
             Vec::new()
         };
@@ -291,13 +277,9 @@ impl KafkaDecode for AddPartitionsToTxnRequest {
             } else {
                 decoder.read_array_len()?
             };
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(AddPartitionsToTxnRequestAddPartitionsToTxnTopic::decode(
-                    decoder, version,
-                )?);
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                AddPartitionsToTxnRequestAddPartitionsToTxnTopic::decode(decoder, version)
+            })?
         } else {
             Vec::new()
         };
@@ -438,15 +420,11 @@ impl KafkaDecode for AddPartitionsToTxnResponseAddPartitionsToTxnTopicResult {
             } else {
                 decoder.read_array_len()?
             };
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(
-                    AddPartitionsToTxnResponseAddPartitionsToTxnPartitionResult::decode(
-                        decoder, version,
-                    )?,
-                );
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                AddPartitionsToTxnResponseAddPartitionsToTxnPartitionResult::decode(
+                    decoder, version,
+                )
+            })?
         };
         let unknown_tagged_fields = if Self::is_flexible(version) {
             decoder.read_tagged_fields()?
@@ -584,15 +562,9 @@ impl KafkaDecode for AddPartitionsToTxnResponseAddPartitionsToTxnResult {
         };
         let topic_results = if version.value() >= 4 {
             let length = decoder.read_compact_array_len()?;
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(
-                    AddPartitionsToTxnResponseAddPartitionsToTxnTopicResult::decode(
-                        decoder, version,
-                    )?,
-                );
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                AddPartitionsToTxnResponseAddPartitionsToTxnTopicResult::decode(decoder, version)
+            })?
         } else {
             Vec::new()
         };
@@ -677,13 +649,9 @@ impl KafkaDecode for AddPartitionsToTxnResponse {
         };
         let results_by_transaction = if version.value() >= 4 {
             let length = decoder.read_compact_array_len()?;
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(AddPartitionsToTxnResponseAddPartitionsToTxnResult::decode(
-                    decoder, version,
-                )?);
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                AddPartitionsToTxnResponseAddPartitionsToTxnResult::decode(decoder, version)
+            })?
         } else {
             Vec::new()
         };
@@ -693,15 +661,9 @@ impl KafkaDecode for AddPartitionsToTxnResponse {
             } else {
                 decoder.read_array_len()?
             };
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(
-                    AddPartitionsToTxnResponseAddPartitionsToTxnTopicResult::decode(
-                        decoder, version,
-                    )?,
-                );
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                AddPartitionsToTxnResponseAddPartitionsToTxnTopicResult::decode(decoder, version)
+            })?
         } else {
             Vec::new()
         };

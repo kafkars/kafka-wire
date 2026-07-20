@@ -121,13 +121,9 @@ impl KafkaDecode for DeleteTopicsRequest {
 
         let topics = if version.value() >= 6 {
             let length = decoder.read_compact_array_len()?;
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(DeleteTopicsRequestDeleteTopicState::decode(
-                    decoder, version,
-                )?);
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                DeleteTopicsRequestDeleteTopicState::decode(decoder, version)
+            })?
         } else {
             Vec::new()
         };
@@ -137,15 +133,13 @@ impl KafkaDecode for DeleteTopicsRequest {
             } else {
                 decoder.read_array_len()?
             };
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(if Self::is_flexible(version) {
+            decoder.read_vec(length, |decoder| {
+                Ok(if Self::is_flexible(version) {
                     decoder.read_compact_string()?
                 } else {
                     decoder.read_string()?
-                });
-            }
-            values
+                })
+            })?
         } else {
             Vec::new()
         };
@@ -362,13 +356,9 @@ impl KafkaDecode for DeleteTopicsResponse {
             } else {
                 decoder.read_array_len()?
             };
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(DeleteTopicsResponseDeletableTopicResult::decode(
-                    decoder, version,
-                )?);
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                DeleteTopicsResponseDeletableTopicResult::decode(decoder, version)
+            })?
         };
         let unknown_tagged_fields = if Self::is_flexible(version) {
             decoder.read_tagged_fields()?

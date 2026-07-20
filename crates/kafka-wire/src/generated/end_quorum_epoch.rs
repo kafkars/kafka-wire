@@ -48,13 +48,9 @@ impl KafkaDecode for EndQuorumEpochRequestTopicData {
             } else {
                 decoder.read_array_len()?
             };
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(EndQuorumEpochRequestPartitionData::decode(
-                    decoder, version,
-                )?);
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                EndQuorumEpochRequestPartitionData::decode(decoder, version)
+            })?
         };
         let unknown_tagged_fields = if Self::is_flexible(version) {
             decoder.read_tagged_fields()?
@@ -136,21 +132,15 @@ impl KafkaDecode for EndQuorumEpochRequestPartitionData {
         let leader_epoch = decoder.read_i32()?;
         let preferred_successors = if version.value() <= 0 {
             let length = decoder.read_array_len()?;
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(decoder.read_i32()?);
-            }
-            values
+            decoder.read_vec(length, Decoder::read_i32)?
         } else {
             Vec::new()
         };
         let preferred_candidates = if version.value() >= 1 {
             let length = decoder.read_compact_array_len()?;
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(EndQuorumEpochRequestReplicaInfo::decode(decoder, version)?);
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                EndQuorumEpochRequestReplicaInfo::decode(decoder, version)
+            })?
         } else {
             Vec::new()
         };
@@ -404,21 +394,15 @@ impl KafkaDecode for EndQuorumEpochRequest {
             } else {
                 decoder.read_array_len()?
             };
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(EndQuorumEpochRequestTopicData::decode(decoder, version)?);
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                EndQuorumEpochRequestTopicData::decode(decoder, version)
+            })?
         };
         let leader_endpoints = if version.value() >= 1 {
             let length = decoder.read_compact_array_len()?;
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(EndQuorumEpochRequestLeaderEndpoint::decode(
-                    decoder, version,
-                )?);
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                EndQuorumEpochRequestLeaderEndpoint::decode(decoder, version)
+            })?
         } else {
             Vec::new()
         };
@@ -511,13 +495,9 @@ impl KafkaDecode for EndQuorumEpochResponseTopicData {
             } else {
                 decoder.read_array_len()?
             };
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(EndQuorumEpochResponsePartitionData::decode(
-                    decoder, version,
-                )?);
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                EndQuorumEpochResponsePartitionData::decode(decoder, version)
+            })?
         };
         let unknown_tagged_fields = if Self::is_flexible(version) {
             decoder.read_tagged_fields()?
@@ -754,11 +734,9 @@ impl KafkaDecode for EndQuorumEpochResponse {
             } else {
                 decoder.read_array_len()?
             };
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(EndQuorumEpochResponseTopicData::decode(decoder, version)?);
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                EndQuorumEpochResponseTopicData::decode(decoder, version)
+            })?
         };
         let mut node_endpoints: Vec<EndQuorumEpochResponseNodeEndpoint> = Vec::new();
         let mut unknown_tagged_fields = TaggedFields::default();
@@ -767,13 +745,9 @@ impl KafkaDecode for EndQuorumEpochResponse {
                 0 => {
                     node_endpoints = {
                         let length = decoder.read_compact_array_len()?;
-                        let mut values = Vec::with_capacity(length);
-                        for _ in 0..length {
-                            values.push(EndQuorumEpochResponseNodeEndpoint::decode(
-                                decoder, version,
-                            )?);
-                        }
-                        values
+                        decoder.read_vec(length, |decoder| {
+                            EndQuorumEpochResponseNodeEndpoint::decode(decoder, version)
+                        })?
                     };
                     Ok(TagOutcome::Decoded)
                 }

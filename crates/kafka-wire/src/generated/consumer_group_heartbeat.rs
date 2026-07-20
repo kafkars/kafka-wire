@@ -40,11 +40,7 @@ impl KafkaDecode for ConsumerGroupHeartbeatRequestTopicPartitions {
         let topic_id = decoder.read_uuid()?;
         let partitions = {
             let length = decoder.read_compact_array_len()?;
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(decoder.read_i32()?);
-            }
-            values
+            decoder.read_vec(length, Decoder::read_i32)?
         };
         let unknown_tagged_fields = if Self::is_flexible(version) {
             decoder.read_tagged_fields()?
@@ -156,16 +152,10 @@ impl KafkaDecode for ConsumerGroupHeartbeatRequest {
         let rack_id = decoder.read_compact_nullable_string()?;
         let rebalance_timeout_ms = decoder.read_i32()?;
         let subscribed_topic_names = {
-            match decoder.read_compact_nullable_array_len()? {
-                None => None,
-                Some(length) => {
-                    let mut values = Vec::with_capacity(length);
-                    for _ in 0..length {
-                        values.push(decoder.read_compact_string()?);
-                    }
-                    Some(values)
-                }
-            }
+            let length = decoder.read_compact_nullable_array_len()?;
+            length
+                .map(|length| decoder.read_vec(length, Decoder::read_compact_string))
+                .transpose()?
         };
         let subscribed_topic_regex = if version.value() >= 1 {
             decoder.read_compact_nullable_string()?
@@ -174,18 +164,14 @@ impl KafkaDecode for ConsumerGroupHeartbeatRequest {
         };
         let server_assignor = decoder.read_compact_nullable_string()?;
         let topic_partitions = {
-            match decoder.read_compact_nullable_array_len()? {
-                None => None,
-                Some(length) => {
-                    let mut values = Vec::with_capacity(length);
-                    for _ in 0..length {
-                        values.push(ConsumerGroupHeartbeatRequestTopicPartitions::decode(
-                            decoder, version,
-                        )?);
-                    }
-                    Some(values)
-                }
-            }
+            let length = decoder.read_compact_nullable_array_len()?;
+            length
+                .map(|length| {
+                    decoder.read_vec(length, |decoder| {
+                        ConsumerGroupHeartbeatRequestTopicPartitions::decode(decoder, version)
+                    })
+                })
+                .transpose()?
         };
         let unknown_tagged_fields = if Self::is_flexible(version) {
             decoder.read_tagged_fields()?
@@ -287,11 +273,7 @@ impl KafkaDecode for ConsumerGroupHeartbeatResponseTopicPartitions {
         let topic_id = decoder.read_uuid()?;
         let partitions = {
             let length = decoder.read_compact_array_len()?;
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(decoder.read_i32()?);
-            }
-            values
+            decoder.read_vec(length, Decoder::read_i32)?
         };
         let unknown_tagged_fields = if Self::is_flexible(version) {
             decoder.read_tagged_fields()?
@@ -354,13 +336,9 @@ impl KafkaDecode for ConsumerGroupHeartbeatResponseAssignment {
     fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
         let topic_partitions = {
             let length = decoder.read_compact_array_len()?;
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(ConsumerGroupHeartbeatResponseTopicPartitions::decode(
-                    decoder, version,
-                )?);
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                ConsumerGroupHeartbeatResponseTopicPartitions::decode(decoder, version)
+            })?
         };
         let unknown_tagged_fields = if Self::is_flexible(version) {
             decoder.read_tagged_fields()?

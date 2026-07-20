@@ -30,11 +30,9 @@ impl KafkaDecode for OffsetDeleteRequestTopic {
         let name = decoder.read_string()?;
         let partitions = {
             let length = decoder.read_array_len()?;
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(OffsetDeleteRequestPartition::decode(decoder, version)?);
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                OffsetDeleteRequestPartition::decode(decoder, version)
+            })?
         };
 
         Ok(Self { name, partitions })
@@ -116,11 +114,9 @@ impl KafkaDecode for OffsetDeleteRequest {
         let group_id = decoder.read_string()?;
         let topics = {
             let length = decoder.read_array_len()?;
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(OffsetDeleteRequestTopic::decode(decoder, version)?);
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                OffsetDeleteRequestTopic::decode(decoder, version)
+            })?
         };
 
         Ok(Self { group_id, topics })
@@ -160,11 +156,9 @@ impl KafkaDecode for OffsetDeleteResponseTopic {
         let name = decoder.read_string()?;
         let partitions = {
             let length = decoder.read_array_len()?;
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(OffsetDeleteResponsePartition::decode(decoder, version)?);
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                OffsetDeleteResponsePartition::decode(decoder, version)
+            })?
         };
 
         Ok(Self { name, partitions })
@@ -252,11 +246,9 @@ impl KafkaDecode for OffsetDeleteResponse {
         let throttle_time_ms = decoder.read_i32()?;
         let topics = {
             let length = decoder.read_array_len()?;
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(OffsetDeleteResponseTopic::decode(decoder, version)?);
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                OffsetDeleteResponseTopic::decode(decoder, version)
+            })?
         };
 
         Ok(Self {

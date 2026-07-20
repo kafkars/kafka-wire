@@ -175,13 +175,9 @@ impl KafkaDecode for DescribeTopicPartitionsRequest {
 
         let topics = {
             let length = decoder.read_compact_array_len()?;
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(DescribeTopicPartitionsRequestTopicRequest::decode(
-                    decoder, version,
-                )?);
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                DescribeTopicPartitionsRequestTopicRequest::decode(decoder, version)
+            })?
         };
         let response_partition_limit = decoder.read_i32()?;
         let cursor = if decoder.read_struct_presence()? {
@@ -289,13 +285,9 @@ impl KafkaDecode for DescribeTopicPartitionsResponseTopic {
         let is_internal = decoder.read_bool()?;
         let partitions = {
             let length = decoder.read_compact_array_len()?;
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(DescribeTopicPartitionsResponsePartition::decode(
-                    decoder, version,
-                )?);
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                DescribeTopicPartitionsResponsePartition::decode(decoder, version)
+            })?
         };
         let topic_authorized_operations = decoder.read_i32()?;
         let unknown_tagged_fields = if Self::is_flexible(version) {
@@ -404,51 +396,27 @@ impl KafkaDecode for DescribeTopicPartitionsResponsePartition {
         let leader_epoch = decoder.read_i32()?;
         let replica_nodes = {
             let length = decoder.read_compact_array_len()?;
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(decoder.read_i32()?);
-            }
-            values
+            decoder.read_vec(length, Decoder::read_i32)?
         };
         let isr_nodes = {
             let length = decoder.read_compact_array_len()?;
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(decoder.read_i32()?);
-            }
-            values
+            decoder.read_vec(length, Decoder::read_i32)?
         };
         let eligible_leader_replicas = {
-            match decoder.read_compact_nullable_array_len()? {
-                None => None,
-                Some(length) => {
-                    let mut values = Vec::with_capacity(length);
-                    for _ in 0..length {
-                        values.push(decoder.read_i32()?);
-                    }
-                    Some(values)
-                }
-            }
+            let length = decoder.read_compact_nullable_array_len()?;
+            length
+                .map(|length| decoder.read_vec(length, Decoder::read_i32))
+                .transpose()?
         };
         let last_known_elr = {
-            match decoder.read_compact_nullable_array_len()? {
-                None => None,
-                Some(length) => {
-                    let mut values = Vec::with_capacity(length);
-                    for _ in 0..length {
-                        values.push(decoder.read_i32()?);
-                    }
-                    Some(values)
-                }
-            }
+            let length = decoder.read_compact_nullable_array_len()?;
+            length
+                .map(|length| decoder.read_vec(length, Decoder::read_i32))
+                .transpose()?
         };
         let offline_replicas = {
             let length = decoder.read_compact_array_len()?;
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(decoder.read_i32()?);
-            }
-            values
+            decoder.read_vec(length, Decoder::read_i32)?
         };
         let unknown_tagged_fields = if Self::is_flexible(version) {
             decoder.read_tagged_fields()?
@@ -612,13 +580,9 @@ impl KafkaDecode for DescribeTopicPartitionsResponse {
         let throttle_time_ms = decoder.read_i32()?;
         let topics = {
             let length = decoder.read_compact_array_len()?;
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(DescribeTopicPartitionsResponseTopic::decode(
-                    decoder, version,
-                )?);
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                DescribeTopicPartitionsResponseTopic::decode(decoder, version)
+            })?
         };
         let next_cursor = if decoder.read_struct_presence()? {
             Some(DescribeTopicPartitionsResponseCursor::decode(

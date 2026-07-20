@@ -40,11 +40,9 @@ impl KafkaDecode for VoteRequestTopicData {
         let topic_name = decoder.read_compact_string()?;
         let partitions = {
             let length = decoder.read_compact_array_len()?;
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(VoteRequestPartitionData::decode(decoder, version)?);
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                VoteRequestPartitionData::decode(decoder, version)
+            })?
         };
         let unknown_tagged_fields = if Self::is_flexible(version) {
             decoder.read_tagged_fields()?
@@ -244,11 +242,9 @@ impl KafkaDecode for VoteRequest {
         };
         let topics = {
             let length = decoder.read_compact_array_len()?;
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(VoteRequestTopicData::decode(decoder, version)?);
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                VoteRequestTopicData::decode(decoder, version)
+            })?
         };
         let unknown_tagged_fields = if Self::is_flexible(version) {
             decoder.read_tagged_fields()?
@@ -320,11 +316,9 @@ impl KafkaDecode for VoteResponseTopicData {
         let topic_name = decoder.read_compact_string()?;
         let partitions = {
             let length = decoder.read_compact_array_len()?;
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(VoteResponsePartitionData::decode(decoder, version)?);
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                VoteResponsePartitionData::decode(decoder, version)
+            })?
         };
         let unknown_tagged_fields = if Self::is_flexible(version) {
             decoder.read_tagged_fields()?
@@ -554,11 +548,9 @@ impl KafkaDecode for VoteResponse {
         let error_code = decoder.read_i16()?;
         let topics = {
             let length = decoder.read_compact_array_len()?;
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(VoteResponseTopicData::decode(decoder, version)?);
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                VoteResponseTopicData::decode(decoder, version)
+            })?
         };
         let mut node_endpoints: Vec<VoteResponseNodeEndpoint> = Vec::new();
         let mut unknown_tagged_fields = TaggedFields::default();
@@ -567,11 +559,9 @@ impl KafkaDecode for VoteResponse {
                 0 if version.value() >= 1 => {
                     node_endpoints = {
                         let length = decoder.read_compact_array_len()?;
-                        let mut values = Vec::with_capacity(length);
-                        for _ in 0..length {
-                            values.push(VoteResponseNodeEndpoint::decode(decoder, version)?);
-                        }
-                        values
+                        decoder.read_vec(length, |decoder| {
+                            VoteResponseNodeEndpoint::decode(decoder, version)
+                        })?
                     };
                     Ok(TagOutcome::Decoded)
                 }

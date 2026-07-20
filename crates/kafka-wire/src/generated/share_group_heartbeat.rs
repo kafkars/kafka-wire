@@ -56,16 +56,10 @@ impl KafkaDecode for ShareGroupHeartbeatRequest {
         let member_epoch = decoder.read_i32()?;
         let rack_id = decoder.read_compact_nullable_string()?;
         let subscribed_topic_names = {
-            match decoder.read_compact_nullable_array_len()? {
-                None => None,
-                Some(length) => {
-                    let mut values = Vec::with_capacity(length);
-                    for _ in 0..length {
-                        values.push(decoder.read_compact_string()?);
-                    }
-                    Some(values)
-                }
-            }
+            let length = decoder.read_compact_nullable_array_len()?;
+            length
+                .map(|length| decoder.read_vec(length, Decoder::read_compact_string))
+                .transpose()?
         };
         let unknown_tagged_fields = if Self::is_flexible(version) {
             decoder.read_tagged_fields()?
@@ -142,11 +136,7 @@ impl KafkaDecode for ShareGroupHeartbeatResponseTopicPartitions {
         let topic_id = decoder.read_uuid()?;
         let partitions = {
             let length = decoder.read_compact_array_len()?;
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(decoder.read_i32()?);
-            }
-            values
+            decoder.read_vec(length, Decoder::read_i32)?
         };
         let unknown_tagged_fields = if Self::is_flexible(version) {
             decoder.read_tagged_fields()?
@@ -209,13 +199,9 @@ impl KafkaDecode for ShareGroupHeartbeatResponseAssignment {
     fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
         let topic_partitions = {
             let length = decoder.read_compact_array_len()?;
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(ShareGroupHeartbeatResponseTopicPartitions::decode(
-                    decoder, version,
-                )?);
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                ShareGroupHeartbeatResponseTopicPartitions::decode(decoder, version)
+            })?
         };
         let unknown_tagged_fields = if Self::is_flexible(version) {
             decoder.read_tagged_fields()?

@@ -4,6 +4,29 @@ use super::super::DecodeError;
 use super::Decoder;
 
 impl Decoder {
+    /// Reads exactly `length` elements, each through `element`.
+    ///
+    /// The counterpart of the length readers above, and the reason they are
+    /// separate: the prefix is the one part of an array that changes with the
+    /// encoding regime, and the elements are the one part that does not. Keeping
+    /// the collect loop here means a generated decode states the regime once and
+    /// then says what it is reading, rather than restating the same four lines
+    /// per array — which, measured over the corpus, was 381 repetitions.
+    ///
+    /// `length` is already bounded by the reader that produced it: both length
+    /// readers reject a count the remaining bytes cannot back, so the reservation
+    /// here cannot be driven past the frame a peer actually sent.
+    pub fn read_vec<T, F>(&mut self, length: usize, mut element: F) -> Result<Vec<T>, DecodeError>
+    where
+        F: FnMut(&mut Self) -> Result<T, DecodeError>,
+    {
+        let mut values = Vec::with_capacity(length);
+        for _ in 0..length {
+            values.push(element(self)?);
+        }
+        Ok(values)
+    }
+
     /// Reads and validates a legacy non-null array length.
     pub fn read_array_len(&mut self) -> Result<usize, DecodeError> {
         let offset = self.offset();

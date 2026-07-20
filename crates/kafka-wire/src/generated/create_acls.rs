@@ -173,11 +173,9 @@ impl KafkaDecode for CreateAclsRequest {
             } else {
                 decoder.read_array_len()?
             };
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(CreateAclsRequestAclCreation::decode(decoder, version)?);
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                CreateAclsRequestAclCreation::decode(decoder, version)
+            })?
         };
         let unknown_tagged_fields = if Self::is_flexible(version) {
             decoder.read_tagged_fields()?
@@ -333,13 +331,9 @@ impl KafkaDecode for CreateAclsResponse {
             } else {
                 decoder.read_array_len()?
             };
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(CreateAclsResponseAclCreationResult::decode(
-                    decoder, version,
-                )?);
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                CreateAclsResponseAclCreationResult::decode(decoder, version)
+            })?
         };
         let unknown_tagged_fields = if Self::is_flexible(version) {
             decoder.read_tagged_fields()?

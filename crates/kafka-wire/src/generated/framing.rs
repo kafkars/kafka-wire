@@ -79,11 +79,7 @@ impl KafkaDecode for ConsumerProtocolAssignmentTopicPartition {
         let topic = decoder.read_string()?;
         let partitions = {
             let length = decoder.read_array_len()?;
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(decoder.read_i32()?);
-            }
-            values
+            decoder.read_vec(length, Decoder::read_i32)?
         };
 
         Ok(Self { topic, partitions })
@@ -126,13 +122,9 @@ impl KafkaDecode for ConsumerProtocolAssignment {
     fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
         let assigned_partitions = {
             let length = decoder.read_array_len()?;
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(ConsumerProtocolAssignmentTopicPartition::decode(
-                    decoder, version,
-                )?);
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                ConsumerProtocolAssignmentTopicPartition::decode(decoder, version)
+            })?
         };
         let user_data = decoder.read_nullable_bytes()?;
 
@@ -178,11 +170,7 @@ impl KafkaDecode for ConsumerProtocolSubscriptionTopicPartition {
         };
         let partitions = if version.value() >= 1 {
             let length = decoder.read_array_len()?;
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(decoder.read_i32()?);
-            }
-            values
+            decoder.read_vec(length, Decoder::read_i32)?
         } else {
             Vec::new()
         };
@@ -249,22 +237,14 @@ impl KafkaDecode for ConsumerProtocolSubscription {
     fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
         let topics = {
             let length = decoder.read_array_len()?;
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(decoder.read_string()?);
-            }
-            values
+            decoder.read_vec(length, Decoder::read_string)?
         };
         let user_data = decoder.read_nullable_bytes()?;
         let owned_partitions = if version.value() >= 1 {
             let length = decoder.read_array_len()?;
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(ConsumerProtocolSubscriptionTopicPartition::decode(
-                    decoder, version,
-                )?);
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                ConsumerProtocolSubscriptionTopicPartition::decode(decoder, version)
+            })?
         } else {
             Vec::new()
         };
@@ -600,19 +580,15 @@ impl KafkaDecode for LeaderChangeMessage {
         let leader_id = decoder.read_i32()?;
         let voters = {
             let length = decoder.read_compact_array_len()?;
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(LeaderChangeMessageVoter::decode(decoder, version)?);
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                LeaderChangeMessageVoter::decode(decoder, version)
+            })?
         };
         let granting_voters = {
             let length = decoder.read_compact_array_len()?;
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(LeaderChangeMessageVoter::decode(decoder, version)?);
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                LeaderChangeMessageVoter::decode(decoder, version)
+            })?
         };
         let unknown_tagged_fields = if Self::is_flexible(version) {
             decoder.read_tagged_fields()?
@@ -934,11 +910,9 @@ impl KafkaDecode for VotersRecordVoter {
         let voter_directory_id = decoder.read_uuid()?;
         let endpoints = {
             let length = decoder.read_compact_array_len()?;
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(VotersRecordEndpoint::decode(decoder, version)?);
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                VotersRecordEndpoint::decode(decoder, version)
+            })?
         };
         let k_raft_version_feature = VotersRecordKRaftVersionFeature::decode(decoder, version)?;
         let unknown_tagged_fields = if Self::is_flexible(version) {
@@ -1132,11 +1106,9 @@ impl KafkaDecode for VotersRecord {
         let version_value = decoder.read_i16()?;
         let voters = {
             let length = decoder.read_compact_array_len()?;
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(VotersRecordVoter::decode(decoder, version)?);
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                VotersRecordVoter::decode(decoder, version)
+            })?
         };
         let unknown_tagged_fields = if Self::is_flexible(version) {
             decoder.read_tagged_fields()?

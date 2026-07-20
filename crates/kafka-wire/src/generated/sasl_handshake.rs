@@ -88,11 +88,7 @@ impl KafkaDecode for SaslHandshakeResponse {
         let error_code = decoder.read_i16()?;
         let mechanisms = {
             let length = decoder.read_array_len()?;
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(decoder.read_string()?);
-            }
-            values
+            decoder.read_vec(length, Decoder::read_string)?
         };
 
         Ok(Self {

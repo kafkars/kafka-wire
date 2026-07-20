@@ -43,13 +43,9 @@ impl KafkaDecode for AlterClientQuotasRequestEntryData {
             } else {
                 decoder.read_array_len()?
             };
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(AlterClientQuotasRequestEntityData::decode(
-                    decoder, version,
-                )?);
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                AlterClientQuotasRequestEntityData::decode(decoder, version)
+            })?
         };
         let ops = {
             let length = if Self::is_flexible(version) {
@@ -57,11 +53,9 @@ impl KafkaDecode for AlterClientQuotasRequestEntryData {
             } else {
                 decoder.read_array_len()?
             };
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(AlterClientQuotasRequestOpData::decode(decoder, version)?);
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                AlterClientQuotasRequestOpData::decode(decoder, version)
+            })?
         };
         let unknown_tagged_fields = if Self::is_flexible(version) {
             decoder.read_tagged_fields()?
@@ -319,11 +313,9 @@ impl KafkaDecode for AlterClientQuotasRequest {
             } else {
                 decoder.read_array_len()?
             };
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(AlterClientQuotasRequestEntryData::decode(decoder, version)?);
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                AlterClientQuotasRequestEntryData::decode(decoder, version)
+            })?
         };
         let validate_only = decoder.read_bool()?;
         let unknown_tagged_fields = if Self::is_flexible(version) {
@@ -418,13 +410,9 @@ impl KafkaDecode for AlterClientQuotasResponseEntryData {
             } else {
                 decoder.read_array_len()?
             };
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(AlterClientQuotasResponseEntityData::decode(
-                    decoder, version,
-                )?);
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                AlterClientQuotasResponseEntityData::decode(decoder, version)
+            })?
         };
         let unknown_tagged_fields = if Self::is_flexible(version) {
             decoder.read_tagged_fields()?
@@ -594,13 +582,9 @@ impl KafkaDecode for AlterClientQuotasResponse {
             } else {
                 decoder.read_array_len()?
             };
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(AlterClientQuotasResponseEntryData::decode(
-                    decoder, version,
-                )?);
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                AlterClientQuotasResponseEntryData::decode(decoder, version)
+            })?
         };
         let unknown_tagged_fields = if Self::is_flexible(version) {
             decoder.read_tagged_fields()?

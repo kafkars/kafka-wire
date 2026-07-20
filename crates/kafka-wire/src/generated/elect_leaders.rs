@@ -48,11 +48,7 @@ impl KafkaDecode for ElectLeadersRequestTopicPartitions {
             } else {
                 decoder.read_array_len()?
             };
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(decoder.read_i32()?);
-            }
-            values
+            decoder.read_vec(length, Decoder::read_i32)?
         };
         let unknown_tagged_fields = if Self::is_flexible(version) {
             decoder.read_tagged_fields()?
@@ -150,22 +146,18 @@ impl KafkaDecode for ElectLeadersRequest {
             0
         };
         let topic_partitions = {
-            match if Self::is_flexible(version) {
+            let length = if Self::is_flexible(version) {
                 decoder.read_compact_nullable_array_len()?
             } else {
                 decoder.read_nullable_array_len()?
-            } {
-                None => None,
-                Some(length) => {
-                    let mut values = Vec::with_capacity(length);
-                    for _ in 0..length {
-                        values.push(ElectLeadersRequestTopicPartitions::decode(
-                            decoder, version,
-                        )?);
-                    }
-                    Some(values)
-                }
-            }
+            };
+            length
+                .map(|length| {
+                    decoder.read_vec(length, |decoder| {
+                        ElectLeadersRequestTopicPartitions::decode(decoder, version)
+                    })
+                })
+                .transpose()?
         };
         let timeout_ms = decoder.read_i32()?;
         let unknown_tagged_fields = if Self::is_flexible(version) {
@@ -261,13 +253,9 @@ impl KafkaDecode for ElectLeadersResponseReplicaElectionResult {
             } else {
                 decoder.read_array_len()?
             };
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(ElectLeadersResponsePartitionResult::decode(
-                    decoder, version,
-                )?);
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                ElectLeadersResponsePartitionResult::decode(decoder, version)
+            })?
         };
         let unknown_tagged_fields = if Self::is_flexible(version) {
             decoder.read_tagged_fields()?
@@ -440,13 +428,9 @@ impl KafkaDecode for ElectLeadersResponse {
             } else {
                 decoder.read_array_len()?
             };
-            let mut values = Vec::with_capacity(length);
-            for _ in 0..length {
-                values.push(ElectLeadersResponseReplicaElectionResult::decode(
-                    decoder, version,
-                )?);
-            }
-            values
+            decoder.read_vec(length, |decoder| {
+                ElectLeadersResponseReplicaElectionResult::decode(decoder, version)
+            })?
         };
         let unknown_tagged_fields = if Self::is_flexible(version) {
             decoder.read_tagged_fields()?
