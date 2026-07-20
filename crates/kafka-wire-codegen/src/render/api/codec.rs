@@ -62,6 +62,23 @@ pub(super) fn render_encode(rust: &mut RustText, message: &Message) -> Result<()
     Ok(())
 }
 
+/// The local one decoded field binds to.
+///
+/// A decode body already uses `version`, `decoder`, `encoder`, and the `length`
+/// and `values` an array loop needs. Upstream really does declare a field named
+/// `Version`, whose local would otherwise shadow the `ApiVersion` parameter and
+/// hand an `i16` to everything downstream of it. The struct field keeps its own
+/// name; only the local moves, so the shadowing cannot happen and the generated
+/// type is unaffected.
+fn local(field: &kafka_wire_schema::Field) -> String {
+    const RESERVED: &[&str] = &["version", "decoder", "encoder", "length", "values"];
+    let name = field.name.rust_field();
+    if RESERVED.contains(&name) {
+        return format!("{name}_value");
+    }
+    name.to_owned()
+}
+
 /// Emits one `let` per field, reading it or substituting its default.
 ///
 /// Shared by messages and by the structs they declare: a struct's members are
@@ -77,7 +94,7 @@ pub(super) fn render_reads(
             let (read, _) = field::element_codec(element, field, message)?;
             let (length, _) = field::array_length_codec(field, message);
             let nullable = field::is_nullable(field, message);
-            let name = field.name.rust_field();
+            let name = local(field);
             // An array is gated by version exactly as a scalar is. Emitting the
             // block unconditionally read a later version's field out of an
             // earlier version's bytes, which Apache Kafka's own vectors caught.
@@ -99,9 +116,9 @@ pub(super) fn render_reads(
         }
         let expression = field::read_expression(field, message)?;
         match field::presence_condition(field, message) {
-            None => rust.line(format!("let {} = {expression};", field.name.rust_field())),
+            None => rust.line(format!("let {} = {expression};", local(field))),
             Some(condition) => {
-                rust.open(format!("let {} = if {condition}", field.name.rust_field()));
+                rust.open(format!("let {} = if {condition}", local(field)));
                 rust.line(expression);
                 rust.reopen("} else {");
                 rust.line(field::default_expression(field, message)?);
@@ -159,17 +176,28 @@ pub(super) fn render_construction(
     tagged: bool,
 ) {
     if fields.len() == 1 && !tagged {
-        rust.line(format!("Ok(Self {{ {} }})", fields[0].name.rust_field()));
+        rust.line(format!("Ok(Self {{ {} }})", binding(&fields[0])));
         return;
     }
     rust.open("Ok(Self");
     for field in fields {
-        rust.line(format!("{},", field.name.rust_field()));
+        rust.line(format!("{},", binding(field)));
     }
     if tagged {
         rust.line("unknown_tagged_fields,");
     }
     rust.close(")");
+}
+
+/// How one field appears in `Ok(Self { .. })`: shorthand, or named when its
+/// local had to move out of the way of a name the body already uses.
+fn binding(field: &kafka_wire_schema::Field) -> String {
+    let name = field.name.rust_field();
+    let local = local(field);
+    if local == name {
+        return name.to_owned();
+    }
+    format!("{name}: {local}")
 }
 
 fn render_representability_checks(

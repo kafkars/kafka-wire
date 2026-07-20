@@ -35,7 +35,7 @@ pub fn generate(config: &GeneratorConfig) -> Result<GenerationReport, Generation
     }
     rendered.insert(
         "mod.rs".to_owned(),
-        render_module_file(&groups, &lock.kafka.commit),
+        render_module_file(&groups, &grouped.unkeyed, &lock.kafka.commit),
     );
     rendered.insert(
         "registry.rs".to_owned(),

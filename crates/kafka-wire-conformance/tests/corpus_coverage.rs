@@ -66,16 +66,19 @@ fn every_vector_matches_the_generated_descriptor() {
         let facts = facts(&vector.message).unwrap();
         let at = format!("{} v{} [{}]", vector.message, vector.version, vector.name);
 
+        // A framing schema states neither, and the two sides must agree about
+        // that too: a key appearing on one side only is a disagreement.
         if facts.api_key != vector.api_key {
             findings.push(format!(
-                "{at}: Kafka reported api key {} but this repository generated {}",
+                "{at}: Kafka reported api key {:?} but this repository generated {:?}",
                 vector.api_key, facts.api_key
             ));
         }
 
         let expected = match vector.direction {
-            Direction::Request => MessageDirection::Request,
-            Direction::Response => MessageDirection::Response,
+            Direction::Request => Some(MessageDirection::Request),
+            Direction::Response => Some(MessageDirection::Response),
+            Direction::Framing => None,
         };
         if facts.direction != expected {
             findings.push(format!("{at}: direction disagrees with the descriptor"));

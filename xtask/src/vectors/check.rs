@@ -104,7 +104,9 @@ fn judge_file(path: &str, plan: &Plan, version: i16, file: &VectorFile) -> Vec<S
         if case.json_value != vector.json_value {
             findings.push(format!("{at}: json_value has drifted from the plan"));
         }
-        if vector.message != plan.message || vector.api_key != plan.api_key {
+        if vector.message != plan.message
+            || (plan.api_key.is_some() && vector.api_key != plan.api_key)
+        {
             findings.push(format!("{at}: message identity disagrees with the plan"));
         }
         if vector.direction != plan.direction || vector.version != version {

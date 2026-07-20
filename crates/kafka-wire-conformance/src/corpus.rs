@@ -21,6 +21,8 @@ const SCHEMA: u32 = 1;
 #[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq)]
 #[serde(rename_all = "lowercase")]
 pub enum Direction {
+    /// Neither: the schema frames a message rather than being one.
+    Framing,
     /// Client to server.
     Request,
     /// Server to client.
@@ -37,7 +39,8 @@ pub struct Vector {
     /// Upstream protocol message name.
     pub message: String,
     /// Numeric Kafka API key, as reported by Kafka itself.
-    pub api_key: i16,
+    #[serde(default)]
+    pub api_key: Option<i16>,
     /// Request or response direction.
     pub direction: Direction,
     /// Version at which these bytes were written.

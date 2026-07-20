@@ -7,9 +7,11 @@
 //! one, so nothing here carries a descriptor or a request/response pair.
 
 use kafka_wire_core::{
-    ApiVersion, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode, KafkaEncode,
-    StrBytes, TaggedFields, VersionRange,
+    ApiVersion, Bytes, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
+    KafkaEncode, StrBytes, TaggedFields, Uuid, VersionRange,
 };
+
+use crate::KafkaMessage;
 
 /// `AbortedTxn` as declared by the `AbortedTxn` API.
 #[non_exhaustive]
@@ -23,6 +25,12 @@ pub struct AbortedTxn {
     pub last_offset: i64,
     /// The last stable offset at the time the transaction was aborted.
     pub last_stable_offset: i64,
+}
+
+impl KafkaMessage for AbortedTxn {
+    const NAME: &'static str = "AbortedTxn";
+    const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 0);
+    const FLEXIBLE_VERSIONS: Option<VersionRange> = None;
 }
 
 impl KafkaDecode for AbortedTxn {
@@ -106,6 +114,12 @@ pub struct ConsumerProtocolAssignment {
     pub assigned_partitions: Vec<ConsumerProtocolAssignmentTopicPartition>,
     /// User data.
     pub user_data: Option<Bytes>,
+}
+
+impl KafkaMessage for ConsumerProtocolAssignment {
+    const NAME: &'static str = "ConsumerProtocolAssignment";
+    const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 3);
+    const FLEXIBLE_VERSIONS: Option<VersionRange> = None;
 }
 
 impl KafkaDecode for ConsumerProtocolAssignment {
@@ -213,6 +227,12 @@ pub struct ConsumerProtocolSubscription {
     pub rack_id: Option<StrBytes>,
 }
 
+impl KafkaMessage for ConsumerProtocolSubscription {
+    const NAME: &'static str = "ConsumerProtocolSubscription";
+    const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 3);
+    const FLEXIBLE_VERSIONS: Option<VersionRange> = None;
+}
+
 impl Default for ConsumerProtocolSubscription {
     fn default() -> Self {
         Self {
@@ -305,6 +325,12 @@ pub struct ControlRecordTypeSchema {
     pub type_: i16,
 }
 
+impl KafkaMessage for ControlRecordTypeSchema {
+    const NAME: &'static str = "ControlRecordTypeSchema";
+    const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 0);
+    const FLEXIBLE_VERSIONS: Option<VersionRange> = None;
+}
+
 impl KafkaDecode for ControlRecordTypeSchema {
     fn decode(decoder: &mut Decoder, _version: ApiVersion) -> Result<Self, DecodeError> {
         let type_ = decoder.read_i16()?;
@@ -339,12 +365,10 @@ pub struct DefaultPrincipalData {
     pub unknown_tagged_fields: TaggedFields,
 }
 
-impl DefaultPrincipalData {
+impl KafkaMessage for DefaultPrincipalData {
+    const NAME: &'static str = "DefaultPrincipalData";
+    const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 0);
     const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 0));
-
-    fn is_flexible(version: ApiVersion) -> bool {
-        Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
-    }
 }
 
 impl KafkaDecode for DefaultPrincipalData {
@@ -393,6 +417,12 @@ pub struct EndTxnMarker {
     pub coordinator_epoch: i32,
 }
 
+impl KafkaMessage for EndTxnMarker {
+    const NAME: &'static str = "EndTxnMarker";
+    const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 0);
+    const FLEXIBLE_VERSIONS: Option<VersionRange> = None;
+}
+
 impl KafkaDecode for EndTxnMarker {
     fn decode(decoder: &mut Decoder, _version: ApiVersion) -> Result<Self, DecodeError> {
         let coordinator_epoch = decoder.read_i32()?;
@@ -425,17 +455,15 @@ pub struct KRaftVersionRecord {
     pub unknown_tagged_fields: TaggedFields,
 }
 
-impl KRaftVersionRecord {
+impl KafkaMessage for KRaftVersionRecord {
+    const NAME: &'static str = "KRaftVersionRecord";
+    const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 0);
     const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 0));
-
-    fn is_flexible(version: ApiVersion) -> bool {
-        Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
-    }
 }
 
 impl KafkaDecode for KRaftVersionRecord {
     fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        let version = decoder.read_i16()?;
+        let version_value = decoder.read_i16()?;
         let k_raft_version = decoder.read_i16()?;
         let unknown_tagged_fields = if Self::is_flexible(version) {
             decoder.read_tagged_fields()?
@@ -444,7 +472,7 @@ impl KafkaDecode for KRaftVersionRecord {
         };
 
         Ok(Self {
-            version,
+            version: version_value,
             k_raft_version,
             unknown_tagged_fields,
         })
@@ -545,17 +573,15 @@ pub struct LeaderChangeMessage {
     pub unknown_tagged_fields: TaggedFields,
 }
 
-impl LeaderChangeMessage {
+impl KafkaMessage for LeaderChangeMessage {
+    const NAME: &'static str = "LeaderChangeMessage";
+    const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 1);
     const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 1));
-
-    fn is_flexible(version: ApiVersion) -> bool {
-        Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
-    }
 }
 
 impl KafkaDecode for LeaderChangeMessage {
     fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        let version = decoder.read_i16()?;
+        let version_value = decoder.read_i16()?;
         let leader_id = decoder.read_i32()?;
         let voters = {
             let length = decoder.read_compact_array_len()?;
@@ -580,7 +606,7 @@ impl KafkaDecode for LeaderChangeMessage {
         };
 
         Ok(Self {
-            version,
+            version: version_value,
             leader_id,
             voters,
             granting_voters,
@@ -630,12 +656,10 @@ pub struct RequestHeader {
     pub unknown_tagged_fields: TaggedFields,
 }
 
-impl RequestHeader {
+impl KafkaMessage for RequestHeader {
+    const NAME: &'static str = "RequestHeader";
+    const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(1, 2);
     const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(2, 2));
-
-    fn is_flexible(version: ApiVersion) -> bool {
-        Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
-    }
 }
 
 impl KafkaDecode for RequestHeader {
@@ -689,12 +713,10 @@ pub struct ResponseHeader {
     pub unknown_tagged_fields: TaggedFields,
 }
 
-impl ResponseHeader {
+impl KafkaMessage for ResponseHeader {
+    const NAME: &'static str = "ResponseHeader";
+    const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 1);
     const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(1, 1));
-
-    fn is_flexible(version: ApiVersion) -> bool {
-        Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
-    }
 }
 
 impl KafkaDecode for ResponseHeader {
@@ -739,17 +761,15 @@ pub struct SnapshotFooterRecord {
     pub unknown_tagged_fields: TaggedFields,
 }
 
-impl SnapshotFooterRecord {
+impl KafkaMessage for SnapshotFooterRecord {
+    const NAME: &'static str = "SnapshotFooterRecord";
+    const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 0);
     const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 0));
-
-    fn is_flexible(version: ApiVersion) -> bool {
-        Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
-    }
 }
 
 impl KafkaDecode for SnapshotFooterRecord {
     fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        let version = decoder.read_i16()?;
+        let version_value = decoder.read_i16()?;
         let unknown_tagged_fields = if Self::is_flexible(version) {
             decoder.read_tagged_fields()?
         } else {
@@ -757,7 +777,7 @@ impl KafkaDecode for SnapshotFooterRecord {
         };
 
         Ok(Self {
-            version,
+            version: version_value,
             unknown_tagged_fields,
         })
     }
@@ -791,17 +811,15 @@ pub struct SnapshotHeaderRecord {
     pub unknown_tagged_fields: TaggedFields,
 }
 
-impl SnapshotHeaderRecord {
+impl KafkaMessage for SnapshotHeaderRecord {
+    const NAME: &'static str = "SnapshotHeaderRecord";
+    const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 0);
     const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 0));
-
-    fn is_flexible(version: ApiVersion) -> bool {
-        Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
-    }
 }
 
 impl KafkaDecode for SnapshotHeaderRecord {
     fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        let version = decoder.read_i16()?;
+        let version_value = decoder.read_i16()?;
         let last_contained_log_timestamp = decoder.read_i64()?;
         let unknown_tagged_fields = if Self::is_flexible(version) {
             decoder.read_tagged_fields()?
@@ -810,7 +828,7 @@ impl KafkaDecode for SnapshotHeaderRecord {
         };
 
         Ok(Self {
-            version,
+            version: version_value,
             last_contained_log_timestamp,
             unknown_tagged_fields,
         })
@@ -1036,17 +1054,15 @@ pub struct VotersRecord {
     pub unknown_tagged_fields: TaggedFields,
 }
 
-impl VotersRecord {
+impl KafkaMessage for VotersRecord {
+    const NAME: &'static str = "VotersRecord";
+    const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 0);
     const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 0));
-
-    fn is_flexible(version: ApiVersion) -> bool {
-        Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
-    }
 }
 
 impl KafkaDecode for VotersRecord {
     fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        let version = decoder.read_i16()?;
+        let version_value = decoder.read_i16()?;
         let voters = {
             let length = decoder.read_compact_array_len()?;
             let mut values = Vec::with_capacity(length);
@@ -1062,7 +1078,7 @@ impl KafkaDecode for VotersRecord {
         };
 
         Ok(Self {
-            version,
+            version: version_value,
             voters,
             unknown_tagged_fields,
         })

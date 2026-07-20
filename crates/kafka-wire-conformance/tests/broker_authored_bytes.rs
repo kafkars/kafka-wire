@@ -239,6 +239,8 @@ const WITHOUT_JSON_BUILDERS: &[&str] = &[
     "RemoveRaftVoterResponse",
     "RenewDelegationTokenRequest",
     "RenewDelegationTokenResponse",
+    "RequestHeader",
+    "ResponseHeader",
     "SaslAuthenticateRequest",
     "SaslAuthenticateResponse",
     "ShareAcknowledgeRequest",

@@ -44,6 +44,7 @@ mod end_txn;
 mod envelope;
 mod expire_delegation_token;
 mod find_coordinator;
+mod framing;
 mod get_telemetry_subscriptions;
 mod heartbeat;
 mod incremental_alter_configs;
@@ -235,6 +236,11 @@ pub use expire_delegation_token::{
 pub use find_coordinator::{
     FIND_COORDINATOR_REQUEST_DESCRIPTOR, FIND_COORDINATOR_RESPONSE_DESCRIPTOR,
     FindCoordinatorRequest, FindCoordinatorResponse,
+};
+pub use framing::{
+    AbortedTxn, ConsumerProtocolAssignment, ConsumerProtocolSubscription, ControlRecordTypeSchema,
+    DefaultPrincipalData, EndTxnMarker, KRaftVersionRecord, LeaderChangeMessage, RequestHeader,
+    ResponseHeader, SnapshotFooterRecord, SnapshotHeaderRecord, VotersRecord,
 };
 pub use get_telemetry_subscriptions::{
     GET_TELEMETRY_SUBSCRIPTIONS_REQUEST_DESCRIPTOR,

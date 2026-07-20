@@ -141,7 +141,7 @@ pub fn render_corpus(workspace_root: impl AsRef<Path>) -> Result<CorpusRender, G
         BTreeMap::from([
             (
                 "mod.rs".to_owned(),
-                render_module_file(&emitted, &lock.kafka.commit),
+                render_module_file(&emitted, &grouped.unkeyed, &lock.kafka.commit),
             ),
             (
                 "registry.rs".to_owned(),

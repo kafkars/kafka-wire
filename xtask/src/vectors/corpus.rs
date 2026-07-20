@@ -19,6 +19,9 @@ use serde::{Deserialize, Serialize};
 #[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq, Serialize)]
 #[serde(rename_all = "lowercase")]
 pub(crate) enum Direction {
+    /// Neither: the schema frames a message rather than being one.
+    #[serde(rename = "framing")]
+    Framing,
     Request,
     Response,
 }
@@ -34,7 +37,9 @@ pub(crate) enum Direction {
 pub(crate) struct Plan {
     pub(crate) schema: u32,
     pub(crate) message: String,
-    pub(crate) api_key: i16,
+    /// Absent for a schema that answers to no API key, such as a header.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub(crate) api_key: Option<i16>,
     pub(crate) direction: Direction,
     pub(crate) valid_versions: Vec<i16>,
     pub(crate) flexible_versions: Vec<i16>,
@@ -77,7 +82,9 @@ pub(crate) struct Vector {
     pub(crate) name: String,
     pub(crate) why: String,
     pub(crate) message: String,
-    pub(crate) api_key: i16,
+    /// Absent for a schema that answers to no API key, such as a header.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub(crate) api_key: Option<i16>,
     pub(crate) direction: Direction,
     pub(crate) version: i16,
     pub(crate) flexible: bool,

@@ -107,7 +107,7 @@
     },
     {
       "path": "describe_client_quotas.rs",
-      "sha256": "761b671c108d41eef765d4e2d106d7ea83c6682c040c145a092fc4078b11fe83"
+      "sha256": "dccfb3f895afbee5b03b3fbdae96b47fa59b17abcc8b3c7d54b0277411763229"
     },
     {
       "path": "describe_cluster.rs",
@@ -171,7 +171,7 @@
     },
     {
       "path": "framing.rs",
-      "sha256": "c7a91a9fa1f1749279b1fc9420e66cf693a0d73f2af912f19f724cd7c3036dce"
+      "sha256": "64dd4c4676ec20dd17cf2fca03beca899046f5faee627f1471f7cb5a6b1e57f6"
     },
     {
       "path": "get_telemetry_subscriptions.rs",
@@ -219,7 +219,7 @@
     },
     {
       "path": "mod.rs",
-      "sha256": "c1930292b5ed3117bd393bce2d2ec6ebe46950d926a39bfa6f0c1cec74382fac"
+      "sha256": "a622b07af507d759500352938c75824ed09727bdfd2a32919e79e77d954f45a9"
     },
     {
       "path": "offset_commit.rs",

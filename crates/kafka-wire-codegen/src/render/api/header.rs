@@ -7,6 +7,8 @@
 //! knows how to emit — so this file owns the module around them and nothing
 //! about how a field becomes Rust.
 
+use kafka_wire_schema::FieldType;
+
 use crate::{GenerationError, provenance::generated_banner, source::MessageSource};
 
 use super::structs::{render_declared_structs, render_standalone};
@@ -48,15 +50,26 @@ fn render_imports(rust: &mut RustText, sources: &[MessageSource]) {
         "KafkaDecode",
         "KafkaEncode",
     ];
-    if sources.iter().any(|source| {
-        crate::render::field::uses_type(&source.message, &kafka_wire_schema::FieldType::String)
-    }) {
+    let uses = |ty: &FieldType| {
+        sources
+            .iter()
+            .any(|source| crate::render::field::uses_type(&source.message, ty))
+    };
+    if uses(&FieldType::Bytes) {
+        wire.push("Bytes");
+    }
+    if uses(&FieldType::String) {
         wire.push("StrBytes");
     }
     if flexible {
         wire.push("TaggedFields");
     }
+    if uses(&FieldType::Uuid) {
+        wire.push("Uuid");
+    }
     wire.push("VersionRange");
     rust.line(format!("use kafka_wire_core::{{{}}};", wire.join(", ")));
+    rust.blank();
+    rust.line("use crate::KafkaMessage;");
     rust.blank();
 }

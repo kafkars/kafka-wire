@@ -12,7 +12,7 @@
 
 use bytes::Bytes;
 use kafka_wire::{
-    AddOffsetsToTxnRequest, AddOffsetsToTxnResponse, AddPartitionsToTxnRequest,
+    AbortedTxn, AddOffsetsToTxnRequest, AddOffsetsToTxnResponse, AddPartitionsToTxnRequest,
     AddPartitionsToTxnResponse, AddRaftVoterRequest, AddRaftVoterResponse,
     AllocateProducerIdsRequest, AllocateProducerIdsResponse, AlterClientQuotasRequest,
     AlterClientQuotasResponse, AlterConfigsRequest, AlterConfigsResponse,
@@ -22,42 +22,45 @@ use kafka_wire::{
     AlterUserScramCredentialsRequest, AlterUserScramCredentialsResponse, ApiVersionsRequest,
     AssignReplicasToDirsRequest, AssignReplicasToDirsResponse, BrokerRegistrationRequest,
     BrokerRegistrationResponse, ConsumerGroupDescribeRequest, ConsumerGroupDescribeResponse,
+    ConsumerProtocolAssignment, ConsumerProtocolSubscription, ControlRecordTypeSchema,
     ControllerRegistrationRequest, ControllerRegistrationResponse, CreateAclsRequest,
     CreateAclsResponse, CreateDelegationTokenRequest, CreateDelegationTokenResponse,
-    CreatePartitionsRequest, CreatePartitionsResponse, DeleteAclsRequest, DeleteAclsResponse,
-    DeleteGroupsRequest, DeleteGroupsResponse, DeleteRecordsRequest, DeleteRecordsResponse,
-    DeleteShareGroupOffsetsRequest, DeleteShareGroupOffsetsResponse, DeleteShareGroupStateRequest,
-    DeleteShareGroupStateResponse, DescribeAclsRequest, DescribeAclsResponse,
-    DescribeClientQuotasRequest, DescribeClientQuotasResponse, DescribeClusterRequest,
-    DescribeClusterResponse, DescribeConfigsRequest, DescribeDelegationTokenRequest,
-    DescribeDelegationTokenResponse, DescribeGroupsRequest, DescribeGroupsResponse,
-    DescribeLogDirsRequest, DescribeLogDirsResponse, DescribeProducersRequest,
-    DescribeProducersResponse, DescribeQuorumRequest, DescribeQuorumResponse,
-    DescribeShareGroupOffsetsRequest, DescribeShareGroupOffsetsResponse,
+    CreatePartitionsRequest, CreatePartitionsResponse, DefaultPrincipalData, DeleteAclsRequest,
+    DeleteAclsResponse, DeleteGroupsRequest, DeleteGroupsResponse, DeleteRecordsRequest,
+    DeleteRecordsResponse, DeleteShareGroupOffsetsRequest, DeleteShareGroupOffsetsResponse,
+    DeleteShareGroupStateRequest, DeleteShareGroupStateResponse, DescribeAclsRequest,
+    DescribeAclsResponse, DescribeClientQuotasRequest, DescribeClientQuotasResponse,
+    DescribeClusterRequest, DescribeClusterResponse, DescribeConfigsRequest,
+    DescribeDelegationTokenRequest, DescribeDelegationTokenResponse, DescribeGroupsRequest,
+    DescribeGroupsResponse, DescribeLogDirsRequest, DescribeLogDirsResponse,
+    DescribeProducersRequest, DescribeProducersResponse, DescribeQuorumRequest,
+    DescribeQuorumResponse, DescribeShareGroupOffsetsRequest, DescribeShareGroupOffsetsResponse,
     DescribeTransactionsRequest, DescribeTransactionsResponse, DescribeUserScramCredentialsRequest,
-    DescribeUserScramCredentialsResponse, ElectLeadersRequest, ElectLeadersResponse, EndTxnRequest,
-    EndTxnResponse, EnvelopeRequest, EnvelopeResponse, ExpireDelegationTokenRequest,
+    DescribeUserScramCredentialsResponse, ElectLeadersRequest, ElectLeadersResponse, EndTxnMarker,
+    EndTxnRequest, EndTxnResponse, EnvelopeRequest, EnvelopeResponse, ExpireDelegationTokenRequest,
     ExpireDelegationTokenResponse, FindCoordinatorRequest, FindCoordinatorResponse,
     GetTelemetrySubscriptionsRequest, GetTelemetrySubscriptionsResponse, HeartbeatRequest,
     HeartbeatResponse, IncrementalAlterConfigsRequest, IncrementalAlterConfigsResponse,
     InitProducerIdRequest, InitProducerIdResponse, InitializeShareGroupStateRequest,
-    InitializeShareGroupStateResponse, KafkaMessage, KafkaRequest, KafkaResponse,
-    LeaveGroupRequest, LeaveGroupResponse, ListConfigResourcesRequest, ListConfigResourcesResponse,
-    ListGroupsRequest, ListGroupsResponse, ListOffsetsRequest, ListOffsetsResponse,
-    ListPartitionReassignmentsRequest, ListPartitionReassignmentsResponse, ListTransactionsRequest,
-    ListTransactionsResponse, MessageDirection, OffsetCommitRequest, OffsetCommitResponse,
-    OffsetDeleteRequest, OffsetDeleteResponse, OffsetForLeaderEpochRequest,
-    OffsetForLeaderEpochResponse, PushTelemetryRequest, PushTelemetryResponse,
-    ReadShareGroupStateRequest, ReadShareGroupStateResponse, ReadShareGroupStateSummaryRequest,
+    InitializeShareGroupStateResponse, KRaftVersionRecord, KafkaMessage, KafkaRequest,
+    KafkaResponse, LeaderChangeMessage, LeaveGroupRequest, LeaveGroupResponse,
+    ListConfigResourcesRequest, ListConfigResourcesResponse, ListGroupsRequest, ListGroupsResponse,
+    ListOffsetsRequest, ListOffsetsResponse, ListPartitionReassignmentsRequest,
+    ListPartitionReassignmentsResponse, ListTransactionsRequest, ListTransactionsResponse,
+    MessageDirection, OffsetCommitRequest, OffsetCommitResponse, OffsetDeleteRequest,
+    OffsetDeleteResponse, OffsetForLeaderEpochRequest, OffsetForLeaderEpochResponse,
+    PushTelemetryRequest, PushTelemetryResponse, ReadShareGroupStateRequest,
+    ReadShareGroupStateResponse, ReadShareGroupStateSummaryRequest,
     ReadShareGroupStateSummaryResponse, RemoveRaftVoterRequest, RemoveRaftVoterResponse,
-    RenewDelegationTokenRequest, RenewDelegationTokenResponse, SaslAuthenticateRequest,
-    SaslAuthenticateResponse, SaslHandshakeRequest, SaslHandshakeResponse, ShareAcknowledgeRequest,
-    ShareAcknowledgeResponse, ShareGroupDescribeRequest, ShareGroupDescribeResponse,
+    RenewDelegationTokenRequest, RenewDelegationTokenResponse, RequestHeader, ResponseHeader,
+    SaslAuthenticateRequest, SaslAuthenticateResponse, SaslHandshakeRequest, SaslHandshakeResponse,
+    ShareAcknowledgeRequest, ShareAcknowledgeResponse, ShareGroupDescribeRequest,
+    ShareGroupDescribeResponse, SnapshotFooterRecord, SnapshotHeaderRecord,
     StreamsGroupTopologyDescriptionUpdateRequest, StreamsGroupTopologyDescriptionUpdateResponse,
     SyncGroupRequest, SyncGroupResponse, TxnOffsetCommitRequest, TxnOffsetCommitResponse,
     UnregisterBrokerRequest, UnregisterBrokerResponse, UpdateFeaturesRequest,
-    UpdateFeaturesResponse, WriteShareGroupStateRequest, WriteShareGroupStateResponse,
-    WriteTxnMarkersRequest, WriteTxnMarkersResponse,
+    UpdateFeaturesResponse, VotersRecord, WriteShareGroupStateRequest,
+    WriteShareGroupStateResponse, WriteTxnMarkersRequest, WriteTxnMarkersResponse,
 };
 use kafka_wire_core::{ApiVersion, DecodeLimits, KafkaDecode, KafkaEncode, VersionRange};
 
@@ -75,6 +78,7 @@ use crate::json_value::{
 macro_rules! subjects {
     ($mac:ident) => {
         $mac! {
+            AbortedTxn => Framing,
             AddOffsetsToTxnRequest => Request,
             AddOffsetsToTxnResponse => Response,
             AddPartitionsToTxnRequest => Request,
@@ -104,6 +108,9 @@ macro_rules! subjects {
             BrokerRegistrationResponse => Response,
             ConsumerGroupDescribeRequest => Request,
             ConsumerGroupDescribeResponse => Response,
+            ConsumerProtocolAssignment => Framing,
+            ConsumerProtocolSubscription => Framing,
+            ControlRecordTypeSchema => Framing,
             ControllerRegistrationRequest => Request,
             ControllerRegistrationResponse => Response,
             CreateAclsRequest => Request,
@@ -112,6 +119,7 @@ macro_rules! subjects {
             CreateDelegationTokenResponse => Response,
             CreatePartitionsRequest => Request,
             CreatePartitionsResponse => Response,
+            DefaultPrincipalData => Framing,
             DeleteAclsRequest => Request,
             DeleteAclsResponse => Response,
             DeleteGroupsRequest => Request,
@@ -147,6 +155,7 @@ macro_rules! subjects {
             DescribeUserScramCredentialsResponse => Response,
             ElectLeadersRequest => Request,
             ElectLeadersResponse => Response,
+            EndTxnMarker => Framing,
             EndTxnRequest => Request,
             EndTxnResponse => Response,
             EnvelopeRequest => Request,
@@ -165,6 +174,8 @@ macro_rules! subjects {
             InitProducerIdResponse => Response,
             InitializeShareGroupStateRequest => Request,
             InitializeShareGroupStateResponse => Response,
+            KRaftVersionRecord => Framing,
+            LeaderChangeMessage => Framing,
             LeaveGroupRequest => Request,
             LeaveGroupResponse => Response,
             ListConfigResourcesRequest => Request,
@@ -193,6 +204,8 @@ macro_rules! subjects {
             RemoveRaftVoterResponse => Response,
             RenewDelegationTokenRequest => Request,
             RenewDelegationTokenResponse => Response,
+            RequestHeader => Framing,
+            ResponseHeader => Framing,
             SaslAuthenticateRequest => Request,
             SaslAuthenticateResponse => Response,
             SaslHandshakeRequest => Request,
@@ -201,6 +214,8 @@ macro_rules! subjects {
             ShareAcknowledgeResponse => Response,
             ShareGroupDescribeRequest => Request,
             ShareGroupDescribeResponse => Response,
+            SnapshotFooterRecord => Framing,
+            SnapshotHeaderRecord => Framing,
             StreamsGroupTopologyDescriptionUpdateRequest => Request,
             StreamsGroupTopologyDescriptionUpdateResponse => Response,
             SyncGroupRequest => Request,
@@ -211,6 +226,7 @@ macro_rules! subjects {
             UnregisterBrokerResponse => Response,
             UpdateFeaturesRequest => Request,
             UpdateFeaturesResponse => Response,
+            VotersRecord => Framing,
             WriteShareGroupStateRequest => Request,
             WriteShareGroupStateResponse => Response,
             WriteTxnMarkersRequest => Request,
@@ -239,10 +255,10 @@ subjects!(declare_subject);
 /// Static protocol facts this repository generated for one message.
 #[derive(Clone, Copy, Debug)]
 pub struct Facts {
-    /// Numeric Kafka API key.
-    pub api_key: i16,
-    /// Request or response direction.
-    pub direction: MessageDirection,
+    /// Numeric Kafka API key, absent for a schema that frames a message.
+    pub api_key: Option<i16>,
+    /// Request or response direction, absent for the same reason.
+    pub direction: Option<MessageDirection>,
     /// Inclusive supported version range.
     pub supported_versions: VersionRange,
 }
@@ -256,7 +272,7 @@ macro_rules! declare_facts {
                 $(
                     stringify!($name) => Ok(Facts {
                         api_key: direction_api_key!($name, $direction),
-                        direction: MessageDirection::$direction,
+                        direction: direction_of!($direction),
                         supported_versions: $name::SUPPORTED_VERSIONS,
                     }),
                 )*
@@ -269,10 +285,27 @@ macro_rules! declare_facts {
 /// The API key constant lives on a different trait per direction.
 macro_rules! direction_api_key {
     ($name:ident, Request) => {
-        <$name as KafkaRequest>::API_KEY.value()
+        Some(<$name as KafkaRequest>::API_KEY.value())
     };
     ($name:ident, Response) => {
-        <$name as KafkaResponse>::API_KEY.value()
+        Some(<$name as KafkaResponse>::API_KEY.value())
+    };
+    // A framing schema implements neither direction trait, which is exactly
+    // what "answers to no API key" means in the type system.
+    ($name:ident, Framing) => {
+        None
+    };
+}
+
+macro_rules! direction_of {
+    (Request) => {
+        Some(MessageDirection::Request)
+    };
+    (Response) => {
+        Some(MessageDirection::Response)
+    };
+    (Framing) => {
+        None
     };
 }
 

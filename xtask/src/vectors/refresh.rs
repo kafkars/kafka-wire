@@ -39,10 +39,12 @@ pub(crate) fn refresh(workspace: &Path) -> Result<(), String> {
                         answer.message, answer.version, plan.message
                     ));
                 }
-                if answer.api_key != plan.api_key {
+                if plan.api_key.is_some_and(|key| key != answer.api_key) {
                     return Err(format!(
                         "{} declares api key {} but Kafka reports {}",
-                        plan.message, plan.api_key, answer.api_key
+                        plan.message,
+                        plan.api_key.unwrap_or(answer.api_key),
+                        answer.api_key
                     ));
                 }
 

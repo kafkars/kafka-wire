@@ -24,7 +24,13 @@ pub(crate) fn render_standalone(
     rust: &mut RustText,
     message: &Message,
 ) -> Result<(), GenerationError> {
-    render_struct(rust, message.name.rust_type(), &message.fields, message)
+    render_struct_with(
+        rust,
+        message.name.rust_type(),
+        &message.fields,
+        message,
+        Identity::Message,
+    )
 }
 
 /// Renders every struct this message declares, in protocol declaration order.
@@ -83,11 +89,34 @@ fn struct_reference(ty: &FieldType) -> Option<&StructRef> {
 /// flexible window, because its own members and its tagged-field section split
 /// on it — so it carries that one constant inherently, which is also what makes
 /// the `Self::is_flexible(version)` the field emitter writes resolve here.
+/// How a rendered struct states the flexible window its codecs read.
+#[derive(Clone, Copy, Eq, PartialEq)]
+enum Identity {
+    /// A struct nested inside a message: it owns the constant inherently,
+    /// because it has no name or version range of its own on the wire.
+    Nested,
+    /// A schema that stands alone. `KafkaMessage` carries exactly what a header
+    /// has — a protocol name, a supported range, and a flexible window — while
+    /// the API key lives on the direction traits, which a header does not
+    /// implement. So a header is a `KafkaMessage` without being an API message.
+    Message,
+}
+
 fn render_struct(
     rust: &mut RustText,
     rust_type: &str,
     fields: &[Field],
     message: &Message,
+) -> Result<(), GenerationError> {
+    render_struct_with(rust, rust_type, fields, message, Identity::Nested)
+}
+
+fn render_struct_with(
+    rust: &mut RustText,
+    rust_type: &str,
+    fields: &[Field],
+    message: &Message,
+    identity: Identity,
 ) -> Result<(), GenerationError> {
     rust.line(format!(
         "/// `{rust_type}` as declared by the `{}` API.",
@@ -127,24 +156,43 @@ fn render_struct(
     rust.close("");
     rust.blank();
 
-    if flexible {
-        let range = message
-            .effective_flexible_versions()
-            .single_bounded()
-            .map_or_else(
-                || "None".to_owned(),
-                |(start, end)| format!("Some(VersionRange::new({start}, {end}))"),
-            );
-        rust.open(format!("impl {rust_type}"));
-        rust.line(format!(
-            "const FLEXIBLE_VERSIONS: Option<VersionRange> = {range};"
-        ));
-        rust.blank();
-        rust.open("fn is_flexible(version: ApiVersion) -> bool");
-        rust.line("Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))");
-        rust.close("");
-        rust.close("");
-        rust.blank();
+    let range = message
+        .effective_flexible_versions()
+        .single_bounded()
+        .map_or_else(
+            || "None".to_owned(),
+            |(start, end)| format!("Some(VersionRange::new({start}, {end}))"),
+        );
+    match identity {
+        Identity::Message => {
+            let (start, end) = message.valid_versions.single_bounded().unwrap_or((0, 0));
+            rust.open(format!("impl KafkaMessage for {rust_type}"));
+            rust.line(format!(
+                "const NAME: &'static str = {:?};",
+                message.name.protocol()
+            ));
+            rust.line(format!(
+                "const SUPPORTED_VERSIONS: VersionRange = VersionRange::new({start}, {end});"
+            ));
+            rust.line(format!(
+                "const FLEXIBLE_VERSIONS: Option<VersionRange> = {range};"
+            ));
+            rust.close("");
+            rust.blank();
+        }
+        Identity::Nested if flexible => {
+            rust.open(format!("impl {rust_type}"));
+            rust.line(format!(
+                "const FLEXIBLE_VERSIONS: Option<VersionRange> = {range};"
+            ));
+            rust.blank();
+            rust.open("fn is_flexible(version: ApiVersion) -> bool");
+            rust.line("Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))");
+            rust.close("");
+            rust.close("");
+            rust.blank();
+        }
+        Identity::Nested => {}
     }
 
     if !derive_default {

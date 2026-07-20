@@ -217,7 +217,7 @@ impl KafkaDecode for DescribeClientQuotasResponseEntryData {
             }
             values
         };
-        let values = {
+        let values_value = {
             let length = if Self::is_flexible(version) {
                 decoder.read_compact_array_len()?
             } else {
@@ -239,7 +239,7 @@ impl KafkaDecode for DescribeClientQuotasResponseEntryData {
 
         Ok(Self {
             entity,
-            values,
+            values: values_value,
             unknown_tagged_fields,
         })
     }
