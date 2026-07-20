@@ -219,16 +219,16 @@ fn arrays_are_accepted_gated_compact_and_nullable_alike() {
 }
 
 #[test]
-fn every_field_type_outside_the_slice_is_refused_by_name() {
-    {
-        let ty = FieldType::Records;
-        let message = message("0-4", "none", vec![field("Probe", ty.clone(), "0+")]);
-        let diagnostic = refusal(&message, &format!("a {ty:?} field"));
+fn an_array_of_an_unsupported_element_is_refused_by_name() {
+    // Every scalar the protocol declares now has a codec, so the last shape
+    // outside the backend is an array whose element has none: an array of
+    // arrays would need a second length prefix the element path never emits.
+    let nested = FieldType::Array(Box::new(FieldType::Array(Box::new(FieldType::Int32))));
+    let message = message("0-4", "none", vec![field("Probe", nested, "0+")]);
+    let diagnostic = refusal(&message, "an array of arrays");
 
-        assert!(
-            diagnostic.contains("outside the initial backend slice")
-                && diagnostic.contains(&format!("{ty:?}")),
-            "the refusal for {ty:?} must name the type and the slice: {diagnostic}"
-        );
-    }
+    assert!(
+        diagnostic.contains("outside the initial backend slice"),
+        "the refusal must name the slice: {diagnostic}"
+    );
 }

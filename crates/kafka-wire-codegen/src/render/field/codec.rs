@@ -139,10 +139,12 @@ pub(crate) fn element_codec(
         }
         // String and Bytes returned above through `length_prefixed_element`;
         // they are named here only because the match must stay total.
+        // String, Bytes, and Records returned above through
+        // `length_prefixed_element`; named here only so the match stays total.
         other @ (FieldType::String
         | FieldType::Bytes
-        | FieldType::Array(_)
-        | FieldType::Records) => {
+        | FieldType::Records
+        | FieldType::Array(_)) => {
             return Err(GenerationError::unsupported(
                 message,
                 field.name.protocol(),
@@ -166,7 +168,7 @@ fn length_prefixed_element(
             "encoder.write_compact_string(value)?;",
             "encoder.write_string(value)?;",
         ),
-        FieldType::Bytes => (
+        FieldType::Bytes | FieldType::Records => (
             "decoder.read_compact_bytes()?",
             "decoder.read_bytes()?",
             "encoder.write_compact_bytes(value)?;",
@@ -244,12 +246,16 @@ fn read_method(
         FieldType::Int64 => Ok("decoder.read_i64()?".to_owned()),
         FieldType::Uuid => Ok("decoder.read_uuid()?".to_owned()),
         FieldType::Float64 => Ok("decoder.read_float64()?".to_owned()),
-        FieldType::Bytes if nullable && compact => {
+        FieldType::Bytes | FieldType::Records if nullable && compact => {
             Ok("decoder.read_compact_nullable_bytes()?".to_owned())
         }
-        FieldType::Bytes if nullable => Ok("decoder.read_nullable_bytes()?".to_owned()),
-        FieldType::Bytes if compact => Ok("decoder.read_compact_bytes()?".to_owned()),
-        FieldType::Bytes => Ok("decoder.read_bytes()?".to_owned()),
+        FieldType::Bytes | FieldType::Records if nullable => {
+            Ok("decoder.read_nullable_bytes()?".to_owned())
+        }
+        FieldType::Bytes | FieldType::Records if compact => {
+            Ok("decoder.read_compact_bytes()?".to_owned())
+        }
+        FieldType::Bytes | FieldType::Records => Ok("decoder.read_bytes()?".to_owned()),
         FieldType::Struct(reference) => Ok(format!(
             "{}::decode(decoder, version)?",
             reference.rust_type()
@@ -259,11 +265,6 @@ fn read_method(
             field.name.protocol(),
             "an array is read by a structured block; the scalar read path has no \
              expression for one",
-        )),
-        other @ FieldType::Records => Err(GenerationError::unsupported(
-            message,
-            field.name.protocol(),
-            format!("field type {other:?} has no read expression in this backend"),
         )),
     }
 }
@@ -293,25 +294,20 @@ fn write_method(
         FieldType::Int64 => Ok(format!("encoder.write_i64(self.{name})?;")),
         FieldType::Uuid => Ok(format!("encoder.write_uuid(self.{name})?;")),
         FieldType::Float64 => Ok(format!("encoder.write_float64(self.{name})?;")),
-        FieldType::Bytes if nullable && compact => Ok(format!(
+        FieldType::Bytes | FieldType::Records if nullable && compact => Ok(format!(
             "encoder.write_compact_nullable_bytes(self.{name}.as_deref())?;"
         )),
-        FieldType::Bytes if nullable => Ok(format!(
+        FieldType::Bytes | FieldType::Records if nullable => Ok(format!(
             "encoder.write_nullable_bytes(self.{name}.as_deref())?;"
         )),
         FieldType::Bytes if compact => Ok(format!("encoder.write_compact_bytes(&self.{name})?;")),
-        FieldType::Bytes => Ok(format!("encoder.write_bytes(&self.{name})?;")),
+        FieldType::Bytes | FieldType::Records => Ok(format!("encoder.write_bytes(&self.{name})?;")),
         FieldType::Struct(_) => Ok(format!("self.{name}.encode(encoder, version)?;")),
         FieldType::Array(_) => Err(GenerationError::unsupported(
             message,
             field.name.protocol(),
             "an array is written by a structured block; the scalar write path has \
              no statement for one",
-        )),
-        other @ FieldType::Records => Err(GenerationError::unsupported(
-            message,
-            field.name.protocol(),
-            format!("field type {other:?} has no write statement in this backend"),
         )),
     }
 }

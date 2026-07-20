@@ -1,7 +1,6 @@
 //! The type/default half of the field-emission table.
 //!
-//! Scenario: for every field type and every protocol default the backend
-//! claims to support, assert the exact Rust type declared for the struct field,
+//! Scenario: for every field type and every protocol default, assert the exact Rust type declared for the struct field,
 //! the exact initializer used when the field is absent from a version, and the
 //! exact comparison that decides whether the value still holds its default.
 //!
@@ -121,32 +120,9 @@ fn every_supported_field_shape_declares_its_exact_rust_type() {
             probe = nullable(probe);
         }
         let message = message(VALID, "none", vec![probe]);
-        let rendered = rust_type(&message.fields[0], &message)
-            .unwrap_or_else(|error| panic!("{:?} has no Rust type: {error}", cell.ty));
+        let rendered = rust_type(&message.fields[0], &message);
 
         assert_eq!(rendered, cell.declared, "declared type for {:?}", cell.ty);
-    }
-}
-
-#[test]
-fn a_type_outside_the_slice_fails_generation_instead_of_emitting_a_comment() {
-    // `/* unsupported Float64 */` in a struct-field position is a syntax error,
-    // so rustfmt would have caught it. The same placeholder in a default or a
-    // comparison position is valid Rust, which is why all three go through the
-    // same refusal.
-    {
-        let ty = FieldType::Records;
-        let probe = field("Probe", ty.clone(), "0+");
-        let message = message(VALID, "none", vec![probe]);
-        let error = rust_type(&message.fields[0], &message)
-            .err()
-            .unwrap_or_else(|| panic!("{ty:?} was given a Rust type outside the backend slice"));
-
-        assert!(
-            error.to_string().contains("ProbeRequest.Probe")
-                && error.to_string().contains(&format!("{ty:?}")),
-            "the type rejection must name the message, the field, and the construct: {error}"
-        );
     }
 }
 
@@ -301,10 +277,8 @@ fn every_supported_default_emits_its_exact_initializer_and_comparison() {
         let message = message(VALID, "none", vec![probe]);
         let probe = &message.fields[0];
 
-        let initializer = default_expression(probe, &message)
-            .unwrap_or_else(|error| panic!("{}: no initializer: {error}", cell.situation));
-        let non_default = non_default_condition(probe, &message)
-            .unwrap_or_else(|error| panic!("{}: no comparison: {error}", cell.situation));
+        let initializer = default_expression(probe, &message);
+        let non_default = non_default_condition(probe, &message);
 
         assert_eq!(
             initializer, cell.initializer,
@@ -337,10 +311,7 @@ fn a_nullable_fixed_width_field_is_excluded_by_the_front_end_not_by_this_backend
     let message = message(VALID, "none", vec![probe]);
     let probe = &message.fields[0];
 
-    assert_eq!(
-        rust_type(probe, &message).unwrap_or_else(|error| panic!("{error}")),
-        "Option<i32>"
-    );
+    assert_eq!(rust_type(probe, &message), "Option<i32>");
     assert!(
         !FieldType::Int32.permits_null(),
         "kafka-wire-schema must keep rejecting nullableVersions on a fixed-width type; \

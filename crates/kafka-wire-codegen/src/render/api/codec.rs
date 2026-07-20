@@ -39,7 +39,7 @@ pub(super) fn render_encode(rust: &mut RustText, message: &Message) -> Result<()
     rust.line("    version: ApiVersion,");
     rust.open(") -> Result<(), EncodeError>");
     rust.line("crate::message::ensure_encode_version::<Self>(version)?;");
-    render_representability_checks(rust, message)?;
+    render_representability_checks(rust, message);
 
     render_writes(rust, &message.fields, message)?;
     if !message.effective_flexible_versions().is_empty() {
@@ -108,7 +108,7 @@ pub(super) fn render_reads(
                     rust.open(format!("let {name} = if {condition}"));
                     render_array_body(rust, &length, &read, nullable);
                     rust.reopen("} else {");
-                    rust.line(field::default_expression(field, message)?);
+                    rust.line(field::default_expression(field, message));
                     rust.close(";");
                 }
             }
@@ -121,7 +121,7 @@ pub(super) fn render_reads(
                 rust.open(format!("let {} = if {condition}", local(field)));
                 rust.line(expression);
                 rust.reopen("} else {");
-                rust.line(field::default_expression(field, message)?);
+                rust.line(field::default_expression(field, message));
                 rust.close(";");
             }
         }
@@ -200,10 +200,7 @@ fn binding(field: &kafka_wire_schema::Field) -> String {
     format!("{name}: {local}")
 }
 
-fn render_representability_checks(
-    rust: &mut RustText,
-    message: &Message,
-) -> Result<(), GenerationError> {
+fn render_representability_checks(rust: &mut RustText, message: &Message) {
     let conditional = message
         .fields
         .iter()
@@ -215,14 +212,14 @@ fn render_representability_checks(
         .collect::<Vec<_>>();
     if conditional.is_empty() {
         rust.blank();
-        return Ok(());
+        return;
     }
 
     rust.blank();
     for (candidate, condition) in conditional {
         rust.open(format!(
             "if {condition} && {}",
-            field::non_default_condition(candidate, message)?
+            field::non_default_condition(candidate, message)
         ));
         rust.open("return Err(EncodeError::FieldNotRepresentable");
         rust.line("message: Self::NAME,");
@@ -232,7 +229,6 @@ fn render_representability_checks(
         rust.close("");
     }
     rust.blank();
-    Ok(())
 }
 
 /// The array read as one expression, so a version gate can wrap it.

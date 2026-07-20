@@ -145,7 +145,7 @@ fn render_struct_with(
         rust.line(format!(
             "pub {}: {},",
             member.name.rust_field(),
-            field::rust_type(member, message)?
+            field::rust_type(member, message)
         ));
     }
     let flexible = !message.effective_flexible_versions().is_empty();
@@ -203,7 +203,7 @@ fn render_struct_with(
             rust.line(format!(
                 "{}: {},",
                 member.name.rust_field(),
-                field::default_expression(member, message)?
+                field::default_expression(member, message)
             ));
         }
         if flexible {

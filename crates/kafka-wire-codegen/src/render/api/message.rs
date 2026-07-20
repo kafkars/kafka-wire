@@ -55,7 +55,7 @@ pub(super) fn render_message(
         rust.line(format!(
             "pub {}: {},",
             field.name.rust_field(),
-            field::rust_type(field, message)?
+            field::rust_type(field, message)
         ));
     }
     if !message.effective_flexible_versions().is_empty() {
@@ -66,7 +66,7 @@ pub(super) fn render_message(
     rust.blank();
 
     if !derive_default {
-        render_default(rust, message)?;
+        render_default(rust, message);
     }
     render_metadata_impls(rust, message, group);
     render_decode(rust, message)?;
@@ -74,7 +74,7 @@ pub(super) fn render_message(
     Ok(())
 }
 
-fn render_default(rust: &mut RustText, message: &Message) -> Result<(), GenerationError> {
+fn render_default(rust: &mut RustText, message: &Message) {
     rust.open(format!("impl Default for {}", message.name.rust_type()));
     rust.open("fn default() -> Self");
     rust.open("Self");
@@ -82,7 +82,7 @@ fn render_default(rust: &mut RustText, message: &Message) -> Result<(), Generati
         rust.line(format!(
             "{}: {},",
             field.name.rust_field(),
-            field::default_expression(field, message)?
+            field::default_expression(field, message)
         ));
     }
     if !message.effective_flexible_versions().is_empty() {
@@ -92,7 +92,6 @@ fn render_default(rust: &mut RustText, message: &Message) -> Result<(), Generati
     rust.close("");
     rust.close("");
     rust.blank();
-    Ok(())
 }
 
 fn render_metadata_impls(rust: &mut RustText, message: &Message, group: &ApiGroup) {

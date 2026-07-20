@@ -262,38 +262,6 @@ fn a_fixed_width_field_straddling_the_flexible_boundary_emits_no_gate() {
     );
 }
 
-/// Field types with no scalar codec, each of which must be refused by name.
-fn types_outside_the_scalar_slice() -> Vec<FieldType> {
-    vec![FieldType::Records]
-}
-
-#[test]
-fn a_type_with_no_codec_fails_generation_instead_of_emitting_a_comment() {
-    for ty in types_outside_the_scalar_slice() {
-        let probe = field("Probe", ty.clone(), "0+");
-        let message = message(VALID, "none", vec![probe]);
-        let probe = &message.fields[0];
-
-        let read = read_expression(probe, &message);
-        let write = write_statement(probe, &message);
-
-        let read = read.err().unwrap_or_else(|| {
-            panic!("{ty:?} rendered a read expression instead of failing generation")
-        });
-        let write = write.err().unwrap_or_else(|| {
-            panic!("{ty:?} rendered a write statement instead of failing generation")
-        });
-
-        for (direction, error) in [("read", read.to_string()), ("write", write.to_string())] {
-            assert!(
-                error.contains("ProbeRequest.Probe") && error.contains(&format!("{ty:?}")),
-                "the {direction} rejection for {ty:?} must name the message, the field, \
-                 and the construct: {error}"
-            );
-        }
-    }
-}
-
 #[test]
 fn an_array_routed_into_the_scalar_path_is_refused_rather_than_commented() {
     // `render::api::codec` sends arrays to a statement block, so an array

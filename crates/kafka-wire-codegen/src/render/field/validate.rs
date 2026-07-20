@@ -93,9 +93,10 @@ fn validate_fields(
             | FieldType::Uuid
             | FieldType::Float64
             | FieldType::Bytes
+            | FieldType::Records
             | FieldType::Struct(_) => {}
             FieldType::Array(element) if is_supported_element(element) => {}
-            other => {
+            other @ FieldType::Array(_) => {
                 return unsupported(
                     message,
                     field.name.protocol(),

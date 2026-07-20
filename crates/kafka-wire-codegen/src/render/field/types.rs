@@ -12,8 +12,6 @@
 
 use kafka_wire_schema::{DefaultValue, Field, FieldType, Message};
 
-use crate::GenerationError;
-
 /// Renders a double so the emitted literal round-trips as `f64`.
 fn float_literal(value: f64) -> String {
     let rendered = format!("{value}");
@@ -57,124 +55,117 @@ fn is_nullable(field: &Field, message: &Message) -> bool {
         .is_empty()
 }
 
-pub(crate) fn rust_type(field: &Field, message: &Message) -> Result<String, GenerationError> {
+pub(crate) fn rust_type(field: &Field, message: &Message) -> String {
     let nullable = is_nullable(field, message);
-    let base = type_name(&field.ty, field, message)?;
+    let base = type_name(&field.ty);
     if nullable {
-        Ok(format!("Option<{base}>"))
+        format!("Option<{base}>")
     } else {
-        Ok(base)
+        base
     }
 }
 
 /// Maps one type to its Rust spelling, recursing through array elements.
 ///
+/// Total: every normalized type now has a Rust spelling, so this cannot fail.
+/// What a type is called and whether the backend can *encode* it are different
+/// questions, and the second belongs to `validate`.
+///
 /// A struct reference is emitted under the owner-qualified name the earlier flat naming rule
 /// resolved during lowering, never a name this file re-derives.
-fn type_name(ty: &FieldType, field: &Field, message: &Message) -> Result<String, GenerationError> {
+fn type_name(ty: &FieldType) -> String {
     match ty {
-        FieldType::String => Ok("StrBytes".to_owned()),
-        FieldType::Bool => Ok("bool".to_owned()),
-        FieldType::Int8 => Ok("i8".to_owned()),
-        FieldType::Int16 => Ok("i16".to_owned()),
-        FieldType::Uint16 => Ok("u16".to_owned()),
-        FieldType::Uint32 => Ok("u32".to_owned()),
-        FieldType::Int32 => Ok("i32".to_owned()),
-        FieldType::Int64 => Ok("i64".to_owned()),
-        FieldType::Uuid => Ok("Uuid".to_owned()),
-        FieldType::Float64 => Ok("f64".to_owned()),
-        FieldType::Bytes => Ok("Bytes".to_owned()),
-        FieldType::Struct(reference) => Ok(reference.rust_type().to_owned()),
-        FieldType::Array(element) => Ok(format!("Vec<{}>", type_name(element, field, message)?)),
-        other @ FieldType::Records => Err(GenerationError::unsupported(
-            message,
-            field.name.protocol(),
-            format!("field type {other:?} has no Rust type in this backend"),
-        )),
+        FieldType::String => "StrBytes".to_owned(),
+        FieldType::Bool => "bool".to_owned(),
+        FieldType::Int8 => "i8".to_owned(),
+        FieldType::Int16 => "i16".to_owned(),
+        FieldType::Uint16 => "u16".to_owned(),
+        FieldType::Uint32 => "u32".to_owned(),
+        FieldType::Int32 => "i32".to_owned(),
+        FieldType::Int64 => "i64".to_owned(),
+        FieldType::Uuid => "Uuid".to_owned(),
+        FieldType::Float64 => "f64".to_owned(),
+        // A `records` field is a byte blob on the wire: the length prefix is the
+        // same, and what sits inside it is a RecordBatch this crate does not yet
+        // parse. Carrying it as the bytes it is keeps the message honest and
+        // leaves the batch to a layer above.
+        FieldType::Bytes | FieldType::Records => "Bytes".to_owned(),
+        FieldType::Struct(reference) => reference.rust_type().to_owned(),
+        FieldType::Array(element) => format!("Vec<{}>", type_name(element)),
     }
 }
 
-pub(crate) fn default_expression(
-    field: &Field,
-    message: &Message,
-) -> Result<String, GenerationError> {
+pub(crate) fn default_expression(field: &Field, message: &Message) -> String {
     if matches!(field.default, DefaultValue::Null) {
-        return Ok("None".to_owned());
+        return "None".to_owned();
     }
-    let value = default_value(field, message)?;
+    let value = default_value(field);
     if is_nullable(field, message) {
         // A nullable field declaring a real default is `Option<T>` holding that
         // value, not `None`: upstream writes both, and collapsing them would
         // encode an absent field where the protocol says a present one.
-        return Ok(format!("Some({value})"));
+        return format!("Some({value})");
     }
-    Ok(value)
+    value
 }
 
 /// The default as the underlying type spells it, before nullability wraps it.
-fn default_value(field: &Field, message: &Message) -> Result<String, GenerationError> {
+fn default_value(field: &Field) -> String {
     match &field.default {
-        DefaultValue::Null => Ok("None".to_owned()),
-        DefaultValue::Bool(value) => Ok(value.to_string()),
-        DefaultValue::Integer(value) => Ok(separated(*value)),
-        DefaultValue::String(value) if value.is_empty() => Ok("StrBytes::default()".to_owned()),
-        DefaultValue::String(value) => Ok(format!("StrBytes::from({value:?})")),
-        DefaultValue::Uuid(bytes) if *bytes == [0_u8; 16] => Ok("Uuid::ZERO".to_owned()),
-        DefaultValue::Uuid(bytes) => Ok(format!("Uuid::from_bytes({bytes:?})")),
+        DefaultValue::Null => "None".to_owned(),
+        DefaultValue::Bool(value) => value.to_string(),
+        DefaultValue::Integer(value) => separated(*value),
+        DefaultValue::String(value) if value.is_empty() => "StrBytes::default()".to_owned(),
+        DefaultValue::String(value) => format!("StrBytes::from({value:?})"),
+        DefaultValue::Uuid(bytes) if *bytes == [0_u8; 16] => "Uuid::ZERO".to_owned(),
+        DefaultValue::Uuid(bytes) => format!("Uuid::from_bytes({bytes:?})"),
         // A non-nullable struct field is absent from a version as every member
         // at its own default, which is what the generated struct derives.
-        DefaultValue::StructDefaults => Ok(format!(
-            "{}::default()",
-            type_name(&field.ty, field, message)?
-        )),
+        DefaultValue::StructDefaults => format!("{}::default()", type_name(&field.ty)),
         // Named by type rather than inferred: `Default::default()` in an
         // initializer position is correct but says less than the type does.
         DefaultValue::Empty => match &field.ty {
-            FieldType::Array(_) => Ok("Vec::new()".to_owned()),
-            FieldType::Bytes => Ok("Bytes::default()".to_owned()),
-            FieldType::String => Ok("StrBytes::default()".to_owned()),
-            _ => Ok("Default::default()".to_owned()),
+            FieldType::Array(_) => "Vec::new()".to_owned(),
+            FieldType::Bytes | FieldType::Records => "Bytes::default()".to_owned(),
+            FieldType::String => "StrBytes::default()".to_owned(),
+            _ => "Default::default()".to_owned(),
         },
         // Rendered so the literal always carries a decimal point and parses
         // back as `f64`; an integral default would otherwise emit as an int.
-        DefaultValue::Float(value) => Ok(float_literal(value.get())),
+        DefaultValue::Float(value) => float_literal(value.get()),
     }
 }
 
-pub(crate) fn non_default_condition(
-    field: &Field,
-    message: &Message,
-) -> Result<String, GenerationError> {
+pub(crate) fn non_default_condition(field: &Field, message: &Message) -> String {
     let name = field.name.rust_field();
     if !matches!(field.default, DefaultValue::Null) && is_nullable(field, message) {
-        let value = default_value(field, message)?;
-        return Ok(format!("self.{name} != Some({value})"));
+        let value = default_value(field);
+        return format!("self.{name} != Some({value})");
     }
     match &field.default {
-        DefaultValue::Null => Ok(format!("self.{name}.is_some()")),
+        DefaultValue::Null => format!("self.{name}.is_some()"),
         // `self.x != false` and `self.x != true` are a negation and an
         // identity; the lints on checked-in output reject both spellings.
-        DefaultValue::Bool(false) => Ok(format!("self.{name}")),
-        DefaultValue::Bool(true) => Ok(format!("!self.{name}")),
-        DefaultValue::Integer(value) => Ok(format!("self.{name} != {}", separated(*value))),
-        DefaultValue::String(value) if value.is_empty() => Ok(format!("!self.{name}.is_empty()")),
-        DefaultValue::String(value) => Ok(format!("self.{name}.as_str() != {value:?}")),
+        DefaultValue::Bool(false) => format!("self.{name}"),
+        DefaultValue::Bool(true) => format!("!self.{name}"),
+        DefaultValue::Integer(value) => format!("self.{name} != {}", separated(*value)),
+        DefaultValue::String(value) if value.is_empty() => format!("!self.{name}.is_empty()"),
+        DefaultValue::String(value) => format!("self.{name}.as_str() != {value:?}"),
         DefaultValue::Uuid(bytes) if *bytes == [0_u8; 16] => {
-            Ok(format!("self.{name} != Uuid::ZERO"))
+            format!("self.{name} != Uuid::ZERO")
         }
-        DefaultValue::Uuid(bytes) => Ok(format!("self.{name} != Uuid::from_bytes({bytes:?})")),
-        DefaultValue::StructDefaults => Ok(format!(
-            "self.{name} != {}::default()",
-            type_name(&field.ty, field, message)?
-        )),
-        DefaultValue::Empty => Ok(format!("!self.{name}.is_empty()")),
+        DefaultValue::Uuid(bytes) => format!("self.{name} != Uuid::from_bytes({bytes:?})"),
+        DefaultValue::StructDefaults => {
+            format!("self.{name} != {}::default()", type_name(&field.ty))
+        }
+        DefaultValue::Empty => format!("!self.{name}.is_empty()"),
         // A float default compares by bits rather than by `==`: the protocol
         // question is whether the value was left alone, and NaN is not equal to
         // itself under the operator the lints would otherwise demand.
-        DefaultValue::Float(value) => Ok(format!(
+        DefaultValue::Float(value) => format!(
             "self.{name}.to_bits() != {}_f64.to_bits()",
             float_literal(value.get())
-        )),
+        ),
     }
 }
 
