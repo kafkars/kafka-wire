@@ -78,6 +78,53 @@
         "topics": []
       },
       "hex": "000001f4000000017fffffff0000000000ffffffff010101020003036331010d00000007000000000000000300"
+    },
+    {
+      "name": "synthesized_populated_v16",
+      "why": "Every field this version declares, present and non-default: one element in every array, every nullable thing supplied. The defaults case leaves arrays empty, which hides every field of the struct the array would have held — a records field encoded with the wrong length prefix survived the whole corpus that way, because nothing ever reached the struct holding it.",
+      "message": "FetchRequest",
+      "api_key": 1,
+      "direction": "request",
+      "version": 16,
+      "flexible": true,
+      "json_value": {
+        "clusterId": "v",
+        "forgottenTopicsData": [
+          {
+            "partitions": [
+              1
+            ],
+            "topicId": "MkU3OEVGRjRDMTk0M0Q2OA"
+          }
+        ],
+        "isolationLevel": 1,
+        "maxBytes": 1,
+        "maxWaitMs": 1,
+        "minBytes": 1,
+        "rackId": "v",
+        "replicaState": {
+          "replicaEpoch": 1,
+          "replicaId": 1
+        },
+        "sessionEpoch": 1,
+        "sessionId": 1,
+        "topics": [
+          {
+            "partitions": [
+              {
+                "currentLeaderEpoch": 1,
+                "fetchOffset": 1,
+                "lastFetchedEpoch": 1,
+                "logStartOffset": 1,
+                "partition": 1,
+                "partitionMaxBytes": 1
+              }
+            ],
+            "topicId": "MkU3OEVGRjRDMTk0M0Q2OA"
+          }
+        ]
+      },
+      "hex": "00000001000000010000000101000000010000000102324537384546463443313934334436380200000001000000010000000000000001000000010000000000000001000000010000023245373845464634433139343344363802000000010002760200020276010d00000001000000000000000100"
     }
   ]
 }

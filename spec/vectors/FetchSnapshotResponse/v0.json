@@ -15,6 +15,78 @@
         "topics": []
       },
       "hex": "0000000000000100"
+    },
+    {
+      "name": "a_partition_carrying_records",
+      "why": "Every synthesized case leaves `topics` empty, so nothing in the corpus ever reached a PartitionSnapshot and `UnalignedRecords` — a non-nullable records field in an always-flexible message — was never encoded at all. An empty array hides every field of the struct it would have held.",
+      "message": "FetchSnapshotResponse",
+      "api_key": 59,
+      "direction": "response",
+      "version": 0,
+      "flexible": true,
+      "json_value": {
+        "errorCode": 0,
+        "throttleTimeMs": 0,
+        "topics": [
+          {
+            "name": "orders",
+            "partitions": [
+              {
+                "currentLeader": {
+                  "leaderEpoch": 5,
+                  "leaderId": 2
+                },
+                "errorCode": 0,
+                "index": 0,
+                "position": 0,
+                "size": 4096,
+                "snapshotId": {
+                  "endOffset": 100,
+                  "epoch": 3
+                },
+                "unalignedRecords": "3q2+7w=="
+              }
+            ]
+          }
+        ]
+      },
+      "hex": "00000000000002076f726465727302000000000000000000000000006400000003000000000000001000000000000000000005deadbeef0100090000000200000005000000"
+    },
+    {
+      "name": "synthesized_populated_v0",
+      "why": "Every field this version declares, present and non-default: one element in every array, every nullable thing supplied. The defaults case leaves arrays empty, which hides every field of the struct the array would have held — a records field encoded with the wrong length prefix survived the whole corpus that way, because nothing ever reached the struct holding it.",
+      "message": "FetchSnapshotResponse",
+      "api_key": 59,
+      "direction": "response",
+      "version": 0,
+      "flexible": true,
+      "json_value": {
+        "errorCode": 1,
+        "throttleTimeMs": 1,
+        "topics": [
+          {
+            "name": "v",
+            "partitions": [
+              {
+                "currentLeader": {
+                  "leaderEpoch": 1,
+                  "leaderId": 1
+                },
+                "errorCode": 1,
+                "index": 1,
+                "position": 1,
+                "size": 1,
+                "snapshotId": {
+                  "endOffset": 1,
+                  "epoch": 1
+                },
+                "unalignedRecords": "3q2+7w=="
+              }
+            ]
+          }
+        ]
+      },
+      "hex": "00000001000102027602000000010001000000000000000100000001000000000000000001000000000000000105deadbeef0100090000000100000001000000"
     }
   ]
 }

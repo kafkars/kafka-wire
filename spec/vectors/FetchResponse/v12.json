@@ -60,6 +60,55 @@
         "throttleTimeMs": 0
       },
       "hex": "0000000000000000000002076f7264657273020000000000000000000000000064ffffffffffffffffffffffffffffffff00ffffffff0003000d00000004000000000000005a000109000000020000000500020d000000000000005000000003000000"
+    },
+    {
+      "name": "synthesized_populated_v12",
+      "why": "Every field this version declares, present and non-default: one element in every array, every nullable thing supplied. The defaults case leaves arrays empty, which hides every field of the struct the array would have held — a records field encoded with the wrong length prefix survived the whole corpus that way, because nothing ever reached the struct holding it.",
+      "message": "FetchResponse",
+      "api_key": 1,
+      "direction": "response",
+      "version": 12,
+      "flexible": true,
+      "json_value": {
+        "errorCode": 1,
+        "responses": [
+          {
+            "partitions": [
+              {
+                "abortedTransactions": [
+                  {
+                    "firstOffset": 1,
+                    "producerId": 1
+                  }
+                ],
+                "currentLeader": {
+                  "leaderEpoch": 1,
+                  "leaderId": 1
+                },
+                "divergingEpoch": {
+                  "endOffset": 1,
+                  "epoch": 1
+                },
+                "errorCode": 1,
+                "highWatermark": 1,
+                "lastStableOffset": 1,
+                "logStartOffset": 1,
+                "partitionIndex": 1,
+                "preferredReadReplica": 1,
+                "records": "3q2+7w==",
+                "snapshotId": {
+                  "endOffset": 1,
+                  "epoch": 1
+                }
+              }
+            ],
+            "topic": "v"
+          }
+        ],
+        "sessionId": 1,
+        "throttleTimeMs": 1
+      },
+      "hex": "00000001000100000001020276020000000100010000000000000001000000000000000100000000000000010200000000000000010000000000000001000000000105deadbeef03000d000000010000000000000001000109000000010000000100020d000000000000000100000001000000"
     }
   ]
 }

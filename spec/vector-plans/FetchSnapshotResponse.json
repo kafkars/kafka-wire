@@ -37,6 +37,152 @@
         "topics": [],
         "nodeEndpoints": []
       }
+    },
+    {
+      "name": "a_partition_carrying_records",
+      "why": "Every synthesized case leaves `topics` empty, so nothing in the corpus ever reached a PartitionSnapshot and `UnalignedRecords` \u2014 a non-nullable records field in an always-flexible message \u2014 was never encoded at all. An empty array hides every field of the struct it would have held.",
+      "versions": [
+        0
+      ],
+      "json_value": {
+        "throttleTimeMs": 0,
+        "errorCode": 0,
+        "topics": [
+          {
+            "name": "orders",
+            "partitions": [
+              {
+                "index": 0,
+                "errorCode": 0,
+                "snapshotId": {
+                  "endOffset": 100,
+                  "epoch": 3
+                },
+                "currentLeader": {
+                  "leaderId": 2,
+                  "leaderEpoch": 5
+                },
+                "size": 4096,
+                "position": 0,
+                "unalignedRecords": "3q2+7w=="
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "a_partition_carrying_records_with_endpoints",
+      "why": "Every synthesized case leaves `topics` empty, so nothing in the corpus ever reached a PartitionSnapshot and `UnalignedRecords` \u2014 a non-nullable records field in an always-flexible message \u2014 was never encoded at all. An empty array hides every field of the struct it would have held.",
+      "versions": [
+        1
+      ],
+      "json_value": {
+        "throttleTimeMs": 0,
+        "errorCode": 0,
+        "topics": [
+          {
+            "name": "orders",
+            "partitions": [
+              {
+                "index": 0,
+                "errorCode": 0,
+                "snapshotId": {
+                  "endOffset": 100,
+                  "epoch": 3
+                },
+                "currentLeader": {
+                  "leaderId": 2,
+                  "leaderEpoch": 5
+                },
+                "size": 4096,
+                "position": 0,
+                "unalignedRecords": "3q2+7w=="
+              }
+            ]
+          }
+        ],
+        "nodeEndpoints": [
+          {
+            "nodeId": 2,
+            "host": "b2",
+            "port": 9092
+          }
+        ]
+      }
+    },
+    {
+      "name": "synthesized_populated_v0",
+      "why": "Every field this version declares, present and non-default: one element in every array, every nullable thing supplied. The defaults case leaves arrays empty, which hides every field of the struct the array would have held \u2014 a records field encoded with the wrong length prefix survived the whole corpus that way, because nothing ever reached the struct holding it.",
+      "versions": [
+        0
+      ],
+      "json_value": {
+        "throttleTimeMs": 1,
+        "errorCode": 1,
+        "topics": [
+          {
+            "name": "v",
+            "partitions": [
+              {
+                "index": 1,
+                "errorCode": 1,
+                "snapshotId": {
+                  "endOffset": 1,
+                  "epoch": 1
+                },
+                "currentLeader": {
+                  "leaderId": 1,
+                  "leaderEpoch": 1
+                },
+                "size": 1,
+                "position": 1,
+                "unalignedRecords": "3q2+7w=="
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "synthesized_populated_v1",
+      "why": "Every field this version declares, present and non-default: one element in every array, every nullable thing supplied. The defaults case leaves arrays empty, which hides every field of the struct the array would have held \u2014 a records field encoded with the wrong length prefix survived the whole corpus that way, because nothing ever reached the struct holding it.",
+      "versions": [
+        1
+      ],
+      "json_value": {
+        "throttleTimeMs": 1,
+        "errorCode": 1,
+        "topics": [
+          {
+            "name": "v",
+            "partitions": [
+              {
+                "index": 1,
+                "errorCode": 1,
+                "snapshotId": {
+                  "endOffset": 1,
+                  "epoch": 1
+                },
+                "currentLeader": {
+                  "leaderId": 1,
+                  "leaderEpoch": 1
+                },
+                "size": 1,
+                "position": 1,
+                "unalignedRecords": "3q2+7w=="
+              }
+            ]
+          }
+        ],
+        "nodeEndpoints": [
+          {
+            "nodeId": 1,
+            "host": "v",
+            "port": 1
+          }
+        ]
+      }
     }
   ]
 }

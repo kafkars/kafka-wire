@@ -431,6 +431,577 @@
         "forgottenTopicsData": [],
         "rackId": ""
       }
+    },
+    {
+      "name": "synthesized_populated_v4",
+      "why": "Every field this version declares, present and non-default: one element in every array, every nullable thing supplied. The defaults case leaves arrays empty, which hides every field of the struct the array would have held \u2014 a records field encoded with the wrong length prefix survived the whole corpus that way, because nothing ever reached the struct holding it.",
+      "versions": [
+        4
+      ],
+      "json_value": {
+        "replicaId": 1,
+        "maxWaitMs": 1,
+        "minBytes": 1,
+        "maxBytes": 1,
+        "isolationLevel": 1,
+        "topics": [
+          {
+            "topic": "v",
+            "partitions": [
+              {
+                "partition": 1,
+                "fetchOffset": 1,
+                "partitionMaxBytes": 1
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "synthesized_populated_v5",
+      "why": "Every field this version declares, present and non-default: one element in every array, every nullable thing supplied. The defaults case leaves arrays empty, which hides every field of the struct the array would have held \u2014 a records field encoded with the wrong length prefix survived the whole corpus that way, because nothing ever reached the struct holding it.",
+      "versions": [
+        5
+      ],
+      "json_value": {
+        "replicaId": 1,
+        "maxWaitMs": 1,
+        "minBytes": 1,
+        "maxBytes": 1,
+        "isolationLevel": 1,
+        "topics": [
+          {
+            "topic": "v",
+            "partitions": [
+              {
+                "partition": 1,
+                "fetchOffset": 1,
+                "logStartOffset": 1,
+                "partitionMaxBytes": 1
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "synthesized_populated_v6",
+      "why": "Every field this version declares, present and non-default: one element in every array, every nullable thing supplied. The defaults case leaves arrays empty, which hides every field of the struct the array would have held \u2014 a records field encoded with the wrong length prefix survived the whole corpus that way, because nothing ever reached the struct holding it.",
+      "versions": [
+        6
+      ],
+      "json_value": {
+        "replicaId": 1,
+        "maxWaitMs": 1,
+        "minBytes": 1,
+        "maxBytes": 1,
+        "isolationLevel": 1,
+        "topics": [
+          {
+            "topic": "v",
+            "partitions": [
+              {
+                "partition": 1,
+                "fetchOffset": 1,
+                "logStartOffset": 1,
+                "partitionMaxBytes": 1
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "synthesized_populated_v7",
+      "why": "Every field this version declares, present and non-default: one element in every array, every nullable thing supplied. The defaults case leaves arrays empty, which hides every field of the struct the array would have held \u2014 a records field encoded with the wrong length prefix survived the whole corpus that way, because nothing ever reached the struct holding it.",
+      "versions": [
+        7
+      ],
+      "json_value": {
+        "replicaId": 1,
+        "maxWaitMs": 1,
+        "minBytes": 1,
+        "maxBytes": 1,
+        "isolationLevel": 1,
+        "sessionId": 1,
+        "sessionEpoch": 1,
+        "topics": [
+          {
+            "topic": "v",
+            "partitions": [
+              {
+                "partition": 1,
+                "fetchOffset": 1,
+                "logStartOffset": 1,
+                "partitionMaxBytes": 1
+              }
+            ]
+          }
+        ],
+        "forgottenTopicsData": [
+          {
+            "topic": "v",
+            "partitions": [
+              1
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "synthesized_populated_v8",
+      "why": "Every field this version declares, present and non-default: one element in every array, every nullable thing supplied. The defaults case leaves arrays empty, which hides every field of the struct the array would have held \u2014 a records field encoded with the wrong length prefix survived the whole corpus that way, because nothing ever reached the struct holding it.",
+      "versions": [
+        8
+      ],
+      "json_value": {
+        "replicaId": 1,
+        "maxWaitMs": 1,
+        "minBytes": 1,
+        "maxBytes": 1,
+        "isolationLevel": 1,
+        "sessionId": 1,
+        "sessionEpoch": 1,
+        "topics": [
+          {
+            "topic": "v",
+            "partitions": [
+              {
+                "partition": 1,
+                "fetchOffset": 1,
+                "logStartOffset": 1,
+                "partitionMaxBytes": 1
+              }
+            ]
+          }
+        ],
+        "forgottenTopicsData": [
+          {
+            "topic": "v",
+            "partitions": [
+              1
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "synthesized_populated_v9",
+      "why": "Every field this version declares, present and non-default: one element in every array, every nullable thing supplied. The defaults case leaves arrays empty, which hides every field of the struct the array would have held \u2014 a records field encoded with the wrong length prefix survived the whole corpus that way, because nothing ever reached the struct holding it.",
+      "versions": [
+        9
+      ],
+      "json_value": {
+        "replicaId": 1,
+        "maxWaitMs": 1,
+        "minBytes": 1,
+        "maxBytes": 1,
+        "isolationLevel": 1,
+        "sessionId": 1,
+        "sessionEpoch": 1,
+        "topics": [
+          {
+            "topic": "v",
+            "partitions": [
+              {
+                "partition": 1,
+                "currentLeaderEpoch": 1,
+                "fetchOffset": 1,
+                "logStartOffset": 1,
+                "partitionMaxBytes": 1
+              }
+            ]
+          }
+        ],
+        "forgottenTopicsData": [
+          {
+            "topic": "v",
+            "partitions": [
+              1
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "synthesized_populated_v10",
+      "why": "Every field this version declares, present and non-default: one element in every array, every nullable thing supplied. The defaults case leaves arrays empty, which hides every field of the struct the array would have held \u2014 a records field encoded with the wrong length prefix survived the whole corpus that way, because nothing ever reached the struct holding it.",
+      "versions": [
+        10
+      ],
+      "json_value": {
+        "replicaId": 1,
+        "maxWaitMs": 1,
+        "minBytes": 1,
+        "maxBytes": 1,
+        "isolationLevel": 1,
+        "sessionId": 1,
+        "sessionEpoch": 1,
+        "topics": [
+          {
+            "topic": "v",
+            "partitions": [
+              {
+                "partition": 1,
+                "currentLeaderEpoch": 1,
+                "fetchOffset": 1,
+                "logStartOffset": 1,
+                "partitionMaxBytes": 1
+              }
+            ]
+          }
+        ],
+        "forgottenTopicsData": [
+          {
+            "topic": "v",
+            "partitions": [
+              1
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "synthesized_populated_v11",
+      "why": "Every field this version declares, present and non-default: one element in every array, every nullable thing supplied. The defaults case leaves arrays empty, which hides every field of the struct the array would have held \u2014 a records field encoded with the wrong length prefix survived the whole corpus that way, because nothing ever reached the struct holding it.",
+      "versions": [
+        11
+      ],
+      "json_value": {
+        "replicaId": 1,
+        "maxWaitMs": 1,
+        "minBytes": 1,
+        "maxBytes": 1,
+        "isolationLevel": 1,
+        "sessionId": 1,
+        "sessionEpoch": 1,
+        "topics": [
+          {
+            "topic": "v",
+            "partitions": [
+              {
+                "partition": 1,
+                "currentLeaderEpoch": 1,
+                "fetchOffset": 1,
+                "logStartOffset": 1,
+                "partitionMaxBytes": 1
+              }
+            ]
+          }
+        ],
+        "forgottenTopicsData": [
+          {
+            "topic": "v",
+            "partitions": [
+              1
+            ]
+          }
+        ],
+        "rackId": "v"
+      }
+    },
+    {
+      "name": "synthesized_populated_v12",
+      "why": "Every field this version declares, present and non-default: one element in every array, every nullable thing supplied. The defaults case leaves arrays empty, which hides every field of the struct the array would have held \u2014 a records field encoded with the wrong length prefix survived the whole corpus that way, because nothing ever reached the struct holding it.",
+      "versions": [
+        12
+      ],
+      "json_value": {
+        "clusterId": "v",
+        "replicaId": 1,
+        "maxWaitMs": 1,
+        "minBytes": 1,
+        "maxBytes": 1,
+        "isolationLevel": 1,
+        "sessionId": 1,
+        "sessionEpoch": 1,
+        "topics": [
+          {
+            "topic": "v",
+            "partitions": [
+              {
+                "partition": 1,
+                "currentLeaderEpoch": 1,
+                "fetchOffset": 1,
+                "lastFetchedEpoch": 1,
+                "logStartOffset": 1,
+                "partitionMaxBytes": 1
+              }
+            ]
+          }
+        ],
+        "forgottenTopicsData": [
+          {
+            "topic": "v",
+            "partitions": [
+              1
+            ]
+          }
+        ],
+        "rackId": "v"
+      }
+    },
+    {
+      "name": "synthesized_populated_v13",
+      "why": "Every field this version declares, present and non-default: one element in every array, every nullable thing supplied. The defaults case leaves arrays empty, which hides every field of the struct the array would have held \u2014 a records field encoded with the wrong length prefix survived the whole corpus that way, because nothing ever reached the struct holding it.",
+      "versions": [
+        13
+      ],
+      "json_value": {
+        "clusterId": "v",
+        "replicaId": 1,
+        "maxWaitMs": 1,
+        "minBytes": 1,
+        "maxBytes": 1,
+        "isolationLevel": 1,
+        "sessionId": 1,
+        "sessionEpoch": 1,
+        "topics": [
+          {
+            "topicId": "MkU3OEVGRjRDMTk0M0Q2OA",
+            "partitions": [
+              {
+                "partition": 1,
+                "currentLeaderEpoch": 1,
+                "fetchOffset": 1,
+                "lastFetchedEpoch": 1,
+                "logStartOffset": 1,
+                "partitionMaxBytes": 1
+              }
+            ]
+          }
+        ],
+        "forgottenTopicsData": [
+          {
+            "topicId": "MkU3OEVGRjRDMTk0M0Q2OA",
+            "partitions": [
+              1
+            ]
+          }
+        ],
+        "rackId": "v"
+      }
+    },
+    {
+      "name": "synthesized_populated_v14",
+      "why": "Every field this version declares, present and non-default: one element in every array, every nullable thing supplied. The defaults case leaves arrays empty, which hides every field of the struct the array would have held \u2014 a records field encoded with the wrong length prefix survived the whole corpus that way, because nothing ever reached the struct holding it.",
+      "versions": [
+        14
+      ],
+      "json_value": {
+        "clusterId": "v",
+        "replicaId": 1,
+        "maxWaitMs": 1,
+        "minBytes": 1,
+        "maxBytes": 1,
+        "isolationLevel": 1,
+        "sessionId": 1,
+        "sessionEpoch": 1,
+        "topics": [
+          {
+            "topicId": "MkU3OEVGRjRDMTk0M0Q2OA",
+            "partitions": [
+              {
+                "partition": 1,
+                "currentLeaderEpoch": 1,
+                "fetchOffset": 1,
+                "lastFetchedEpoch": 1,
+                "logStartOffset": 1,
+                "partitionMaxBytes": 1
+              }
+            ]
+          }
+        ],
+        "forgottenTopicsData": [
+          {
+            "topicId": "MkU3OEVGRjRDMTk0M0Q2OA",
+            "partitions": [
+              1
+            ]
+          }
+        ],
+        "rackId": "v"
+      }
+    },
+    {
+      "name": "synthesized_populated_v15",
+      "why": "Every field this version declares, present and non-default: one element in every array, every nullable thing supplied. The defaults case leaves arrays empty, which hides every field of the struct the array would have held \u2014 a records field encoded with the wrong length prefix survived the whole corpus that way, because nothing ever reached the struct holding it.",
+      "versions": [
+        15
+      ],
+      "json_value": {
+        "clusterId": "v",
+        "replicaState": {
+          "replicaId": 1,
+          "replicaEpoch": 1
+        },
+        "maxWaitMs": 1,
+        "minBytes": 1,
+        "maxBytes": 1,
+        "isolationLevel": 1,
+        "sessionId": 1,
+        "sessionEpoch": 1,
+        "topics": [
+          {
+            "topicId": "MkU3OEVGRjRDMTk0M0Q2OA",
+            "partitions": [
+              {
+                "partition": 1,
+                "currentLeaderEpoch": 1,
+                "fetchOffset": 1,
+                "lastFetchedEpoch": 1,
+                "logStartOffset": 1,
+                "partitionMaxBytes": 1
+              }
+            ]
+          }
+        ],
+        "forgottenTopicsData": [
+          {
+            "topicId": "MkU3OEVGRjRDMTk0M0Q2OA",
+            "partitions": [
+              1
+            ]
+          }
+        ],
+        "rackId": "v"
+      }
+    },
+    {
+      "name": "synthesized_populated_v16",
+      "why": "Every field this version declares, present and non-default: one element in every array, every nullable thing supplied. The defaults case leaves arrays empty, which hides every field of the struct the array would have held \u2014 a records field encoded with the wrong length prefix survived the whole corpus that way, because nothing ever reached the struct holding it.",
+      "versions": [
+        16
+      ],
+      "json_value": {
+        "clusterId": "v",
+        "replicaState": {
+          "replicaId": 1,
+          "replicaEpoch": 1
+        },
+        "maxWaitMs": 1,
+        "minBytes": 1,
+        "maxBytes": 1,
+        "isolationLevel": 1,
+        "sessionId": 1,
+        "sessionEpoch": 1,
+        "topics": [
+          {
+            "topicId": "MkU3OEVGRjRDMTk0M0Q2OA",
+            "partitions": [
+              {
+                "partition": 1,
+                "currentLeaderEpoch": 1,
+                "fetchOffset": 1,
+                "lastFetchedEpoch": 1,
+                "logStartOffset": 1,
+                "partitionMaxBytes": 1
+              }
+            ]
+          }
+        ],
+        "forgottenTopicsData": [
+          {
+            "topicId": "MkU3OEVGRjRDMTk0M0Q2OA",
+            "partitions": [
+              1
+            ]
+          }
+        ],
+        "rackId": "v"
+      }
+    },
+    {
+      "name": "synthesized_populated_v17",
+      "why": "Every field this version declares, present and non-default: one element in every array, every nullable thing supplied. The defaults case leaves arrays empty, which hides every field of the struct the array would have held \u2014 a records field encoded with the wrong length prefix survived the whole corpus that way, because nothing ever reached the struct holding it.",
+      "versions": [
+        17
+      ],
+      "json_value": {
+        "clusterId": "v",
+        "replicaState": {
+          "replicaId": 1,
+          "replicaEpoch": 1
+        },
+        "maxWaitMs": 1,
+        "minBytes": 1,
+        "maxBytes": 1,
+        "isolationLevel": 1,
+        "sessionId": 1,
+        "sessionEpoch": 1,
+        "topics": [
+          {
+            "topicId": "MkU3OEVGRjRDMTk0M0Q2OA",
+            "partitions": [
+              {
+                "partition": 1,
+                "currentLeaderEpoch": 1,
+                "fetchOffset": 1,
+                "lastFetchedEpoch": 1,
+                "logStartOffset": 1,
+                "partitionMaxBytes": 1,
+                "replicaDirectoryId": "MkU3OEVGRjRDMTk0M0Q2OA"
+              }
+            ]
+          }
+        ],
+        "forgottenTopicsData": [
+          {
+            "topicId": "MkU3OEVGRjRDMTk0M0Q2OA",
+            "partitions": [
+              1
+            ]
+          }
+        ],
+        "rackId": "v"
+      }
+    },
+    {
+      "name": "synthesized_populated_v18",
+      "why": "Every field this version declares, present and non-default: one element in every array, every nullable thing supplied. The defaults case leaves arrays empty, which hides every field of the struct the array would have held \u2014 a records field encoded with the wrong length prefix survived the whole corpus that way, because nothing ever reached the struct holding it.",
+      "versions": [
+        18
+      ],
+      "json_value": {
+        "clusterId": "v",
+        "replicaState": {
+          "replicaId": 1,
+          "replicaEpoch": 1
+        },
+        "maxWaitMs": 1,
+        "minBytes": 1,
+        "maxBytes": 1,
+        "isolationLevel": 1,
+        "sessionId": 1,
+        "sessionEpoch": 1,
+        "topics": [
+          {
+            "topicId": "MkU3OEVGRjRDMTk0M0Q2OA",
+            "partitions": [
+              {
+                "partition": 1,
+                "currentLeaderEpoch": 1,
+                "fetchOffset": 1,
+                "lastFetchedEpoch": 1,
+                "logStartOffset": 1,
+                "partitionMaxBytes": 1,
+                "replicaDirectoryId": "MkU3OEVGRjRDMTk0M0Q2OA",
+                "highWatermark": 1
+              }
+            ]
+          }
+        ],
+        "forgottenTopicsData": [
+          {
+            "topicId": "MkU3OEVGRjRDMTk0M0Q2OA",
+            "partitions": [
+              1
+            ]
+          }
+        ],
+        "rackId": "v"
+      }
     }
   ]
 }
