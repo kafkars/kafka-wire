@@ -13,6 +13,33 @@
         "userData": null
       },
       "hex": "00000000ffffffff"
+    },
+    {
+      "name": "assigned_partitions_with_user_data",
+      "why": "The assignment side of the same consumer protocol, with a nested legacy array and non-null bytes.",
+      "message": "ConsumerProtocolAssignment",
+      "direction": "framing",
+      "version": 0,
+      "flexible": false,
+      "json_value": {
+        "assignedPartitions": [
+          {
+            "partitions": [
+              0,
+              3
+            ],
+            "topic": "orders"
+          },
+          {
+            "partitions": [
+              1
+            ],
+            "topic": "payments"
+          }
+        ],
+        "userData": "3q2+7w=="
+      },
+      "hex": "0000000200066f726465727300000002000000000000000300087061796d656e7473000000010000000100000004deadbeef"
     }
   ]
 }

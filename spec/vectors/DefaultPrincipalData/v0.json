@@ -14,6 +14,20 @@
         "type": ""
       },
       "hex": "01010000"
+    },
+    {
+      "name": "a_named_principal",
+      "why": "A flexible data schema of two compact strings and a bool: the smallest thing that proves a data schema takes the compact side when it says so.",
+      "message": "DefaultPrincipalData",
+      "direction": "framing",
+      "version": 0,
+      "flexible": true,
+      "json_value": {
+        "name": "alice",
+        "tokenAuthenticated": true,
+        "type": "User"
+      },
+      "hex": "055573657206616c6963650100"
     }
   ]
 }

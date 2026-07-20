@@ -13,6 +13,19 @@
         "version": 0
       },
       "hex": "0000000000"
+    },
+    {
+      "name": "a_non_zero_feature_level",
+      "why": "Two int16s that an all-defaults vector cannot tell apart.",
+      "message": "KRaftVersionRecord",
+      "direction": "framing",
+      "version": 0,
+      "flexible": true,
+      "json_value": {
+        "kRaftVersion": 1,
+        "version": 0
+      },
+      "hex": "0000000100"
     }
   ]
 }

@@ -16,6 +16,33 @@
         "userData": null
       },
       "hex": "00000000ffffffff00000000ffffffffffff"
+    },
+    {
+      "name": "owned_partitions_and_a_null_rack",
+      "why": "v3 adds a nullable string to a schema that is not flexible, so null is int16 -1 rather than a varint 0, and the nested partition array is a legacy array inside a legacy array.",
+      "message": "ConsumerProtocolSubscription",
+      "direction": "framing",
+      "version": 3,
+      "flexible": false,
+      "json_value": {
+        "generationId": 7,
+        "ownedPartitions": [
+          {
+            "partitions": [
+              0,
+              1,
+              2
+            ],
+            "topic": "orders"
+          }
+        ],
+        "rackId": null,
+        "topics": [
+          "orders"
+        ],
+        "userData": null
+      },
+      "hex": "0000000100066f7264657273ffffffff0000000100066f72646572730000000300000000000000010000000200000007ffff"
     }
   ]
 }

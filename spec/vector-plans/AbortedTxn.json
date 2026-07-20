@@ -20,6 +20,19 @@
         "lastOffset": 0,
         "lastStableOffset": 0
       }
+    },
+    {
+      "name": "four_distinct_int64s",
+      "why": "Every field is an int64, so an all-defaults vector cannot tell them apart or catch a transposition. Distinct values pin the order.",
+      "versions": [
+        0
+      ],
+      "json_value": {
+        "producerId": 11,
+        "firstOffset": 22,
+        "lastOffset": 33,
+        "lastStableOffset": 44
+      }
     }
   ]
 }

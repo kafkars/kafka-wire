@@ -15,6 +15,21 @@
         "producerId": 0
       },
       "hex": "0000000000000000000000000000000000000000000000000000000000000000"
+    },
+    {
+      "name": "four_distinct_int64s",
+      "why": "Every field is an int64, so an all-defaults vector cannot tell them apart or catch a transposition. Distinct values pin the order.",
+      "message": "AbortedTxn",
+      "direction": "framing",
+      "version": 0,
+      "flexible": false,
+      "json_value": {
+        "firstOffset": 22,
+        "lastOffset": 33,
+        "lastStableOffset": 44,
+        "producerId": 11
+      },
+      "hex": "000000000000000b00000000000000160000000000000021000000000000002c"
     }
   ]
 }

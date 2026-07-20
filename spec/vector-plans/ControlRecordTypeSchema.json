@@ -17,6 +17,16 @@
       "json_value": {
         "type": 0
       }
+    },
+    {
+      "name": "a_non_zero_control_type",
+      "why": "One int16 in a non-flexible schema; the same no-trailing-section proof.",
+      "versions": [
+        0
+      ],
+      "json_value": {
+        "type": 2
+      }
     }
   ]
 }

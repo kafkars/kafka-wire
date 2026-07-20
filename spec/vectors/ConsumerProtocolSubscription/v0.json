@@ -13,6 +13,22 @@
         "userData": null
       },
       "hex": "00000000ffffffff"
+    },
+    {
+      "name": "a_legacy_data_schema_with_arrays_and_nullable_bytes",
+      "why": "This schema declares flexibleVersions none, so its arrays carry int32 length prefixes and its nullable bytes carry int32 -1 — the legacy side of every choice the emitter makes. Kafka's own bytes are the only thing that proves this repository did not quietly treat a data schema as flexible.",
+      "message": "ConsumerProtocolSubscription",
+      "direction": "framing",
+      "version": 0,
+      "flexible": false,
+      "json_value": {
+        "topics": [
+          "orders",
+          "payments"
+        ],
+        "userData": "3q2+7w=="
+      },
+      "hex": "0000000200066f726465727300087061796d656e747300000004deadbeef"
     }
   ]
 }

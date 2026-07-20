@@ -13,6 +13,35 @@
         "voters": []
       },
       "hex": "00000100"
+    },
+    {
+      "name": "a_voter_with_endpoints_and_a_feature_range",
+      "why": "The deepest nesting in the data set: an array of structs, each holding another array of structs and an inline struct. It also carries a uint16 port, which is the only unsigned width most schemas never exercise.",
+      "message": "VotersRecord",
+      "direction": "framing",
+      "version": 0,
+      "flexible": true,
+      "json_value": {
+        "version": 0,
+        "voters": [
+          {
+            "endpoints": [
+              {
+                "host": "broker-1",
+                "name": "CONTROLLER",
+                "port": 9093
+              }
+            ],
+            "kRaftVersionFeature": {
+              "maxSupportedVersion": 1,
+              "minSupportedVersion": 0
+            },
+            "voterDirectoryId": "MkU3OEVGRjRDMTk0M0Q2OA",
+            "voterId": 1
+          }
+        ]
+      },
+      "hex": "0000020000000132453738454646344331393433443638020b434f4e54524f4c4c45520962726f6b65722d3123850000000001000000"
     }
   ]
 }

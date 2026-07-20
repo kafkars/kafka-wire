@@ -20,6 +20,17 @@
         "version": 0,
         "kRaftVersion": 0
       }
+    },
+    {
+      "name": "a_non_zero_feature_level",
+      "why": "Two int16s that an all-defaults vector cannot tell apart.",
+      "versions": [
+        0
+      ],
+      "json_value": {
+        "version": 0,
+        "kRaftVersion": 1
+      }
     }
   ]
 }

@@ -60,6 +60,45 @@
         "generationId": -1,
         "rackId": null
       }
+    },
+    {
+      "name": "a_legacy_data_schema_with_arrays_and_nullable_bytes",
+      "why": "This schema declares flexibleVersions none, so its arrays carry int32 length prefixes and its nullable bytes carry int32 -1 \u2014 the legacy side of every choice the emitter makes. Kafka's own bytes are the only thing that proves this repository did not quietly treat a data schema as flexible.",
+      "versions": [
+        0
+      ],
+      "json_value": {
+        "topics": [
+          "orders",
+          "payments"
+        ],
+        "userData": "3q2+7w=="
+      }
+    },
+    {
+      "name": "owned_partitions_and_a_null_rack",
+      "why": "v3 adds a nullable string to a schema that is not flexible, so null is int16 -1 rather than a varint 0, and the nested partition array is a legacy array inside a legacy array.",
+      "versions": [
+        3
+      ],
+      "json_value": {
+        "topics": [
+          "orders"
+        ],
+        "userData": null,
+        "ownedPartitions": [
+          {
+            "topic": "orders",
+            "partitions": [
+              0,
+              1,
+              2
+            ]
+          }
+        ],
+        "generationId": 7,
+        "rackId": null
+      }
     }
   ]
 }

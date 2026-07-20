@@ -20,6 +20,17 @@
         "version": 0,
         "lastContainedLogTimestamp": 0
       }
+    },
+    {
+      "name": "a_real_timestamp",
+      "why": "Distinguishes the int16 version from the int64 timestamp beside it.",
+      "versions": [
+        0
+      ],
+      "json_value": {
+        "version": 0,
+        "lastContainedLogTimestamp": 1721000000000
+      }
     }
   ]
 }

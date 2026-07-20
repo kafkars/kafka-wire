@@ -15,6 +15,35 @@
         "voters": []
       },
       "hex": "000000000000010100"
+    },
+    {
+      "name": "voters_carrying_directory_ids",
+      "why": "v1 adds a uuid to the Voter struct, so this is a flexible data schema whose nested struct grew a field — the version gate lives inside an array element, which is where an ungated read would go unnoticed.",
+      "message": "LeaderChangeMessage",
+      "direction": "framing",
+      "version": 1,
+      "flexible": true,
+      "json_value": {
+        "grantingVoters": [
+          {
+            "voterDirectoryId": "MkU3OEVGRjRDMTk0M0Q2OA",
+            "voterId": 1
+          }
+        ],
+        "leaderId": 3,
+        "version": 1,
+        "voters": [
+          {
+            "voterDirectoryId": "MkU3OEVGRjRDMTk0M0Q2OA",
+            "voterId": 1
+          },
+          {
+            "voterDirectoryId": "AAAAAAAAAAAAAAAAAAAAAQ",
+            "voterId": 2
+          }
+        ]
+      },
+      "hex": "000100000003030000000132453738454646344331393433443638000000000200000000000000000000000000000001000200000001324537384546463443313934334436380000"
     }
   ]
 }

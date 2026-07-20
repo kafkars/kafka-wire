@@ -12,6 +12,18 @@
         "type": 0
       },
       "hex": "0000"
+    },
+    {
+      "name": "a_non_zero_control_type",
+      "why": "One int16 in a non-flexible schema; the same no-trailing-section proof.",
+      "message": "ControlRecordTypeSchema",
+      "direction": "framing",
+      "version": 0,
+      "flexible": false,
+      "json_value": {
+        "type": 2
+      },
+      "hex": "0002"
     }
   ]
 }

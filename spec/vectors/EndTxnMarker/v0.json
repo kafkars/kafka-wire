@@ -12,6 +12,18 @@
         "coordinatorEpoch": 0
       },
       "hex": "00000000"
+    },
+    {
+      "name": "a_non_zero_coordinator_epoch",
+      "why": "One int32 in a non-flexible schema, so this also proves no tagged-field section is appended where none belongs.",
+      "message": "EndTxnMarker",
+      "direction": "framing",
+      "version": 0,
+      "flexible": false,
+      "json_value": {
+        "coordinatorEpoch": 12
+      },
+      "hex": "0000000c"
     }
   ]
 }

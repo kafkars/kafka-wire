@@ -13,6 +13,19 @@
         "version": 0
       },
       "hex": "0000000000000000000000"
+    },
+    {
+      "name": "a_real_timestamp",
+      "why": "Distinguishes the int16 version from the int64 timestamp beside it.",
+      "message": "SnapshotHeaderRecord",
+      "direction": "framing",
+      "version": 0,
+      "flexible": true,
+      "json_value": {
+        "lastContainedLogTimestamp": 1721000000000,
+        "version": 0
+      },
+      "hex": "000000000190b397fa0000"
     }
   ]
 }

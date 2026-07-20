@@ -21,6 +21,18 @@
         "name": "",
         "tokenAuthenticated": false
       }
+    },
+    {
+      "name": "a_named_principal",
+      "why": "A flexible data schema of two compact strings and a bool: the smallest thing that proves a data schema takes the compact side when it says so.",
+      "versions": [
+        0
+      ],
+      "json_value": {
+        "type": "User",
+        "name": "alice",
+        "tokenAuthenticated": true
+      }
     }
   ]
 }
