@@ -139,21 +139,62 @@ public final class Oracle {
         }
     }
 
+    /**
+     * Resolve one generated class, which Kafka names differently by schema type.
+     *
+     * A request, response, or header becomes `<name>Data`; a `"type": "data"` schema —
+     * AbortedTxn, LeaderChangeMessage, VotersRecord and the rest of the record-adjacent
+     * set — keeps its own name. This program is handed a message name and not a schema
+     * type, so it asks the jar rather than the caller, preferring the suffixed name
+     * because that is what an API message uses.
+     *
+     * Resolving BOTH is refused rather than chosen between. Measured over all 201 pinned
+     * schemas the two candidates never both exist, so a jar where they do is a jar this
+     * rule was not written for, and picking one there would silently answer a question
+     * about the wrong class.
+     */
+    private static Class<?> generated(String message, String suffix) {
+        Class<?> suffixed = lookup(message + "Data" + suffix);
+        Class<?> bare = lookup(message + suffix);
+        if (suffixed != null && bare != null) {
+            throw new OracleException(
+                    message + "Data" + suffix + " and " + message + suffix + " both exist; this jar "
+                            + "does not follow the naming rule this oracle resolves by, and choosing "
+                            + "between them would be a guess");
+        }
+        if (suffixed != null) {
+            return suffixed;
+        }
+        if (bare != null) {
+            return bare;
+        }
+        throw new OracleException("neither " + MESSAGE_PACKAGE + "." + message + "Data" + suffix
+                + " nor " + MESSAGE_PACKAGE + "." + message + suffix + " exists in the oracle jar");
+    }
+
+    private static Class<?> lookup(String simpleName) {
+        try {
+            return Class.forName(MESSAGE_PACKAGE + "." + simpleName);
+        } catch (ClassNotFoundException absent) {
+            return null;
+        }
+    }
+
     private static Message newData(String message) throws Exception {
-        Class<?> dataClass = Class.forName(MESSAGE_PACKAGE + "." + message + "Data");
+        Class<?> dataClass = generated(message, "");
         Object instance = dataClass.getDeclaredConstructor().newInstance();
         if (!(instance instanceof Message data)) {
-            throw new OracleException(message + "Data is not a Kafka Message");
+            throw new OracleException(dataClass.getSimpleName() + " is not a Kafka Message");
         }
         return data;
     }
 
     private static Message readConverter(String message, JsonNode value, short version) throws Exception {
-        Class<?> converter = Class.forName(MESSAGE_PACKAGE + "." + message + "DataJsonConverter");
+        Class<?> converter = generated(message, "JsonConverter");
         Method read = converter.getMethod("read", JsonNode.class, short.class);
         Object instance = read.invoke(null, value, version);
         if (!(instance instanceof Message data)) {
-            throw new OracleException(message + "DataJsonConverter.read did not return a Message");
+            throw new OracleException(converter.getSimpleName() + ".read did not return a Message");
         }
         return data;
     }
