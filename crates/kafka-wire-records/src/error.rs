@@ -5,16 +5,20 @@
 //! expected and what arrived, because "malformed batch" tells an operator
 //! nothing about which side is wrong.
 
-use kafka_wire_core::DecodeError;
+use kafka_wire_core::{DecodeError, EncodeError};
 use thiserror::Error;
 
 /// Record batch decoding or encoding failure.
 #[non_exhaustive]
 #[derive(Clone, Debug, Error, Eq, PartialEq)]
 pub enum RecordError {
-    /// A primitive read or write inside the batch failed.
+    /// A primitive read inside the batch failed.
     #[error(transparent)]
     Wire(#[from] DecodeError),
+
+    /// A primitive write inside the batch failed.
+    #[error(transparent)]
+    Encode(#[from] EncodeError),
 
     /// The batch declared a magic byte this crate does not implement.
     ///
@@ -72,15 +76,16 @@ pub enum RecordError {
         consumed: usize,
     },
 
-    /// The batch is compressed with a codec this build cannot decode.
+    /// A codec rejected the payload it was handed.
     ///
-    /// Named rather than returned as opaque bytes: a caller handed the
-    /// still-compressed payload would have no way to tell it from a decompressed
-    /// one, and would parse garbage as records.
-    #[error("record batch is {codec} compressed, which this build does not implement")]
-    UnsupportedCompression {
-        /// Codec the attributes named.
+    /// Reachable from a peer, not only from a bug: a truncated or mislabelled
+    /// payload reaches the codec before anything here can tell it is wrong.
+    #[error("{codec} could not process the records payload: {detail}")]
+    CompressionFailed {
+        /// Codec that refused.
         codec: &'static str,
+        /// What the codec reported.
+        detail: String,
     },
 
     /// The attributes named a codec number the protocol does not define.

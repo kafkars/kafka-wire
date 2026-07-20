@@ -50,15 +50,18 @@ fn every_uncompressed_batch_decodes_and_re_encodes_to_the_same_bytes() {
         let expected = from_hex(&vector.hex).expect("hex");
         let batch = match RecordBatch::decode(&Bytes::from(expected.clone())) {
             Ok(batch) => batch,
-            // Compression is not implemented; the vectors exist so that the
-            // refusal is proved against a real compressed batch rather than a
-            // hand-made one, and so the codec is already covered when it lands.
-            Err(RecordError::UnsupportedCompression { .. }) => continue,
             Err(error) => {
                 failures.push(format!("{}: decode failed: {error}", vector.name));
                 continue;
             }
         };
+        // A compressed payload cannot be reproduced byte for byte: it would
+        // require this crate's compressor to agree with Java's down to the
+        // encoder's internal choices. Those batches are judged by their records
+        // instead, in the test below.
+        if batch.compression != Compression::None {
+            continue;
+        }
 
         let mut buffer = BytesMut::new();
         match batch.encode(&mut Encoder::new(&mut buffer)) {
@@ -87,23 +90,76 @@ fn every_uncompressed_batch_decodes_and_re_encodes_to_the_same_bytes() {
 }
 
 #[test]
-fn every_compressed_batch_is_refused_by_the_name_of_its_codec() {
-    // A codec this build cannot decode must be named, not handed back as opaque
-    // bytes: a caller given a still-compressed payload would parse it as records
-    // and get garbage that looks like data.
-    let mut seen = Vec::new();
-    for vector in corpus() {
-        let bytes = Bytes::from(from_hex(&vector.hex).expect("hex"));
-        if let Err(RecordError::UnsupportedCompression { codec }) = RecordBatch::decode(&bytes) {
-            seen.push(codec);
-        }
+fn every_codec_decompresses_to_the_records_kafka_compressed() {
+    // The half of compression that CAN be held to Kafka's bytes. Each codec's
+    // batch carries the same two records as the uncompressed twin, so decoding
+    // one must produce exactly those records — which fails if the framing is
+    // read wrongly, and snappy's is the one most likely to be: Kafka writes the
+    // xerial container, not the standard snappy frame format.
+    let batches: Vec<_> = corpus()
+        .into_iter()
+        .map(|vector| {
+            let bytes = Bytes::from(from_hex(&vector.hex).expect("hex"));
+            let batch = RecordBatch::decode(&bytes)
+                .unwrap_or_else(|error| panic!("{}: {error}", vector.name));
+            (vector.name, batch)
+        })
+        .collect();
+
+    let find = |name: &str| {
+        batches
+            .iter()
+            .find(|(vector, _)| vector == name)
+            .map_or_else(
+                || panic!("the corpus must carry {name}"),
+                |(_, batch)| batch,
+            )
+    };
+
+    let plain = find("compression_twin_uncompressed");
+    let mut codecs = Vec::new();
+    for name in ["gzip", "snappy", "lz4", "zstd"] {
+        let batch = find(name);
+        assert_ne!(
+            batch.compression,
+            Compression::None,
+            "{name} must decode as compressed"
+        );
+        assert_eq!(
+            batch.records, plain.records,
+            "{name} decompressed to different records than the uncompressed twin"
+        );
+        codecs.push(batch.compression.name());
     }
-    seen.sort_unstable();
-    assert_eq!(
-        seen,
-        ["gzip", "lz4", "snappy", "zstd"],
-        "every compressed codec in the corpus must be refused by name"
-    );
+    codecs.sort_unstable();
+    assert_eq!(codecs, ["gzip", "lz4", "snappy", "zstd"]);
+}
+
+#[test]
+fn a_compressed_batch_round_trips_its_records_though_not_its_bytes() {
+    // The other half, and the honest limit of it. Re-compressing cannot
+    // reproduce Java's bytes, so what is asserted is that this crate's own
+    // compressor and decompressor agree — a weaker claim, stated as such.
+    for name in ["gzip", "snappy", "lz4", "zstd"] {
+        let vector = corpus()
+            .into_iter()
+            .find(|vector| vector.name == name)
+            .unwrap_or_else(|| panic!("the corpus must carry {name}"));
+        let original = RecordBatch::decode(&Bytes::from(from_hex(&vector.hex).expect("hex")))
+            .unwrap_or_else(|error| panic!("{name}: {error}"));
+
+        let mut buffer = BytesMut::new();
+        original
+            .encode(&mut Encoder::new(&mut buffer))
+            .unwrap_or_else(|error| panic!("{name}: re-encode: {error}"));
+        let reread = RecordBatch::decode(&buffer.freeze())
+            .unwrap_or_else(|error| panic!("{name}: re-decode: {error}"));
+
+        assert_eq!(
+            reread, original,
+            "{name} did not survive a round trip through this crate's own codec"
+        );
+    }
 }
 
 #[test]

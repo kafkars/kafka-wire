@@ -15,6 +15,7 @@
 
 mod attributes;
 mod batch;
+mod compression;
 mod error;
 mod record;
 

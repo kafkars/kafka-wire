@@ -59,7 +59,9 @@ impl Compression {
         }
     }
 
-    pub(crate) const fn name(self) -> &'static str {
+    /// The codec's protocol name, for a caller reporting what it received.
+    #[must_use]
+    pub const fn name(self) -> &'static str {
         match self {
             Self::None => "uncompressed",
             Self::Gzip => "gzip",

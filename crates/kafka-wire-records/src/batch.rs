@@ -111,12 +111,8 @@ impl RecordBatch {
         let records_count = usize::try_from(records_count).unwrap_or(0);
 
         let payload = decoder.take_bytes(end - (CRC_COVERAGE_START + 40))?;
-        if attributes.compression != Compression::None {
-            return Err(RecordError::UnsupportedCompression {
-                codec: attributes.compression.name(),
-            });
-        }
-        let records = record::decode_all(payload, records_count)?;
+        let payload = attributes.compression.decompress(&payload)?;
+        let records = record::decode_all(Bytes::from(payload), records_count)?;
 
         // Kafka derives this from the records rather than trusting it, and so
         // must anything that re-encodes the batch. Checking it here means a
@@ -153,9 +149,13 @@ impl RecordBatch {
     /// set is one that can disagree with the bytes beside it, and Kafka derives
     /// both — so they are derived here too, and the type has no way to express
     /// a batch whose header lies about its payload.
-    pub fn encode<T: EncodeTarget>(&self, encoder: &mut Encoder<T>) -> Result<(), EncodeError> {
-        let mut payload = BytesMut::new();
-        record::encode_all(&self.records, &mut payload)?;
+    pub fn encode<T: EncodeTarget>(&self, encoder: &mut Encoder<T>) -> Result<(), RecordError> {
+        let mut plain = BytesMut::new();
+        record::encode_all(&self.records, &mut plain)?;
+        // A compressed payload is legal for its codec but is not a reproduction
+        // of what Java would emit; see `compression`. Only the records survive a
+        // round trip through one, which is exactly what the corpus asserts.
+        let payload = self.compression.compress(&plain)?;
 
         let mut body = BytesMut::new();
         let mut inner = Encoder::new(&mut body);
@@ -197,6 +197,7 @@ impl RecordBatch {
         encoder.write_i32(self.partition_leader_epoch)?;
         encoder.write_i8(MAGIC_V2)?;
         encoder.write_u32(crc32c::crc32c(&body))?;
-        encoder.write_raw_slice(&body)
+        encoder.write_raw_slice(&body)?;
+        Ok(())
     }
 }

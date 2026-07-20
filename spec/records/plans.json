@@ -7,7 +7,10 @@
       "why": "The smallest batch: one record, no key, no headers, no compression, every optional batch field at its Kafka sentinel. Everything else here is a departure from this.",
       "compression": "none",
       "records": [
-        { "timestamp": 1700000000000, "value": "dmFsdWUtb25l" }
+        {
+          "timestamp": 1700000000000,
+          "value": "dmFsdWUtb25l"
+        }
       ]
     },
     {
@@ -15,7 +18,11 @@
       "why": "A key present alongside the value. Key and value are both zigzag-varint length-prefixed and a null key is -1 rather than 0, so absent and empty must stay distinct.",
       "compression": "none",
       "records": [
-        { "timestamp": 1700000000000, "key": "azE=", "value": "dmFsdWUtb25l" }
+        {
+          "timestamp": 1700000000000,
+          "key": "azE=",
+          "value": "dmFsdWUtb25l"
+        }
       ]
     },
     {
@@ -23,7 +30,11 @@
       "why": "Empty is not absent. A zero-length key encodes as varint 0 where a null key encodes as -1, and the pair is the one distinction a length alone cannot carry.",
       "compression": "none",
       "records": [
-        { "timestamp": 1700000000000, "key": "", "value": "" }
+        {
+          "timestamp": 1700000000000,
+          "key": "",
+          "value": ""
+        }
       ]
     },
     {
@@ -31,7 +42,11 @@
       "why": "A tombstone. Kafka writes a null value as varint -1, which is what makes a delete distinguishable from an empty payload.",
       "compression": "none",
       "records": [
-        { "timestamp": 1700000000000, "key": "azE=", "value": null }
+        {
+          "timestamp": 1700000000000,
+          "key": "azE=",
+          "value": null
+        }
       ]
     },
     {
@@ -40,9 +55,21 @@
       "compression": "none",
       "baseOffset": 100,
       "records": [
-        { "offsetDelta": 0, "timestamp": 1700000000000, "value": "b25l" },
-        { "offsetDelta": 1, "timestamp": 1700000000500, "value": "dHdv" },
-        { "offsetDelta": 2, "timestamp": 1700000000200, "value": "dGhyZWU=" }
+        {
+          "offsetDelta": 0,
+          "timestamp": 1700000000000,
+          "value": "b25l"
+        },
+        {
+          "offsetDelta": 1,
+          "timestamp": 1700000000500,
+          "value": "dHdv"
+        },
+        {
+          "offsetDelta": 2,
+          "timestamp": 1700000000200,
+          "value": "dGhyZWU="
+        }
       ]
     },
     {
@@ -54,9 +81,18 @@
           "timestamp": 1700000000000,
           "value": "dmFsdWU=",
           "headers": [
-            { "key": "trace-id", "value": "YWJjMTIz" },
-            { "key": "empty", "value": "" },
-            { "key": "absent", "value": null }
+            {
+              "key": "trace-id",
+              "value": "YWJjMTIz"
+            },
+            {
+              "key": "empty",
+              "value": ""
+            },
+            {
+              "key": "absent",
+              "value": null
+            }
           ]
         }
       ]
@@ -71,7 +107,11 @@
       "baseSequence": 100,
       "partitionLeaderEpoch": 42,
       "records": [
-        { "timestamp": 1700000000000, "key": "azE=", "value": "dmFsdWU=" }
+        {
+          "timestamp": 1700000000000,
+          "key": "azE=",
+          "value": "dmFsdWU="
+        }
       ]
     },
     {
@@ -80,7 +120,10 @@
       "compression": "none",
       "timestampType": "LogAppendTime",
       "records": [
-        { "timestamp": 1700000000000, "value": "dmFsdWU=" }
+        {
+          "timestamp": 1700000000000,
+          "value": "dmFsdWU="
+        }
       ]
     },
     {
@@ -88,7 +131,27 @@
       "why": "Every length in a record is a zigzag varint, so a payload past 63 bytes is the first that needs two continuation bytes. A corpus of short records would never exercise the multi-byte path at all.",
       "compression": "none",
       "records": [
-        { "timestamp": 1700000000000, "key": "azE=", "value": "TG9yZW0gaXBzdW0gZG9sb3Igc2l0IGFtZXQsIGNvbnNlY3RldHVyIGFkaXBpc2NpbmcgZWxpdCwgc2VkIGRvIGVpdXNtb2QgdGVtcG9yIGluY2lkaWR1bnQgdXQgbGFib3JlIGV0IGRvbG9yZSBtYWduYSBhbGlxdWEu" }
+        {
+          "timestamp": 1700000000000,
+          "key": "azE=",
+          "value": "TG9yZW0gaXBzdW0gZG9sb3Igc2l0IGFtZXQsIGNvbnNlY3RldHVyIGFkaXBpc2NpbmcgZWxpdCwgc2VkIGRvIGVpdXNtb2QgdGVtcG9yIGluY2lkaWR1bnQgdXQgbGFib3JlIGV0IGRvbG9yZSBtYWduYSBhbGlxdWEu"
+        }
+      ]
+    },
+    {
+      "name": "compression_twin_uncompressed",
+      "why": "The same two records as the four compressed batches, stored verbatim. It is the control: decompressing any codec must produce exactly these records, which is the half of compression that CAN be held to Kafka's bytes.",
+      "compression": "none",
+      "records": [
+        {
+          "timestamp": 1700000000000,
+          "key": "azE=",
+          "value": "dmFsdWUtb25l"
+        },
+        {
+          "timestamp": 1700000000001,
+          "value": "dmFsdWUtdHdv"
+        }
       ]
     },
     {
@@ -96,8 +159,15 @@
       "why": "Compression replaces the records payload wholesale and sets attribute bits 0-2. The batch header stays uncompressed, which is what lets a broker read a batch it cannot decompress.",
       "compression": "gzip",
       "records": [
-        { "timestamp": 1700000000000, "key": "azE=", "value": "dmFsdWUtb25l" },
-        { "timestamp": 1700000000001, "value": "dmFsdWUtdHdv" }
+        {
+          "timestamp": 1700000000000,
+          "key": "azE=",
+          "value": "dmFsdWUtb25l"
+        },
+        {
+          "timestamp": 1700000000001,
+          "value": "dmFsdWUtdHdv"
+        }
       ]
     },
     {
@@ -105,8 +175,15 @@
       "why": "Kafka's snappy is the xerial FRAMED format, whose payload opens with a 0x82 'SNAPPY' magic, not the raw snappy an implementation reaching for the obvious crate would produce.",
       "compression": "snappy",
       "records": [
-        { "timestamp": 1700000000000, "key": "azE=", "value": "dmFsdWUtb25l" },
-        { "timestamp": 1700000000001, "value": "dmFsdWUtdHdv" }
+        {
+          "timestamp": 1700000000000,
+          "key": "azE=",
+          "value": "dmFsdWUtb25l"
+        },
+        {
+          "timestamp": 1700000000001,
+          "value": "dmFsdWUtdHdv"
+        }
       ]
     },
     {
@@ -114,8 +191,15 @@
       "why": "LZ4 here is the frame format, opening with the 0x04224D18 frame magic rather than a bare block.",
       "compression": "lz4",
       "records": [
-        { "timestamp": 1700000000000, "key": "azE=", "value": "dmFsdWUtb25l" },
-        { "timestamp": 1700000000001, "value": "dmFsdWUtdHdv" }
+        {
+          "timestamp": 1700000000000,
+          "key": "azE=",
+          "value": "dmFsdWUtb25l"
+        },
+        {
+          "timestamp": 1700000000001,
+          "value": "dmFsdWUtdHdv"
+        }
       ]
     },
     {
@@ -123,8 +207,15 @@
       "why": "Zstd's frame magic is 0x28B52FFD. Included for the same reason as its siblings: the codec identity lives in the attributes, and reading the wrong one produces a plausible-looking failure deep inside the payload.",
       "compression": "zstd",
       "records": [
-        { "timestamp": 1700000000000, "key": "azE=", "value": "dmFsdWUtb25l" },
-        { "timestamp": 1700000000001, "value": "dmFsdWUtdHdv" }
+        {
+          "timestamp": 1700000000000,
+          "key": "azE=",
+          "value": "dmFsdWUtb25l"
+        },
+        {
+          "timestamp": 1700000000001,
+          "value": "dmFsdWUtdHdv"
+        }
       ]
     }
   ]
