@@ -15,6 +15,25 @@
         "stateFilters": []
       },
       "hex": "0101ffffffffffffffff00"
+    },
+    {
+      "name": "synthesized_populated_v1",
+      "why": "Every field this version declares, present and non-default: one element in every array, every nullable thing supplied. The defaults case leaves arrays empty, which hides every field of the struct the array would have held — a records field encoded with the wrong length prefix survived the whole corpus that way, because nothing ever reached the struct holding it.",
+      "message": "ListTransactionsRequest",
+      "api_key": 66,
+      "direction": "request",
+      "version": 1,
+      "flexible": true,
+      "json_value": {
+        "durationFilter": 1,
+        "producerIdFilters": [
+          1
+        ],
+        "stateFilters": [
+          "v"
+        ]
+      },
+      "hex": "020276020000000000000001000000000000000100"
     }
   ]
 }
