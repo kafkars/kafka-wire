@@ -15,6 +15,37 @@
         "tokens": []
       },
       "hex": "00000000000000000000"
+    },
+    {
+      "name": "synthesized_populated_v1",
+      "why": "Every field this version declares, present and non-default: one element in every array, every nullable thing supplied. The defaults case leaves arrays empty, which hides every field of the struct the array would have held — a records field encoded with the wrong length prefix survived the whole corpus that way, because nothing ever reached the struct holding it.",
+      "message": "DescribeDelegationTokenResponse",
+      "api_key": 41,
+      "direction": "response",
+      "version": 1,
+      "flexible": false,
+      "json_value": {
+        "errorCode": 1,
+        "throttleTimeMs": 1,
+        "tokens": [
+          {
+            "expiryTimestamp": 1,
+            "hmac": "3q2+7w==",
+            "issueTimestamp": 1,
+            "maxTimestamp": 1,
+            "principalName": "v",
+            "principalType": "v",
+            "renewers": [
+              {
+                "principalName": "v",
+                "principalType": "v"
+              }
+            ],
+            "tokenId": "v"
+          }
+        ]
+      },
+      "hex": "00010000000100017600017600000000000000010000000000000001000000000000000100017600000004deadbeef0000000100017600017600000001"
     }
   ]
 }
