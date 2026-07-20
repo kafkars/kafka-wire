@@ -14,6 +14,26 @@
         "strict": false
       },
       "hex": "010000"
+    },
+    {
+      "name": "synthesized_populated_v1",
+      "why": "Every field this version declares, present and non-default: one element in every array, every nullable thing supplied. The defaults case leaves arrays empty, which hides every field of the struct the array would have held — a records field encoded with the wrong length prefix survived the whole corpus that way, because nothing ever reached the struct holding it.",
+      "message": "DescribeClientQuotasRequest",
+      "api_key": 48,
+      "direction": "request",
+      "version": 1,
+      "flexible": true,
+      "json_value": {
+        "components": [
+          {
+            "entityType": "v",
+            "match": "v",
+            "matchType": 1
+          }
+        ],
+        "strict": true
+      },
+      "hex": "020276010276000100"
     }
   ]
 }

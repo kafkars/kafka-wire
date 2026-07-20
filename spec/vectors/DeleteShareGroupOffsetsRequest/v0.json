@@ -14,6 +14,24 @@
         "topics": []
       },
       "hex": "010100"
+    },
+    {
+      "name": "synthesized_populated_v0",
+      "why": "Every field this version declares, present and non-default: one element in every array, every nullable thing supplied. The defaults case leaves arrays empty, which hides every field of the struct the array would have held — a records field encoded with the wrong length prefix survived the whole corpus that way, because nothing ever reached the struct holding it.",
+      "message": "DeleteShareGroupOffsetsRequest",
+      "api_key": 92,
+      "direction": "request",
+      "version": 0,
+      "flexible": true,
+      "json_value": {
+        "groupId": "v",
+        "topics": [
+          {
+            "topicName": "v"
+          }
+        ]
+      },
+      "hex": "02760202760000"
     }
   ]
 }

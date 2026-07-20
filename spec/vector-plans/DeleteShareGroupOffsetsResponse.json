@@ -23,6 +23,26 @@
         "errorMessage": null,
         "responses": []
       }
+    },
+    {
+      "name": "synthesized_populated_v0",
+      "why": "Every field this version declares, present and non-default: one element in every array, every nullable thing supplied. The defaults case leaves arrays empty, which hides every field of the struct the array would have held \u2014 a records field encoded with the wrong length prefix survived the whole corpus that way, because nothing ever reached the struct holding it.",
+      "versions": [
+        0
+      ],
+      "json_value": {
+        "throttleTimeMs": 1,
+        "errorCode": 1,
+        "errorMessage": "v",
+        "responses": [
+          {
+            "topicName": "v",
+            "topicId": "MkU3OEVGRjRDMTk0M0Q2OA",
+            "errorCode": 1,
+            "errorMessage": "v"
+          }
+        ]
+      }
     }
   ]
 }
