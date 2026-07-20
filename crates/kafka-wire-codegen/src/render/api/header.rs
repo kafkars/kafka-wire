@@ -55,7 +55,10 @@ fn render_imports(rust: &mut RustText, sources: &[MessageSource]) {
             .iter()
             .any(|source| crate::render::field::uses_type(&source.message, ty))
     };
-    if uses(&FieldType::Bytes) {
+    if sources
+        .iter()
+        .any(|source| crate::render::field::uses_bytes(&source.message))
+    {
         wire.push("Bytes");
     }
     if uses(&FieldType::String) {

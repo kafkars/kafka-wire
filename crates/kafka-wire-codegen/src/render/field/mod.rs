@@ -21,7 +21,7 @@ pub(crate) use codec::{
     array_length_codec, element_codec, is_nullable, read_expression, write_statement,
 };
 pub(crate) use types::{
-    default_expression, non_default_condition, rust_type, uses_rust_default, uses_type,
+    default_expression, non_default_condition, rust_type, uses_bytes, uses_rust_default, uses_type,
 };
 pub(crate) use validate::validate_supported;
 pub(crate) use version::{absence_condition, presence_condition};

@@ -18,7 +18,10 @@ use crate::{
     format::format_rendered_rust,
     group::{ApiGroup, group_sources},
     lockfile::ProtocolLock,
-    render::{render_api, render_module_file, render_registry, render_unkeyed},
+    overrides::HeaderOverrides,
+    render::{
+        render_api, render_header_version, render_module_file, render_registry, render_unkeyed,
+    },
     source::load_every_source,
 };
 
@@ -137,6 +140,11 @@ pub fn render_corpus(workspace_root: impl AsRef<Path>) -> Result<CorpusRender, G
         );
     }
 
+    // Every file `mod.rs` declares must be written, or the probe cannot compile
+    // and so cannot answer the one question it exists to ask. `header_version`
+    // is not keyed by a schema and has no outcome to record, but it is a module
+    // the facade names, which is enough.
+    let overrides = HeaderOverrides::read(workspace)?;
     let facades = format_rendered_rust(
         BTreeMap::from([
             (
@@ -146,6 +154,10 @@ pub fn render_corpus(workspace_root: impl AsRef<Path>) -> Result<CorpusRender, G
             (
                 "registry.rs".to_owned(),
                 render_registry(&emitted, &lock.kafka.commit),
+            ),
+            (
+                "header_version.rs".to_owned(),
+                render_header_version(&overrides, &lock.kafka.commit),
             ),
         ]),
         workspace,

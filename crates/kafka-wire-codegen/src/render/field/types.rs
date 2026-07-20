@@ -215,6 +215,18 @@ pub(crate) fn uses_type(message: &Message, wanted: &FieldType) -> bool {
             .any(|common| fields_use_type(&common.fields, wanted))
 }
 
+/// Whether any field this message emits is declared as `kafka_wire_core::Bytes`.
+///
+/// Two protocol types answer to one Rust type: `bytes` and `records` both become
+/// `Bytes`, because a records field is a length-prefixed blob whose contents this
+/// crate does not yet parse. An import decided by `uses_type(.., Bytes)` alone
+/// therefore leaves a records-only message naming a type it never imported —
+/// which is exactly what the compile probe caught. The mapping lives here, next
+/// to the `type_name` arm that makes it true, so the two cannot drift apart.
+pub(crate) fn uses_bytes(message: &Message) -> bool {
+    uses_type(message, &FieldType::Bytes) || uses_type(message, &FieldType::Records)
+}
+
 fn fields_use_type(fields: &[Field], wanted: &FieldType) -> bool {
     fields
         .iter()

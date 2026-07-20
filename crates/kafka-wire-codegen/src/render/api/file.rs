@@ -76,7 +76,7 @@ fn render_imports(rust: &mut RustText, group: &ApiGroup) {
     }
     if group
         .messages()
-        .any(|source| field::uses_type(&source.message, &FieldType::Bytes))
+        .any(|source| field::uses_bytes(&source.message))
     {
         wire.push("Bytes");
     }
