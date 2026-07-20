@@ -37,7 +37,42 @@ pub(crate) fn tagged_presence_condition(field: &Field, message: &Message) -> Opt
 /// produces a non-minimal boolean that the lints on checked-in output reject.
 pub(crate) fn absence_condition(field: &Field, message: &Message) -> Option<String> {
     let effective = field.versions.intersection(&message.valid_versions);
-    if effective == message.valid_versions {
+    negated_condition(&effective, message)
+}
+
+/// The predicate true exactly where `versions` is true.
+pub(crate) fn condition_for(versions: &VersionSet, message: &Message) -> String {
+    render_condition(versions, message)
+}
+
+/// One rendered condition, parenthesized only if it needs to be to survive
+/// being `&&`-ed to another.
+///
+/// `&&` binds tighter than `||`, so splicing a disjunction into a conjunction
+/// silently reassociates it: `a || b && c` means `a || (b && c)`. A field
+/// present in versions 8 through 10 of a 0-13 message renders exactly that
+/// disjunction, and the guard built from it refused every version below 8
+/// whatever the field actually held — a message that a real broker accepts,
+/// rejected by this library, with a diagnostic naming the wrong cause.
+///
+/// Applied only where a condition is composed, and only when it contains a
+/// disjunction, because the lints on checked-in output reject the redundant
+/// parentheses that wrapping everything would produce.
+pub(crate) fn as_conjunct(condition: &str) -> String {
+    if condition.contains("||") {
+        return format!("({condition})");
+    }
+    condition.to_owned()
+}
+
+/// The predicate true exactly where `versions` is false, or `None` when it
+/// covers every supported version and so has no complement worth emitting.
+///
+/// Built from the version bounds for the same reason `absence_condition` is:
+/// the negation of `>=` is `<`, and a rendered double negative is a non-minimal
+/// boolean that the lints on checked-in output reject.
+pub(crate) fn negated_condition(effective: &VersionSet, message: &Message) -> Option<String> {
+    if *effective == message.valid_versions {
         return None;
     }
     let valid = message.valid_versions.single_bounded();
@@ -60,7 +95,7 @@ pub(crate) fn absence_condition(field: &Field, message: &Message) -> Option<Stri
     }
     // A disjoint presence set has no single-interval complement worth spelling
     // out, so the general negation stands.
-    Some(format!("!({})", render_condition(&effective, message)))
+    Some(format!("!({})", render_condition(effective, message)))
 }
 
 fn render_condition(versions: &VersionSet, message: &Message) -> String {

@@ -33,6 +33,7 @@ mod delete_groups;
 mod delete_records;
 mod delete_share_group_offsets;
 mod delete_share_group_state;
+mod delete_topics;
 mod describe_acls;
 mod describe_client_quotas;
 mod describe_cluster;
@@ -61,14 +62,17 @@ mod heartbeat;
 mod incremental_alter_configs;
 mod init_producer_id;
 mod initialize_share_group_state;
+mod join_group;
 mod leave_group;
 mod list_config_resources;
 mod list_groups;
 mod list_offsets;
 mod list_partition_reassignments;
 mod list_transactions;
+mod metadata;
 mod offset_commit;
 mod offset_delete;
+mod offset_fetch;
 mod offset_for_leader_epoch;
 mod produce;
 mod push_telemetry;
@@ -209,6 +213,10 @@ pub use delete_share_group_state::{
     DELETE_SHARE_GROUP_STATE_REQUEST_DESCRIPTOR, DELETE_SHARE_GROUP_STATE_RESPONSE_DESCRIPTOR,
     DeleteShareGroupStateRequest, DeleteShareGroupStateResponse,
 };
+pub use delete_topics::{
+    DELETE_TOPICS_REQUEST_DESCRIPTOR, DELETE_TOPICS_RESPONSE_DESCRIPTOR, DeleteTopicsRequest,
+    DeleteTopicsResponse,
+};
 pub use describe_acls::{
     DESCRIBE_ACLS_REQUEST_DESCRIPTOR, DESCRIBE_ACLS_RESPONSE_DESCRIPTOR, DescribeAclsRequest,
     DescribeAclsResponse,
@@ -315,6 +323,10 @@ pub use initialize_share_group_state::{
     INITIALIZE_SHARE_GROUP_STATE_RESPONSE_DESCRIPTOR, InitializeShareGroupStateRequest,
     InitializeShareGroupStateResponse,
 };
+pub use join_group::{
+    JOIN_GROUP_REQUEST_DESCRIPTOR, JOIN_GROUP_RESPONSE_DESCRIPTOR, JoinGroupRequest,
+    JoinGroupResponse,
+};
 pub use leave_group::{
     LEAVE_GROUP_REQUEST_DESCRIPTOR, LEAVE_GROUP_RESPONSE_DESCRIPTOR, LeaveGroupRequest,
     LeaveGroupResponse,
@@ -340,6 +352,9 @@ pub use list_transactions::{
     LIST_TRANSACTIONS_REQUEST_DESCRIPTOR, LIST_TRANSACTIONS_RESPONSE_DESCRIPTOR,
     ListTransactionsRequest, ListTransactionsResponse,
 };
+pub use metadata::{
+    METADATA_REQUEST_DESCRIPTOR, METADATA_RESPONSE_DESCRIPTOR, MetadataRequest, MetadataResponse,
+};
 pub use offset_commit::{
     OFFSET_COMMIT_REQUEST_DESCRIPTOR, OFFSET_COMMIT_RESPONSE_DESCRIPTOR, OffsetCommitRequest,
     OffsetCommitResponse,
@@ -347,6 +362,10 @@ pub use offset_commit::{
 pub use offset_delete::{
     OFFSET_DELETE_REQUEST_DESCRIPTOR, OFFSET_DELETE_RESPONSE_DESCRIPTOR, OffsetDeleteRequest,
     OffsetDeleteResponse,
+};
+pub use offset_fetch::{
+    OFFSET_FETCH_REQUEST_DESCRIPTOR, OFFSET_FETCH_RESPONSE_DESCRIPTOR, OffsetFetchRequest,
+    OffsetFetchResponse,
 };
 pub use offset_for_leader_epoch::{
     OFFSET_FOR_LEADER_EPOCH_REQUEST_DESCRIPTOR, OFFSET_FOR_LEADER_EPOCH_RESPONSE_DESCRIPTOR,

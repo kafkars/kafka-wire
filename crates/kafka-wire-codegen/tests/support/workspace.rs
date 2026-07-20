@@ -24,8 +24,14 @@ pub(crate) const COMMIT: &str = "678c0e07e4733c5a592e52046dc2c4e1625587f1";
 /// One request and response pair the backend is known to render.
 pub(crate) const SUPPORTED: [&str; 2] = ["SaslHandshakeRequest.json", "SaslHandshakeResponse.json"];
 
-/// A schema outside the backend's slice: its topics are an array of structs.
-pub(crate) const REFUSED: &str = "MetadataRequest.json";
+/// A schema outside the backend's slice, used to prove a refusal writes nothing.
+///
+/// It has been three different schemas as the backend grew: an array of structs,
+/// then partial-version nullability, both of which are now emitted. This one is
+/// a message upstream RETIRED — `validVersions: "none"` — so it is refused by
+/// choice rather than by limitation, and unlike its predecessors it will not
+/// stop being refused. Apache Kafka generates no code for it either.
+pub(crate) const REFUSED: &str = "LeaderAndIsrRequest.json";
 
 pub(crate) fn repository_root() -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR"))

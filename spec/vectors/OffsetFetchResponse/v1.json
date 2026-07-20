@@ -1,0 +1,43 @@
+{
+  "schema": 1,
+  "vectors": [
+    {
+      "name": "synthesized_defaults_v1",
+      "why": "Every field this version declares, at its protocol default. Synthesized so the message is held to Apache Kafka's bytes at all; hand-written cases carry the interesting shapes.",
+      "message": "OffsetFetchResponse",
+      "api_key": 9,
+      "direction": "response",
+      "version": 1,
+      "flexible": false,
+      "json_value": {
+        "topics": []
+      },
+      "hex": "00000000"
+    },
+    {
+      "name": "synthesized_populated_v1",
+      "why": "Every field this version declares, present and non-default: one element in every array, every nullable thing supplied. The defaults case leaves arrays empty, which hides every field of the struct the array would have held — a records field encoded with the wrong length prefix survived the whole corpus that way, because nothing ever reached the struct holding it.",
+      "message": "OffsetFetchResponse",
+      "api_key": 9,
+      "direction": "response",
+      "version": 1,
+      "flexible": false,
+      "json_value": {
+        "topics": [
+          {
+            "name": "v",
+            "partitions": [
+              {
+                "committedOffset": 1,
+                "errorCode": 1,
+                "metadata": "v",
+                "partitionIndex": 1
+              }
+            ]
+          }
+        ]
+      },
+      "hex": "00000001000176000000010000000100000000000000010001760001"
+    }
+  ]
+}

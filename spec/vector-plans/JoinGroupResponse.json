@@ -1,0 +1,406 @@
+{
+  "schema": 1,
+  "message": "JoinGroupResponse",
+  "api_key": 11,
+  "direction": "response",
+  "valid_versions": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9
+  ],
+  "flexible_versions": [
+    6,
+    7,
+    8,
+    9
+  ],
+  "source": "JoinGroupResponse.json",
+  "cases": [
+    {
+      "name": "synthesized_defaults_v0",
+      "why": "Every field this version declares, at its protocol default. Synthesized so the message is held to Apache Kafka's bytes at all; hand-written cases carry the interesting shapes.",
+      "versions": [
+        0
+      ],
+      "json_value": {
+        "errorCode": 0,
+        "generationId": -1,
+        "protocolName": "",
+        "leader": "",
+        "memberId": "",
+        "members": []
+      }
+    },
+    {
+      "name": "synthesized_defaults_v1",
+      "why": "Every field this version declares, at its protocol default. Synthesized so the message is held to Apache Kafka's bytes at all; hand-written cases carry the interesting shapes.",
+      "versions": [
+        1
+      ],
+      "json_value": {
+        "errorCode": 0,
+        "generationId": -1,
+        "protocolName": "",
+        "leader": "",
+        "memberId": "",
+        "members": []
+      }
+    },
+    {
+      "name": "synthesized_defaults_v2",
+      "why": "Every field this version declares, at its protocol default. Synthesized so the message is held to Apache Kafka's bytes at all; hand-written cases carry the interesting shapes.",
+      "versions": [
+        2
+      ],
+      "json_value": {
+        "throttleTimeMs": 0,
+        "errorCode": 0,
+        "generationId": -1,
+        "protocolName": "",
+        "leader": "",
+        "memberId": "",
+        "members": []
+      }
+    },
+    {
+      "name": "synthesized_defaults_v3",
+      "why": "Every field this version declares, at its protocol default. Synthesized so the message is held to Apache Kafka's bytes at all; hand-written cases carry the interesting shapes.",
+      "versions": [
+        3
+      ],
+      "json_value": {
+        "throttleTimeMs": 0,
+        "errorCode": 0,
+        "generationId": -1,
+        "protocolName": "",
+        "leader": "",
+        "memberId": "",
+        "members": []
+      }
+    },
+    {
+      "name": "synthesized_defaults_v4",
+      "why": "Every field this version declares, at its protocol default. Synthesized so the message is held to Apache Kafka's bytes at all; hand-written cases carry the interesting shapes.",
+      "versions": [
+        4
+      ],
+      "json_value": {
+        "throttleTimeMs": 0,
+        "errorCode": 0,
+        "generationId": -1,
+        "protocolName": "",
+        "leader": "",
+        "memberId": "",
+        "members": []
+      }
+    },
+    {
+      "name": "synthesized_defaults_v5",
+      "why": "Every field this version declares, at its protocol default. Synthesized so the message is held to Apache Kafka's bytes at all; hand-written cases carry the interesting shapes.",
+      "versions": [
+        5
+      ],
+      "json_value": {
+        "throttleTimeMs": 0,
+        "errorCode": 0,
+        "generationId": -1,
+        "protocolName": "",
+        "leader": "",
+        "memberId": "",
+        "members": []
+      }
+    },
+    {
+      "name": "synthesized_defaults_v6",
+      "why": "Every field this version declares, at its protocol default. Synthesized so the message is held to Apache Kafka's bytes at all; hand-written cases carry the interesting shapes.",
+      "versions": [
+        6
+      ],
+      "json_value": {
+        "throttleTimeMs": 0,
+        "errorCode": 0,
+        "generationId": -1,
+        "protocolName": "",
+        "leader": "",
+        "memberId": "",
+        "members": []
+      }
+    },
+    {
+      "name": "synthesized_defaults_v7",
+      "why": "Every field this version declares, at its protocol default. Synthesized so the message is held to Apache Kafka's bytes at all; hand-written cases carry the interesting shapes.",
+      "versions": [
+        7
+      ],
+      "json_value": {
+        "throttleTimeMs": 0,
+        "errorCode": 0,
+        "generationId": -1,
+        "protocolType": null,
+        "protocolName": null,
+        "leader": "",
+        "memberId": "",
+        "members": []
+      }
+    },
+    {
+      "name": "synthesized_defaults_v8",
+      "why": "Every field this version declares, at its protocol default. Synthesized so the message is held to Apache Kafka's bytes at all; hand-written cases carry the interesting shapes.",
+      "versions": [
+        8
+      ],
+      "json_value": {
+        "throttleTimeMs": 0,
+        "errorCode": 0,
+        "generationId": -1,
+        "protocolType": null,
+        "protocolName": null,
+        "leader": "",
+        "memberId": "",
+        "members": []
+      }
+    },
+    {
+      "name": "synthesized_defaults_v9",
+      "why": "Every field this version declares, at its protocol default. Synthesized so the message is held to Apache Kafka's bytes at all; hand-written cases carry the interesting shapes.",
+      "versions": [
+        9
+      ],
+      "json_value": {
+        "throttleTimeMs": 0,
+        "errorCode": 0,
+        "generationId": -1,
+        "protocolType": null,
+        "protocolName": null,
+        "leader": "",
+        "skipAssignment": false,
+        "memberId": "",
+        "members": []
+      }
+    },
+    {
+      "name": "synthesized_populated_v0",
+      "why": "Every field this version declares, present and non-default: one element in every array, every nullable thing supplied. The defaults case leaves arrays empty, which hides every field of the struct the array would have held \u2014 a records field encoded with the wrong length prefix survived the whole corpus that way, because nothing ever reached the struct holding it.",
+      "versions": [
+        0
+      ],
+      "json_value": {
+        "errorCode": 1,
+        "generationId": 1,
+        "protocolName": "v",
+        "leader": "v",
+        "memberId": "v",
+        "members": [
+          {
+            "memberId": "v",
+            "metadata": "3q2+7w=="
+          }
+        ]
+      }
+    },
+    {
+      "name": "synthesized_populated_v1",
+      "why": "Every field this version declares, present and non-default: one element in every array, every nullable thing supplied. The defaults case leaves arrays empty, which hides every field of the struct the array would have held \u2014 a records field encoded with the wrong length prefix survived the whole corpus that way, because nothing ever reached the struct holding it.",
+      "versions": [
+        1
+      ],
+      "json_value": {
+        "errorCode": 1,
+        "generationId": 1,
+        "protocolName": "v",
+        "leader": "v",
+        "memberId": "v",
+        "members": [
+          {
+            "memberId": "v",
+            "metadata": "3q2+7w=="
+          }
+        ]
+      }
+    },
+    {
+      "name": "synthesized_populated_v2",
+      "why": "Every field this version declares, present and non-default: one element in every array, every nullable thing supplied. The defaults case leaves arrays empty, which hides every field of the struct the array would have held \u2014 a records field encoded with the wrong length prefix survived the whole corpus that way, because nothing ever reached the struct holding it.",
+      "versions": [
+        2
+      ],
+      "json_value": {
+        "throttleTimeMs": 1,
+        "errorCode": 1,
+        "generationId": 1,
+        "protocolName": "v",
+        "leader": "v",
+        "memberId": "v",
+        "members": [
+          {
+            "memberId": "v",
+            "metadata": "3q2+7w=="
+          }
+        ]
+      }
+    },
+    {
+      "name": "synthesized_populated_v3",
+      "why": "Every field this version declares, present and non-default: one element in every array, every nullable thing supplied. The defaults case leaves arrays empty, which hides every field of the struct the array would have held \u2014 a records field encoded with the wrong length prefix survived the whole corpus that way, because nothing ever reached the struct holding it.",
+      "versions": [
+        3
+      ],
+      "json_value": {
+        "throttleTimeMs": 1,
+        "errorCode": 1,
+        "generationId": 1,
+        "protocolName": "v",
+        "leader": "v",
+        "memberId": "v",
+        "members": [
+          {
+            "memberId": "v",
+            "metadata": "3q2+7w=="
+          }
+        ]
+      }
+    },
+    {
+      "name": "synthesized_populated_v4",
+      "why": "Every field this version declares, present and non-default: one element in every array, every nullable thing supplied. The defaults case leaves arrays empty, which hides every field of the struct the array would have held \u2014 a records field encoded with the wrong length prefix survived the whole corpus that way, because nothing ever reached the struct holding it.",
+      "versions": [
+        4
+      ],
+      "json_value": {
+        "throttleTimeMs": 1,
+        "errorCode": 1,
+        "generationId": 1,
+        "protocolName": "v",
+        "leader": "v",
+        "memberId": "v",
+        "members": [
+          {
+            "memberId": "v",
+            "metadata": "3q2+7w=="
+          }
+        ]
+      }
+    },
+    {
+      "name": "synthesized_populated_v5",
+      "why": "Every field this version declares, present and non-default: one element in every array, every nullable thing supplied. The defaults case leaves arrays empty, which hides every field of the struct the array would have held \u2014 a records field encoded with the wrong length prefix survived the whole corpus that way, because nothing ever reached the struct holding it.",
+      "versions": [
+        5
+      ],
+      "json_value": {
+        "throttleTimeMs": 1,
+        "errorCode": 1,
+        "generationId": 1,
+        "protocolName": "v",
+        "leader": "v",
+        "memberId": "v",
+        "members": [
+          {
+            "memberId": "v",
+            "groupInstanceId": "v",
+            "metadata": "3q2+7w=="
+          }
+        ]
+      }
+    },
+    {
+      "name": "synthesized_populated_v6",
+      "why": "Every field this version declares, present and non-default: one element in every array, every nullable thing supplied. The defaults case leaves arrays empty, which hides every field of the struct the array would have held \u2014 a records field encoded with the wrong length prefix survived the whole corpus that way, because nothing ever reached the struct holding it.",
+      "versions": [
+        6
+      ],
+      "json_value": {
+        "throttleTimeMs": 1,
+        "errorCode": 1,
+        "generationId": 1,
+        "protocolName": "v",
+        "leader": "v",
+        "memberId": "v",
+        "members": [
+          {
+            "memberId": "v",
+            "groupInstanceId": "v",
+            "metadata": "3q2+7w=="
+          }
+        ]
+      }
+    },
+    {
+      "name": "synthesized_populated_v7",
+      "why": "Every field this version declares, present and non-default: one element in every array, every nullable thing supplied. The defaults case leaves arrays empty, which hides every field of the struct the array would have held \u2014 a records field encoded with the wrong length prefix survived the whole corpus that way, because nothing ever reached the struct holding it.",
+      "versions": [
+        7
+      ],
+      "json_value": {
+        "throttleTimeMs": 1,
+        "errorCode": 1,
+        "generationId": 1,
+        "protocolType": "v",
+        "protocolName": "v",
+        "leader": "v",
+        "memberId": "v",
+        "members": [
+          {
+            "memberId": "v",
+            "groupInstanceId": "v",
+            "metadata": "3q2+7w=="
+          }
+        ]
+      }
+    },
+    {
+      "name": "synthesized_populated_v8",
+      "why": "Every field this version declares, present and non-default: one element in every array, every nullable thing supplied. The defaults case leaves arrays empty, which hides every field of the struct the array would have held \u2014 a records field encoded with the wrong length prefix survived the whole corpus that way, because nothing ever reached the struct holding it.",
+      "versions": [
+        8
+      ],
+      "json_value": {
+        "throttleTimeMs": 1,
+        "errorCode": 1,
+        "generationId": 1,
+        "protocolType": "v",
+        "protocolName": "v",
+        "leader": "v",
+        "memberId": "v",
+        "members": [
+          {
+            "memberId": "v",
+            "groupInstanceId": "v",
+            "metadata": "3q2+7w=="
+          }
+        ]
+      }
+    },
+    {
+      "name": "synthesized_populated_v9",
+      "why": "Every field this version declares, present and non-default: one element in every array, every nullable thing supplied. The defaults case leaves arrays empty, which hides every field of the struct the array would have held \u2014 a records field encoded with the wrong length prefix survived the whole corpus that way, because nothing ever reached the struct holding it.",
+      "versions": [
+        9
+      ],
+      "json_value": {
+        "throttleTimeMs": 1,
+        "errorCode": 1,
+        "generationId": 1,
+        "protocolType": "v",
+        "protocolName": "v",
+        "leader": "v",
+        "skipAssignment": true,
+        "memberId": "v",
+        "members": [
+          {
+            "memberId": "v",
+            "groupInstanceId": "v",
+            "metadata": "3q2+7w=="
+          }
+        ]
+      }
+    }
+  ]
+}

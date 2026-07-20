@@ -86,6 +86,50 @@ impl VersionSet {
         Self::normalized(ranges)
     }
 
+    /// Returns the versions in this set that `other` does not contain.
+    ///
+    /// Needed because a field's nullability can cut its presence window in two:
+    /// `MetadataRequest.Topics` appears from v0 and is nullable from v1, and the
+    /// codec for the versions where it is *not* nullable has to be chosen over
+    /// exactly the remainder.
+    ///
+    /// Computed by walking the versions rather than by interval arithmetic. An
+    /// open-ended range has no last version to subtract from, so the walk is
+    /// bounded by whichever endpoint the two sets actually name; a difference
+    /// against an open range beyond that point is empty by construction.
+    #[must_use]
+    pub fn difference(&self, other: &Self) -> Self {
+        let Some(highest) = self.highest() else {
+            return Self::none();
+        };
+        let mut ranges: Vec<VersionRange> = Vec::new();
+        for version in self.lowest().unwrap_or(0)..=highest {
+            if !self.contains(version) || other.contains(version) {
+                continue;
+            }
+            match ranges.last_mut() {
+                Some(last) if last.end == Some(version - 1) => last.end = Some(version),
+                _ => ranges.push(VersionRange::bounded(version, version)),
+            }
+        }
+        Self::normalized(ranges)
+    }
+
+    /// The first version this set names, if any.
+    fn lowest(&self) -> Option<i16> {
+        self.ranges.first().map(|range| range.start)
+    }
+
+    /// The last version this set names, treating an open range as unbounded.
+    ///
+    /// `None` for an empty set and for one that runs to infinity, where a
+    /// difference cannot be enumerated and no caller here produces one: every
+    /// window this is asked about has already been intersected with a message's
+    /// bounded `validVersions`.
+    fn highest(&self) -> Option<i16> {
+        self.ranges.last().and_then(|range| range.end)
+    }
+
     /// Returns whether every represented version is contained by `other`.
     pub fn is_subset_of(&self, other: &Self) -> bool {
         self.ranges

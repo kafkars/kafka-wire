@@ -1,0 +1,46 @@
+{
+  "schema": 1,
+  "vectors": [
+    {
+      "name": "synthesized_defaults_v4",
+      "why": "Every field this version declares, at its protocol default. Synthesized so the message is held to Apache Kafka's bytes at all; hand-written cases carry the interesting shapes.",
+      "message": "JoinGroupRequest",
+      "api_key": 11,
+      "direction": "request",
+      "version": 4,
+      "flexible": false,
+      "json_value": {
+        "groupId": "",
+        "memberId": "",
+        "protocolType": "",
+        "protocols": [],
+        "rebalanceTimeoutMs": -1,
+        "sessionTimeoutMs": 0
+      },
+      "hex": "000000000000ffffffff0000000000000000"
+    },
+    {
+      "name": "synthesized_populated_v4",
+      "why": "Every field this version declares, present and non-default: one element in every array, every nullable thing supplied. The defaults case leaves arrays empty, which hides every field of the struct the array would have held — a records field encoded with the wrong length prefix survived the whole corpus that way, because nothing ever reached the struct holding it.",
+      "message": "JoinGroupRequest",
+      "api_key": 11,
+      "direction": "request",
+      "version": 4,
+      "flexible": false,
+      "json_value": {
+        "groupId": "v",
+        "memberId": "v",
+        "protocolType": "v",
+        "protocols": [
+          {
+            "metadata": "3q2+7w==",
+            "name": "v"
+          }
+        ],
+        "rebalanceTimeoutMs": 1,
+        "sessionTimeoutMs": 1
+      },
+      "hex": "00017600000001000000010001760001760000000100017600000004deadbeef"
+    }
+  ]
+}

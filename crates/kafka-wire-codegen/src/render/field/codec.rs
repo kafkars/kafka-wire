@@ -11,13 +11,47 @@
 //! error rather than absorbed by a placeholder comment: a comment where a codec
 //! belongs still compiles, and encodes nothing.
 
-use kafka_wire_schema::{Field, FieldType, Message};
+use kafka_wire_schema::{Field, FieldType, Message, VersionSet};
 
-use crate::GenerationError;
+use crate::{
+    GenerationError,
+    render::field::{
+        regime::{
+            Encoding, Nullability, encoding_of, encoding_over, is_nullable, nullability_of, present,
+        },
+        version,
+    },
+};
 
 pub(crate) fn read_expression(field: &Field, message: &Message) -> Result<String, GenerationError> {
-    let nullable = is_nullable(field, message);
-    match encoding_of(field, message) {
+    match nullability_of(field, message) {
+        Nullability::Never => read_over(&present(field, message), field, message, false),
+        Nullability::Always => read_over(&present(field, message), field, message, true),
+        // A field nullable in only some of the versions it appears in has to
+        // read through two different methods, because the non-null reader
+        // REJECTS the null sentinel. Using the nullable one throughout would
+        // silently accept a null the protocol forbids at that version — the
+        // encoding regime is chosen per window too, since the versions where a
+        // field is nullable need not be the versions where it is compact.
+        Nullability::Gated { nullable, plain } => {
+            let condition = version::condition_for(&nullable, message);
+            let null_read = read_over(&nullable, field, message, true)?;
+            let plain_read = read_over(&plain, field, message, false)?;
+            Ok(format!(
+                "if {condition} {{ {null_read} }} else {{ Some({plain_read}) }}"
+            ))
+        }
+    }
+}
+
+/// The read expression over one window, with the regime that window implies.
+fn read_over(
+    window: &VersionSet,
+    field: &Field,
+    message: &Message,
+    nullable: bool,
+) -> Result<String, GenerationError> {
+    match encoding_over(window, field, message) {
         Encoding::Compact => read_method(field, message, nullable, true),
         Encoding::Legacy => read_method(field, message, nullable, false),
         Encoding::VersionGated => {
@@ -61,44 +95,81 @@ fn gate(compact: &str, legacy: &str) -> String {
 /// `int32`. Elements are unaffected, which is why this is decided here and not
 /// in `element_codec`.
 pub(crate) fn array_length_codec(field: &Field, message: &Message) -> (String, String) {
-    if is_nullable(field, message) {
-        return nullable_array_length_codec(field, message);
-    }
-    let name = field.name.rust_field();
-    let compact_read = "decoder.read_compact_array_len()?";
-    let legacy_read = "decoder.read_array_len()?";
-    let compact_write = format!("encoder.write_compact_array_len(self.{name}.len())?;");
-    let legacy_write = format!("encoder.write_array_len(self.{name}.len())?;");
-    match encoding_of(field, message) {
-        Encoding::Compact => (compact_read.to_owned(), compact_write),
-        Encoding::Legacy => (legacy_read.to_owned(), legacy_write),
-        Encoding::VersionGated => (
-            gate(compact_read, legacy_read),
-            gate(&compact_write, &legacy_write),
+    let whole = present(field, message);
+    match nullability_of(field, message) {
+        Nullability::Never => (
+            array_len_read(&whole, field, message, false),
+            array_len_write(&whole, field, message, false),
         ),
+        Nullability::Always => (
+            array_len_read(&whole, field, message, true),
+            array_len_write(&whole, field, message, true),
+        ),
+        Nullability::Gated { nullable, plain } => {
+            let condition = version::condition_for(&nullable, message);
+            let null_read = array_len_read(&nullable, field, message, true);
+            let plain_read = array_len_read(&plain, field, message, false);
+            (
+                format!("if {condition} {{ {null_read} }} else {{ Some({plain_read}) }}"),
+                // The write needs no gate. Every nullable writer delegates to
+                // its non-null counterpart for a present value, so `Some(n)`
+                // is byte-identical under both; only `None` differs, and that
+                // case is refused outright by the guard `render_writes` emits.
+                array_len_write(&whole, field, message, true),
+            )
+        }
     }
 }
 
-/// The same prefix for an array that may itself be null.
+/// The length-prefix read over one window.
 ///
 /// The nullable readers return `Option<usize>`, which is what lets the decode
 /// block tell an absent array from a present empty one — two distinct wire
 /// encodings that a plain length cannot separate.
-fn nullable_array_length_codec(field: &Field, message: &Message) -> (String, String) {
+fn array_len_read(window: &VersionSet, field: &Field, message: &Message, nullable: bool) -> String {
+    let (compact, legacy) = if nullable {
+        (
+            "decoder.read_compact_nullable_array_len()?",
+            "decoder.read_nullable_array_len()?",
+        )
+    } else {
+        (
+            "decoder.read_compact_array_len()?",
+            "decoder.read_array_len()?",
+        )
+    };
+    match encoding_over(window, field, message) {
+        Encoding::Compact => compact.to_owned(),
+        Encoding::Legacy => legacy.to_owned(),
+        Encoding::VersionGated => gate(compact, legacy),
+    }
+}
+
+/// The length-prefix write over one window.
+fn array_len_write(
+    window: &VersionSet,
+    field: &Field,
+    message: &Message,
+    nullable: bool,
+) -> String {
     let name = field.name.rust_field();
-    let compact_read = "decoder.read_compact_nullable_array_len()?";
-    let legacy_read = "decoder.read_nullable_array_len()?";
-    let compact_write =
-        format!("encoder.write_compact_nullable_array_len(self.{name}.as_ref().map(Vec::len))?;");
-    let legacy_write =
-        format!("encoder.write_nullable_array_len(self.{name}.as_ref().map(Vec::len))?;");
-    match encoding_of(field, message) {
-        Encoding::Compact => (compact_read.to_owned(), compact_write),
-        Encoding::Legacy => (legacy_read.to_owned(), legacy_write),
-        Encoding::VersionGated => (
-            gate(compact_read, legacy_read),
-            gate(&compact_write, &legacy_write),
-        ),
+    let (compact, legacy) = if nullable {
+        (
+            format!(
+                "encoder.write_compact_nullable_array_len(self.{name}.as_ref().map(Vec::len))?;"
+            ),
+            format!("encoder.write_nullable_array_len(self.{name}.as_ref().map(Vec::len))?;"),
+        )
+    } else {
+        (
+            format!("encoder.write_compact_array_len(self.{name}.len())?;"),
+            format!("encoder.write_array_len(self.{name}.len())?;"),
+        )
+    };
+    match encoding_over(window, field, message) {
+        Encoding::Compact => compact,
+        Encoding::Legacy => legacy,
+        Encoding::VersionGated => gate(&compact, &legacy),
     }
 }
 
@@ -184,44 +255,6 @@ fn length_prefixed_element(
             gate(compact_write, legacy_write),
         ),
     })
-}
-
-/// Which length prefix a field uses across the versions it is present in.
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
-enum Encoding {
-    /// Present only in flexible versions, so the compact form is unconditional.
-    Compact,
-    /// Present only in pre-flexible versions, so the legacy form is unconditional.
-    Legacy,
-    /// Present on both sides of the flexible boundary, so the gate is emitted.
-    VersionGated,
-}
-
-fn encoding_of(field: &Field, message: &Message) -> Encoding {
-    let present = field.versions.intersection(&message.valid_versions);
-    // A field may pin itself to an encoding its message would not otherwise
-    // use. `RequestHeader.ClientId` declares `flexibleVersions: "none"` and so
-    // keeps the legacy two-byte prefix even in a flexible header, which is what
-    // lets a broker read the header of a request before it knows the version
-    // the client chose. Ignoring the override would put a varint there.
-    let flexible = field
-        .flexible_versions
-        .clone()
-        .unwrap_or_else(|| message.effective_flexible_versions());
-    if present.is_subset_of(&flexible) {
-        Encoding::Compact
-    } else if present.intersection(&flexible).is_empty() {
-        Encoding::Legacy
-    } else {
-        Encoding::VersionGated
-    }
-}
-
-pub(crate) fn is_nullable(field: &Field, message: &Message) -> bool {
-    !field
-        .nullable_versions
-        .intersection(&message.valid_versions)
-        .is_empty()
 }
 
 fn read_method(

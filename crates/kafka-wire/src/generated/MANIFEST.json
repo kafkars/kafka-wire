@@ -118,6 +118,10 @@
       "sha256": "c8c0b9ceaf3edba7b081f247170be182b3d10b49c617efa9cf1599330fae2139"
     },
     {
+      "path": "delete_topics.rs",
+      "sha256": "fe38cacea61a8c3e8b2d5e6cb6865729769fa3dd24ac1abde34ab7d2fac7d108"
+    },
+    {
       "path": "describe_acls.rs",
       "sha256": "a99f6bdf2ef4f456057f64ac9c74eeb1605b81d630fb029b5bd6ec5df49cba7b"
     },
@@ -230,6 +234,10 @@
       "sha256": "735675b5567028e64013f62bce254202514a0fddf6b4944d8e22fc09a66f940f"
     },
     {
+      "path": "join_group.rs",
+      "sha256": "2ea345c2f27fed75825270513edefc3a99f2f9a5346e9417836a751dde89dc76"
+    },
+    {
       "path": "leave_group.rs",
       "sha256": "97f87ff50bc3318f19638c5382ac1d2bdfdd5124b9dd7e3378f6c3b90ab095e7"
     },
@@ -254,8 +262,12 @@
       "sha256": "20f2a3f2257491e6d0e5b20772d43bd986b9d491ef352165d42679fcb013926a"
     },
     {
+      "path": "metadata.rs",
+      "sha256": "d496f1cc5456ca8a00b2e37d14e8c1f6da4be8492072535fbbe7ea1d8c3935a7"
+    },
+    {
       "path": "mod.rs",
-      "sha256": "025b6ad256c3515a63bc1b77c1f46391a5d663469f1f3e3167482a186107f166"
+      "sha256": "00a09034a67b709c8ce9ff3e6fdad7bbe8157ba0f4be1170ca296536acc59c87"
     },
     {
       "path": "offset_commit.rs",
@@ -264,6 +276,10 @@
     {
       "path": "offset_delete.rs",
       "sha256": "af50343c64d49e3492cc1a51ce4f7440ff2abcc3bdd3b3b743b8000971851527"
+    },
+    {
+      "path": "offset_fetch.rs",
+      "sha256": "05b40760448acf3903f814eeb599960fe44ef23da24bcf3988ed5c6f23b7bd27"
     },
     {
       "path": "offset_for_leader_epoch.rs",
@@ -287,7 +303,7 @@
     },
     {
       "path": "registry.rs",
-      "sha256": "56e2d0bdc96c791fd14457408d479d81ebf45aa68ccd3ac5b66f51a1fec441b6"
+      "sha256": "06892b3db6678fb4c37cf6be039e4669fab9a76f76960bc1ac389412dd2268c9"
     },
     {
       "path": "remove_raft_voter.rs",

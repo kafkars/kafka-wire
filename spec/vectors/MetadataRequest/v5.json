@@ -1,0 +1,37 @@
+{
+  "schema": 1,
+  "vectors": [
+    {
+      "name": "synthesized_defaults_v5",
+      "why": "Every field this version declares, at its protocol default. Synthesized so the message is held to Apache Kafka's bytes at all; hand-written cases carry the interesting shapes.",
+      "message": "MetadataRequest",
+      "api_key": 3,
+      "direction": "request",
+      "version": 5,
+      "flexible": false,
+      "json_value": {
+        "allowAutoTopicCreation": true,
+        "topics": null
+      },
+      "hex": "ffffffff01"
+    },
+    {
+      "name": "synthesized_populated_v5",
+      "why": "Every field this version declares, present and non-default: one element in every array, every nullable thing supplied. The defaults case leaves arrays empty, which hides every field of the struct the array would have held — a records field encoded with the wrong length prefix survived the whole corpus that way, because nothing ever reached the struct holding it.",
+      "message": "MetadataRequest",
+      "api_key": 3,
+      "direction": "request",
+      "version": 5,
+      "flexible": false,
+      "json_value": {
+        "allowAutoTopicCreation": true,
+        "topics": [
+          {
+            "name": "v"
+          }
+        ]
+      },
+      "hex": "0000000100017601"
+    }
+  ]
+}

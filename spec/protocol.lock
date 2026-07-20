@@ -324,12 +324,12 @@ status = "enabled"
 [[kafka.files]]
 path = "DeleteTopicsRequest.json"
 sha256 = "0b65293e9f8e2ca7595c28adf6e273447cb7a4e66bf17477a3c9867a949bf5d4"
-status = "pending"
+status = "enabled"
 
 [[kafka.files]]
 path = "DeleteTopicsResponse.json"
 sha256 = "280988d68ecb4cc7b6f51d102cb046759a0081809873a4e23bfaa12402f2e018"
-status = "pending"
+status = "enabled"
 
 [[kafka.files]]
 path = "DescribeAclsRequest.json"
@@ -599,12 +599,12 @@ status = "enabled"
 [[kafka.files]]
 path = "JoinGroupRequest.json"
 sha256 = "d61f9667c79f4ec088a3b8edc19ecc92d125332318c42e82cb94a2d9138e5d33"
-status = "pending"
+status = "enabled"
 
 [[kafka.files]]
 path = "JoinGroupResponse.json"
 sha256 = "ef1a27d537c2460b00a9bc2331dc7655bf28826a872011ef247fcdda904f1687"
-status = "pending"
+status = "enabled"
 
 [[kafka.files]]
 path = "KRaftVersionRecord.json"
@@ -689,12 +689,12 @@ status = "enabled"
 [[kafka.files]]
 path = "MetadataRequest.json"
 sha256 = "4dd85dfe9585b9f59210ba78bc60b5c86d7684614c3a8829b8dea343f22a1d36"
-status = "pending"
+status = "enabled"
 
 [[kafka.files]]
 path = "MetadataResponse.json"
 sha256 = "482b7171b2c41172213b9d8c7842998938c386872a0c89f209cc0e0427d4b4d8"
-status = "pending"
+status = "enabled"
 
 [[kafka.files]]
 path = "OffsetCommitRequest.json"
@@ -719,12 +719,12 @@ status = "enabled"
 [[kafka.files]]
 path = "OffsetFetchRequest.json"
 sha256 = "bacf7b8065ad3763e6837d7e69855065914facc46d880750fc5c7abca8bfefc0"
-status = "pending"
+status = "enabled"
 
 [[kafka.files]]
 path = "OffsetFetchResponse.json"
 sha256 = "c4a276a54437b094b7bd4b6c795785b419f81d390dea3c8908028439eda65e7c"
-status = "pending"
+status = "enabled"
 
 [[kafka.files]]
 path = "OffsetForLeaderEpochRequest.json"

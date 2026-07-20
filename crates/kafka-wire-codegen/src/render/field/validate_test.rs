@@ -237,18 +237,19 @@ fn a_nullable_tagged_struct_field_is_refused() {
 }
 
 #[test]
-fn partial_version_nullability_is_refused() {
-    // A field that is nullable in some of the versions it appears in needs the
-    // null case gated by version, which this backend cannot express.
+fn partial_version_nullability_is_accepted() {
+    // A field nullable in only some of the versions it appears in is
+    // `Option<T>` in all of them, reads through two different methods, and is
+    // refused a null in the versions that forbid one. The construct the
+    // backend once turned away by name.
     let mut partial = field("Probe", FieldType::String, "0+");
     partial.nullable_versions = versions("2+");
     partial.default = DefaultValue::Null;
-    assert_refused(
-        vec![partial],
-        "0-4",
-        "none",
-        "a field nullable in only some of its versions",
-        "partial-version nullability is not implemented yet",
+    let message = message("0-4", "none", vec![partial]);
+
+    assert!(
+        validate_supported(&message).is_ok(),
+        "the backend refused a field nullable in only some of its versions"
     );
 }
 

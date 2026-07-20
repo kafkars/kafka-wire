@@ -17,34 +17,9 @@ use crate::{
     render::{field, text::RustText},
 };
 
-use super::codec::{local, render_array_body, render_array_encode, render_nullable_array_encode};
-
-/// How a structure names itself when it refuses to drop retained tags.
-///
-/// Both messages and structs refuse; they differ only in how the name is
-/// spelled, because a struct has no `KafkaMessage` and therefore no
-/// `Self::NAME`. An earlier version let a struct stay silent on the theory that
-/// its message had already refused — which was false. The message-level check
-/// reads `self.unknown_tagged_fields` on the message alone and never descends,
-/// so a nested struct's retained tags were dropped without a word.
-#[derive(Clone, Copy, Eq, PartialEq)]
-pub(super) enum TagOwner<'a> {
-    /// A message, which carries its protocol name as a constant.
-    Message,
-    /// A struct, named by the Rust type the generator gave it. Not a protocol
-    /// name, because a nested struct has none on the wire.
-    Struct(&'a str),
-}
-
-impl TagOwner<'_> {
-    /// The expression that names this structure in an encode error.
-    fn name(self) -> String {
-        match self {
-            Self::Message => "Self::NAME".to_owned(),
-            Self::Struct(rust_type) => format!("{rust_type:?}"),
-        }
-    }
-}
+use super::codec::{
+    Owner, local, render_array_body, render_array_encode, render_nullable_array_encode,
+};
 
 /// Whether this field travels in the tagged-field section rather than inline.
 pub(super) fn is_tagged(field: &Field) -> bool {
@@ -164,7 +139,7 @@ pub(super) fn render_tagged_encode(
     rust: &mut RustText,
     fields: &[Field],
     message: &Message,
-    owner: TagOwner<'_>,
+    owner: Owner<'_>,
 ) -> Result<(), GenerationError> {
     let tagged = known_tags(fields);
     rust.blank();
@@ -201,7 +176,7 @@ fn render_tag_write(
 ) -> Result<(), GenerationError> {
     let non_default = field::non_default_condition(field, message);
     let condition = match field::tagged_presence_condition(field, message) {
-        Some(presence) => format!("{presence} && {non_default}"),
+        Some(presence) => format!("{} && {non_default}", field::as_conjunct(&presence)),
         None => non_default,
     };
     rust.open(format!("if {condition}"));

@@ -1,0 +1,339 @@
+{
+  "schema": 1,
+  "message": "OffsetFetchRequest",
+  "api_key": 9,
+  "direction": "request",
+  "valid_versions": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10
+  ],
+  "flexible_versions": [
+    6,
+    7,
+    8,
+    9,
+    10
+  ],
+  "source": "OffsetFetchRequest.json",
+  "cases": [
+    {
+      "name": "synthesized_defaults_v1",
+      "why": "Every field this version declares, at its protocol default. Synthesized so the message is held to Apache Kafka's bytes at all; hand-written cases carry the interesting shapes.",
+      "versions": [
+        1
+      ],
+      "json_value": {
+        "groupId": "",
+        "topics": []
+      }
+    },
+    {
+      "name": "synthesized_defaults_v2",
+      "why": "Every field this version declares, at its protocol default. Synthesized so the message is held to Apache Kafka's bytes at all; hand-written cases carry the interesting shapes.",
+      "versions": [
+        2
+      ],
+      "json_value": {
+        "groupId": "",
+        "topics": null
+      }
+    },
+    {
+      "name": "synthesized_defaults_v3",
+      "why": "Every field this version declares, at its protocol default. Synthesized so the message is held to Apache Kafka's bytes at all; hand-written cases carry the interesting shapes.",
+      "versions": [
+        3
+      ],
+      "json_value": {
+        "groupId": "",
+        "topics": null
+      }
+    },
+    {
+      "name": "synthesized_defaults_v4",
+      "why": "Every field this version declares, at its protocol default. Synthesized so the message is held to Apache Kafka's bytes at all; hand-written cases carry the interesting shapes.",
+      "versions": [
+        4
+      ],
+      "json_value": {
+        "groupId": "",
+        "topics": null
+      }
+    },
+    {
+      "name": "synthesized_defaults_v5",
+      "why": "Every field this version declares, at its protocol default. Synthesized so the message is held to Apache Kafka's bytes at all; hand-written cases carry the interesting shapes.",
+      "versions": [
+        5
+      ],
+      "json_value": {
+        "groupId": "",
+        "topics": null
+      }
+    },
+    {
+      "name": "synthesized_defaults_v6",
+      "why": "Every field this version declares, at its protocol default. Synthesized so the message is held to Apache Kafka's bytes at all; hand-written cases carry the interesting shapes.",
+      "versions": [
+        6
+      ],
+      "json_value": {
+        "groupId": "",
+        "topics": null
+      }
+    },
+    {
+      "name": "synthesized_defaults_v7",
+      "why": "Every field this version declares, at its protocol default. Synthesized so the message is held to Apache Kafka's bytes at all; hand-written cases carry the interesting shapes.",
+      "versions": [
+        7
+      ],
+      "json_value": {
+        "groupId": "",
+        "topics": null,
+        "requireStable": false
+      }
+    },
+    {
+      "name": "synthesized_defaults_v8",
+      "why": "Every field this version declares, at its protocol default. Synthesized so the message is held to Apache Kafka's bytes at all; hand-written cases carry the interesting shapes.",
+      "versions": [
+        8
+      ],
+      "json_value": {
+        "groups": [],
+        "requireStable": false
+      }
+    },
+    {
+      "name": "synthesized_defaults_v9",
+      "why": "Every field this version declares, at its protocol default. Synthesized so the message is held to Apache Kafka's bytes at all; hand-written cases carry the interesting shapes.",
+      "versions": [
+        9
+      ],
+      "json_value": {
+        "groups": [],
+        "requireStable": false
+      }
+    },
+    {
+      "name": "synthesized_defaults_v10",
+      "why": "Every field this version declares, at its protocol default. Synthesized so the message is held to Apache Kafka's bytes at all; hand-written cases carry the interesting shapes.",
+      "versions": [
+        10
+      ],
+      "json_value": {
+        "groups": [],
+        "requireStable": false
+      }
+    },
+    {
+      "name": "synthesized_populated_v1",
+      "why": "Every field this version declares, present and non-default: one element in every array, every nullable thing supplied. The defaults case leaves arrays empty, which hides every field of the struct the array would have held \u2014 a records field encoded with the wrong length prefix survived the whole corpus that way, because nothing ever reached the struct holding it.",
+      "versions": [
+        1
+      ],
+      "json_value": {
+        "groupId": "v",
+        "topics": [
+          {
+            "name": "v",
+            "partitionIndexes": [
+              1
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "synthesized_populated_v2",
+      "why": "Every field this version declares, present and non-default: one element in every array, every nullable thing supplied. The defaults case leaves arrays empty, which hides every field of the struct the array would have held \u2014 a records field encoded with the wrong length prefix survived the whole corpus that way, because nothing ever reached the struct holding it.",
+      "versions": [
+        2
+      ],
+      "json_value": {
+        "groupId": "v",
+        "topics": [
+          {
+            "name": "v",
+            "partitionIndexes": [
+              1
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "synthesized_populated_v3",
+      "why": "Every field this version declares, present and non-default: one element in every array, every nullable thing supplied. The defaults case leaves arrays empty, which hides every field of the struct the array would have held \u2014 a records field encoded with the wrong length prefix survived the whole corpus that way, because nothing ever reached the struct holding it.",
+      "versions": [
+        3
+      ],
+      "json_value": {
+        "groupId": "v",
+        "topics": [
+          {
+            "name": "v",
+            "partitionIndexes": [
+              1
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "synthesized_populated_v4",
+      "why": "Every field this version declares, present and non-default: one element in every array, every nullable thing supplied. The defaults case leaves arrays empty, which hides every field of the struct the array would have held \u2014 a records field encoded with the wrong length prefix survived the whole corpus that way, because nothing ever reached the struct holding it.",
+      "versions": [
+        4
+      ],
+      "json_value": {
+        "groupId": "v",
+        "topics": [
+          {
+            "name": "v",
+            "partitionIndexes": [
+              1
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "synthesized_populated_v5",
+      "why": "Every field this version declares, present and non-default: one element in every array, every nullable thing supplied. The defaults case leaves arrays empty, which hides every field of the struct the array would have held \u2014 a records field encoded with the wrong length prefix survived the whole corpus that way, because nothing ever reached the struct holding it.",
+      "versions": [
+        5
+      ],
+      "json_value": {
+        "groupId": "v",
+        "topics": [
+          {
+            "name": "v",
+            "partitionIndexes": [
+              1
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "synthesized_populated_v6",
+      "why": "Every field this version declares, present and non-default: one element in every array, every nullable thing supplied. The defaults case leaves arrays empty, which hides every field of the struct the array would have held \u2014 a records field encoded with the wrong length prefix survived the whole corpus that way, because nothing ever reached the struct holding it.",
+      "versions": [
+        6
+      ],
+      "json_value": {
+        "groupId": "v",
+        "topics": [
+          {
+            "name": "v",
+            "partitionIndexes": [
+              1
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "synthesized_populated_v7",
+      "why": "Every field this version declares, present and non-default: one element in every array, every nullable thing supplied. The defaults case leaves arrays empty, which hides every field of the struct the array would have held \u2014 a records field encoded with the wrong length prefix survived the whole corpus that way, because nothing ever reached the struct holding it.",
+      "versions": [
+        7
+      ],
+      "json_value": {
+        "groupId": "v",
+        "topics": [
+          {
+            "name": "v",
+            "partitionIndexes": [
+              1
+            ]
+          }
+        ],
+        "requireStable": true
+      }
+    },
+    {
+      "name": "synthesized_populated_v8",
+      "why": "Every field this version declares, present and non-default: one element in every array, every nullable thing supplied. The defaults case leaves arrays empty, which hides every field of the struct the array would have held \u2014 a records field encoded with the wrong length prefix survived the whole corpus that way, because nothing ever reached the struct holding it.",
+      "versions": [
+        8
+      ],
+      "json_value": {
+        "groups": [
+          {
+            "groupId": "v",
+            "topics": [
+              {
+                "name": "v",
+                "partitionIndexes": [
+                  1
+                ]
+              }
+            ]
+          }
+        ],
+        "requireStable": true
+      }
+    },
+    {
+      "name": "synthesized_populated_v9",
+      "why": "Every field this version declares, present and non-default: one element in every array, every nullable thing supplied. The defaults case leaves arrays empty, which hides every field of the struct the array would have held \u2014 a records field encoded with the wrong length prefix survived the whole corpus that way, because nothing ever reached the struct holding it.",
+      "versions": [
+        9
+      ],
+      "json_value": {
+        "groups": [
+          {
+            "groupId": "v",
+            "memberId": "v",
+            "memberEpoch": 1,
+            "topics": [
+              {
+                "name": "v",
+                "partitionIndexes": [
+                  1
+                ]
+              }
+            ]
+          }
+        ],
+        "requireStable": true
+      }
+    },
+    {
+      "name": "synthesized_populated_v10",
+      "why": "Every field this version declares, present and non-default: one element in every array, every nullable thing supplied. The defaults case leaves arrays empty, which hides every field of the struct the array would have held \u2014 a records field encoded with the wrong length prefix survived the whole corpus that way, because nothing ever reached the struct holding it.",
+      "versions": [
+        10
+      ],
+      "json_value": {
+        "groups": [
+          {
+            "groupId": "v",
+            "memberId": "v",
+            "memberEpoch": 1,
+            "topics": [
+              {
+                "topicId": "MkU3OEVGRjRDMTk0M0Q2OA",
+                "partitionIndexes": [
+                  1
+                ]
+              }
+            ]
+          }
+        ],
+        "requireStable": true
+      }
+    }
+  ]
+}

@@ -12,9 +12,9 @@ use crate::{
     render::{field, text::RustText},
 };
 
-use super::codec::{render_construction, render_reads, render_writes};
+use super::codec::{Owner, render_construction, render_reads, render_writes};
 use super::prose::sentence;
-use super::tagged::{TagOwner, render_tagged_decode, render_tagged_encode};
+use super::tagged::{render_tagged_decode, render_tagged_encode};
 
 /// Renders one whole schema as a standalone struct.
 ///
@@ -308,9 +308,9 @@ pub(super) fn render_struct_encode(
     rust.line("    encoder: &mut Encoder<T>,");
     rust.line(format!("    {version}: ApiVersion,"));
     rust.open(") -> Result<(), EncodeError>");
-    render_writes(rust, fields, message)?;
+    render_writes(rust, fields, message, Owner::Struct(rust_type))?;
     if !message.effective_flexible_versions().is_empty() {
-        render_tagged_encode(rust, fields, message, TagOwner::Struct(rust_type))?;
+        render_tagged_encode(rust, fields, message, Owner::Struct(rust_type))?;
     }
     rust.blank();
     rust.line("Ok(())");

@@ -64,13 +64,6 @@ fn validate_fields(
         let nullable = field
             .nullable_versions
             .intersection(&message.valid_versions);
-        if !nullable.is_empty() && nullable != present {
-            return unsupported(
-                message,
-                field.name.protocol(),
-                "partial-version nullability is not implemented yet",
-            );
-        }
         // Checked before the shape match so that the scalar arm stays a plain
         // type list: folding this into a guard there would drop nullable
         // strings, which the backend does support, into the refusal arm.
