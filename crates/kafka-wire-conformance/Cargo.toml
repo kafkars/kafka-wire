@@ -14,6 +14,7 @@ publish = false
 [dependencies]
 bytes.workspace = true
 kafka-wire = { path = "../kafka-wire" }
+kafka-wire-records = { path = "../kafka-wire-records" }
 kafka-wire-core = { path = "../kafka-wire-core" }
 serde.workspace = true
 serde_json.workspace = true
