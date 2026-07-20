@@ -1,0 +1,58 @@
+{
+  "schema": 1,
+  "vectors": [
+    {
+      "name": "synthesized_defaults_v3",
+      "why": "Every field this version declares, at its protocol default. Synthesized so the message is held to Apache Kafka's bytes at all; hand-written cases carry the interesting shapes.",
+      "message": "DescribeConfigsResponse",
+      "api_key": 32,
+      "direction": "response",
+      "version": 3,
+      "flexible": false,
+      "json_value": {
+        "results": [],
+        "throttleTimeMs": 0
+      },
+      "hex": "0000000000000000"
+    },
+    {
+      "name": "synthesized_populated_v3",
+      "why": "Every field this version declares, present and non-default: one element in every array, every nullable thing supplied. The defaults case leaves arrays empty, which hides every field of the struct the array would have held — a records field encoded with the wrong length prefix survived the whole corpus that way, because nothing ever reached the struct holding it.",
+      "message": "DescribeConfigsResponse",
+      "api_key": 32,
+      "direction": "response",
+      "version": 3,
+      "flexible": false,
+      "json_value": {
+        "results": [
+          {
+            "configs": [
+              {
+                "configSource": 1,
+                "configType": 1,
+                "documentation": "v",
+                "isSensitive": true,
+                "name": "v",
+                "readOnly": true,
+                "synonyms": [
+                  {
+                    "name": "v",
+                    "source": 1,
+                    "value": "v"
+                  }
+                ],
+                "value": "v"
+              }
+            ],
+            "errorCode": 1,
+            "errorMessage": "v",
+            "resourceName": "v",
+            "resourceType": 1
+          }
+        ],
+        "throttleTimeMs": 1
+      },
+      "hex": "000000010000000100010001760100017600000001000176000176010101000000010001760001760101000176"
+    }
+  ]
+}

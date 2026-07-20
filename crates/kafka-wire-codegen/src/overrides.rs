@@ -39,14 +39,64 @@ fn first_version<'de, D: serde::Deserializer<'de>>(deserializer: D) -> Result<i1
 impl HeaderOverrides {
     /// Reads `spec/overrides/headers.toml` from the workspace.
     pub(crate) fn read(workspace_root: &Path) -> Result<Self, GenerationError> {
-        let path = workspace_root
-            .join("spec")
-            .join("overrides")
-            .join("headers.toml");
-        let source = std::fs::read_to_string(&path).map_err(|error| GenerationError::Io {
-            path: path.clone(),
-            source: error,
-        })?;
-        toml::from_str(&source).map_err(|source| GenerationError::Lockfile { path, source })
+        read_overrides(workspace_root, "headers.toml")
     }
+}
+
+/// Every reviewed upstream schema defect the front end accepts by name.
+///
+/// The file has been checked in and asserted-against since the corpus was
+/// vendored, and `kafka-wire-schema`'s own tests fail if an entry stops being
+/// load-bearing. It had no reader on the generation path: `load_message`
+/// passes `SchemaExceptions::none()`, so the two messages these entries
+/// describe were refused by the front end and never reached the backend at all.
+#[derive(Debug, Default, Deserialize)]
+pub(crate) struct SchemaExceptionOverrides {
+    #[serde(default)]
+    accepted: Vec<AcceptedDefect>,
+}
+
+/// One upstream defect, named down to the single diagnostic it subtracts.
+#[derive(Debug, Deserialize)]
+struct AcceptedDefect {
+    message: String,
+    field: Option<String>,
+    code: String,
+    reason: String,
+    upstream: String,
+}
+
+impl SchemaExceptionOverrides {
+    /// Reads `spec/overrides/schema_exceptions.toml` from the workspace.
+    pub(crate) fn read(workspace_root: &Path) -> Result<Self, GenerationError> {
+        read_overrides(workspace_root, "schema_exceptions.toml")
+    }
+
+    /// The reviewed set, in the shape the schema front end validates against.
+    pub(crate) fn exceptions(self) -> kafka_wire_schema::SchemaExceptions {
+        kafka_wire_schema::SchemaExceptions::new(
+            self.accepted
+                .into_iter()
+                .map(|entry| kafka_wire_schema::SchemaException {
+                    message: entry.message,
+                    field: entry.field,
+                    code: entry.code,
+                    reason: entry.reason,
+                    upstream: entry.upstream,
+                })
+                .collect(),
+        )
+    }
+}
+
+fn read_overrides<T: serde::de::DeserializeOwned>(
+    workspace_root: &Path,
+    file: &str,
+) -> Result<T, GenerationError> {
+    let path = workspace_root.join("spec").join("overrides").join(file);
+    let source = std::fs::read_to_string(&path).map_err(|error| GenerationError::Io {
+        path: path.clone(),
+        source: error,
+    })?;
+    toml::from_str(&source).map_err(|source| GenerationError::Lockfile { path, source })
 }

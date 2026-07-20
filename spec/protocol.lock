@@ -369,7 +369,7 @@ status = "enabled"
 [[kafka.files]]
 path = "DescribeConfigsResponse.json"
 sha256 = "b757a8100024f92f6f24436f86fed9c0bb9ba42e6ed18f3449dda1735e286e1d"
-status = "pending"
+status = "enabled"
 
 [[kafka.files]]
 path = "DescribeDelegationTokenRequest.json"
@@ -839,7 +839,7 @@ status = "enabled"
 [[kafka.files]]
 path = "ShareFetchRequest.json"
 sha256 = "0290657f8faa79a24a9a53dab0ab949ae75095fd6cf414f2920e72c5da1723b2"
-status = "pending"
+status = "enabled"
 
 [[kafka.files]]
 path = "ShareFetchResponse.json"

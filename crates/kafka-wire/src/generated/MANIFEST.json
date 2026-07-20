@@ -135,7 +135,7 @@
     },
     {
       "path": "describe_configs.rs",
-      "sha256": "5bbe404377f799e6c3e171f99cd1fbba3d3ee9c866f13fe4c96abbbe86b7176e"
+      "sha256": "696b39afb110b3efad7622a45130d1402da596dea7359e18d5db57adaae5e7ac"
     },
     {
       "path": "describe_delegation_token.rs",
@@ -267,7 +267,7 @@
     },
     {
       "path": "mod.rs",
-      "sha256": "00a09034a67b709c8ce9ff3e6fdad7bbe8157ba0f4be1170ca296536acc59c87"
+      "sha256": "67537fb9d366823e2cbec8b0257e39a6a90f1e4478ef8bd07a20e3eb15ed6e19"
     },
     {
       "path": "offset_commit.rs",
@@ -303,7 +303,7 @@
     },
     {
       "path": "registry.rs",
-      "sha256": "06892b3db6678fb4c37cf6be039e4669fab9a76f76960bc1ac389412dd2268c9"
+      "sha256": "31fd3d2db4b70c95eaee49197b3dd02efe7daa87f231a7c9f1706c73a23eb8c8"
     },
     {
       "path": "remove_raft_voter.rs",
@@ -327,7 +327,7 @@
     },
     {
       "path": "share_fetch.rs",
-      "sha256": "52b527645e5730b3e10359252266d603a298d9efd4eac798bf4fb3ff3a36b34a"
+      "sha256": "16d68fcb9d44f648bc2a99660abb17ab1cf029f838a5115a08c7e277058903e1"
     },
     {
       "path": "share_group_describe.rs",

@@ -1,0 +1,74 @@
+{
+  "schema": 1,
+  "vectors": [
+    {
+      "name": "synthesized_defaults_v1",
+      "why": "Every field this version declares, at its protocol default. Synthesized so the message is held to Apache Kafka's bytes at all; hand-written cases carry the interesting shapes.",
+      "message": "ShareFetchRequest",
+      "api_key": 78,
+      "direction": "request",
+      "version": 1,
+      "flexible": true,
+      "json_value": {
+        "batchSize": 0,
+        "forgottenTopicsData": [],
+        "groupId": null,
+        "maxBytes": 2147483647,
+        "maxRecords": 0,
+        "maxWaitMs": 0,
+        "memberId": null,
+        "minBytes": 0,
+        "shareSessionEpoch": 0,
+        "topics": []
+      },
+      "hex": "00000000000000000000000000007fffffff0000000000000000010100"
+    },
+    {
+      "name": "synthesized_populated_v1",
+      "why": "Every field this version declares, present and non-default: one element in every array, every nullable thing supplied. The defaults case leaves arrays empty, which hides every field of the struct the array would have held — a records field encoded with the wrong length prefix survived the whole corpus that way, because nothing ever reached the struct holding it.",
+      "message": "ShareFetchRequest",
+      "api_key": 78,
+      "direction": "request",
+      "version": 1,
+      "flexible": true,
+      "json_value": {
+        "batchSize": 1,
+        "forgottenTopicsData": [
+          {
+            "partitions": [
+              1
+            ],
+            "topicId": "MkU3OEVGRjRDMTk0M0Q2OA"
+          }
+        ],
+        "groupId": "v",
+        "maxBytes": 1,
+        "maxRecords": 1,
+        "maxWaitMs": 1,
+        "memberId": "v",
+        "minBytes": 1,
+        "shareSessionEpoch": 1,
+        "topics": [
+          {
+            "partitions": [
+              {
+                "acknowledgementBatches": [
+                  {
+                    "acknowledgeTypes": [
+                      1
+                    ],
+                    "firstOffset": 1,
+                    "lastOffset": 1
+                  }
+                ],
+                "partitionIndex": 1
+              }
+            ],
+            "topicId": "MkU3OEVGRjRDMTk0M0Q2OA"
+          }
+        ]
+      },
+      "hex": "027602760000000100000001000000010000000100000001000000010232453738454646344331393433443638020000000102000000000000000100000000000000010201000000023245373845464634433139343344363802000000010000"
+    }
+  ]
+}

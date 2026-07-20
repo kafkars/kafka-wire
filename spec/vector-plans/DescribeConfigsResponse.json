@@ -1,0 +1,202 @@
+{
+  "schema": 1,
+  "message": "DescribeConfigsResponse",
+  "api_key": 32,
+  "direction": "response",
+  "valid_versions": [
+    1,
+    2,
+    3,
+    4
+  ],
+  "flexible_versions": [
+    4
+  ],
+  "source": "DescribeConfigsResponse.json",
+  "cases": [
+    {
+      "name": "synthesized_defaults_v1",
+      "why": "Every field this version declares, at its protocol default. Synthesized so the message is held to Apache Kafka's bytes at all; hand-written cases carry the interesting shapes.",
+      "versions": [
+        1
+      ],
+      "json_value": {
+        "throttleTimeMs": 0,
+        "results": []
+      }
+    },
+    {
+      "name": "synthesized_defaults_v2",
+      "why": "Every field this version declares, at its protocol default. Synthesized so the message is held to Apache Kafka's bytes at all; hand-written cases carry the interesting shapes.",
+      "versions": [
+        2
+      ],
+      "json_value": {
+        "throttleTimeMs": 0,
+        "results": []
+      }
+    },
+    {
+      "name": "synthesized_defaults_v3",
+      "why": "Every field this version declares, at its protocol default. Synthesized so the message is held to Apache Kafka's bytes at all; hand-written cases carry the interesting shapes.",
+      "versions": [
+        3
+      ],
+      "json_value": {
+        "throttleTimeMs": 0,
+        "results": []
+      }
+    },
+    {
+      "name": "synthesized_defaults_v4",
+      "why": "Every field this version declares, at its protocol default. Synthesized so the message is held to Apache Kafka's bytes at all; hand-written cases carry the interesting shapes.",
+      "versions": [
+        4
+      ],
+      "json_value": {
+        "throttleTimeMs": 0,
+        "results": []
+      }
+    },
+    {
+      "name": "synthesized_populated_v1",
+      "why": "Every field this version declares, present and non-default: one element in every array, every nullable thing supplied. The defaults case leaves arrays empty, which hides every field of the struct the array would have held \u2014 a records field encoded with the wrong length prefix survived the whole corpus that way, because nothing ever reached the struct holding it.",
+      "versions": [
+        1
+      ],
+      "json_value": {
+        "throttleTimeMs": 1,
+        "results": [
+          {
+            "errorCode": 1,
+            "errorMessage": "v",
+            "resourceType": 1,
+            "resourceName": "v",
+            "configs": [
+              {
+                "name": "v",
+                "value": "v",
+                "readOnly": true,
+                "configSource": 1,
+                "isSensitive": true,
+                "synonyms": [
+                  {
+                    "name": "v",
+                    "value": "v",
+                    "source": 1
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "synthesized_populated_v2",
+      "why": "Every field this version declares, present and non-default: one element in every array, every nullable thing supplied. The defaults case leaves arrays empty, which hides every field of the struct the array would have held \u2014 a records field encoded with the wrong length prefix survived the whole corpus that way, because nothing ever reached the struct holding it.",
+      "versions": [
+        2
+      ],
+      "json_value": {
+        "throttleTimeMs": 1,
+        "results": [
+          {
+            "errorCode": 1,
+            "errorMessage": "v",
+            "resourceType": 1,
+            "resourceName": "v",
+            "configs": [
+              {
+                "name": "v",
+                "value": "v",
+                "readOnly": true,
+                "configSource": 1,
+                "isSensitive": true,
+                "synonyms": [
+                  {
+                    "name": "v",
+                    "value": "v",
+                    "source": 1
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "synthesized_populated_v3",
+      "why": "Every field this version declares, present and non-default: one element in every array, every nullable thing supplied. The defaults case leaves arrays empty, which hides every field of the struct the array would have held \u2014 a records field encoded with the wrong length prefix survived the whole corpus that way, because nothing ever reached the struct holding it.",
+      "versions": [
+        3
+      ],
+      "json_value": {
+        "throttleTimeMs": 1,
+        "results": [
+          {
+            "errorCode": 1,
+            "errorMessage": "v",
+            "resourceType": 1,
+            "resourceName": "v",
+            "configs": [
+              {
+                "name": "v",
+                "value": "v",
+                "readOnly": true,
+                "configSource": 1,
+                "isSensitive": true,
+                "synonyms": [
+                  {
+                    "name": "v",
+                    "value": "v",
+                    "source": 1
+                  }
+                ],
+                "configType": 1,
+                "documentation": "v"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "synthesized_populated_v4",
+      "why": "Every field this version declares, present and non-default: one element in every array, every nullable thing supplied. The defaults case leaves arrays empty, which hides every field of the struct the array would have held \u2014 a records field encoded with the wrong length prefix survived the whole corpus that way, because nothing ever reached the struct holding it.",
+      "versions": [
+        4
+      ],
+      "json_value": {
+        "throttleTimeMs": 1,
+        "results": [
+          {
+            "errorCode": 1,
+            "errorMessage": "v",
+            "resourceType": 1,
+            "resourceName": "v",
+            "configs": [
+              {
+                "name": "v",
+                "value": "v",
+                "readOnly": true,
+                "configSource": 1,
+                "isSensitive": true,
+                "synonyms": [
+                  {
+                    "name": "v",
+                    "value": "v",
+                    "source": 1
+                  }
+                ],
+                "configType": 1,
+                "documentation": "v"
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

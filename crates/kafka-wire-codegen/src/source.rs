@@ -15,6 +15,7 @@ use sha2::{Digest, Sha256};
 use crate::{
     GenerationError,
     lockfile::{ProtocolLock, SourceStatus},
+    overrides::SchemaExceptionOverrides,
 };
 
 /// Validated message paired with exact source provenance.
@@ -44,6 +45,7 @@ pub(crate) fn load_every_source(
     lock: &ProtocolLock,
 ) -> Result<LoadedCorpus, GenerationError> {
     let source_root = lock.kafka.vendored_message_root(workspace)?;
+    let exceptions = SchemaExceptionOverrides::read(workspace)?.exceptions();
     let mut corpus = LoadedCorpus::default();
     for locked in &lock.kafka.files {
         let path = source_root.join(&locked.path);
@@ -57,7 +59,7 @@ pub(crate) fn load_every_source(
             });
         }
 
-        match kafka_wire_schema::load_message(&path) {
+        match kafka_wire_schema::load_message_with(&path, &exceptions) {
             Ok(message) => corpus.sources.push(MessageSource {
                 message,
                 filename: locked.path.clone(),
@@ -78,6 +80,7 @@ pub(crate) fn load_sources(
     lock: &ProtocolLock,
 ) -> Result<Vec<MessageSource>, GenerationError> {
     let source_root = lock.kafka.vendored_message_root(workspace)?;
+    let exceptions = SchemaExceptionOverrides::read(workspace)?.exceptions();
     let enabled = lock
         .kafka
         .files
@@ -101,7 +104,7 @@ pub(crate) fn load_sources(
             continue;
         }
 
-        let message = kafka_wire_schema::load_message(&path)?;
+        let message = kafka_wire_schema::load_message_with(&path, &exceptions)?;
         sources.push(MessageSource {
             message,
             filename: locked.path.clone(),

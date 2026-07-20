@@ -229,7 +229,10 @@ pub use describe_cluster::{
     DESCRIBE_CLUSTER_REQUEST_DESCRIPTOR, DESCRIBE_CLUSTER_RESPONSE_DESCRIPTOR,
     DescribeClusterRequest, DescribeClusterResponse,
 };
-pub use describe_configs::{DESCRIBE_CONFIGS_REQUEST_DESCRIPTOR, DescribeConfigsRequest};
+pub use describe_configs::{
+    DESCRIBE_CONFIGS_REQUEST_DESCRIPTOR, DESCRIBE_CONFIGS_RESPONSE_DESCRIPTOR,
+    DescribeConfigsRequest, DescribeConfigsResponse,
+};
 pub use describe_delegation_token::{
     DESCRIBE_DELEGATION_TOKEN_REQUEST_DESCRIPTOR, DESCRIBE_DELEGATION_TOKEN_RESPONSE_DESCRIPTOR,
     DescribeDelegationTokenRequest, DescribeDelegationTokenResponse,
@@ -408,7 +411,10 @@ pub use share_acknowledge::{
     SHARE_ACKNOWLEDGE_REQUEST_DESCRIPTOR, SHARE_ACKNOWLEDGE_RESPONSE_DESCRIPTOR,
     ShareAcknowledgeRequest, ShareAcknowledgeResponse,
 };
-pub use share_fetch::{SHARE_FETCH_RESPONSE_DESCRIPTOR, ShareFetchResponse};
+pub use share_fetch::{
+    SHARE_FETCH_REQUEST_DESCRIPTOR, SHARE_FETCH_RESPONSE_DESCRIPTOR, ShareFetchRequest,
+    ShareFetchResponse,
+};
 pub use share_group_describe::{
     SHARE_GROUP_DESCRIBE_REQUEST_DESCRIPTOR, SHARE_GROUP_DESCRIBE_RESPONSE_DESCRIPTOR,
     ShareGroupDescribeRequest, ShareGroupDescribeResponse,

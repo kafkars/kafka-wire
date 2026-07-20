@@ -133,10 +133,12 @@ impl Workspace {
         // workspace has to carry it too. Copied from the real one rather than
         // invented, so a probe cannot pass against exceptions the repository
         // does not actually declare.
-        write(
-            &root.join("spec/overrides/headers.toml"),
-            &read(&repository_root().join("spec/overrides/headers.toml")),
-        );
+        for overrides in ["headers.toml", "schema_exceptions.toml"] {
+            write(
+                &root.join("spec/overrides").join(overrides),
+                &read(&repository_root().join("spec/overrides").join(overrides)),
+            );
+        }
 
         Self { root }
     }
