@@ -21,6 +21,42 @@
         "rack": null
       },
       "hex": "0000000001000000000000000000000000000000000101000001ffffffffffffffff00"
+    },
+    {
+      "name": "synthesized_populated_v3",
+      "why": "Every field this version declares, present and non-default: one element in every array, every nullable thing supplied. The defaults case leaves arrays empty, which hides every field of the struct the array would have held — a records field encoded with the wrong length prefix survived the whole corpus that way, because nothing ever reached the struct holding it.",
+      "message": "BrokerRegistrationRequest",
+      "api_key": 62,
+      "direction": "request",
+      "version": 3,
+      "flexible": true,
+      "json_value": {
+        "brokerId": 1,
+        "clusterId": "v",
+        "features": [
+          {
+            "maxSupportedVersion": 1,
+            "minSupportedVersion": 1,
+            "name": "v"
+          }
+        ],
+        "incarnationId": "MkU3OEVGRjRDMTk0M0Q2OA",
+        "isMigratingZkBroker": true,
+        "listeners": [
+          {
+            "host": "v",
+            "name": "v",
+            "port": 1,
+            "securityProtocol": 1
+          }
+        ],
+        "logDirs": [
+          "MkU3OEVGRjRDMTk0M0Q2OA"
+        ],
+        "previousBrokerEpoch": 1,
+        "rack": "v"
+      },
+      "hex": "000000010276324537384546463443313934334436380202760276000100010002027600010001000276010232453738454646344331393433443638000000000000000100"
     }
   ]
 }

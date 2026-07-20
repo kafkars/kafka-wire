@@ -17,6 +17,23 @@
         "throttleTimeMs": 0
       },
       "hex": "00000000000000010000"
+    },
+    {
+      "name": "synthesized_populated_v0",
+      "why": "Every field this version declares, present and non-default: one element in every array, every nullable thing supplied. The defaults case leaves arrays empty, which hides every field of the struct the array would have held — a records field encoded with the wrong length prefix survived the whole corpus that way, because nothing ever reached the struct holding it.",
+      "message": "BrokerHeartbeatResponse",
+      "api_key": 63,
+      "direction": "response",
+      "version": 0,
+      "flexible": true,
+      "json_value": {
+        "errorCode": 1,
+        "isCaughtUp": true,
+        "isFenced": true,
+        "shouldShutDown": true,
+        "throttleTimeMs": 1
+      },
+      "hex": "00000001000101010100"
     }
   ]
 }

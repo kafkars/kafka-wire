@@ -39,6 +39,26 @@
         "wantShutDown": false
       },
       "hex": "00000001ffffffffffffffff000000000000005a0000010021033245373845464634433139343344363800000000000000000000000000000001"
+    },
+    {
+      "name": "synthesized_populated_v1",
+      "why": "Every field this version declares, present and non-default: one element in every array, every nullable thing supplied. The defaults case leaves arrays empty, which hides every field of the struct the array would have held — a records field encoded with the wrong length prefix survived the whole corpus that way, because nothing ever reached the struct holding it.",
+      "message": "BrokerHeartbeatRequest",
+      "api_key": 63,
+      "direction": "request",
+      "version": 1,
+      "flexible": true,
+      "json_value": {
+        "brokerEpoch": 1,
+        "brokerId": 1,
+        "currentMetadataOffset": 1,
+        "offlineLogDirs": [
+          "MkU3OEVGRjRDMTk0M0Q2OA"
+        ],
+        "wantFence": true,
+        "wantShutDown": true
+      },
+      "hex": "000000010000000000000001000000000000000101010100110232453738454646344331393433443638"
     }
   ]
 }
