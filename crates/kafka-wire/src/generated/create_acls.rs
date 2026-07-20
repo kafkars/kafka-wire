@@ -15,7 +15,7 @@ use crate::{
     RequestResponsePair,
 };
 
-/// `CreateAclsRequestAclCreation` as declared by the `CreateAcls` API.
+/// `AclCreation` as declared by the `CreateAcls` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct CreateAclsRequestAclCreation {
@@ -220,7 +220,7 @@ impl KafkaEncode for CreateAclsRequest {
     }
 }
 
-/// `CreateAclsResponseAclCreationResult` as declared by the `CreateAcls` API.
+/// `AclCreationResult` as declared by the `CreateAcls` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct CreateAclsResponseAclCreationResult {

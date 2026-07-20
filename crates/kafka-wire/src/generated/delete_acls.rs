@@ -15,10 +15,10 @@ use crate::{
     RequestResponsePair,
 };
 
-/// `DeleteAclsRequestDeleteAclsFilter` as declared by the `DeleteAcls` API.
+/// `DeleteAclsFilter` as declared by the `DeleteAcls` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Eq, PartialEq)]
-pub struct DeleteAclsRequestDeleteAclsFilter {
+pub struct DeleteAclsRequestFilter {
     /// The resource type.
     pub resource_type_filter: i8,
     /// The resource name, or null to match any resource name.
@@ -37,7 +37,7 @@ pub struct DeleteAclsRequestDeleteAclsFilter {
     pub unknown_tagged_fields: TaggedFields,
 }
 
-impl DeleteAclsRequestDeleteAclsFilter {
+impl DeleteAclsRequestFilter {
     const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(2, 3));
 
     fn is_flexible(version: ApiVersion) -> bool {
@@ -45,7 +45,7 @@ impl DeleteAclsRequestDeleteAclsFilter {
     }
 }
 
-impl Default for DeleteAclsRequestDeleteAclsFilter {
+impl Default for DeleteAclsRequestFilter {
     fn default() -> Self {
         Self {
             resource_type_filter: 0,
@@ -60,7 +60,7 @@ impl Default for DeleteAclsRequestDeleteAclsFilter {
     }
 }
 
-impl KafkaDecode for DeleteAclsRequestDeleteAclsFilter {
+impl KafkaDecode for DeleteAclsRequestFilter {
     fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
         let resource_type_filter = decoder.read_i8()?;
         let resource_name_filter = if Self::is_flexible(version) {
@@ -100,7 +100,7 @@ impl KafkaDecode for DeleteAclsRequestDeleteAclsFilter {
     }
 }
 
-impl KafkaEncode for DeleteAclsRequestDeleteAclsFilter {
+impl KafkaEncode for DeleteAclsRequestFilter {
     fn encode<T: EncodeTarget>(
         &self,
         encoder: &mut Encoder<T>,
@@ -130,7 +130,7 @@ impl KafkaEncode for DeleteAclsRequestDeleteAclsFilter {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
         } else if !self.unknown_tagged_fields.is_empty() {
             return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: "DeleteAclsRequestDeleteAclsFilter",
+                message: "DeleteAclsRequestFilter",
                 version,
             });
         }
@@ -144,7 +144,7 @@ impl KafkaEncode for DeleteAclsRequestDeleteAclsFilter {
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct DeleteAclsRequest {
     /// The filters to use when deleting `ACLs`.
-    pub filters: Vec<DeleteAclsRequestDeleteAclsFilter>,
+    pub filters: Vec<DeleteAclsRequestFilter>,
     /// Unknown flexible-version tagged fields retained for forwarding.
     pub unknown_tagged_fields: TaggedFields,
 }
@@ -174,7 +174,7 @@ impl KafkaDecode for DeleteAclsRequest {
                 decoder.read_array_len()?
             };
             decoder.read_vec(length, |decoder| {
-                DeleteAclsRequestDeleteAclsFilter::decode(decoder, version)
+                DeleteAclsRequestFilter::decode(decoder, version)
             })?
         };
         let unknown_tagged_fields = if Self::is_flexible(version) {
@@ -220,21 +220,21 @@ impl KafkaEncode for DeleteAclsRequest {
     }
 }
 
-/// `DeleteAclsResponseDeleteAclsFilterResult` as declared by the `DeleteAcls` API.
+/// `DeleteAclsFilterResult` as declared by the `DeleteAcls` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Eq, PartialEq)]
-pub struct DeleteAclsResponseDeleteAclsFilterResult {
+pub struct DeleteAclsResponseFilterResult {
     /// The error code, or 0 if the filter succeeded.
     pub error_code: i16,
     /// The error message, or null if the filter succeeded.
     pub error_message: Option<StrBytes>,
     /// The `ACLs` which matched this filter.
-    pub matching_acls: Vec<DeleteAclsResponseDeleteAclsMatchingAcl>,
+    pub matching_acls: Vec<DeleteAclsResponseMatchingAcl>,
     /// Unknown flexible-version tagged fields retained for forwarding.
     pub unknown_tagged_fields: TaggedFields,
 }
 
-impl DeleteAclsResponseDeleteAclsFilterResult {
+impl DeleteAclsResponseFilterResult {
     const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(2, 3));
 
     fn is_flexible(version: ApiVersion) -> bool {
@@ -242,7 +242,7 @@ impl DeleteAclsResponseDeleteAclsFilterResult {
     }
 }
 
-impl Default for DeleteAclsResponseDeleteAclsFilterResult {
+impl Default for DeleteAclsResponseFilterResult {
     fn default() -> Self {
         Self {
             error_code: 0,
@@ -253,7 +253,7 @@ impl Default for DeleteAclsResponseDeleteAclsFilterResult {
     }
 }
 
-impl KafkaDecode for DeleteAclsResponseDeleteAclsFilterResult {
+impl KafkaDecode for DeleteAclsResponseFilterResult {
     fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
         let error_code = decoder.read_i16()?;
         let error_message = if Self::is_flexible(version) {
@@ -268,7 +268,7 @@ impl KafkaDecode for DeleteAclsResponseDeleteAclsFilterResult {
                 decoder.read_array_len()?
             };
             decoder.read_vec(length, |decoder| {
-                DeleteAclsResponseDeleteAclsMatchingAcl::decode(decoder, version)
+                DeleteAclsResponseMatchingAcl::decode(decoder, version)
             })?
         };
         let unknown_tagged_fields = if Self::is_flexible(version) {
@@ -286,7 +286,7 @@ impl KafkaDecode for DeleteAclsResponseDeleteAclsFilterResult {
     }
 }
 
-impl KafkaEncode for DeleteAclsResponseDeleteAclsFilterResult {
+impl KafkaEncode for DeleteAclsResponseFilterResult {
     fn encode<T: EncodeTarget>(
         &self,
         encoder: &mut Encoder<T>,
@@ -311,7 +311,7 @@ impl KafkaEncode for DeleteAclsResponseDeleteAclsFilterResult {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
         } else if !self.unknown_tagged_fields.is_empty() {
             return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: "DeleteAclsResponseDeleteAclsFilterResult",
+                message: "DeleteAclsResponseFilterResult",
                 version,
             });
         }
@@ -320,10 +320,10 @@ impl KafkaEncode for DeleteAclsResponseDeleteAclsFilterResult {
     }
 }
 
-/// `DeleteAclsResponseDeleteAclsMatchingAcl` as declared by the `DeleteAcls` API.
+/// `DeleteAclsMatchingAcl` as declared by the `DeleteAcls` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Eq, PartialEq)]
-pub struct DeleteAclsResponseDeleteAclsMatchingAcl {
+pub struct DeleteAclsResponseMatchingAcl {
     /// The deletion error code, or 0 if the deletion succeeded.
     pub error_code: i16,
     /// The deletion error message, or null if the deletion succeeded.
@@ -346,7 +346,7 @@ pub struct DeleteAclsResponseDeleteAclsMatchingAcl {
     pub unknown_tagged_fields: TaggedFields,
 }
 
-impl DeleteAclsResponseDeleteAclsMatchingAcl {
+impl DeleteAclsResponseMatchingAcl {
     const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(2, 3));
 
     fn is_flexible(version: ApiVersion) -> bool {
@@ -354,7 +354,7 @@ impl DeleteAclsResponseDeleteAclsMatchingAcl {
     }
 }
 
-impl Default for DeleteAclsResponseDeleteAclsMatchingAcl {
+impl Default for DeleteAclsResponseMatchingAcl {
     fn default() -> Self {
         Self {
             error_code: 0,
@@ -371,7 +371,7 @@ impl Default for DeleteAclsResponseDeleteAclsMatchingAcl {
     }
 }
 
-impl KafkaDecode for DeleteAclsResponseDeleteAclsMatchingAcl {
+impl KafkaDecode for DeleteAclsResponseMatchingAcl {
     fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
         let error_code = decoder.read_i16()?;
         let error_message = if Self::is_flexible(version) {
@@ -419,7 +419,7 @@ impl KafkaDecode for DeleteAclsResponseDeleteAclsMatchingAcl {
     }
 }
 
-impl KafkaEncode for DeleteAclsResponseDeleteAclsMatchingAcl {
+impl KafkaEncode for DeleteAclsResponseMatchingAcl {
     fn encode<T: EncodeTarget>(
         &self,
         encoder: &mut Encoder<T>,
@@ -455,7 +455,7 @@ impl KafkaEncode for DeleteAclsResponseDeleteAclsMatchingAcl {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
         } else if !self.unknown_tagged_fields.is_empty() {
             return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: "DeleteAclsResponseDeleteAclsMatchingAcl",
+                message: "DeleteAclsResponseMatchingAcl",
                 version,
             });
         }
@@ -471,7 +471,7 @@ pub struct DeleteAclsResponse {
     /// The duration in milliseconds for which the request was throttled due to a quota violation, or zero if the request did not violate any quota.
     pub throttle_time_ms: i32,
     /// The results for each filter.
-    pub filter_results: Vec<DeleteAclsResponseDeleteAclsFilterResult>,
+    pub filter_results: Vec<DeleteAclsResponseFilterResult>,
     /// Unknown flexible-version tagged fields retained for forwarding.
     pub unknown_tagged_fields: TaggedFields,
 }
@@ -498,7 +498,7 @@ impl KafkaDecode for DeleteAclsResponse {
                 decoder.read_array_len()?
             };
             decoder.read_vec(length, |decoder| {
-                DeleteAclsResponseDeleteAclsFilterResult::decode(decoder, version)
+                DeleteAclsResponseFilterResult::decode(decoder, version)
             })?
         };
         let unknown_tagged_fields = if Self::is_flexible(version) {

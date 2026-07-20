@@ -15,7 +15,7 @@ use crate::{
     RequestResponsePair,
 };
 
-/// `CreateDelegationTokenRequestCreatableRenewers` as declared by the `CreateDelegationToken` API.
+/// `CreatableRenewers` as declared by the `CreateDelegationToken` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct CreateDelegationTokenRequestCreatableRenewers {

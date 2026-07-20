@@ -15,7 +15,7 @@ use crate::{
     RequestResponsePair,
 };
 
-/// `AddRaftVoterRequestListener` as declared by the `AddRaftVoter` API.
+/// `Listener` as declared by the `AddRaftVoter` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct AddRaftVoterRequestListener {

@@ -15,7 +15,7 @@ use crate::{
     RequestResponsePair,
 };
 
-/// `VoteRequestTopicData` as declared by the `Vote` API.
+/// `TopicData` as declared by the `Vote` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct VoteRequestTopicData {
@@ -83,7 +83,7 @@ impl KafkaEncode for VoteRequestTopicData {
     }
 }
 
-/// `VoteRequestPartitionData` as declared by the `Vote` API.
+/// `PartitionData` as declared by the `Vote` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct VoteRequestPartitionData {
@@ -291,7 +291,7 @@ impl KafkaEncode for VoteRequest {
     }
 }
 
-/// `VoteResponseTopicData` as declared by the `Vote` API.
+/// `TopicData` as declared by the `Vote` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct VoteResponseTopicData {
@@ -359,7 +359,7 @@ impl KafkaEncode for VoteResponseTopicData {
     }
 }
 
-/// `VoteResponsePartitionData` as declared by the `Vote` API.
+/// `PartitionData` as declared by the `Vote` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct VoteResponsePartitionData {
@@ -434,7 +434,7 @@ impl KafkaEncode for VoteResponsePartitionData {
     }
 }
 
-/// `VoteResponseNodeEndpoint` as declared by the `Vote` API.
+/// `NodeEndpoint` as declared by the `Vote` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct VoteResponseNodeEndpoint {

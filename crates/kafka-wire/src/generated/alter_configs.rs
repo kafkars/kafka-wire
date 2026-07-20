@@ -15,10 +15,10 @@ use crate::{
     RequestResponsePair,
 };
 
-/// `AlterConfigsRequestAlterConfigsResource` as declared by the `AlterConfigs` API.
+/// `AlterConfigsResource` as declared by the `AlterConfigs` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct AlterConfigsRequestAlterConfigsResource {
+pub struct AlterConfigsRequestResource {
     /// The resource type.
     pub resource_type: i8,
     /// The resource name.
@@ -29,7 +29,7 @@ pub struct AlterConfigsRequestAlterConfigsResource {
     pub unknown_tagged_fields: TaggedFields,
 }
 
-impl AlterConfigsRequestAlterConfigsResource {
+impl AlterConfigsRequestResource {
     const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(2, 2));
 
     fn is_flexible(version: ApiVersion) -> bool {
@@ -37,7 +37,7 @@ impl AlterConfigsRequestAlterConfigsResource {
     }
 }
 
-impl KafkaDecode for AlterConfigsRequestAlterConfigsResource {
+impl KafkaDecode for AlterConfigsRequestResource {
     fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
         let resource_type = decoder.read_i8()?;
         let resource_name = if Self::is_flexible(version) {
@@ -70,7 +70,7 @@ impl KafkaDecode for AlterConfigsRequestAlterConfigsResource {
     }
 }
 
-impl KafkaEncode for AlterConfigsRequestAlterConfigsResource {
+impl KafkaEncode for AlterConfigsRequestResource {
     fn encode<T: EncodeTarget>(
         &self,
         encoder: &mut Encoder<T>,
@@ -95,7 +95,7 @@ impl KafkaEncode for AlterConfigsRequestAlterConfigsResource {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
         } else if !self.unknown_tagged_fields.is_empty() {
             return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: "AlterConfigsRequestAlterConfigsResource",
+                message: "AlterConfigsRequestResource",
                 version,
             });
         }
@@ -104,7 +104,7 @@ impl KafkaEncode for AlterConfigsRequestAlterConfigsResource {
     }
 }
 
-/// `AlterConfigsRequestAlterableConfig` as declared by the `AlterConfigs` API.
+/// `AlterableConfig` as declared by the `AlterConfigs` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct AlterConfigsRequestAlterableConfig {
@@ -195,7 +195,7 @@ impl KafkaEncode for AlterConfigsRequestAlterableConfig {
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct AlterConfigsRequest {
     /// The updates for each resource.
-    pub resources: Vec<AlterConfigsRequestAlterConfigsResource>,
+    pub resources: Vec<AlterConfigsRequestResource>,
     /// True if we should validate the request, but not change the configurations.
     pub validate_only: bool,
     /// Unknown flexible-version tagged fields retained for forwarding.
@@ -227,7 +227,7 @@ impl KafkaDecode for AlterConfigsRequest {
                 decoder.read_array_len()?
             };
             decoder.read_vec(length, |decoder| {
-                AlterConfigsRequestAlterConfigsResource::decode(decoder, version)
+                AlterConfigsRequestResource::decode(decoder, version)
             })?
         };
         let validate_only = decoder.read_bool()?;
@@ -276,10 +276,10 @@ impl KafkaEncode for AlterConfigsRequest {
     }
 }
 
-/// `AlterConfigsResponseAlterConfigsResourceResponse` as declared by the `AlterConfigs` API.
+/// `AlterConfigsResourceResponse` as declared by the `AlterConfigs` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Eq, PartialEq)]
-pub struct AlterConfigsResponseAlterConfigsResourceResponse {
+pub struct AlterConfigsResponseResourceResponse {
     /// The resource error code.
     pub error_code: i16,
     /// The resource error message, or null if there was no error.
@@ -292,7 +292,7 @@ pub struct AlterConfigsResponseAlterConfigsResourceResponse {
     pub unknown_tagged_fields: TaggedFields,
 }
 
-impl AlterConfigsResponseAlterConfigsResourceResponse {
+impl AlterConfigsResponseResourceResponse {
     const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(2, 2));
 
     fn is_flexible(version: ApiVersion) -> bool {
@@ -300,7 +300,7 @@ impl AlterConfigsResponseAlterConfigsResourceResponse {
     }
 }
 
-impl Default for AlterConfigsResponseAlterConfigsResourceResponse {
+impl Default for AlterConfigsResponseResourceResponse {
     fn default() -> Self {
         Self {
             error_code: 0,
@@ -312,7 +312,7 @@ impl Default for AlterConfigsResponseAlterConfigsResourceResponse {
     }
 }
 
-impl KafkaDecode for AlterConfigsResponseAlterConfigsResourceResponse {
+impl KafkaDecode for AlterConfigsResponseResourceResponse {
     fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
         let error_code = decoder.read_i16()?;
         let error_message = if Self::is_flexible(version) {
@@ -342,7 +342,7 @@ impl KafkaDecode for AlterConfigsResponseAlterConfigsResourceResponse {
     }
 }
 
-impl KafkaEncode for AlterConfigsResponseAlterConfigsResourceResponse {
+impl KafkaEncode for AlterConfigsResponseResourceResponse {
     fn encode<T: EncodeTarget>(
         &self,
         encoder: &mut Encoder<T>,
@@ -365,7 +365,7 @@ impl KafkaEncode for AlterConfigsResponseAlterConfigsResourceResponse {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
         } else if !self.unknown_tagged_fields.is_empty() {
             return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: "AlterConfigsResponseAlterConfigsResourceResponse",
+                message: "AlterConfigsResponseResourceResponse",
                 version,
             });
         }
@@ -381,7 +381,7 @@ pub struct AlterConfigsResponse {
     /// Duration in milliseconds for which the request was throttled due to a quota violation, or zero if the request did not violate any quota.
     pub throttle_time_ms: i32,
     /// The responses for each resource.
-    pub responses: Vec<AlterConfigsResponseAlterConfigsResourceResponse>,
+    pub responses: Vec<AlterConfigsResponseResourceResponse>,
     /// Unknown flexible-version tagged fields retained for forwarding.
     pub unknown_tagged_fields: TaggedFields,
 }
@@ -408,7 +408,7 @@ impl KafkaDecode for AlterConfigsResponse {
                 decoder.read_array_len()?
             };
             decoder.read_vec(length, |decoder| {
-                AlterConfigsResponseAlterConfigsResourceResponse::decode(decoder, version)
+                AlterConfigsResponseResourceResponse::decode(decoder, version)
             })?
         };
         let unknown_tagged_fields = if Self::is_flexible(version) {

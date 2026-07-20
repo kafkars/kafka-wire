@@ -15,7 +15,7 @@ use crate::{
     RequestResponsePair,
 };
 
-/// `DescribeProducersRequestTopicRequest` as declared by the `DescribeProducers` API.
+/// `TopicRequest` as declared by the `DescribeProducers` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct DescribeProducersRequestTopicRequest {
@@ -154,7 +154,7 @@ impl KafkaEncode for DescribeProducersRequest {
     }
 }
 
-/// `DescribeProducersResponseTopicResponse` as declared by the `DescribeProducers` API.
+/// `TopicResponse` as declared by the `DescribeProducers` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct DescribeProducersResponseTopicResponse {
@@ -222,7 +222,7 @@ impl KafkaEncode for DescribeProducersResponseTopicResponse {
     }
 }
 
-/// `DescribeProducersResponsePartitionResponse` as declared by the `DescribeProducers` API.
+/// `PartitionResponse` as declared by the `DescribeProducers` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct DescribeProducersResponsePartitionResponse {
@@ -300,7 +300,7 @@ impl KafkaEncode for DescribeProducersResponsePartitionResponse {
     }
 }
 
-/// `DescribeProducersResponseProducerState` as declared by the `DescribeProducers` API.
+/// `ProducerState` as declared by the `DescribeProducers` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct DescribeProducersResponseProducerState {

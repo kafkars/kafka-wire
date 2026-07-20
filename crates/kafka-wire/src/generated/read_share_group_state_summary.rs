@@ -15,7 +15,7 @@ use crate::{
     RequestResponsePair,
 };
 
-/// `ReadShareGroupStateSummaryRequestReadStateSummaryData` as declared by the `ReadShareGroupStateSummary` API.
+/// `ReadStateSummaryData` as declared by the `ReadShareGroupStateSummary` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct ReadShareGroupStateSummaryRequestReadStateSummaryData {
@@ -83,7 +83,7 @@ impl KafkaEncode for ReadShareGroupStateSummaryRequestReadStateSummaryData {
     }
 }
 
-/// `ReadShareGroupStateSummaryRequestPartitionData` as declared by the `ReadShareGroupStateSummary` API.
+/// `PartitionData` as declared by the `ReadShareGroupStateSummary` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct ReadShareGroupStateSummaryRequestPartitionData {
@@ -221,7 +221,7 @@ impl KafkaEncode for ReadShareGroupStateSummaryRequest {
     }
 }
 
-/// `ReadShareGroupStateSummaryResponseReadStateSummaryResult` as declared by the `ReadShareGroupStateSummary` API.
+/// `ReadStateSummaryResult` as declared by the `ReadShareGroupStateSummary` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct ReadShareGroupStateSummaryResponseReadStateSummaryResult {
@@ -289,7 +289,7 @@ impl KafkaEncode for ReadShareGroupStateSummaryResponseReadStateSummaryResult {
     }
 }
 
-/// `ReadShareGroupStateSummaryResponsePartitionResult` as declared by the `ReadShareGroupStateSummary` API.
+/// `PartitionResult` as declared by the `ReadShareGroupStateSummary` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct ReadShareGroupStateSummaryResponsePartitionResult {

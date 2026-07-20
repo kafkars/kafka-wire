@@ -15,7 +15,7 @@ use crate::{
     RequestResponsePair,
 };
 
-/// `FetchRequestReplicaState` as declared by the `Fetch` API.
+/// `ReplicaState` as declared by the `Fetch` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct FetchRequestReplicaState {
@@ -97,21 +97,21 @@ impl KafkaEncode for FetchRequestReplicaState {
     }
 }
 
-/// `FetchRequestFetchTopic` as declared by the `Fetch` API.
+/// `FetchTopic` as declared by the `Fetch` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct FetchRequestFetchTopic {
+pub struct FetchRequestTopic {
     /// The name of the topic to fetch.
     pub topic: StrBytes,
     /// The unique topic ID.
     pub topic_id: Uuid,
     /// The partitions to fetch.
-    pub partitions: Vec<FetchRequestFetchPartition>,
+    pub partitions: Vec<FetchRequestPartition>,
     /// Unknown flexible-version tagged fields retained for forwarding.
     pub unknown_tagged_fields: TaggedFields,
 }
 
-impl FetchRequestFetchTopic {
+impl FetchRequestTopic {
     const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(12, 18));
 
     fn is_flexible(version: ApiVersion) -> bool {
@@ -119,7 +119,7 @@ impl FetchRequestFetchTopic {
     }
 }
 
-impl KafkaDecode for FetchRequestFetchTopic {
+impl KafkaDecode for FetchRequestTopic {
     fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
         let topic = if version.value() <= 12 {
             if Self::is_flexible(version) {
@@ -142,7 +142,7 @@ impl KafkaDecode for FetchRequestFetchTopic {
                 decoder.read_array_len()?
             };
             decoder.read_vec(length, |decoder| {
-                FetchRequestFetchPartition::decode(decoder, version)
+                FetchRequestPartition::decode(decoder, version)
             })?
         };
         let unknown_tagged_fields = if Self::is_flexible(version) {
@@ -160,7 +160,7 @@ impl KafkaDecode for FetchRequestFetchTopic {
     }
 }
 
-impl KafkaEncode for FetchRequestFetchTopic {
+impl KafkaEncode for FetchRequestTopic {
     fn encode<T: EncodeTarget>(
         &self,
         encoder: &mut Encoder<T>,
@@ -189,7 +189,7 @@ impl KafkaEncode for FetchRequestFetchTopic {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
         } else if !self.unknown_tagged_fields.is_empty() {
             return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: "FetchRequestFetchTopic",
+                message: "FetchRequestTopic",
                 version,
             });
         }
@@ -198,10 +198,10 @@ impl KafkaEncode for FetchRequestFetchTopic {
     }
 }
 
-/// `FetchRequestFetchPartition` as declared by the `Fetch` API.
+/// `FetchPartition` as declared by the `Fetch` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Eq, PartialEq)]
-pub struct FetchRequestFetchPartition {
+pub struct FetchRequestPartition {
     /// The partition index.
     pub partition: i32,
     /// The current leader epoch of the partition.
@@ -222,7 +222,7 @@ pub struct FetchRequestFetchPartition {
     pub unknown_tagged_fields: TaggedFields,
 }
 
-impl FetchRequestFetchPartition {
+impl FetchRequestPartition {
     const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(12, 18));
 
     fn is_flexible(version: ApiVersion) -> bool {
@@ -230,7 +230,7 @@ impl FetchRequestFetchPartition {
     }
 }
 
-impl Default for FetchRequestFetchPartition {
+impl Default for FetchRequestPartition {
     fn default() -> Self {
         Self {
             partition: 0,
@@ -246,7 +246,7 @@ impl Default for FetchRequestFetchPartition {
     }
 }
 
-impl KafkaDecode for FetchRequestFetchPartition {
+impl KafkaDecode for FetchRequestPartition {
     fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
         let partition = decoder.read_i32()?;
         let current_leader_epoch = if version.value() >= 9 {
@@ -297,7 +297,7 @@ impl KafkaDecode for FetchRequestFetchPartition {
     }
 }
 
-impl KafkaEncode for FetchRequestFetchPartition {
+impl KafkaEncode for FetchRequestPartition {
     fn encode<T: EncodeTarget>(
         &self,
         encoder: &mut Encoder<T>,
@@ -333,7 +333,7 @@ impl KafkaEncode for FetchRequestFetchPartition {
             encoder.write_merged_tagged_fields(known, &self.unknown_tagged_fields)?;
         } else if !self.unknown_tagged_fields.is_empty() {
             return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: "FetchRequestFetchPartition",
+                message: "FetchRequestPartition",
                 version,
             });
         }
@@ -342,7 +342,7 @@ impl KafkaEncode for FetchRequestFetchPartition {
     }
 }
 
-/// `FetchRequestForgottenTopic` as declared by the `Fetch` API.
+/// `ForgottenTopic` as declared by the `Fetch` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct FetchRequestForgottenTopic {
@@ -468,7 +468,7 @@ pub struct FetchRequest {
     /// The fetch session epoch, which is used for ordering requests in a session.
     pub session_epoch: i32,
     /// The topics to fetch.
-    pub topics: Vec<FetchRequestFetchTopic>,
+    pub topics: Vec<FetchRequestTopic>,
     /// In an incremental fetch request, the partitions to remove.
     pub forgotten_topics_data: Vec<FetchRequestForgottenTopic>,
     /// Rack ID of the consumer making this request.
@@ -541,7 +541,7 @@ impl KafkaDecode for FetchRequest {
                 decoder.read_array_len()?
             };
             decoder.read_vec(length, |decoder| {
-                FetchRequestFetchTopic::decode(decoder, version)
+                FetchRequestTopic::decode(decoder, version)
             })?
         };
         let forgotten_topics_data = if version.value() >= 7 {
@@ -695,7 +695,7 @@ impl KafkaEncode for FetchRequest {
     }
 }
 
-/// `FetchResponseFetchableTopicResponse` as declared by the `Fetch` API.
+/// `FetchableTopicResponse` as declared by the `Fetch` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct FetchResponseFetchableTopicResponse {
@@ -796,7 +796,7 @@ impl KafkaEncode for FetchResponseFetchableTopicResponse {
     }
 }
 
-/// `FetchResponsePartitionData` as declared by the `Fetch` API.
+/// `PartitionData` as declared by the `Fetch` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct FetchResponsePartitionData {
@@ -995,7 +995,7 @@ impl KafkaEncode for FetchResponsePartitionData {
     }
 }
 
-/// `FetchResponseEpochEndOffset` as declared by the `Fetch` API.
+/// `EpochEndOffset` as declared by the `Fetch` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct FetchResponseEpochEndOffset {
@@ -1077,7 +1077,7 @@ impl KafkaEncode for FetchResponseEpochEndOffset {
     }
 }
 
-/// `FetchResponseLeaderIdAndEpoch` as declared by the `Fetch` API.
+/// `LeaderIdAndEpoch` as declared by the `Fetch` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct FetchResponseLeaderIdAndEpoch {
@@ -1159,7 +1159,7 @@ impl KafkaEncode for FetchResponseLeaderIdAndEpoch {
     }
 }
 
-/// `FetchResponseSnapshotId` as declared by the `Fetch` API.
+/// `SnapshotId` as declared by the `Fetch` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct FetchResponseSnapshotId {
@@ -1229,7 +1229,7 @@ impl KafkaEncode for FetchResponseSnapshotId {
     }
 }
 
-/// `FetchResponseAbortedTransaction` as declared by the `Fetch` API.
+/// `AbortedTransaction` as declared by the `Fetch` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct FetchResponseAbortedTransaction {
@@ -1289,7 +1289,7 @@ impl KafkaEncode for FetchResponseAbortedTransaction {
     }
 }
 
-/// `FetchResponseNodeEndpoint` as declared by the `Fetch` API.
+/// `NodeEndpoint` as declared by the `Fetch` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct FetchResponseNodeEndpoint {

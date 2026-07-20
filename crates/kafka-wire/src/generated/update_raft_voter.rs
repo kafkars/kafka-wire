@@ -15,7 +15,7 @@ use crate::{
     RequestResponsePair,
 };
 
-/// `UpdateRaftVoterRequestListener` as declared by the `UpdateRaftVoter` API.
+/// `Listener` as declared by the `UpdateRaftVoter` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct UpdateRaftVoterRequestListener {
@@ -80,7 +80,7 @@ impl KafkaEncode for UpdateRaftVoterRequestListener {
     }
 }
 
-/// `UpdateRaftVoterRequestKRaftVersionFeature` as declared by the `UpdateRaftVoter` API.
+/// `KRaftVersionFeature` as declared by the `UpdateRaftVoter` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct UpdateRaftVoterRequestKRaftVersionFeature {
@@ -253,7 +253,7 @@ impl KafkaEncode for UpdateRaftVoterRequest {
     }
 }
 
-/// `UpdateRaftVoterResponseCurrentLeader` as declared by the `UpdateRaftVoter` API.
+/// `CurrentLeader` as declared by the `UpdateRaftVoter` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct UpdateRaftVoterResponseCurrentLeader {

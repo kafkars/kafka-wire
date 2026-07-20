@@ -15,7 +15,7 @@ use crate::{
     RequestResponsePair,
 };
 
-/// `DescribeQuorumRequestTopicData` as declared by the `DescribeQuorum` API.
+/// `TopicData` as declared by the `DescribeQuorum` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct DescribeQuorumRequestTopicData {
@@ -83,7 +83,7 @@ impl KafkaEncode for DescribeQuorumRequestTopicData {
     }
 }
 
-/// `DescribeQuorumRequestPartitionData` as declared by the `DescribeQuorum` API.
+/// `PartitionData` as declared by the `DescribeQuorum` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct DescribeQuorumRequestPartitionData {
@@ -211,7 +211,7 @@ impl KafkaEncode for DescribeQuorumRequest {
     }
 }
 
-/// `DescribeQuorumResponseReplicaState` as declared by the `DescribeQuorum` API.
+/// `ReplicaState` as declared by the `DescribeQuorum` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct DescribeQuorumResponseReplicaState {
@@ -317,7 +317,7 @@ impl KafkaEncode for DescribeQuorumResponseReplicaState {
     }
 }
 
-/// `DescribeQuorumResponseTopicData` as declared by the `DescribeQuorum` API.
+/// `TopicData` as declared by the `DescribeQuorum` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct DescribeQuorumResponseTopicData {
@@ -385,7 +385,7 @@ impl KafkaEncode for DescribeQuorumResponseTopicData {
     }
 }
 
-/// `DescribeQuorumResponsePartitionData` as declared by the `DescribeQuorum` API.
+/// `PartitionData` as declared by the `DescribeQuorum` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct DescribeQuorumResponsePartitionData {
@@ -513,7 +513,7 @@ impl KafkaEncode for DescribeQuorumResponsePartitionData {
     }
 }
 
-/// `DescribeQuorumResponseNode` as declared by the `DescribeQuorum` API.
+/// `Node` as declared by the `DescribeQuorum` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct DescribeQuorumResponseNode {
@@ -591,7 +591,7 @@ impl KafkaEncode for DescribeQuorumResponseNode {
     }
 }
 
-/// `DescribeQuorumResponseListener` as declared by the `DescribeQuorum` API.
+/// `Listener` as declared by the `DescribeQuorum` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct DescribeQuorumResponseListener {

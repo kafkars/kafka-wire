@@ -15,7 +15,7 @@ use crate::{
     RequestResponsePair,
 };
 
-/// `BeginQuorumEpochRequestTopicData` as declared by the `BeginQuorumEpoch` API.
+/// `TopicData` as declared by the `BeginQuorumEpoch` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct BeginQuorumEpochRequestTopicData {
@@ -99,7 +99,7 @@ impl KafkaEncode for BeginQuorumEpochRequestTopicData {
     }
 }
 
-/// `BeginQuorumEpochRequestPartitionData` as declared by the `BeginQuorumEpoch` API.
+/// `PartitionData` as declared by the `BeginQuorumEpoch` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct BeginQuorumEpochRequestPartitionData {
@@ -175,7 +175,7 @@ impl KafkaEncode for BeginQuorumEpochRequestPartitionData {
     }
 }
 
-/// `BeginQuorumEpochRequestLeaderEndpoint` as declared by the `BeginQuorumEpoch` API.
+/// `LeaderEndpoint` as declared by the `BeginQuorumEpoch` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct BeginQuorumEpochRequestLeaderEndpoint {
@@ -392,7 +392,7 @@ impl KafkaEncode for BeginQuorumEpochRequest {
     }
 }
 
-/// `BeginQuorumEpochResponseTopicData` as declared by the `BeginQuorumEpoch` API.
+/// `TopicData` as declared by the `BeginQuorumEpoch` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct BeginQuorumEpochResponseTopicData {
@@ -476,7 +476,7 @@ impl KafkaEncode for BeginQuorumEpochResponseTopicData {
     }
 }
 
-/// `BeginQuorumEpochResponsePartitionData` as declared by the `BeginQuorumEpoch` API.
+/// `PartitionData` as declared by the `BeginQuorumEpoch` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct BeginQuorumEpochResponsePartitionData {
@@ -546,7 +546,7 @@ impl KafkaEncode for BeginQuorumEpochResponsePartitionData {
     }
 }
 
-/// `BeginQuorumEpochResponseNodeEndpoint` as declared by the `BeginQuorumEpoch` API.
+/// `NodeEndpoint` as declared by the `BeginQuorumEpoch` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct BeginQuorumEpochResponseNodeEndpoint {

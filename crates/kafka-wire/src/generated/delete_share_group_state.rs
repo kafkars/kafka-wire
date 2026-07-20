@@ -15,7 +15,7 @@ use crate::{
     RequestResponsePair,
 };
 
-/// `DeleteShareGroupStateRequestDeleteStateData` as declared by the `DeleteShareGroupState` API.
+/// `DeleteStateData` as declared by the `DeleteShareGroupState` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct DeleteShareGroupStateRequestDeleteStateData {
@@ -83,7 +83,7 @@ impl KafkaEncode for DeleteShareGroupStateRequestDeleteStateData {
     }
 }
 
-/// `DeleteShareGroupStateRequestPartitionData` as declared by the `DeleteShareGroupState` API.
+/// `PartitionData` as declared by the `DeleteShareGroupState` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct DeleteShareGroupStateRequestPartitionData {
@@ -216,7 +216,7 @@ impl KafkaEncode for DeleteShareGroupStateRequest {
     }
 }
 
-/// `DeleteShareGroupStateResponseDeleteStateResult` as declared by the `DeleteShareGroupState` API.
+/// `DeleteStateResult` as declared by the `DeleteShareGroupState` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct DeleteShareGroupStateResponseDeleteStateResult {
@@ -284,7 +284,7 @@ impl KafkaEncode for DeleteShareGroupStateResponseDeleteStateResult {
     }
 }
 
-/// `DeleteShareGroupStateResponsePartitionResult` as declared by the `DeleteShareGroupState` API.
+/// `PartitionResult` as declared by the `DeleteShareGroupState` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct DeleteShareGroupStateResponsePartitionResult {

@@ -110,7 +110,7 @@ impl KafkaEncode for StreamsGroupDescribeRequest {
     }
 }
 
-/// `StreamsGroupDescribeResponseEndpoint` as declared by the `StreamsGroupDescribe` API.
+/// `Endpoint` as declared by the `StreamsGroupDescribe` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct StreamsGroupDescribeResponseEndpoint {
@@ -170,7 +170,7 @@ impl KafkaEncode for StreamsGroupDescribeResponseEndpoint {
     }
 }
 
-/// `StreamsGroupDescribeResponseTaskOffset` as declared by the `StreamsGroupDescribe` API.
+/// `TaskOffset` as declared by the `StreamsGroupDescribe` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct StreamsGroupDescribeResponseTaskOffset {
@@ -235,7 +235,7 @@ impl KafkaEncode for StreamsGroupDescribeResponseTaskOffset {
     }
 }
 
-/// `StreamsGroupDescribeResponseAssignment` as declared by the `StreamsGroupDescribe` API.
+/// `Assignment` as declared by the `StreamsGroupDescribe` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct StreamsGroupDescribeResponseAssignment {
@@ -324,7 +324,7 @@ impl KafkaEncode for StreamsGroupDescribeResponseAssignment {
     }
 }
 
-/// `StreamsGroupDescribeResponseTaskIds` as declared by the `StreamsGroupDescribe` API.
+/// `TaskIds` as declared by the `StreamsGroupDescribe` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct StreamsGroupDescribeResponseTaskIds {
@@ -390,7 +390,7 @@ impl KafkaEncode for StreamsGroupDescribeResponseTaskIds {
     }
 }
 
-/// `StreamsGroupDescribeResponseKeyValue` as declared by the `StreamsGroupDescribe` API.
+/// `KeyValue` as declared by the `StreamsGroupDescribe` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct StreamsGroupDescribeResponseKeyValue {
@@ -450,7 +450,7 @@ impl KafkaEncode for StreamsGroupDescribeResponseKeyValue {
     }
 }
 
-/// `StreamsGroupDescribeResponseTopicInfo` as declared by the `StreamsGroupDescribe` API.
+/// `TopicInfo` as declared by the `StreamsGroupDescribe` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct StreamsGroupDescribeResponseTopicInfo {
@@ -528,7 +528,7 @@ impl KafkaEncode for StreamsGroupDescribeResponseTopicInfo {
     }
 }
 
-/// `StreamsGroupDescribeResponseTopologyDescription` as declared by the `StreamsGroupDescribe` API.
+/// `TopologyDescription` as declared by the `StreamsGroupDescribe` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct StreamsGroupDescribeResponseTopologyDescription {
@@ -612,7 +612,7 @@ impl KafkaEncode for StreamsGroupDescribeResponseTopologyDescription {
     }
 }
 
-/// `StreamsGroupDescribeResponseTopologyDescriptionSubtopology` as declared by the `StreamsGroupDescribe` API.
+/// `TopologyDescriptionSubtopology` as declared by the `StreamsGroupDescribe` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct StreamsGroupDescribeResponseTopologyDescriptionSubtopology {
@@ -690,7 +690,7 @@ impl KafkaEncode for StreamsGroupDescribeResponseTopologyDescriptionSubtopology 
     }
 }
 
-/// `StreamsGroupDescribeResponseTopologyDescriptionNode` as declared by the `StreamsGroupDescribe` API.
+/// `TopologyDescriptionNode` as declared by the `StreamsGroupDescribe` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct StreamsGroupDescribeResponseTopologyDescriptionNode {
@@ -818,7 +818,7 @@ impl KafkaEncode for StreamsGroupDescribeResponseTopologyDescriptionNode {
     }
 }
 
-/// `StreamsGroupDescribeResponseTopologyDescriptionGlobalStore` as declared by the `StreamsGroupDescribe` API.
+/// `TopologyDescriptionGlobalStore` as declared by the `StreamsGroupDescribe` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct StreamsGroupDescribeResponseTopologyDescriptionGlobalStore {
@@ -890,7 +890,7 @@ impl KafkaEncode for StreamsGroupDescribeResponseTopologyDescriptionGlobalStore 
     }
 }
 
-/// `StreamsGroupDescribeResponseDescribedGroup` as declared by the `StreamsGroupDescribe` API.
+/// `DescribedGroup` as declared by the `StreamsGroupDescribe` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct StreamsGroupDescribeResponseDescribedGroup {
@@ -1056,7 +1056,7 @@ impl KafkaEncode for StreamsGroupDescribeResponseDescribedGroup {
     }
 }
 
-/// `StreamsGroupDescribeResponseTopology` as declared by the `StreamsGroupDescribe` API.
+/// `Topology` as declared by the `StreamsGroupDescribe` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct StreamsGroupDescribeResponseTopology {
@@ -1130,7 +1130,7 @@ impl KafkaEncode for StreamsGroupDescribeResponseTopology {
     }
 }
 
-/// `StreamsGroupDescribeResponseSubtopology` as declared by the `StreamsGroupDescribe` API.
+/// `Subtopology` as declared by the `StreamsGroupDescribe` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct StreamsGroupDescribeResponseSubtopology {
@@ -1233,7 +1233,7 @@ impl KafkaEncode for StreamsGroupDescribeResponseSubtopology {
     }
 }
 
-/// `StreamsGroupDescribeResponseMember` as declared by the `StreamsGroupDescribe` API.
+/// `Member` as declared by the `StreamsGroupDescribe` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct StreamsGroupDescribeResponseMember {

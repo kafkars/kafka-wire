@@ -77,8 +77,15 @@ fn elision_needs_a_name_boundary_rather_than_a_text_prefix() {
     // `VoteRequestor` begins with `VoteRequest` as bytes while naming something
     // else, and a struct spelled exactly like its own message is not qualified
     // at all by keeping it — it would collide with the message type in the
-    // module the two share. Neither is a leading name segment, so both take the
-    // prefix arm.
+    // module the two share. Neither is a leading segment of the OWNER, so
+    // neither is left alone.
+    //
+    // Both do open on the API stem `Vote` at a name boundary, so both take the
+    // stem-deduplicated arm rather than repeating it: the qualified name is the
+    // owner plus what follows the stem. `VoteRequestVoteRequestor` would have
+    // been the alternative, and the corpus shows where that leads — prefixing
+    // the whole owner produced a seventy-character type that said
+    // `DescribeUserScramCredentials` twice.
     let message = lower(
         r#"{ "apiKey": 52, "type": "request", "name": "VoteRequest",
              "validVersions": "0", "flexibleVersions": "0+",
@@ -92,14 +99,14 @@ fn elision_needs_a_name_boundary_rather_than_a_text_prefix() {
     assert_eq!(
         emitted(&message),
         vec![
-            ("VoteRequestor", "VoteRequestVoteRequestor"),
-            ("VoteRequest", "VoteRequestVoteRequest"),
+            ("VoteRequestor", "VoteRequestRequestor"),
+            ("VoteRequest", "VoteRequestRequest"),
         ],
     );
     for declaration in message.structs.declarations() {
         assert_eq!(
             declaration.name.qualification(),
-            Qualification::OwnerPrefixed,
+            Qualification::StemDeduplicated,
         );
     }
 }

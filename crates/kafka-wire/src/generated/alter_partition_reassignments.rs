@@ -15,7 +15,7 @@ use crate::{
     RequestResponsePair,
 };
 
-/// `AlterPartitionReassignmentsRequestReassignableTopic` as declared by the `AlterPartitionReassignments` API.
+/// `ReassignableTopic` as declared by the `AlterPartitionReassignments` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct AlterPartitionReassignmentsRequestReassignableTopic {
@@ -83,7 +83,7 @@ impl KafkaEncode for AlterPartitionReassignmentsRequestReassignableTopic {
     }
 }
 
-/// `AlterPartitionReassignmentsRequestReassignablePartition` as declared by the `AlterPartitionReassignments` API.
+/// `ReassignablePartition` as declared by the `AlterPartitionReassignments` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct AlterPartitionReassignmentsRequestReassignablePartition {
@@ -261,7 +261,7 @@ impl KafkaEncode for AlterPartitionReassignmentsRequest {
     }
 }
 
-/// `AlterPartitionReassignmentsResponseReassignableTopicResponse` as declared by the `AlterPartitionReassignments` API.
+/// `ReassignableTopicResponse` as declared by the `AlterPartitionReassignments` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct AlterPartitionReassignmentsResponseReassignableTopicResponse {
@@ -331,7 +331,7 @@ impl KafkaEncode for AlterPartitionReassignmentsResponseReassignableTopicRespons
     }
 }
 
-/// `AlterPartitionReassignmentsResponseReassignablePartitionResponse` as declared by the `AlterPartitionReassignments` API.
+/// `ReassignablePartitionResponse` as declared by the `AlterPartitionReassignments` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct AlterPartitionReassignmentsResponseReassignablePartitionResponse {

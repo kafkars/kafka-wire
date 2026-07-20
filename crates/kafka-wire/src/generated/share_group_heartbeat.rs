@@ -111,7 +111,7 @@ impl KafkaEncode for ShareGroupHeartbeatRequest {
     }
 }
 
-/// `ShareGroupHeartbeatResponseTopicPartitions` as declared by the `ShareGroupHeartbeat` API.
+/// `TopicPartitions` as declared by the `ShareGroupHeartbeat` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct ShareGroupHeartbeatResponseTopicPartitions {
@@ -177,7 +177,7 @@ impl KafkaEncode for ShareGroupHeartbeatResponseTopicPartitions {
     }
 }
 
-/// `ShareGroupHeartbeatResponseAssignment` as declared by the `ShareGroupHeartbeat` API.
+/// `Assignment` as declared by the `ShareGroupHeartbeat` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct ShareGroupHeartbeatResponseAssignment {

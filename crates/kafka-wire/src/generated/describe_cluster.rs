@@ -128,10 +128,10 @@ impl KafkaEncode for DescribeClusterRequest {
     }
 }
 
-/// `DescribeClusterResponseDescribeClusterBroker` as declared by the `DescribeCluster` API.
+/// `DescribeClusterBroker` as declared by the `DescribeCluster` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct DescribeClusterResponseDescribeClusterBroker {
+pub struct DescribeClusterResponseBroker {
     /// The broker ID.
     pub broker_id: i32,
     /// The broker hostname.
@@ -146,7 +146,7 @@ pub struct DescribeClusterResponseDescribeClusterBroker {
     pub unknown_tagged_fields: TaggedFields,
 }
 
-impl DescribeClusterResponseDescribeClusterBroker {
+impl DescribeClusterResponseBroker {
     const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 2));
 
     fn is_flexible(version: ApiVersion) -> bool {
@@ -154,7 +154,7 @@ impl DescribeClusterResponseDescribeClusterBroker {
     }
 }
 
-impl KafkaDecode for DescribeClusterResponseDescribeClusterBroker {
+impl KafkaDecode for DescribeClusterResponseBroker {
     fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
         let broker_id = decoder.read_i32()?;
         let host = decoder.read_compact_string()?;
@@ -182,7 +182,7 @@ impl KafkaDecode for DescribeClusterResponseDescribeClusterBroker {
     }
 }
 
-impl KafkaEncode for DescribeClusterResponseDescribeClusterBroker {
+impl KafkaEncode for DescribeClusterResponseBroker {
     fn encode<T: EncodeTarget>(
         &self,
         encoder: &mut Encoder<T>,
@@ -200,7 +200,7 @@ impl KafkaEncode for DescribeClusterResponseDescribeClusterBroker {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
         } else if !self.unknown_tagged_fields.is_empty() {
             return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: "DescribeClusterResponseDescribeClusterBroker",
+                message: "DescribeClusterResponseBroker",
                 version,
             });
         }
@@ -226,7 +226,7 @@ pub struct DescribeClusterResponse {
     /// The ID of the controller. When handled by a controller, returns the current voter leader ID. When handled by a broker, returns a random alive broker ID as a fallback.
     pub controller_id: i32,
     /// Each broker in the response.
-    pub brokers: Vec<DescribeClusterResponseDescribeClusterBroker>,
+    pub brokers: Vec<DescribeClusterResponseBroker>,
     /// 32-bit bitfield to represent authorized operations for this cluster.
     pub cluster_authorized_operations: i32,
     /// Unknown flexible-version tagged fields retained for forwarding.
@@ -276,7 +276,7 @@ impl KafkaDecode for DescribeClusterResponse {
         let brokers = {
             let length = decoder.read_compact_array_len()?;
             decoder.read_vec(length, |decoder| {
-                DescribeClusterResponseDescribeClusterBroker::decode(decoder, version)
+                DescribeClusterResponseBroker::decode(decoder, version)
             })?
         };
         let cluster_authorized_operations = decoder.read_i32()?;

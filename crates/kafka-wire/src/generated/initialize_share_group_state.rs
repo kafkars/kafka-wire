@@ -15,7 +15,7 @@ use crate::{
     RequestResponsePair,
 };
 
-/// `InitializeShareGroupStateRequestInitializeStateData` as declared by the `InitializeShareGroupState` API.
+/// `InitializeStateData` as declared by the `InitializeShareGroupState` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct InitializeShareGroupStateRequestInitializeStateData {
@@ -83,7 +83,7 @@ impl KafkaEncode for InitializeShareGroupStateRequestInitializeStateData {
     }
 }
 
-/// `InitializeShareGroupStateRequestPartitionData` as declared by the `InitializeShareGroupState` API.
+/// `PartitionData` as declared by the `InitializeShareGroupState` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct InitializeShareGroupStateRequestPartitionData {
@@ -226,7 +226,7 @@ impl KafkaEncode for InitializeShareGroupStateRequest {
     }
 }
 
-/// `InitializeShareGroupStateResponseInitializeStateResult` as declared by the `InitializeShareGroupState` API.
+/// `InitializeStateResult` as declared by the `InitializeShareGroupState` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct InitializeShareGroupStateResponseInitializeStateResult {
@@ -294,7 +294,7 @@ impl KafkaEncode for InitializeShareGroupStateResponseInitializeStateResult {
     }
 }
 
-/// `InitializeShareGroupStateResponsePartitionResult` as declared by the `InitializeShareGroupState` API.
+/// `PartitionResult` as declared by the `InitializeShareGroupState` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct InitializeShareGroupStateResponsePartitionResult {

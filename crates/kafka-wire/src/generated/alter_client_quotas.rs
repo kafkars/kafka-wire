@@ -15,7 +15,7 @@ use crate::{
     RequestResponsePair,
 };
 
-/// `AlterClientQuotasRequestEntryData` as declared by the `AlterClientQuotas` API.
+/// `EntryData` as declared by the `AlterClientQuotas` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct AlterClientQuotasRequestEntryData {
@@ -107,7 +107,7 @@ impl KafkaEncode for AlterClientQuotasRequestEntryData {
     }
 }
 
-/// `AlterClientQuotasRequestEntityData` as declared by the `AlterClientQuotas` API.
+/// `EntityData` as declared by the `AlterClientQuotas` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, PartialEq)]
 pub struct AlterClientQuotasRequestEntityData {
@@ -193,7 +193,7 @@ impl KafkaEncode for AlterClientQuotasRequestEntityData {
     }
 }
 
-/// `AlterClientQuotasRequestOpData` as declared by the `AlterClientQuotas` API.
+/// `OpData` as declared by the `AlterClientQuotas` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, PartialEq)]
 pub struct AlterClientQuotasRequestOpData {
@@ -363,7 +363,7 @@ impl KafkaEncode for AlterClientQuotasRequest {
     }
 }
 
-/// `AlterClientQuotasResponseEntryData` as declared by the `AlterClientQuotas` API.
+/// `EntryData` as declared by the `AlterClientQuotas` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct AlterClientQuotasResponseEntryData {
@@ -463,7 +463,7 @@ impl KafkaEncode for AlterClientQuotasResponseEntryData {
     }
 }
 
-/// `AlterClientQuotasResponseEntityData` as declared by the `AlterClientQuotas` API.
+/// `EntityData` as declared by the `AlterClientQuotas` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct AlterClientQuotasResponseEntityData {

@@ -15,19 +15,19 @@ use crate::{
     RequestResponsePair,
 };
 
-/// `DeleteRecordsRequestDeleteRecordsTopic` as declared by the `DeleteRecords` API.
+/// `DeleteRecordsTopic` as declared by the `DeleteRecords` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct DeleteRecordsRequestDeleteRecordsTopic {
+pub struct DeleteRecordsRequestTopic {
     /// The topic name.
     pub name: StrBytes,
     /// Each partition that we want to delete records from.
-    pub partitions: Vec<DeleteRecordsRequestDeleteRecordsPartition>,
+    pub partitions: Vec<DeleteRecordsRequestPartition>,
     /// Unknown flexible-version tagged fields retained for forwarding.
     pub unknown_tagged_fields: TaggedFields,
 }
 
-impl DeleteRecordsRequestDeleteRecordsTopic {
+impl DeleteRecordsRequestTopic {
     const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(2, 2));
 
     fn is_flexible(version: ApiVersion) -> bool {
@@ -35,7 +35,7 @@ impl DeleteRecordsRequestDeleteRecordsTopic {
     }
 }
 
-impl KafkaDecode for DeleteRecordsRequestDeleteRecordsTopic {
+impl KafkaDecode for DeleteRecordsRequestTopic {
     fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
         let name = if Self::is_flexible(version) {
             decoder.read_compact_string()?
@@ -49,7 +49,7 @@ impl KafkaDecode for DeleteRecordsRequestDeleteRecordsTopic {
                 decoder.read_array_len()?
             };
             decoder.read_vec(length, |decoder| {
-                DeleteRecordsRequestDeleteRecordsPartition::decode(decoder, version)
+                DeleteRecordsRequestPartition::decode(decoder, version)
             })?
         };
         let unknown_tagged_fields = if Self::is_flexible(version) {
@@ -66,7 +66,7 @@ impl KafkaDecode for DeleteRecordsRequestDeleteRecordsTopic {
     }
 }
 
-impl KafkaEncode for DeleteRecordsRequestDeleteRecordsTopic {
+impl KafkaEncode for DeleteRecordsRequestTopic {
     fn encode<T: EncodeTarget>(
         &self,
         encoder: &mut Encoder<T>,
@@ -90,7 +90,7 @@ impl KafkaEncode for DeleteRecordsRequestDeleteRecordsTopic {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
         } else if !self.unknown_tagged_fields.is_empty() {
             return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: "DeleteRecordsRequestDeleteRecordsTopic",
+                message: "DeleteRecordsRequestTopic",
                 version,
             });
         }
@@ -99,10 +99,10 @@ impl KafkaEncode for DeleteRecordsRequestDeleteRecordsTopic {
     }
 }
 
-/// `DeleteRecordsRequestDeleteRecordsPartition` as declared by the `DeleteRecords` API.
+/// `DeleteRecordsPartition` as declared by the `DeleteRecords` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct DeleteRecordsRequestDeleteRecordsPartition {
+pub struct DeleteRecordsRequestPartition {
     /// The partition index.
     pub partition_index: i32,
     /// The deletion offset. -1 means that records should be truncated to the high watermark.
@@ -111,7 +111,7 @@ pub struct DeleteRecordsRequestDeleteRecordsPartition {
     pub unknown_tagged_fields: TaggedFields,
 }
 
-impl DeleteRecordsRequestDeleteRecordsPartition {
+impl DeleteRecordsRequestPartition {
     const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(2, 2));
 
     fn is_flexible(version: ApiVersion) -> bool {
@@ -119,7 +119,7 @@ impl DeleteRecordsRequestDeleteRecordsPartition {
     }
 }
 
-impl KafkaDecode for DeleteRecordsRequestDeleteRecordsPartition {
+impl KafkaDecode for DeleteRecordsRequestPartition {
     fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
         let partition_index = decoder.read_i32()?;
         let offset = decoder.read_i64()?;
@@ -137,7 +137,7 @@ impl KafkaDecode for DeleteRecordsRequestDeleteRecordsPartition {
     }
 }
 
-impl KafkaEncode for DeleteRecordsRequestDeleteRecordsPartition {
+impl KafkaEncode for DeleteRecordsRequestPartition {
     fn encode<T: EncodeTarget>(
         &self,
         encoder: &mut Encoder<T>,
@@ -150,7 +150,7 @@ impl KafkaEncode for DeleteRecordsRequestDeleteRecordsPartition {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
         } else if !self.unknown_tagged_fields.is_empty() {
             return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: "DeleteRecordsRequestDeleteRecordsPartition",
+                message: "DeleteRecordsRequestPartition",
                 version,
             });
         }
@@ -164,7 +164,7 @@ impl KafkaEncode for DeleteRecordsRequestDeleteRecordsPartition {
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct DeleteRecordsRequest {
     /// Each topic that we want to delete records from.
-    pub topics: Vec<DeleteRecordsRequestDeleteRecordsTopic>,
+    pub topics: Vec<DeleteRecordsRequestTopic>,
     /// How long to wait for the deletion to complete, in milliseconds.
     pub timeout_ms: i32,
     /// Unknown flexible-version tagged fields retained for forwarding.
@@ -196,7 +196,7 @@ impl KafkaDecode for DeleteRecordsRequest {
                 decoder.read_array_len()?
             };
             decoder.read_vec(length, |decoder| {
-                DeleteRecordsRequestDeleteRecordsTopic::decode(decoder, version)
+                DeleteRecordsRequestTopic::decode(decoder, version)
             })?
         };
         let timeout_ms = decoder.read_i32()?;
@@ -245,19 +245,19 @@ impl KafkaEncode for DeleteRecordsRequest {
     }
 }
 
-/// `DeleteRecordsResponseDeleteRecordsTopicResult` as declared by the `DeleteRecords` API.
+/// `DeleteRecordsTopicResult` as declared by the `DeleteRecords` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct DeleteRecordsResponseDeleteRecordsTopicResult {
+pub struct DeleteRecordsResponseTopicResult {
     /// The topic name.
     pub name: StrBytes,
     /// Each partition that we wanted to delete records from.
-    pub partitions: Vec<DeleteRecordsResponseDeleteRecordsPartitionResult>,
+    pub partitions: Vec<DeleteRecordsResponsePartitionResult>,
     /// Unknown flexible-version tagged fields retained for forwarding.
     pub unknown_tagged_fields: TaggedFields,
 }
 
-impl DeleteRecordsResponseDeleteRecordsTopicResult {
+impl DeleteRecordsResponseTopicResult {
     const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(2, 2));
 
     fn is_flexible(version: ApiVersion) -> bool {
@@ -265,7 +265,7 @@ impl DeleteRecordsResponseDeleteRecordsTopicResult {
     }
 }
 
-impl KafkaDecode for DeleteRecordsResponseDeleteRecordsTopicResult {
+impl KafkaDecode for DeleteRecordsResponseTopicResult {
     fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
         let name = if Self::is_flexible(version) {
             decoder.read_compact_string()?
@@ -279,7 +279,7 @@ impl KafkaDecode for DeleteRecordsResponseDeleteRecordsTopicResult {
                 decoder.read_array_len()?
             };
             decoder.read_vec(length, |decoder| {
-                DeleteRecordsResponseDeleteRecordsPartitionResult::decode(decoder, version)
+                DeleteRecordsResponsePartitionResult::decode(decoder, version)
             })?
         };
         let unknown_tagged_fields = if Self::is_flexible(version) {
@@ -296,7 +296,7 @@ impl KafkaDecode for DeleteRecordsResponseDeleteRecordsTopicResult {
     }
 }
 
-impl KafkaEncode for DeleteRecordsResponseDeleteRecordsTopicResult {
+impl KafkaEncode for DeleteRecordsResponseTopicResult {
     fn encode<T: EncodeTarget>(
         &self,
         encoder: &mut Encoder<T>,
@@ -320,7 +320,7 @@ impl KafkaEncode for DeleteRecordsResponseDeleteRecordsTopicResult {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
         } else if !self.unknown_tagged_fields.is_empty() {
             return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: "DeleteRecordsResponseDeleteRecordsTopicResult",
+                message: "DeleteRecordsResponseTopicResult",
                 version,
             });
         }
@@ -329,10 +329,10 @@ impl KafkaEncode for DeleteRecordsResponseDeleteRecordsTopicResult {
     }
 }
 
-/// `DeleteRecordsResponseDeleteRecordsPartitionResult` as declared by the `DeleteRecords` API.
+/// `DeleteRecordsPartitionResult` as declared by the `DeleteRecords` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct DeleteRecordsResponseDeleteRecordsPartitionResult {
+pub struct DeleteRecordsResponsePartitionResult {
     /// The partition index.
     pub partition_index: i32,
     /// The partition low water mark.
@@ -343,7 +343,7 @@ pub struct DeleteRecordsResponseDeleteRecordsPartitionResult {
     pub unknown_tagged_fields: TaggedFields,
 }
 
-impl DeleteRecordsResponseDeleteRecordsPartitionResult {
+impl DeleteRecordsResponsePartitionResult {
     const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(2, 2));
 
     fn is_flexible(version: ApiVersion) -> bool {
@@ -351,7 +351,7 @@ impl DeleteRecordsResponseDeleteRecordsPartitionResult {
     }
 }
 
-impl KafkaDecode for DeleteRecordsResponseDeleteRecordsPartitionResult {
+impl KafkaDecode for DeleteRecordsResponsePartitionResult {
     fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
         let partition_index = decoder.read_i32()?;
         let low_watermark = decoder.read_i64()?;
@@ -371,7 +371,7 @@ impl KafkaDecode for DeleteRecordsResponseDeleteRecordsPartitionResult {
     }
 }
 
-impl KafkaEncode for DeleteRecordsResponseDeleteRecordsPartitionResult {
+impl KafkaEncode for DeleteRecordsResponsePartitionResult {
     fn encode<T: EncodeTarget>(
         &self,
         encoder: &mut Encoder<T>,
@@ -385,7 +385,7 @@ impl KafkaEncode for DeleteRecordsResponseDeleteRecordsPartitionResult {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
         } else if !self.unknown_tagged_fields.is_empty() {
             return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: "DeleteRecordsResponseDeleteRecordsPartitionResult",
+                message: "DeleteRecordsResponsePartitionResult",
                 version,
             });
         }
@@ -401,7 +401,7 @@ pub struct DeleteRecordsResponse {
     /// The duration in milliseconds for which the request was throttled due to a quota violation, or zero if the request did not violate any quota.
     pub throttle_time_ms: i32,
     /// Each topic that we wanted to delete records from.
-    pub topics: Vec<DeleteRecordsResponseDeleteRecordsTopicResult>,
+    pub topics: Vec<DeleteRecordsResponseTopicResult>,
     /// Unknown flexible-version tagged fields retained for forwarding.
     pub unknown_tagged_fields: TaggedFields,
 }
@@ -428,7 +428,7 @@ impl KafkaDecode for DeleteRecordsResponse {
                 decoder.read_array_len()?
             };
             decoder.read_vec(length, |decoder| {
-                DeleteRecordsResponseDeleteRecordsTopicResult::decode(decoder, version)
+                DeleteRecordsResponseTopicResult::decode(decoder, version)
             })?
         };
         let unknown_tagged_fields = if Self::is_flexible(version) {

@@ -15,10 +15,10 @@ use crate::{
     RequestResponsePair,
 };
 
-/// `DescribeDelegationTokenRequestDescribeDelegationTokenOwner` as declared by the `DescribeDelegationToken` API.
+/// `DescribeDelegationTokenOwner` as declared by the `DescribeDelegationToken` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct DescribeDelegationTokenRequestDescribeDelegationTokenOwner {
+pub struct DescribeDelegationTokenRequestOwner {
     /// The owner principal type.
     pub principal_type: StrBytes,
     /// The owner principal name.
@@ -27,7 +27,7 @@ pub struct DescribeDelegationTokenRequestDescribeDelegationTokenOwner {
     pub unknown_tagged_fields: TaggedFields,
 }
 
-impl DescribeDelegationTokenRequestDescribeDelegationTokenOwner {
+impl DescribeDelegationTokenRequestOwner {
     const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(2, 3));
 
     fn is_flexible(version: ApiVersion) -> bool {
@@ -35,7 +35,7 @@ impl DescribeDelegationTokenRequestDescribeDelegationTokenOwner {
     }
 }
 
-impl KafkaDecode for DescribeDelegationTokenRequestDescribeDelegationTokenOwner {
+impl KafkaDecode for DescribeDelegationTokenRequestOwner {
     fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
         let principal_type = if Self::is_flexible(version) {
             decoder.read_compact_string()?
@@ -61,7 +61,7 @@ impl KafkaDecode for DescribeDelegationTokenRequestDescribeDelegationTokenOwner 
     }
 }
 
-impl KafkaEncode for DescribeDelegationTokenRequestDescribeDelegationTokenOwner {
+impl KafkaEncode for DescribeDelegationTokenRequestOwner {
     fn encode<T: EncodeTarget>(
         &self,
         encoder: &mut Encoder<T>,
@@ -82,7 +82,7 @@ impl KafkaEncode for DescribeDelegationTokenRequestDescribeDelegationTokenOwner 
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
         } else if !self.unknown_tagged_fields.is_empty() {
             return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: "DescribeDelegationTokenRequestDescribeDelegationTokenOwner",
+                message: "DescribeDelegationTokenRequestOwner",
                 version,
             });
         }
@@ -96,7 +96,7 @@ impl KafkaEncode for DescribeDelegationTokenRequestDescribeDelegationTokenOwner 
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct DescribeDelegationTokenRequest {
     /// Each owner that we want to describe delegation tokens for, or null to describe all tokens.
-    pub owners: Option<Vec<DescribeDelegationTokenRequestDescribeDelegationTokenOwner>>,
+    pub owners: Option<Vec<DescribeDelegationTokenRequestOwner>>,
     /// Unknown flexible-version tagged fields retained for forwarding.
     pub unknown_tagged_fields: TaggedFields,
 }
@@ -137,9 +137,7 @@ impl KafkaDecode for DescribeDelegationTokenRequest {
             length
                 .map(|length| {
                     decoder.read_vec(length, |decoder| {
-                        DescribeDelegationTokenRequestDescribeDelegationTokenOwner::decode(
-                            decoder, version,
-                        )
+                        DescribeDelegationTokenRequestOwner::decode(decoder, version)
                     })
                 })
                 .transpose()?
@@ -189,7 +187,7 @@ impl KafkaEncode for DescribeDelegationTokenRequest {
     }
 }
 
-/// `DescribeDelegationTokenResponseDescribedDelegationToken` as declared by the `DescribeDelegationToken` API.
+/// `DescribedDelegationToken` as declared by the `DescribeDelegationToken` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct DescribeDelegationTokenResponseDescribedDelegationToken {
@@ -351,7 +349,7 @@ impl KafkaEncode for DescribeDelegationTokenResponseDescribedDelegationToken {
     }
 }
 
-/// `DescribeDelegationTokenResponseDescribedDelegationTokenRenewer` as declared by the `DescribeDelegationToken` API.
+/// `DescribedDelegationTokenRenewer` as declared by the `DescribeDelegationToken` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct DescribeDelegationTokenResponseDescribedDelegationTokenRenewer {

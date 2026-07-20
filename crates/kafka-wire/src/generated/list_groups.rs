@@ -120,7 +120,7 @@ impl KafkaEncode for ListGroupsRequest {
     }
 }
 
-/// `ListGroupsResponseListedGroup` as declared by the `ListGroups` API.
+/// `ListedGroup` as declared by the `ListGroups` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct ListGroupsResponseListedGroup {

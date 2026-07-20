@@ -15,7 +15,7 @@ use crate::{
     RequestResponsePair,
 };
 
-/// `ShareFetchRequestFetchTopic` as declared by the `ShareFetch` API.
+/// `FetchTopic` as declared by the `ShareFetch` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct ShareFetchRequestFetchTopic {
@@ -83,7 +83,7 @@ impl KafkaEncode for ShareFetchRequestFetchTopic {
     }
 }
 
-/// `ShareFetchRequestFetchPartition` as declared by the `ShareFetch` API.
+/// `FetchPartition` as declared by the `ShareFetch` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct ShareFetchRequestFetchPartition {
@@ -151,7 +151,7 @@ impl KafkaEncode for ShareFetchRequestFetchPartition {
     }
 }
 
-/// `ShareFetchRequestAcknowledgementBatch` as declared by the `ShareFetch` API.
+/// `AcknowledgementBatch` as declared by the `ShareFetch` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct ShareFetchRequestAcknowledgementBatch {
@@ -222,7 +222,7 @@ impl KafkaEncode for ShareFetchRequestAcknowledgementBatch {
     }
 }
 
-/// `ShareFetchRequestForgottenTopic` as declared by the `ShareFetch` API.
+/// `ForgottenTopic` as declared by the `ShareFetch` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct ShareFetchRequestForgottenTopic {
@@ -464,7 +464,7 @@ impl KafkaEncode for ShareFetchRequest {
     }
 }
 
-/// `ShareFetchResponseShareFetchableTopicResponse` as declared by the `ShareFetch` API.
+/// `ShareFetchableTopicResponse` as declared by the `ShareFetch` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct ShareFetchResponseShareFetchableTopicResponse {
@@ -532,7 +532,7 @@ impl KafkaEncode for ShareFetchResponseShareFetchableTopicResponse {
     }
 }
 
-/// `ShareFetchResponsePartitionData` as declared by the `ShareFetch` API.
+/// `PartitionData` as declared by the `ShareFetch` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct ShareFetchResponsePartitionData {
@@ -630,7 +630,7 @@ impl KafkaEncode for ShareFetchResponsePartitionData {
     }
 }
 
-/// `ShareFetchResponseLeaderIdAndEpoch` as declared by the `ShareFetch` API.
+/// `LeaderIdAndEpoch` as declared by the `ShareFetch` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct ShareFetchResponseLeaderIdAndEpoch {
@@ -690,7 +690,7 @@ impl KafkaEncode for ShareFetchResponseLeaderIdAndEpoch {
     }
 }
 
-/// `ShareFetchResponseAcquiredRecords` as declared by the `ShareFetch` API.
+/// `AcquiredRecords` as declared by the `ShareFetch` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct ShareFetchResponseAcquiredRecords {
@@ -755,7 +755,7 @@ impl KafkaEncode for ShareFetchResponseAcquiredRecords {
     }
 }
 
-/// `ShareFetchResponseNodeEndpoint` as declared by the `ShareFetch` API.
+/// `NodeEndpoint` as declared by the `ShareFetch` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct ShareFetchResponseNodeEndpoint {

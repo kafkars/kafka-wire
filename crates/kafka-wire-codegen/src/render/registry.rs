@@ -14,23 +14,16 @@ pub(crate) fn render_registry(groups: &[ApiGroup], commit: &str) -> String {
     rust.line("use crate::MessageDescriptor;");
     rust.blank();
 
-    let constants = groups
-        .iter()
-        .flat_map(ApiGroup::messages)
-        .map(|source| descriptor_name(&source.message))
-        .collect::<Vec<_>>();
-    let mut imports = constants.clone();
-    imports.sort_unstable();
-    // Brace collapsing and line breaking are rustfmt's, not the emitter's.
-    rust.line(format!("use super::{{{}}};", imports.join(", ")));
-    rust.blank();
-
+    // Each descriptor is named where it is used rather than imported first. The
+    // import list was a third of this file — 92 lines naming every constant
+    // twice — and bought nothing: the table below reads the same either way, and
+    // `super::` says where a descriptor comes from at the point a reader asks.
     rust.line(
         "/// All messages emitted by this pinned protocol slice, sorted by API key and direction.",
     );
     rust.line("pub const MESSAGE_DESCRIPTORS: &[MessageDescriptor] = &[");
-    for constant in constants {
-        rust.line(format!("    {constant},"));
+    for source in groups.iter().flat_map(ApiGroup::messages) {
+        rust.line(format!("    super::{},", descriptor_name(&source.message)));
     }
     rust.line("];");
     rust.finish()

@@ -15,10 +15,10 @@ use crate::{
     RequestResponsePair,
 };
 
-/// `ListPartitionReassignmentsRequestListPartitionReassignmentsTopics` as declared by the `ListPartitionReassignments` API.
+/// `ListPartitionReassignmentsTopics` as declared by the `ListPartitionReassignments` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct ListPartitionReassignmentsRequestListPartitionReassignmentsTopics {
+pub struct ListPartitionReassignmentsRequestTopics {
     /// The topic name.
     pub name: StrBytes,
     /// The partitions to list partition reassignments for.
@@ -27,7 +27,7 @@ pub struct ListPartitionReassignmentsRequestListPartitionReassignmentsTopics {
     pub unknown_tagged_fields: TaggedFields,
 }
 
-impl ListPartitionReassignmentsRequestListPartitionReassignmentsTopics {
+impl ListPartitionReassignmentsRequestTopics {
     const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 0));
 
     fn is_flexible(version: ApiVersion) -> bool {
@@ -35,7 +35,7 @@ impl ListPartitionReassignmentsRequestListPartitionReassignmentsTopics {
     }
 }
 
-impl KafkaDecode for ListPartitionReassignmentsRequestListPartitionReassignmentsTopics {
+impl KafkaDecode for ListPartitionReassignmentsRequestTopics {
     fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
         let name = decoder.read_compact_string()?;
         let partition_indexes = {
@@ -56,7 +56,7 @@ impl KafkaDecode for ListPartitionReassignmentsRequestListPartitionReassignments
     }
 }
 
-impl KafkaEncode for ListPartitionReassignmentsRequestListPartitionReassignmentsTopics {
+impl KafkaEncode for ListPartitionReassignmentsRequestTopics {
     fn encode<T: EncodeTarget>(
         &self,
         encoder: &mut Encoder<T>,
@@ -72,7 +72,7 @@ impl KafkaEncode for ListPartitionReassignmentsRequestListPartitionReassignments
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
         } else if !self.unknown_tagged_fields.is_empty() {
             return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: "ListPartitionReassignmentsRequestListPartitionReassignmentsTopics",
+                message: "ListPartitionReassignmentsRequestTopics",
                 version,
             });
         }
@@ -88,7 +88,7 @@ pub struct ListPartitionReassignmentsRequest {
     /// The time in ms to wait for the request to complete.
     pub timeout_ms: i32,
     /// The topics to list partition reassignments for, or null to list everything.
-    pub topics: Option<Vec<ListPartitionReassignmentsRequestListPartitionReassignmentsTopics>>,
+    pub topics: Option<Vec<ListPartitionReassignmentsRequestTopics>>,
     /// Unknown flexible-version tagged fields retained for forwarding.
     pub unknown_tagged_fields: TaggedFields,
 }
@@ -127,9 +127,7 @@ impl KafkaDecode for ListPartitionReassignmentsRequest {
             length
                 .map(|length| {
                     decoder.read_vec(length, |decoder| {
-                        ListPartitionReassignmentsRequestListPartitionReassignmentsTopics::decode(
-                            decoder, version,
-                        )
+                        ListPartitionReassignmentsRequestTopics::decode(decoder, version)
                     })
                 })
                 .transpose()?
@@ -177,7 +175,7 @@ impl KafkaEncode for ListPartitionReassignmentsRequest {
     }
 }
 
-/// `ListPartitionReassignmentsResponseOngoingTopicReassignment` as declared by the `ListPartitionReassignments` API.
+/// `OngoingTopicReassignment` as declared by the `ListPartitionReassignments` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct ListPartitionReassignmentsResponseOngoingTopicReassignment {
@@ -247,7 +245,7 @@ impl KafkaEncode for ListPartitionReassignmentsResponseOngoingTopicReassignment 
     }
 }
 
-/// `ListPartitionReassignmentsResponseOngoingPartitionReassignment` as declared by the `ListPartitionReassignments` API.
+/// `OngoingPartitionReassignment` as declared by the `ListPartitionReassignments` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct ListPartitionReassignmentsResponseOngoingPartitionReassignment {

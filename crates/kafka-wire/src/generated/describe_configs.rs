@@ -15,10 +15,10 @@ use crate::{
     RequestResponsePair,
 };
 
-/// `DescribeConfigsRequestDescribeConfigsResource` as declared by the `DescribeConfigs` API.
+/// `DescribeConfigsResource` as declared by the `DescribeConfigs` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Eq, PartialEq)]
-pub struct DescribeConfigsRequestDescribeConfigsResource {
+pub struct DescribeConfigsRequestResource {
     /// The resource type.
     pub resource_type: i8,
     /// The resource name.
@@ -29,7 +29,7 @@ pub struct DescribeConfigsRequestDescribeConfigsResource {
     pub unknown_tagged_fields: TaggedFields,
 }
 
-impl DescribeConfigsRequestDescribeConfigsResource {
+impl DescribeConfigsRequestResource {
     const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(4, 4));
 
     fn is_flexible(version: ApiVersion) -> bool {
@@ -37,7 +37,7 @@ impl DescribeConfigsRequestDescribeConfigsResource {
     }
 }
 
-impl Default for DescribeConfigsRequestDescribeConfigsResource {
+impl Default for DescribeConfigsRequestResource {
     fn default() -> Self {
         Self {
             resource_type: 0,
@@ -48,7 +48,7 @@ impl Default for DescribeConfigsRequestDescribeConfigsResource {
     }
 }
 
-impl KafkaDecode for DescribeConfigsRequestDescribeConfigsResource {
+impl KafkaDecode for DescribeConfigsRequestResource {
     fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
         let resource_type = decoder.read_i8()?;
         let resource_name = if Self::is_flexible(version) {
@@ -89,7 +89,7 @@ impl KafkaDecode for DescribeConfigsRequestDescribeConfigsResource {
     }
 }
 
-impl KafkaEncode for DescribeConfigsRequestDescribeConfigsResource {
+impl KafkaEncode for DescribeConfigsRequestResource {
     fn encode<T: EncodeTarget>(
         &self,
         encoder: &mut Encoder<T>,
@@ -121,7 +121,7 @@ impl KafkaEncode for DescribeConfigsRequestDescribeConfigsResource {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
         } else if !self.unknown_tagged_fields.is_empty() {
             return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: "DescribeConfigsRequestDescribeConfigsResource",
+                message: "DescribeConfigsRequestResource",
                 version,
             });
         }
@@ -135,7 +135,7 @@ impl KafkaEncode for DescribeConfigsRequestDescribeConfigsResource {
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct DescribeConfigsRequest {
     /// The resources whose configurations we want to describe.
-    pub resources: Vec<DescribeConfigsRequestDescribeConfigsResource>,
+    pub resources: Vec<DescribeConfigsRequestResource>,
     /// True if we should include all synonyms.
     pub include_synonyms: bool,
     /// True if we should include configuration documentation.
@@ -169,7 +169,7 @@ impl KafkaDecode for DescribeConfigsRequest {
                 decoder.read_array_len()?
             };
             decoder.read_vec(length, |decoder| {
-                DescribeConfigsRequestDescribeConfigsResource::decode(decoder, version)
+                DescribeConfigsRequestResource::decode(decoder, version)
             })?
         };
         let include_synonyms = decoder.read_bool()?;
@@ -235,10 +235,10 @@ impl KafkaEncode for DescribeConfigsRequest {
     }
 }
 
-/// `DescribeConfigsResponseDescribeConfigsResult` as declared by the `DescribeConfigs` API.
+/// `DescribeConfigsResult` as declared by the `DescribeConfigs` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Eq, PartialEq)]
-pub struct DescribeConfigsResponseDescribeConfigsResult {
+pub struct DescribeConfigsResponseResult {
     /// The error code, or 0 if we were able to successfully describe the configurations.
     pub error_code: i16,
     /// The error message, or null if we were able to successfully describe the configurations.
@@ -248,12 +248,12 @@ pub struct DescribeConfigsResponseDescribeConfigsResult {
     /// The resource name.
     pub resource_name: StrBytes,
     /// Each listed configuration.
-    pub configs: Vec<DescribeConfigsResponseDescribeConfigsResourceResult>,
+    pub configs: Vec<DescribeConfigsResponseResourceResult>,
     /// Unknown flexible-version tagged fields retained for forwarding.
     pub unknown_tagged_fields: TaggedFields,
 }
 
-impl DescribeConfigsResponseDescribeConfigsResult {
+impl DescribeConfigsResponseResult {
     const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(4, 4));
 
     fn is_flexible(version: ApiVersion) -> bool {
@@ -261,7 +261,7 @@ impl DescribeConfigsResponseDescribeConfigsResult {
     }
 }
 
-impl Default for DescribeConfigsResponseDescribeConfigsResult {
+impl Default for DescribeConfigsResponseResult {
     fn default() -> Self {
         Self {
             error_code: 0,
@@ -274,7 +274,7 @@ impl Default for DescribeConfigsResponseDescribeConfigsResult {
     }
 }
 
-impl KafkaDecode for DescribeConfigsResponseDescribeConfigsResult {
+impl KafkaDecode for DescribeConfigsResponseResult {
     fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
         let error_code = decoder.read_i16()?;
         let error_message = if Self::is_flexible(version) {
@@ -295,7 +295,7 @@ impl KafkaDecode for DescribeConfigsResponseDescribeConfigsResult {
                 decoder.read_array_len()?
             };
             decoder.read_vec(length, |decoder| {
-                DescribeConfigsResponseDescribeConfigsResourceResult::decode(decoder, version)
+                DescribeConfigsResponseResourceResult::decode(decoder, version)
             })?
         };
         let unknown_tagged_fields = if Self::is_flexible(version) {
@@ -315,7 +315,7 @@ impl KafkaDecode for DescribeConfigsResponseDescribeConfigsResult {
     }
 }
 
-impl KafkaEncode for DescribeConfigsResponseDescribeConfigsResult {
+impl KafkaEncode for DescribeConfigsResponseResult {
     fn encode<T: EncodeTarget>(
         &self,
         encoder: &mut Encoder<T>,
@@ -346,7 +346,7 @@ impl KafkaEncode for DescribeConfigsResponseDescribeConfigsResult {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
         } else if !self.unknown_tagged_fields.is_empty() {
             return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: "DescribeConfigsResponseDescribeConfigsResult",
+                message: "DescribeConfigsResponseResult",
                 version,
             });
         }
@@ -355,10 +355,10 @@ impl KafkaEncode for DescribeConfigsResponseDescribeConfigsResult {
     }
 }
 
-/// `DescribeConfigsResponseDescribeConfigsResourceResult` as declared by the `DescribeConfigs` API.
+/// `DescribeConfigsResourceResult` as declared by the `DescribeConfigs` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Eq, PartialEq)]
-pub struct DescribeConfigsResponseDescribeConfigsResourceResult {
+pub struct DescribeConfigsResponseResourceResult {
     /// The configuration name.
     pub name: StrBytes,
     /// The configuration value.
@@ -370,7 +370,7 @@ pub struct DescribeConfigsResponseDescribeConfigsResourceResult {
     /// True if this configuration is sensitive.
     pub is_sensitive: bool,
     /// The synonyms for this configuration key.
-    pub synonyms: Vec<DescribeConfigsResponseDescribeConfigsSynonym>,
+    pub synonyms: Vec<DescribeConfigsResponseSynonym>,
     /// The configuration data type. Type can be one of the following values - BOOLEAN, STRING, INT, SHORT, LONG, DOUBLE, LIST, CLASS, PASSWORD.
     pub config_type: i8,
     /// The configuration documentation.
@@ -379,7 +379,7 @@ pub struct DescribeConfigsResponseDescribeConfigsResourceResult {
     pub unknown_tagged_fields: TaggedFields,
 }
 
-impl DescribeConfigsResponseDescribeConfigsResourceResult {
+impl DescribeConfigsResponseResourceResult {
     const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(4, 4));
 
     fn is_flexible(version: ApiVersion) -> bool {
@@ -387,7 +387,7 @@ impl DescribeConfigsResponseDescribeConfigsResourceResult {
     }
 }
 
-impl Default for DescribeConfigsResponseDescribeConfigsResourceResult {
+impl Default for DescribeConfigsResponseResourceResult {
     fn default() -> Self {
         Self {
             name: StrBytes::default(),
@@ -403,7 +403,7 @@ impl Default for DescribeConfigsResponseDescribeConfigsResourceResult {
     }
 }
 
-impl KafkaDecode for DescribeConfigsResponseDescribeConfigsResourceResult {
+impl KafkaDecode for DescribeConfigsResponseResourceResult {
     fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
         let name = if Self::is_flexible(version) {
             decoder.read_compact_string()?
@@ -425,7 +425,7 @@ impl KafkaDecode for DescribeConfigsResponseDescribeConfigsResourceResult {
                 decoder.read_array_len()?
             };
             decoder.read_vec(length, |decoder| {
-                DescribeConfigsResponseDescribeConfigsSynonym::decode(decoder, version)
+                DescribeConfigsResponseSynonym::decode(decoder, version)
             })?
         };
         let config_type = if version.value() >= 3 {
@@ -462,7 +462,7 @@ impl KafkaDecode for DescribeConfigsResponseDescribeConfigsResourceResult {
     }
 }
 
-impl KafkaEncode for DescribeConfigsResponseDescribeConfigsResourceResult {
+impl KafkaEncode for DescribeConfigsResponseResourceResult {
     fn encode<T: EncodeTarget>(
         &self,
         encoder: &mut Encoder<T>,
@@ -504,7 +504,7 @@ impl KafkaEncode for DescribeConfigsResponseDescribeConfigsResourceResult {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
         } else if !self.unknown_tagged_fields.is_empty() {
             return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: "DescribeConfigsResponseDescribeConfigsResourceResult",
+                message: "DescribeConfigsResponseResourceResult",
                 version,
             });
         }
@@ -513,10 +513,10 @@ impl KafkaEncode for DescribeConfigsResponseDescribeConfigsResourceResult {
     }
 }
 
-/// `DescribeConfigsResponseDescribeConfigsSynonym` as declared by the `DescribeConfigs` API.
+/// `DescribeConfigsSynonym` as declared by the `DescribeConfigs` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Eq, PartialEq)]
-pub struct DescribeConfigsResponseDescribeConfigsSynonym {
+pub struct DescribeConfigsResponseSynonym {
     /// The synonym name.
     pub name: StrBytes,
     /// The synonym value.
@@ -527,7 +527,7 @@ pub struct DescribeConfigsResponseDescribeConfigsSynonym {
     pub unknown_tagged_fields: TaggedFields,
 }
 
-impl DescribeConfigsResponseDescribeConfigsSynonym {
+impl DescribeConfigsResponseSynonym {
     const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(4, 4));
 
     fn is_flexible(version: ApiVersion) -> bool {
@@ -535,7 +535,7 @@ impl DescribeConfigsResponseDescribeConfigsSynonym {
     }
 }
 
-impl Default for DescribeConfigsResponseDescribeConfigsSynonym {
+impl Default for DescribeConfigsResponseSynonym {
     fn default() -> Self {
         Self {
             name: StrBytes::default(),
@@ -546,7 +546,7 @@ impl Default for DescribeConfigsResponseDescribeConfigsSynonym {
     }
 }
 
-impl KafkaDecode for DescribeConfigsResponseDescribeConfigsSynonym {
+impl KafkaDecode for DescribeConfigsResponseSynonym {
     fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
         let name = if Self::is_flexible(version) {
             decoder.read_compact_string()?
@@ -574,7 +574,7 @@ impl KafkaDecode for DescribeConfigsResponseDescribeConfigsSynonym {
     }
 }
 
-impl KafkaEncode for DescribeConfigsResponseDescribeConfigsSynonym {
+impl KafkaEncode for DescribeConfigsResponseSynonym {
     fn encode<T: EncodeTarget>(
         &self,
         encoder: &mut Encoder<T>,
@@ -596,7 +596,7 @@ impl KafkaEncode for DescribeConfigsResponseDescribeConfigsSynonym {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
         } else if !self.unknown_tagged_fields.is_empty() {
             return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: "DescribeConfigsResponseDescribeConfigsSynonym",
+                message: "DescribeConfigsResponseSynonym",
                 version,
             });
         }
@@ -612,7 +612,7 @@ pub struct DescribeConfigsResponse {
     /// The duration in milliseconds for which the request was throttled due to a quota violation, or zero if the request did not violate any quota.
     pub throttle_time_ms: i32,
     /// The results for each resource.
-    pub results: Vec<DescribeConfigsResponseDescribeConfigsResult>,
+    pub results: Vec<DescribeConfigsResponseResult>,
     /// Unknown flexible-version tagged fields retained for forwarding.
     pub unknown_tagged_fields: TaggedFields,
 }
@@ -639,7 +639,7 @@ impl KafkaDecode for DescribeConfigsResponse {
                 decoder.read_array_len()?
             };
             decoder.read_vec(length, |decoder| {
-                DescribeConfigsResponseDescribeConfigsResult::decode(decoder, version)
+                DescribeConfigsResponseResult::decode(decoder, version)
             })?
         };
         let unknown_tagged_fields = if Self::is_flexible(version) {

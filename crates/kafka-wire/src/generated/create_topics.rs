@@ -15,7 +15,7 @@ use crate::{
     RequestResponsePair,
 };
 
-/// `CreateTopicsRequestCreatableTopic` as declared by the `CreateTopics` API.
+/// `CreatableTopic` as declared by the `CreateTopics` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct CreateTopicsRequestCreatableTopic {
@@ -130,7 +130,7 @@ impl KafkaEncode for CreateTopicsRequestCreatableTopic {
     }
 }
 
-/// `CreateTopicsRequestCreatableReplicaAssignment` as declared by the `CreateTopics` API.
+/// `CreatableReplicaAssignment` as declared by the `CreateTopics` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct CreateTopicsRequestCreatableReplicaAssignment {
@@ -204,7 +204,7 @@ impl KafkaEncode for CreateTopicsRequestCreatableReplicaAssignment {
     }
 }
 
-/// `CreateTopicsRequestCreatableTopicConfig` as declared by the `CreateTopics` API.
+/// `CreatableTopicConfig` as declared by the `CreateTopics` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct CreateTopicsRequestCreatableTopicConfig {
@@ -392,7 +392,7 @@ impl KafkaEncode for CreateTopicsRequest {
     }
 }
 
-/// `CreateTopicsResponseCreatableTopicResult` as declared by the `CreateTopics` API.
+/// `CreatableTopicResult` as declared by the `CreateTopics` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct CreateTopicsResponseCreatableTopicResult {
@@ -561,7 +561,7 @@ impl KafkaEncode for CreateTopicsResponseCreatableTopicResult {
     }
 }
 
-/// `CreateTopicsResponseCreatableTopicConfigs` as declared by the `CreateTopics` API.
+/// `CreatableTopicConfigs` as declared by the `CreateTopics` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct CreateTopicsResponseCreatableTopicConfigs {

@@ -131,7 +131,7 @@ impl KafkaEncode for ApiVersionsRequest {
     }
 }
 
-/// `ApiVersionsResponseApiVersion` as declared by the `ApiVersions` API.
+/// `ApiVersion` as declared by the `ApiVersions` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct ApiVersionsResponseApiVersion {
@@ -196,7 +196,7 @@ impl KafkaEncode for ApiVersionsResponseApiVersion {
     }
 }
 
-/// `ApiVersionsResponseSupportedFeatureKey` as declared by the `ApiVersions` API.
+/// `SupportedFeatureKey` as declared by the `ApiVersions` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct ApiVersionsResponseSupportedFeatureKey {
@@ -279,7 +279,7 @@ impl KafkaEncode for ApiVersionsResponseSupportedFeatureKey {
     }
 }
 
-/// `ApiVersionsResponseFinalizedFeatureKey` as declared by the `ApiVersions` API.
+/// `FinalizedFeatureKey` as declared by the `ApiVersions` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct ApiVersionsResponseFinalizedFeatureKey {

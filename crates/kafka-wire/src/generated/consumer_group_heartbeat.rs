@@ -15,7 +15,7 @@ use crate::{
     RequestResponsePair,
 };
 
-/// `ConsumerGroupHeartbeatRequestTopicPartitions` as declared by the `ConsumerGroupHeartbeat` API.
+/// `TopicPartitions` as declared by the `ConsumerGroupHeartbeat` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct ConsumerGroupHeartbeatRequestTopicPartitions {
@@ -248,7 +248,7 @@ impl KafkaEncode for ConsumerGroupHeartbeatRequest {
     }
 }
 
-/// `ConsumerGroupHeartbeatResponseTopicPartitions` as declared by the `ConsumerGroupHeartbeat` API.
+/// `TopicPartitions` as declared by the `ConsumerGroupHeartbeat` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct ConsumerGroupHeartbeatResponseTopicPartitions {
@@ -314,7 +314,7 @@ impl KafkaEncode for ConsumerGroupHeartbeatResponseTopicPartitions {
     }
 }
 
-/// `ConsumerGroupHeartbeatResponseAssignment` as declared by the `ConsumerGroupHeartbeat` API.
+/// `Assignment` as declared by the `ConsumerGroupHeartbeat` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct ConsumerGroupHeartbeatResponseAssignment {

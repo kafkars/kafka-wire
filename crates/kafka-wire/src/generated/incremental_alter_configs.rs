@@ -15,7 +15,7 @@ use crate::{
     RequestResponsePair,
 };
 
-/// `IncrementalAlterConfigsRequestAlterConfigsResource` as declared by the `IncrementalAlterConfigs` API.
+/// `AlterConfigsResource` as declared by the `IncrementalAlterConfigs` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct IncrementalAlterConfigsRequestAlterConfigsResource {
@@ -104,7 +104,7 @@ impl KafkaEncode for IncrementalAlterConfigsRequestAlterConfigsResource {
     }
 }
 
-/// `IncrementalAlterConfigsRequestAlterableConfig` as declared by the `IncrementalAlterConfigs` API.
+/// `AlterableConfig` as declared by the `IncrementalAlterConfigs` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct IncrementalAlterConfigsRequestAlterableConfig {
@@ -282,7 +282,7 @@ impl KafkaEncode for IncrementalAlterConfigsRequest {
     }
 }
 
-/// `IncrementalAlterConfigsResponseAlterConfigsResourceResponse` as declared by the `IncrementalAlterConfigs` API.
+/// `AlterConfigsResourceResponse` as declared by the `IncrementalAlterConfigs` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct IncrementalAlterConfigsResponseAlterConfigsResourceResponse {

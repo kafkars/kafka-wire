@@ -28,6 +28,15 @@ pub enum Qualification {
     AlreadyQualified,
     /// The owning message's protocol name was prefixed to the upstream spelling.
     OwnerPrefixed,
+    /// The declared name repeated the API's stem, which the owner already
+    /// carries, so the stem is spelled once.
+    ///
+    /// Upstream writes `DescribeUserScramCredentialsResult` inside
+    /// `DescribeUserScramCredentialsResponse`. Prefixing the whole owner would
+    /// say `DescribeUserScramCredentials` twice and produce a seventy-character
+    /// type, which is a name no one reads — the qualification would be doing its
+    /// job and defeating the purpose of having a name at all.
+    StemDeduplicated,
 }
 
 /// A struct reference bound to the message that owns its declaration.
@@ -66,10 +75,13 @@ impl StructRef {
     /// `len(message) + len(struct)` however deep upstream nests.
     pub fn qualify(owner: &MessageName, declared: impl Into<String>) -> Self {
         let declared = declared.into();
+        let stem = owner.api_stem().to_owned();
         let owner = owner.protocol().to_owned();
 
         let (protocol, qualification) = if begins_with_owner(&declared, &owner) {
             (declared.clone(), Qualification::AlreadyQualified)
+        } else if let Some(rest) = trailing_after_stem(&declared, &stem) {
+            (format!("{owner}{rest}"), Qualification::StemDeduplicated)
         } else {
             (format!("{owner}{declared}"), Qualification::OwnerPrefixed)
         };
@@ -126,6 +138,23 @@ impl StructRef {
 /// Measured over the pinned corpus, no declaration distinguishes this reading
 /// from a raw prefix: all 40 elisions clear the boundary. The stricter test is
 /// kept because the corpus changes upstream and the failure mode is silent.
+/// The part of `declared` that follows the API stem it already repeats.
+///
+/// `None` unless the declared name opens with the stem and continues with a new
+/// word, so this never fires on a coincidental prefix or splits an identifier
+/// mid-word. The result stays unique for the same reason full qualification
+/// does: the emitted name is still `owner` followed by something derived only
+/// from `declared`, and two different declarations under one owner cannot
+/// reduce to the same remainder.
+fn trailing_after_stem<'a>(declared: &'a str, stem: &str) -> Option<&'a str> {
+    if stem.is_empty() {
+        return None;
+    }
+    declared
+        .strip_prefix(stem)
+        .filter(|rest| rest.starts_with(|first: char| first.is_ascii_uppercase()))
+}
+
 fn begins_with_owner(declared: &str, owner: &str) -> bool {
     declared
         .strip_prefix(owner)

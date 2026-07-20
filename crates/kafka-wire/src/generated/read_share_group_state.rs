@@ -15,7 +15,7 @@ use crate::{
     RequestResponsePair,
 };
 
-/// `ReadShareGroupStateRequestReadStateData` as declared by the `ReadShareGroupState` API.
+/// `ReadStateData` as declared by the `ReadShareGroupState` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct ReadShareGroupStateRequestReadStateData {
@@ -83,7 +83,7 @@ impl KafkaEncode for ReadShareGroupStateRequestReadStateData {
     }
 }
 
-/// `ReadShareGroupStateRequestPartitionData` as declared by the `ReadShareGroupState` API.
+/// `PartitionData` as declared by the `ReadShareGroupState` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct ReadShareGroupStateRequestPartitionData {
@@ -221,7 +221,7 @@ impl KafkaEncode for ReadShareGroupStateRequest {
     }
 }
 
-/// `ReadShareGroupStateResponseReadStateResult` as declared by the `ReadShareGroupState` API.
+/// `ReadStateResult` as declared by the `ReadShareGroupState` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct ReadShareGroupStateResponseReadStateResult {
@@ -289,7 +289,7 @@ impl KafkaEncode for ReadShareGroupStateResponseReadStateResult {
     }
 }
 
-/// `ReadShareGroupStateResponsePartitionResult` as declared by the `ReadShareGroupState` API.
+/// `PartitionResult` as declared by the `ReadShareGroupState` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct ReadShareGroupStateResponsePartitionResult {
@@ -377,7 +377,7 @@ impl KafkaEncode for ReadShareGroupStateResponsePartitionResult {
     }
 }
 
-/// `ReadShareGroupStateResponseStateBatch` as declared by the `ReadShareGroupState` API.
+/// `StateBatch` as declared by the `ReadShareGroupState` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct ReadShareGroupStateResponseStateBatch {

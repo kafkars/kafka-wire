@@ -91,7 +91,7 @@ impl KafkaEncode for ShareGroupDescribeRequest {
     }
 }
 
-/// `ShareGroupDescribeResponseTopicPartitions` as declared by the `ShareGroupDescribe` API.
+/// `TopicPartitions` as declared by the `ShareGroupDescribe` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct ShareGroupDescribeResponseTopicPartitions {
@@ -162,7 +162,7 @@ impl KafkaEncode for ShareGroupDescribeResponseTopicPartitions {
     }
 }
 
-/// `ShareGroupDescribeResponseAssignment` as declared by the `ShareGroupDescribe` API.
+/// `Assignment` as declared by the `ShareGroupDescribe` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct ShareGroupDescribeResponseAssignment {
@@ -225,7 +225,7 @@ impl KafkaEncode for ShareGroupDescribeResponseAssignment {
     }
 }
 
-/// `ShareGroupDescribeResponseDescribedGroup` as declared by the `ShareGroupDescribe` API.
+/// `DescribedGroup` as declared by the `ShareGroupDescribe` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct ShareGroupDescribeResponseDescribedGroup {
@@ -345,7 +345,7 @@ impl KafkaEncode for ShareGroupDescribeResponseDescribedGroup {
     }
 }
 
-/// `ShareGroupDescribeResponseMember` as declared by the `ShareGroupDescribe` API.
+/// `Member` as declared by the `ShareGroupDescribe` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct ShareGroupDescribeResponseMember {

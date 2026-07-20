@@ -15,19 +15,19 @@ use crate::{
     RequestResponsePair,
 };
 
-/// `ListOffsetsRequestListOffsetsTopic` as declared by the `ListOffsets` API.
+/// `ListOffsetsTopic` as declared by the `ListOffsets` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct ListOffsetsRequestListOffsetsTopic {
+pub struct ListOffsetsRequestTopic {
     /// The topic name.
     pub name: StrBytes,
     /// Each partition in the request.
-    pub partitions: Vec<ListOffsetsRequestListOffsetsPartition>,
+    pub partitions: Vec<ListOffsetsRequestPartition>,
     /// Unknown flexible-version tagged fields retained for forwarding.
     pub unknown_tagged_fields: TaggedFields,
 }
 
-impl ListOffsetsRequestListOffsetsTopic {
+impl ListOffsetsRequestTopic {
     const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(6, 11));
 
     fn is_flexible(version: ApiVersion) -> bool {
@@ -35,7 +35,7 @@ impl ListOffsetsRequestListOffsetsTopic {
     }
 }
 
-impl KafkaDecode for ListOffsetsRequestListOffsetsTopic {
+impl KafkaDecode for ListOffsetsRequestTopic {
     fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
         let name = if Self::is_flexible(version) {
             decoder.read_compact_string()?
@@ -49,7 +49,7 @@ impl KafkaDecode for ListOffsetsRequestListOffsetsTopic {
                 decoder.read_array_len()?
             };
             decoder.read_vec(length, |decoder| {
-                ListOffsetsRequestListOffsetsPartition::decode(decoder, version)
+                ListOffsetsRequestPartition::decode(decoder, version)
             })?
         };
         let unknown_tagged_fields = if Self::is_flexible(version) {
@@ -66,7 +66,7 @@ impl KafkaDecode for ListOffsetsRequestListOffsetsTopic {
     }
 }
 
-impl KafkaEncode for ListOffsetsRequestListOffsetsTopic {
+impl KafkaEncode for ListOffsetsRequestTopic {
     fn encode<T: EncodeTarget>(
         &self,
         encoder: &mut Encoder<T>,
@@ -90,7 +90,7 @@ impl KafkaEncode for ListOffsetsRequestListOffsetsTopic {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
         } else if !self.unknown_tagged_fields.is_empty() {
             return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: "ListOffsetsRequestListOffsetsTopic",
+                message: "ListOffsetsRequestTopic",
                 version,
             });
         }
@@ -99,10 +99,10 @@ impl KafkaEncode for ListOffsetsRequestListOffsetsTopic {
     }
 }
 
-/// `ListOffsetsRequestListOffsetsPartition` as declared by the `ListOffsets` API.
+/// `ListOffsetsPartition` as declared by the `ListOffsets` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Eq, PartialEq)]
-pub struct ListOffsetsRequestListOffsetsPartition {
+pub struct ListOffsetsRequestPartition {
     /// The partition index.
     pub partition_index: i32,
     /// The current leader epoch.
@@ -113,7 +113,7 @@ pub struct ListOffsetsRequestListOffsetsPartition {
     pub unknown_tagged_fields: TaggedFields,
 }
 
-impl ListOffsetsRequestListOffsetsPartition {
+impl ListOffsetsRequestPartition {
     const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(6, 11));
 
     fn is_flexible(version: ApiVersion) -> bool {
@@ -121,7 +121,7 @@ impl ListOffsetsRequestListOffsetsPartition {
     }
 }
 
-impl Default for ListOffsetsRequestListOffsetsPartition {
+impl Default for ListOffsetsRequestPartition {
     fn default() -> Self {
         Self {
             partition_index: 0,
@@ -132,7 +132,7 @@ impl Default for ListOffsetsRequestListOffsetsPartition {
     }
 }
 
-impl KafkaDecode for ListOffsetsRequestListOffsetsPartition {
+impl KafkaDecode for ListOffsetsRequestPartition {
     fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
         let partition_index = decoder.read_i32()?;
         let current_leader_epoch = if version.value() >= 4 {
@@ -156,7 +156,7 @@ impl KafkaDecode for ListOffsetsRequestListOffsetsPartition {
     }
 }
 
-impl KafkaEncode for ListOffsetsRequestListOffsetsPartition {
+impl KafkaEncode for ListOffsetsRequestPartition {
     fn encode<T: EncodeTarget>(
         &self,
         encoder: &mut Encoder<T>,
@@ -172,7 +172,7 @@ impl KafkaEncode for ListOffsetsRequestListOffsetsPartition {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
         } else if !self.unknown_tagged_fields.is_empty() {
             return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: "ListOffsetsRequestListOffsetsPartition",
+                message: "ListOffsetsRequestPartition",
                 version,
             });
         }
@@ -190,7 +190,7 @@ pub struct ListOffsetsRequest {
     /// This setting controls the visibility of transactional records. Using `READ_UNCOMMITTED` (`isolation_level` = 0) makes all records visible. With `READ_COMMITTED` (`isolation_level` = 1), non-transactional and COMMITTED transactional records are visible. To be more concrete, `READ_COMMITTED` returns all data from offsets smaller than the current LSO (last stable offset), and enables the inclusion of the list of aborted transactions in the result, which allows consumers to discard ABORTED transactional records.
     pub isolation_level: i8,
     /// Each topic in the request.
-    pub topics: Vec<ListOffsetsRequestListOffsetsTopic>,
+    pub topics: Vec<ListOffsetsRequestTopic>,
     /// The timeout to await a response in milliseconds for requests that require reading from remote storage for topics enabled with tiered storage.
     pub timeout_ms: i32,
     /// Unknown flexible-version tagged fields retained for forwarding.
@@ -228,7 +228,7 @@ impl KafkaDecode for ListOffsetsRequest {
                 decoder.read_array_len()?
             };
             decoder.read_vec(length, |decoder| {
-                ListOffsetsRequestListOffsetsTopic::decode(decoder, version)
+                ListOffsetsRequestTopic::decode(decoder, version)
             })?
         };
         let timeout_ms = if version.value() >= 10 {
@@ -297,19 +297,19 @@ impl KafkaEncode for ListOffsetsRequest {
     }
 }
 
-/// `ListOffsetsResponseListOffsetsTopicResponse` as declared by the `ListOffsets` API.
+/// `ListOffsetsTopicResponse` as declared by the `ListOffsets` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct ListOffsetsResponseListOffsetsTopicResponse {
+pub struct ListOffsetsResponseTopicResponse {
     /// The topic name.
     pub name: StrBytes,
     /// Each partition in the response.
-    pub partitions: Vec<ListOffsetsResponseListOffsetsPartitionResponse>,
+    pub partitions: Vec<ListOffsetsResponsePartitionResponse>,
     /// Unknown flexible-version tagged fields retained for forwarding.
     pub unknown_tagged_fields: TaggedFields,
 }
 
-impl ListOffsetsResponseListOffsetsTopicResponse {
+impl ListOffsetsResponseTopicResponse {
     const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(6, 11));
 
     fn is_flexible(version: ApiVersion) -> bool {
@@ -317,7 +317,7 @@ impl ListOffsetsResponseListOffsetsTopicResponse {
     }
 }
 
-impl KafkaDecode for ListOffsetsResponseListOffsetsTopicResponse {
+impl KafkaDecode for ListOffsetsResponseTopicResponse {
     fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
         let name = if Self::is_flexible(version) {
             decoder.read_compact_string()?
@@ -331,7 +331,7 @@ impl KafkaDecode for ListOffsetsResponseListOffsetsTopicResponse {
                 decoder.read_array_len()?
             };
             decoder.read_vec(length, |decoder| {
-                ListOffsetsResponseListOffsetsPartitionResponse::decode(decoder, version)
+                ListOffsetsResponsePartitionResponse::decode(decoder, version)
             })?
         };
         let unknown_tagged_fields = if Self::is_flexible(version) {
@@ -348,7 +348,7 @@ impl KafkaDecode for ListOffsetsResponseListOffsetsTopicResponse {
     }
 }
 
-impl KafkaEncode for ListOffsetsResponseListOffsetsTopicResponse {
+impl KafkaEncode for ListOffsetsResponseTopicResponse {
     fn encode<T: EncodeTarget>(
         &self,
         encoder: &mut Encoder<T>,
@@ -372,7 +372,7 @@ impl KafkaEncode for ListOffsetsResponseListOffsetsTopicResponse {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
         } else if !self.unknown_tagged_fields.is_empty() {
             return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: "ListOffsetsResponseListOffsetsTopicResponse",
+                message: "ListOffsetsResponseTopicResponse",
                 version,
             });
         }
@@ -381,10 +381,10 @@ impl KafkaEncode for ListOffsetsResponseListOffsetsTopicResponse {
     }
 }
 
-/// `ListOffsetsResponseListOffsetsPartitionResponse` as declared by the `ListOffsets` API.
+/// `ListOffsetsPartitionResponse` as declared by the `ListOffsets` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Eq, PartialEq)]
-pub struct ListOffsetsResponseListOffsetsPartitionResponse {
+pub struct ListOffsetsResponsePartitionResponse {
     /// The partition index.
     pub partition_index: i32,
     /// The partition error code, or 0 if there was no error.
@@ -399,7 +399,7 @@ pub struct ListOffsetsResponseListOffsetsPartitionResponse {
     pub unknown_tagged_fields: TaggedFields,
 }
 
-impl ListOffsetsResponseListOffsetsPartitionResponse {
+impl ListOffsetsResponsePartitionResponse {
     const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(6, 11));
 
     fn is_flexible(version: ApiVersion) -> bool {
@@ -407,7 +407,7 @@ impl ListOffsetsResponseListOffsetsPartitionResponse {
     }
 }
 
-impl Default for ListOffsetsResponseListOffsetsPartitionResponse {
+impl Default for ListOffsetsResponsePartitionResponse {
     fn default() -> Self {
         Self {
             partition_index: 0,
@@ -420,7 +420,7 @@ impl Default for ListOffsetsResponseListOffsetsPartitionResponse {
     }
 }
 
-impl KafkaDecode for ListOffsetsResponseListOffsetsPartitionResponse {
+impl KafkaDecode for ListOffsetsResponsePartitionResponse {
     fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
         let partition_index = decoder.read_i32()?;
         let error_code = decoder.read_i16()?;
@@ -448,7 +448,7 @@ impl KafkaDecode for ListOffsetsResponseListOffsetsPartitionResponse {
     }
 }
 
-impl KafkaEncode for ListOffsetsResponseListOffsetsPartitionResponse {
+impl KafkaEncode for ListOffsetsResponsePartitionResponse {
     fn encode<T: EncodeTarget>(
         &self,
         encoder: &mut Encoder<T>,
@@ -466,7 +466,7 @@ impl KafkaEncode for ListOffsetsResponseListOffsetsPartitionResponse {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
         } else if !self.unknown_tagged_fields.is_empty() {
             return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: "ListOffsetsResponseListOffsetsPartitionResponse",
+                message: "ListOffsetsResponsePartitionResponse",
                 version,
             });
         }
@@ -482,7 +482,7 @@ pub struct ListOffsetsResponse {
     /// The duration in milliseconds for which the request was throttled due to a quota violation, or zero if the request did not violate any quota.
     pub throttle_time_ms: i32,
     /// Each topic in the response.
-    pub topics: Vec<ListOffsetsResponseListOffsetsTopicResponse>,
+    pub topics: Vec<ListOffsetsResponseTopicResponse>,
     /// Unknown flexible-version tagged fields retained for forwarding.
     pub unknown_tagged_fields: TaggedFields,
 }
@@ -513,7 +513,7 @@ impl KafkaDecode for ListOffsetsResponse {
                 decoder.read_array_len()?
             };
             decoder.read_vec(length, |decoder| {
-                ListOffsetsResponseListOffsetsTopicResponse::decode(decoder, version)
+                ListOffsetsResponseTopicResponse::decode(decoder, version)
             })?
         };
         let unknown_tagged_fields = if Self::is_flexible(version) {

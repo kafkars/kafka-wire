@@ -104,7 +104,7 @@ impl KafkaEncode for DeleteGroupsRequest {
     }
 }
 
-/// `DeleteGroupsResponseDeletableGroupResult` as declared by the `DeleteGroups` API.
+/// `DeletableGroupResult` as declared by the `DeleteGroups` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct DeleteGroupsResponseDeletableGroupResult {

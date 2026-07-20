@@ -28,6 +28,7 @@ pub(crate) fn render_standalone(
     render_struct_with(
         rust,
         message.name.rust_type(),
+        message.name.protocol(),
         &message.fields,
         message,
         Identity::Message,
@@ -39,8 +40,8 @@ pub(crate) fn render_declared_structs(
     rust: &mut RustText,
     message: &Message,
 ) -> Result<(), GenerationError> {
-    for (rust_type, fields) in declared_structs(message) {
-        render_struct(rust, &rust_type, fields, message)?;
+    for (rust_type, declared, fields) in declared_structs(message) {
+        render_struct(rust, &rust_type, &declared, fields, message)?;
     }
     Ok(())
 }
@@ -52,22 +53,30 @@ pub(crate) fn render_declared_structs(
 /// members live in different places: a common struct carries its own field
 /// list, while an inline body hangs off the field that declares the shape. This
 /// walks both so the emitter sees one ordered list.
-pub(super) fn declared_structs(message: &Message) -> Vec<(String, &[Field])> {
+pub(super) fn declared_structs(message: &Message) -> Vec<(String, String, &[Field])> {
     let mut declared = Vec::new();
     for common in &message.common_structs {
-        declared.push((common.name.rust_type().to_owned(), common.fields.as_slice()));
+        declared.push((
+            common.name.rust_type().to_owned(),
+            common.name.declared().to_owned(),
+            common.fields.as_slice(),
+        ));
     }
     collect_inline(&message.fields, &mut declared);
     declared
 }
 
-fn collect_inline<'a>(fields: &'a [Field], declared: &mut Vec<(String, &'a [Field])>) {
+fn collect_inline<'a>(fields: &'a [Field], declared: &mut Vec<(String, String, &'a [Field])>) {
     for field in fields {
         if field.fields.is_empty() {
             continue;
         }
         if let Some(reference) = struct_reference(&field.ty) {
-            declared.push((reference.rust_type().to_owned(), field.fields.as_slice()));
+            declared.push((
+                reference.rust_type().to_owned(),
+                reference.declared().to_owned(),
+                field.fields.as_slice(),
+            ));
         }
         collect_inline(&field.fields, declared);
     }
@@ -106,21 +115,26 @@ enum Identity {
 fn render_struct(
     rust: &mut RustText,
     rust_type: &str,
+    declared: &str,
     fields: &[Field],
     message: &Message,
 ) -> Result<(), GenerationError> {
-    render_struct_with(rust, rust_type, fields, message, Identity::Nested)
+    render_struct_with(rust, rust_type, declared, fields, message, Identity::Nested)
 }
 
 fn render_struct_with(
     rust: &mut RustText,
     rust_type: &str,
+    declared: &str,
     fields: &[Field],
     message: &Message,
     identity: Identity,
 ) -> Result<(), GenerationError> {
+    // Upstream's own spelling, not the Rust one the next line already shows.
+    // The qualified type no longer repeats the API stem, so this is what a
+    // reader greps back to the schema.
     rust.line(format!(
-        "/// `{rust_type}` as declared by the `{}` API.",
+        "/// `{declared}` as declared by the `{}` API.",
         message.name.api_stem()
     ));
     rust.line("#[non_exhaustive]");

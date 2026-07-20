@@ -123,7 +123,7 @@ impl KafkaEncode for DescribeGroupsRequest {
     }
 }
 
-/// `DescribeGroupsResponseDescribedGroup` as declared by the `DescribeGroups` API.
+/// `DescribedGroup` as declared by the `DescribeGroups` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct DescribeGroupsResponseDescribedGroup {
@@ -289,7 +289,7 @@ impl KafkaEncode for DescribeGroupsResponseDescribedGroup {
     }
 }
 
-/// `DescribeGroupsResponseDescribedGroupMember` as declared by the `DescribeGroups` API.
+/// `DescribedGroupMember` as declared by the `DescribeGroups` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct DescribeGroupsResponseDescribedGroupMember {

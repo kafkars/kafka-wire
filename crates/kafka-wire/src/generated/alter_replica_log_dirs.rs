@@ -15,7 +15,7 @@ use crate::{
     RequestResponsePair,
 };
 
-/// `AlterReplicaLogDirsRequestAlterReplicaLogDir` as declared by the `AlterReplicaLogDirs` API.
+/// `AlterReplicaLogDir` as declared by the `AlterReplicaLogDirs` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct AlterReplicaLogDirsRequestAlterReplicaLogDir {
@@ -99,7 +99,7 @@ impl KafkaEncode for AlterReplicaLogDirsRequestAlterReplicaLogDir {
     }
 }
 
-/// `AlterReplicaLogDirsRequestAlterReplicaLogDirTopic` as declared by the `AlterReplicaLogDirs` API.
+/// `AlterReplicaLogDirTopic` as declared by the `AlterReplicaLogDirs` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct AlterReplicaLogDirsRequestAlterReplicaLogDirTopic {
@@ -262,7 +262,7 @@ impl KafkaEncode for AlterReplicaLogDirsRequest {
     }
 }
 
-/// `AlterReplicaLogDirsResponseAlterReplicaLogDirTopicResult` as declared by the `AlterReplicaLogDirs` API.
+/// `AlterReplicaLogDirTopicResult` as declared by the `AlterReplicaLogDirs` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct AlterReplicaLogDirsResponseAlterReplicaLogDirTopicResult {
@@ -348,7 +348,7 @@ impl KafkaEncode for AlterReplicaLogDirsResponseAlterReplicaLogDirTopicResult {
     }
 }
 
-/// `AlterReplicaLogDirsResponseAlterReplicaLogDirPartitionResult` as declared by the `AlterReplicaLogDirs` API.
+/// `AlterReplicaLogDirPartitionResult` as declared by the `AlterReplicaLogDirs` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct AlterReplicaLogDirsResponseAlterReplicaLogDirPartitionResult {

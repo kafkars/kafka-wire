@@ -15,7 +15,7 @@ use crate::{
     RequestResponsePair,
 };
 
-/// `ControllerRegistrationRequestListener` as declared by the `ControllerRegistration` API.
+/// `Listener` as declared by the `ControllerRegistration` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct ControllerRegistrationRequestListener {
@@ -85,7 +85,7 @@ impl KafkaEncode for ControllerRegistrationRequestListener {
     }
 }
 
-/// `ControllerRegistrationRequestFeature` as declared by the `ControllerRegistration` API.
+/// `Feature` as declared by the `ControllerRegistration` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct ControllerRegistrationRequestFeature {

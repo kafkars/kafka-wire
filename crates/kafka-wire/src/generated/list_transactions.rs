@@ -146,7 +146,7 @@ impl KafkaEncode for ListTransactionsRequest {
     }
 }
 
-/// `ListTransactionsResponseTransactionState` as declared by the `ListTransactions` API.
+/// `TransactionState` as declared by the `ListTransactions` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct ListTransactionsResponseTransactionState {

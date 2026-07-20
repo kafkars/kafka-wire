@@ -142,7 +142,7 @@ impl KafkaEncode for FindCoordinatorRequest {
     }
 }
 
-/// `FindCoordinatorResponseCoordinator` as declared by the `FindCoordinator` API.
+/// `Coordinator` as declared by the `FindCoordinator` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct FindCoordinatorResponseCoordinator {

@@ -86,7 +86,7 @@ impl KafkaEncode for DescribeTransactionsRequest {
     }
 }
 
-/// `DescribeTransactionsResponseTransactionState` as declared by the `DescribeTransactions` API.
+/// `TransactionState` as declared by the `DescribeTransactions` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct DescribeTransactionsResponseTransactionState {
@@ -184,7 +184,7 @@ impl KafkaEncode for DescribeTransactionsResponseTransactionState {
     }
 }
 
-/// `DescribeTransactionsResponseTopicData` as declared by the `DescribeTransactions` API.
+/// `TopicData` as declared by the `DescribeTransactions` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct DescribeTransactionsResponseTopicData {

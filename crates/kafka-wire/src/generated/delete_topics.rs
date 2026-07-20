@@ -15,7 +15,7 @@ use crate::{
     RequestResponsePair,
 };
 
-/// `DeleteTopicsRequestDeleteTopicState` as declared by the `DeleteTopics` API.
+/// `DeleteTopicState` as declared by the `DeleteTopics` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct DeleteTopicsRequestDeleteTopicState {
@@ -210,7 +210,7 @@ impl KafkaEncode for DeleteTopicsRequest {
     }
 }
 
-/// `DeleteTopicsResponseDeletableTopicResult` as declared by the `DeleteTopics` API.
+/// `DeletableTopicResult` as declared by the `DeleteTopics` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct DeleteTopicsResponseDeletableTopicResult {

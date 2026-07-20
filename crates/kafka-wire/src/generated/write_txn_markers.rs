@@ -15,7 +15,7 @@ use crate::{
     RequestResponsePair,
 };
 
-/// `WriteTxnMarkersRequestWritableTxnMarker` as declared by the `WriteTxnMarkers` API.
+/// `WritableTxnMarker` as declared by the `WriteTxnMarkers` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct WriteTxnMarkersRequestWritableTxnMarker {
@@ -109,7 +109,7 @@ impl KafkaEncode for WriteTxnMarkersRequestWritableTxnMarker {
     }
 }
 
-/// `WriteTxnMarkersRequestWritableTxnMarkerTopic` as declared by the `WriteTxnMarkers` API.
+/// `WritableTxnMarkerTopic` as declared by the `WriteTxnMarkers` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct WriteTxnMarkersRequestWritableTxnMarkerTopic {
@@ -248,7 +248,7 @@ impl KafkaEncode for WriteTxnMarkersRequest {
     }
 }
 
-/// `WriteTxnMarkersResponseWritableTxnMarkerResult` as declared by the `WriteTxnMarkers` API.
+/// `WritableTxnMarkerResult` as declared by the `WriteTxnMarkers` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct WriteTxnMarkersResponseWritableTxnMarkerResult {
@@ -316,7 +316,7 @@ impl KafkaEncode for WriteTxnMarkersResponseWritableTxnMarkerResult {
     }
 }
 
-/// `WriteTxnMarkersResponseWritableTxnMarkerTopicResult` as declared by the `WriteTxnMarkers` API.
+/// `WritableTxnMarkerTopicResult` as declared by the `WriteTxnMarkers` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct WriteTxnMarkersResponseWritableTxnMarkerTopicResult {
@@ -384,7 +384,7 @@ impl KafkaEncode for WriteTxnMarkersResponseWritableTxnMarkerTopicResult {
     }
 }
 
-/// `WriteTxnMarkersResponseWritableTxnMarkerPartitionResult` as declared by the `WriteTxnMarkers` API.
+/// `WritableTxnMarkerPartitionResult` as declared by the `WriteTxnMarkers` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct WriteTxnMarkersResponseWritableTxnMarkerPartitionResult {

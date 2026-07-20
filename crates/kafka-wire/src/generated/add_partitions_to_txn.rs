@@ -15,10 +15,10 @@ use crate::{
     RequestResponsePair,
 };
 
-/// `AddPartitionsToTxnRequestAddPartitionsToTxnTopic` as declared by the `AddPartitionsToTxn` API.
+/// `AddPartitionsToTxnTopic` as declared by the `AddPartitionsToTxn` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct AddPartitionsToTxnRequestAddPartitionsToTxnTopic {
+pub struct AddPartitionsToTxnRequestTopic {
     /// The name of the topic.
     pub name: StrBytes,
     /// The partition indexes to add to the transaction.
@@ -27,7 +27,7 @@ pub struct AddPartitionsToTxnRequestAddPartitionsToTxnTopic {
     pub unknown_tagged_fields: TaggedFields,
 }
 
-impl AddPartitionsToTxnRequestAddPartitionsToTxnTopic {
+impl AddPartitionsToTxnRequestTopic {
     const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(3, 5));
 
     fn is_flexible(version: ApiVersion) -> bool {
@@ -35,7 +35,7 @@ impl AddPartitionsToTxnRequestAddPartitionsToTxnTopic {
     }
 }
 
-impl KafkaDecode for AddPartitionsToTxnRequestAddPartitionsToTxnTopic {
+impl KafkaDecode for AddPartitionsToTxnRequestTopic {
     fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
         let name = if Self::is_flexible(version) {
             decoder.read_compact_string()?
@@ -64,7 +64,7 @@ impl KafkaDecode for AddPartitionsToTxnRequestAddPartitionsToTxnTopic {
     }
 }
 
-impl KafkaEncode for AddPartitionsToTxnRequestAddPartitionsToTxnTopic {
+impl KafkaEncode for AddPartitionsToTxnRequestTopic {
     fn encode<T: EncodeTarget>(
         &self,
         encoder: &mut Encoder<T>,
@@ -88,7 +88,7 @@ impl KafkaEncode for AddPartitionsToTxnRequestAddPartitionsToTxnTopic {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
         } else if !self.unknown_tagged_fields.is_empty() {
             return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: "AddPartitionsToTxnRequestAddPartitionsToTxnTopic",
+                message: "AddPartitionsToTxnRequestTopic",
                 version,
             });
         }
@@ -97,10 +97,10 @@ impl KafkaEncode for AddPartitionsToTxnRequestAddPartitionsToTxnTopic {
     }
 }
 
-/// `AddPartitionsToTxnRequestAddPartitionsToTxnTransaction` as declared by the `AddPartitionsToTxn` API.
+/// `AddPartitionsToTxnTransaction` as declared by the `AddPartitionsToTxn` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct AddPartitionsToTxnRequestAddPartitionsToTxnTransaction {
+pub struct AddPartitionsToTxnRequestTransaction {
     /// The transactional id corresponding to the transaction.
     pub transactional_id: StrBytes,
     /// Current producer id in use by the transactional id.
@@ -110,12 +110,12 @@ pub struct AddPartitionsToTxnRequestAddPartitionsToTxnTransaction {
     /// Boolean to signify if we want to check if the partition is in the transaction rather than add it.
     pub verify_only: bool,
     /// The partitions to add to the transaction.
-    pub topics: Vec<AddPartitionsToTxnRequestAddPartitionsToTxnTopic>,
+    pub topics: Vec<AddPartitionsToTxnRequestTopic>,
     /// Unknown flexible-version tagged fields retained for forwarding.
     pub unknown_tagged_fields: TaggedFields,
 }
 
-impl AddPartitionsToTxnRequestAddPartitionsToTxnTransaction {
+impl AddPartitionsToTxnRequestTransaction {
     const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(3, 5));
 
     fn is_flexible(version: ApiVersion) -> bool {
@@ -123,7 +123,7 @@ impl AddPartitionsToTxnRequestAddPartitionsToTxnTransaction {
     }
 }
 
-impl KafkaDecode for AddPartitionsToTxnRequestAddPartitionsToTxnTransaction {
+impl KafkaDecode for AddPartitionsToTxnRequestTransaction {
     fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
         let transactional_id = if version.value() >= 4 {
             decoder.read_compact_string()?
@@ -148,7 +148,7 @@ impl KafkaDecode for AddPartitionsToTxnRequestAddPartitionsToTxnTransaction {
         let topics = if version.value() >= 4 {
             let length = decoder.read_compact_array_len()?;
             decoder.read_vec(length, |decoder| {
-                AddPartitionsToTxnRequestAddPartitionsToTxnTopic::decode(decoder, version)
+                AddPartitionsToTxnRequestTopic::decode(decoder, version)
             })?
         } else {
             Vec::new()
@@ -170,7 +170,7 @@ impl KafkaDecode for AddPartitionsToTxnRequestAddPartitionsToTxnTransaction {
     }
 }
 
-impl KafkaEncode for AddPartitionsToTxnRequestAddPartitionsToTxnTransaction {
+impl KafkaEncode for AddPartitionsToTxnRequestTransaction {
     fn encode<T: EncodeTarget>(
         &self,
         encoder: &mut Encoder<T>,
@@ -199,7 +199,7 @@ impl KafkaEncode for AddPartitionsToTxnRequestAddPartitionsToTxnTransaction {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
         } else if !self.unknown_tagged_fields.is_empty() {
             return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: "AddPartitionsToTxnRequestAddPartitionsToTxnTransaction",
+                message: "AddPartitionsToTxnRequestTransaction",
                 version,
             });
         }
@@ -213,7 +213,7 @@ impl KafkaEncode for AddPartitionsToTxnRequestAddPartitionsToTxnTransaction {
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct AddPartitionsToTxnRequest {
     /// List of transactions to add partitions to.
-    pub transactions: Vec<AddPartitionsToTxnRequestAddPartitionsToTxnTransaction>,
+    pub transactions: Vec<AddPartitionsToTxnRequestTransaction>,
     /// The transactional id corresponding to the transaction.
     pub v3_and_below_transactional_id: StrBytes,
     /// Current producer id in use by the transactional id.
@@ -221,7 +221,7 @@ pub struct AddPartitionsToTxnRequest {
     /// Current epoch associated with the producer id.
     pub v3_and_below_producer_epoch: i16,
     /// The partitions to add to the transaction.
-    pub v3_and_below_topics: Vec<AddPartitionsToTxnRequestAddPartitionsToTxnTopic>,
+    pub v3_and_below_topics: Vec<AddPartitionsToTxnRequestTopic>,
     /// Unknown flexible-version tagged fields retained for forwarding.
     pub unknown_tagged_fields: TaggedFields,
 }
@@ -247,7 +247,7 @@ impl KafkaDecode for AddPartitionsToTxnRequest {
         let transactions = if version.value() >= 4 {
             let length = decoder.read_compact_array_len()?;
             decoder.read_vec(length, |decoder| {
-                AddPartitionsToTxnRequestAddPartitionsToTxnTransaction::decode(decoder, version)
+                AddPartitionsToTxnRequestTransaction::decode(decoder, version)
             })?
         } else {
             Vec::new()
@@ -278,7 +278,7 @@ impl KafkaDecode for AddPartitionsToTxnRequest {
                 decoder.read_array_len()?
             };
             decoder.read_vec(length, |decoder| {
-                AddPartitionsToTxnRequestAddPartitionsToTxnTopic::decode(decoder, version)
+                AddPartitionsToTxnRequestTopic::decode(decoder, version)
             })?
         } else {
             Vec::new()
@@ -387,19 +387,19 @@ impl KafkaEncode for AddPartitionsToTxnRequest {
     }
 }
 
-/// `AddPartitionsToTxnResponseAddPartitionsToTxnTopicResult` as declared by the `AddPartitionsToTxn` API.
+/// `AddPartitionsToTxnTopicResult` as declared by the `AddPartitionsToTxn` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct AddPartitionsToTxnResponseAddPartitionsToTxnTopicResult {
+pub struct AddPartitionsToTxnResponseTopicResult {
     /// The topic name.
     pub name: StrBytes,
     /// The results for each partition.
-    pub results_by_partition: Vec<AddPartitionsToTxnResponseAddPartitionsToTxnPartitionResult>,
+    pub results_by_partition: Vec<AddPartitionsToTxnResponsePartitionResult>,
     /// Unknown flexible-version tagged fields retained for forwarding.
     pub unknown_tagged_fields: TaggedFields,
 }
 
-impl AddPartitionsToTxnResponseAddPartitionsToTxnTopicResult {
+impl AddPartitionsToTxnResponseTopicResult {
     const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(3, 5));
 
     fn is_flexible(version: ApiVersion) -> bool {
@@ -407,7 +407,7 @@ impl AddPartitionsToTxnResponseAddPartitionsToTxnTopicResult {
     }
 }
 
-impl KafkaDecode for AddPartitionsToTxnResponseAddPartitionsToTxnTopicResult {
+impl KafkaDecode for AddPartitionsToTxnResponseTopicResult {
     fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
         let name = if Self::is_flexible(version) {
             decoder.read_compact_string()?
@@ -421,9 +421,7 @@ impl KafkaDecode for AddPartitionsToTxnResponseAddPartitionsToTxnTopicResult {
                 decoder.read_array_len()?
             };
             decoder.read_vec(length, |decoder| {
-                AddPartitionsToTxnResponseAddPartitionsToTxnPartitionResult::decode(
-                    decoder, version,
-                )
+                AddPartitionsToTxnResponsePartitionResult::decode(decoder, version)
             })?
         };
         let unknown_tagged_fields = if Self::is_flexible(version) {
@@ -440,7 +438,7 @@ impl KafkaDecode for AddPartitionsToTxnResponseAddPartitionsToTxnTopicResult {
     }
 }
 
-impl KafkaEncode for AddPartitionsToTxnResponseAddPartitionsToTxnTopicResult {
+impl KafkaEncode for AddPartitionsToTxnResponseTopicResult {
     fn encode<T: EncodeTarget>(
         &self,
         encoder: &mut Encoder<T>,
@@ -464,7 +462,7 @@ impl KafkaEncode for AddPartitionsToTxnResponseAddPartitionsToTxnTopicResult {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
         } else if !self.unknown_tagged_fields.is_empty() {
             return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: "AddPartitionsToTxnResponseAddPartitionsToTxnTopicResult",
+                message: "AddPartitionsToTxnResponseTopicResult",
                 version,
             });
         }
@@ -473,10 +471,10 @@ impl KafkaEncode for AddPartitionsToTxnResponseAddPartitionsToTxnTopicResult {
     }
 }
 
-/// `AddPartitionsToTxnResponseAddPartitionsToTxnPartitionResult` as declared by the `AddPartitionsToTxn` API.
+/// `AddPartitionsToTxnPartitionResult` as declared by the `AddPartitionsToTxn` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct AddPartitionsToTxnResponseAddPartitionsToTxnPartitionResult {
+pub struct AddPartitionsToTxnResponsePartitionResult {
     /// The partition indexes.
     pub partition_index: i32,
     /// The response error code.
@@ -485,7 +483,7 @@ pub struct AddPartitionsToTxnResponseAddPartitionsToTxnPartitionResult {
     pub unknown_tagged_fields: TaggedFields,
 }
 
-impl AddPartitionsToTxnResponseAddPartitionsToTxnPartitionResult {
+impl AddPartitionsToTxnResponsePartitionResult {
     const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(3, 5));
 
     fn is_flexible(version: ApiVersion) -> bool {
@@ -493,7 +491,7 @@ impl AddPartitionsToTxnResponseAddPartitionsToTxnPartitionResult {
     }
 }
 
-impl KafkaDecode for AddPartitionsToTxnResponseAddPartitionsToTxnPartitionResult {
+impl KafkaDecode for AddPartitionsToTxnResponsePartitionResult {
     fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
         let partition_index = decoder.read_i32()?;
         let partition_error_code = decoder.read_i16()?;
@@ -511,7 +509,7 @@ impl KafkaDecode for AddPartitionsToTxnResponseAddPartitionsToTxnPartitionResult
     }
 }
 
-impl KafkaEncode for AddPartitionsToTxnResponseAddPartitionsToTxnPartitionResult {
+impl KafkaEncode for AddPartitionsToTxnResponsePartitionResult {
     fn encode<T: EncodeTarget>(
         &self,
         encoder: &mut Encoder<T>,
@@ -524,7 +522,7 @@ impl KafkaEncode for AddPartitionsToTxnResponseAddPartitionsToTxnPartitionResult
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
         } else if !self.unknown_tagged_fields.is_empty() {
             return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: "AddPartitionsToTxnResponseAddPartitionsToTxnPartitionResult",
+                message: "AddPartitionsToTxnResponsePartitionResult",
                 version,
             });
         }
@@ -533,19 +531,19 @@ impl KafkaEncode for AddPartitionsToTxnResponseAddPartitionsToTxnPartitionResult
     }
 }
 
-/// `AddPartitionsToTxnResponseAddPartitionsToTxnResult` as declared by the `AddPartitionsToTxn` API.
+/// `AddPartitionsToTxnResult` as declared by the `AddPartitionsToTxn` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct AddPartitionsToTxnResponseAddPartitionsToTxnResult {
+pub struct AddPartitionsToTxnResponseResult {
     /// The transactional id corresponding to the transaction.
     pub transactional_id: StrBytes,
     /// The results for each topic.
-    pub topic_results: Vec<AddPartitionsToTxnResponseAddPartitionsToTxnTopicResult>,
+    pub topic_results: Vec<AddPartitionsToTxnResponseTopicResult>,
     /// Unknown flexible-version tagged fields retained for forwarding.
     pub unknown_tagged_fields: TaggedFields,
 }
 
-impl AddPartitionsToTxnResponseAddPartitionsToTxnResult {
+impl AddPartitionsToTxnResponseResult {
     const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(3, 5));
 
     fn is_flexible(version: ApiVersion) -> bool {
@@ -553,7 +551,7 @@ impl AddPartitionsToTxnResponseAddPartitionsToTxnResult {
     }
 }
 
-impl KafkaDecode for AddPartitionsToTxnResponseAddPartitionsToTxnResult {
+impl KafkaDecode for AddPartitionsToTxnResponseResult {
     fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
         let transactional_id = if version.value() >= 4 {
             decoder.read_compact_string()?
@@ -563,7 +561,7 @@ impl KafkaDecode for AddPartitionsToTxnResponseAddPartitionsToTxnResult {
         let topic_results = if version.value() >= 4 {
             let length = decoder.read_compact_array_len()?;
             decoder.read_vec(length, |decoder| {
-                AddPartitionsToTxnResponseAddPartitionsToTxnTopicResult::decode(decoder, version)
+                AddPartitionsToTxnResponseTopicResult::decode(decoder, version)
             })?
         } else {
             Vec::new()
@@ -582,7 +580,7 @@ impl KafkaDecode for AddPartitionsToTxnResponseAddPartitionsToTxnResult {
     }
 }
 
-impl KafkaEncode for AddPartitionsToTxnResponseAddPartitionsToTxnResult {
+impl KafkaEncode for AddPartitionsToTxnResponseResult {
     fn encode<T: EncodeTarget>(
         &self,
         encoder: &mut Encoder<T>,
@@ -602,7 +600,7 @@ impl KafkaEncode for AddPartitionsToTxnResponseAddPartitionsToTxnResult {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
         } else if !self.unknown_tagged_fields.is_empty() {
             return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: "AddPartitionsToTxnResponseAddPartitionsToTxnResult",
+                message: "AddPartitionsToTxnResponseResult",
                 version,
             });
         }
@@ -620,9 +618,9 @@ pub struct AddPartitionsToTxnResponse {
     /// The response top level error code.
     pub error_code: i16,
     /// Results categorized by transactional ID.
-    pub results_by_transaction: Vec<AddPartitionsToTxnResponseAddPartitionsToTxnResult>,
+    pub results_by_transaction: Vec<AddPartitionsToTxnResponseResult>,
     /// The results for each topic.
-    pub results_by_topic_v3_and_below: Vec<AddPartitionsToTxnResponseAddPartitionsToTxnTopicResult>,
+    pub results_by_topic_v3_and_below: Vec<AddPartitionsToTxnResponseTopicResult>,
     /// Unknown flexible-version tagged fields retained for forwarding.
     pub unknown_tagged_fields: TaggedFields,
 }
@@ -650,7 +648,7 @@ impl KafkaDecode for AddPartitionsToTxnResponse {
         let results_by_transaction = if version.value() >= 4 {
             let length = decoder.read_compact_array_len()?;
             decoder.read_vec(length, |decoder| {
-                AddPartitionsToTxnResponseAddPartitionsToTxnResult::decode(decoder, version)
+                AddPartitionsToTxnResponseResult::decode(decoder, version)
             })?
         } else {
             Vec::new()
@@ -662,7 +660,7 @@ impl KafkaDecode for AddPartitionsToTxnResponse {
                 decoder.read_array_len()?
             };
             decoder.read_vec(length, |decoder| {
-                AddPartitionsToTxnResponseAddPartitionsToTxnTopicResult::decode(decoder, version)
+                AddPartitionsToTxnResponseTopicResult::decode(decoder, version)
             })?
         } else {
             Vec::new()

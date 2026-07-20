@@ -149,10 +149,10 @@ impl KafkaEncode for DescribeAclsRequest {
     }
 }
 
-/// `DescribeAclsResponseDescribeAclsResource` as declared by the `DescribeAcls` API.
+/// `DescribeAclsResource` as declared by the `DescribeAcls` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Eq, PartialEq)]
-pub struct DescribeAclsResponseDescribeAclsResource {
+pub struct DescribeAclsResponseResource {
     /// The resource type.
     pub resource_type: i8,
     /// The resource name.
@@ -165,7 +165,7 @@ pub struct DescribeAclsResponseDescribeAclsResource {
     pub unknown_tagged_fields: TaggedFields,
 }
 
-impl DescribeAclsResponseDescribeAclsResource {
+impl DescribeAclsResponseResource {
     const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(2, 3));
 
     fn is_flexible(version: ApiVersion) -> bool {
@@ -173,7 +173,7 @@ impl DescribeAclsResponseDescribeAclsResource {
     }
 }
 
-impl Default for DescribeAclsResponseDescribeAclsResource {
+impl Default for DescribeAclsResponseResource {
     fn default() -> Self {
         Self {
             resource_type: 0,
@@ -185,7 +185,7 @@ impl Default for DescribeAclsResponseDescribeAclsResource {
     }
 }
 
-impl KafkaDecode for DescribeAclsResponseDescribeAclsResource {
+impl KafkaDecode for DescribeAclsResponseResource {
     fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
         let resource_type = decoder.read_i8()?;
         let resource_name = if Self::is_flexible(version) {
@@ -220,7 +220,7 @@ impl KafkaDecode for DescribeAclsResponseDescribeAclsResource {
     }
 }
 
-impl KafkaEncode for DescribeAclsResponseDescribeAclsResource {
+impl KafkaEncode for DescribeAclsResponseResource {
     fn encode<T: EncodeTarget>(
         &self,
         encoder: &mut Encoder<T>,
@@ -246,7 +246,7 @@ impl KafkaEncode for DescribeAclsResponseDescribeAclsResource {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
         } else if !self.unknown_tagged_fields.is_empty() {
             return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: "DescribeAclsResponseDescribeAclsResource",
+                message: "DescribeAclsResponseResource",
                 version,
             });
         }
@@ -255,7 +255,7 @@ impl KafkaEncode for DescribeAclsResponseDescribeAclsResource {
     }
 }
 
-/// `DescribeAclsResponseAclDescription` as declared by the `DescribeAcls` API.
+/// `AclDescription` as declared by the `DescribeAcls` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct DescribeAclsResponseAclDescription {
@@ -352,7 +352,7 @@ pub struct DescribeAclsResponse {
     /// The error message, or null if there was no error.
     pub error_message: Option<StrBytes>,
     /// Each Resource that is referenced in an ACL.
-    pub resources: Vec<DescribeAclsResponseDescribeAclsResource>,
+    pub resources: Vec<DescribeAclsResponseResource>,
     /// Unknown flexible-version tagged fields retained for forwarding.
     pub unknown_tagged_fields: TaggedFields,
 }
@@ -397,7 +397,7 @@ impl KafkaDecode for DescribeAclsResponse {
                 decoder.read_array_len()?
             };
             decoder.read_vec(length, |decoder| {
-                DescribeAclsResponseDescribeAclsResource::decode(decoder, version)
+                DescribeAclsResponseResource::decode(decoder, version)
             })?
         };
         let unknown_tagged_fields = if Self::is_flexible(version) {

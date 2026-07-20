@@ -15,7 +15,7 @@ use crate::{
     RequestResponsePair,
 };
 
-/// `FetchSnapshotRequestTopicSnapshot` as declared by the `FetchSnapshot` API.
+/// `TopicSnapshot` as declared by the `FetchSnapshot` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct FetchSnapshotRequestTopicSnapshot {
@@ -83,7 +83,7 @@ impl KafkaEncode for FetchSnapshotRequestTopicSnapshot {
     }
 }
 
-/// `FetchSnapshotRequestPartitionSnapshot` as declared by the `FetchSnapshot` API.
+/// `PartitionSnapshot` as declared by the `FetchSnapshot` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct FetchSnapshotRequestPartitionSnapshot {
@@ -169,7 +169,7 @@ impl KafkaEncode for FetchSnapshotRequestPartitionSnapshot {
     }
 }
 
-/// `FetchSnapshotRequestSnapshotId` as declared by the `FetchSnapshot` API.
+/// `SnapshotId` as declared by the `FetchSnapshot` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct FetchSnapshotRequestSnapshotId {
@@ -340,7 +340,7 @@ impl KafkaEncode for FetchSnapshotRequest {
     }
 }
 
-/// `FetchSnapshotResponseTopicSnapshot` as declared by the `FetchSnapshot` API.
+/// `TopicSnapshot` as declared by the `FetchSnapshot` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct FetchSnapshotResponseTopicSnapshot {
@@ -408,7 +408,7 @@ impl KafkaEncode for FetchSnapshotResponseTopicSnapshot {
     }
 }
 
-/// `FetchSnapshotResponsePartitionSnapshot` as declared by the `FetchSnapshot` API.
+/// `PartitionSnapshot` as declared by the `FetchSnapshot` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct FetchSnapshotResponsePartitionSnapshot {
@@ -506,7 +506,7 @@ impl KafkaEncode for FetchSnapshotResponsePartitionSnapshot {
     }
 }
 
-/// `FetchSnapshotResponseSnapshotId` as declared by the `FetchSnapshot` API.
+/// `SnapshotId` as declared by the `FetchSnapshot` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct FetchSnapshotResponseSnapshotId {
@@ -566,7 +566,7 @@ impl KafkaEncode for FetchSnapshotResponseSnapshotId {
     }
 }
 
-/// `FetchSnapshotResponseLeaderIdAndEpoch` as declared by the `FetchSnapshot` API.
+/// `LeaderIdAndEpoch` as declared by the `FetchSnapshot` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct FetchSnapshotResponseLeaderIdAndEpoch {
@@ -626,7 +626,7 @@ impl KafkaEncode for FetchSnapshotResponseLeaderIdAndEpoch {
     }
 }
 
-/// `FetchSnapshotResponseNodeEndpoint` as declared by the `FetchSnapshot` API.
+/// `NodeEndpoint` as declared by the `FetchSnapshot` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct FetchSnapshotResponseNodeEndpoint {

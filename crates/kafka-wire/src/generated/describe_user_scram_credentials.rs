@@ -15,7 +15,7 @@ use crate::{
     RequestResponsePair,
 };
 
-/// `DescribeUserScramCredentialsRequestUserName` as declared by the `DescribeUserScramCredentials` API.
+/// `UserName` as declared by the `DescribeUserScramCredentials` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct DescribeUserScramCredentialsRequestUserName {
@@ -158,10 +158,10 @@ impl KafkaEncode for DescribeUserScramCredentialsRequest {
     }
 }
 
-/// `DescribeUserScramCredentialsResponseDescribeUserScramCredentialsResult` as declared by the `DescribeUserScramCredentials` API.
+/// `DescribeUserScramCredentialsResult` as declared by the `DescribeUserScramCredentials` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Eq, PartialEq)]
-pub struct DescribeUserScramCredentialsResponseDescribeUserScramCredentialsResult {
+pub struct DescribeUserScramCredentialsResponseResult {
     /// The user name.
     pub user: StrBytes,
     /// The user-level error code.
@@ -174,7 +174,7 @@ pub struct DescribeUserScramCredentialsResponseDescribeUserScramCredentialsResul
     pub unknown_tagged_fields: TaggedFields,
 }
 
-impl DescribeUserScramCredentialsResponseDescribeUserScramCredentialsResult {
+impl DescribeUserScramCredentialsResponseResult {
     const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 0));
 
     fn is_flexible(version: ApiVersion) -> bool {
@@ -182,7 +182,7 @@ impl DescribeUserScramCredentialsResponseDescribeUserScramCredentialsResult {
     }
 }
 
-impl Default for DescribeUserScramCredentialsResponseDescribeUserScramCredentialsResult {
+impl Default for DescribeUserScramCredentialsResponseResult {
     fn default() -> Self {
         Self {
             user: StrBytes::default(),
@@ -194,7 +194,7 @@ impl Default for DescribeUserScramCredentialsResponseDescribeUserScramCredential
     }
 }
 
-impl KafkaDecode for DescribeUserScramCredentialsResponseDescribeUserScramCredentialsResult {
+impl KafkaDecode for DescribeUserScramCredentialsResponseResult {
     fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
         let user = decoder.read_compact_string()?;
         let error_code = decoder.read_i16()?;
@@ -221,7 +221,7 @@ impl KafkaDecode for DescribeUserScramCredentialsResponseDescribeUserScramCreden
     }
 }
 
-impl KafkaEncode for DescribeUserScramCredentialsResponseDescribeUserScramCredentialsResult {
+impl KafkaEncode for DescribeUserScramCredentialsResponseResult {
     fn encode<T: EncodeTarget>(
         &self,
         encoder: &mut Encoder<T>,
@@ -239,7 +239,7 @@ impl KafkaEncode for DescribeUserScramCredentialsResponseDescribeUserScramCreden
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
         } else if !self.unknown_tagged_fields.is_empty() {
             return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: "DescribeUserScramCredentialsResponseDescribeUserScramCredentialsResult",
+                message: "DescribeUserScramCredentialsResponseResult",
                 version,
             });
         }
@@ -248,7 +248,7 @@ impl KafkaEncode for DescribeUserScramCredentialsResponseDescribeUserScramCreden
     }
 }
 
-/// `DescribeUserScramCredentialsResponseCredentialInfo` as declared by the `DescribeUserScramCredentials` API.
+/// `CredentialInfo` as declared by the `DescribeUserScramCredentials` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct DescribeUserScramCredentialsResponseCredentialInfo {
@@ -319,7 +319,7 @@ pub struct DescribeUserScramCredentialsResponse {
     /// The message-level error message, if any.
     pub error_message: Option<StrBytes>,
     /// The results for descriptions, one per user.
-    pub results: Vec<DescribeUserScramCredentialsResponseDescribeUserScramCredentialsResult>,
+    pub results: Vec<DescribeUserScramCredentialsResponseResult>,
     /// Unknown flexible-version tagged fields retained for forwarding.
     pub unknown_tagged_fields: TaggedFields,
 }
@@ -356,9 +356,7 @@ impl KafkaDecode for DescribeUserScramCredentialsResponse {
         let results = {
             let length = decoder.read_compact_array_len()?;
             decoder.read_vec(length, |decoder| {
-                DescribeUserScramCredentialsResponseDescribeUserScramCredentialsResult::decode(
-                    decoder, version,
-                )
+                DescribeUserScramCredentialsResponseResult::decode(decoder, version)
             })?
         };
         let unknown_tagged_fields = if Self::is_flexible(version) {

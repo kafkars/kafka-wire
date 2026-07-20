@@ -64,7 +64,7 @@ impl KafkaEncode for AbortedTxn {
     }
 }
 
-/// `ConsumerProtocolAssignmentTopicPartition` as declared by the `ConsumerProtocolAssignment` API.
+/// `TopicPartition` as declared by the `ConsumerProtocolAssignment` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct ConsumerProtocolAssignmentTopicPartition {
@@ -151,7 +151,7 @@ impl KafkaEncode for ConsumerProtocolAssignment {
     }
 }
 
-/// `ConsumerProtocolSubscriptionTopicPartition` as declared by the `ConsumerProtocolSubscription` API.
+/// `TopicPartition` as declared by the `ConsumerProtocolSubscription` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct ConsumerProtocolSubscriptionTopicPartition {
@@ -486,7 +486,7 @@ impl KafkaEncode for KRaftVersionRecord {
     }
 }
 
-/// `LeaderChangeMessageVoter` as declared by the `LeaderChangeMessage` API.
+/// `Voter` as declared by the `LeaderChangeMessage` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct LeaderChangeMessageVoter {
@@ -880,7 +880,7 @@ impl KafkaEncode for SnapshotHeaderRecord {
     }
 }
 
-/// `VotersRecordVoter` as declared by the `VotersRecord` API.
+/// `Voter` as declared by the `VotersRecord` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct VotersRecordVoter {
@@ -958,7 +958,7 @@ impl KafkaEncode for VotersRecordVoter {
     }
 }
 
-/// `VotersRecordEndpoint` as declared by the `VotersRecord` API.
+/// `Endpoint` as declared by the `VotersRecord` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct VotersRecordEndpoint {
@@ -1023,7 +1023,7 @@ impl KafkaEncode for VotersRecordEndpoint {
     }
 }
 
-/// `VotersRecordKRaftVersionFeature` as declared by the `VotersRecord` API.
+/// `KRaftVersionFeature` as declared by the `VotersRecord` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct VotersRecordKRaftVersionFeature {

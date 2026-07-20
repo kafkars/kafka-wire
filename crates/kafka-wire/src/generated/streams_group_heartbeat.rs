@@ -15,7 +15,7 @@ use crate::{
     RequestResponsePair,
 };
 
-/// `StreamsGroupHeartbeatRequestKeyValue` as declared by the `StreamsGroupHeartbeat` API.
+/// `KeyValue` as declared by the `StreamsGroupHeartbeat` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct StreamsGroupHeartbeatRequestKeyValue {
@@ -75,7 +75,7 @@ impl KafkaEncode for StreamsGroupHeartbeatRequestKeyValue {
     }
 }
 
-/// `StreamsGroupHeartbeatRequestTopicInfo` as declared by the `StreamsGroupHeartbeat` API.
+/// `TopicInfo` as declared by the `StreamsGroupHeartbeat` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct StreamsGroupHeartbeatRequestTopicInfo {
@@ -153,7 +153,7 @@ impl KafkaEncode for StreamsGroupHeartbeatRequestTopicInfo {
     }
 }
 
-/// `StreamsGroupHeartbeatRequestEndpoint` as declared by the `StreamsGroupHeartbeat` API.
+/// `Endpoint` as declared by the `StreamsGroupHeartbeat` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct StreamsGroupHeartbeatRequestEndpoint {
@@ -213,7 +213,7 @@ impl KafkaEncode for StreamsGroupHeartbeatRequestEndpoint {
     }
 }
 
-/// `StreamsGroupHeartbeatRequestTaskOffset` as declared by the `StreamsGroupHeartbeat` API.
+/// `TaskOffset` as declared by the `StreamsGroupHeartbeat` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct StreamsGroupHeartbeatRequestTaskOffset {
@@ -278,7 +278,7 @@ impl KafkaEncode for StreamsGroupHeartbeatRequestTaskOffset {
     }
 }
 
-/// `StreamsGroupHeartbeatRequestTaskIds` as declared by the `StreamsGroupHeartbeat` API.
+/// `TaskIds` as declared by the `StreamsGroupHeartbeat` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct StreamsGroupHeartbeatRequestTaskIds {
@@ -344,7 +344,7 @@ impl KafkaEncode for StreamsGroupHeartbeatRequestTaskIds {
     }
 }
 
-/// `StreamsGroupHeartbeatRequestTopology` as declared by the `StreamsGroupHeartbeat` API.
+/// `Topology` as declared by the `StreamsGroupHeartbeat` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct StreamsGroupHeartbeatRequestTopology {
@@ -412,7 +412,7 @@ impl KafkaEncode for StreamsGroupHeartbeatRequestTopology {
     }
 }
 
-/// `StreamsGroupHeartbeatRequestSubtopology` as declared by the `StreamsGroupHeartbeat` API.
+/// `Subtopology` as declared by the `StreamsGroupHeartbeat` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct StreamsGroupHeartbeatRequestSubtopology {
@@ -539,7 +539,7 @@ impl KafkaEncode for StreamsGroupHeartbeatRequestSubtopology {
     }
 }
 
-/// `StreamsGroupHeartbeatRequestCopartitionGroup` as declared by the `StreamsGroupHeartbeat` API.
+/// `CopartitionGroup` as declared by the `StreamsGroupHeartbeat` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct StreamsGroupHeartbeatRequestCopartitionGroup {
@@ -898,7 +898,7 @@ impl KafkaEncode for StreamsGroupHeartbeatRequest {
     }
 }
 
-/// `StreamsGroupHeartbeatResponseStatus` as declared by the `StreamsGroupHeartbeat` API.
+/// `Status` as declared by the `StreamsGroupHeartbeat` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct StreamsGroupHeartbeatResponseStatus {
@@ -958,7 +958,7 @@ impl KafkaEncode for StreamsGroupHeartbeatResponseStatus {
     }
 }
 
-/// `StreamsGroupHeartbeatResponseTopicPartition` as declared by the `StreamsGroupHeartbeat` API.
+/// `TopicPartition` as declared by the `StreamsGroupHeartbeat` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct StreamsGroupHeartbeatResponseTopicPartition {
@@ -1024,7 +1024,7 @@ impl KafkaEncode for StreamsGroupHeartbeatResponseTopicPartition {
     }
 }
 
-/// `StreamsGroupHeartbeatResponseTaskIds` as declared by the `StreamsGroupHeartbeat` API.
+/// `TaskIds` as declared by the `StreamsGroupHeartbeat` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct StreamsGroupHeartbeatResponseTaskIds {
@@ -1090,7 +1090,7 @@ impl KafkaEncode for StreamsGroupHeartbeatResponseTaskIds {
     }
 }
 
-/// `StreamsGroupHeartbeatResponseEndpoint` as declared by the `StreamsGroupHeartbeat` API.
+/// `Endpoint` as declared by the `StreamsGroupHeartbeat` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct StreamsGroupHeartbeatResponseEndpoint {
@@ -1150,7 +1150,7 @@ impl KafkaEncode for StreamsGroupHeartbeatResponseEndpoint {
     }
 }
 
-/// `StreamsGroupHeartbeatResponseEndpointToPartitions` as declared by the `StreamsGroupHeartbeat` API.
+/// `EndpointToPartitions` as declared by the `StreamsGroupHeartbeat` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct StreamsGroupHeartbeatResponseEndpointToPartitions {

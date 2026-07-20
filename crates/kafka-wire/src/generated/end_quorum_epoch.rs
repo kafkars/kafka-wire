@@ -15,7 +15,7 @@ use crate::{
     RequestResponsePair,
 };
 
-/// `EndQuorumEpochRequestTopicData` as declared by the `EndQuorumEpoch` API.
+/// `TopicData` as declared by the `EndQuorumEpoch` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct EndQuorumEpochRequestTopicData {
@@ -99,7 +99,7 @@ impl KafkaEncode for EndQuorumEpochRequestTopicData {
     }
 }
 
-/// `EndQuorumEpochRequestPartitionData` as declared by the `EndQuorumEpoch` API.
+/// `PartitionData` as declared by the `EndQuorumEpoch` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct EndQuorumEpochRequestPartitionData {
@@ -196,7 +196,7 @@ impl KafkaEncode for EndQuorumEpochRequestPartitionData {
     }
 }
 
-/// `EndQuorumEpochRequestReplicaInfo` as declared by the `EndQuorumEpoch` API.
+/// `ReplicaInfo` as declared by the `EndQuorumEpoch` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct EndQuorumEpochRequestReplicaInfo {
@@ -268,7 +268,7 @@ impl KafkaEncode for EndQuorumEpochRequestReplicaInfo {
     }
 }
 
-/// `EndQuorumEpochRequestLeaderEndpoint` as declared by the `EndQuorumEpoch` API.
+/// `LeaderEndpoint` as declared by the `EndQuorumEpoch` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct EndQuorumEpochRequestLeaderEndpoint {
@@ -462,7 +462,7 @@ impl KafkaEncode for EndQuorumEpochRequest {
     }
 }
 
-/// `EndQuorumEpochResponseTopicData` as declared by the `EndQuorumEpoch` API.
+/// `TopicData` as declared by the `EndQuorumEpoch` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct EndQuorumEpochResponseTopicData {
@@ -546,7 +546,7 @@ impl KafkaEncode for EndQuorumEpochResponseTopicData {
     }
 }
 
-/// `EndQuorumEpochResponsePartitionData` as declared by the `EndQuorumEpoch` API.
+/// `PartitionData` as declared by the `EndQuorumEpoch` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct EndQuorumEpochResponsePartitionData {
@@ -616,7 +616,7 @@ impl KafkaEncode for EndQuorumEpochResponsePartitionData {
     }
 }
 
-/// `EndQuorumEpochResponseNodeEndpoint` as declared by the `EndQuorumEpoch` API.
+/// `NodeEndpoint` as declared by the `EndQuorumEpoch` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct EndQuorumEpochResponseNodeEndpoint {

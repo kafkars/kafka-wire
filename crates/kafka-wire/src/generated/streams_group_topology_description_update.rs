@@ -15,7 +15,7 @@ use crate::{
     RequestResponsePair,
 };
 
-/// `StreamsGroupTopologyDescriptionUpdateRequestTopologyDescription` as declared by the `StreamsGroupTopologyDescriptionUpdate` API.
+/// `TopologyDescription` as declared by the `StreamsGroupTopologyDescriptionUpdate` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct StreamsGroupTopologyDescriptionUpdateRequestTopologyDescription {
@@ -97,7 +97,7 @@ impl KafkaEncode for StreamsGroupTopologyDescriptionUpdateRequestTopologyDescrip
     }
 }
 
-/// `StreamsGroupTopologyDescriptionUpdateRequestTopologyDescriptionSubtopology` as declared by the `StreamsGroupTopologyDescriptionUpdate` API.
+/// `TopologyDescriptionSubtopology` as declared by the `StreamsGroupTopologyDescriptionUpdate` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct StreamsGroupTopologyDescriptionUpdateRequestTopologyDescriptionSubtopology {
@@ -167,7 +167,7 @@ impl KafkaEncode for StreamsGroupTopologyDescriptionUpdateRequestTopologyDescrip
     }
 }
 
-/// `StreamsGroupTopologyDescriptionUpdateRequestTopologyDescriptionNode` as declared by the `StreamsGroupTopologyDescriptionUpdate` API.
+/// `TopologyDescriptionNode` as declared by the `StreamsGroupTopologyDescriptionUpdate` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct StreamsGroupTopologyDescriptionUpdateRequestTopologyDescriptionNode {
@@ -265,7 +265,7 @@ impl KafkaEncode for StreamsGroupTopologyDescriptionUpdateRequestTopologyDescrip
     }
 }
 
-/// `StreamsGroupTopologyDescriptionUpdateRequestTopologyDescriptionGlobalStore` as declared by the `StreamsGroupTopologyDescriptionUpdate` API.
+/// `TopologyDescriptionGlobalStore` as declared by the `StreamsGroupTopologyDescriptionUpdate` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct StreamsGroupTopologyDescriptionUpdateRequestTopologyDescriptionGlobalStore {

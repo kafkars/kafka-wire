@@ -15,7 +15,7 @@ use crate::{
     RequestResponsePair,
 };
 
-/// `ProduceRequestTopicProduceData` as declared by the `Produce` API.
+/// `TopicProduceData` as declared by the `Produce` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct ProduceRequestTopicProduceData {
@@ -116,7 +116,7 @@ impl KafkaEncode for ProduceRequestTopicProduceData {
     }
 }
 
-/// `ProduceRequestPartitionProduceData` as declared by the `Produce` API.
+/// `PartitionProduceData` as declared by the `Produce` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct ProduceRequestPartitionProduceData {
@@ -298,7 +298,7 @@ impl KafkaEncode for ProduceRequest {
     }
 }
 
-/// `ProduceResponseTopicProduceResponse` as declared by the `Produce` API.
+/// `TopicProduceResponse` as declared by the `Produce` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct ProduceResponseTopicProduceResponse {
@@ -399,7 +399,7 @@ impl KafkaEncode for ProduceResponseTopicProduceResponse {
     }
 }
 
-/// `ProduceResponsePartitionProduceResponse` as declared by the `Produce` API.
+/// `PartitionProduceResponse` as declared by the `Produce` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct ProduceResponsePartitionProduceResponse {
@@ -559,7 +559,7 @@ impl KafkaEncode for ProduceResponsePartitionProduceResponse {
     }
 }
 
-/// `ProduceResponseBatchIndexAndErrorMessage` as declared by the `Produce` API.
+/// `BatchIndexAndErrorMessage` as declared by the `Produce` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct ProduceResponseBatchIndexAndErrorMessage {
@@ -639,7 +639,7 @@ impl KafkaEncode for ProduceResponseBatchIndexAndErrorMessage {
     }
 }
 
-/// `ProduceResponseLeaderIdAndEpoch` as declared by the `Produce` API.
+/// `LeaderIdAndEpoch` as declared by the `Produce` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct ProduceResponseLeaderIdAndEpoch {
@@ -721,7 +721,7 @@ impl KafkaEncode for ProduceResponseLeaderIdAndEpoch {
     }
 }
 
-/// `ProduceResponseNodeEndpoint` as declared by the `Produce` API.
+/// `NodeEndpoint` as declared by the `Produce` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct ProduceResponseNodeEndpoint {

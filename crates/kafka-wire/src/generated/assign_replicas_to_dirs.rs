@@ -15,7 +15,7 @@ use crate::{
     RequestResponsePair,
 };
 
-/// `AssignReplicasToDirsRequestDirectoryData` as declared by the `AssignReplicasToDirs` API.
+/// `DirectoryData` as declared by the `AssignReplicasToDirs` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct AssignReplicasToDirsRequestDirectoryData {
@@ -83,7 +83,7 @@ impl KafkaEncode for AssignReplicasToDirsRequestDirectoryData {
     }
 }
 
-/// `AssignReplicasToDirsRequestTopicData` as declared by the `AssignReplicasToDirs` API.
+/// `TopicData` as declared by the `AssignReplicasToDirs` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct AssignReplicasToDirsRequestTopicData {
@@ -151,7 +151,7 @@ impl KafkaEncode for AssignReplicasToDirsRequestTopicData {
     }
 }
 
-/// `AssignReplicasToDirsRequestPartitionData` as declared by the `AssignReplicasToDirs` API.
+/// `PartitionData` as declared by the `AssignReplicasToDirs` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct AssignReplicasToDirsRequestPartitionData {
@@ -300,7 +300,7 @@ impl KafkaEncode for AssignReplicasToDirsRequest {
     }
 }
 
-/// `AssignReplicasToDirsResponseDirectoryData` as declared by the `AssignReplicasToDirs` API.
+/// `DirectoryData` as declared by the `AssignReplicasToDirs` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct AssignReplicasToDirsResponseDirectoryData {
@@ -368,7 +368,7 @@ impl KafkaEncode for AssignReplicasToDirsResponseDirectoryData {
     }
 }
 
-/// `AssignReplicasToDirsResponseTopicData` as declared by the `AssignReplicasToDirs` API.
+/// `TopicData` as declared by the `AssignReplicasToDirs` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct AssignReplicasToDirsResponseTopicData {
@@ -436,7 +436,7 @@ impl KafkaEncode for AssignReplicasToDirsResponseTopicData {
     }
 }
 
-/// `AssignReplicasToDirsResponsePartitionData` as declared by the `AssignReplicasToDirs` API.
+/// `PartitionData` as declared by the `AssignReplicasToDirs` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct AssignReplicasToDirsResponsePartitionData {

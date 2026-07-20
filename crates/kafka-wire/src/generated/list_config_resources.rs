@@ -98,7 +98,7 @@ impl KafkaEncode for ListConfigResourcesRequest {
     }
 }
 
-/// `ListConfigResourcesResponseConfigResource` as declared by the `ListConfigResources` API.
+/// `ConfigResource` as declared by the `ListConfigResources` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct ListConfigResourcesResponseConfigResource {

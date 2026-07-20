@@ -15,7 +15,7 @@ use crate::{
     RequestResponsePair,
 };
 
-/// `WriteShareGroupStateRequestWriteStateData` as declared by the `WriteShareGroupState` API.
+/// `WriteStateData` as declared by the `WriteShareGroupState` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct WriteShareGroupStateRequestWriteStateData {
@@ -83,7 +83,7 @@ impl KafkaEncode for WriteShareGroupStateRequestWriteStateData {
     }
 }
 
-/// `WriteShareGroupStateRequestPartitionData` as declared by the `WriteShareGroupState` API.
+/// `PartitionData` as declared by the `WriteShareGroupState` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct WriteShareGroupStateRequestPartitionData {
@@ -191,7 +191,7 @@ impl KafkaEncode for WriteShareGroupStateRequestPartitionData {
     }
 }
 
-/// `WriteShareGroupStateRequestStateBatch` as declared by the `WriteShareGroupState` API.
+/// `StateBatch` as declared by the `WriteShareGroupState` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct WriteShareGroupStateRequestStateBatch {
@@ -339,7 +339,7 @@ impl KafkaEncode for WriteShareGroupStateRequest {
     }
 }
 
-/// `WriteShareGroupStateResponseWriteStateResult` as declared by the `WriteShareGroupState` API.
+/// `WriteStateResult` as declared by the `WriteShareGroupState` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct WriteShareGroupStateResponseWriteStateResult {
@@ -407,7 +407,7 @@ impl KafkaEncode for WriteShareGroupStateResponseWriteStateResult {
     }
 }
 
-/// `WriteShareGroupStateResponsePartitionResult` as declared by the `WriteShareGroupState` API.
+/// `PartitionResult` as declared by the `WriteShareGroupState` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct WriteShareGroupStateResponsePartitionResult {

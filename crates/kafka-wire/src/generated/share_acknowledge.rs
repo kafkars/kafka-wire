@@ -15,7 +15,7 @@ use crate::{
     RequestResponsePair,
 };
 
-/// `ShareAcknowledgeRequestAcknowledgeTopic` as declared by the `ShareAcknowledge` API.
+/// `AcknowledgeTopic` as declared by the `ShareAcknowledge` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct ShareAcknowledgeRequestAcknowledgeTopic {
@@ -83,7 +83,7 @@ impl KafkaEncode for ShareAcknowledgeRequestAcknowledgeTopic {
     }
 }
 
-/// `ShareAcknowledgeRequestAcknowledgePartition` as declared by the `ShareAcknowledge` API.
+/// `AcknowledgePartition` as declared by the `ShareAcknowledge` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct ShareAcknowledgeRequestAcknowledgePartition {
@@ -151,7 +151,7 @@ impl KafkaEncode for ShareAcknowledgeRequestAcknowledgePartition {
     }
 }
 
-/// `ShareAcknowledgeRequestAcknowledgementBatch` as declared by the `ShareAcknowledge` API.
+/// `AcknowledgementBatch` as declared by the `ShareAcknowledge` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct ShareAcknowledgeRequestAcknowledgementBatch {
@@ -342,10 +342,10 @@ impl KafkaEncode for ShareAcknowledgeRequest {
     }
 }
 
-/// `ShareAcknowledgeResponseShareAcknowledgeTopicResponse` as declared by the `ShareAcknowledge` API.
+/// `ShareAcknowledgeTopicResponse` as declared by the `ShareAcknowledge` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct ShareAcknowledgeResponseShareAcknowledgeTopicResponse {
+pub struct ShareAcknowledgeResponseTopicResponse {
     /// The unique topic ID.
     pub topic_id: Uuid,
     /// The topic partitions.
@@ -354,7 +354,7 @@ pub struct ShareAcknowledgeResponseShareAcknowledgeTopicResponse {
     pub unknown_tagged_fields: TaggedFields,
 }
 
-impl ShareAcknowledgeResponseShareAcknowledgeTopicResponse {
+impl ShareAcknowledgeResponseTopicResponse {
     const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(1, 2));
 
     fn is_flexible(version: ApiVersion) -> bool {
@@ -362,7 +362,7 @@ impl ShareAcknowledgeResponseShareAcknowledgeTopicResponse {
     }
 }
 
-impl KafkaDecode for ShareAcknowledgeResponseShareAcknowledgeTopicResponse {
+impl KafkaDecode for ShareAcknowledgeResponseTopicResponse {
     fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
         let topic_id = decoder.read_uuid()?;
         let partitions = {
@@ -385,7 +385,7 @@ impl KafkaDecode for ShareAcknowledgeResponseShareAcknowledgeTopicResponse {
     }
 }
 
-impl KafkaEncode for ShareAcknowledgeResponseShareAcknowledgeTopicResponse {
+impl KafkaEncode for ShareAcknowledgeResponseTopicResponse {
     fn encode<T: EncodeTarget>(
         &self,
         encoder: &mut Encoder<T>,
@@ -401,7 +401,7 @@ impl KafkaEncode for ShareAcknowledgeResponseShareAcknowledgeTopicResponse {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
         } else if !self.unknown_tagged_fields.is_empty() {
             return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: "ShareAcknowledgeResponseShareAcknowledgeTopicResponse",
+                message: "ShareAcknowledgeResponseTopicResponse",
                 version,
             });
         }
@@ -410,7 +410,7 @@ impl KafkaEncode for ShareAcknowledgeResponseShareAcknowledgeTopicResponse {
     }
 }
 
-/// `ShareAcknowledgeResponsePartitionData` as declared by the `ShareAcknowledge` API.
+/// `PartitionData` as declared by the `ShareAcknowledge` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct ShareAcknowledgeResponsePartitionData {
@@ -480,7 +480,7 @@ impl KafkaEncode for ShareAcknowledgeResponsePartitionData {
     }
 }
 
-/// `ShareAcknowledgeResponseLeaderIdAndEpoch` as declared by the `ShareAcknowledge` API.
+/// `LeaderIdAndEpoch` as declared by the `ShareAcknowledge` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct ShareAcknowledgeResponseLeaderIdAndEpoch {
@@ -540,7 +540,7 @@ impl KafkaEncode for ShareAcknowledgeResponseLeaderIdAndEpoch {
     }
 }
 
-/// `ShareAcknowledgeResponseNodeEndpoint` as declared by the `ShareAcknowledge` API.
+/// `NodeEndpoint` as declared by the `ShareAcknowledge` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct ShareAcknowledgeResponseNodeEndpoint {
@@ -623,7 +623,7 @@ pub struct ShareAcknowledgeResponse {
     /// The time in milliseconds for which the acquired records are locked.
     pub acquisition_lock_timeout_ms: i32,
     /// The response topics.
-    pub responses: Vec<ShareAcknowledgeResponseShareAcknowledgeTopicResponse>,
+    pub responses: Vec<ShareAcknowledgeResponseTopicResponse>,
     /// Endpoints for all current leaders enumerated in `PartitionData` with error `NOT_LEADER_OR_FOLLOWER`.
     pub node_endpoints: Vec<ShareAcknowledgeResponseNodeEndpoint>,
     /// Unknown flexible-version tagged fields retained for forwarding.
@@ -655,7 +655,7 @@ impl KafkaDecode for ShareAcknowledgeResponse {
         let responses = {
             let length = decoder.read_compact_array_len()?;
             decoder.read_vec(length, |decoder| {
-                ShareAcknowledgeResponseShareAcknowledgeTopicResponse::decode(decoder, version)
+                ShareAcknowledgeResponseTopicResponse::decode(decoder, version)
             })?
         };
         let node_endpoints = {

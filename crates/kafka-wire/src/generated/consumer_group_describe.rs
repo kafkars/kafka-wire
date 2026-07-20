@@ -91,7 +91,7 @@ impl KafkaEncode for ConsumerGroupDescribeRequest {
     }
 }
 
-/// `ConsumerGroupDescribeResponseTopicPartitions` as declared by the `ConsumerGroupDescribe` API.
+/// `TopicPartitions` as declared by the `ConsumerGroupDescribe` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct ConsumerGroupDescribeResponseTopicPartitions {
@@ -162,7 +162,7 @@ impl KafkaEncode for ConsumerGroupDescribeResponseTopicPartitions {
     }
 }
 
-/// `ConsumerGroupDescribeResponseAssignment` as declared by the `ConsumerGroupDescribe` API.
+/// `Assignment` as declared by the `ConsumerGroupDescribe` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct ConsumerGroupDescribeResponseAssignment {
@@ -225,7 +225,7 @@ impl KafkaEncode for ConsumerGroupDescribeResponseAssignment {
     }
 }
 
-/// `ConsumerGroupDescribeResponseDescribedGroup` as declared by the `ConsumerGroupDescribe` API.
+/// `DescribedGroup` as declared by the `ConsumerGroupDescribe` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct ConsumerGroupDescribeResponseDescribedGroup {
@@ -345,7 +345,7 @@ impl KafkaEncode for ConsumerGroupDescribeResponseDescribedGroup {
     }
 }
 
-/// `ConsumerGroupDescribeResponseMember` as declared by the `ConsumerGroupDescribe` API.
+/// `Member` as declared by the `ConsumerGroupDescribe` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct ConsumerGroupDescribeResponseMember {

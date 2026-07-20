@@ -15,7 +15,7 @@ use crate::{
     RequestResponsePair,
 };
 
-/// `DescribeTopicPartitionsRequestTopicRequest` as declared by the `DescribeTopicPartitions` API.
+/// `TopicRequest` as declared by the `DescribeTopicPartitions` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct DescribeTopicPartitionsRequestTopicRequest {
@@ -70,7 +70,7 @@ impl KafkaEncode for DescribeTopicPartitionsRequestTopicRequest {
     }
 }
 
-/// `DescribeTopicPartitionsRequestCursor` as declared by the `DescribeTopicPartitions` API.
+/// `Cursor` as declared by the `DescribeTopicPartitions` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct DescribeTopicPartitionsRequestCursor {
@@ -489,7 +489,7 @@ impl KafkaEncode for DescribeTopicPartitionsResponsePartition {
     }
 }
 
-/// `DescribeTopicPartitionsResponseCursor` as declared by the `DescribeTopicPartitions` API.
+/// `Cursor` as declared by the `DescribeTopicPartitions` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct DescribeTopicPartitionsResponseCursor {

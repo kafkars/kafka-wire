@@ -15,7 +15,7 @@ use crate::{
     RequestResponsePair,
 };
 
-/// `AlterUserScramCredentialsRequestScramCredentialDeletion` as declared by the `AlterUserScramCredentials` API.
+/// `ScramCredentialDeletion` as declared by the `AlterUserScramCredentials` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct AlterUserScramCredentialsRequestScramCredentialDeletion {
@@ -75,7 +75,7 @@ impl KafkaEncode for AlterUserScramCredentialsRequestScramCredentialDeletion {
     }
 }
 
-/// `AlterUserScramCredentialsRequestScramCredentialUpsertion` as declared by the `AlterUserScramCredentials` API.
+/// `ScramCredentialUpsertion` as declared by the `AlterUserScramCredentials` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct AlterUserScramCredentialsRequestScramCredentialUpsertion {
@@ -236,10 +236,10 @@ impl KafkaEncode for AlterUserScramCredentialsRequest {
     }
 }
 
-/// `AlterUserScramCredentialsResponseAlterUserScramCredentialsResult` as declared by the `AlterUserScramCredentials` API.
+/// `AlterUserScramCredentialsResult` as declared by the `AlterUserScramCredentials` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Eq, PartialEq)]
-pub struct AlterUserScramCredentialsResponseAlterUserScramCredentialsResult {
+pub struct AlterUserScramCredentialsResponseResult {
     /// The user name.
     pub user: StrBytes,
     /// The error code.
@@ -250,7 +250,7 @@ pub struct AlterUserScramCredentialsResponseAlterUserScramCredentialsResult {
     pub unknown_tagged_fields: TaggedFields,
 }
 
-impl AlterUserScramCredentialsResponseAlterUserScramCredentialsResult {
+impl AlterUserScramCredentialsResponseResult {
     const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 0));
 
     fn is_flexible(version: ApiVersion) -> bool {
@@ -258,7 +258,7 @@ impl AlterUserScramCredentialsResponseAlterUserScramCredentialsResult {
     }
 }
 
-impl Default for AlterUserScramCredentialsResponseAlterUserScramCredentialsResult {
+impl Default for AlterUserScramCredentialsResponseResult {
     fn default() -> Self {
         Self {
             user: StrBytes::default(),
@@ -269,7 +269,7 @@ impl Default for AlterUserScramCredentialsResponseAlterUserScramCredentialsResul
     }
 }
 
-impl KafkaDecode for AlterUserScramCredentialsResponseAlterUserScramCredentialsResult {
+impl KafkaDecode for AlterUserScramCredentialsResponseResult {
     fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
         let user = decoder.read_compact_string()?;
         let error_code = decoder.read_i16()?;
@@ -289,7 +289,7 @@ impl KafkaDecode for AlterUserScramCredentialsResponseAlterUserScramCredentialsR
     }
 }
 
-impl KafkaEncode for AlterUserScramCredentialsResponseAlterUserScramCredentialsResult {
+impl KafkaEncode for AlterUserScramCredentialsResponseResult {
     fn encode<T: EncodeTarget>(
         &self,
         encoder: &mut Encoder<T>,
@@ -303,7 +303,7 @@ impl KafkaEncode for AlterUserScramCredentialsResponseAlterUserScramCredentialsR
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
         } else if !self.unknown_tagged_fields.is_empty() {
             return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: "AlterUserScramCredentialsResponseAlterUserScramCredentialsResult",
+                message: "AlterUserScramCredentialsResponseResult",
                 version,
             });
         }
@@ -319,7 +319,7 @@ pub struct AlterUserScramCredentialsResponse {
     /// The duration in milliseconds for which the request was throttled due to a quota violation, or zero if the request did not violate any quota.
     pub throttle_time_ms: i32,
     /// The results for deletions and alterations, one per affected user.
-    pub results: Vec<AlterUserScramCredentialsResponseAlterUserScramCredentialsResult>,
+    pub results: Vec<AlterUserScramCredentialsResponseResult>,
     /// Unknown flexible-version tagged fields retained for forwarding.
     pub unknown_tagged_fields: TaggedFields,
 }
@@ -342,9 +342,7 @@ impl KafkaDecode for AlterUserScramCredentialsResponse {
         let results = {
             let length = decoder.read_compact_array_len()?;
             decoder.read_vec(length, |decoder| {
-                AlterUserScramCredentialsResponseAlterUserScramCredentialsResult::decode(
-                    decoder, version,
-                )
+                AlterUserScramCredentialsResponseResult::decode(decoder, version)
             })?
         };
         let unknown_tagged_fields = if Self::is_flexible(version) {

@@ -15,7 +15,7 @@ use crate::{
     RequestResponsePair,
 };
 
-/// `DescribeClientQuotasRequestComponentData` as declared by the `DescribeClientQuotas` API.
+/// `ComponentData` as declared by the `DescribeClientQuotas` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct DescribeClientQuotasRequestComponentData {
@@ -193,7 +193,7 @@ impl KafkaEncode for DescribeClientQuotasRequest {
     }
 }
 
-/// `DescribeClientQuotasResponseEntryData` as declared by the `DescribeClientQuotas` API.
+/// `EntryData` as declared by the `DescribeClientQuotas` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct DescribeClientQuotasResponseEntryData {
@@ -285,7 +285,7 @@ impl KafkaEncode for DescribeClientQuotasResponseEntryData {
     }
 }
 
-/// `DescribeClientQuotasResponseEntityData` as declared by the `DescribeClientQuotas` API.
+/// `EntityData` as declared by the `DescribeClientQuotas` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, PartialEq)]
 pub struct DescribeClientQuotasResponseEntityData {
@@ -371,7 +371,7 @@ impl KafkaEncode for DescribeClientQuotasResponseEntityData {
     }
 }
 
-/// `DescribeClientQuotasResponseValueData` as declared by the `DescribeClientQuotas` API.
+/// `ValueData` as declared by the `DescribeClientQuotas` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, PartialEq)]
 pub struct DescribeClientQuotasResponseValueData {

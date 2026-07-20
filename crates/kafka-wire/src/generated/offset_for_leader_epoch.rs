@@ -15,7 +15,7 @@ use crate::{
     RequestResponsePair,
 };
 
-/// `OffsetForLeaderEpochRequestOffsetForLeaderTopic` as declared by the `OffsetForLeaderEpoch` API.
+/// `OffsetForLeaderTopic` as declared by the `OffsetForLeaderEpoch` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct OffsetForLeaderEpochRequestOffsetForLeaderTopic {
@@ -99,7 +99,7 @@ impl KafkaEncode for OffsetForLeaderEpochRequestOffsetForLeaderTopic {
     }
 }
 
-/// `OffsetForLeaderEpochRequestOffsetForLeaderPartition` as declared by the `OffsetForLeaderEpoch` API.
+/// `OffsetForLeaderPartition` as declared by the `OffsetForLeaderEpoch` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct OffsetForLeaderEpochRequestOffsetForLeaderPartition {
@@ -277,7 +277,7 @@ impl KafkaEncode for OffsetForLeaderEpochRequest {
     }
 }
 
-/// `OffsetForLeaderEpochResponseOffsetForLeaderTopicResult` as declared by the `OffsetForLeaderEpoch` API.
+/// `OffsetForLeaderTopicResult` as declared by the `OffsetForLeaderEpoch` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct OffsetForLeaderEpochResponseOffsetForLeaderTopicResult {
@@ -361,7 +361,7 @@ impl KafkaEncode for OffsetForLeaderEpochResponseOffsetForLeaderTopicResult {
     }
 }
 
-/// `OffsetForLeaderEpochResponseEpochEndOffset` as declared by the `OffsetForLeaderEpoch` API.
+/// `EpochEndOffset` as declared by the `OffsetForLeaderEpoch` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct OffsetForLeaderEpochResponseEpochEndOffset {

@@ -15,7 +15,7 @@ use crate::{
     RequestResponsePair,
 };
 
-/// `UpdateFeaturesRequestFeatureUpdateKey` as declared by the `UpdateFeatures` API.
+/// `FeatureUpdateKey` as declared by the `UpdateFeatures` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct UpdateFeaturesRequestFeatureUpdateKey {
@@ -217,7 +217,7 @@ impl KafkaEncode for UpdateFeaturesRequest {
     }
 }
 
-/// `UpdateFeaturesResponseUpdatableFeatureResult` as declared by the `UpdateFeatures` API.
+/// `UpdatableFeatureResult` as declared by the `UpdateFeatures` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct UpdateFeaturesResponseUpdatableFeatureResult {

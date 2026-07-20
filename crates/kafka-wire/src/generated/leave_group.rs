@@ -15,7 +15,7 @@ use crate::{
     RequestResponsePair,
 };
 
-/// `LeaveGroupRequestMemberIdentity` as declared by the `LeaveGroup` API.
+/// `MemberIdentity` as declared by the `LeaveGroup` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct LeaveGroupRequestMemberIdentity {
@@ -238,7 +238,7 @@ impl KafkaEncode for LeaveGroupRequest {
     }
 }
 
-/// `LeaveGroupResponseMemberResponse` as declared by the `LeaveGroup` API.
+/// `MemberResponse` as declared by the `LeaveGroup` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct LeaveGroupResponseMemberResponse {

@@ -15,7 +15,7 @@ use crate::{
     RequestResponsePair,
 };
 
-/// `ElectLeadersRequestTopicPartitions` as declared by the `ElectLeaders` API.
+/// `TopicPartitions` as declared by the `ElectLeaders` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct ElectLeadersRequestTopicPartitions {
@@ -220,7 +220,7 @@ impl KafkaEncode for ElectLeadersRequest {
     }
 }
 
-/// `ElectLeadersResponseReplicaElectionResult` as declared by the `ElectLeaders` API.
+/// `ReplicaElectionResult` as declared by the `ElectLeaders` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct ElectLeadersResponseReplicaElectionResult {
@@ -304,7 +304,7 @@ impl KafkaEncode for ElectLeadersResponseReplicaElectionResult {
     }
 }
 
-/// `ElectLeadersResponsePartitionResult` as declared by the `ElectLeaders` API.
+/// `PartitionResult` as declared by the `ElectLeaders` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct ElectLeadersResponsePartitionResult {

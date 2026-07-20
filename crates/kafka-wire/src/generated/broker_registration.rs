@@ -15,7 +15,7 @@ use crate::{
     RequestResponsePair,
 };
 
-/// `BrokerRegistrationRequestListener` as declared by the `BrokerRegistration` API.
+/// `Listener` as declared by the `BrokerRegistration` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct BrokerRegistrationRequestListener {
@@ -85,7 +85,7 @@ impl KafkaEncode for BrokerRegistrationRequestListener {
     }
 }
 
-/// `BrokerRegistrationRequestFeature` as declared by the `BrokerRegistration` API.
+/// `Feature` as declared by the `BrokerRegistration` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct BrokerRegistrationRequestFeature {

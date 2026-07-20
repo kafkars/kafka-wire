@@ -15,7 +15,7 @@ use crate::{
     RequestResponsePair,
 };
 
-/// `AlterPartitionRequestTopicData` as declared by the `AlterPartition` API.
+/// `TopicData` as declared by the `AlterPartition` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct AlterPartitionRequestTopicData {
@@ -83,7 +83,7 @@ impl KafkaEncode for AlterPartitionRequestTopicData {
     }
 }
 
-/// `AlterPartitionRequestPartitionData` as declared by the `AlterPartition` API.
+/// `PartitionData` as declared by the `AlterPartition` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct AlterPartitionRequestPartitionData {
@@ -185,7 +185,7 @@ impl KafkaEncode for AlterPartitionRequestPartitionData {
     }
 }
 
-/// `AlterPartitionRequestBrokerState` as declared by the `AlterPartition` API.
+/// `BrokerState` as declared by the `AlterPartition` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct AlterPartitionRequestBrokerState {
@@ -361,7 +361,7 @@ impl KafkaEncode for AlterPartitionRequest {
     }
 }
 
-/// `AlterPartitionResponseTopicData` as declared by the `AlterPartition` API.
+/// `TopicData` as declared by the `AlterPartition` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct AlterPartitionResponseTopicData {
@@ -429,7 +429,7 @@ impl KafkaEncode for AlterPartitionResponseTopicData {
     }
 }
 
-/// `AlterPartitionResponsePartitionData` as declared by the `AlterPartition` API.
+/// `PartitionData` as declared by the `AlterPartition` API.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct AlterPartitionResponsePartitionData {
