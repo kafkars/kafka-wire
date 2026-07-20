@@ -14,6 +14,159 @@
         "throttleTimeMs": 0
       },
       "hex": "000000000100"
+    },
+    {
+      "name": "synthesized_populated_v0",
+      "why": "Every field this version declares, present and non-default: one element in every array, every nullable thing supplied. The defaults case leaves arrays empty, which hides every field of the struct the array would have held — a records field encoded with the wrong length prefix survived the whole corpus that way, because nothing ever reached the struct holding it.",
+      "message": "StreamsGroupDescribeResponse",
+      "api_key": 89,
+      "direction": "response",
+      "version": 0,
+      "flexible": true,
+      "json_value": {
+        "groups": [
+          {
+            "assignmentEpoch": 1,
+            "authorizedOperations": 1,
+            "errorCode": 1,
+            "errorMessage": "v",
+            "groupEpoch": 1,
+            "groupId": "v",
+            "groupState": "v",
+            "members": [
+              {
+                "assignment": {
+                  "activeTasks": [
+                    {
+                      "partitions": [
+                        1
+                      ],
+                      "subtopologyId": "v"
+                    }
+                  ],
+                  "standbyTasks": [
+                    {
+                      "partitions": [
+                        1
+                      ],
+                      "subtopologyId": "v"
+                    }
+                  ],
+                  "warmupTasks": [
+                    {
+                      "partitions": [
+                        1
+                      ],
+                      "subtopologyId": "v"
+                    }
+                  ]
+                },
+                "clientHost": "v",
+                "clientId": "v",
+                "clientTags": [
+                  {
+                    "key": "v",
+                    "value": "v"
+                  }
+                ],
+                "instanceId": "v",
+                "isClassic": true,
+                "memberEpoch": 1,
+                "memberId": "v",
+                "processId": "v",
+                "rackId": "v",
+                "targetAssignment": {
+                  "activeTasks": [
+                    {
+                      "partitions": [
+                        1
+                      ],
+                      "subtopologyId": "v"
+                    }
+                  ],
+                  "standbyTasks": [
+                    {
+                      "partitions": [
+                        1
+                      ],
+                      "subtopologyId": "v"
+                    }
+                  ],
+                  "warmupTasks": [
+                    {
+                      "partitions": [
+                        1
+                      ],
+                      "subtopologyId": "v"
+                    }
+                  ]
+                },
+                "taskEndOffsets": [
+                  {
+                    "offset": 1,
+                    "partition": 1,
+                    "subtopologyId": "v"
+                  }
+                ],
+                "taskOffsets": [
+                  {
+                    "offset": 1,
+                    "partition": 1,
+                    "subtopologyId": "v"
+                  }
+                ],
+                "topologyEpoch": 1,
+                "userEndpoint": {
+                  "host": "v",
+                  "port": 1
+                }
+              }
+            ],
+            "topology": {
+              "epoch": 1,
+              "subtopologies": [
+                {
+                  "repartitionSinkTopics": [
+                    "v"
+                  ],
+                  "repartitionSourceTopics": [
+                    {
+                      "name": "v",
+                      "partitions": 1,
+                      "replicationFactor": 1,
+                      "topicConfigs": [
+                        {
+                          "key": "v",
+                          "value": "v"
+                        }
+                      ]
+                    }
+                  ],
+                  "sourceTopics": [
+                    "v"
+                  ],
+                  "stateChangelogTopics": [
+                    {
+                      "name": "v",
+                      "partitions": 1,
+                      "replicationFactor": 1,
+                      "topicConfigs": [
+                        {
+                          "key": "v",
+                          "value": "v"
+                        }
+                      ]
+                    }
+                  ],
+                  "subtopologyId": "v"
+                }
+              ]
+            }
+          }
+        ],
+        "throttleTimeMs": 1
+      },
+      "hex": "000000010200010276027602760000000100000001010000000102027602027602027602027600000001000102027602760000020276000000010001020276027600000000020276000000010276027602760276000000010276010276000100020276027600020276000000010000000000000001000202760000000100000000000000010002027602000000010002027602000000010002027602000000010000020276020000000100020276020000000100020276020000000100000100000000010000"
     }
   ]
 }

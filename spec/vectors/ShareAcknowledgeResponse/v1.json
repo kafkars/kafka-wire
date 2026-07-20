@@ -17,6 +17,45 @@
         "throttleTimeMs": 0
       },
       "hex": "00000000000000010100"
+    },
+    {
+      "name": "synthesized_populated_v1",
+      "why": "Every field this version declares, present and non-default: one element in every array, every nullable thing supplied. The defaults case leaves arrays empty, which hides every field of the struct the array would have held — a records field encoded with the wrong length prefix survived the whole corpus that way, because nothing ever reached the struct holding it.",
+      "message": "ShareAcknowledgeResponse",
+      "api_key": 79,
+      "direction": "response",
+      "version": 1,
+      "flexible": true,
+      "json_value": {
+        "errorCode": 1,
+        "errorMessage": "v",
+        "nodeEndpoints": [
+          {
+            "host": "v",
+            "nodeId": 1,
+            "port": 1,
+            "rack": "v"
+          }
+        ],
+        "responses": [
+          {
+            "partitions": [
+              {
+                "currentLeader": {
+                  "leaderEpoch": 1,
+                  "leaderId": 1
+                },
+                "errorCode": 1,
+                "errorMessage": "v",
+                "partitionIndex": 1
+              }
+            ],
+            "topicId": "MkU3OEVGRjRDMTk0M0Q2OA"
+          }
+        ],
+        "throttleTimeMs": 1
+      },
+      "hex": "000000010001027602324537384546463443313934334436380200000001000102760000000100000001000000020000000102760000000102760000"
     }
   ]
 }

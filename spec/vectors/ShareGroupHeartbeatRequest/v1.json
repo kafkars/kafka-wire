@@ -17,6 +17,25 @@
         "subscribedTopicNames": null
       },
       "hex": "010100000000000000"
+    },
+    {
+      "name": "synthesized_populated_v1",
+      "why": "Every field this version declares, present and non-default: one element in every array, every nullable thing supplied. The defaults case leaves arrays empty, which hides every field of the struct the array would have held — a records field encoded with the wrong length prefix survived the whole corpus that way, because nothing ever reached the struct holding it.",
+      "message": "ShareGroupHeartbeatRequest",
+      "api_key": 76,
+      "direction": "request",
+      "version": 1,
+      "flexible": true,
+      "json_value": {
+        "groupId": "v",
+        "memberEpoch": 1,
+        "memberId": "v",
+        "rackId": "v",
+        "subscribedTopicNames": [
+          "v"
+        ]
+      },
+      "hex": "0276027600000001027602027600"
     }
   ]
 }

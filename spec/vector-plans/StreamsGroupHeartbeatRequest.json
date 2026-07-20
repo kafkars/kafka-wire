@@ -108,6 +108,250 @@
         "taskEndOffsets": null,
         "shutdownApplication": false
       }
+    },
+    {
+      "name": "synthesized_populated_v0",
+      "why": "Every field this version declares, present and non-default: one element in every array, every nullable thing supplied. The defaults case leaves arrays empty, which hides every field of the struct the array would have held \u2014 a records field encoded with the wrong length prefix survived the whole corpus that way, because nothing ever reached the struct holding it.",
+      "versions": [
+        0
+      ],
+      "json_value": {
+        "groupId": "v",
+        "memberId": "v",
+        "memberEpoch": 1,
+        "endpointInformationEpoch": 1,
+        "instanceId": "v",
+        "rackId": "v",
+        "rebalanceTimeoutMs": 1,
+        "topology": {
+          "epoch": 1,
+          "subtopologies": [
+            {
+              "subtopologyId": "v",
+              "sourceTopics": [
+                "v"
+              ],
+              "sourceTopicRegex": [
+                "v"
+              ],
+              "stateChangelogTopics": [
+                {
+                  "name": "v",
+                  "partitions": 1,
+                  "replicationFactor": 1,
+                  "topicConfigs": [
+                    {
+                      "key": "v",
+                      "value": "v"
+                    }
+                  ]
+                }
+              ],
+              "repartitionSinkTopics": [
+                "v"
+              ],
+              "repartitionSourceTopics": [
+                {
+                  "name": "v",
+                  "partitions": 1,
+                  "replicationFactor": 1,
+                  "topicConfigs": [
+                    {
+                      "key": "v",
+                      "value": "v"
+                    }
+                  ]
+                }
+              ],
+              "copartitionGroups": [
+                {
+                  "sourceTopics": [
+                    1
+                  ],
+                  "sourceTopicRegex": [
+                    1
+                  ],
+                  "repartitionSourceTopics": [
+                    1
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        "activeTasks": [
+          {
+            "subtopologyId": "v",
+            "partitions": [
+              1
+            ]
+          }
+        ],
+        "standbyTasks": [
+          {
+            "subtopologyId": "v",
+            "partitions": [
+              1
+            ]
+          }
+        ],
+        "warmupTasks": [
+          {
+            "subtopologyId": "v",
+            "partitions": [
+              1
+            ]
+          }
+        ],
+        "processId": "v",
+        "userEndpoint": {
+          "host": "v",
+          "port": 1
+        },
+        "clientTags": [
+          {
+            "key": "v",
+            "value": "v"
+          }
+        ],
+        "taskOffsets": [
+          {
+            "subtopologyId": "v",
+            "partition": 1,
+            "offset": 1
+          }
+        ],
+        "taskEndOffsets": [
+          {
+            "subtopologyId": "v",
+            "partition": 1,
+            "offset": 1
+          }
+        ],
+        "shutdownApplication": true
+      }
+    },
+    {
+      "name": "synthesized_populated_v1",
+      "why": "Every field this version declares, present and non-default: one element in every array, every nullable thing supplied. The defaults case leaves arrays empty, which hides every field of the struct the array would have held \u2014 a records field encoded with the wrong length prefix survived the whole corpus that way, because nothing ever reached the struct holding it.",
+      "versions": [
+        1
+      ],
+      "json_value": {
+        "groupId": "v",
+        "memberId": "v",
+        "memberEpoch": 1,
+        "endpointInformationEpoch": 1,
+        "instanceId": "v",
+        "rackId": "v",
+        "rebalanceTimeoutMs": 1,
+        "topology": {
+          "epoch": 1,
+          "subtopologies": [
+            {
+              "subtopologyId": "v",
+              "sourceTopics": [
+                "v"
+              ],
+              "sourceTopicRegex": [
+                "v"
+              ],
+              "stateChangelogTopics": [
+                {
+                  "name": "v",
+                  "partitions": 1,
+                  "replicationFactor": 1,
+                  "topicConfigs": [
+                    {
+                      "key": "v",
+                      "value": "v"
+                    }
+                  ]
+                }
+              ],
+              "repartitionSinkTopics": [
+                "v"
+              ],
+              "repartitionSourceTopics": [
+                {
+                  "name": "v",
+                  "partitions": 1,
+                  "replicationFactor": 1,
+                  "topicConfigs": [
+                    {
+                      "key": "v",
+                      "value": "v"
+                    }
+                  ]
+                }
+              ],
+              "copartitionGroups": [
+                {
+                  "sourceTopics": [
+                    1
+                  ],
+                  "sourceTopicRegex": [
+                    1
+                  ],
+                  "repartitionSourceTopics": [
+                    1
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        "activeTasks": [
+          {
+            "subtopologyId": "v",
+            "partitions": [
+              1
+            ]
+          }
+        ],
+        "standbyTasks": [
+          {
+            "subtopologyId": "v",
+            "partitions": [
+              1
+            ]
+          }
+        ],
+        "warmupTasks": [
+          {
+            "subtopologyId": "v",
+            "partitions": [
+              1
+            ]
+          }
+        ],
+        "processId": "v",
+        "userEndpoint": {
+          "host": "v",
+          "port": 1
+        },
+        "clientTags": [
+          {
+            "key": "v",
+            "value": "v"
+          }
+        ],
+        "taskOffsets": [
+          {
+            "subtopologyId": "v",
+            "partition": 1,
+            "offset": 1
+          }
+        ],
+        "taskEndOffsets": [
+          {
+            "subtopologyId": "v",
+            "partition": 1,
+            "offset": 1
+          }
+        ],
+        "shutdownApplication": true
+      }
     }
   ]
 }

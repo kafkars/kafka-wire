@@ -19,6 +19,76 @@
         "topologyEpoch": 0
       },
       "hex": "01010000000001010000"
+    },
+    {
+      "name": "synthesized_populated_v0",
+      "why": "Every field this version declares, present and non-default: one element in every array, every nullable thing supplied. The defaults case leaves arrays empty, which hides every field of the struct the array would have held — a records field encoded with the wrong length prefix survived the whole corpus that way, because nothing ever reached the struct holding it.",
+      "message": "StreamsGroupTopologyDescriptionUpdateRequest",
+      "api_key": 93,
+      "direction": "request",
+      "version": 0,
+      "flexible": true,
+      "json_value": {
+        "groupId": "v",
+        "memberId": "v",
+        "topologyDescription": {
+          "globalStores": [
+            {
+              "processor": {
+                "name": "v",
+                "nodeType": 1,
+                "sinkTopic": "v",
+                "sourceTopics": [
+                  "v"
+                ],
+                "stores": [
+                  "v"
+                ],
+                "successors": [
+                  "v"
+                ]
+              },
+              "source": {
+                "name": "v",
+                "nodeType": 1,
+                "sinkTopic": "v",
+                "sourceTopics": [
+                  "v"
+                ],
+                "stores": [
+                  "v"
+                ],
+                "successors": [
+                  "v"
+                ]
+              }
+            }
+          ],
+          "subtopologies": [
+            {
+              "nodes": [
+                {
+                  "name": "v",
+                  "nodeType": 1,
+                  "sinkTopic": "v",
+                  "sourceTopics": [
+                    "v"
+                  ],
+                  "stores": [
+                    "v"
+                  ],
+                  "successors": [
+                    "v"
+                  ]
+                }
+              ],
+              "subtopologyId": "v"
+            }
+          ]
+        },
+        "topologyEpoch": 1
+      },
+      "hex": "0276027600000001020276020276010202760276020276020276000002027601020276027602027602027600027601020276027602027602027600000000"
     }
   ]
 }

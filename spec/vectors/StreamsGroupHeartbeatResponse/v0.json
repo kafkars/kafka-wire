@@ -26,6 +26,81 @@
         "warmupTasks": null
       },
       "hex": "00000000000000010000000000000000000000000000000000000000000000000000"
+    },
+    {
+      "name": "synthesized_populated_v0",
+      "why": "Every field this version declares, present and non-default: one element in every array, every nullable thing supplied. The defaults case leaves arrays empty, which hides every field of the struct the array would have held — a records field encoded with the wrong length prefix survived the whole corpus that way, because nothing ever reached the struct holding it.",
+      "message": "StreamsGroupHeartbeatResponse",
+      "api_key": 88,
+      "direction": "response",
+      "version": 0,
+      "flexible": true,
+      "json_value": {
+        "acceptableRecoveryLagLegacy": 1,
+        "activeTasks": [
+          {
+            "partitions": [
+              1
+            ],
+            "subtopologyId": "v"
+          }
+        ],
+        "endpointInformationEpoch": 1,
+        "errorCode": 1,
+        "errorMessage": "v",
+        "heartbeatIntervalMs": 1,
+        "memberEpoch": 1,
+        "memberId": "v",
+        "partitionsByUserEndpoint": [
+          {
+            "activePartitions": [
+              {
+                "partitions": [
+                  1
+                ],
+                "topic": "v"
+              }
+            ],
+            "standbyPartitions": [
+              {
+                "partitions": [
+                  1
+                ],
+                "topic": "v"
+              }
+            ],
+            "userEndpoint": {
+              "host": "v",
+              "port": 1
+            }
+          }
+        ],
+        "standbyTasks": [
+          {
+            "partitions": [
+              1
+            ],
+            "subtopologyId": "v"
+          }
+        ],
+        "status": [
+          {
+            "statusCode": 1,
+            "statusDetail": "v"
+          }
+        ],
+        "taskOffsetIntervalMs": 1,
+        "throttleTimeMs": 1,
+        "warmupTasks": [
+          {
+            "partitions": [
+              1
+            ],
+            "subtopologyId": "v"
+          }
+        ]
+      },
+      "hex": "00000001000102760276000000010000000100000001000000010201027600020276020000000100020276020000000100020276020000000100000000010202760001000202760200000001000202760200000001000000"
     }
   ]
 }

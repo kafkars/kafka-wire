@@ -29,6 +29,131 @@
         "warmupTasks": null
       },
       "hex": "010100000000000000000000ffffffffff00000000ff0000000000"
+    },
+    {
+      "name": "synthesized_populated_v1",
+      "why": "Every field this version declares, present and non-default: one element in every array, every nullable thing supplied. The defaults case leaves arrays empty, which hides every field of the struct the array would have held — a records field encoded with the wrong length prefix survived the whole corpus that way, because nothing ever reached the struct holding it.",
+      "message": "StreamsGroupHeartbeatRequest",
+      "api_key": 88,
+      "direction": "request",
+      "version": 1,
+      "flexible": true,
+      "json_value": {
+        "activeTasks": [
+          {
+            "partitions": [
+              1
+            ],
+            "subtopologyId": "v"
+          }
+        ],
+        "clientTags": [
+          {
+            "key": "v",
+            "value": "v"
+          }
+        ],
+        "endpointInformationEpoch": 1,
+        "groupId": "v",
+        "instanceId": "v",
+        "memberEpoch": 1,
+        "memberId": "v",
+        "processId": "v",
+        "rackId": "v",
+        "rebalanceTimeoutMs": 1,
+        "shutdownApplication": true,
+        "standbyTasks": [
+          {
+            "partitions": [
+              1
+            ],
+            "subtopologyId": "v"
+          }
+        ],
+        "taskEndOffsets": [
+          {
+            "offset": 1,
+            "partition": 1,
+            "subtopologyId": "v"
+          }
+        ],
+        "taskOffsets": [
+          {
+            "offset": 1,
+            "partition": 1,
+            "subtopologyId": "v"
+          }
+        ],
+        "topology": {
+          "epoch": 1,
+          "subtopologies": [
+            {
+              "copartitionGroups": [
+                {
+                  "repartitionSourceTopics": [
+                    1
+                  ],
+                  "sourceTopicRegex": [
+                    1
+                  ],
+                  "sourceTopics": [
+                    1
+                  ]
+                }
+              ],
+              "repartitionSinkTopics": [
+                "v"
+              ],
+              "repartitionSourceTopics": [
+                {
+                  "name": "v",
+                  "partitions": 1,
+                  "replicationFactor": 1,
+                  "topicConfigs": [
+                    {
+                      "key": "v",
+                      "value": "v"
+                    }
+                  ]
+                }
+              ],
+              "sourceTopicRegex": [
+                "v"
+              ],
+              "sourceTopics": [
+                "v"
+              ],
+              "stateChangelogTopics": [
+                {
+                  "name": "v",
+                  "partitions": 1,
+                  "replicationFactor": 1,
+                  "topicConfigs": [
+                    {
+                      "key": "v",
+                      "value": "v"
+                    }
+                  ]
+                }
+              ],
+              "subtopologyId": "v"
+            }
+          ]
+        },
+        "userEndpoint": {
+          "host": "v",
+          "port": 1
+        },
+        "warmupTasks": [
+          {
+            "partitions": [
+              1
+            ],
+            "subtopologyId": "v"
+          }
+        ]
+      },
+      "hex": "02760276000000010000000102760276000000010100000001020276020276020276020276000000010001020276027600000202760202760000000100010202760276000002020001020001020001000000020276020000000100020276020000000100020276020000000100027601027600010002027602760002027600000001000000000000000100020276000000010000000000000001000100"
     }
   ]
 }
