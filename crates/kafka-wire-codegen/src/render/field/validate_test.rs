@@ -12,7 +12,7 @@
 use kafka_wire_schema::{DefaultValue, Field, FieldType};
 
 use super::{
-    probe::{field, message, nullable, struct_type, versions},
+    probe::{field, message, nullable, struct_type, tagged, versions},
     validate::validate_supported,
 };
 
@@ -120,16 +120,65 @@ fn a_field_present_in_no_valid_version_is_refused_by_name() {
 }
 
 #[test]
-fn a_known_tagged_field_is_refused() {
-    let mut tagged = field("Probe", FieldType::Int32, "0+");
-    tagged.tag = Some(0);
-    tagged.tagged_versions = versions("0+");
-    assert_refused(
-        vec![tagged],
+fn a_known_tagged_field_inside_the_flexible_window_is_accepted() {
+    // The shape upstream actually writes, and the paired positive for the three
+    // refusals below: `versions` and `taggedVersions` agree and both sit inside
+    // the window where the section exists at all.
+    let message = message(
         "0-4",
         "0+",
-        "a field with an assigned flexible tag",
-        "known tagged fields are not implemented yet",
+        vec![tagged(field("Probe", FieldType::Int32, "0+"), 0)],
+    );
+
+    assert!(
+        validate_supported(&message).is_ok(),
+        "the backend refused a well-formed known tagged field"
+    );
+}
+
+#[test]
+fn a_tagged_field_reaching_outside_the_flexible_window_is_refused() {
+    // The tagged section exists only in flexible versions, which is what makes
+    // every tagged value compact. A tag present at v0 of a message flexible
+    // from v3 would be handed to the same codec and rendered in the legacy
+    // form — plausible bytes in the wrong format rather than a failure.
+    assert_refused(
+        vec![tagged(field("Probe", FieldType::Int32, "0+"), 0)],
+        "0-4",
+        "3+",
+        "a tag present before its message became flexible",
+        "present in versions the message is not flexible in",
+    );
+}
+
+#[test]
+fn a_field_tagged_in_only_some_of_its_versions_is_refused() {
+    // The generated gate is built from `versions`. If `taggedVersions` were
+    // narrower, the field would be written into the section in versions where
+    // upstream says it belongs inline.
+    let mut partial = tagged(field("Probe", FieldType::Int32, "0+"), 0);
+    partial.tagged_versions = versions("2+");
+    assert_refused(
+        vec![partial],
+        "0-4",
+        "0+",
+        "a field tagged for only part of its life",
+        "tagged in only some of the versions it appears in",
+    );
+}
+
+#[test]
+fn tagged_versions_without_a_tag_number_is_refused() {
+    // Upstream spells one construct with two keys and the emitter keys on the
+    // number, so a field carrying only the window has no slot to write to.
+    let mut numberless = field("Probe", FieldType::Int32, "0+");
+    numberless.tagged_versions = versions("0+");
+    assert_refused(
+        vec![numberless],
+        "0-4",
+        "0+",
+        "a field declaring taggedVersions with no tag",
+        "taggedVersions without a tag number",
     );
 }
 

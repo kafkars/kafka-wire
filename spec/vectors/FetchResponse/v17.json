@@ -1,0 +1,74 @@
+{
+  "schema": 1,
+  "vectors": [
+    {
+      "name": "synthesized_defaults_v17",
+      "why": "Every field this version declares, at its protocol default. Synthesized so the message is held to Apache Kafka's bytes at all; hand-written cases carry the interesting shapes.",
+      "message": "FetchResponse",
+      "api_key": 1,
+      "direction": "response",
+      "version": 17,
+      "flexible": true,
+      "json_value": {
+        "errorCode": 0,
+        "nodeEndpoints": [],
+        "responses": [],
+        "sessionId": 0,
+        "throttleTimeMs": 0
+      },
+      "hex": "000000000000000000000100"
+    },
+    {
+      "name": "a_message_tag_and_a_partition_tag_in_one_response",
+      "why": "`NodeEndpoints` is tag 0 of the response while the partition carries tags of its own. Two sections at two nesting depths in one message, each ordered independently.",
+      "message": "FetchResponse",
+      "api_key": 1,
+      "direction": "response",
+      "version": 17,
+      "flexible": true,
+      "json_value": {
+        "errorCode": 0,
+        "nodeEndpoints": [
+          {
+            "host": "broker-2",
+            "nodeId": 2,
+            "port": 9092,
+            "rack": null
+          }
+        ],
+        "responses": [
+          {
+            "partitions": [
+              {
+                "abortedTransactions": null,
+                "currentLeader": {
+                  "leaderEpoch": 5,
+                  "leaderId": 2
+                },
+                "divergingEpoch": {
+                  "endOffset": -1,
+                  "epoch": -1
+                },
+                "errorCode": 0,
+                "highWatermark": 100,
+                "lastStableOffset": -1,
+                "logStartOffset": -1,
+                "partitionIndex": 0,
+                "preferredReadReplica": -1,
+                "records": null,
+                "snapshotId": {
+                  "endOffset": -1,
+                  "epoch": -1
+                }
+              }
+            ],
+            "topicId": "MkU3OEVGRjRDMTk0M0Q2OA"
+          }
+        ],
+        "sessionId": 0,
+        "throttleTimeMs": 0
+      },
+      "hex": "000000000000000000000232453738454646344331393433443638020000000000000000000000000064ffffffffffffffffffffffffffffffff00ffffffff000101090000000200000005000001001402000000020962726f6b65722d32000023840000"
+    }
+  ]
+}

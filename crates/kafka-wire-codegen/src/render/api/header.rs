@@ -67,6 +67,13 @@ fn render_imports(rust: &mut RustText, sources: &[MessageSource]) {
     if flexible {
         wire.push("TaggedFields");
     }
+    if sources
+        .iter()
+        .any(|source| super::tagged::declares_a_tag(&source.message))
+    {
+        wire.push("KnownTags");
+        wire.push("TagOutcome");
+    }
     if uses(&FieldType::Uuid) {
         wire.push("Uuid");
     }

@@ -1,0 +1,26 @@
+{
+  "schema": 1,
+  "vectors": [
+    {
+      "name": "synthesized_defaults_v9",
+      "why": "Every field this version declares, at its protocol default. Synthesized so the message is held to Apache Kafka's bytes at all; hand-written cases carry the interesting shapes.",
+      "message": "FetchRequest",
+      "api_key": 1,
+      "direction": "request",
+      "version": 9,
+      "flexible": false,
+      "json_value": {
+        "forgottenTopicsData": [],
+        "isolationLevel": 0,
+        "maxBytes": 2147483647,
+        "maxWaitMs": 0,
+        "minBytes": 0,
+        "replicaId": -1,
+        "sessionEpoch": -1,
+        "sessionId": 0,
+        "topics": []
+      },
+      "hex": "ffffffff00000000000000007fffffff0000000000ffffffff0000000000000000"
+    }
+  ]
+}

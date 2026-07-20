@@ -4,7 +4,7 @@ use kafka_wire_schema::FieldType;
 
 use crate::{GenerationError, group::ApiGroup, provenance::generated_banner};
 
-use super::{descriptor::render_descriptor, message::render_message};
+use super::{descriptor::render_descriptor, message::render_message, tagged::declares_a_tag};
 use crate::render::{field, text::RustText};
 
 pub(crate) fn render_api(group: &ApiGroup, commit: &str) -> Result<String, GenerationError> {
@@ -73,6 +73,15 @@ fn render_imports(rust: &mut RustText, group: &ApiGroup) {
     }
     if has_flexible {
         wire.push("TaggedFields");
+    }
+    // The known-tag machinery is pulled in only by a message that declares one,
+    // so the many APIs with a purely unknown section name neither type.
+    if group
+        .messages()
+        .any(|source| declares_a_tag(&source.message))
+    {
+        wire.push("KnownTags");
+        wire.push("TagOutcome");
     }
     if group
         .messages()

@@ -74,6 +74,17 @@ pub(super) fn field(name: &str, ty: FieldType, present: &str) -> Field {
     }
 }
 
+/// The same field, carrying `tag` across every version it is present in.
+///
+/// A tagged field is an ordinary field that travels in the tagged-field section
+/// rather than inline, which is exactly how upstream declares one: `versions`
+/// and `taggedVersions` agree, and both sit inside the flexible window.
+pub(super) fn tagged(mut field: Field, tag: u32) -> Field {
+    field.tagged_versions = field.versions.clone();
+    field.tag = Some(tag);
+    field
+}
+
 /// The same field, declared nullable across every version it is present in.
 pub(super) fn nullable(mut field: Field) -> Field {
     field.nullable_versions = field.versions.clone();

@@ -16,12 +16,15 @@ mod alter_share_group_offsets;
 mod alter_user_scram_credentials;
 mod api_versions;
 mod assign_replicas_to_dirs;
+mod begin_quorum_epoch;
+mod broker_heartbeat;
 mod broker_registration;
 mod consumer_group_describe;
 mod controller_registration;
 mod create_acls;
 mod create_delegation_token;
 mod create_partitions;
+mod create_topics;
 mod delete_acls;
 mod delete_groups;
 mod delete_records;
@@ -40,9 +43,12 @@ mod describe_share_group_offsets;
 mod describe_transactions;
 mod describe_user_scram_credentials;
 mod elect_leaders;
+mod end_quorum_epoch;
 mod end_txn;
 mod envelope;
 mod expire_delegation_token;
+mod fetch;
+mod fetch_snapshot;
 mod find_coordinator;
 mod framing;
 mod get_telemetry_subscriptions;
@@ -60,6 +66,7 @@ mod list_transactions;
 mod offset_commit;
 mod offset_delete;
 mod offset_for_leader_epoch;
+mod produce;
 mod push_telemetry;
 mod read_share_group_state;
 mod read_share_group_state_summary;
@@ -69,12 +76,15 @@ mod renew_delegation_token;
 mod sasl_authenticate;
 mod sasl_handshake;
 mod share_acknowledge;
+mod share_fetch;
 mod share_group_describe;
 mod streams_group_topology_description_update;
 mod sync_group;
 mod txn_offset_commit;
 mod unregister_broker;
 mod update_features;
+mod update_raft_voter;
+mod vote;
 mod write_share_group_state;
 mod write_txn_markers;
 
@@ -124,10 +134,21 @@ pub use alter_user_scram_credentials::{
     ALTER_USER_SCRAM_CREDENTIALS_RESPONSE_DESCRIPTOR, AlterUserScramCredentialsRequest,
     AlterUserScramCredentialsResponse,
 };
-pub use api_versions::{API_VERSIONS_REQUEST_DESCRIPTOR, ApiVersionsRequest};
+pub use api_versions::{
+    API_VERSIONS_REQUEST_DESCRIPTOR, API_VERSIONS_RESPONSE_DESCRIPTOR, ApiVersionsRequest,
+    ApiVersionsResponse,
+};
 pub use assign_replicas_to_dirs::{
     ASSIGN_REPLICAS_TO_DIRS_REQUEST_DESCRIPTOR, ASSIGN_REPLICAS_TO_DIRS_RESPONSE_DESCRIPTOR,
     AssignReplicasToDirsRequest, AssignReplicasToDirsResponse,
+};
+pub use begin_quorum_epoch::{
+    BEGIN_QUORUM_EPOCH_REQUEST_DESCRIPTOR, BEGIN_QUORUM_EPOCH_RESPONSE_DESCRIPTOR,
+    BeginQuorumEpochRequest, BeginQuorumEpochResponse,
+};
+pub use broker_heartbeat::{
+    BROKER_HEARTBEAT_REQUEST_DESCRIPTOR, BROKER_HEARTBEAT_RESPONSE_DESCRIPTOR,
+    BrokerHeartbeatRequest, BrokerHeartbeatResponse,
 };
 pub use broker_registration::{
     BROKER_REGISTRATION_REQUEST_DESCRIPTOR, BROKER_REGISTRATION_RESPONSE_DESCRIPTOR,
@@ -152,6 +173,10 @@ pub use create_delegation_token::{
 pub use create_partitions::{
     CREATE_PARTITIONS_REQUEST_DESCRIPTOR, CREATE_PARTITIONS_RESPONSE_DESCRIPTOR,
     CreatePartitionsRequest, CreatePartitionsResponse,
+};
+pub use create_topics::{
+    CREATE_TOPICS_REQUEST_DESCRIPTOR, CREATE_TOPICS_RESPONSE_DESCRIPTOR, CreateTopicsRequest,
+    CreateTopicsResponse,
 };
 pub use delete_acls::{
     DELETE_ACLS_REQUEST_DESCRIPTOR, DELETE_ACLS_RESPONSE_DESCRIPTOR, DeleteAclsRequest,
@@ -224,6 +249,10 @@ pub use elect_leaders::{
     ELECT_LEADERS_REQUEST_DESCRIPTOR, ELECT_LEADERS_RESPONSE_DESCRIPTOR, ElectLeadersRequest,
     ElectLeadersResponse,
 };
+pub use end_quorum_epoch::{
+    END_QUORUM_EPOCH_REQUEST_DESCRIPTOR, END_QUORUM_EPOCH_RESPONSE_DESCRIPTOR,
+    EndQuorumEpochRequest, EndQuorumEpochResponse,
+};
 pub use end_txn::{
     END_TXN_REQUEST_DESCRIPTOR, END_TXN_RESPONSE_DESCRIPTOR, EndTxnRequest, EndTxnResponse,
 };
@@ -233,6 +262,11 @@ pub use envelope::{
 pub use expire_delegation_token::{
     EXPIRE_DELEGATION_TOKEN_REQUEST_DESCRIPTOR, EXPIRE_DELEGATION_TOKEN_RESPONSE_DESCRIPTOR,
     ExpireDelegationTokenRequest, ExpireDelegationTokenResponse,
+};
+pub use fetch::{FETCH_REQUEST_DESCRIPTOR, FETCH_RESPONSE_DESCRIPTOR, FetchRequest, FetchResponse};
+pub use fetch_snapshot::{
+    FETCH_SNAPSHOT_REQUEST_DESCRIPTOR, FETCH_SNAPSHOT_RESPONSE_DESCRIPTOR, FetchSnapshotRequest,
+    FetchSnapshotResponse,
 };
 pub use find_coordinator::{
     FIND_COORDINATOR_REQUEST_DESCRIPTOR, FIND_COORDINATOR_RESPONSE_DESCRIPTOR,
@@ -303,6 +337,9 @@ pub use offset_for_leader_epoch::{
     OFFSET_FOR_LEADER_EPOCH_REQUEST_DESCRIPTOR, OFFSET_FOR_LEADER_EPOCH_RESPONSE_DESCRIPTOR,
     OffsetForLeaderEpochRequest, OffsetForLeaderEpochResponse,
 };
+pub use produce::{
+    PRODUCE_REQUEST_DESCRIPTOR, PRODUCE_RESPONSE_DESCRIPTOR, ProduceRequest, ProduceResponse,
+};
 pub use push_telemetry::{
     PUSH_TELEMETRY_REQUEST_DESCRIPTOR, PUSH_TELEMETRY_RESPONSE_DESCRIPTOR, PushTelemetryRequest,
     PushTelemetryResponse,
@@ -337,6 +374,7 @@ pub use share_acknowledge::{
     SHARE_ACKNOWLEDGE_REQUEST_DESCRIPTOR, SHARE_ACKNOWLEDGE_RESPONSE_DESCRIPTOR,
     ShareAcknowledgeRequest, ShareAcknowledgeResponse,
 };
+pub use share_fetch::{SHARE_FETCH_RESPONSE_DESCRIPTOR, ShareFetchResponse};
 pub use share_group_describe::{
     SHARE_GROUP_DESCRIBE_REQUEST_DESCRIPTOR, SHARE_GROUP_DESCRIBE_RESPONSE_DESCRIPTOR,
     ShareGroupDescribeRequest, ShareGroupDescribeResponse,
@@ -362,6 +400,11 @@ pub use update_features::{
     UPDATE_FEATURES_REQUEST_DESCRIPTOR, UPDATE_FEATURES_RESPONSE_DESCRIPTOR, UpdateFeaturesRequest,
     UpdateFeaturesResponse,
 };
+pub use update_raft_voter::{
+    UPDATE_RAFT_VOTER_REQUEST_DESCRIPTOR, UPDATE_RAFT_VOTER_RESPONSE_DESCRIPTOR,
+    UpdateRaftVoterRequest, UpdateRaftVoterResponse,
+};
+pub use vote::{VOTE_REQUEST_DESCRIPTOR, VOTE_RESPONSE_DESCRIPTOR, VoteRequest, VoteResponse};
 pub use write_share_group_state::{
     WRITE_SHARE_GROUP_STATE_REQUEST_DESCRIPTOR, WRITE_SHARE_GROUP_STATE_RESPONSE_DESCRIPTOR,
     WriteShareGroupStateRequest, WriteShareGroupStateResponse,

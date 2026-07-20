@@ -7,6 +7,7 @@ mod header;
 mod message;
 mod prose;
 mod structs;
+mod tagged;
 
 pub(crate) use descriptor::descriptor_name;
 pub(crate) use file::render_api;

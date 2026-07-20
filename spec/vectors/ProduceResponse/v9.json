@@ -1,0 +1,19 @@
+{
+  "schema": 1,
+  "vectors": [
+    {
+      "name": "synthesized_defaults_v9",
+      "why": "Every field this version declares, at its protocol default. Synthesized so the message is held to Apache Kafka's bytes at all; hand-written cases carry the interesting shapes.",
+      "message": "ProduceResponse",
+      "api_key": 0,
+      "direction": "response",
+      "version": 9,
+      "flexible": true,
+      "json_value": {
+        "responses": [],
+        "throttleTimeMs": 0
+      },
+      "hex": "010000000000"
+    }
+  ]
+}

@@ -23,7 +23,7 @@ source_repository = "https://github.com/apache/kafka"
 source_commit = "678c0e07e4733c5a592e52046dc2c4e1625587f1"
 gradle_task = ":clients:jar"
 jar_name = "kafka-clients-4.4.0-SNAPSHOT.jar"
-jar_sha256 = "82a80dfc1e57e6e9b822955be5ddfb65a0a49c166fcc2e5b4babcea5af9bcaa5"
+jar_sha256 = "f1e150c318d21d4362bf1311aa7181a213d186a4d77f8c0543ef636cd93cee31"
 jdk_version = "21.0.5"
 jdk_build = "Oracle GraalVM 21.0.5+9.1 (build 21.0.5+9-LTS-jvmci-23.1-b48)"
 

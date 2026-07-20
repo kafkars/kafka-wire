@@ -1,0 +1,172 @@
+{
+  "schema": 1,
+  "message": "ProduceRequest",
+  "api_key": 0,
+  "direction": "request",
+  "valid_versions": [
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13
+  ],
+  "flexible_versions": [
+    9,
+    10,
+    11,
+    12,
+    13
+  ],
+  "source": "ProduceRequest.json",
+  "cases": [
+    {
+      "name": "synthesized_defaults_v3",
+      "why": "Every field this version declares, at its protocol default. Synthesized so the message is held to Apache Kafka's bytes at all; hand-written cases carry the interesting shapes.",
+      "versions": [
+        3
+      ],
+      "json_value": {
+        "transactionalId": null,
+        "acks": 0,
+        "timeoutMs": 0,
+        "topicData": []
+      }
+    },
+    {
+      "name": "synthesized_defaults_v4",
+      "why": "Every field this version declares, at its protocol default. Synthesized so the message is held to Apache Kafka's bytes at all; hand-written cases carry the interesting shapes.",
+      "versions": [
+        4
+      ],
+      "json_value": {
+        "transactionalId": null,
+        "acks": 0,
+        "timeoutMs": 0,
+        "topicData": []
+      }
+    },
+    {
+      "name": "synthesized_defaults_v5",
+      "why": "Every field this version declares, at its protocol default. Synthesized so the message is held to Apache Kafka's bytes at all; hand-written cases carry the interesting shapes.",
+      "versions": [
+        5
+      ],
+      "json_value": {
+        "transactionalId": null,
+        "acks": 0,
+        "timeoutMs": 0,
+        "topicData": []
+      }
+    },
+    {
+      "name": "synthesized_defaults_v6",
+      "why": "Every field this version declares, at its protocol default. Synthesized so the message is held to Apache Kafka's bytes at all; hand-written cases carry the interesting shapes.",
+      "versions": [
+        6
+      ],
+      "json_value": {
+        "transactionalId": null,
+        "acks": 0,
+        "timeoutMs": 0,
+        "topicData": []
+      }
+    },
+    {
+      "name": "synthesized_defaults_v7",
+      "why": "Every field this version declares, at its protocol default. Synthesized so the message is held to Apache Kafka's bytes at all; hand-written cases carry the interesting shapes.",
+      "versions": [
+        7
+      ],
+      "json_value": {
+        "transactionalId": null,
+        "acks": 0,
+        "timeoutMs": 0,
+        "topicData": []
+      }
+    },
+    {
+      "name": "synthesized_defaults_v8",
+      "why": "Every field this version declares, at its protocol default. Synthesized so the message is held to Apache Kafka's bytes at all; hand-written cases carry the interesting shapes.",
+      "versions": [
+        8
+      ],
+      "json_value": {
+        "transactionalId": null,
+        "acks": 0,
+        "timeoutMs": 0,
+        "topicData": []
+      }
+    },
+    {
+      "name": "synthesized_defaults_v9",
+      "why": "Every field this version declares, at its protocol default. Synthesized so the message is held to Apache Kafka's bytes at all; hand-written cases carry the interesting shapes.",
+      "versions": [
+        9
+      ],
+      "json_value": {
+        "transactionalId": null,
+        "acks": 0,
+        "timeoutMs": 0,
+        "topicData": []
+      }
+    },
+    {
+      "name": "synthesized_defaults_v10",
+      "why": "Every field this version declares, at its protocol default. Synthesized so the message is held to Apache Kafka's bytes at all; hand-written cases carry the interesting shapes.",
+      "versions": [
+        10
+      ],
+      "json_value": {
+        "transactionalId": null,
+        "acks": 0,
+        "timeoutMs": 0,
+        "topicData": []
+      }
+    },
+    {
+      "name": "synthesized_defaults_v11",
+      "why": "Every field this version declares, at its protocol default. Synthesized so the message is held to Apache Kafka's bytes at all; hand-written cases carry the interesting shapes.",
+      "versions": [
+        11
+      ],
+      "json_value": {
+        "transactionalId": null,
+        "acks": 0,
+        "timeoutMs": 0,
+        "topicData": []
+      }
+    },
+    {
+      "name": "synthesized_defaults_v12",
+      "why": "Every field this version declares, at its protocol default. Synthesized so the message is held to Apache Kafka's bytes at all; hand-written cases carry the interesting shapes.",
+      "versions": [
+        12
+      ],
+      "json_value": {
+        "transactionalId": null,
+        "acks": 0,
+        "timeoutMs": 0,
+        "topicData": []
+      }
+    },
+    {
+      "name": "synthesized_defaults_v13",
+      "why": "Every field this version declares, at its protocol default. Synthesized so the message is held to Apache Kafka's bytes at all; hand-written cases carry the interesting shapes.",
+      "versions": [
+        13
+      ],
+      "json_value": {
+        "transactionalId": null,
+        "acks": 0,
+        "timeoutMs": 0,
+        "topicData": []
+      }
+    }
+  ]
+}

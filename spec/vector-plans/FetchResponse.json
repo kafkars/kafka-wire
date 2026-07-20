@@ -1,0 +1,319 @@
+{
+  "schema": 1,
+  "message": "FetchResponse",
+  "api_key": 1,
+  "direction": "response",
+  "valid_versions": [
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18
+  ],
+  "flexible_versions": [
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18
+  ],
+  "source": "FetchResponse.json",
+  "cases": [
+    {
+      "name": "synthesized_defaults_v4",
+      "why": "Every field this version declares, at its protocol default. Synthesized so the message is held to Apache Kafka's bytes at all; hand-written cases carry the interesting shapes.",
+      "versions": [
+        4
+      ],
+      "json_value": {
+        "throttleTimeMs": 0,
+        "responses": []
+      }
+    },
+    {
+      "name": "synthesized_defaults_v5",
+      "why": "Every field this version declares, at its protocol default. Synthesized so the message is held to Apache Kafka's bytes at all; hand-written cases carry the interesting shapes.",
+      "versions": [
+        5
+      ],
+      "json_value": {
+        "throttleTimeMs": 0,
+        "responses": []
+      }
+    },
+    {
+      "name": "synthesized_defaults_v6",
+      "why": "Every field this version declares, at its protocol default. Synthesized so the message is held to Apache Kafka's bytes at all; hand-written cases carry the interesting shapes.",
+      "versions": [
+        6
+      ],
+      "json_value": {
+        "throttleTimeMs": 0,
+        "responses": []
+      }
+    },
+    {
+      "name": "synthesized_defaults_v7",
+      "why": "Every field this version declares, at its protocol default. Synthesized so the message is held to Apache Kafka's bytes at all; hand-written cases carry the interesting shapes.",
+      "versions": [
+        7
+      ],
+      "json_value": {
+        "throttleTimeMs": 0,
+        "errorCode": 0,
+        "sessionId": 0,
+        "responses": []
+      }
+    },
+    {
+      "name": "synthesized_defaults_v8",
+      "why": "Every field this version declares, at its protocol default. Synthesized so the message is held to Apache Kafka's bytes at all; hand-written cases carry the interesting shapes.",
+      "versions": [
+        8
+      ],
+      "json_value": {
+        "throttleTimeMs": 0,
+        "errorCode": 0,
+        "sessionId": 0,
+        "responses": []
+      }
+    },
+    {
+      "name": "synthesized_defaults_v9",
+      "why": "Every field this version declares, at its protocol default. Synthesized so the message is held to Apache Kafka's bytes at all; hand-written cases carry the interesting shapes.",
+      "versions": [
+        9
+      ],
+      "json_value": {
+        "throttleTimeMs": 0,
+        "errorCode": 0,
+        "sessionId": 0,
+        "responses": []
+      }
+    },
+    {
+      "name": "synthesized_defaults_v10",
+      "why": "Every field this version declares, at its protocol default. Synthesized so the message is held to Apache Kafka's bytes at all; hand-written cases carry the interesting shapes.",
+      "versions": [
+        10
+      ],
+      "json_value": {
+        "throttleTimeMs": 0,
+        "errorCode": 0,
+        "sessionId": 0,
+        "responses": []
+      }
+    },
+    {
+      "name": "synthesized_defaults_v11",
+      "why": "Every field this version declares, at its protocol default. Synthesized so the message is held to Apache Kafka's bytes at all; hand-written cases carry the interesting shapes.",
+      "versions": [
+        11
+      ],
+      "json_value": {
+        "throttleTimeMs": 0,
+        "errorCode": 0,
+        "sessionId": 0,
+        "responses": []
+      }
+    },
+    {
+      "name": "synthesized_defaults_v12",
+      "why": "Every field this version declares, at its protocol default. Synthesized so the message is held to Apache Kafka's bytes at all; hand-written cases carry the interesting shapes.",
+      "versions": [
+        12
+      ],
+      "json_value": {
+        "throttleTimeMs": 0,
+        "errorCode": 0,
+        "sessionId": 0,
+        "responses": []
+      }
+    },
+    {
+      "name": "synthesized_defaults_v13",
+      "why": "Every field this version declares, at its protocol default. Synthesized so the message is held to Apache Kafka's bytes at all; hand-written cases carry the interesting shapes.",
+      "versions": [
+        13
+      ],
+      "json_value": {
+        "throttleTimeMs": 0,
+        "errorCode": 0,
+        "sessionId": 0,
+        "responses": []
+      }
+    },
+    {
+      "name": "synthesized_defaults_v14",
+      "why": "Every field this version declares, at its protocol default. Synthesized so the message is held to Apache Kafka's bytes at all; hand-written cases carry the interesting shapes.",
+      "versions": [
+        14
+      ],
+      "json_value": {
+        "throttleTimeMs": 0,
+        "errorCode": 0,
+        "sessionId": 0,
+        "responses": []
+      }
+    },
+    {
+      "name": "synthesized_defaults_v15",
+      "why": "Every field this version declares, at its protocol default. Synthesized so the message is held to Apache Kafka's bytes at all; hand-written cases carry the interesting shapes.",
+      "versions": [
+        15
+      ],
+      "json_value": {
+        "throttleTimeMs": 0,
+        "errorCode": 0,
+        "sessionId": 0,
+        "responses": []
+      }
+    },
+    {
+      "name": "synthesized_defaults_v16",
+      "why": "Every field this version declares, at its protocol default. Synthesized so the message is held to Apache Kafka's bytes at all; hand-written cases carry the interesting shapes.",
+      "versions": [
+        16
+      ],
+      "json_value": {
+        "throttleTimeMs": 0,
+        "errorCode": 0,
+        "sessionId": 0,
+        "responses": [],
+        "nodeEndpoints": []
+      }
+    },
+    {
+      "name": "synthesized_defaults_v17",
+      "why": "Every field this version declares, at its protocol default. Synthesized so the message is held to Apache Kafka's bytes at all; hand-written cases carry the interesting shapes.",
+      "versions": [
+        17
+      ],
+      "json_value": {
+        "throttleTimeMs": 0,
+        "errorCode": 0,
+        "sessionId": 0,
+        "responses": [],
+        "nodeEndpoints": []
+      }
+    },
+    {
+      "name": "synthesized_defaults_v18",
+      "why": "Every field this version declares, at its protocol default. Synthesized so the message is held to Apache Kafka's bytes at all; hand-written cases carry the interesting shapes.",
+      "versions": [
+        18
+      ],
+      "json_value": {
+        "throttleTimeMs": 0,
+        "errorCode": 0,
+        "sessionId": 0,
+        "responses": [],
+        "nodeEndpoints": []
+      }
+    },
+    {
+      "name": "three_struct_tags_on_one_partition",
+      "why": "`DivergingEpoch`, `CurrentLeader`, and `SnapshotId` are tags 0, 1, and 2 of a partition, all structs. Three struct payloads in one ascending run is the densest tagged section the corpus has.",
+      "versions": [
+        12
+      ],
+      "json_value": {
+        "throttleTimeMs": 0,
+        "errorCode": 0,
+        "sessionId": 0,
+        "responses": [
+          {
+            "topic": "orders",
+            "partitions": [
+              {
+                "partitionIndex": 0,
+                "errorCode": 0,
+                "highWatermark": 100,
+                "lastStableOffset": -1,
+                "logStartOffset": -1,
+                "divergingEpoch": {
+                  "epoch": 4,
+                  "endOffset": 90
+                },
+                "currentLeader": {
+                  "leaderId": 2,
+                  "leaderEpoch": 5
+                },
+                "snapshotId": {
+                  "endOffset": 80,
+                  "epoch": 3
+                },
+                "abortedTransactions": null,
+                "preferredReadReplica": -1,
+                "records": null
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "a_message_tag_and_a_partition_tag_in_one_response",
+      "why": "`NodeEndpoints` is tag 0 of the response while the partition carries tags of its own. Two sections at two nesting depths in one message, each ordered independently.",
+      "versions": [
+        16,
+        17,
+        18
+      ],
+      "json_value": {
+        "throttleTimeMs": 0,
+        "errorCode": 0,
+        "sessionId": 0,
+        "responses": [
+          {
+            "topicId": "MkU3OEVGRjRDMTk0M0Q2OA",
+            "partitions": [
+              {
+                "partitionIndex": 0,
+                "errorCode": 0,
+                "highWatermark": 100,
+                "lastStableOffset": -1,
+                "logStartOffset": -1,
+                "divergingEpoch": {
+                  "epoch": -1,
+                  "endOffset": -1
+                },
+                "currentLeader": {
+                  "leaderId": 2,
+                  "leaderEpoch": 5
+                },
+                "snapshotId": {
+                  "endOffset": -1,
+                  "epoch": -1
+                },
+                "abortedTransactions": null,
+                "preferredReadReplica": -1,
+                "records": null
+              }
+            ]
+          }
+        ],
+        "nodeEndpoints": [
+          {
+            "nodeId": 2,
+            "host": "broker-2",
+            "port": 9092,
+            "rack": null
+          }
+        ]
+      }
+    }
+  ]
+}

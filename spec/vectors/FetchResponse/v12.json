@@ -1,0 +1,65 @@
+{
+  "schema": 1,
+  "vectors": [
+    {
+      "name": "synthesized_defaults_v12",
+      "why": "Every field this version declares, at its protocol default. Synthesized so the message is held to Apache Kafka's bytes at all; hand-written cases carry the interesting shapes.",
+      "message": "FetchResponse",
+      "api_key": 1,
+      "direction": "response",
+      "version": 12,
+      "flexible": true,
+      "json_value": {
+        "errorCode": 0,
+        "responses": [],
+        "sessionId": 0,
+        "throttleTimeMs": 0
+      },
+      "hex": "000000000000000000000100"
+    },
+    {
+      "name": "three_struct_tags_on_one_partition",
+      "why": "`DivergingEpoch`, `CurrentLeader`, and `SnapshotId` are tags 0, 1, and 2 of a partition, all structs. Three struct payloads in one ascending run is the densest tagged section the corpus has.",
+      "message": "FetchResponse",
+      "api_key": 1,
+      "direction": "response",
+      "version": 12,
+      "flexible": true,
+      "json_value": {
+        "errorCode": 0,
+        "responses": [
+          {
+            "partitions": [
+              {
+                "abortedTransactions": null,
+                "currentLeader": {
+                  "leaderEpoch": 5,
+                  "leaderId": 2
+                },
+                "divergingEpoch": {
+                  "endOffset": 90,
+                  "epoch": 4
+                },
+                "errorCode": 0,
+                "highWatermark": 100,
+                "lastStableOffset": -1,
+                "logStartOffset": -1,
+                "partitionIndex": 0,
+                "preferredReadReplica": -1,
+                "records": null,
+                "snapshotId": {
+                  "endOffset": 80,
+                  "epoch": 3
+                }
+              }
+            ],
+            "topic": "orders"
+          }
+        ],
+        "sessionId": 0,
+        "throttleTimeMs": 0
+      },
+      "hex": "0000000000000000000002076f7264657273020000000000000000000000000064ffffffffffffffffffffffffffffffff00ffffffff0003000d00000004000000000000005a000109000000020000000500020d000000000000005000000003000000"
+    }
+  ]
+}

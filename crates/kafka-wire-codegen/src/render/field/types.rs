@@ -192,8 +192,11 @@ pub(crate) fn uses_rust_default(field: &Field) -> bool {
         (FieldType::Uuid, DefaultValue::Uuid(bytes)) if *bytes == [0_u8; 16]
     ) || matches!(
         (&field.ty, &field.default),
+        // `Records` is spelled beside `Bytes` here for the same reason it is in
+        // `default_value` and `uses_bytes`: it renders as `Bytes`, so its empty
+        // default is `Bytes::default()` and the struct can derive `Default`.
         (
-            FieldType::Array(_) | FieldType::Bytes | FieldType::String,
+            FieldType::Array(_) | FieldType::Bytes | FieldType::Records | FieldType::String,
             DefaultValue::Empty
         )
     ) || matches!(

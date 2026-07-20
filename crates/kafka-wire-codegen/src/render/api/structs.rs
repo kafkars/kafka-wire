@@ -14,6 +14,7 @@ use crate::{
 
 use super::codec::{render_construction, render_reads, render_writes};
 use super::prose::sentence;
+use super::tagged::{LegacyTags, render_tagged_decode, render_tagged_encode};
 
 /// Renders one whole schema as a standalone struct.
 ///
@@ -277,11 +278,7 @@ pub(super) fn render_struct_decode(
     render_reads(rust, fields, message)?;
     let flexible = !message.effective_flexible_versions().is_empty();
     if flexible {
-        rust.open("let unknown_tagged_fields = if Self::is_flexible(version)");
-        rust.line("decoder.read_tagged_fields()?");
-        rust.reopen("} else {");
-        rust.line("TaggedFields::default()");
-        rust.close(";");
+        render_tagged_decode(rust, fields, message)?;
     }
     rust.blank();
     render_construction(rust, fields, flexible);
@@ -311,10 +308,7 @@ pub(super) fn render_struct_encode(
     rust.open(") -> Result<(), EncodeError>");
     render_writes(rust, fields, message)?;
     if !message.effective_flexible_versions().is_empty() {
-        rust.blank();
-        rust.open("if Self::is_flexible(version)");
-        rust.line("encoder.write_tagged_fields(&self.unknown_tagged_fields)?;");
-        rust.close("");
+        render_tagged_encode(rust, fields, message, LegacyTags::Ignore)?;
     }
     rust.blank();
     rust.line("Ok(())");

@@ -7,6 +7,8 @@ use crate::{
     render::{field, text::RustText},
 };
 
+use super::tagged::{LegacyTags, is_tagged, render_tagged_decode, render_tagged_encode};
+
 pub(super) fn render_decode(rust: &mut RustText, message: &Message) -> Result<(), GenerationError> {
     rust.open(format!("impl KafkaDecode for {}", message.name.rust_type()));
     rust.open("fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError>");
@@ -15,11 +17,7 @@ pub(super) fn render_decode(rust: &mut RustText, message: &Message) -> Result<()
 
     render_reads(rust, &message.fields, message)?;
     if !message.effective_flexible_versions().is_empty() {
-        rust.open("let unknown_tagged_fields = if Self::is_flexible(version)");
-        rust.line("decoder.read_tagged_fields()?");
-        rust.reopen("} else {");
-        rust.line("TaggedFields::default()");
-        rust.close(";");
+        render_tagged_decode(rust, &message.fields, message)?;
     }
 
     rust.blank();
@@ -43,15 +41,7 @@ pub(super) fn render_encode(rust: &mut RustText, message: &Message) -> Result<()
 
     render_writes(rust, &message.fields, message)?;
     if !message.effective_flexible_versions().is_empty() {
-        rust.blank();
-        rust.open("if Self::is_flexible(version)");
-        rust.line("encoder.write_tagged_fields(&self.unknown_tagged_fields)?;");
-        rust.reopen("} else if !self.unknown_tagged_fields.is_empty() {");
-        rust.open("return Err(EncodeError::TaggedFieldsNotRepresentable");
-        rust.line("message: Self::NAME,");
-        rust.line("version,");
-        rust.close(");");
-        rust.close("");
+        render_tagged_encode(rust, &message.fields, message, LegacyTags::Refuse)?;
     }
 
     rust.blank();
@@ -64,14 +54,16 @@ pub(super) fn render_encode(rust: &mut RustText, message: &Message) -> Result<()
 
 /// The local one decoded field binds to.
 ///
-/// A decode body already uses `version`, `decoder`, `encoder`, and the `length`
-/// and `values` an array loop needs. Upstream really does declare a field named
-/// `Version`, whose local would otherwise shadow the `ApiVersion` parameter and
-/// hand an `i16` to everything downstream of it. The struct field keeps its own
-/// name; only the local moves, so the shadowing cannot happen and the generated
-/// type is unaffected.
-fn local(field: &kafka_wire_schema::Field) -> String {
-    const RESERVED: &[&str] = &["version", "decoder", "encoder", "length", "values"];
+/// A decode body already uses `version`, `decoder`, `encoder`, the `length` and
+/// `values` an array loop needs, and the `tag` a tagged-field dispatch matches
+/// on. Upstream really does declare a field named `Version`, whose local would
+/// otherwise shadow the `ApiVersion` parameter and hand an `i16` to everything
+/// downstream of it. The struct field keeps its own name; only the local moves,
+/// so the shadowing cannot happen and the generated type is unaffected.
+pub(super) fn local(field: &kafka_wire_schema::Field) -> String {
+    const RESERVED: &[&str] = &[
+        "version", "decoder", "encoder", "length", "values", "tag", "known",
+    ];
     let name = field.name.rust_field();
     if RESERVED.contains(&name) {
         return format!("{name}_value");
@@ -90,6 +82,11 @@ pub(super) fn render_reads(
     message: &Message,
 ) -> Result<(), GenerationError> {
     for field in fields {
+        // A tagged field is read from its own entry in the section at the end,
+        // not from this position in the body. `render_tagged_decode` owns it.
+        if is_tagged(field) {
+            continue;
+        }
         if let FieldType::Array(element) = &field.ty {
             let (read, _) = field::element_codec(element, field, message)?;
             let (length, _) = field::array_length_codec(field, message);
@@ -137,6 +134,11 @@ pub(super) fn render_writes(
     message: &Message,
 ) -> Result<(), GenerationError> {
     for field in fields {
+        // The counterpart of the skip in `render_reads`: a tagged field is
+        // written into the section, and only when it is not at its default.
+        if is_tagged(field) {
+            continue;
+        }
         if let FieldType::Array(element) = &field.ty {
             let (_, write) = field::element_codec(element, field, message)?;
             let (_, length) = field::array_length_codec(field, message);
@@ -235,7 +237,7 @@ fn render_representability_checks(rust: &mut RustText, message: &Message) {
 ///
 /// A nullable array keeps absent and empty distinct: the nullable readers
 /// return `Option<usize>`, and only the present arm allocates.
-fn render_array_body(rust: &mut RustText, length: &str, element: &str, nullable: bool) {
+pub(super) fn render_array_body(rust: &mut RustText, length: &str, element: &str, nullable: bool) {
     if nullable {
         rust.open(format!("match {length}"));
         rust.line("None => None,");
@@ -258,7 +260,12 @@ fn render_array_body(rust: &mut RustText, length: &str, element: &str, nullable:
 }
 
 /// Writes the prefix once, then the elements only when the array is present.
-fn render_nullable_array_encode(rust: &mut RustText, name: &str, length: &str, element: &str) {
+pub(super) fn render_nullable_array_encode(
+    rust: &mut RustText,
+    name: &str,
+    length: &str,
+    element: &str,
+) {
     rust.line(length);
     rust.open(format!("if let Some(values) = &self.{name}"));
     rust.open("for value in values");
@@ -267,7 +274,7 @@ fn render_nullable_array_encode(rust: &mut RustText, name: &str, length: &str, e
     rust.close("");
 }
 
-fn render_array_encode(rust: &mut RustText, name: &str, length: &str, element: &str) {
+pub(super) fn render_array_encode(rust: &mut RustText, name: &str, length: &str, element: &str) {
     rust.line(length);
     rust.open(format!("for value in &self.{name}"));
     rust.line(element);

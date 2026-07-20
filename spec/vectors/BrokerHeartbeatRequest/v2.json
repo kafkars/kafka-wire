@@ -1,0 +1,66 @@
+{
+  "schema": 1,
+  "vectors": [
+    {
+      "name": "synthesized_defaults_v2",
+      "why": "Every field this version declares, at its protocol default. Synthesized so the message is held to Apache Kafka's bytes at all; hand-written cases carry the interesting shapes.",
+      "message": "BrokerHeartbeatRequest",
+      "api_key": 63,
+      "direction": "request",
+      "version": 2,
+      "flexible": true,
+      "json_value": {
+        "brokerEpoch": -1,
+        "brokerId": 0,
+        "cordonedLogDirs": null,
+        "currentMetadataOffset": 0,
+        "offlineLogDirs": [],
+        "wantFence": false,
+        "wantShutDown": false
+      },
+      "hex": "00000000ffffffffffffffff0000000000000000000000"
+    },
+    {
+      "name": "a_nullable_array_tag_present_beside_a_non_null_one",
+      "why": "`CordonedLogDirs` is tag 1, nullable with a null default, so it is absent when null and carries a compact nullable array length when present. Absent and empty are different bytes and must stay different.",
+      "message": "BrokerHeartbeatRequest",
+      "api_key": 63,
+      "direction": "request",
+      "version": 2,
+      "flexible": true,
+      "json_value": {
+        "brokerEpoch": -1,
+        "brokerId": 1,
+        "cordonedLogDirs": [
+          "AAAAAAAAAAAAAAAAAAAAAg"
+        ],
+        "currentMetadataOffset": 90,
+        "offlineLogDirs": [
+          "MkU3OEVGRjRDMTk0M0Q2OA"
+        ],
+        "wantFence": false,
+        "wantShutDown": false
+      },
+      "hex": "00000001ffffffffffffffff000000000000005a0000020011023245373845464634433139343344363801110200000000000000000000000000000002"
+    },
+    {
+      "name": "a_nullable_array_tag_that_is_empty_rather_than_null",
+      "why": "An empty array is not the default and is written; a null one is the default and is omitted. The synthesized case covers null, so this is the other side of that pair.",
+      "message": "BrokerHeartbeatRequest",
+      "api_key": 63,
+      "direction": "request",
+      "version": 2,
+      "flexible": true,
+      "json_value": {
+        "brokerEpoch": -1,
+        "brokerId": 1,
+        "cordonedLogDirs": [],
+        "currentMetadataOffset": 90,
+        "offlineLogDirs": [],
+        "wantFence": false,
+        "wantShutDown": false
+      },
+      "hex": "00000001ffffffffffffffff000000000000005a000001010101"
+    }
+  ]
+}

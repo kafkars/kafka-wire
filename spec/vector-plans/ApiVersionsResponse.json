@@ -1,0 +1,183 @@
+{
+  "schema": 1,
+  "message": "ApiVersionsResponse",
+  "api_key": 18,
+  "direction": "response",
+  "valid_versions": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5
+  ],
+  "flexible_versions": [
+    3,
+    4,
+    5
+  ],
+  "source": "ApiVersionsResponse.json",
+  "cases": [
+    {
+      "name": "synthesized_defaults_v0",
+      "why": "Every field this version declares, at its protocol default. Synthesized so the message is held to Apache Kafka's bytes at all; hand-written cases carry the interesting shapes.",
+      "versions": [
+        0
+      ],
+      "json_value": {
+        "errorCode": 0,
+        "apiKeys": []
+      }
+    },
+    {
+      "name": "synthesized_defaults_v1",
+      "why": "Every field this version declares, at its protocol default. Synthesized so the message is held to Apache Kafka's bytes at all; hand-written cases carry the interesting shapes.",
+      "versions": [
+        1
+      ],
+      "json_value": {
+        "errorCode": 0,
+        "apiKeys": [],
+        "throttleTimeMs": 0
+      }
+    },
+    {
+      "name": "synthesized_defaults_v2",
+      "why": "Every field this version declares, at its protocol default. Synthesized so the message is held to Apache Kafka's bytes at all; hand-written cases carry the interesting shapes.",
+      "versions": [
+        2
+      ],
+      "json_value": {
+        "errorCode": 0,
+        "apiKeys": [],
+        "throttleTimeMs": 0
+      }
+    },
+    {
+      "name": "synthesized_defaults_v3",
+      "why": "Every field this version declares, at its protocol default. Synthesized so the message is held to Apache Kafka's bytes at all; hand-written cases carry the interesting shapes.",
+      "versions": [
+        3
+      ],
+      "json_value": {
+        "errorCode": 0,
+        "apiKeys": [],
+        "throttleTimeMs": 0,
+        "supportedFeatures": [],
+        "finalizedFeaturesEpoch": -1,
+        "finalizedFeatures": [],
+        "zkMigrationReady": false
+      }
+    },
+    {
+      "name": "synthesized_defaults_v4",
+      "why": "Every field this version declares, at its protocol default. Synthesized so the message is held to Apache Kafka's bytes at all; hand-written cases carry the interesting shapes.",
+      "versions": [
+        4
+      ],
+      "json_value": {
+        "errorCode": 0,
+        "apiKeys": [],
+        "throttleTimeMs": 0,
+        "supportedFeatures": [],
+        "finalizedFeaturesEpoch": -1,
+        "finalizedFeatures": [],
+        "zkMigrationReady": false
+      }
+    },
+    {
+      "name": "synthesized_defaults_v5",
+      "why": "Every field this version declares, at its protocol default. Synthesized so the message is held to Apache Kafka's bytes at all; hand-written cases carry the interesting shapes.",
+      "versions": [
+        5
+      ],
+      "json_value": {
+        "errorCode": 0,
+        "apiKeys": [],
+        "throttleTimeMs": 0,
+        "supportedFeatures": [],
+        "finalizedFeaturesEpoch": -1,
+        "finalizedFeatures": [],
+        "zkMigrationReady": false
+      }
+    },
+    {
+      "name": "every_known_tag_carries_a_value",
+      "why": "All four tags non-default at once. The section has to be a single ascending run \u2014 0, 1, 2, 3 \u2014 each entry sized by its own payload, which is the claim the whole construct rests on.",
+      "versions": [
+        3,
+        4,
+        5
+      ],
+      "json_value": {
+        "errorCode": 0,
+        "apiKeys": [
+          {
+            "apiKey": 18,
+            "minVersion": 0,
+            "maxVersion": 5
+          }
+        ],
+        "throttleTimeMs": 0,
+        "supportedFeatures": [
+          {
+            "name": "metadata.version",
+            "minVersion": 1,
+            "maxVersion": 20
+          }
+        ],
+        "finalizedFeaturesEpoch": 42,
+        "finalizedFeatures": [
+          {
+            "name": "metadata.version",
+            "maxVersionLevel": 20,
+            "minVersionLevel": 1
+          }
+        ],
+        "zkMigrationReady": true
+      }
+    },
+    {
+      "name": "a_sparse_section_omits_the_defaulted_tags",
+      "why": "Tags 0 and 2 hold their defaults and must vanish entirely, leaving 1 and 3 adjacent in the run. Omitting a default-valued tag is what makes the section sparse; writing it would inflate every message for no information.",
+      "versions": [
+        3,
+        4,
+        5
+      ],
+      "json_value": {
+        "errorCode": 0,
+        "apiKeys": [],
+        "throttleTimeMs": 0,
+        "supportedFeatures": [],
+        "finalizedFeaturesEpoch": 7,
+        "finalizedFeatures": [],
+        "zkMigrationReady": true
+      }
+    },
+    {
+      "name": "a_known_tag_merges_with_a_retained_unknown_one",
+      "why": "A tag this build knows and a tag it does not, in one section. The retained entry is numerically above every known tag here \u2014 the corpus has no message whose known tags start above zero \u2014 so the interleave below a known tag is proven by kafka-wire-core's own vectors.",
+      "versions": [
+        3,
+        4,
+        5
+      ],
+      "json_value": {
+        "errorCode": 0,
+        "apiKeys": [],
+        "throttleTimeMs": 0,
+        "supportedFeatures": [],
+        "finalizedFeaturesEpoch": 42,
+        "finalizedFeatures": [],
+        "zkMigrationReady": false
+      },
+      "unknown_tagged_fields": [
+        {
+          "tag": 9,
+          "data_hex": "cafe"
+        }
+      ]
+    }
+  ]
+}

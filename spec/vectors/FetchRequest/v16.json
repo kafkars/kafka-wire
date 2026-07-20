@@ -1,0 +1,83 @@
+{
+  "schema": 1,
+  "vectors": [
+    {
+      "name": "synthesized_defaults_v16",
+      "why": "Every field this version declares, at its protocol default. Synthesized so the message is held to Apache Kafka's bytes at all; hand-written cases carry the interesting shapes.",
+      "message": "FetchRequest",
+      "api_key": 1,
+      "direction": "request",
+      "version": 16,
+      "flexible": true,
+      "json_value": {
+        "clusterId": null,
+        "forgottenTopicsData": [],
+        "isolationLevel": 0,
+        "maxBytes": 2147483647,
+        "maxWaitMs": 0,
+        "minBytes": 0,
+        "rackId": "",
+        "replicaState": {
+          "replicaEpoch": -1,
+          "replicaId": -1
+        },
+        "sessionEpoch": -1,
+        "sessionId": 0,
+        "topics": []
+      },
+      "hex": "00000000000000007fffffff0000000000ffffffff01010100"
+    },
+    {
+      "name": "a_struct_tag_carries_a_value_and_the_string_tag_stays_absent",
+      "why": "`ReplicaState` arrives at v15 as tag 1 while tag 0 holds its null default. The struct's payload carries a tagged-field section of its own, nested inside an entry of this one.",
+      "message": "FetchRequest",
+      "api_key": 1,
+      "direction": "request",
+      "version": 16,
+      "flexible": true,
+      "json_value": {
+        "clusterId": null,
+        "forgottenTopicsData": [],
+        "isolationLevel": 0,
+        "maxBytes": 2147483647,
+        "maxWaitMs": 500,
+        "minBytes": 1,
+        "rackId": "",
+        "replicaState": {
+          "replicaEpoch": 3,
+          "replicaId": 7
+        },
+        "sessionEpoch": -1,
+        "sessionId": 0,
+        "topics": []
+      },
+      "hex": "000001f4000000017fffffff0000000000ffffffff01010101010d00000007000000000000000300"
+    },
+    {
+      "name": "both_top_level_tags_carry_values",
+      "why": "Tag 0 is a length-prefixed string and tag 1 a struct, so the two entries are sized by different rules and must still land in ascending order.",
+      "message": "FetchRequest",
+      "api_key": 1,
+      "direction": "request",
+      "version": 16,
+      "flexible": true,
+      "json_value": {
+        "clusterId": "c1",
+        "forgottenTopicsData": [],
+        "isolationLevel": 0,
+        "maxBytes": 2147483647,
+        "maxWaitMs": 500,
+        "minBytes": 1,
+        "rackId": "",
+        "replicaState": {
+          "replicaEpoch": 3,
+          "replicaId": 7
+        },
+        "sessionEpoch": -1,
+        "sessionId": 0,
+        "topics": []
+      },
+      "hex": "000001f4000000017fffffff0000000000ffffffff010101020003036331010d00000007000000000000000300"
+    }
+  ]
+}

@@ -129,7 +129,7 @@ status = "enabled"
 [[kafka.files]]
 path = "ApiVersionsResponse.json"
 sha256 = "ddd7e266763919dd68dbd900b6f8521bc5316cf2ea3ffefeeee99d3f91d68428"
-status = "pending"
+status = "enabled"
 
 [[kafka.files]]
 path = "AssignReplicasToDirsRequest.json"
@@ -144,22 +144,22 @@ status = "enabled"
 [[kafka.files]]
 path = "BeginQuorumEpochRequest.json"
 sha256 = "e5b5fcc284b5002bed458480a4a80580aef2e7739fc95416e96c19dd118053ea"
-status = "pending"
+status = "enabled"
 
 [[kafka.files]]
 path = "BeginQuorumEpochResponse.json"
 sha256 = "89a187c3df2c35ecd2d2d6659c4666f565045e946269fa1bd905b2b511f83a99"
-status = "pending"
+status = "enabled"
 
 [[kafka.files]]
 path = "BrokerHeartbeatRequest.json"
 sha256 = "6392fa540247ce58a1f271c713e3bf45819cd539a6c57e151415716e16b6baec"
-status = "pending"
+status = "enabled"
 
 [[kafka.files]]
 path = "BrokerHeartbeatResponse.json"
 sha256 = "fdb42868f8fbb4202633f49bf5664f8ec232955e16cc103db5d34a009428ae16"
-status = "pending"
+status = "enabled"
 
 [[kafka.files]]
 path = "BrokerRegistrationRequest.json"
@@ -259,12 +259,12 @@ status = "enabled"
 [[kafka.files]]
 path = "CreateTopicsRequest.json"
 sha256 = "decf707610f04693c50357f10f9afc9128856f04dc0a3ca6fa53091091455725"
-status = "pending"
+status = "enabled"
 
 [[kafka.files]]
 path = "CreateTopicsResponse.json"
 sha256 = "d41587291449d365b7db4c662fb91ac38c7b99ddeaac41e54a27bcd92b840eac"
-status = "pending"
+status = "enabled"
 
 [[kafka.files]]
 path = "DefaultPrincipalData.json"
@@ -474,12 +474,12 @@ status = "enabled"
 [[kafka.files]]
 path = "EndQuorumEpochRequest.json"
 sha256 = "3f23f77fce1f1f8b062152071919955004aa81aeb31ecabd37fd9dc73d86f649"
-status = "pending"
+status = "enabled"
 
 [[kafka.files]]
 path = "EndQuorumEpochResponse.json"
 sha256 = "1769e13f2a2ccabe50bb0c4d6fdd73de9ffa97bfee765d0c926687146ed8d75f"
-status = "pending"
+status = "enabled"
 
 [[kafka.files]]
 path = "EndTxnMarker.json"
@@ -519,22 +519,22 @@ status = "enabled"
 [[kafka.files]]
 path = "FetchRequest.json"
 sha256 = "40d679a103935abe707055c2f3dde3aefcdb0eb13a00e51a71f2e0832d2033ba"
-status = "pending"
+status = "enabled"
 
 [[kafka.files]]
 path = "FetchResponse.json"
 sha256 = "102c7b46666469d29d9810d2437ed10cb66cd90ee1050820405b6acfff94e002"
-status = "pending"
+status = "enabled"
 
 [[kafka.files]]
 path = "FetchSnapshotRequest.json"
 sha256 = "0b60d77cd8334228562714399232ed67ee3c6f870ca12c301d429e420651e42f"
-status = "pending"
+status = "enabled"
 
 [[kafka.files]]
 path = "FetchSnapshotResponse.json"
 sha256 = "a52685f84229a5df50ad04f9d55e39ccbaab647f6180780f855d91577b58b923"
-status = "pending"
+status = "enabled"
 
 [[kafka.files]]
 path = "FindCoordinatorRequest.json"
@@ -739,12 +739,12 @@ status = "enabled"
 [[kafka.files]]
 path = "ProduceRequest.json"
 sha256 = "779c104bdd1753731b946384ea1fc1af08c6c6fd47f2496eadc6530a2db35966"
-status = "pending"
+status = "enabled"
 
 [[kafka.files]]
 path = "ProduceResponse.json"
 sha256 = "ea483c690ec06f83b3dcd95c5ec53f239702f754a16963d62300b156a233614a"
-status = "pending"
+status = "enabled"
 
 [[kafka.files]]
 path = "PushTelemetryRequest.json"
@@ -844,7 +844,7 @@ status = "pending"
 [[kafka.files]]
 path = "ShareFetchResponse.json"
 sha256 = "fa90ee102ad98ce88b14f0d38a775d0e4b32c8e53e11577a3d93923089a69f5e"
-status = "pending"
+status = "enabled"
 
 [[kafka.files]]
 path = "ShareGroupDescribeRequest.json"
@@ -969,22 +969,22 @@ status = "pending"
 [[kafka.files]]
 path = "UpdateRaftVoterRequest.json"
 sha256 = "4a7a157d482b6c76cecb1237e58243463c184ccc0c05e4c8818ca35cbb0eda52"
-status = "pending"
+status = "enabled"
 
 [[kafka.files]]
 path = "UpdateRaftVoterResponse.json"
 sha256 = "eee0ca272b4853f79e047cd681fafeab6ee90eed6f43f2434c570b799bb4855e"
-status = "pending"
+status = "enabled"
 
 [[kafka.files]]
 path = "VoteRequest.json"
 sha256 = "aac8735bbc8f06d915dcb5659a18f75ce966f70852644b320e8ff1dd97fee9be"
-status = "pending"
+status = "enabled"
 
 [[kafka.files]]
 path = "VoteResponse.json"
 sha256 = "3dbf931851152b179b4e96c59eb4300ae383b6bb311279a8c48af69b730ee373"
-status = "pending"
+status = "enabled"
 
 [[kafka.files]]
 path = "VotersRecord.json"

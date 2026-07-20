@@ -11,6 +11,25 @@ pub(crate) fn presence_condition(field: &Field, message: &Message) -> Option<Str
     }
 }
 
+/// The presence gate a known tagged field needs inside its section.
+///
+/// A tagged field is only ever read or written where the tagged-field section
+/// exists at all, so the universe here is the flexible window rather than every
+/// supported version. `ApiVersionsResponse` declares all four of its tags across
+/// exactly its flexible window, which needs no gate; `FetchRequest.ReplicaState`
+/// arrives at v15 in a message flexible from v12, which does.
+pub(crate) fn tagged_presence_condition(field: &Field, message: &Message) -> Option<String> {
+    let present = field.versions.intersection(&message.valid_versions);
+    let flexible = message
+        .effective_flexible_versions()
+        .intersection(&message.valid_versions);
+    if flexible.is_subset_of(&present) {
+        None
+    } else {
+        Some(render_condition(&present, message))
+    }
+}
+
 /// The predicate that is true exactly where the field is absent.
 ///
 /// Built from the version bounds rather than by wrapping `presence_condition`

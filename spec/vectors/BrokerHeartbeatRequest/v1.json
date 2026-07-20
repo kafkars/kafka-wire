@@ -1,0 +1,44 @@
+{
+  "schema": 1,
+  "vectors": [
+    {
+      "name": "synthesized_defaults_v1",
+      "why": "Every field this version declares, at its protocol default. Synthesized so the message is held to Apache Kafka's bytes at all; hand-written cases carry the interesting shapes.",
+      "message": "BrokerHeartbeatRequest",
+      "api_key": 63,
+      "direction": "request",
+      "version": 1,
+      "flexible": true,
+      "json_value": {
+        "brokerEpoch": -1,
+        "brokerId": 0,
+        "currentMetadataOffset": 0,
+        "offlineLogDirs": [],
+        "wantFence": false,
+        "wantShutDown": false
+      },
+      "hex": "00000000ffffffffffffffff0000000000000000000000"
+    },
+    {
+      "name": "an_array_tag_carries_its_elements",
+      "why": "`OfflineLogDirs` is tag 0, an array of uuid. Its payload is a whole compact array — length prefix and elements — inside one tagged entry, so the entry's declared size covers all of it.",
+      "message": "BrokerHeartbeatRequest",
+      "api_key": 63,
+      "direction": "request",
+      "version": 1,
+      "flexible": true,
+      "json_value": {
+        "brokerEpoch": -1,
+        "brokerId": 1,
+        "currentMetadataOffset": 90,
+        "offlineLogDirs": [
+          "MkU3OEVGRjRDMTk0M0Q2OA",
+          "AAAAAAAAAAAAAAAAAAAAAQ"
+        ],
+        "wantFence": false,
+        "wantShutDown": false
+      },
+      "hex": "00000001ffffffffffffffff000000000000005a0000010021033245373845464634433139343344363800000000000000000000000000000001"
+    }
+  ]
+}

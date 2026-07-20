@@ -53,13 +53,7 @@ fn validate_fields(
                 "the initial backend requires one bounded field-presence interval",
             );
         }
-        if field.tag.is_some() || !field.tagged_versions.is_empty() {
-            return unsupported(
-                message,
-                field.name.protocol(),
-                "known tagged fields are not implemented yet",
-            );
-        }
+        validate_tag(field, message, &present)?;
         let nullable = field
             .nullable_versions
             .intersection(&message.valid_versions);
@@ -106,6 +100,56 @@ fn validate_fields(
         }
 
         validate_fields(&field.fields, message)?;
+    }
+    Ok(())
+}
+
+/// Checks the three things the tagged-field emitter assumes about a known tag.
+///
+/// Each one is silent if it is wrong. The emitter reads a tag's presence window
+/// to decide its version gate, and the codec picks compact or legacy from that
+/// same window — so a tag whose windows disagree with the section it travels in
+/// would encode plausible bytes in the wrong format rather than fail.
+fn validate_tag(
+    field: &kafka_wire_schema::Field,
+    message: &Message,
+    present: &kafka_wire_schema::VersionSet,
+) -> Result<(), GenerationError> {
+    // Upstream spells one construct with two keys, and the emitter keys on the
+    // number. A field carrying only `taggedVersions` has no slot to write to.
+    let Some(_) = field.tag else {
+        if field.tagged_versions.is_empty() {
+            return Ok(());
+        }
+        return unsupported(
+            message,
+            field.name.protocol(),
+            "the field declares taggedVersions without a tag number",
+        );
+    };
+
+    // The section exists only in flexible versions, which is what makes every
+    // tagged value compact. A tag reachable outside that window would be
+    // rendered by the same codec in the legacy form and read as garbage.
+    let flexible = message.effective_flexible_versions();
+    if !present.is_subset_of(&flexible) {
+        return unsupported(
+            message,
+            field.name.protocol(),
+            "a tagged field is present in versions the message is not flexible in",
+        );
+    }
+
+    // The generated gate is built from `versions`; if `taggedVersions` were
+    // narrower, the field would be written into the section in versions where
+    // upstream says it belongs inline.
+    let tagged = field.tagged_versions.intersection(&message.valid_versions);
+    if &tagged != present {
+        return unsupported(
+            message,
+            field.name.protocol(),
+            "a tagged field is tagged in only some of the versions it appears in",
+        );
     }
     Ok(())
 }

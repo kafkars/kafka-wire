@@ -1,0 +1,43 @@
+{
+  "schema": 1,
+  "vectors": [
+    {
+      "name": "synthesized_defaults_v6",
+      "why": "Every field this version declares, at its protocol default. Synthesized so the message is held to Apache Kafka's bytes at all; hand-written cases carry the interesting shapes.",
+      "message": "CreateTopicsResponse",
+      "api_key": 19,
+      "direction": "response",
+      "version": 6,
+      "flexible": true,
+      "json_value": {
+        "throttleTimeMs": 0,
+        "topics": []
+      },
+      "hex": "000000000100"
+    },
+    {
+      "name": "a_tag_on_a_nested_struct_carries_a_value",
+      "why": "`TopicConfigErrorCode` is tag 0 of a topic result, not of the response. It proves a struct nested in an array emits a tagged section of its own.",
+      "message": "CreateTopicsResponse",
+      "api_key": 19,
+      "direction": "response",
+      "version": 6,
+      "flexible": true,
+      "json_value": {
+        "throttleTimeMs": 0,
+        "topics": [
+          {
+            "configs": [],
+            "errorCode": 0,
+            "errorMessage": null,
+            "name": "orders",
+            "numPartitions": 3,
+            "replicationFactor": 2,
+            "topicConfigErrorCode": 41
+          }
+        ]
+      },
+      "hex": "0000000002076f726465727300000000000003000201010002002900"
+    }
+  ]
+}

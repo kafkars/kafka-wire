@@ -1,0 +1,118 @@
+{
+  "schema": 1,
+  "message": "BrokerHeartbeatRequest",
+  "api_key": 63,
+  "direction": "request",
+  "valid_versions": [
+    0,
+    1,
+    2
+  ],
+  "flexible_versions": [
+    0,
+    1,
+    2
+  ],
+  "source": "BrokerHeartbeatRequest.json",
+  "cases": [
+    {
+      "name": "synthesized_defaults_v0",
+      "why": "Every field this version declares, at its protocol default. Synthesized so the message is held to Apache Kafka's bytes at all; hand-written cases carry the interesting shapes.",
+      "versions": [
+        0
+      ],
+      "json_value": {
+        "brokerId": 0,
+        "brokerEpoch": -1,
+        "currentMetadataOffset": 0,
+        "wantFence": false,
+        "wantShutDown": false
+      }
+    },
+    {
+      "name": "synthesized_defaults_v1",
+      "why": "Every field this version declares, at its protocol default. Synthesized so the message is held to Apache Kafka's bytes at all; hand-written cases carry the interesting shapes.",
+      "versions": [
+        1
+      ],
+      "json_value": {
+        "brokerId": 0,
+        "brokerEpoch": -1,
+        "currentMetadataOffset": 0,
+        "wantFence": false,
+        "wantShutDown": false,
+        "offlineLogDirs": []
+      }
+    },
+    {
+      "name": "synthesized_defaults_v2",
+      "why": "Every field this version declares, at its protocol default. Synthesized so the message is held to Apache Kafka's bytes at all; hand-written cases carry the interesting shapes.",
+      "versions": [
+        2
+      ],
+      "json_value": {
+        "brokerId": 0,
+        "brokerEpoch": -1,
+        "currentMetadataOffset": 0,
+        "wantFence": false,
+        "wantShutDown": false,
+        "offlineLogDirs": [],
+        "cordonedLogDirs": null
+      }
+    },
+    {
+      "name": "an_array_tag_carries_its_elements",
+      "why": "`OfflineLogDirs` is tag 0, an array of uuid. Its payload is a whole compact array \u2014 length prefix and elements \u2014 inside one tagged entry, so the entry's declared size covers all of it.",
+      "versions": [
+        1
+      ],
+      "json_value": {
+        "brokerId": 1,
+        "brokerEpoch": -1,
+        "currentMetadataOffset": 90,
+        "wantFence": false,
+        "wantShutDown": false,
+        "offlineLogDirs": [
+          "MkU3OEVGRjRDMTk0M0Q2OA",
+          "AAAAAAAAAAAAAAAAAAAAAQ"
+        ]
+      }
+    },
+    {
+      "name": "a_nullable_array_tag_present_beside_a_non_null_one",
+      "why": "`CordonedLogDirs` is tag 1, nullable with a null default, so it is absent when null and carries a compact nullable array length when present. Absent and empty are different bytes and must stay different.",
+      "versions": [
+        2
+      ],
+      "json_value": {
+        "brokerId": 1,
+        "brokerEpoch": -1,
+        "currentMetadataOffset": 90,
+        "wantFence": false,
+        "wantShutDown": false,
+        "offlineLogDirs": [
+          "MkU3OEVGRjRDMTk0M0Q2OA"
+        ],
+        "cordonedLogDirs": [
+          "AAAAAAAAAAAAAAAAAAAAAg"
+        ]
+      }
+    },
+    {
+      "name": "a_nullable_array_tag_that_is_empty_rather_than_null",
+      "why": "An empty array is not the default and is written; a null one is the default and is omitted. The synthesized case covers null, so this is the other side of that pair.",
+      "versions": [
+        2
+      ],
+      "json_value": {
+        "brokerId": 1,
+        "brokerEpoch": -1,
+        "currentMetadataOffset": 90,
+        "wantFence": false,
+        "wantShutDown": false,
+        "offlineLogDirs": [],
+        "cordonedLogDirs": []
+      }
+    }
+  ]
+}

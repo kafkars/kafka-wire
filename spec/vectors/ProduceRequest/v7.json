@@ -1,0 +1,21 @@
+{
+  "schema": 1,
+  "vectors": [
+    {
+      "name": "synthesized_defaults_v7",
+      "why": "Every field this version declares, at its protocol default. Synthesized so the message is held to Apache Kafka's bytes at all; hand-written cases carry the interesting shapes.",
+      "message": "ProduceRequest",
+      "api_key": 0,
+      "direction": "request",
+      "version": 7,
+      "flexible": false,
+      "json_value": {
+        "acks": 0,
+        "timeoutMs": 0,
+        "topicData": [],
+        "transactionalId": null
+      },
+      "hex": "ffff00000000000000000000"
+    }
+  ]
+}

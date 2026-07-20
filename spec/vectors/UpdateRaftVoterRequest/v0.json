@@ -1,0 +1,26 @@
+{
+  "schema": 1,
+  "vectors": [
+    {
+      "name": "synthesized_defaults_v0",
+      "why": "Every field this version declares, at its protocol default. Synthesized so the message is held to Apache Kafka's bytes at all; hand-written cases carry the interesting shapes.",
+      "message": "UpdateRaftVoterRequest",
+      "api_key": 82,
+      "direction": "request",
+      "version": 0,
+      "flexible": true,
+      "json_value": {
+        "clusterId": null,
+        "currentLeaderEpoch": 0,
+        "kRaftVersionFeature": {
+          "maxSupportedVersion": 0,
+          "minSupportedVersion": 0
+        },
+        "listeners": [],
+        "voterDirectoryId": "AAAAAAAAAAAAAAAAAAAAAA",
+        "voterId": 0
+      },
+      "hex": "0000000000000000000000000000000000000000000000000001000000000000"
+    }
+  ]
+}
