@@ -20,6 +20,31 @@ pub enum RecordError {
     #[error(transparent)]
     Encode(#[from] EncodeError),
 
+    /// A batch declared a negative byte length.
+    #[error("record batch declares negative length {length}")]
+    NegativeBatchLength {
+        /// Signed length read from the batch prefix.
+        length: i32,
+    },
+
+    /// A complete batch exceeded the caller's encoded-size budget.
+    #[error("record batch length {length} exceeds configured limit {limit}")]
+    BatchLimitExceeded {
+        /// Complete encoded batch length.
+        length: usize,
+        /// Configured maximum.
+        limit: usize,
+    },
+
+    /// A compressed records payload expanded past the caller's budget.
+    #[error("{codec} records payload exceeds decompressed-byte limit {limit}")]
+    DecompressionLimitExceeded {
+        /// Codec whose output crossed the limit.
+        codec: &'static str,
+        /// Configured maximum expanded length.
+        limit: usize,
+    },
+
     /// The batch declared a magic byte this crate does not implement.
     ///
     /// v0 and v1 are the pre-KIP-98 message sets, which have a different frame
@@ -67,6 +92,13 @@ pub enum RecordError {
         actual: usize,
     },
 
+    /// The batch header declared a negative record count.
+    #[error("record batch declares negative record count {count}")]
+    NegativeRecordCount {
+        /// Signed count read from the batch header.
+        count: i32,
+    },
+
     /// A record's length prefix disagreed with what its fields consumed.
     #[error("record declares {declared} bytes but its fields used {consumed}")]
     RecordSizeMismatch {
@@ -75,6 +107,17 @@ pub enum RecordError {
         /// Bytes its fields actually used.
         consumed: usize,
     },
+
+    /// A nullable record field used a sentinel below `-1`.
+    #[error("record field length {length} is below the null sentinel -1")]
+    InvalidRecordFieldLength {
+        /// Signed zigzag-varint length read from the record.
+        length: i32,
+    },
+
+    /// A record header used the null sentinel for its required key.
+    #[error("record header key is null; header keys must be present")]
+    NullHeaderKey,
 
     /// A codec rejected the payload it was handed.
     ///

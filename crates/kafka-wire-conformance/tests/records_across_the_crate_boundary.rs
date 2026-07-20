@@ -29,7 +29,7 @@ use kafka_wire::{
 };
 use kafka_wire_conformance::from_hex;
 use kafka_wire_core::{ApiVersion, DecodeLimits, KafkaDecode, KafkaEncode, StrBytes};
-use kafka_wire_records::RecordBatch;
+use kafka_wire_records::{RecordBatch, RecordDecodeLimits, RecordError};
 
 mod support;
 
@@ -43,12 +43,22 @@ const PRODUCE_VERSIONS: [i16; 3] = [3, 9, 13];
 /// The same three questions for `Fetch`, whose flexible window opens at 12.
 const FETCH_VERSIONS: [i16; 3] = [4, 12, 18];
 
+fn decode_batch(mut bytes: Bytes) -> Result<RecordBatch, RecordError> {
+    let batch = RecordBatch::decode(&mut bytes, RecordDecodeLimits::default())?;
+    assert!(
+        bytes.is_empty(),
+        "a one-batch oracle vector carried {} trailing byte(s)",
+        bytes.len()
+    );
+    Ok(batch)
+}
+
 #[test]
 fn a_produce_request_delivers_every_broker_authored_batch_intact() {
     let mut checked = 0;
     for batch in support::batches() {
         let authored = Bytes::from(from_hex(&batch.hex).unwrap());
-        let expected = RecordBatch::decode(&authored)
+        let expected = decode_batch(authored.clone())
             .unwrap_or_else(|error| panic!("{}: {error}", batch.name));
 
         for version in PRODUCE_VERSIONS {
@@ -64,7 +74,7 @@ fn a_produce_request_delivers_every_broker_authored_batch_intact() {
                 batch.name, batch.why
             );
 
-            let parsed = RecordBatch::decode(&recovered).unwrap_or_else(|error| {
+            let parsed = decode_batch(recovered.clone()).unwrap_or_else(|error| {
                 panic!(
                     "{} v{version}: the recovered blob is no longer a batch: {error}",
                     batch.name
@@ -89,7 +99,7 @@ fn a_produce_request_delivers_every_broker_authored_batch_intact() {
 fn a_fetch_response_delivers_every_broker_authored_batch_intact() {
     for batch in support::batches() {
         let authored = Bytes::from(from_hex(&batch.hex).unwrap());
-        let expected = RecordBatch::decode(&authored)
+        let expected = decode_batch(authored.clone())
             .unwrap_or_else(|error| panic!("{}: {error}", batch.name));
 
         for version in FETCH_VERSIONS {
@@ -105,7 +115,7 @@ fn a_fetch_response_delivers_every_broker_authored_batch_intact() {
                 batch.name, batch.why
             );
 
-            let parsed = RecordBatch::decode(&recovered).unwrap_or_else(|error| {
+            let parsed = decode_batch(recovered.clone()).unwrap_or_else(|error| {
                 panic!(
                     "{} v{version}: the recovered blob is no longer a batch: {error}",
                     batch.name
@@ -142,7 +152,7 @@ fn a_batch_that_lost_a_byte_still_crosses_the_field_and_fails_to_parse() {
         "the message round trip must stay indifferent to what the blob contains"
     );
     assert!(
-        RecordBatch::decode(&recovered).is_err(),
+        decode_batch(recovered).is_err(),
         "a batch missing its last byte parsed anyway, so the parse proves nothing"
     );
 }

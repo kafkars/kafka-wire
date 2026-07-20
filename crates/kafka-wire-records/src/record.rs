@@ -7,7 +7,7 @@
 //! value is a tombstone — so nothing here may collapse them.
 
 use bytes::{Bytes, BytesMut};
-use kafka_wire_core::{Decoder, EncodeError, EncodeTarget, Encoder};
+use kafka_wire_core::{DecodeLimits, Decoder, EncodeError, EncodeTarget, Encoder};
 
 use crate::error::RecordError;
 
@@ -119,7 +119,7 @@ impl Record {
 
 impl RecordHeader {
     fn decode(decoder: &mut Decoder) -> Result<Self, RecordError> {
-        let key = read_varint_bytes(decoder)?.unwrap_or_default();
+        let key = read_varint_bytes(decoder)?.ok_or(RecordError::NullHeaderKey)?;
         let key = String::from_utf8(key.to_vec()).map_err(|error| {
             RecordError::Wire(kafka_wire_core::DecodeError::InvalidUtf8 {
                 offset: decoder.offset(),
@@ -141,8 +141,11 @@ impl RecordHeader {
 /// Reads a zigzag-varint length-prefixed byte string, where `-1` is null.
 fn read_varint_bytes(decoder: &mut Decoder) -> Result<Option<Bytes>, RecordError> {
     let length = decoder.read_varint()?;
-    if length < 0 {
+    if length == -1 {
         return Ok(None);
+    }
+    if length < -1 {
+        return Err(RecordError::InvalidRecordFieldLength { length });
     }
     let length = usize::try_from(length).unwrap_or(usize::MAX);
     Ok(Some(decoder.take_bytes(length)?))
@@ -178,8 +181,11 @@ pub(crate) fn encode_all(records: &[Record], buffer: &mut BytesMut) -> Result<()
 
 /// Reads exactly `count` records, refusing a payload that holds a different
 /// number than the batch header promised.
-pub(crate) fn decode_all(payload: Bytes, count: usize) -> Result<Vec<Record>, RecordError> {
-    let limits = kafka_wire_core::DecodeLimits::default();
+pub(crate) fn decode_all(
+    payload: Bytes,
+    count: usize,
+    limits: DecodeLimits,
+) -> Result<Vec<Record>, RecordError> {
     let mut decoder = Decoder::new(payload, limits);
     let mut records = Vec::with_capacity(count.min(decoder.remaining()));
     for _ in 0..count {

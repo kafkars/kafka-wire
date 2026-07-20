@@ -20,7 +20,7 @@ use std::fmt::Write as _;
 use std::path::{Path, PathBuf};
 
 use bytes::Bytes;
-use kafka_wire_records::{Compression, RecordBatch};
+use kafka_wire_records::{Compression, RecordBatch, RecordDecodeLimits};
 use serde::{Deserialize, Serialize};
 
 use super::{Corpus, SCHEMA, read};
@@ -131,9 +131,16 @@ pub(super) fn check(workspace: &Path, corpus: &Corpus) -> Result<usize, String> 
 pub(super) fn refresh(workspace: &Path, corpus: &Corpus) -> Result<usize, String> {
     let mut asked: Vec<(Question, String)> = Vec::new();
     for vector in &corpus.vectors {
-        let authored = from_hex(&vector.hex, &vector.name)?;
-        let batch = RecordBatch::decode(&authored)
+        let mut authored = from_hex(&vector.hex, &vector.name)?;
+        let batch = RecordBatch::decode(&mut authored, RecordDecodeLimits::default())
             .map_err(|error| format!("{}: decode: {error}", vector.name))?;
+        if !authored.is_empty() {
+            return Err(format!(
+                "{}: record oracle vector carries {} trailing byte(s) after its batch",
+                vector.name,
+                authored.len()
+            ));
+        }
         if batch.compression == Compression::None {
             continue;
         }

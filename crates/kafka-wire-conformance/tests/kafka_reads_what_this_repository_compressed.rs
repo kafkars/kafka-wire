@@ -23,11 +23,21 @@
 
 use bytes::Bytes;
 use kafka_wire_conformance::{from_hex, to_hex};
-use kafka_wire_records::{Compression, Record, RecordBatch};
+use kafka_wire_records::{Compression, Record, RecordBatch, RecordDecodeLimits, RecordError};
 
 mod support;
 
 use support::{ReadBatch, ReadRecord};
+
+fn decode_batch(mut bytes: Bytes) -> Result<RecordBatch, RecordError> {
+    let batch = RecordBatch::decode(&mut bytes, RecordDecodeLimits::default())?;
+    assert!(
+        bytes.is_empty(),
+        "a one-batch oracle vector carried {} trailing byte(s)",
+        bytes.len()
+    );
+    Ok(batch)
+}
 
 #[test]
 fn every_codec_this_repository_writes_is_read_back_by_kafka() {
@@ -39,7 +49,7 @@ fn every_codec_this_repository_writes_is_read_back_by_kafka() {
             .iter()
             .find(|batch| batch.name == entry.name)
             .unwrap_or_else(|| panic!("{}: vectors.json carries no such batch", entry.name));
-        let authored = RecordBatch::decode(&Bytes::from(from_hex(&vector.hex).unwrap()))
+        let authored = decode_batch(Bytes::from(from_hex(&vector.hex).unwrap()))
             .unwrap_or_else(|error| panic!("{}: {error}", entry.name));
 
         // Kafka's answer is about specific bytes. If this build no longer writes
@@ -84,7 +94,7 @@ fn every_compressed_batch_in_the_corpus_is_put_to_kafka() {
     let mut missing = Vec::new();
 
     for batch in support::batches() {
-        let decoded = RecordBatch::decode(&Bytes::from(from_hex(&batch.hex).unwrap()))
+        let decoded = decode_batch(Bytes::from(from_hex(&batch.hex).unwrap()))
             .unwrap_or_else(|error| panic!("{}: {error}", batch.name));
         if decoded.compression == Compression::None {
             continue;
@@ -117,7 +127,7 @@ fn a_payload_kafka_could_not_read_would_be_visible_here() {
     bytes[last] ^= 0xff;
 
     assert!(
-        RecordBatch::decode(&Bytes::from(bytes)).is_err(),
+        decode_batch(Bytes::from(bytes)).is_err(),
         "a compressed batch with a mangled payload decoded anyway, so the transcript \
          comparison is not exercising decompression at all"
     );

@@ -93,41 +93,26 @@ impl VersionSet {
     /// codec for the versions where it is *not* nullable has to be chosen over
     /// exactly the remainder.
     ///
-    /// Computed by walking the versions rather than by interval arithmetic. An
-    /// open-ended range has no last version to subtract from, so the walk is
-    /// bounded by whichever endpoint the two sets actually name; a difference
-    /// against an open range beyond that point is empty by construction.
+    /// Computed as interval subtraction so open-ended operands retain their
+    /// unbounded tail when the right-hand side does not cover it.
     #[must_use]
     pub fn difference(&self, other: &Self) -> Self {
-        let Some(highest) = self.highest() else {
-            return Self::none();
-        };
-        let mut ranges: Vec<VersionRange> = Vec::new();
-        for version in self.lowest().unwrap_or(0)..=highest {
-            if !self.contains(version) || other.contains(version) {
-                continue;
+        let mut difference = Vec::new();
+        for left in &self.ranges {
+            let mut fragments = vec![*left];
+            for right in &other.ranges {
+                let mut next = Vec::new();
+                for fragment in fragments {
+                    next.extend(subtract_range(fragment, *right));
+                }
+                fragments = next;
+                if fragments.is_empty() {
+                    break;
+                }
             }
-            match ranges.last_mut() {
-                Some(last) if last.end == Some(version - 1) => last.end = Some(version),
-                _ => ranges.push(VersionRange::bounded(version, version)),
-            }
+            difference.extend(fragments);
         }
-        Self::normalized(ranges)
-    }
-
-    /// The first version this set names, if any.
-    fn lowest(&self) -> Option<i16> {
-        self.ranges.first().map(|range| range.start)
-    }
-
-    /// The last version this set names, treating an open range as unbounded.
-    ///
-    /// `None` for an empty set and for one that runs to infinity, where a
-    /// difference cannot be enumerated and no caller here produces one: every
-    /// window this is asked about has already been intersected with a message's
-    /// bounded `validVersions`.
-    fn highest(&self) -> Option<i16> {
-        self.ranges.last().and_then(|range| range.end)
+        Self::normalized(difference)
     }
 
     /// Returns whether every represented version is contained by `other`.
@@ -257,6 +242,30 @@ fn intersect(left: VersionRange, right: VersionRange) -> Option<VersionRange> {
     } else {
         Some(VersionRange { start, end })
     }
+}
+
+fn subtract_range(left: VersionRange, right: VersionRange) -> Vec<VersionRange> {
+    let Some(overlap) = intersect(left, right) else {
+        return vec![left];
+    };
+
+    let mut fragments = Vec::with_capacity(2);
+    if overlap.start > left.start {
+        fragments.push(VersionRange::bounded(left.start, overlap.start - 1));
+    }
+    if let Some(overlap_end) = overlap.end {
+        let leaves_right = match left.end {
+            Some(left_end) => overlap_end < left_end,
+            None => true,
+        };
+        if leaves_right && overlap_end < i16::MAX {
+            fragments.push(VersionRange {
+                start: overlap_end + 1,
+                end: left.end,
+            });
+        }
+    }
+    fragments
 }
 
 fn min_end(left: Option<i16>, right: Option<i16>) -> Option<i16> {

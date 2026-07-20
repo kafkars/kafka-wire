@@ -14,11 +14,21 @@
 use bytes::{Bytes, BytesMut};
 use kafka_wire_conformance::{from_hex, to_hex};
 use kafka_wire_core::Encoder;
-use kafka_wire_records::{Compression, RecordBatch, RecordError};
+use kafka_wire_records::{Compression, RecordBatch, RecordDecodeLimits, RecordError};
 
 mod support;
 
 use support::batches as corpus;
+
+fn decode_batch(mut bytes: Bytes) -> Result<RecordBatch, RecordError> {
+    let batch = RecordBatch::decode(&mut bytes, RecordDecodeLimits::default())?;
+    assert!(
+        bytes.is_empty(),
+        "a one-batch oracle vector carried {} trailing byte(s)",
+        bytes.len()
+    );
+    Ok(batch)
+}
 
 #[test]
 fn every_uncompressed_batch_decodes_and_re_encodes_to_the_same_bytes() {
@@ -27,7 +37,7 @@ fn every_uncompressed_batch_decodes_and_re_encodes_to_the_same_bytes() {
 
     for vector in corpus() {
         let expected = from_hex(&vector.hex).expect("hex");
-        let batch = match RecordBatch::decode(&Bytes::from(expected.clone())) {
+        let batch = match decode_batch(Bytes::from(expected.clone())) {
             Ok(batch) => batch,
             Err(error) => {
                 failures.push(format!("{}: decode failed: {error}", vector.name));
@@ -80,8 +90,8 @@ fn every_codec_decompresses_to_the_records_kafka_compressed() {
         .into_iter()
         .map(|vector| {
             let bytes = Bytes::from(from_hex(&vector.hex).expect("hex"));
-            let batch = RecordBatch::decode(&bytes)
-                .unwrap_or_else(|error| panic!("{}: {error}", vector.name));
+            let batch =
+                decode_batch(bytes).unwrap_or_else(|error| panic!("{}: {error}", vector.name));
             (vector.name, batch)
         })
         .collect();
@@ -126,14 +136,14 @@ fn a_compressed_batch_round_trips_its_records_though_not_its_bytes() {
             .into_iter()
             .find(|vector| vector.name == name)
             .unwrap_or_else(|| panic!("the corpus must carry {name}"));
-        let original = RecordBatch::decode(&Bytes::from(from_hex(&vector.hex).expect("hex")))
+        let original = decode_batch(Bytes::from(from_hex(&vector.hex).expect("hex")))
             .unwrap_or_else(|error| panic!("{name}: {error}"));
 
         let mut buffer = BytesMut::new();
         original
             .encode(&mut Encoder::new(&mut buffer))
             .unwrap_or_else(|error| panic!("{name}: re-encode: {error}"));
-        let reread = RecordBatch::decode(&buffer.freeze())
+        let reread = decode_batch(buffer.freeze())
             .unwrap_or_else(|error| panic!("{name}: re-decode: {error}"));
 
         assert_eq!(
@@ -155,7 +165,7 @@ fn a_corrupted_batch_is_rejected_by_its_crc() {
     let last = bytes.len() - 1;
     bytes[last] ^= 0xff;
 
-    let error = RecordBatch::decode(&Bytes::from(bytes)).unwrap_err();
+    let error = decode_batch(Bytes::from(bytes)).unwrap_err();
     assert!(
         matches!(error, RecordError::CorruptBatch { .. }),
         "a flipped payload byte must fail the CRC: {error}"
@@ -169,7 +179,7 @@ fn the_uncompressed_vectors_carry_the_shapes_that_discriminate() {
     let batches: Vec<_> = corpus()
         .into_iter()
         .filter_map(|vector| {
-            RecordBatch::decode(&Bytes::from(from_hex(&vector.hex).expect("hex")))
+            decode_batch(Bytes::from(from_hex(&vector.hex).expect("hex")))
                 .ok()
                 .map(|batch| (vector.name, batch))
         })

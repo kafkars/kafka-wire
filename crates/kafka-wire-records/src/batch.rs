@@ -13,11 +13,12 @@
 //! * the CRC is CRC32C (Castagnoli, the `iSCSI` polynomial) over everything
 //!   *after* the CRC field, not over the batch and not over the records alone.
 
-use bytes::{Bytes, BytesMut};
+use bytes::{Buf as _, Bytes, BytesMut};
 use kafka_wire_core::{Decoder, EncodeError, EncodeTarget, Encoder};
 
 use crate::attributes::{Attributes, Compression, TimestampType};
 use crate::error::RecordError;
+use crate::limits::RecordDecodeLimits;
 use crate::record::{self, Record};
 
 /// The only magic byte this crate implements.
@@ -64,17 +65,23 @@ pub struct RecordBatch {
 }
 
 impl RecordBatch {
-    /// Reads one batch, verifying its CRC before interpreting anything after it.
+    /// Reads and removes one batch from the front of `bytes`.
     ///
     /// The order matters. A CRC checked after parsing would let a corrupt length
     /// drive an allocation or a nonsense field reach a caller before anything
     /// noticed, so the checksum runs against the raw bytes first and the fields
     /// are only read once they are known to be the bytes Kafka wrote.
-    pub fn decode(bytes: &Bytes) -> Result<Self, RecordError> {
-        let mut decoder = Decoder::new(bytes.clone(), kafka_wire_core::DecodeLimits::default());
+    ///
+    /// Bytes after the declared batch remain in `bytes`, ready for the next
+    /// call. A failure leaves the cursor unchanged.
+    pub fn decode(bytes: &mut Bytes, limits: RecordDecodeLimits) -> Result<Self, RecordError> {
+        let mut decoder = Decoder::new(bytes.clone(), limits.wire);
         let base_offset = decoder.read_i64()?;
         let batch_length = decoder.read_i32()?;
-        let declared = usize::try_from(batch_length).unwrap_or(usize::MAX);
+        let declared =
+            usize::try_from(batch_length).map_err(|_| RecordError::NegativeBatchLength {
+                length: batch_length,
+            })?;
         if declared < HEADER_AFTER_LENGTH || declared > decoder.remaining() {
             return Err(RecordError::TruncatedBatch {
                 declared,
@@ -85,6 +92,12 @@ impl RecordBatch {
         // blob, not to this one. The length is stated from just after itself,
         // so the batch ends 12 bytes (base offset plus the length) further on.
         let end = 12 + declared;
+        if end > limits.max_batch_bytes {
+            return Err(RecordError::BatchLimitExceeded {
+                length: end,
+                limit: limits.max_batch_bytes,
+            });
+        }
 
         let partition_leader_epoch = decoder.read_i32()?;
         let magic = decoder.read_i8()?;
@@ -107,26 +120,34 @@ impl RecordBatch {
         let producer_id = decoder.read_i64()?;
         let producer_epoch = decoder.read_i16()?;
         let base_sequence = decoder.read_i32()?;
-        let records_count = decoder.read_i32()?;
-        let records_count = usize::try_from(records_count).unwrap_or(0);
+        let records_count_wire = decoder.read_i32()?;
+        let records_count =
+            usize::try_from(records_count_wire).map_err(|_| RecordError::NegativeRecordCount {
+                count: records_count_wire,
+            })?;
 
         let payload = decoder.take_bytes(end - (CRC_COVERAGE_START + 40))?;
-        let payload = attributes.compression.decompress(&payload)?;
-        let records = record::decode_all(Bytes::from(payload), records_count)?;
+        let payload = attributes
+            .compression
+            .decompress(&payload, limits.max_decompressed_records_bytes)?;
+        let records = record::decode_all(Bytes::from(payload), records_count, limits.wire)?;
 
         // Kafka derives this from the records rather than trusting it, and so
         // must anything that re-encodes the batch. Checking it here means a
         // header that disagrees with its own payload cannot round-trip
         // undetected.
-        let expected_last = i32::try_from(records.len().saturating_sub(1)).unwrap_or(0);
+        let expected_last = records_count_wire - 1;
         if last_offset_delta != expected_last {
             return Err(RecordError::RecordCountMismatch {
-                declared: usize::try_from(last_offset_delta).unwrap_or(0) + 1,
+                declared: last_offset_delta
+                    .checked_add(1)
+                    .and_then(|count| usize::try_from(count).ok())
+                    .unwrap_or(0),
                 actual: records.len(),
             });
         }
 
-        Ok(Self {
+        let batch = Self {
             base_offset,
             partition_leader_epoch,
             compression: attributes.compression,
@@ -140,7 +161,9 @@ impl RecordBatch {
             producer_epoch,
             base_sequence,
             records,
-        })
+        };
+        bytes.advance(end);
+        Ok(batch)
     }
 
     /// Writes this batch into bytes of its own, mirroring [`Self::decode`].
@@ -179,19 +202,19 @@ impl RecordBatch {
             }
             .encode(),
         )?;
-        inner.write_i32(i32::try_from(self.records.len().saturating_sub(1)).unwrap_or(0))?;
+        let record_count =
+            i32::try_from(self.records.len()).map_err(|_| EncodeError::LengthOverflow {
+                kind: "record count",
+                length: self.records.len(),
+                maximum: usize::try_from(i32::MAX).unwrap_or(usize::MAX),
+            })?;
+        inner.write_i32(record_count - 1)?;
         inner.write_i64(self.base_timestamp)?;
         inner.write_i64(self.max_timestamp)?;
         inner.write_i64(self.producer_id)?;
         inner.write_i16(self.producer_epoch)?;
         inner.write_i32(self.base_sequence)?;
-        inner.write_i32(i32::try_from(self.records.len()).map_err(|_| {
-            EncodeError::LengthOverflow {
-                kind: "record count",
-                length: self.records.len(),
-                maximum: usize::try_from(i32::MAX).unwrap_or(usize::MAX),
-            }
-        })?)?;
+        inner.write_i32(record_count)?;
         inner.write_raw_slice(&payload)?;
 
         // partition_leader_epoch + magic + crc + everything the CRC covers.

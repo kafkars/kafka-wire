@@ -16,10 +16,14 @@
 mod attributes;
 mod batch;
 mod compression;
+#[cfg(test)]
+mod compression_test;
 mod error;
+mod limits;
 mod record;
 
 pub use attributes::{Compression, TimestampType};
 pub use batch::{MAGIC_V2, RecordBatch};
 pub use error::RecordError;
+pub use limits::RecordDecodeLimits;
 pub use record::{Record, RecordHeader};
