@@ -42,11 +42,28 @@ pub(crate) fn render_module_file(
     }
     rust.blank();
 
-    // Each message contributes three names: its descriptor, its type, and the
-    // module the module-scoped naming rule scopes its nested structs to. The module has to be
-    // re-exported, not merely emitted — a nested struct is reachable only
-    // through it now, and a `pub mod` nothing re-exports is both unreachable to
-    // a caller and an `unreachable_pub` warning on checked-in output.
+    for (module, items) in module_exports(groups, unkeyed) {
+        // Brace collapsing and line breaking are rustfmt's, not the emitter's.
+        rust.line(format!("pub use {module}::{{{}}};", items.join(", ")));
+    }
+    rust.finish()
+}
+
+/// Every name this facade re-exports, grouped by the module that declares it.
+///
+/// Shared with the crate-root export list rather than recomputed there. The two
+/// files must name exactly the same set — the root list is what makes those
+/// names public — and a second traversal is a second chance to disagree.
+///
+/// Each message contributes three names: its descriptor, its type, and the
+/// module the module-scoped naming rule scopes its nested structs to. The module has to be
+/// re-exported, not merely emitted — a nested struct is reachable only through
+/// it now, and a `pub mod` nothing re-exports is both unreachable to a caller
+/// and an `unreachable_pub` warning on checked-in output.
+pub(crate) fn module_exports(
+    groups: &[ApiGroup],
+    unkeyed: &[MessageSource],
+) -> Vec<(String, Vec<String>)> {
     let mut exports = groups
         .iter()
         .map(|group| {
@@ -91,9 +108,5 @@ pub(crate) fn render_module_file(
         exports.push(("framing".to_owned(), items));
     }
     exports.sort_unstable_by(|left, right| left.0.cmp(&right.0));
-    for (module, items) in exports {
-        // Brace collapsing and line breaking are rustfmt's, not the emitter's.
-        rust.line(format!("pub use {module}::{{{}}};", items.join(", ")));
-    }
-    rust.finish()
+    exports
 }

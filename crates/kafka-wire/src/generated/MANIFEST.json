@@ -194,6 +194,10 @@
       "sha256": "5da6d69f67b611cd9ca7ba1e76f02602d5b017af70215237476b9124cf4df546"
     },
     {
+      "path": "exports.rsi",
+      "sha256": "3836579b83234a1b70c040d36b3fe9d38bba1236842c9312ee22495d746ef3b3"
+    },
+    {
       "path": "fetch.rs",
       "sha256": "9cc7d1d56942245d5100e624fd25653e3186d25b4006753799638f9b0c853c61"
     },

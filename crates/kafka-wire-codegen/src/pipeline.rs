@@ -11,7 +11,8 @@ use crate::{
     output::apply_tree,
     overrides::HeaderOverrides,
     render::{
-        render_api, render_header_version, render_module_file, render_registry, render_unkeyed,
+        render_api, render_exports_file, render_header_version, render_module_file,
+        render_registry, render_unkeyed,
     },
     source::load_sources,
 };
@@ -39,6 +40,12 @@ pub fn generate(config: &GeneratorConfig) -> Result<GenerationReport, Generation
     rendered.insert(
         "mod.rs".to_owned(),
         render_module_file(&groups, &grouped.unkeyed, &lock.kafka.commit),
+    );
+    // The crate root's own export list. `lib.rs` includes it, which is what lets
+    // the flat facade name every generated item without a wildcard re-export.
+    rendered.insert(
+        "exports.rsi".to_owned(),
+        render_exports_file(&groups, &grouped.unkeyed, &lock.kafka.commit),
     );
     rendered.insert(
         "registry.rs".to_owned(),
