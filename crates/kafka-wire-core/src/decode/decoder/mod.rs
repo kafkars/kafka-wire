@@ -10,3 +10,4 @@ mod uuid;
 mod varint;
 
 pub use core::Decoder;
+pub use tagged::TagOutcome;

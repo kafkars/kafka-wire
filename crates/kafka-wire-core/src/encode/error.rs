@@ -5,7 +5,7 @@
 
 use thiserror::Error;
 
-use crate::{ApiVersion, VersionRange};
+use crate::{ApiVersion, TaggedFieldsError, VersionRange};
 
 /// Kafka wire encoding failure.
 #[non_exhaustive]
@@ -63,6 +63,14 @@ pub enum EncodeError {
         /// Requested version.
         version: ApiVersion,
     },
+
+    /// Known and retained tagged fields could not be merged into one section.
+    ///
+    /// Reached when a field this build knows carries the same tag number as an
+    /// unknown entry retained from a peer. Both claim the same slot in one
+    /// ascending run, and no ordering of the two is correct.
+    #[error("tagged-field section cannot be built: {0}")]
+    TaggedFieldsInvalid(#[from] TaggedFieldsError),
 
     /// The sizing and writing targets observed different byte counts.
     #[error("encoded length predicted {predicted} bytes but wrote {actual}")]

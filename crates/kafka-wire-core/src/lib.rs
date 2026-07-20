@@ -12,8 +12,10 @@ mod tagged;
 mod uuid;
 
 pub use api::{ApiKey, ApiVersion, VersionRange};
-pub use decode::{DecodeError, DecodeLimits, Decoder, KafkaDecode};
-pub use encode::{BufferTarget, EncodeError, EncodeTarget, Encoder, KafkaEncode, SizeTarget};
+pub use decode::{DecodeError, DecodeLimits, Decoder, KafkaDecode, TagOutcome};
+pub use encode::{
+    BufferTarget, EncodeError, EncodeTarget, Encoder, KafkaEncode, KnownTags, SizeTarget,
+};
 // Re-exported because `read_bytes` hands one out: a consumer of the generated
 // protocol must be able to name the type it receives without taking a direct
 // dependency on `bytes` and pinning a second version of it.

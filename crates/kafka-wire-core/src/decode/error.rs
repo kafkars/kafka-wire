@@ -120,6 +120,26 @@ pub enum DecodeError {
         offset: usize,
     },
 
+    /// A known tagged field's value did not use the size the peer declared.
+    ///
+    /// The size is the peer's statement about how long the entry is. A value
+    /// this build reads as shorter means the two disagree about the tag's
+    /// schema, which is reported rather than absorbed: skipping the remainder
+    /// would decode a truncated value and call it complete.
+    #[error(
+        "tagged field {tag} declared {size} bytes but its value used {consumed} at byte {offset}"
+    )]
+    TaggedFieldSize {
+        /// Tag number of the entry.
+        tag: u32,
+        /// Size the peer declared.
+        size: usize,
+        /// Bytes the value actually read.
+        consumed: usize,
+        /// Byte offset of the size prefix.
+        offset: usize,
+    },
+
     /// Checked conversion or addition overflowed the host representation.
     #[error("{kind} length overflow at byte {offset}")]
     LengthOverflow {
