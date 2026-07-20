@@ -21,6 +21,33 @@
         "voterId": 0
       },
       "hex": "0000000000000000000000000000000000000000000000000001000000000000"
+    },
+    {
+      "name": "synthesized_populated_v0",
+      "why": "Every field this version declares, present and non-default: one element in every array, every nullable thing supplied. The defaults case leaves arrays empty, which hides every field of the struct the array would have held — a records field encoded with the wrong length prefix survived the whole corpus that way, because nothing ever reached the struct holding it.",
+      "message": "UpdateRaftVoterRequest",
+      "api_key": 82,
+      "direction": "request",
+      "version": 0,
+      "flexible": true,
+      "json_value": {
+        "clusterId": "v",
+        "currentLeaderEpoch": 1,
+        "kRaftVersionFeature": {
+          "maxSupportedVersion": 1,
+          "minSupportedVersion": 1
+        },
+        "listeners": [
+          {
+            "host": "v",
+            "name": "v",
+            "port": 1
+          }
+        ],
+        "voterDirectoryId": "MkU3OEVGRjRDMTk0M0Q2OA",
+        "voterId": 1
+      },
+      "hex": "02760000000100000001324537384546463443313934334436380202760276000100000100010000"
     }
   ]
 }
