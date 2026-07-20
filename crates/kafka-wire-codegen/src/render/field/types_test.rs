@@ -291,7 +291,7 @@ fn every_supported_default_emits_its_exact_initializer_and_comparison() {
             cell.situation
         );
         assert_eq!(
-            uses_rust_default(probe),
+            uses_rust_default(probe, &message),
             cell.derivable,
             "derive(Default) suitability for {}",
             cell.situation

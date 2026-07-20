@@ -80,6 +80,11 @@ impl KafkaEncode for DescribeDelegationTokenRequestDescribeDelegationTokenOwner 
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "DescribeDelegationTokenRequestDescribeDelegationTokenOwner",
+                version,
+            });
         }
 
         Ok(())
@@ -88,12 +93,21 @@ impl KafkaEncode for DescribeDelegationTokenRequestDescribeDelegationTokenOwner 
 
 /// Request body for the `DescribeDelegationToken` API.
 #[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct DescribeDelegationTokenRequest {
     /// Each owner that we want to describe delegation tokens for, or null to describe all tokens.
     pub owners: Option<Vec<DescribeDelegationTokenRequestDescribeDelegationTokenOwner>>,
     /// Unknown flexible-version tagged fields retained for forwarding.
     pub unknown_tagged_fields: TaggedFields,
+}
+
+impl Default for DescribeDelegationTokenRequest {
+    fn default() -> Self {
+        Self {
+            owners: Some(Vec::new()),
+            unknown_tagged_fields: TaggedFields::default(),
+        }
+    }
 }
 
 impl KafkaMessage for DescribeDelegationTokenRequest {
@@ -334,6 +348,11 @@ impl KafkaEncode for DescribeDelegationTokenResponseDescribedDelegationToken {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "DescribeDelegationTokenResponseDescribedDelegationToken",
+                version,
+            });
         }
 
         Ok(())
@@ -405,6 +424,11 @@ impl KafkaEncode for DescribeDelegationTokenResponseDescribedDelegationTokenRene
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "DescribeDelegationTokenResponseDescribedDelegationTokenRenewer",
+                version,
+            });
         }
 
         Ok(())

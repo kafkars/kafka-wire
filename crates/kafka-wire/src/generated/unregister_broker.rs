@@ -82,7 +82,7 @@ impl KafkaEncode for UnregisterBrokerRequest {
 
 /// Response body for the `UnregisterBroker` API.
 #[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct UnregisterBrokerResponse {
     /// Duration in milliseconds for which the request was throttled due to a quota violation, or zero if the request did not violate any quota.
     pub throttle_time_ms: i32,
@@ -92,6 +92,17 @@ pub struct UnregisterBrokerResponse {
     pub error_message: Option<StrBytes>,
     /// Unknown flexible-version tagged fields retained for forwarding.
     pub unknown_tagged_fields: TaggedFields,
+}
+
+impl Default for UnregisterBrokerResponse {
+    fn default() -> Self {
+        Self {
+            throttle_time_ms: 0,
+            error_code: 0,
+            error_message: Some(StrBytes::default()),
+            unknown_tagged_fields: TaggedFields::default(),
+        }
+    }
 }
 
 impl KafkaMessage for UnregisterBrokerResponse {

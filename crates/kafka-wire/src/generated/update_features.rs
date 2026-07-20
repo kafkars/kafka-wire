@@ -98,6 +98,11 @@ impl KafkaEncode for UpdateFeaturesRequestFeatureUpdateKey {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "UpdateFeaturesRequestFeatureUpdateKey",
+                version,
+            });
         }
 
         Ok(())
@@ -218,7 +223,7 @@ impl KafkaEncode for UpdateFeaturesRequest {
 
 /// `UpdateFeaturesResponseUpdatableFeatureResult` as declared by the `UpdateFeatures` API.
 #[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct UpdateFeaturesResponseUpdatableFeatureResult {
     /// The name of the finalized feature.
     pub feature: StrBytes,
@@ -235,6 +240,17 @@ impl UpdateFeaturesResponseUpdatableFeatureResult {
 
     fn is_flexible(version: ApiVersion) -> bool {
         Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+    }
+}
+
+impl Default for UpdateFeaturesResponseUpdatableFeatureResult {
+    fn default() -> Self {
+        Self {
+            feature: StrBytes::default(),
+            error_code: 0,
+            error_message: Some(StrBytes::default()),
+            unknown_tagged_fields: TaggedFields::default(),
+        }
     }
 }
 
@@ -270,6 +286,11 @@ impl KafkaEncode for UpdateFeaturesResponseUpdatableFeatureResult {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "UpdateFeaturesResponseUpdatableFeatureResult",
+                version,
+            });
         }
 
         Ok(())
@@ -278,7 +299,7 @@ impl KafkaEncode for UpdateFeaturesResponseUpdatableFeatureResult {
 
 /// Response body for the `UpdateFeatures` API.
 #[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct UpdateFeaturesResponse {
     /// The duration in milliseconds for which the request was throttled due to a quota violation, or zero if the request did not violate any quota.
     pub throttle_time_ms: i32,
@@ -290,6 +311,18 @@ pub struct UpdateFeaturesResponse {
     pub results: Vec<UpdateFeaturesResponseUpdatableFeatureResult>,
     /// Unknown flexible-version tagged fields retained for forwarding.
     pub unknown_tagged_fields: TaggedFields,
+}
+
+impl Default for UpdateFeaturesResponse {
+    fn default() -> Self {
+        Self {
+            throttle_time_ms: 0,
+            error_code: 0,
+            error_message: Some(StrBytes::default()),
+            results: Vec::new(),
+            unknown_tagged_fields: TaggedFields::default(),
+        }
+    }
 }
 
 impl KafkaMessage for UpdateFeaturesResponse {

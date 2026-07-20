@@ -33,7 +33,10 @@ pub(super) fn render_message(
         message.name.api_stem()
     ));
     rust.line("#[non_exhaustive]");
-    let derive_default = message.fields.iter().all(field::uses_rust_default);
+    let derive_default = message
+        .fields
+        .iter()
+        .all(|member| field::uses_rust_default(member, message));
     // `f64` is not `Eq`, and `Eq` does not propagate: a struct holding a
     // `Vec<T>` where `T` is not `Eq` cannot be either. Asked of the whole
     // message rather than these fields alone, so a container and the struct it

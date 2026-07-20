@@ -248,6 +248,11 @@ impl KafkaEncode for DescribeAclsResponseDescribeAclsResource {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "DescribeAclsResponseDescribeAclsResource",
+                version,
+            });
         }
 
         Ok(())
@@ -329,6 +334,11 @@ impl KafkaEncode for DescribeAclsResponseAclDescription {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "DescribeAclsResponseAclDescription",
+                version,
+            });
         }
 
         Ok(())
@@ -337,7 +347,7 @@ impl KafkaEncode for DescribeAclsResponseAclDescription {
 
 /// Response body for the `DescribeAcls` API.
 #[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct DescribeAclsResponse {
     /// The duration in milliseconds for which the request was throttled due to a quota violation, or zero if the request did not violate any quota.
     pub throttle_time_ms: i32,
@@ -349,6 +359,18 @@ pub struct DescribeAclsResponse {
     pub resources: Vec<DescribeAclsResponseDescribeAclsResource>,
     /// Unknown flexible-version tagged fields retained for forwarding.
     pub unknown_tagged_fields: TaggedFields,
+}
+
+impl Default for DescribeAclsResponse {
+    fn default() -> Self {
+        Self {
+            throttle_time_ms: 0,
+            error_code: 0,
+            error_message: Some(StrBytes::default()),
+            resources: Vec::new(),
+            unknown_tagged_fields: TaggedFields::default(),
+        }
+    }
 }
 
 impl KafkaMessage for DescribeAclsResponse {

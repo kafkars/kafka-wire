@@ -185,6 +185,11 @@ impl KafkaEncode for ApiVersionsResponseApiVersion {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "ApiVersionsResponseApiVersion",
+                version,
+            });
         }
 
         Ok(())
@@ -263,6 +268,11 @@ impl KafkaEncode for ApiVersionsResponseSupportedFeatureKey {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "ApiVersionsResponseSupportedFeatureKey",
+                version,
+            });
         }
 
         Ok(())
@@ -341,6 +351,11 @@ impl KafkaEncode for ApiVersionsResponseFinalizedFeatureKey {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "ApiVersionsResponseFinalizedFeatureKey",
+                version,
+            });
         }
 
         Ok(())

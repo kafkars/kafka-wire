@@ -76,6 +76,11 @@ impl KafkaEncode for ReadShareGroupStateSummaryRequestReadStateSummaryData {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "ReadShareGroupStateSummaryRequestReadStateSummaryData",
+                version,
+            });
         }
 
         Ok(())
@@ -131,6 +136,11 @@ impl KafkaEncode for ReadShareGroupStateSummaryRequestPartitionData {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "ReadShareGroupStateSummaryRequestPartitionData",
+                version,
+            });
         }
 
         Ok(())
@@ -282,6 +292,11 @@ impl KafkaEncode for ReadShareGroupStateSummaryResponseReadStateSummaryResult {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "ReadShareGroupStateSummaryResponseReadStateSummaryResult",
+                version,
+            });
         }
 
         Ok(())
@@ -383,6 +398,11 @@ impl KafkaEncode for ReadShareGroupStateSummaryResponsePartitionResult {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "ReadShareGroupStateSummaryResponsePartitionResult",
+                version,
+            });
         }
 
         Ok(())

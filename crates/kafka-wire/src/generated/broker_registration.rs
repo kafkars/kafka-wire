@@ -74,6 +74,11 @@ impl KafkaEncode for BrokerRegistrationRequestListener {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "BrokerRegistrationRequestListener",
+                version,
+            });
         }
 
         Ok(())
@@ -134,6 +139,11 @@ impl KafkaEncode for BrokerRegistrationRequestFeature {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "BrokerRegistrationRequestFeature",
+                version,
+            });
         }
 
         Ok(())

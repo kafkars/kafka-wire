@@ -74,6 +74,11 @@ impl KafkaEncode for DescribeProducersRequestTopicRequest {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "DescribeProducersRequestTopicRequest",
+                version,
+            });
         }
 
         Ok(())
@@ -218,6 +223,11 @@ impl KafkaEncode for DescribeProducersResponseTopicResponse {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "DescribeProducersResponseTopicResponse",
+                version,
+            });
         }
 
         Ok(())
@@ -295,6 +305,11 @@ impl KafkaEncode for DescribeProducersResponsePartitionResponse {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "DescribeProducersResponsePartitionResponse",
+                version,
+            });
         }
 
         Ok(())
@@ -384,6 +399,11 @@ impl KafkaEncode for DescribeProducersResponseProducerState {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "DescribeProducersResponseProducerState",
+                version,
+            });
         }
 
         Ok(())

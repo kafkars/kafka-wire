@@ -70,6 +70,11 @@ impl KafkaEncode for ShareFetchResponseShareFetchableTopicResponse {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "ShareFetchResponseShareFetchableTopicResponse",
+                version,
+            });
         }
 
         Ok(())
@@ -165,6 +170,11 @@ impl KafkaEncode for ShareFetchResponsePartitionData {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "ShareFetchResponsePartitionData",
+                version,
+            });
         }
 
         Ok(())
@@ -220,6 +230,11 @@ impl KafkaEncode for ShareFetchResponseLeaderIdAndEpoch {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "ShareFetchResponseLeaderIdAndEpoch",
+                version,
+            });
         }
 
         Ok(())
@@ -280,6 +295,11 @@ impl KafkaEncode for ShareFetchResponseAcquiredRecords {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "ShareFetchResponseAcquiredRecords",
+                version,
+            });
         }
 
         Ok(())
@@ -345,6 +365,11 @@ impl KafkaEncode for ShareFetchResponseNodeEndpoint {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "ShareFetchResponseNodeEndpoint",
+                version,
+            });
         }
 
         Ok(())

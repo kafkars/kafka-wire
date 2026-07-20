@@ -128,6 +128,11 @@ impl KafkaEncode for DeleteAclsRequestDeleteAclsFilter {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "DeleteAclsRequestDeleteAclsFilter",
+                version,
+            });
         }
 
         Ok(())
@@ -219,7 +224,7 @@ impl KafkaEncode for DeleteAclsRequest {
 
 /// `DeleteAclsResponseDeleteAclsFilterResult` as declared by the `DeleteAcls` API.
 #[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct DeleteAclsResponseDeleteAclsFilterResult {
     /// The error code, or 0 if the filter succeeded.
     pub error_code: i16,
@@ -236,6 +241,17 @@ impl DeleteAclsResponseDeleteAclsFilterResult {
 
     fn is_flexible(version: ApiVersion) -> bool {
         Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+    }
+}
+
+impl Default for DeleteAclsResponseDeleteAclsFilterResult {
+    fn default() -> Self {
+        Self {
+            error_code: 0,
+            error_message: Some(StrBytes::default()),
+            matching_acls: Vec::new(),
+            unknown_tagged_fields: TaggedFields::default(),
+        }
     }
 }
 
@@ -299,6 +315,11 @@ impl KafkaEncode for DeleteAclsResponseDeleteAclsFilterResult {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "DeleteAclsResponseDeleteAclsFilterResult",
+                version,
+            });
         }
 
         Ok(())
@@ -438,6 +459,11 @@ impl KafkaEncode for DeleteAclsResponseDeleteAclsMatchingAcl {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "DeleteAclsResponseDeleteAclsMatchingAcl",
+                version,
+            });
         }
 
         Ok(())

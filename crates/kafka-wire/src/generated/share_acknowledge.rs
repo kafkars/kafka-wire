@@ -76,6 +76,11 @@ impl KafkaEncode for ShareAcknowledgeRequestAcknowledgeTopic {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "ShareAcknowledgeRequestAcknowledgeTopic",
+                version,
+            });
         }
 
         Ok(())
@@ -143,6 +148,11 @@ impl KafkaEncode for ShareAcknowledgeRequestAcknowledgePartition {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "ShareAcknowledgeRequestAcknowledgePartition",
+                version,
+            });
         }
 
         Ok(())
@@ -213,6 +223,11 @@ impl KafkaEncode for ShareAcknowledgeRequestAcknowledgementBatch {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "ShareAcknowledgeRequestAcknowledgementBatch",
+                version,
+            });
         }
 
         Ok(())
@@ -221,7 +236,7 @@ impl KafkaEncode for ShareAcknowledgeRequestAcknowledgementBatch {
 
 /// Request body for the `ShareAcknowledge` API.
 #[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct ShareAcknowledgeRequest {
     /// The group identifier.
     pub group_id: Option<StrBytes>,
@@ -235,6 +250,19 @@ pub struct ShareAcknowledgeRequest {
     pub topics: Vec<ShareAcknowledgeRequestAcknowledgeTopic>,
     /// Unknown flexible-version tagged fields retained for forwarding.
     pub unknown_tagged_fields: TaggedFields,
+}
+
+impl Default for ShareAcknowledgeRequest {
+    fn default() -> Self {
+        Self {
+            group_id: None,
+            member_id: Some(StrBytes::default()),
+            share_session_epoch: 0,
+            is_renew_ack: false,
+            topics: Vec::new(),
+            unknown_tagged_fields: TaggedFields::default(),
+        }
+    }
 }
 
 impl KafkaMessage for ShareAcknowledgeRequest {
@@ -391,6 +419,11 @@ impl KafkaEncode for ShareAcknowledgeResponseShareAcknowledgeTopicResponse {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "ShareAcknowledgeResponseShareAcknowledgeTopicResponse",
+                version,
+            });
         }
 
         Ok(())
@@ -456,6 +489,11 @@ impl KafkaEncode for ShareAcknowledgeResponsePartitionData {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "ShareAcknowledgeResponsePartitionData",
+                version,
+            });
         }
 
         Ok(())
@@ -511,6 +549,11 @@ impl KafkaEncode for ShareAcknowledgeResponseLeaderIdAndEpoch {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "ShareAcknowledgeResponseLeaderIdAndEpoch",
+                version,
+            });
         }
 
         Ok(())
@@ -576,6 +619,11 @@ impl KafkaEncode for ShareAcknowledgeResponseNodeEndpoint {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "ShareAcknowledgeResponseNodeEndpoint",
+                version,
+            });
         }
 
         Ok(())

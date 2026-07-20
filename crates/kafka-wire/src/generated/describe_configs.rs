@@ -13,7 +13,7 @@ use crate::{KafkaMessage, KafkaRequest, MessageDescriptor, MessageDirection};
 
 /// `DescribeConfigsRequestDescribeConfigsResource` as declared by the `DescribeConfigs` API.
 #[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct DescribeConfigsRequestDescribeConfigsResource {
     /// The resource type.
     pub resource_type: i8,
@@ -30,6 +30,17 @@ impl DescribeConfigsRequestDescribeConfigsResource {
 
     fn is_flexible(version: ApiVersion) -> bool {
         Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+    }
+}
+
+impl Default for DescribeConfigsRequestDescribeConfigsResource {
+    fn default() -> Self {
+        Self {
+            resource_type: 0,
+            resource_name: StrBytes::default(),
+            configuration_keys: Some(Vec::new()),
+            unknown_tagged_fields: TaggedFields::default(),
+        }
     }
 }
 
@@ -106,6 +117,11 @@ impl KafkaEncode for DescribeConfigsRequestDescribeConfigsResource {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "DescribeConfigsRequestDescribeConfigsResource",
+                version,
+            });
         }
 
         Ok(())

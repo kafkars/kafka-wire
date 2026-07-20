@@ -76,6 +76,11 @@ impl KafkaEncode for DeleteShareGroupStateRequestDeleteStateData {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "DeleteShareGroupStateRequestDeleteStateData",
+                version,
+            });
         }
 
         Ok(())
@@ -126,6 +131,11 @@ impl KafkaEncode for DeleteShareGroupStateRequestPartitionData {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "DeleteShareGroupStateRequestPartitionData",
+                version,
+            });
         }
 
         Ok(())
@@ -275,6 +285,11 @@ impl KafkaEncode for DeleteShareGroupStateResponseDeleteStateResult {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "DeleteShareGroupStateResponseDeleteStateResult",
+                version,
+            });
         }
 
         Ok(())
@@ -335,6 +350,11 @@ impl KafkaEncode for DeleteShareGroupStateResponsePartitionResult {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "DeleteShareGroupStateResponsePartitionResult",
+                version,
+            });
         }
 
         Ok(())

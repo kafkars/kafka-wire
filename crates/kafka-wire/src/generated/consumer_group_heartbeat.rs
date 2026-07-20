@@ -74,6 +74,11 @@ impl KafkaEncode for ConsumerGroupHeartbeatRequestTopicPartitions {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "ConsumerGroupHeartbeatRequestTopicPartitions",
+                version,
+            });
         }
 
         Ok(())
@@ -316,6 +321,11 @@ impl KafkaEncode for ConsumerGroupHeartbeatResponseTopicPartitions {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "ConsumerGroupHeartbeatResponseTopicPartitions",
+                version,
+            });
         }
 
         Ok(())
@@ -378,6 +388,11 @@ impl KafkaEncode for ConsumerGroupHeartbeatResponseAssignment {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "ConsumerGroupHeartbeatResponseAssignment",
+                version,
+            });
         }
 
         Ok(())

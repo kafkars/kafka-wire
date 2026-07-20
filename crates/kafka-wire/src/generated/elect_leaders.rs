@@ -90,6 +90,11 @@ impl KafkaEncode for ElectLeadersRequestTopicPartitions {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "ElectLeadersRequestTopicPartitions",
+                version,
+            });
         }
 
         Ok(())
@@ -300,6 +305,11 @@ impl KafkaEncode for ElectLeadersResponseReplicaElectionResult {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "ElectLeadersResponseReplicaElectionResult",
+                version,
+            });
         }
 
         Ok(())
@@ -308,7 +318,7 @@ impl KafkaEncode for ElectLeadersResponseReplicaElectionResult {
 
 /// `ElectLeadersResponsePartitionResult` as declared by the `ElectLeaders` API.
 #[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct ElectLeadersResponsePartitionResult {
     /// The partition id.
     pub partition_id: i32,
@@ -325,6 +335,17 @@ impl ElectLeadersResponsePartitionResult {
 
     fn is_flexible(version: ApiVersion) -> bool {
         Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+    }
+}
+
+impl Default for ElectLeadersResponsePartitionResult {
+    fn default() -> Self {
+        Self {
+            partition_id: 0,
+            error_code: 0,
+            error_message: Some(StrBytes::default()),
+            unknown_tagged_fields: TaggedFields::default(),
+        }
     }
 }
 
@@ -368,6 +389,11 @@ impl KafkaEncode for ElectLeadersResponsePartitionResult {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "ElectLeadersResponsePartitionResult",
+                version,
+            });
         }
 
         Ok(())

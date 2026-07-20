@@ -92,6 +92,11 @@ impl KafkaEncode for ListOffsetsRequestListOffsetsTopic {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "ListOffsetsRequestListOffsetsTopic",
+                version,
+            });
         }
 
         Ok(())
@@ -169,6 +174,11 @@ impl KafkaEncode for ListOffsetsRequestListOffsetsPartition {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "ListOffsetsRequestListOffsetsPartition",
+                version,
+            });
         }
 
         Ok(())
@@ -372,6 +382,11 @@ impl KafkaEncode for ListOffsetsResponseListOffsetsTopicResponse {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "ListOffsetsResponseListOffsetsTopicResponse",
+                version,
+            });
         }
 
         Ok(())
@@ -461,6 +476,11 @@ impl KafkaEncode for ListOffsetsResponseListOffsetsPartitionResponse {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "ListOffsetsResponseListOffsetsPartitionResponse",
+                version,
+            });
         }
 
         Ok(())

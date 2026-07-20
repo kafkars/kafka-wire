@@ -148,7 +148,7 @@ impl KafkaEncode for FindCoordinatorRequest {
 
 /// `FindCoordinatorResponseCoordinator` as declared by the `FindCoordinator` API.
 #[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct FindCoordinatorResponseCoordinator {
     /// The coordinator key.
     pub key: StrBytes,
@@ -171,6 +171,20 @@ impl FindCoordinatorResponseCoordinator {
 
     fn is_flexible(version: ApiVersion) -> bool {
         Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+    }
+}
+
+impl Default for FindCoordinatorResponseCoordinator {
+    fn default() -> Self {
+        Self {
+            key: StrBytes::default(),
+            node_id: 0,
+            host: StrBytes::default(),
+            port: 0,
+            error_code: 0,
+            error_message: Some(StrBytes::default()),
+            unknown_tagged_fields: TaggedFields::default(),
+        }
     }
 }
 
@@ -251,6 +265,11 @@ impl KafkaEncode for FindCoordinatorResponseCoordinator {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "FindCoordinatorResponseCoordinator",
+                version,
+            });
         }
 
         Ok(())
@@ -259,7 +278,7 @@ impl KafkaEncode for FindCoordinatorResponseCoordinator {
 
 /// Response body for the `FindCoordinator` API.
 #[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct FindCoordinatorResponse {
     /// The duration in milliseconds for which the request was throttled due to a quota violation, or zero if the request did not violate any quota.
     pub throttle_time_ms: i32,
@@ -277,6 +296,21 @@ pub struct FindCoordinatorResponse {
     pub coordinators: Vec<FindCoordinatorResponseCoordinator>,
     /// Unknown flexible-version tagged fields retained for forwarding.
     pub unknown_tagged_fields: TaggedFields,
+}
+
+impl Default for FindCoordinatorResponse {
+    fn default() -> Self {
+        Self {
+            throttle_time_ms: 0,
+            error_code: 0,
+            error_message: Some(StrBytes::default()),
+            node_id: 0,
+            host: StrBytes::default(),
+            port: 0,
+            coordinators: Vec::new(),
+            unknown_tagged_fields: TaggedFields::default(),
+        }
+    }
 }
 
 impl KafkaMessage for FindCoordinatorResponse {

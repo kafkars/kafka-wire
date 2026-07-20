@@ -59,6 +59,11 @@ impl KafkaEncode for DeleteShareGroupOffsetsRequestTopic {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "DeleteShareGroupOffsetsRequestTopic",
+                version,
+            });
         }
 
         Ok(())
@@ -206,6 +211,11 @@ impl KafkaEncode for DeleteShareGroupOffsetsResponseTopic {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "DeleteShareGroupOffsetsResponseTopic",
+                version,
+            });
         }
 
         Ok(())

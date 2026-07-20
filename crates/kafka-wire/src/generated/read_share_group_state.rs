@@ -76,6 +76,11 @@ impl KafkaEncode for ReadShareGroupStateRequestReadStateData {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "ReadShareGroupStateRequestReadStateData",
+                version,
+            });
         }
 
         Ok(())
@@ -131,6 +136,11 @@ impl KafkaEncode for ReadShareGroupStateRequestPartitionData {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "ReadShareGroupStateRequestPartitionData",
+                version,
+            });
         }
 
         Ok(())
@@ -280,6 +290,11 @@ impl KafkaEncode for ReadShareGroupStateResponseReadStateResult {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "ReadShareGroupStateResponseReadStateResult",
+                version,
+            });
         }
 
         Ok(())
@@ -367,6 +382,11 @@ impl KafkaEncode for ReadShareGroupStateResponsePartitionResult {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "ReadShareGroupStateResponsePartitionResult",
+                version,
+            });
         }
 
         Ok(())
@@ -432,6 +452,11 @@ impl KafkaEncode for ReadShareGroupStateResponseStateBatch {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "ReadShareGroupStateResponseStateBatch",
+                version,
+            });
         }
 
         Ok(())

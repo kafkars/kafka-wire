@@ -97,6 +97,11 @@ impl KafkaEncode for AlterConfigsRequestAlterConfigsResource {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "AlterConfigsRequestAlterConfigsResource",
+                version,
+            });
         }
 
         Ok(())
@@ -105,7 +110,7 @@ impl KafkaEncode for AlterConfigsRequestAlterConfigsResource {
 
 /// `AlterConfigsRequestAlterableConfig` as declared by the `AlterConfigs` API.
 #[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct AlterConfigsRequestAlterableConfig {
     /// The configuration key name.
     pub name: StrBytes,
@@ -120,6 +125,16 @@ impl AlterConfigsRequestAlterableConfig {
 
     fn is_flexible(version: ApiVersion) -> bool {
         Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+    }
+}
+
+impl Default for AlterConfigsRequestAlterableConfig {
+    fn default() -> Self {
+        Self {
+            name: StrBytes::default(),
+            value: Some(StrBytes::default()),
+            unknown_tagged_fields: TaggedFields::default(),
+        }
     }
 }
 
@@ -168,6 +183,11 @@ impl KafkaEncode for AlterConfigsRequestAlterableConfig {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "AlterConfigsRequestAlterableConfig",
+                version,
+            });
         }
 
         Ok(())
@@ -266,7 +286,7 @@ impl KafkaEncode for AlterConfigsRequest {
 
 /// `AlterConfigsResponseAlterConfigsResourceResponse` as declared by the `AlterConfigs` API.
 #[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct AlterConfigsResponseAlterConfigsResourceResponse {
     /// The resource error code.
     pub error_code: i16,
@@ -285,6 +305,18 @@ impl AlterConfigsResponseAlterConfigsResourceResponse {
 
     fn is_flexible(version: ApiVersion) -> bool {
         Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+    }
+}
+
+impl Default for AlterConfigsResponseAlterConfigsResourceResponse {
+    fn default() -> Self {
+        Self {
+            error_code: 0,
+            error_message: Some(StrBytes::default()),
+            resource_type: 0,
+            resource_name: StrBytes::default(),
+            unknown_tagged_fields: TaggedFields::default(),
+        }
     }
 }
 
@@ -339,6 +371,11 @@ impl KafkaEncode for AlterConfigsResponseAlterConfigsResourceResponse {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "AlterConfigsResponseAlterConfigsResourceResponse",
+                version,
+            });
         }
 
         Ok(())

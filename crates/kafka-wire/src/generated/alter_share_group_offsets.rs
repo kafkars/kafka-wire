@@ -76,6 +76,11 @@ impl KafkaEncode for AlterShareGroupOffsetsRequestTopic {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "AlterShareGroupOffsetsRequestTopic",
+                version,
+            });
         }
 
         Ok(())
@@ -131,6 +136,11 @@ impl KafkaEncode for AlterShareGroupOffsetsRequestPartition {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "AlterShareGroupOffsetsRequestPartition",
+                version,
+            });
         }
 
         Ok(())
@@ -285,6 +295,11 @@ impl KafkaEncode for AlterShareGroupOffsetsResponseTopic {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "AlterShareGroupOffsetsResponseTopic",
+                version,
+            });
         }
 
         Ok(())
@@ -345,6 +360,11 @@ impl KafkaEncode for AlterShareGroupOffsetsResponsePartition {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "AlterShareGroupOffsetsResponsePartition",
+                version,
+            });
         }
 
         Ok(())

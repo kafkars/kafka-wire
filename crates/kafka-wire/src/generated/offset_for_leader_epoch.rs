@@ -92,6 +92,11 @@ impl KafkaEncode for OffsetForLeaderEpochRequestOffsetForLeaderTopic {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "OffsetForLeaderEpochRequestOffsetForLeaderTopic",
+                version,
+            });
         }
 
         Ok(())
@@ -163,6 +168,11 @@ impl KafkaEncode for OffsetForLeaderEpochRequestOffsetForLeaderPartition {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "OffsetForLeaderEpochRequestOffsetForLeaderPartition",
+                version,
+            });
         }
 
         Ok(())
@@ -352,6 +362,11 @@ impl KafkaEncode for OffsetForLeaderEpochResponseOffsetForLeaderTopicResult {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "OffsetForLeaderEpochResponseOffsetForLeaderTopicResult",
+                version,
+            });
         }
 
         Ok(())
@@ -429,6 +444,11 @@ impl KafkaEncode for OffsetForLeaderEpochResponseEpochEndOffset {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "OffsetForLeaderEpochResponseEpochEndOffset",
+                version,
+            });
         }
 
         Ok(())

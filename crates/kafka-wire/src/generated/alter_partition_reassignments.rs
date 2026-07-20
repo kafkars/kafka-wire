@@ -78,6 +78,11 @@ impl KafkaEncode for AlterPartitionReassignmentsRequestReassignableTopic {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "AlterPartitionReassignmentsRequestReassignableTopic",
+                version,
+            });
         }
 
         Ok(())
@@ -149,6 +154,11 @@ impl KafkaEncode for AlterPartitionReassignmentsRequestReassignablePartition {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "AlterPartitionReassignmentsRequestReassignablePartition",
+                version,
+            });
         }
 
         Ok(())
@@ -330,6 +340,11 @@ impl KafkaEncode for AlterPartitionReassignmentsResponseReassignableTopicRespons
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "AlterPartitionReassignmentsResponseReassignableTopicResponse",
+                version,
+            });
         }
 
         Ok(())
@@ -338,7 +353,7 @@ impl KafkaEncode for AlterPartitionReassignmentsResponseReassignableTopicRespons
 
 /// `AlterPartitionReassignmentsResponseReassignablePartitionResponse` as declared by the `AlterPartitionReassignments` API.
 #[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct AlterPartitionReassignmentsResponseReassignablePartitionResponse {
     /// The partition index.
     pub partition_index: i32,
@@ -355,6 +370,17 @@ impl AlterPartitionReassignmentsResponseReassignablePartitionResponse {
 
     fn is_flexible(version: ApiVersion) -> bool {
         Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+    }
+}
+
+impl Default for AlterPartitionReassignmentsResponseReassignablePartitionResponse {
+    fn default() -> Self {
+        Self {
+            partition_index: 0,
+            error_code: 0,
+            error_message: Some(StrBytes::default()),
+            unknown_tagged_fields: TaggedFields::default(),
+        }
     }
 }
 
@@ -390,6 +416,11 @@ impl KafkaEncode for AlterPartitionReassignmentsResponseReassignablePartitionRes
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "AlterPartitionReassignmentsResponseReassignablePartitionResponse",
+                version,
+            });
         }
 
         Ok(())

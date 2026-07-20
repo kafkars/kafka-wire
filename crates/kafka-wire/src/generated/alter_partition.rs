@@ -76,6 +76,11 @@ impl KafkaEncode for AlterPartitionRequestTopicData {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "AlterPartitionRequestTopicData",
+                version,
+            });
         }
 
         Ok(())
@@ -179,6 +184,11 @@ impl KafkaEncode for AlterPartitionRequestPartitionData {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "AlterPartitionRequestPartitionData",
+                version,
+            });
         }
 
         Ok(())
@@ -256,6 +266,11 @@ impl KafkaEncode for AlterPartitionRequestBrokerState {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "AlterPartitionRequestBrokerState",
+                version,
+            });
         }
 
         Ok(())
@@ -419,6 +434,11 @@ impl KafkaEncode for AlterPartitionResponseTopicData {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "AlterPartitionResponseTopicData",
+                version,
+            });
         }
 
         Ok(())
@@ -509,6 +529,11 @@ impl KafkaEncode for AlterPartitionResponsePartitionData {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "AlterPartitionResponsePartitionData",
+                version,
+            });
         }
 
         Ok(())

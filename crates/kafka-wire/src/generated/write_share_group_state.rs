@@ -76,6 +76,11 @@ impl KafkaEncode for WriteShareGroupStateRequestWriteStateData {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "WriteShareGroupStateRequestWriteStateData",
+                version,
+            });
         }
 
         Ok(())
@@ -183,6 +188,11 @@ impl KafkaEncode for WriteShareGroupStateRequestPartitionData {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "WriteShareGroupStateRequestPartitionData",
+                version,
+            });
         }
 
         Ok(())
@@ -248,6 +258,11 @@ impl KafkaEncode for WriteShareGroupStateRequestStateBatch {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "WriteShareGroupStateRequestStateBatch",
+                version,
+            });
         }
 
         Ok(())
@@ -397,6 +412,11 @@ impl KafkaEncode for WriteShareGroupStateResponseWriteStateResult {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "WriteShareGroupStateResponseWriteStateResult",
+                version,
+            });
         }
 
         Ok(())
@@ -457,6 +477,11 @@ impl KafkaEncode for WriteShareGroupStateResponsePartitionResult {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "WriteShareGroupStateResponsePartitionResult",
+                version,
+            });
         }
 
         Ok(())

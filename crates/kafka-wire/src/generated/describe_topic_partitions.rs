@@ -59,6 +59,11 @@ impl KafkaEncode for DescribeTopicPartitionsRequestTopicRequest {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "DescribeTopicPartitionsRequestTopicRequest",
+                version,
+            });
         }
 
         Ok(())
@@ -114,6 +119,11 @@ impl KafkaEncode for DescribeTopicPartitionsRequestCursor {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "DescribeTopicPartitionsRequestCursor",
+                version,
+            });
         }
 
         Ok(())
@@ -324,6 +334,11 @@ impl KafkaEncode for DescribeTopicPartitionsResponseTopic {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "DescribeTopicPartitionsResponseTopic",
+                version,
+            });
         }
 
         Ok(())
@@ -495,6 +510,11 @@ impl KafkaEncode for DescribeTopicPartitionsResponsePartition {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "DescribeTopicPartitionsResponsePartition",
+                version,
+            });
         }
 
         Ok(())
@@ -550,6 +570,11 @@ impl KafkaEncode for DescribeTopicPartitionsResponseCursor {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "DescribeTopicPartitionsResponseCursor",
+                version,
+            });
         }
 
         Ok(())

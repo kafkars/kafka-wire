@@ -174,6 +174,11 @@ impl KafkaEncode for DeleteGroupsResponseDeletableGroupResult {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "DeleteGroupsResponseDeletableGroupResult",
+                version,
+            });
         }
 
         Ok(())

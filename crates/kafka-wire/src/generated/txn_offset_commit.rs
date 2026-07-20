@@ -107,6 +107,11 @@ impl KafkaEncode for TxnOffsetCommitRequestTopic {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "TxnOffsetCommitRequestTopic",
+                version,
+            });
         }
 
         Ok(())
@@ -198,6 +203,11 @@ impl KafkaEncode for TxnOffsetCommitRequestPartition {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "TxnOffsetCommitRequestPartition",
+                version,
+            });
         }
 
         Ok(())
@@ -486,6 +496,11 @@ impl KafkaEncode for TxnOffsetCommitResponseTopic {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "TxnOffsetCommitResponseTopic",
+                version,
+            });
         }
 
         Ok(())
@@ -541,6 +556,11 @@ impl KafkaEncode for TxnOffsetCommitResponsePartition {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "TxnOffsetCommitResponsePartition",
+                version,
+            });
         }
 
         Ok(())

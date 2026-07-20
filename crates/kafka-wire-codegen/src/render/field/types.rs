@@ -169,7 +169,18 @@ pub(crate) fn non_default_condition(field: &Field, message: &Message) -> String 
     }
 }
 
-pub(crate) fn uses_rust_default(field: &Field) -> bool {
+/// Whether this field's protocol default is also Rust's, so `Default` derives.
+///
+/// A nullable field is asked about its *wrapped* default. `Option`'s Rust
+/// default is `None`, so a nullable field whose protocol default is a real
+/// value — which `default_expression` renders as `Some(value)` — does not
+/// derive, however ordinary that value looks unwrapped. No pinned schema
+/// declares one today; the arm exists so the derive cannot silently disagree
+/// with the initializer the moment upstream adds one.
+pub(crate) fn uses_rust_default(field: &Field, message: &Message) -> bool {
+    if is_nullable(field, message) {
+        return matches!(field.default, DefaultValue::Null);
+    }
     matches!(
         (&field.ty, &field.default),
         (FieldType::String, DefaultValue::String(value)) if value.is_empty()

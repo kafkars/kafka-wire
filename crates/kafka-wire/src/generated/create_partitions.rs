@@ -17,7 +17,7 @@ use crate::{
 
 /// `CreatePartitionsRequestCreatePartitionsTopic` as declared by the `CreatePartitions` API.
 #[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct CreatePartitionsRequestCreatePartitionsTopic {
     /// The topic name.
     pub name: StrBytes,
@@ -34,6 +34,17 @@ impl CreatePartitionsRequestCreatePartitionsTopic {
 
     fn is_flexible(version: ApiVersion) -> bool {
         Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+    }
+}
+
+impl Default for CreatePartitionsRequestCreatePartitionsTopic {
+    fn default() -> Self {
+        Self {
+            name: StrBytes::default(),
+            count: 0,
+            assignments: Some(Vec::new()),
+            unknown_tagged_fields: TaggedFields::default(),
+        }
     }
 }
 
@@ -103,6 +114,11 @@ impl KafkaEncode for CreatePartitionsRequestCreatePartitionsTopic {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "CreatePartitionsRequestCreatePartitionsTopic",
+                version,
+            });
         }
 
         Ok(())
@@ -171,6 +187,11 @@ impl KafkaEncode for CreatePartitionsRequestCreatePartitionsAssignment {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "CreatePartitionsRequestCreatePartitionsAssignment",
+                version,
+            });
         }
 
         Ok(())
@@ -342,6 +363,11 @@ impl KafkaEncode for CreatePartitionsResponseCreatePartitionsTopicResult {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "CreatePartitionsResponseCreatePartitionsTopicResult",
+                version,
+            });
         }
 
         Ok(())

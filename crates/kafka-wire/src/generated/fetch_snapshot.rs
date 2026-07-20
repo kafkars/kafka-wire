@@ -76,6 +76,11 @@ impl KafkaEncode for FetchSnapshotRequestTopicSnapshot {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "FetchSnapshotRequestTopicSnapshot",
+                version,
+            });
         }
 
         Ok(())
@@ -157,6 +162,11 @@ impl KafkaEncode for FetchSnapshotRequestPartitionSnapshot {
                 })?;
             }
             encoder.write_merged_tagged_fields(known, &self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "FetchSnapshotRequestPartitionSnapshot",
+                version,
+            });
         }
 
         Ok(())
@@ -212,6 +222,11 @@ impl KafkaEncode for FetchSnapshotRequestSnapshotId {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "FetchSnapshotRequestSnapshotId",
+                version,
+            });
         }
 
         Ok(())
@@ -392,6 +407,11 @@ impl KafkaEncode for FetchSnapshotResponseTopicSnapshot {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "FetchSnapshotResponseTopicSnapshot",
+                version,
+            });
         }
 
         Ok(())
@@ -485,6 +505,11 @@ impl KafkaEncode for FetchSnapshotResponsePartitionSnapshot {
                 })?;
             }
             encoder.write_merged_tagged_fields(known, &self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "FetchSnapshotResponsePartitionSnapshot",
+                version,
+            });
         }
 
         Ok(())
@@ -540,6 +565,11 @@ impl KafkaEncode for FetchSnapshotResponseSnapshotId {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "FetchSnapshotResponseSnapshotId",
+                version,
+            });
         }
 
         Ok(())
@@ -595,6 +625,11 @@ impl KafkaEncode for FetchSnapshotResponseLeaderIdAndEpoch {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "FetchSnapshotResponseLeaderIdAndEpoch",
+                version,
+            });
         }
 
         Ok(())
@@ -673,6 +708,11 @@ impl KafkaEncode for FetchSnapshotResponseNodeEndpoint {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "FetchSnapshotResponseNodeEndpoint",
+                version,
+            });
         }
 
         Ok(())

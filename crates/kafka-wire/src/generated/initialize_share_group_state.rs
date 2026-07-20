@@ -76,6 +76,11 @@ impl KafkaEncode for InitializeShareGroupStateRequestInitializeStateData {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "InitializeShareGroupStateRequestInitializeStateData",
+                version,
+            });
         }
 
         Ok(())
@@ -136,6 +141,11 @@ impl KafkaEncode for InitializeShareGroupStateRequestPartitionData {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "InitializeShareGroupStateRequestPartitionData",
+                version,
+            });
         }
 
         Ok(())
@@ -285,6 +295,11 @@ impl KafkaEncode for InitializeShareGroupStateResponseInitializeStateResult {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "InitializeShareGroupStateResponseInitializeStateResult",
+                version,
+            });
         }
 
         Ok(())
@@ -345,6 +360,11 @@ impl KafkaEncode for InitializeShareGroupStateResponsePartitionResult {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "InitializeShareGroupStateResponsePartitionResult",
+                version,
+            });
         }
 
         Ok(())

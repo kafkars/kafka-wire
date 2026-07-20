@@ -17,7 +17,7 @@ use crate::{
 
 /// Request body for the `RemoveRaftVoter` API.
 #[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct RemoveRaftVoterRequest {
     /// The cluster id of the request.
     pub cluster_id: Option<StrBytes>,
@@ -27,6 +27,17 @@ pub struct RemoveRaftVoterRequest {
     pub voter_directory_id: Uuid,
     /// Unknown flexible-version tagged fields retained for forwarding.
     pub unknown_tagged_fields: TaggedFields,
+}
+
+impl Default for RemoveRaftVoterRequest {
+    fn default() -> Self {
+        Self {
+            cluster_id: Some(StrBytes::default()),
+            voter_id: 0,
+            voter_directory_id: Uuid::ZERO,
+            unknown_tagged_fields: TaggedFields::default(),
+        }
+    }
 }
 
 impl KafkaMessage for RemoveRaftVoterRequest {
@@ -92,7 +103,7 @@ impl KafkaEncode for RemoveRaftVoterRequest {
 
 /// Response body for the `RemoveRaftVoter` API.
 #[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct RemoveRaftVoterResponse {
     /// The duration in milliseconds for which the request was throttled due to a quota violation, or zero if the request did not violate any quota.
     pub throttle_time_ms: i32,
@@ -102,6 +113,17 @@ pub struct RemoveRaftVoterResponse {
     pub error_message: Option<StrBytes>,
     /// Unknown flexible-version tagged fields retained for forwarding.
     pub unknown_tagged_fields: TaggedFields,
+}
+
+impl Default for RemoveRaftVoterResponse {
+    fn default() -> Self {
+        Self {
+            throttle_time_ms: 0,
+            error_code: 0,
+            error_message: Some(StrBytes::default()),
+            unknown_tagged_fields: TaggedFields::default(),
+        }
+    }
 }
 
 impl KafkaMessage for RemoveRaftVoterResponse {

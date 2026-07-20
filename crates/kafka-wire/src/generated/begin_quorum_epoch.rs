@@ -92,6 +92,11 @@ impl KafkaEncode for BeginQuorumEpochRequestTopicData {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "BeginQuorumEpochRequestTopicData",
+                version,
+            });
         }
 
         Ok(())
@@ -163,6 +168,11 @@ impl KafkaEncode for BeginQuorumEpochRequestPartitionData {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "BeginQuorumEpochRequestPartitionData",
+                version,
+            });
         }
 
         Ok(())
@@ -241,6 +251,11 @@ impl KafkaEncode for BeginQuorumEpochRequestLeaderEndpoint {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "BeginQuorumEpochRequestLeaderEndpoint",
+                version,
+            });
         }
 
         Ok(())
@@ -464,6 +479,11 @@ impl KafkaEncode for BeginQuorumEpochResponseTopicData {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "BeginQuorumEpochResponseTopicData",
+                version,
+            });
         }
 
         Ok(())
@@ -529,6 +549,11 @@ impl KafkaEncode for BeginQuorumEpochResponsePartitionData {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "BeginQuorumEpochResponsePartitionData",
+                version,
+            });
         }
 
         Ok(())
@@ -607,6 +632,11 @@ impl KafkaEncode for BeginQuorumEpochResponseNodeEndpoint {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "BeginQuorumEpochResponseNodeEndpoint",
+                version,
+            });
         }
 
         Ok(())

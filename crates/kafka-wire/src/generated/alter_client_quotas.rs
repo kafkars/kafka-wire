@@ -102,6 +102,11 @@ impl KafkaEncode for AlterClientQuotasRequestEntryData {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "AlterClientQuotasRequestEntryData",
+                version,
+            });
         }
 
         Ok(())
@@ -110,7 +115,7 @@ impl KafkaEncode for AlterClientQuotasRequestEntryData {
 
 /// `AlterClientQuotasRequestEntityData` as declared by the `AlterClientQuotas` API.
 #[non_exhaustive]
-#[derive(Clone, Debug, Default, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct AlterClientQuotasRequestEntityData {
     /// The entity type.
     pub entity_type: StrBytes,
@@ -125,6 +130,16 @@ impl AlterClientQuotasRequestEntityData {
 
     fn is_flexible(version: ApiVersion) -> bool {
         Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+    }
+}
+
+impl Default for AlterClientQuotasRequestEntityData {
+    fn default() -> Self {
+        Self {
+            entity_type: StrBytes::default(),
+            entity_name: Some(StrBytes::default()),
+            unknown_tagged_fields: TaggedFields::default(),
+        }
     }
 }
 
@@ -173,6 +188,11 @@ impl KafkaEncode for AlterClientQuotasRequestEntityData {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "AlterClientQuotasRequestEntityData",
+                version,
+            });
         }
 
         Ok(())
@@ -252,6 +272,11 @@ impl KafkaEncode for AlterClientQuotasRequestOpData {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "AlterClientQuotasRequestOpData",
+                version,
+            });
         }
 
         Ok(())
@@ -348,7 +373,7 @@ impl KafkaEncode for AlterClientQuotasRequest {
 
 /// `AlterClientQuotasResponseEntryData` as declared by the `AlterClientQuotas` API.
 #[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct AlterClientQuotasResponseEntryData {
     /// The error code, or `0` if the quota alteration succeeded.
     pub error_code: i16,
@@ -365,6 +390,17 @@ impl AlterClientQuotasResponseEntryData {
 
     fn is_flexible(version: ApiVersion) -> bool {
         Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+    }
+}
+
+impl Default for AlterClientQuotasResponseEntryData {
+    fn default() -> Self {
+        Self {
+            error_code: 0,
+            error_message: Some(StrBytes::default()),
+            entity: Vec::new(),
+            unknown_tagged_fields: TaggedFields::default(),
+        }
     }
 }
 
@@ -428,6 +464,11 @@ impl KafkaEncode for AlterClientQuotasResponseEntryData {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "AlterClientQuotasResponseEntryData",
+                version,
+            });
         }
 
         Ok(())
@@ -436,7 +477,7 @@ impl KafkaEncode for AlterClientQuotasResponseEntryData {
 
 /// `AlterClientQuotasResponseEntityData` as declared by the `AlterClientQuotas` API.
 #[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct AlterClientQuotasResponseEntityData {
     /// The entity type.
     pub entity_type: StrBytes,
@@ -451,6 +492,16 @@ impl AlterClientQuotasResponseEntityData {
 
     fn is_flexible(version: ApiVersion) -> bool {
         Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+    }
+}
+
+impl Default for AlterClientQuotasResponseEntityData {
+    fn default() -> Self {
+        Self {
+            entity_type: StrBytes::default(),
+            entity_name: Some(StrBytes::default()),
+            unknown_tagged_fields: TaggedFields::default(),
+        }
     }
 }
 
@@ -499,6 +550,11 @@ impl KafkaEncode for AlterClientQuotasResponseEntityData {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "AlterClientQuotasResponseEntityData",
+                version,
+            });
         }
 
         Ok(())

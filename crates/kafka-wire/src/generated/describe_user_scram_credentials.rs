@@ -59,6 +59,11 @@ impl KafkaEncode for DescribeUserScramCredentialsRequestUserName {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "DescribeUserScramCredentialsRequestUserName",
+                version,
+            });
         }
 
         Ok(())
@@ -67,12 +72,21 @@ impl KafkaEncode for DescribeUserScramCredentialsRequestUserName {
 
 /// Request body for the `DescribeUserScramCredentials` API.
 #[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct DescribeUserScramCredentialsRequest {
     /// The users to describe, or null/empty to describe all users.
     pub users: Option<Vec<DescribeUserScramCredentialsRequestUserName>>,
     /// Unknown flexible-version tagged fields retained for forwarding.
     pub unknown_tagged_fields: TaggedFields,
+}
+
+impl Default for DescribeUserScramCredentialsRequest {
+    fn default() -> Self {
+        Self {
+            users: Some(Vec::new()),
+            unknown_tagged_fields: TaggedFields::default(),
+        }
+    }
 }
 
 impl KafkaMessage for DescribeUserScramCredentialsRequest {
@@ -150,7 +164,7 @@ impl KafkaEncode for DescribeUserScramCredentialsRequest {
 
 /// `DescribeUserScramCredentialsResponseDescribeUserScramCredentialsResult` as declared by the `DescribeUserScramCredentials` API.
 #[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct DescribeUserScramCredentialsResponseDescribeUserScramCredentialsResult {
     /// The user name.
     pub user: StrBytes,
@@ -169,6 +183,18 @@ impl DescribeUserScramCredentialsResponseDescribeUserScramCredentialsResult {
 
     fn is_flexible(version: ApiVersion) -> bool {
         Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+    }
+}
+
+impl Default for DescribeUserScramCredentialsResponseDescribeUserScramCredentialsResult {
+    fn default() -> Self {
+        Self {
+            user: StrBytes::default(),
+            error_code: 0,
+            error_message: Some(StrBytes::default()),
+            credential_infos: Vec::new(),
+            unknown_tagged_fields: TaggedFields::default(),
+        }
     }
 }
 
@@ -219,6 +245,11 @@ impl KafkaEncode for DescribeUserScramCredentialsResponseDescribeUserScramCreden
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "DescribeUserScramCredentialsResponseDescribeUserScramCredentialsResult",
+                version,
+            });
         }
 
         Ok(())
@@ -274,6 +305,11 @@ impl KafkaEncode for DescribeUserScramCredentialsResponseCredentialInfo {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "DescribeUserScramCredentialsResponseCredentialInfo",
+                version,
+            });
         }
 
         Ok(())
@@ -282,7 +318,7 @@ impl KafkaEncode for DescribeUserScramCredentialsResponseCredentialInfo {
 
 /// Response body for the `DescribeUserScramCredentials` API.
 #[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct DescribeUserScramCredentialsResponse {
     /// The duration in milliseconds for which the request was throttled due to a quota violation, or zero if the request did not violate any quota.
     pub throttle_time_ms: i32,
@@ -294,6 +330,18 @@ pub struct DescribeUserScramCredentialsResponse {
     pub results: Vec<DescribeUserScramCredentialsResponseDescribeUserScramCredentialsResult>,
     /// Unknown flexible-version tagged fields retained for forwarding.
     pub unknown_tagged_fields: TaggedFields,
+}
+
+impl Default for DescribeUserScramCredentialsResponse {
+    fn default() -> Self {
+        Self {
+            throttle_time_ms: 0,
+            error_code: 0,
+            error_message: Some(StrBytes::default()),
+            results: Vec::new(),
+            unknown_tagged_fields: TaggedFields::default(),
+        }
+    }
 }
 
 impl KafkaMessage for DescribeUserScramCredentialsResponse {

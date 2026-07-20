@@ -17,7 +17,7 @@ use crate::{
 
 /// `DescribeShareGroupOffsetsRequestGroup` as declared by the `DescribeShareGroupOffsets` API.
 #[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct DescribeShareGroupOffsetsRequestGroup {
     /// The group identifier.
     pub group_id: StrBytes,
@@ -32,6 +32,16 @@ impl DescribeShareGroupOffsetsRequestGroup {
 
     fn is_flexible(version: ApiVersion) -> bool {
         Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+    }
+}
+
+impl Default for DescribeShareGroupOffsetsRequestGroup {
+    fn default() -> Self {
+        Self {
+            group_id: StrBytes::default(),
+            topics: Some(Vec::new()),
+            unknown_tagged_fields: TaggedFields::default(),
+        }
     }
 }
 
@@ -82,6 +92,11 @@ impl KafkaEncode for DescribeShareGroupOffsetsRequestGroup {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "DescribeShareGroupOffsetsRequestGroup",
+                version,
+            });
         }
 
         Ok(())
@@ -147,6 +162,11 @@ impl KafkaEncode for DescribeShareGroupOffsetsRequestTopic {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "DescribeShareGroupOffsetsRequestTopic",
+                version,
+            });
         }
 
         Ok(())
@@ -301,6 +321,11 @@ impl KafkaEncode for DescribeShareGroupOffsetsResponseGroup {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "DescribeShareGroupOffsetsResponseGroup",
+                version,
+            });
         }
 
         Ok(())
@@ -373,6 +398,11 @@ impl KafkaEncode for DescribeShareGroupOffsetsResponseTopic {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "DescribeShareGroupOffsetsResponseTopic",
+                version,
+            });
         }
 
         Ok(())
@@ -468,6 +498,11 @@ impl KafkaEncode for DescribeShareGroupOffsetsResponsePartition {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "DescribeShareGroupOffsetsResponsePartition",
+                version,
+            });
         }
 
         Ok(())

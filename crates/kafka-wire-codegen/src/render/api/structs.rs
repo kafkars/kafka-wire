@@ -14,7 +14,7 @@ use crate::{
 
 use super::codec::{render_construction, render_reads, render_writes};
 use super::prose::sentence;
-use super::tagged::{LegacyTags, render_tagged_decode, render_tagged_encode};
+use super::tagged::{TagOwner, render_tagged_decode, render_tagged_encode};
 
 /// Renders one whole schema as a standalone struct.
 ///
@@ -124,7 +124,9 @@ fn render_struct_with(
         message.name.api_stem()
     ));
     rust.line("#[non_exhaustive]");
-    let derive_default = fields.iter().all(field::uses_rust_default);
+    let derive_default = fields
+        .iter()
+        .all(|member| field::uses_rust_default(member, message));
     // `f64` is not `Eq`, and `Eq` does not propagate: a struct holding a
     // `Vec<T>` where `T` is not `Eq` cannot be either. Asked of the whole
     // message rather than these fields alone, so a container and the struct it
@@ -308,7 +310,7 @@ pub(super) fn render_struct_encode(
     rust.open(") -> Result<(), EncodeError>");
     render_writes(rust, fields, message)?;
     if !message.effective_flexible_versions().is_empty() {
-        render_tagged_encode(rust, fields, message, LegacyTags::Ignore)?;
+        render_tagged_encode(rust, fields, message, TagOwner::Struct(rust_type))?;
     }
     rust.blank();
     rust.line("Ok(())");

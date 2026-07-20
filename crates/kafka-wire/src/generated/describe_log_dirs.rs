@@ -90,6 +90,11 @@ impl KafkaEncode for DescribeLogDirsRequestDescribableLogDirTopic {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "DescribeLogDirsRequestDescribableLogDirTopic",
+                version,
+            });
         }
 
         Ok(())
@@ -98,12 +103,21 @@ impl KafkaEncode for DescribeLogDirsRequestDescribableLogDirTopic {
 
 /// Request body for the `DescribeLogDirs` API.
 #[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct DescribeLogDirsRequest {
     /// Each topic that we want to describe log directories for, or null for all topics.
     pub topics: Option<Vec<DescribeLogDirsRequestDescribableLogDirTopic>>,
     /// Unknown flexible-version tagged fields retained for forwarding.
     pub unknown_tagged_fields: TaggedFields,
+}
+
+impl Default for DescribeLogDirsRequest {
+    fn default() -> Self {
+        Self {
+            topics: Some(Vec::new()),
+            unknown_tagged_fields: TaggedFields::default(),
+        }
+    }
 }
 
 impl KafkaMessage for DescribeLogDirsRequest {
@@ -316,6 +330,11 @@ impl KafkaEncode for DescribeLogDirsResponseDescribeLogDirsResult {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "DescribeLogDirsResponseDescribeLogDirsResult",
+                version,
+            });
         }
 
         Ok(())
@@ -399,6 +418,11 @@ impl KafkaEncode for DescribeLogDirsResponseDescribeLogDirsTopic {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "DescribeLogDirsResponseDescribeLogDirsTopic",
+                version,
+            });
         }
 
         Ok(())
@@ -464,6 +488,11 @@ impl KafkaEncode for DescribeLogDirsResponseDescribeLogDirsPartition {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "DescribeLogDirsResponseDescribeLogDirsPartition",
+                version,
+            });
         }
 
         Ok(())

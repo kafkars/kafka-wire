@@ -74,6 +74,11 @@ impl KafkaEncode for VoteRequestTopicData {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "VoteRequestTopicData",
+                version,
+            });
         }
 
         Ok(())
@@ -177,6 +182,11 @@ impl KafkaEncode for VoteRequestPartitionData {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "VoteRequestPartitionData",
+                version,
+            });
         }
 
         Ok(())
@@ -344,6 +354,11 @@ impl KafkaEncode for VoteResponseTopicData {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "VoteResponseTopicData",
+                version,
+            });
         }
 
         Ok(())
@@ -414,6 +429,11 @@ impl KafkaEncode for VoteResponsePartitionData {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "VoteResponsePartitionData",
+                version,
+            });
         }
 
         Ok(())
@@ -492,6 +512,11 @@ impl KafkaEncode for VoteResponseNodeEndpoint {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "VoteResponseNodeEndpoint",
+                version,
+            });
         }
 
         Ok(())

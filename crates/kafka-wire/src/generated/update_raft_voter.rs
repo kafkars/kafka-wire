@@ -69,6 +69,11 @@ impl KafkaEncode for UpdateRaftVoterRequestListener {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "UpdateRaftVoterRequestListener",
+                version,
+            });
         }
 
         Ok(())
@@ -124,6 +129,11 @@ impl KafkaEncode for UpdateRaftVoterRequestKRaftVersionFeature {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "UpdateRaftVoterRequestKRaftVersionFeature",
+                version,
+            });
         }
 
         Ok(())
@@ -132,7 +142,7 @@ impl KafkaEncode for UpdateRaftVoterRequestKRaftVersionFeature {
 
 /// Request body for the `UpdateRaftVoter` API.
 #[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct UpdateRaftVoterRequest {
     /// The cluster id.
     pub cluster_id: Option<StrBytes>,
@@ -148,6 +158,20 @@ pub struct UpdateRaftVoterRequest {
     pub k_raft_version_feature: UpdateRaftVoterRequestKRaftVersionFeature,
     /// Unknown flexible-version tagged fields retained for forwarding.
     pub unknown_tagged_fields: TaggedFields,
+}
+
+impl Default for UpdateRaftVoterRequest {
+    fn default() -> Self {
+        Self {
+            cluster_id: Some(StrBytes::default()),
+            current_leader_epoch: 0,
+            voter_id: 0,
+            voter_directory_id: Uuid::ZERO,
+            listeners: Vec::new(),
+            k_raft_version_feature: UpdateRaftVoterRequestKRaftVersionFeature::default(),
+            unknown_tagged_fields: TaggedFields::default(),
+        }
+    }
 }
 
 impl KafkaMessage for UpdateRaftVoterRequest {
@@ -302,6 +326,11 @@ impl KafkaEncode for UpdateRaftVoterResponseCurrentLeader {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "UpdateRaftVoterResponseCurrentLeader",
+                version,
+            });
         }
 
         Ok(())

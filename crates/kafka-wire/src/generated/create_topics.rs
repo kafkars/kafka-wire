@@ -127,6 +127,11 @@ impl KafkaEncode for CreateTopicsRequestCreatableTopic {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "CreateTopicsRequestCreatableTopic",
+                version,
+            });
         }
 
         Ok(())
@@ -200,6 +205,11 @@ impl KafkaEncode for CreateTopicsRequestCreatableReplicaAssignment {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "CreateTopicsRequestCreatableReplicaAssignment",
+                version,
+            });
         }
 
         Ok(())
@@ -208,7 +218,7 @@ impl KafkaEncode for CreateTopicsRequestCreatableReplicaAssignment {
 
 /// `CreateTopicsRequestCreatableTopicConfig` as declared by the `CreateTopics` API.
 #[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct CreateTopicsRequestCreatableTopicConfig {
     /// The configuration name.
     pub name: StrBytes,
@@ -223,6 +233,16 @@ impl CreateTopicsRequestCreatableTopicConfig {
 
     fn is_flexible(version: ApiVersion) -> bool {
         Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+    }
+}
+
+impl Default for CreateTopicsRequestCreatableTopicConfig {
+    fn default() -> Self {
+        Self {
+            name: StrBytes::default(),
+            value: Some(StrBytes::default()),
+            unknown_tagged_fields: TaggedFields::default(),
+        }
     }
 }
 
@@ -271,6 +291,11 @@ impl KafkaEncode for CreateTopicsRequestCreatableTopicConfig {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "CreateTopicsRequestCreatableTopicConfig",
+                version,
+            });
         }
 
         Ok(())
@@ -543,6 +568,11 @@ impl KafkaEncode for CreateTopicsResponseCreatableTopicResult {
                 })?;
             }
             encoder.write_merged_tagged_fields(known, &self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "CreateTopicsResponseCreatableTopicResult",
+                version,
+            });
         }
 
         Ok(())
@@ -656,6 +686,11 @@ impl KafkaEncode for CreateTopicsResponseCreatableTopicConfigs {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "CreateTopicsResponseCreatableTopicConfigs",
+                version,
+            });
         }
 
         Ok(())

@@ -159,6 +159,11 @@ impl KafkaEncode for ShareGroupDescribeResponseTopicPartitions {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "ShareGroupDescribeResponseTopicPartitions",
+                version,
+            });
         }
 
         Ok(())
@@ -221,6 +226,11 @@ impl KafkaEncode for ShareGroupDescribeResponseAssignment {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "ShareGroupDescribeResponseAssignment",
+                version,
+            });
         }
 
         Ok(())
@@ -338,6 +348,11 @@ impl KafkaEncode for ShareGroupDescribeResponseDescribedGroup {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "ShareGroupDescribeResponseDescribedGroup",
+                version,
+            });
         }
 
         Ok(())
@@ -428,6 +443,11 @@ impl KafkaEncode for ShareGroupDescribeResponseMember {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "ShareGroupDescribeResponseMember",
+                version,
+            });
         }
 
         Ok(())

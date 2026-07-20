@@ -19,15 +19,31 @@ use crate::{
 
 use super::codec::{local, render_array_body, render_array_encode, render_nullable_array_encode};
 
-/// What a structure does with retained tags at a version carrying no section.
+/// How a structure names itself when it refuses to drop retained tags.
+///
+/// Both messages and structs refuse; they differ only in how the name is
+/// spelled, because a struct has no `KafkaMessage` and therefore no
+/// `Self::NAME`. An earlier version let a struct stay silent on the theory that
+/// its message had already refused — which was false. The message-level check
+/// reads `self.unknown_tagged_fields` on the message alone and never descends,
+/// so a nested struct's retained tags were dropped without a word.
 #[derive(Clone, Copy, Eq, PartialEq)]
-pub(super) enum LegacyTags {
-    /// A message refuses: the caller handed it tags this version cannot carry,
-    /// and writing the message without them would silently drop what a peer
-    /// sent.
-    Refuse,
-    /// A struct says nothing, because the message that owns it already did.
-    Ignore,
+pub(super) enum TagOwner<'a> {
+    /// A message, which carries its protocol name as a constant.
+    Message,
+    /// A struct, named by the Rust type the generator gave it. Not a protocol
+    /// name, because a nested struct has none on the wire.
+    Struct(&'a str),
+}
+
+impl TagOwner<'_> {
+    /// The expression that names this structure in an encode error.
+    fn name(self) -> String {
+        match self {
+            Self::Message => "Self::NAME".to_owned(),
+            Self::Struct(rust_type) => format!("{rust_type:?}"),
+        }
+    }
 }
 
 /// Whether this field travels in the tagged-field section rather than inline.
@@ -148,7 +164,7 @@ pub(super) fn render_tagged_encode(
     rust: &mut RustText,
     fields: &[Field],
     message: &Message,
-    legacy: LegacyTags,
+    owner: TagOwner<'_>,
 ) -> Result<(), GenerationError> {
     let tagged = known_tags(fields);
     rust.blank();
@@ -162,17 +178,12 @@ pub(super) fn render_tagged_encode(
         }
         rust.line("encoder.write_merged_tagged_fields(known, &self.unknown_tagged_fields)?;");
     }
-    match legacy {
-        LegacyTags::Refuse => {
-            rust.reopen("} else if !self.unknown_tagged_fields.is_empty() {");
-            rust.open("return Err(EncodeError::TaggedFieldsNotRepresentable");
-            rust.line("message: Self::NAME,");
-            rust.line("version,");
-            rust.close(");");
-            rust.close("");
-        }
-        LegacyTags::Ignore => rust.close(""),
-    }
+    rust.reopen("} else if !self.unknown_tagged_fields.is_empty() {");
+    rust.open("return Err(EncodeError::TaggedFieldsNotRepresentable");
+    rust.line(format!("message: {},", owner.name()));
+    rust.line("version,");
+    rust.close(");");
+    rust.close("");
     Ok(())
 }
 

@@ -76,6 +76,11 @@ impl KafkaEncode for AssignReplicasToDirsRequestDirectoryData {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "AssignReplicasToDirsRequestDirectoryData",
+                version,
+            });
         }
 
         Ok(())
@@ -143,6 +148,11 @@ impl KafkaEncode for AssignReplicasToDirsRequestTopicData {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "AssignReplicasToDirsRequestTopicData",
+                version,
+            });
         }
 
         Ok(())
@@ -193,6 +203,11 @@ impl KafkaEncode for AssignReplicasToDirsRequestPartitionData {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "AssignReplicasToDirsRequestPartitionData",
+                version,
+            });
         }
 
         Ok(())
@@ -358,6 +373,11 @@ impl KafkaEncode for AssignReplicasToDirsResponseDirectoryData {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "AssignReplicasToDirsResponseDirectoryData",
+                version,
+            });
         }
 
         Ok(())
@@ -425,6 +445,11 @@ impl KafkaEncode for AssignReplicasToDirsResponseTopicData {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "AssignReplicasToDirsResponseTopicData",
+                version,
+            });
         }
 
         Ok(())
@@ -480,6 +505,11 @@ impl KafkaEncode for AssignReplicasToDirsResponsePartitionData {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "AssignReplicasToDirsResponsePartitionData",
+                version,
+            });
         }
 
         Ok(())

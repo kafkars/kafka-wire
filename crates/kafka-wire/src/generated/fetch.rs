@@ -86,6 +86,11 @@ impl KafkaEncode for FetchRequestReplicaState {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "FetchRequestReplicaState",
+                version,
+            });
         }
 
         Ok(())
@@ -184,6 +189,11 @@ impl KafkaEncode for FetchRequestFetchTopic {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "FetchRequestFetchTopic",
+                version,
+            });
         }
 
         Ok(())
@@ -323,6 +333,11 @@ impl KafkaEncode for FetchRequestFetchPartition {
                 })?;
             }
             encoder.write_merged_tagged_fields(known, &self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "FetchRequestFetchPartition",
+                version,
+            });
         }
 
         Ok(())
@@ -425,6 +440,11 @@ impl KafkaEncode for FetchRequestForgottenTopic {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "FetchRequestForgottenTopic",
+                version,
+            });
         }
 
         Ok(())
@@ -777,6 +797,11 @@ impl KafkaEncode for FetchResponseFetchableTopicResponse {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "FetchResponseFetchableTopicResponse",
+                version,
+            });
         }
 
         Ok(())
@@ -973,6 +998,11 @@ impl KafkaEncode for FetchResponsePartitionData {
                 })?;
             }
             encoder.write_merged_tagged_fields(known, &self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "FetchResponsePartitionData",
+                version,
+            });
         }
 
         Ok(())
@@ -1050,6 +1080,11 @@ impl KafkaEncode for FetchResponseEpochEndOffset {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "FetchResponseEpochEndOffset",
+                version,
+            });
         }
 
         Ok(())
@@ -1127,6 +1162,11 @@ impl KafkaEncode for FetchResponseLeaderIdAndEpoch {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "FetchResponseLeaderIdAndEpoch",
+                version,
+            });
         }
 
         Ok(())
@@ -1192,6 +1232,11 @@ impl KafkaEncode for FetchResponseSnapshotId {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "FetchResponseSnapshotId",
+                version,
+            });
         }
 
         Ok(())
@@ -1247,6 +1292,11 @@ impl KafkaEncode for FetchResponseAbortedTransaction {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "FetchResponseAbortedTransaction",
+                version,
+            });
         }
 
         Ok(())
@@ -1336,6 +1386,11 @@ impl KafkaEncode for FetchResponseNodeEndpoint {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "FetchResponseNodeEndpoint",
+                version,
+            });
         }
 
         Ok(())

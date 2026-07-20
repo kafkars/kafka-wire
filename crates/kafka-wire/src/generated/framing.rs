@@ -403,6 +403,11 @@ impl KafkaEncode for DefaultPrincipalData {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "DefaultPrincipalData",
+                version,
+            });
         }
 
         Ok(())
@@ -490,6 +495,11 @@ impl KafkaEncode for KRaftVersionRecord {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "KRaftVersionRecord",
+                version,
+            });
         }
 
         Ok(())
@@ -551,6 +561,11 @@ impl KafkaEncode for LeaderChangeMessageVoter {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "LeaderChangeMessageVoter",
+                version,
+            });
         }
 
         Ok(())
@@ -634,6 +649,11 @@ impl KafkaEncode for LeaderChangeMessage {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "LeaderChangeMessage",
+                version,
+            });
         }
 
         Ok(())
@@ -642,7 +662,7 @@ impl KafkaEncode for LeaderChangeMessage {
 
 /// `RequestHeader` as declared by the `RequestHeader` API.
 #[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct RequestHeader {
     /// The API key of this request.
     pub request_api_key: i16,
@@ -660,6 +680,18 @@ impl KafkaMessage for RequestHeader {
     const NAME: &'static str = "RequestHeader";
     const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(1, 2);
     const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(2, 2));
+}
+
+impl Default for RequestHeader {
+    fn default() -> Self {
+        Self {
+            request_api_key: 0,
+            request_api_version: 0,
+            correlation_id: 0,
+            client_id: Some(StrBytes::default()),
+            unknown_tagged_fields: TaggedFields::default(),
+        }
+    }
 }
 
 impl KafkaDecode for RequestHeader {
@@ -697,6 +729,11 @@ impl KafkaEncode for RequestHeader {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "RequestHeader",
+                version,
+            });
         }
 
         Ok(())
@@ -745,6 +782,11 @@ impl KafkaEncode for ResponseHeader {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "ResponseHeader",
+                version,
+            });
         }
 
         Ok(())
@@ -793,6 +835,11 @@ impl KafkaEncode for SnapshotFooterRecord {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "SnapshotFooterRecord",
+                version,
+            });
         }
 
         Ok(())
@@ -846,6 +893,11 @@ impl KafkaEncode for SnapshotHeaderRecord {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "SnapshotHeaderRecord",
+                version,
+            });
         }
 
         Ok(())
@@ -921,6 +973,11 @@ impl KafkaEncode for VotersRecordVoter {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "VotersRecordVoter",
+                version,
+            });
         }
 
         Ok(())
@@ -981,6 +1038,11 @@ impl KafkaEncode for VotersRecordEndpoint {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "VotersRecordEndpoint",
+                version,
+            });
         }
 
         Ok(())
@@ -1036,6 +1098,11 @@ impl KafkaEncode for VotersRecordKRaftVersionFeature {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "VotersRecordKRaftVersionFeature",
+                version,
+            });
         }
 
         Ok(())
@@ -1099,6 +1166,11 @@ impl KafkaEncode for VotersRecord {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "VotersRecord",
+                version,
+            });
         }
 
         Ok(())

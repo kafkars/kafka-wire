@@ -17,7 +17,7 @@ use crate::{
 
 /// Request body for the `Envelope` API.
 #[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct EnvelopeRequest {
     /// The embedded request header and data.
     pub request_data: Bytes,
@@ -27,6 +27,17 @@ pub struct EnvelopeRequest {
     pub client_host_address: Bytes,
     /// Unknown flexible-version tagged fields retained for forwarding.
     pub unknown_tagged_fields: TaggedFields,
+}
+
+impl Default for EnvelopeRequest {
+    fn default() -> Self {
+        Self {
+            request_data: Bytes::default(),
+            request_principal: Some(Bytes::default()),
+            client_host_address: Bytes::default(),
+            unknown_tagged_fields: TaggedFields::default(),
+        }
+    }
 }
 
 impl KafkaMessage for EnvelopeRequest {

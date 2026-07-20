@@ -7,7 +7,7 @@ use crate::{
     render::{field, text::RustText},
 };
 
-use super::tagged::{LegacyTags, is_tagged, render_tagged_decode, render_tagged_encode};
+use super::tagged::{TagOwner, is_tagged, render_tagged_decode, render_tagged_encode};
 
 pub(super) fn render_decode(rust: &mut RustText, message: &Message) -> Result<(), GenerationError> {
     rust.open(format!("impl KafkaDecode for {}", message.name.rust_type()));
@@ -41,7 +41,7 @@ pub(super) fn render_encode(rust: &mut RustText, message: &Message) -> Result<()
 
     render_writes(rust, &message.fields, message)?;
     if !message.effective_flexible_versions().is_empty() {
-        render_tagged_encode(rust, &message.fields, message, LegacyTags::Refuse)?;
+        render_tagged_encode(rust, &message.fields, message, TagOwner::Message)?;
     }
 
     rust.blank();
@@ -62,7 +62,17 @@ pub(super) fn render_encode(rust: &mut RustText, message: &Message) -> Result<()
 /// so the shadowing cannot happen and the generated type is unaffected.
 pub(super) fn local(field: &kafka_wire_schema::Field) -> String {
     const RESERVED: &[&str] = &[
-        "version", "decoder", "encoder", "length", "values", "tag", "known",
+        "version",
+        "decoder",
+        "encoder",
+        "length",
+        "values",
+        "tag",
+        "known",
+        // Bound by the tagged decode as the retained-tag accumulator, and named
+        // in `Ok(Self { .. })` besides, so a field of this name would be
+        // assigned the section it was supposed to sit beside.
+        "unknown_tagged_fields",
     ];
     let name = field.name.rust_field();
     if RESERVED.contains(&name) {

@@ -102,6 +102,11 @@ impl KafkaEncode for WriteTxnMarkersRequestWritableTxnMarker {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "WriteTxnMarkersRequestWritableTxnMarker",
+                version,
+            });
         }
 
         Ok(())
@@ -167,6 +172,11 @@ impl KafkaEncode for WriteTxnMarkersRequestWritableTxnMarkerTopic {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "WriteTxnMarkersRequestWritableTxnMarkerTopic",
+                version,
+            });
         }
 
         Ok(())
@@ -311,6 +321,11 @@ impl KafkaEncode for WriteTxnMarkersResponseWritableTxnMarkerResult {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "WriteTxnMarkersResponseWritableTxnMarkerResult",
+                version,
+            });
         }
 
         Ok(())
@@ -380,6 +395,11 @@ impl KafkaEncode for WriteTxnMarkersResponseWritableTxnMarkerTopicResult {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "WriteTxnMarkersResponseWritableTxnMarkerTopicResult",
+                version,
+            });
         }
 
         Ok(())
@@ -435,6 +455,11 @@ impl KafkaEncode for WriteTxnMarkersResponseWritableTxnMarkerPartitionResult {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "WriteTxnMarkersResponseWritableTxnMarkerPartitionResult",
+                version,
+            });
         }
 
         Ok(())

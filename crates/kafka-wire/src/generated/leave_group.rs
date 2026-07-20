@@ -103,6 +103,11 @@ impl KafkaEncode for LeaveGroupRequestMemberIdentity {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "LeaveGroupRequestMemberIdentity",
+                version,
+            });
         }
 
         Ok(())
@@ -237,7 +242,7 @@ impl KafkaEncode for LeaveGroupRequest {
 
 /// `LeaveGroupResponseMemberResponse` as declared by the `LeaveGroup` API.
 #[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct LeaveGroupResponseMemberResponse {
     /// The member ID to remove from the group.
     pub member_id: StrBytes,
@@ -254,6 +259,17 @@ impl LeaveGroupResponseMemberResponse {
 
     fn is_flexible(version: ApiVersion) -> bool {
         Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+    }
+}
+
+impl Default for LeaveGroupResponseMemberResponse {
+    fn default() -> Self {
+        Self {
+            member_id: StrBytes::default(),
+            group_instance_id: Some(StrBytes::default()),
+            error_code: 0,
+            unknown_tagged_fields: TaggedFields::default(),
+        }
     }
 }
 
@@ -323,6 +339,11 @@ impl KafkaEncode for LeaveGroupResponseMemberResponse {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "LeaveGroupResponseMemberResponse",
+                version,
+            });
         }
 
         Ok(())

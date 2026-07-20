@@ -128,6 +128,11 @@ impl KafkaEncode for CreateAclsRequestAclCreation {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "CreateAclsRequestAclCreation",
+                version,
+            });
         }
 
         Ok(())
@@ -219,7 +224,7 @@ impl KafkaEncode for CreateAclsRequest {
 
 /// `CreateAclsResponseAclCreationResult` as declared by the `CreateAcls` API.
 #[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct CreateAclsResponseAclCreationResult {
     /// The result error, or zero if there was no error.
     pub error_code: i16,
@@ -234,6 +239,16 @@ impl CreateAclsResponseAclCreationResult {
 
     fn is_flexible(version: ApiVersion) -> bool {
         Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+    }
+}
+
+impl Default for CreateAclsResponseAclCreationResult {
+    fn default() -> Self {
+        Self {
+            error_code: 0,
+            error_message: Some(StrBytes::default()),
+            unknown_tagged_fields: TaggedFields::default(),
+        }
     }
 }
 
@@ -274,6 +289,11 @@ impl KafkaEncode for CreateAclsResponseAclCreationResult {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "CreateAclsResponseAclCreationResult",
+                version,
+            });
         }
 
         Ok(())

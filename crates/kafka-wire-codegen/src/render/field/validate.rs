@@ -22,6 +22,13 @@ pub(crate) fn validate_supported(message: &Message) -> Result<(), GenerationErro
         );
     }
 
+    // Common structs are emitted by `render_declared_structs` exactly as inline
+    // bodies are, so a construct declared in one reaches an emitter with no rule
+    // for it unless it is checked here. Walking only `message.fields` left the
+    // boundary open on one of the two places upstream spells a struct.
+    for common in &message.common_structs {
+        validate_fields(&common.fields, message)?;
+    }
     validate_fields(&message.fields, message)
 }
 

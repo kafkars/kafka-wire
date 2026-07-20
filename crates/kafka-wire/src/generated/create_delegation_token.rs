@@ -80,6 +80,11 @@ impl KafkaEncode for CreateDelegationTokenRequestCreatableRenewers {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "CreateDelegationTokenRequestCreatableRenewers",
+                version,
+            });
         }
 
         Ok(())
@@ -88,7 +93,7 @@ impl KafkaEncode for CreateDelegationTokenRequestCreatableRenewers {
 
 /// Request body for the `CreateDelegationToken` API.
 #[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct CreateDelegationTokenRequest {
     /// The principal type of the owner of the token. If it's null it defaults to the token request principal.
     pub owner_principal_type: Option<StrBytes>,
@@ -100,6 +105,18 @@ pub struct CreateDelegationTokenRequest {
     pub max_lifetime_ms: i64,
     /// Unknown flexible-version tagged fields retained for forwarding.
     pub unknown_tagged_fields: TaggedFields,
+}
+
+impl Default for CreateDelegationTokenRequest {
+    fn default() -> Self {
+        Self {
+            owner_principal_type: Some(StrBytes::default()),
+            owner_principal_name: Some(StrBytes::default()),
+            renewers: Vec::new(),
+            max_lifetime_ms: 0,
+            unknown_tagged_fields: TaggedFields::default(),
+        }
+    }
 }
 
 impl KafkaMessage for CreateDelegationTokenRequest {

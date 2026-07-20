@@ -76,6 +76,11 @@ impl KafkaEncode for DescribeQuorumRequestTopicData {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "DescribeQuorumRequestTopicData",
+                version,
+            });
         }
 
         Ok(())
@@ -126,6 +131,11 @@ impl KafkaEncode for DescribeQuorumRequestPartitionData {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "DescribeQuorumRequestPartitionData",
+                version,
+            });
         }
 
         Ok(())
@@ -302,6 +312,11 @@ impl KafkaEncode for DescribeQuorumResponseReplicaState {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "DescribeQuorumResponseReplicaState",
+                version,
+            });
         }
 
         Ok(())
@@ -369,6 +384,11 @@ impl KafkaEncode for DescribeQuorumResponseTopicData {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "DescribeQuorumResponseTopicData",
+                version,
+            });
         }
 
         Ok(())
@@ -377,7 +397,7 @@ impl KafkaEncode for DescribeQuorumResponseTopicData {
 
 /// `DescribeQuorumResponsePartitionData` as declared by the `DescribeQuorum` API.
 #[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct DescribeQuorumResponsePartitionData {
     /// The partition index.
     pub partition_index: i32,
@@ -404,6 +424,22 @@ impl DescribeQuorumResponsePartitionData {
 
     fn is_flexible(version: ApiVersion) -> bool {
         Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+    }
+}
+
+impl Default for DescribeQuorumResponsePartitionData {
+    fn default() -> Self {
+        Self {
+            partition_index: 0,
+            error_code: 0,
+            error_message: Some(StrBytes::default()),
+            leader_id: 0,
+            leader_epoch: 0,
+            high_watermark: 0,
+            current_voters: Vec::new(),
+            observers: Vec::new(),
+            unknown_tagged_fields: TaggedFields::default(),
+        }
     }
 }
 
@@ -484,6 +520,11 @@ impl KafkaEncode for DescribeQuorumResponsePartitionData {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "DescribeQuorumResponsePartitionData",
+                version,
+            });
         }
 
         Ok(())
@@ -559,6 +600,11 @@ impl KafkaEncode for DescribeQuorumResponseNode {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "DescribeQuorumResponseNode",
+                version,
+            });
         }
 
         Ok(())
@@ -637,6 +683,11 @@ impl KafkaEncode for DescribeQuorumResponseListener {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "DescribeQuorumResponseListener",
+                version,
+            });
         }
 
         Ok(())
@@ -645,7 +696,7 @@ impl KafkaEncode for DescribeQuorumResponseListener {
 
 /// Response body for the `DescribeQuorum` API.
 #[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct DescribeQuorumResponse {
     /// The top level error code.
     pub error_code: i16,
@@ -657,6 +708,18 @@ pub struct DescribeQuorumResponse {
     pub nodes: Vec<DescribeQuorumResponseNode>,
     /// Unknown flexible-version tagged fields retained for forwarding.
     pub unknown_tagged_fields: TaggedFields,
+}
+
+impl Default for DescribeQuorumResponse {
+    fn default() -> Self {
+        Self {
+            error_code: 0,
+            error_message: Some(StrBytes::default()),
+            topics: Vec::new(),
+            nodes: Vec::new(),
+            unknown_tagged_fields: TaggedFields::default(),
+        }
+    }
 }
 
 impl KafkaMessage for DescribeQuorumResponse {

@@ -159,6 +159,11 @@ impl KafkaEncode for ConsumerGroupDescribeResponseTopicPartitions {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "ConsumerGroupDescribeResponseTopicPartitions",
+                version,
+            });
         }
 
         Ok(())
@@ -221,6 +226,11 @@ impl KafkaEncode for ConsumerGroupDescribeResponseAssignment {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "ConsumerGroupDescribeResponseAssignment",
+                version,
+            });
         }
 
         Ok(())
@@ -340,6 +350,11 @@ impl KafkaEncode for ConsumerGroupDescribeResponseDescribedGroup {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "ConsumerGroupDescribeResponseDescribedGroup",
+                version,
+            });
         }
 
         Ok(())
@@ -475,6 +490,11 @@ impl KafkaEncode for ConsumerGroupDescribeResponseMember {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "ConsumerGroupDescribeResponseMember",
+                version,
+            });
         }
 
         Ok(())

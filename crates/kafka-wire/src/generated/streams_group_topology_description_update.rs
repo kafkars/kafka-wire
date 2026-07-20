@@ -86,6 +86,11 @@ impl KafkaEncode for StreamsGroupTopologyDescriptionUpdateRequestTopologyDescrip
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "StreamsGroupTopologyDescriptionUpdateRequestTopologyDescription",
+                version,
+            });
         }
 
         Ok(())
@@ -155,6 +160,11 @@ impl KafkaEncode for StreamsGroupTopologyDescriptionUpdateRequestTopologyDescrip
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "StreamsGroupTopologyDescriptionUpdateRequestTopologyDescriptionSubtopology",
+                version,
+            });
         }
 
         Ok(())
@@ -260,6 +270,11 @@ impl KafkaEncode for StreamsGroupTopologyDescriptionUpdateRequestTopologyDescrip
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "StreamsGroupTopologyDescriptionUpdateRequestTopologyDescriptionNode",
+                version,
+            });
         }
 
         Ok(())
@@ -320,6 +335,11 @@ impl KafkaEncode for StreamsGroupTopologyDescriptionUpdateRequestTopologyDescrip
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "StreamsGroupTopologyDescriptionUpdateRequestTopologyDescriptionGlobalStore",
+                version,
+            });
         }
 
         Ok(())

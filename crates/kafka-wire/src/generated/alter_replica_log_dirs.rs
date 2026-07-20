@@ -92,6 +92,11 @@ impl KafkaEncode for AlterReplicaLogDirsRequestAlterReplicaLogDir {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "AlterReplicaLogDirsRequestAlterReplicaLogDir",
+                version,
+            });
         }
 
         Ok(())
@@ -173,6 +178,11 @@ impl KafkaEncode for AlterReplicaLogDirsRequestAlterReplicaLogDirTopic {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "AlterReplicaLogDirsRequestAlterReplicaLogDirTopic",
+                version,
+            });
         }
 
         Ok(())
@@ -343,6 +353,11 @@ impl KafkaEncode for AlterReplicaLogDirsResponseAlterReplicaLogDirTopicResult {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "AlterReplicaLogDirsResponseAlterReplicaLogDirTopicResult",
+                version,
+            });
         }
 
         Ok(())
@@ -398,6 +413,11 @@ impl KafkaEncode for AlterReplicaLogDirsResponseAlterReplicaLogDirPartitionResul
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "AlterReplicaLogDirsResponseAlterReplicaLogDirPartitionResult",
+                version,
+            });
         }
 
         Ok(())

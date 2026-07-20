@@ -17,7 +17,7 @@ use crate::{
 
 /// `DescribeClientQuotasRequestComponentData` as declared by the `DescribeClientQuotas` API.
 #[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct DescribeClientQuotasRequestComponentData {
     /// The entity type that the filter component applies to.
     pub entity_type: StrBytes,
@@ -34,6 +34,17 @@ impl DescribeClientQuotasRequestComponentData {
 
     fn is_flexible(version: ApiVersion) -> bool {
         Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+    }
+}
+
+impl Default for DescribeClientQuotasRequestComponentData {
+    fn default() -> Self {
+        Self {
+            entity_type: StrBytes::default(),
+            match_type: 0,
+            match_: Some(StrBytes::default()),
+            unknown_tagged_fields: TaggedFields::default(),
+        }
     }
 }
 
@@ -85,6 +96,11 @@ impl KafkaEncode for DescribeClientQuotasRequestComponentData {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "DescribeClientQuotasRequestComponentData",
+                version,
+            });
         }
 
         Ok(())
@@ -270,6 +286,11 @@ impl KafkaEncode for DescribeClientQuotasResponseEntryData {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "DescribeClientQuotasResponseEntryData",
+                version,
+            });
         }
 
         Ok(())
@@ -278,7 +299,7 @@ impl KafkaEncode for DescribeClientQuotasResponseEntryData {
 
 /// `DescribeClientQuotasResponseEntityData` as declared by the `DescribeClientQuotas` API.
 #[non_exhaustive]
-#[derive(Clone, Debug, Default, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct DescribeClientQuotasResponseEntityData {
     /// The entity type.
     pub entity_type: StrBytes,
@@ -293,6 +314,16 @@ impl DescribeClientQuotasResponseEntityData {
 
     fn is_flexible(version: ApiVersion) -> bool {
         Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+    }
+}
+
+impl Default for DescribeClientQuotasResponseEntityData {
+    fn default() -> Self {
+        Self {
+            entity_type: StrBytes::default(),
+            entity_name: Some(StrBytes::default()),
+            unknown_tagged_fields: TaggedFields::default(),
+        }
     }
 }
 
@@ -341,6 +372,11 @@ impl KafkaEncode for DescribeClientQuotasResponseEntityData {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "DescribeClientQuotasResponseEntityData",
+                version,
+            });
         }
 
         Ok(())
@@ -414,6 +450,11 @@ impl KafkaEncode for DescribeClientQuotasResponseValueData {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "DescribeClientQuotasResponseValueData",
+                version,
+            });
         }
 
         Ok(())
@@ -422,7 +463,7 @@ impl KafkaEncode for DescribeClientQuotasResponseValueData {
 
 /// Response body for the `DescribeClientQuotas` API.
 #[non_exhaustive]
-#[derive(Clone, Debug, Default, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct DescribeClientQuotasResponse {
     /// The duration in milliseconds for which the request was throttled due to a quota violation, or zero if the request did not violate any quota.
     pub throttle_time_ms: i32,
@@ -434,6 +475,18 @@ pub struct DescribeClientQuotasResponse {
     pub entries: Option<Vec<DescribeClientQuotasResponseEntryData>>,
     /// Unknown flexible-version tagged fields retained for forwarding.
     pub unknown_tagged_fields: TaggedFields,
+}
+
+impl Default for DescribeClientQuotasResponse {
+    fn default() -> Self {
+        Self {
+            throttle_time_ms: 0,
+            error_code: 0,
+            error_message: Some(StrBytes::default()),
+            entries: Some(Vec::new()),
+            unknown_tagged_fields: TaggedFields::default(),
+        }
+    }
 }
 
 impl KafkaMessage for DescribeClientQuotasResponse {

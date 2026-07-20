@@ -163,6 +163,11 @@ impl KafkaEncode for StreamsGroupDescribeResponseEndpoint {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "StreamsGroupDescribeResponseEndpoint",
+                version,
+            });
         }
 
         Ok(())
@@ -223,6 +228,11 @@ impl KafkaEncode for StreamsGroupDescribeResponseTaskOffset {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "StreamsGroupDescribeResponseTaskOffset",
+                version,
+            });
         }
 
         Ok(())
@@ -319,6 +329,11 @@ impl KafkaEncode for StreamsGroupDescribeResponseAssignment {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "StreamsGroupDescribeResponseAssignment",
+                version,
+            });
         }
 
         Ok(())
@@ -384,6 +399,11 @@ impl KafkaEncode for StreamsGroupDescribeResponseTaskIds {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "StreamsGroupDescribeResponseTaskIds",
+                version,
+            });
         }
 
         Ok(())
@@ -439,6 +459,11 @@ impl KafkaEncode for StreamsGroupDescribeResponseKeyValue {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "StreamsGroupDescribeResponseKeyValue",
+                version,
+            });
         }
 
         Ok(())
@@ -516,6 +541,11 @@ impl KafkaEncode for StreamsGroupDescribeResponseTopicInfo {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "StreamsGroupDescribeResponseTopicInfo",
+                version,
+            });
         }
 
         Ok(())
@@ -607,6 +637,11 @@ impl KafkaEncode for StreamsGroupDescribeResponseTopologyDescription {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "StreamsGroupDescribeResponseTopologyDescription",
+                version,
+            });
         }
 
         Ok(())
@@ -684,6 +719,11 @@ impl KafkaEncode for StreamsGroupDescribeResponseTopologyDescriptionSubtopology 
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "StreamsGroupDescribeResponseTopologyDescriptionSubtopology",
+                version,
+            });
         }
 
         Ok(())
@@ -819,6 +859,11 @@ impl KafkaEncode for StreamsGroupDescribeResponseTopologyDescriptionNode {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "StreamsGroupDescribeResponseTopologyDescriptionNode",
+                version,
+            });
         }
 
         Ok(())
@@ -886,6 +931,11 @@ impl KafkaEncode for StreamsGroupDescribeResponseTopologyDescriptionGlobalStore 
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "StreamsGroupDescribeResponseTopologyDescriptionGlobalStore",
+                version,
+            });
         }
 
         Ok(())
@@ -1051,6 +1101,11 @@ impl KafkaEncode for StreamsGroupDescribeResponseDescribedGroup {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "StreamsGroupDescribeResponseDescribedGroup",
+                version,
+            });
         }
 
         Ok(())
@@ -1124,6 +1179,11 @@ impl KafkaEncode for StreamsGroupDescribeResponseTopology {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "StreamsGroupDescribeResponseTopology",
+                version,
+            });
         }
 
         Ok(())
@@ -1238,6 +1298,11 @@ impl KafkaEncode for StreamsGroupDescribeResponseSubtopology {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "StreamsGroupDescribeResponseSubtopology",
+                version,
+            });
         }
 
         Ok(())
@@ -1405,6 +1470,11 @@ impl KafkaEncode for StreamsGroupDescribeResponseMember {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "StreamsGroupDescribeResponseMember",
+                version,
+            });
         }
 
         Ok(())

@@ -74,6 +74,11 @@ impl KafkaEncode for ListPartitionReassignmentsRequestListPartitionReassignments
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "ListPartitionReassignmentsRequestListPartitionReassignmentsTopics",
+                version,
+            });
         }
 
         Ok(())
@@ -239,6 +244,11 @@ impl KafkaEncode for ListPartitionReassignmentsResponseOngoingTopicReassignment 
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "ListPartitionReassignmentsResponseOngoingTopicReassignment",
+                version,
+            });
         }
 
         Ok(())
@@ -334,6 +344,11 @@ impl KafkaEncode for ListPartitionReassignmentsResponseOngoingPartitionReassignm
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "ListPartitionReassignmentsResponseOngoingPartitionReassignment",
+                version,
+            });
         }
 
         Ok(())
@@ -342,7 +357,7 @@ impl KafkaEncode for ListPartitionReassignmentsResponseOngoingPartitionReassignm
 
 /// Response body for the `ListPartitionReassignments` API.
 #[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct ListPartitionReassignmentsResponse {
     /// The duration in milliseconds for which the request was throttled due to a quota violation, or zero if the request did not violate any quota.
     pub throttle_time_ms: i32,
@@ -354,6 +369,18 @@ pub struct ListPartitionReassignmentsResponse {
     pub topics: Vec<ListPartitionReassignmentsResponseOngoingTopicReassignment>,
     /// Unknown flexible-version tagged fields retained for forwarding.
     pub unknown_tagged_fields: TaggedFields,
+}
+
+impl Default for ListPartitionReassignmentsResponse {
+    fn default() -> Self {
+        Self {
+            throttle_time_ms: 0,
+            error_code: 0,
+            error_message: Some(StrBytes::default()),
+            topics: Vec::new(),
+            unknown_tagged_fields: TaggedFields::default(),
+        }
+    }
 }
 
 impl KafkaMessage for ListPartitionReassignmentsResponse {

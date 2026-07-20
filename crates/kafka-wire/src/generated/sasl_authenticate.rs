@@ -90,7 +90,7 @@ impl KafkaEncode for SaslAuthenticateRequest {
 
 /// Response body for the `SaslAuthenticate` API.
 #[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct SaslAuthenticateResponse {
     /// The error code, or 0 if there was no error.
     pub error_code: i16,
@@ -102,6 +102,18 @@ pub struct SaslAuthenticateResponse {
     pub session_lifetime_ms: i64,
     /// Unknown flexible-version tagged fields retained for forwarding.
     pub unknown_tagged_fields: TaggedFields,
+}
+
+impl Default for SaslAuthenticateResponse {
+    fn default() -> Self {
+        Self {
+            error_code: 0,
+            error_message: Some(StrBytes::default()),
+            auth_bytes: Bytes::default(),
+            session_lifetime_ms: 0,
+            unknown_tagged_fields: TaggedFields::default(),
+        }
+    }
 }
 
 impl KafkaMessage for SaslAuthenticateResponse {

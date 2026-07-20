@@ -92,6 +92,11 @@ impl KafkaEncode for DeleteRecordsRequestDeleteRecordsTopic {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "DeleteRecordsRequestDeleteRecordsTopic",
+                version,
+            });
         }
 
         Ok(())
@@ -147,6 +152,11 @@ impl KafkaEncode for DeleteRecordsRequestDeleteRecordsPartition {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "DeleteRecordsRequestDeleteRecordsPartition",
+                version,
+            });
         }
 
         Ok(())
@@ -320,6 +330,11 @@ impl KafkaEncode for DeleteRecordsResponseDeleteRecordsTopicResult {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "DeleteRecordsResponseDeleteRecordsTopicResult",
+                version,
+            });
         }
 
         Ok(())
@@ -380,6 +395,11 @@ impl KafkaEncode for DeleteRecordsResponseDeleteRecordsPartitionResult {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "DeleteRecordsResponseDeleteRecordsPartitionResult",
+                version,
+            });
         }
 
         Ok(())

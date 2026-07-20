@@ -64,6 +64,11 @@ impl KafkaEncode for StreamsGroupHeartbeatRequestKeyValue {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "StreamsGroupHeartbeatRequestKeyValue",
+                version,
+            });
         }
 
         Ok(())
@@ -141,6 +146,11 @@ impl KafkaEncode for StreamsGroupHeartbeatRequestTopicInfo {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "StreamsGroupHeartbeatRequestTopicInfo",
+                version,
+            });
         }
 
         Ok(())
@@ -196,6 +206,11 @@ impl KafkaEncode for StreamsGroupHeartbeatRequestEndpoint {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "StreamsGroupHeartbeatRequestEndpoint",
+                version,
+            });
         }
 
         Ok(())
@@ -256,6 +271,11 @@ impl KafkaEncode for StreamsGroupHeartbeatRequestTaskOffset {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "StreamsGroupHeartbeatRequestTaskOffset",
+                version,
+            });
         }
 
         Ok(())
@@ -321,6 +341,11 @@ impl KafkaEncode for StreamsGroupHeartbeatRequestTaskIds {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "StreamsGroupHeartbeatRequestTaskIds",
+                version,
+            });
         }
 
         Ok(())
@@ -388,6 +413,11 @@ impl KafkaEncode for StreamsGroupHeartbeatRequestTopology {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "StreamsGroupHeartbeatRequestTopology",
+                version,
+            });
         }
 
         Ok(())
@@ -534,6 +564,11 @@ impl KafkaEncode for StreamsGroupHeartbeatRequestSubtopology {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "StreamsGroupHeartbeatRequestSubtopology",
+                version,
+            });
         }
 
         Ok(())
@@ -624,6 +659,11 @@ impl KafkaEncode for StreamsGroupHeartbeatRequestCopartitionGroup {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "StreamsGroupHeartbeatRequestCopartitionGroup",
+                version,
+            });
         }
 
         Ok(())
@@ -979,6 +1019,11 @@ impl KafkaEncode for StreamsGroupHeartbeatResponseStatus {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "StreamsGroupHeartbeatResponseStatus",
+                version,
+            });
         }
 
         Ok(())
@@ -1044,6 +1089,11 @@ impl KafkaEncode for StreamsGroupHeartbeatResponseTopicPartition {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "StreamsGroupHeartbeatResponseTopicPartition",
+                version,
+            });
         }
 
         Ok(())
@@ -1109,6 +1159,11 @@ impl KafkaEncode for StreamsGroupHeartbeatResponseTaskIds {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "StreamsGroupHeartbeatResponseTaskIds",
+                version,
+            });
         }
 
         Ok(())
@@ -1164,6 +1219,11 @@ impl KafkaEncode for StreamsGroupHeartbeatResponseEndpoint {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "StreamsGroupHeartbeatResponseEndpoint",
+                version,
+            });
         }
 
         Ok(())
@@ -1248,6 +1308,11 @@ impl KafkaEncode for StreamsGroupHeartbeatResponseEndpointToPartitions {
 
         if Self::is_flexible(version) {
             encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+        } else if !self.unknown_tagged_fields.is_empty() {
+            return Err(EncodeError::TaggedFieldsNotRepresentable {
+                message: "StreamsGroupHeartbeatResponseEndpointToPartitions",
+                version,
+            });
         }
 
         Ok(())
