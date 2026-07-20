@@ -15,6 +15,32 @@
         "topics": []
       },
       "hex": "00000000000100"
+    },
+    {
+      "name": "synthesized_populated_v9",
+      "why": "Every field this version declares, present and non-default: one element in every array, every nullable thing supplied. The defaults case leaves arrays empty, which hides every field of the struct the array would have held — a records field encoded with the wrong length prefix survived the whole corpus that way, because nothing ever reached the struct holding it.",
+      "message": "ListOffsetsRequest",
+      "api_key": 2,
+      "direction": "request",
+      "version": 9,
+      "flexible": true,
+      "json_value": {
+        "isolationLevel": 1,
+        "replicaId": 1,
+        "topics": [
+          {
+            "name": "v",
+            "partitions": [
+              {
+                "currentLeaderEpoch": 1,
+                "partitionIndex": 1,
+                "timestamp": 1
+              }
+            ]
+          }
+        ]
+      },
+      "hex": "00000001010202760200000001000000010000000000000001000000"
     }
   ]
 }
