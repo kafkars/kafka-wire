@@ -18,6 +18,15 @@ vectors-check:
 vectors-refresh:
     cargo xtask vectors --refresh
 
+# Verify the record-batch corpus. Pure Rust, same as vectors-check.
+records-check:
+    cargo xtask records --check
+
+# Re-author it from the pinned jar. Also needs the compression codecs on the
+# classpath, which the clients jar does not bundle.
+records-refresh:
+    cargo xtask records --refresh
+
 fmt:
     cargo fmt --all --check
 
@@ -30,7 +39,7 @@ test:
 doc:
     RUSTDOCFLAGS="-D warnings" cargo doc --workspace --all-features --no-deps
 
-check: generated-check vectors-check fmt lint test doc
+check: generated-check vectors-check records-check fmt lint test doc
 
 tree:
     find crates xtask spec -type f | sort
