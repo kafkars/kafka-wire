@@ -21,6 +21,7 @@ pub(crate) fn render_module_file(
         .map(|group| group.module_name.as_str())
         .collect::<Vec<_>>();
     modules.push("registry");
+    modules.push("header_version");
     if !unkeyed.is_empty() {
         modules.push("framing");
     }
@@ -49,6 +50,13 @@ pub(crate) fn render_module_file(
     exports.push((
         "registry".to_owned(),
         vec!["MESSAGE_DESCRIPTORS".to_owned()],
+    ));
+    exports.push((
+        "header_version".to_owned(),
+        vec![
+            "request_header_version".to_owned(),
+            "response_header_version".to_owned(),
+        ],
     ));
     // A framing schema carries no descriptor, so it exports only its type.
     if !unkeyed.is_empty() {

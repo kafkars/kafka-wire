@@ -72,4 +72,16 @@ pub enum EncodeError {
         /// Length written by `BufferTarget`.
         actual: usize,
     },
+
+    /// A frame's body exceeds what its `int32` length prefix can describe.
+    ///
+    /// Kafka frames are length-delimited by a signed 32-bit count, so a body
+    /// past `i32::MAX` has no wire representation at all. Named rather than
+    /// truncated: silently writing a wrapped length would hand the peer a
+    /// frame boundary in the middle of a message.
+    #[error("frame body of {bytes} bytes exceeds the int32 length prefix")]
+    FrameTooLarge {
+        /// Bytes the header and body occupied.
+        bytes: usize,
+    },
 }

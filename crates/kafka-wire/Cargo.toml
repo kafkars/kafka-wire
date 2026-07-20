@@ -9,6 +9,7 @@ description = "Generated, version-aware Kafka wire messages"
 publish = false
 
 [dependencies]
+bytes.workspace = true
 kafka-wire-core = { path = "../kafka-wire-core" }
 
 [dev-dependencies]

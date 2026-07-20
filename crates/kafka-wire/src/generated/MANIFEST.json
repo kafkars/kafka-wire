@@ -178,6 +178,10 @@
       "sha256": "a31dbee1367f89ebaa1840ba2a325d443da7756f4e50825f1185945d17a24f3b"
     },
     {
+      "path": "header_version.rs",
+      "sha256": "dc296db53ffff62c2cc545aaa07a46f9c69575159f39f72b3d4bef241d55ec82"
+    },
+    {
       "path": "heartbeat.rs",
       "sha256": "b53a13849b70f41020f393ebacdcbf354bbadc0d75a194cadc64320f411dce7c"
     },
@@ -219,7 +223,7 @@
     },
     {
       "path": "mod.rs",
-      "sha256": "a622b07af507d759500352938c75824ed09727bdfd2a32919e79e77d954f45a9"
+      "sha256": "4bf035d573b9d15ca51f0851840b2bac0a8043d4faef33e3ac93bd086a0c3112"
     },
     {
       "path": "offset_commit.rs",

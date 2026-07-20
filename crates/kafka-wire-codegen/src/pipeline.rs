@@ -9,7 +9,10 @@ use crate::{
     lockfile::ProtocolLock,
     manifest::render_manifest,
     output::apply_tree,
-    render::{render_api, render_module_file, render_registry, render_unkeyed},
+    overrides::HeaderOverrides,
+    render::{
+        render_api, render_header_version, render_module_file, render_registry, render_unkeyed,
+    },
     source::load_sources,
 };
 
@@ -40,6 +43,11 @@ pub fn generate(config: &GeneratorConfig) -> Result<GenerationReport, Generation
     rendered.insert(
         "registry.rs".to_owned(),
         render_registry(&groups, &lock.kafka.commit),
+    );
+    let overrides = HeaderOverrides::read(config.workspace_root())?;
+    rendered.insert(
+        "header_version.rs".to_owned(),
+        render_header_version(&overrides, &lock.kafka.commit),
     );
 
     // Layout belongs to rustfmt, so the manifest must hash formatted bytes.

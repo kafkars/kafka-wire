@@ -12,6 +12,7 @@ mod identity;
 mod lockfile;
 mod manifest;
 mod output;
+mod overrides;
 mod pipeline;
 mod provenance;
 mod render;

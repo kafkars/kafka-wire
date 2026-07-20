@@ -4,10 +4,12 @@
 //! names are not part of the public API.
 
 mod descriptor;
+mod frame;
 mod generated;
 mod message;
 
 pub use descriptor::{MessageDescriptor, MessageDirection};
+pub use frame::{encode_request, response_header_version_for};
 
 // EXCEPTION to the repository rule "no wildcard public re-exports" (AGENTS.md).
 //

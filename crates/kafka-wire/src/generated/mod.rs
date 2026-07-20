@@ -46,6 +46,7 @@ mod expire_delegation_token;
 mod find_coordinator;
 mod framing;
 mod get_telemetry_subscriptions;
+mod header_version;
 mod heartbeat;
 mod incremental_alter_configs;
 mod init_producer_id;
@@ -247,6 +248,7 @@ pub use get_telemetry_subscriptions::{
     GET_TELEMETRY_SUBSCRIPTIONS_RESPONSE_DESCRIPTOR, GetTelemetrySubscriptionsRequest,
     GetTelemetrySubscriptionsResponse,
 };
+pub use header_version::{request_header_version, response_header_version};
 pub use heartbeat::{
     HEARTBEAT_REQUEST_DESCRIPTOR, HEARTBEAT_RESPONSE_DESCRIPTOR, HeartbeatRequest,
     HeartbeatResponse,

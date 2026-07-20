@@ -123,6 +123,14 @@ impl Workspace {
             entries.join("\n\n")
         );
         write(&root.join("spec/protocol.lock"), &lock);
+        // The reviewed quirk data is an input the pipeline reads, so a synthetic
+        // workspace has to carry it too. Copied from the real one rather than
+        // invented, so a probe cannot pass against exceptions the repository
+        // does not actually declare.
+        write(
+            &root.join("spec/overrides/headers.toml"),
+            &read(&repository_root().join("spec/overrides/headers.toml")),
+        );
 
         Self { root }
     }
