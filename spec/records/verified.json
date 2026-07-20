@@ -1,0 +1,162 @@
+{
+  "schema": 1,
+  "about": "What Apache Kafka's own MemoryRecords reader recovered from batches THIS repository compressed. Unlike vectors.json the `hex` here is not Kafka's: it is the output under judgement, pinned so a later comparison is against bytes Kafka actually saw. Regenerate with `cargo xtask records --refresh`.",
+  "verified": [
+    {
+      "name": "gzip",
+      "why": "Compression replaces the records payload wholesale and sets attribute bits 0-2. The batch header stays uncompressed, which is what lets a broker read a batch it cannot decompress.",
+      "hex": "000000000000000000000061ffffffff0200c4241f0001000000010000018bcfe568000000018bcfe56801ffffffffffffffffffffffffffff000000021f8b08000000000000ff5362606060c936142a4bcc294dd5cdcf4b65906360626284f24bcaf319008724593422000000",
+      "kafka": {
+        "batches": [
+          {
+            "baseOffset": 0,
+            "baseSequence": -1,
+            "compression": "gzip",
+            "controlBatch": false,
+            "lastOffset": 1,
+            "magic": 2,
+            "maxTimestamp": 1700000000001,
+            "partitionLeaderEpoch": -1,
+            "producerEpoch": -1,
+            "producerId": -1,
+            "records": [
+              {
+                "headers": [],
+                "key": "6b31",
+                "offset": 0,
+                "timestamp": 1700000000000,
+                "value": "76616c75652d6f6e65"
+              },
+              {
+                "headers": [],
+                "key": null,
+                "offset": 1,
+                "timestamp": 1700000000001,
+                "value": "76616c75652d74776f"
+              }
+            ],
+            "timestampType": "CreateTime",
+            "transactional": false
+          }
+        ]
+      }
+    },
+    {
+      "name": "snappy",
+      "why": "Kafka's snappy is the xerial FRAMED format, whose payload opens with a 0x82 'SNAPPY' magic, not the raw snappy an implementation reaching for the obvious crate would produce.",
+      "hex": "000000000000000000000069ffffffff029c60bd9e0002000000010000018bcfe568000000018bcfe56801ffffffffffffffffffffffffffff0000000282534e4150505900000000010000000100000024228422000000046b311276616c75652d6f6e65001e000202011276616c75652d74776f00",
+      "kafka": {
+        "batches": [
+          {
+            "baseOffset": 0,
+            "baseSequence": -1,
+            "compression": "snappy",
+            "controlBatch": false,
+            "lastOffset": 1,
+            "magic": 2,
+            "maxTimestamp": 1700000000001,
+            "partitionLeaderEpoch": -1,
+            "producerEpoch": -1,
+            "producerId": -1,
+            "records": [
+              {
+                "headers": [],
+                "key": "6b31",
+                "offset": 0,
+                "timestamp": 1700000000000,
+                "value": "76616c75652d6f6e65"
+              },
+              {
+                "headers": [],
+                "key": null,
+                "offset": 1,
+                "timestamp": 1700000000001,
+                "value": "76616c75652d74776f"
+              }
+            ],
+            "timestampType": "CreateTime",
+            "transactional": false
+          }
+        ]
+      }
+    },
+    {
+      "name": "lz4",
+      "why": "LZ4 here is the frame format, opening with the 0x04224D18 frame magic rather than a bare block.",
+      "hex": "000000000000000000000062ffffffff02e347307e0003000000010000018bcfe568000000018bcfe56801ffffffffffffffffffffffffffff0000000204224d186040822200008022000000046b311276616c75652d6f6e65001e000202011276616c75652d74776f0000000000",
+      "kafka": {
+        "batches": [
+          {
+            "baseOffset": 0,
+            "baseSequence": -1,
+            "compression": "lz4",
+            "controlBatch": false,
+            "lastOffset": 1,
+            "magic": 2,
+            "maxTimestamp": 1700000000001,
+            "partitionLeaderEpoch": -1,
+            "producerEpoch": -1,
+            "producerId": -1,
+            "records": [
+              {
+                "headers": [],
+                "key": "6b31",
+                "offset": 0,
+                "timestamp": 1700000000000,
+                "value": "76616c75652d6f6e65"
+              },
+              {
+                "headers": [],
+                "key": null,
+                "offset": 1,
+                "timestamp": 1700000000001,
+                "value": "76616c75652d74776f"
+              }
+            ],
+            "timestampType": "CreateTime",
+            "transactional": false
+          }
+        ]
+      }
+    },
+    {
+      "name": "zstd",
+      "why": "Zstd's frame magic is 0x28B52FFD. Included for the same reason as its siblings: the codec identity lives in the attributes, and reading the wrong one produces a plausible-looking failure deep inside the payload.",
+      "hex": "00000000000000000000005cffffffff02e7de3c2b0004000000010000018bcfe568000000018bcfe56801ffffffffffffffffffffffffffff0000000228b52ffd005811010022000000046b311276616c75652d6f6e65001e000202011276616c75652d74776f00",
+      "kafka": {
+        "batches": [
+          {
+            "baseOffset": 0,
+            "baseSequence": -1,
+            "compression": "zstd",
+            "controlBatch": false,
+            "lastOffset": 1,
+            "magic": 2,
+            "maxTimestamp": 1700000000001,
+            "partitionLeaderEpoch": -1,
+            "producerEpoch": -1,
+            "producerId": -1,
+            "records": [
+              {
+                "headers": [],
+                "key": "6b31",
+                "offset": 0,
+                "timestamp": 1700000000000,
+                "value": "76616c75652d6f6e65"
+              },
+              {
+                "headers": [],
+                "key": null,
+                "offset": 1,
+                "timestamp": 1700000000001,
+                "value": "76616c75652d74776f"
+              }
+            ],
+            "timestampType": "CreateTime",
+            "transactional": false
+          }
+        ]
+      }
+    }
+  ]
+}

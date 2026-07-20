@@ -63,6 +63,29 @@ pub(super) fn self_test(workspace: &Path) -> Result<String, String> {
 
 /// Ask Kafka's producer machinery to lay out every batch the plans call for.
 pub(super) fn encode(workspace: &Path, plans: &str) -> Result<String, String> {
+    ask(workspace, &[], plans, "the record oracle refused the plans")
+}
+
+/// Ask Kafka's own reader what it recovers from bytes this repository wrote.
+///
+/// This is the only direction in which compression encode can be judged. Byte
+/// identity with Java's compressors is unreachable and was never the property
+/// worth having; whether Kafka can read the payload is.
+pub(super) fn verify(workspace: &Path, batches: &str) -> Result<String, String> {
+    ask(
+        workspace,
+        &["--verify"],
+        batches,
+        "Apache Kafka could not read the bytes this repository wrote",
+    )
+}
+
+fn ask(
+    workspace: &Path,
+    arguments: &[&str],
+    request: &str,
+    refusal: &str,
+) -> Result<String, String> {
     use std::io::Write as _;
 
     let classpath = ready(workspace)?;
@@ -70,6 +93,7 @@ pub(super) fn encode(workspace: &Path, plans: &str) -> Result<String, String> {
         .arg("-cp")
         .arg(classpath)
         .arg(program(workspace))
+        .args(arguments)
         .stdin(std::process::Stdio::piped())
         .stdout(std::process::Stdio::piped())
         .stderr(std::process::Stdio::piped())
@@ -80,15 +104,15 @@ pub(super) fn encode(workspace: &Path, plans: &str) -> Result<String, String> {
         .stdin
         .take()
         .ok_or_else(|| "the record oracle's stdin was not available".to_owned())?
-        .write_all(plans.as_bytes())
-        .map_err(|error| format!("write the batch plans: {error}"))?;
+        .write_all(request.as_bytes())
+        .map_err(|error| format!("write the record oracle's input: {error}"))?;
 
     let output = child
         .wait_with_output()
         .map_err(|error| format!("wait for the record oracle: {error}"))?;
     if !output.status.success() {
         return Err(format!(
-            "the record oracle refused the plans:\n{}",
+            "{refusal}:\n{}",
             String::from_utf8_lossy(&output.stderr).trim()
         ));
     }

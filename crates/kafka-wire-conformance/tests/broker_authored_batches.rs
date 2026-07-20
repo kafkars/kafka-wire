@@ -34,10 +34,11 @@ fn every_uncompressed_batch_decodes_and_re_encodes_to_the_same_bytes() {
                 continue;
             }
         };
-        // A compressed payload cannot be reproduced byte for byte: it would
-        // require this crate's compressor to agree with Java's down to the
-        // encoder's internal choices. Those batches are judged by their records
-        // instead, in the test below.
+        // A compressed payload is not asserted to reproduce Java's bytes: that
+        // would require this crate's compressor to agree with Java's down to the
+        // encoder's internal choices, and where it happens to today it is a
+        // coincidence of two libraries rather than a protocol property. Those
+        // batches are judged by whether Kafka can read them back instead.
         if batch.compression != Compression::None {
             continue;
         }
@@ -116,9 +117,10 @@ fn every_codec_decompresses_to_the_records_kafka_compressed() {
 
 #[test]
 fn a_compressed_batch_round_trips_its_records_though_not_its_bytes() {
-    // The other half, and the honest limit of it. Re-compressing cannot
-    // reproduce Java's bytes, so what is asserted is that this crate's own
-    // compressor and decompressor agree — a weaker claim, stated as such.
+    // The cheap half of the encode direction: this crate's own compressor and
+    // decompressor agree. That is a weak claim on its own — both could share one
+    // misreading — and it is not the one that matters. Kafka reading these bytes
+    // back is, and `kafka_reads_what_this_repository_compressed` asserts it.
     for name in ["gzip", "snappy", "lz4", "zstd"] {
         let vector = corpus()
             .into_iter()

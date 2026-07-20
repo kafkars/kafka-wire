@@ -4,15 +4,25 @@
 //! broker can route a batch whose codec it does not implement. That is why the
 //! codec lives in the attributes rather than being inferred from the payload.
 //!
-//! **The two directions here are not equally verifiable, and that asymmetry is
-//! load-bearing.** Decompression is held to Apache Kafka's own bytes: the corpus
-//! carries a batch Kafka compressed with each codec, and decoding one must yield
-//! exactly the records of its uncompressed twin. Compression cannot be checked
-//! that way. Byte-identical output would require this crate's compressor to
-//! agree with Java's `Deflater`, `zstd-jni`, `lz4-java`, and `snappy-java` down
-//! to the encoder's internal choices, which no two implementations do — so a
-//! round trip through a compressed batch is asserted to preserve the *records*,
-//! never the bytes. Anything claiming otherwise would be asserting a coincidence.
+//! **Both directions are held to Apache Kafka, by two different instruments.**
+//! Decompression is held to Kafka's bytes: the corpus carries a batch Kafka
+//! compressed with each codec, and decoding one must yield exactly the records
+//! of its uncompressed twin.
+//!
+//! Compression cannot be held to bytes, and does not need to be. Byte-identical
+//! output would require this crate's compressor to agree with Java's `Deflater`,
+//! `zstd-jni`, `lz4-java`, and `snappy-java` down to each encoder's internal
+//! choices; asserting that would be asserting a coincidence. The property a
+//! producer actually needs is that the broker can READ what it wrote, and that
+//! is a question only the broker can answer. `RecordOracle --verify` asks it:
+//! every codec's payload is re-encoded here, handed to Kafka's own
+//! `MemoryRecords` reader, and `spec/records/verified.json` records the records
+//! Kafka got back. `kafka-wire-conformance` holds them to the records the batch
+//! started with.
+//!
+//! What remains unproven is narrower than it used to be, and worth naming: the
+//! compression *level* and internal choices are this crate's, so a payload here
+//! is legal and readable rather than identical to Java's.
 
 use std::io::{Read as _, Write as _};
 
@@ -60,8 +70,9 @@ impl Compression {
 
     /// Compresses one records payload.
     ///
-    /// The output is a legal payload for the codec, not a reproduction of what
-    /// Java would have emitted for the same input. See the module note.
+    /// The output is a payload Apache Kafka reads back unchanged, not a
+    /// reproduction of what Java would have emitted for the same input. See the
+    /// module note for which instrument establishes which.
     pub(crate) fn compress(self, records: &[u8]) -> Result<Vec<u8>, RecordError> {
         match self {
             Self::None => Ok(records.to_vec()),

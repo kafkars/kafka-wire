@@ -10,12 +10,18 @@
 //! pinned jar and is run by a human, while `--check` reads the checked-in files
 //! in pure Rust. Whether this repository actually agrees with the bytes is
 //! neither one's job — `kafka-wire-conformance` decides that.
+//!
+//! `--refresh` asks the oracle two different questions. `plans.json` asks what
+//! bytes Kafka writes; `verified` asks what Kafka reads back from bytes this
+//! repository wrote, which is the only way compression encode can be judged at
+//! all. Both answers are checked in, and both halves of `--check` stay Java-free.
 
 use std::{collections::BTreeSet, path::Path};
 
 use serde::{Deserialize, Serialize};
 
 mod oracle;
+mod verified;
 
 use crate::cli::RecordsMode;
 
@@ -139,8 +145,11 @@ fn check(workspace: &Path) -> Result<(), String> {
         }
     }
 
+    let read_back = verified::check(workspace, &vectors)?;
+
     println!(
-        "record corpus is current: {} batch(es), authored by Apache Kafka",
+        "record corpus is current: {} batch(es), authored by Apache Kafka; \
+         {read_back} re-encoded batch(es) carry Kafka's own reading of them",
         vectors.vectors.len()
     );
     Ok(())
@@ -201,5 +210,10 @@ fn refresh(workspace: &Path) -> Result<(), String> {
         "refreshed {} broker-authored record batch(es)",
         written.vectors.len()
     );
+
+    // The second question, and the only one that can reach compression encode:
+    // hand Kafka the bytes this repository writes and record what it reads back.
+    let read_back = verified::refresh(workspace, &written)?;
+    println!("Apache Kafka read back {read_back} batch(es) this repository re-encoded");
     Ok(())
 }

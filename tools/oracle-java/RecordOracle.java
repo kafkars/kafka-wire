@@ -25,6 +25,14 @@
  * the property rather than asserting it: it builds each batch twice and refuses
  * to emit anything if the two runs disagree.
  *
+ * `--verify` answers the opposite question, and it is the only instrument that
+ * can. Compression cannot be judged by byte identity — no two implementations of
+ * `Deflater` or zstd make the same internal choices — but byte identity was never
+ * the property worth having. The property worth having is that Kafka can READ
+ * what this repository wrote, so `--verify` takes bytes produced by the Rust
+ * compressor and hands them to `MemoryRecords.readableRecords`, Kafka's own
+ * reader, reporting the records it recovered or failing with Kafka's own error.
+ *
  * It deliberately owns no vector policy. Which batches are worth covering is
  * decided by `spec/records/plans.json`, and whether this repository agrees with
  * the bytes is decided by `kafka-wire-conformance`.
@@ -41,6 +49,8 @@ import org.apache.kafka.common.header.internals.RecordHeader;
 import org.apache.kafka.common.record.TimestampType;
 import org.apache.kafka.common.record.internal.MemoryRecords;
 import org.apache.kafka.common.record.internal.MemoryRecordsBuilder;
+import org.apache.kafka.common.record.internal.MutableRecordBatch;
+import org.apache.kafka.common.record.internal.Record;
 import org.apache.kafka.common.record.internal.RecordBatch;
 
 import java.nio.ByteBuffer;
@@ -65,8 +75,13 @@ public final class RecordOracle {
                 selfTest();
                 return;
             }
+            if (args.length == 1 && args[0].equals("--verify")) {
+                verifyAll();
+                return;
+            }
             if (args.length != 0) {
-                throw new OracleException("usage: RecordOracle [--self-test] < plans.json > vectors.json");
+                throw new OracleException(
+                        "usage: RecordOracle [--self-test | --verify] < plans.json > vectors.json");
             }
             encodeAll();
         } catch (Throwable failure) {
@@ -101,6 +116,124 @@ public final class RecordOracle {
         ObjectNode output = MAPPER.createObjectNode();
         output.set("results", results);
         System.out.println(MAPPER.writeValueAsString(output));
+    }
+
+    /** Read foreign batch bytes with Kafka's own reader and report what it found. */
+    private static void verifyAll() throws Exception {
+        JsonNode input = MAPPER.readTree(System.in);
+        JsonNode batches = required(input, "batches");
+        if (!batches.isArray()) {
+            throw new OracleException("`batches` must be an array");
+        }
+
+        ArrayNode results = MAPPER.createArrayNode();
+        for (JsonNode batch : batches) {
+            String name = required(batch, "name").asText();
+            byte[] bytes = HexFormat.of().parseHex(required(batch, "hex").asText());
+            ObjectNode result = MAPPER.createObjectNode();
+            result.put("name", name);
+            try {
+                result.set("read", read(bytes));
+            } catch (OracleException refusal) {
+                throw refusal;
+            } catch (Throwable failure) {
+                // Kafka's own refusal, reported as Kafka spelled it. A caller
+                // that reads "CorruptRecordException" learns which invariant it
+                // broke; one that reads "verification failed" learns nothing.
+                throw new OracleException(name + ": Kafka could not read these bytes: "
+                        + failure.getClass().getName() + ": " + failure.getMessage());
+            }
+            results.add(result);
+        }
+
+        ObjectNode output = MAPPER.createObjectNode();
+        output.set("results", results);
+        System.out.println(MAPPER.writeValueAsString(output));
+    }
+
+    /**
+     * Describe every batch and record Kafka recovered from one blob.
+     *
+     * `ensureValid` is called on the batch and on each record because
+     * `readableRecords` is lazy: it wraps the buffer and checks nothing, so a
+     * program that only counted batches would report success over a payload with
+     * a broken CRC. Iterating a compressed batch is also what decompresses it,
+     * which is the step this whole mode exists to put Kafka in charge of.
+     */
+    private static ObjectNode read(byte[] bytes) {
+        ArrayNode batches = MAPPER.createArrayNode();
+        for (MutableRecordBatch batch : MemoryRecords.readableRecords(ByteBuffer.wrap(bytes)).batches()) {
+            batch.ensureValid();
+
+            ObjectNode described = MAPPER.createObjectNode();
+            described.put("compression", batch.compressionType().name);
+            described.put("magic", batch.magic());
+            described.put("baseOffset", batch.baseOffset());
+            described.put("lastOffset", batch.lastOffset());
+            described.put("partitionLeaderEpoch", batch.partitionLeaderEpoch());
+            described.put("producerId", batch.producerId());
+            described.put("producerEpoch", batch.producerEpoch());
+            described.put("baseSequence", batch.baseSequence());
+            described.put("maxTimestamp", batch.maxTimestamp());
+            described.put("timestampType", batch.timestampType().name);
+            described.put("transactional", batch.isTransactional());
+            described.put("controlBatch", batch.isControlBatch());
+            described.set("records", records(batch));
+            batches.add(described);
+        }
+
+        if (batches.isEmpty()) {
+            throw new OracleException("Kafka read no batch at all from these bytes");
+        }
+        ObjectNode read = MAPPER.createObjectNode();
+        read.set("batches", batches);
+        return read;
+    }
+
+    /** Every record Kafka recovered from one batch, decompressing as it goes. */
+    private static ArrayNode records(MutableRecordBatch batch) {
+        ArrayNode records = MAPPER.createArrayNode();
+        for (Record record : batch) {
+            record.ensureValid();
+            ObjectNode entry = MAPPER.createObjectNode();
+            entry.put("offset", record.offset());
+            entry.put("timestamp", record.timestamp());
+            entry.put("key", hex(record.key()));
+            entry.put("value", hex(record.value()));
+
+            ArrayNode headers = MAPPER.createArrayNode();
+            for (Header header : record.headers()) {
+                ObjectNode described = MAPPER.createObjectNode();
+                described.put("key", header.key());
+                described.put("value", hex(header.value()));
+                headers.add(described);
+            }
+            entry.set("headers", headers);
+            records.add(entry);
+        }
+        return records;
+    }
+
+    /**
+     * Lowercase hex, or JSON null where the record carries no key or value.
+     *
+     * Hex rather than the base64 the plans are written in, because this file is
+     * read back by Rust: `spec/` spells every wire byte string in hex and
+     * `kafka-wire-conformance` already owns that conversion, so base64 here would buy
+     * a dependency for one field.
+     */
+    private static String hex(ByteBuffer buffer) {
+        if (buffer == null) {
+            return null;
+        }
+        byte[] out = new byte[buffer.remaining()];
+        buffer.duplicate().get(out);
+        return HexFormat.of().formatHex(out);
+    }
+
+    /** Hex of a header value, which is nullable where a header key is not. */
+    private static String hex(byte[] value) {
+        return value == null ? null : HexFormat.of().formatHex(value);
     }
 
     /** Lay out one batch exactly as Kafka's producer would. */

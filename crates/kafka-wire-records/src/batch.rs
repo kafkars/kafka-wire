@@ -143,6 +143,16 @@ impl RecordBatch {
         })
     }
 
+    /// Writes this batch into bytes of its own, mirroring [`Self::decode`].
+    ///
+    /// The pair is what most callers want and is stated once here so that each
+    /// does not assemble the same buffer and encoder by hand.
+    pub fn encode_to_bytes(&self) -> Result<Bytes, RecordError> {
+        let mut buffer = BytesMut::new();
+        self.encode(&mut Encoder::new(&mut buffer))?;
+        Ok(buffer.freeze())
+    }
+
     /// Writes this batch, computing the length and the CRC from what it wrote.
     ///
     /// Neither is carried on the struct. A length or a checksum a caller could
@@ -152,9 +162,9 @@ impl RecordBatch {
     pub fn encode<T: EncodeTarget>(&self, encoder: &mut Encoder<T>) -> Result<(), RecordError> {
         let mut plain = BytesMut::new();
         record::encode_all(&self.records, &mut plain)?;
-        // A compressed payload is legal for its codec but is not a reproduction
-        // of what Java would emit; see `compression`. Only the records survive a
-        // round trip through one, which is exactly what the corpus asserts.
+        // A compressed payload is not a reproduction of what Java would emit for
+        // the same records; see `compression`. What it is held to instead is
+        // that Kafka's own reader recovers exactly these records from it.
         let payload = self.compression.compress(&plain)?;
 
         let mut body = BytesMut::new();

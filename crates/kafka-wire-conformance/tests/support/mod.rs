@@ -1,8 +1,9 @@
-//! Shared access to the broker-authored record-batch corpus.
+//! Shared access to the two files under `spec/records/`.
 //!
-//! This module owns reading `spec/records/vectors.json`, which two test files
-//! now need: one holds `kafka-wire-records` to those bytes, the other carries them
-//! through a `records` field to prove the two crates compose.
+//! `vectors.json` holds batches Apache Kafka wrote; `verified.json` holds what
+//! Kafka read back from batches this repository wrote. Three test files now
+//! reach for one or both, so the mechanics of finding and parsing them live
+//! here once.
 //!
 //! It deliberately owns no assertion. What a test concludes from a batch belongs
 //! in the file that names the conclusion.
@@ -12,5 +13,7 @@
 #![allow(dead_code, unused_imports)]
 
 mod batches;
+mod verified;
 
 pub(crate) use batches::{Batch, batches};
+pub(crate) use verified::{ReadBatch, ReadHeader, ReadRecord, Reading, Verified, verified};

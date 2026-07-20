@@ -555,7 +555,9 @@ dependencies = [
 name = "xtask"
 version = "0.1.0"
 dependencies = [
+ "bytes",
  "kafka-wire-codegen",
+ "kafka-wire-records",
  "serde",
  "serde_json",
  "sha2",
