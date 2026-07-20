@@ -38,6 +38,64 @@
         "errorCode": 0,
         "topics": []
       }
+    },
+    {
+      "name": "synthesized_populated_v2",
+      "why": "Every field this version declares, present and non-default: one element in every array, every nullable thing supplied. The defaults case leaves arrays empty, which hides every field of the struct the array would have held \u2014 a records field encoded with the wrong length prefix survived the whole corpus that way, because nothing ever reached the struct holding it.",
+      "versions": [
+        2
+      ],
+      "json_value": {
+        "throttleTimeMs": 1,
+        "errorCode": 1,
+        "topics": [
+          {
+            "topicId": "MkU3OEVGRjRDMTk0M0Q2OA",
+            "partitions": [
+              {
+                "partitionIndex": 1,
+                "errorCode": 1,
+                "leaderId": 1,
+                "leaderEpoch": 1,
+                "isr": [
+                  1
+                ],
+                "leaderRecoveryState": 1,
+                "partitionEpoch": 1
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "synthesized_populated_v3",
+      "why": "Every field this version declares, present and non-default: one element in every array, every nullable thing supplied. The defaults case leaves arrays empty, which hides every field of the struct the array would have held \u2014 a records field encoded with the wrong length prefix survived the whole corpus that way, because nothing ever reached the struct holding it.",
+      "versions": [
+        3
+      ],
+      "json_value": {
+        "throttleTimeMs": 1,
+        "errorCode": 1,
+        "topics": [
+          {
+            "topicId": "MkU3OEVGRjRDMTk0M0Q2OA",
+            "partitions": [
+              {
+                "partitionIndex": 1,
+                "errorCode": 1,
+                "leaderId": 1,
+                "leaderEpoch": 1,
+                "isr": [
+                  1
+                ],
+                "leaderRecoveryState": 1,
+                "partitionEpoch": 1
+              }
+            ]
+          }
+        ]
+      }
     }
   ]
 }

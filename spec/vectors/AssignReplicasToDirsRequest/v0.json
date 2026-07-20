@@ -15,6 +15,35 @@
         "directories": []
       },
       "hex": "00000000ffffffffffffffff0100"
+    },
+    {
+      "name": "synthesized_populated_v0",
+      "why": "Every field this version declares, present and non-default: one element in every array, every nullable thing supplied. The defaults case leaves arrays empty, which hides every field of the struct the array would have held — a records field encoded with the wrong length prefix survived the whole corpus that way, because nothing ever reached the struct holding it.",
+      "message": "AssignReplicasToDirsRequest",
+      "api_key": 73,
+      "direction": "request",
+      "version": 0,
+      "flexible": true,
+      "json_value": {
+        "brokerEpoch": 1,
+        "brokerId": 1,
+        "directories": [
+          {
+            "id": "MkU3OEVGRjRDMTk0M0Q2OA",
+            "topics": [
+              {
+                "partitions": [
+                  {
+                    "partitionIndex": 1
+                  }
+                ],
+                "topicId": "MkU3OEVGRjRDMTk0M0Q2OA"
+              }
+            ]
+          }
+        ]
+      },
+      "hex": "00000001000000000000000102324537384546463443313934334436380232453738454646344331393433443638020000000100000000"
     }
   ]
 }
