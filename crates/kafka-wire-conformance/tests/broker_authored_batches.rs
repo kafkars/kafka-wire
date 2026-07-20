@@ -11,35 +11,14 @@
 
 #![allow(clippy::expect_used, clippy::unwrap_used)]
 
-use std::{fs, path::PathBuf};
-
 use bytes::{Bytes, BytesMut};
 use kafka_wire_conformance::{from_hex, to_hex};
 use kafka_wire_core::Encoder;
 use kafka_wire_records::{Compression, RecordBatch, RecordError};
 
-#[derive(serde::Deserialize)]
-struct Corpus {
-    vectors: Vec<Vector>,
-}
+mod support;
 
-#[derive(serde::Deserialize)]
-struct Vector {
-    name: String,
-    why: String,
-    hex: String,
-}
-
-fn corpus() -> Vec<Vector> {
-    let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../..")
-        .join("spec/records/vectors.json");
-    let text = fs::read_to_string(&path)
-        .unwrap_or_else(|error| panic!("read {}: {error}", path.display()));
-    let corpus: Corpus = serde_json::from_str(&text)
-        .unwrap_or_else(|error| panic!("parse {}: {error}", path.display()));
-    corpus.vectors
-}
+use support::batches as corpus;
 
 #[test]
 fn every_uncompressed_batch_decodes_and_re_encodes_to_the_same_bytes() {
