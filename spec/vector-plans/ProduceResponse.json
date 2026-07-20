@@ -149,6 +149,358 @@
         "throttleTimeMs": 0,
         "nodeEndpoints": []
       }
+    },
+    {
+      "name": "synthesized_populated_v3",
+      "why": "Every field this version declares, present and non-default: one element in every array, every nullable thing supplied. The defaults case leaves arrays empty, which hides every field of the struct the array would have held \u2014 a records field encoded with the wrong length prefix survived the whole corpus that way, because nothing ever reached the struct holding it.",
+      "versions": [
+        3
+      ],
+      "json_value": {
+        "responses": [
+          {
+            "name": "v",
+            "partitionResponses": [
+              {
+                "index": 1,
+                "errorCode": 1,
+                "baseOffset": 1,
+                "logAppendTimeMs": 1
+              }
+            ]
+          }
+        ],
+        "throttleTimeMs": 1
+      }
+    },
+    {
+      "name": "synthesized_populated_v4",
+      "why": "Every field this version declares, present and non-default: one element in every array, every nullable thing supplied. The defaults case leaves arrays empty, which hides every field of the struct the array would have held \u2014 a records field encoded with the wrong length prefix survived the whole corpus that way, because nothing ever reached the struct holding it.",
+      "versions": [
+        4
+      ],
+      "json_value": {
+        "responses": [
+          {
+            "name": "v",
+            "partitionResponses": [
+              {
+                "index": 1,
+                "errorCode": 1,
+                "baseOffset": 1,
+                "logAppendTimeMs": 1
+              }
+            ]
+          }
+        ],
+        "throttleTimeMs": 1
+      }
+    },
+    {
+      "name": "synthesized_populated_v5",
+      "why": "Every field this version declares, present and non-default: one element in every array, every nullable thing supplied. The defaults case leaves arrays empty, which hides every field of the struct the array would have held \u2014 a records field encoded with the wrong length prefix survived the whole corpus that way, because nothing ever reached the struct holding it.",
+      "versions": [
+        5
+      ],
+      "json_value": {
+        "responses": [
+          {
+            "name": "v",
+            "partitionResponses": [
+              {
+                "index": 1,
+                "errorCode": 1,
+                "baseOffset": 1,
+                "logAppendTimeMs": 1,
+                "logStartOffset": 1
+              }
+            ]
+          }
+        ],
+        "throttleTimeMs": 1
+      }
+    },
+    {
+      "name": "synthesized_populated_v6",
+      "why": "Every field this version declares, present and non-default: one element in every array, every nullable thing supplied. The defaults case leaves arrays empty, which hides every field of the struct the array would have held \u2014 a records field encoded with the wrong length prefix survived the whole corpus that way, because nothing ever reached the struct holding it.",
+      "versions": [
+        6
+      ],
+      "json_value": {
+        "responses": [
+          {
+            "name": "v",
+            "partitionResponses": [
+              {
+                "index": 1,
+                "errorCode": 1,
+                "baseOffset": 1,
+                "logAppendTimeMs": 1,
+                "logStartOffset": 1
+              }
+            ]
+          }
+        ],
+        "throttleTimeMs": 1
+      }
+    },
+    {
+      "name": "synthesized_populated_v7",
+      "why": "Every field this version declares, present and non-default: one element in every array, every nullable thing supplied. The defaults case leaves arrays empty, which hides every field of the struct the array would have held \u2014 a records field encoded with the wrong length prefix survived the whole corpus that way, because nothing ever reached the struct holding it.",
+      "versions": [
+        7
+      ],
+      "json_value": {
+        "responses": [
+          {
+            "name": "v",
+            "partitionResponses": [
+              {
+                "index": 1,
+                "errorCode": 1,
+                "baseOffset": 1,
+                "logAppendTimeMs": 1,
+                "logStartOffset": 1
+              }
+            ]
+          }
+        ],
+        "throttleTimeMs": 1
+      }
+    },
+    {
+      "name": "synthesized_populated_v8",
+      "why": "Every field this version declares, present and non-default: one element in every array, every nullable thing supplied. The defaults case leaves arrays empty, which hides every field of the struct the array would have held \u2014 a records field encoded with the wrong length prefix survived the whole corpus that way, because nothing ever reached the struct holding it.",
+      "versions": [
+        8
+      ],
+      "json_value": {
+        "responses": [
+          {
+            "name": "v",
+            "partitionResponses": [
+              {
+                "index": 1,
+                "errorCode": 1,
+                "baseOffset": 1,
+                "logAppendTimeMs": 1,
+                "logStartOffset": 1,
+                "recordErrors": [
+                  {
+                    "batchIndex": 1,
+                    "batchIndexErrorMessage": "v"
+                  }
+                ],
+                "errorMessage": "v"
+              }
+            ]
+          }
+        ],
+        "throttleTimeMs": 1
+      }
+    },
+    {
+      "name": "synthesized_populated_v9",
+      "why": "Every field this version declares, present and non-default: one element in every array, every nullable thing supplied. The defaults case leaves arrays empty, which hides every field of the struct the array would have held \u2014 a records field encoded with the wrong length prefix survived the whole corpus that way, because nothing ever reached the struct holding it.",
+      "versions": [
+        9
+      ],
+      "json_value": {
+        "responses": [
+          {
+            "name": "v",
+            "partitionResponses": [
+              {
+                "index": 1,
+                "errorCode": 1,
+                "baseOffset": 1,
+                "logAppendTimeMs": 1,
+                "logStartOffset": 1,
+                "recordErrors": [
+                  {
+                    "batchIndex": 1,
+                    "batchIndexErrorMessage": "v"
+                  }
+                ],
+                "errorMessage": "v"
+              }
+            ]
+          }
+        ],
+        "throttleTimeMs": 1
+      }
+    },
+    {
+      "name": "synthesized_populated_v10",
+      "why": "Every field this version declares, present and non-default: one element in every array, every nullable thing supplied. The defaults case leaves arrays empty, which hides every field of the struct the array would have held \u2014 a records field encoded with the wrong length prefix survived the whole corpus that way, because nothing ever reached the struct holding it.",
+      "versions": [
+        10
+      ],
+      "json_value": {
+        "responses": [
+          {
+            "name": "v",
+            "partitionResponses": [
+              {
+                "index": 1,
+                "errorCode": 1,
+                "baseOffset": 1,
+                "logAppendTimeMs": 1,
+                "logStartOffset": 1,
+                "recordErrors": [
+                  {
+                    "batchIndex": 1,
+                    "batchIndexErrorMessage": "v"
+                  }
+                ],
+                "errorMessage": "v",
+                "currentLeader": {
+                  "leaderId": 1,
+                  "leaderEpoch": 1
+                }
+              }
+            ]
+          }
+        ],
+        "throttleTimeMs": 1,
+        "nodeEndpoints": [
+          {
+            "nodeId": 1,
+            "host": "v",
+            "port": 1,
+            "rack": "v"
+          }
+        ]
+      }
+    },
+    {
+      "name": "synthesized_populated_v11",
+      "why": "Every field this version declares, present and non-default: one element in every array, every nullable thing supplied. The defaults case leaves arrays empty, which hides every field of the struct the array would have held \u2014 a records field encoded with the wrong length prefix survived the whole corpus that way, because nothing ever reached the struct holding it.",
+      "versions": [
+        11
+      ],
+      "json_value": {
+        "responses": [
+          {
+            "name": "v",
+            "partitionResponses": [
+              {
+                "index": 1,
+                "errorCode": 1,
+                "baseOffset": 1,
+                "logAppendTimeMs": 1,
+                "logStartOffset": 1,
+                "recordErrors": [
+                  {
+                    "batchIndex": 1,
+                    "batchIndexErrorMessage": "v"
+                  }
+                ],
+                "errorMessage": "v",
+                "currentLeader": {
+                  "leaderId": 1,
+                  "leaderEpoch": 1
+                }
+              }
+            ]
+          }
+        ],
+        "throttleTimeMs": 1,
+        "nodeEndpoints": [
+          {
+            "nodeId": 1,
+            "host": "v",
+            "port": 1,
+            "rack": "v"
+          }
+        ]
+      }
+    },
+    {
+      "name": "synthesized_populated_v12",
+      "why": "Every field this version declares, present and non-default: one element in every array, every nullable thing supplied. The defaults case leaves arrays empty, which hides every field of the struct the array would have held \u2014 a records field encoded with the wrong length prefix survived the whole corpus that way, because nothing ever reached the struct holding it.",
+      "versions": [
+        12
+      ],
+      "json_value": {
+        "responses": [
+          {
+            "name": "v",
+            "partitionResponses": [
+              {
+                "index": 1,
+                "errorCode": 1,
+                "baseOffset": 1,
+                "logAppendTimeMs": 1,
+                "logStartOffset": 1,
+                "recordErrors": [
+                  {
+                    "batchIndex": 1,
+                    "batchIndexErrorMessage": "v"
+                  }
+                ],
+                "errorMessage": "v",
+                "currentLeader": {
+                  "leaderId": 1,
+                  "leaderEpoch": 1
+                }
+              }
+            ]
+          }
+        ],
+        "throttleTimeMs": 1,
+        "nodeEndpoints": [
+          {
+            "nodeId": 1,
+            "host": "v",
+            "port": 1,
+            "rack": "v"
+          }
+        ]
+      }
+    },
+    {
+      "name": "synthesized_populated_v13",
+      "why": "Every field this version declares, present and non-default: one element in every array, every nullable thing supplied. The defaults case leaves arrays empty, which hides every field of the struct the array would have held \u2014 a records field encoded with the wrong length prefix survived the whole corpus that way, because nothing ever reached the struct holding it.",
+      "versions": [
+        13
+      ],
+      "json_value": {
+        "responses": [
+          {
+            "topicId": "MkU3OEVGRjRDMTk0M0Q2OA",
+            "partitionResponses": [
+              {
+                "index": 1,
+                "errorCode": 1,
+                "baseOffset": 1,
+                "logAppendTimeMs": 1,
+                "logStartOffset": 1,
+                "recordErrors": [
+                  {
+                    "batchIndex": 1,
+                    "batchIndexErrorMessage": "v"
+                  }
+                ],
+                "errorMessage": "v",
+                "currentLeader": {
+                  "leaderId": 1,
+                  "leaderEpoch": 1
+                }
+              }
+            ]
+          }
+        ],
+        "throttleTimeMs": 1,
+        "nodeEndpoints": [
+          {
+            "nodeId": 1,
+            "host": "v",
+            "port": 1,
+            "rack": "v"
+          }
+        ]
+      }
     }
   ]
 }

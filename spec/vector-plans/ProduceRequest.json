@@ -167,6 +167,259 @@
         "timeoutMs": 0,
         "topicData": []
       }
+    },
+    {
+      "name": "synthesized_populated_v3",
+      "why": "Every field this version declares, present and non-default: one element in every array, every nullable thing supplied. The defaults case leaves arrays empty, which hides every field of the struct the array would have held \u2014 a records field encoded with the wrong length prefix survived the whole corpus that way, because nothing ever reached the struct holding it.",
+      "versions": [
+        3
+      ],
+      "json_value": {
+        "transactionalId": "v",
+        "acks": 1,
+        "timeoutMs": 1,
+        "topicData": [
+          {
+            "name": "v",
+            "partitionData": [
+              {
+                "index": 1,
+                "records": "3q2+7w=="
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "synthesized_populated_v4",
+      "why": "Every field this version declares, present and non-default: one element in every array, every nullable thing supplied. The defaults case leaves arrays empty, which hides every field of the struct the array would have held \u2014 a records field encoded with the wrong length prefix survived the whole corpus that way, because nothing ever reached the struct holding it.",
+      "versions": [
+        4
+      ],
+      "json_value": {
+        "transactionalId": "v",
+        "acks": 1,
+        "timeoutMs": 1,
+        "topicData": [
+          {
+            "name": "v",
+            "partitionData": [
+              {
+                "index": 1,
+                "records": "3q2+7w=="
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "synthesized_populated_v5",
+      "why": "Every field this version declares, present and non-default: one element in every array, every nullable thing supplied. The defaults case leaves arrays empty, which hides every field of the struct the array would have held \u2014 a records field encoded with the wrong length prefix survived the whole corpus that way, because nothing ever reached the struct holding it.",
+      "versions": [
+        5
+      ],
+      "json_value": {
+        "transactionalId": "v",
+        "acks": 1,
+        "timeoutMs": 1,
+        "topicData": [
+          {
+            "name": "v",
+            "partitionData": [
+              {
+                "index": 1,
+                "records": "3q2+7w=="
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "synthesized_populated_v6",
+      "why": "Every field this version declares, present and non-default: one element in every array, every nullable thing supplied. The defaults case leaves arrays empty, which hides every field of the struct the array would have held \u2014 a records field encoded with the wrong length prefix survived the whole corpus that way, because nothing ever reached the struct holding it.",
+      "versions": [
+        6
+      ],
+      "json_value": {
+        "transactionalId": "v",
+        "acks": 1,
+        "timeoutMs": 1,
+        "topicData": [
+          {
+            "name": "v",
+            "partitionData": [
+              {
+                "index": 1,
+                "records": "3q2+7w=="
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "synthesized_populated_v7",
+      "why": "Every field this version declares, present and non-default: one element in every array, every nullable thing supplied. The defaults case leaves arrays empty, which hides every field of the struct the array would have held \u2014 a records field encoded with the wrong length prefix survived the whole corpus that way, because nothing ever reached the struct holding it.",
+      "versions": [
+        7
+      ],
+      "json_value": {
+        "transactionalId": "v",
+        "acks": 1,
+        "timeoutMs": 1,
+        "topicData": [
+          {
+            "name": "v",
+            "partitionData": [
+              {
+                "index": 1,
+                "records": "3q2+7w=="
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "synthesized_populated_v8",
+      "why": "Every field this version declares, present and non-default: one element in every array, every nullable thing supplied. The defaults case leaves arrays empty, which hides every field of the struct the array would have held \u2014 a records field encoded with the wrong length prefix survived the whole corpus that way, because nothing ever reached the struct holding it.",
+      "versions": [
+        8
+      ],
+      "json_value": {
+        "transactionalId": "v",
+        "acks": 1,
+        "timeoutMs": 1,
+        "topicData": [
+          {
+            "name": "v",
+            "partitionData": [
+              {
+                "index": 1,
+                "records": "3q2+7w=="
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "synthesized_populated_v9",
+      "why": "Every field this version declares, present and non-default: one element in every array, every nullable thing supplied. The defaults case leaves arrays empty, which hides every field of the struct the array would have held \u2014 a records field encoded with the wrong length prefix survived the whole corpus that way, because nothing ever reached the struct holding it.",
+      "versions": [
+        9
+      ],
+      "json_value": {
+        "transactionalId": "v",
+        "acks": 1,
+        "timeoutMs": 1,
+        "topicData": [
+          {
+            "name": "v",
+            "partitionData": [
+              {
+                "index": 1,
+                "records": "3q2+7w=="
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "synthesized_populated_v10",
+      "why": "Every field this version declares, present and non-default: one element in every array, every nullable thing supplied. The defaults case leaves arrays empty, which hides every field of the struct the array would have held \u2014 a records field encoded with the wrong length prefix survived the whole corpus that way, because nothing ever reached the struct holding it.",
+      "versions": [
+        10
+      ],
+      "json_value": {
+        "transactionalId": "v",
+        "acks": 1,
+        "timeoutMs": 1,
+        "topicData": [
+          {
+            "name": "v",
+            "partitionData": [
+              {
+                "index": 1,
+                "records": "3q2+7w=="
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "synthesized_populated_v11",
+      "why": "Every field this version declares, present and non-default: one element in every array, every nullable thing supplied. The defaults case leaves arrays empty, which hides every field of the struct the array would have held \u2014 a records field encoded with the wrong length prefix survived the whole corpus that way, because nothing ever reached the struct holding it.",
+      "versions": [
+        11
+      ],
+      "json_value": {
+        "transactionalId": "v",
+        "acks": 1,
+        "timeoutMs": 1,
+        "topicData": [
+          {
+            "name": "v",
+            "partitionData": [
+              {
+                "index": 1,
+                "records": "3q2+7w=="
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "synthesized_populated_v12",
+      "why": "Every field this version declares, present and non-default: one element in every array, every nullable thing supplied. The defaults case leaves arrays empty, which hides every field of the struct the array would have held \u2014 a records field encoded with the wrong length prefix survived the whole corpus that way, because nothing ever reached the struct holding it.",
+      "versions": [
+        12
+      ],
+      "json_value": {
+        "transactionalId": "v",
+        "acks": 1,
+        "timeoutMs": 1,
+        "topicData": [
+          {
+            "name": "v",
+            "partitionData": [
+              {
+                "index": 1,
+                "records": "3q2+7w=="
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "synthesized_populated_v13",
+      "why": "Every field this version declares, present and non-default: one element in every array, every nullable thing supplied. The defaults case leaves arrays empty, which hides every field of the struct the array would have held \u2014 a records field encoded with the wrong length prefix survived the whole corpus that way, because nothing ever reached the struct holding it.",
+      "versions": [
+        13
+      ],
+      "json_value": {
+        "transactionalId": "v",
+        "acks": 1,
+        "timeoutMs": 1,
+        "topicData": [
+          {
+            "topicId": "MkU3OEVGRjRDMTk0M0Q2OA",
+            "partitionData": [
+              {
+                "index": 1,
+                "records": "3q2+7w=="
+              }
+            ]
+          }
+        ]
+      }
     }
   ]
 }
