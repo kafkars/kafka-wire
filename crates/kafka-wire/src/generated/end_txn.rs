@@ -5,203 +5,226 @@
 //! Request SHA-256: `23a4639682f1d2bfe79fb907fe6cb4c6cf2a3332f2be94461245155548264bb5`.
 //! Response SHA-256: `5b6ad18b4883e33be291367736c45c30b7240f9e6e6e168c9a8abac0755d561a`.
 
-use kafka_wire_core::{
-    ApiKey, ApiVersion, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
-    KafkaEncode, StrBytes, TaggedFields, VersionRange,
-};
+/// `EndTxnRequest` and every struct it declares, under upstream's own names.
+///
+/// [`EndTxnRequest`](crate::EndTxnRequest) is re-exported flat, so this path never has to be
+/// written to name the message itself.
+pub mod end_txn_request {
+    use kafka_wire_core::{
+        ApiKey, ApiVersion, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
+        KafkaEncode, StrBytes, TaggedFields, VersionRange,
+    };
 
-use crate::{
-    KafkaMessage, KafkaRequest, KafkaResponse, MessageDescriptor, MessageDirection,
-    RequestResponsePair,
-};
+    use crate::{KafkaMessage, KafkaRequest, RequestResponsePair};
 
-/// Request body for the `EndTxn` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct EndTxnRequest {
-    /// The ID of the transaction to end.
-    pub transactional_id: StrBytes,
-    /// The producer ID.
-    pub producer_id: i64,
-    /// The current epoch associated with the producer.
-    pub producer_epoch: i16,
-    /// True if the transaction was committed, false if it was aborted.
-    pub committed: bool,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
-
-impl KafkaMessage for EndTxnRequest {
-    const NAME: &'static str = "EndTxnRequest";
-    const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 5);
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(3, 5));
-}
-
-impl KafkaRequest for EndTxnRequest {
-    const API_KEY: ApiKey = ApiKey::new(26);
-}
-
-impl RequestResponsePair for EndTxnRequest {
-    type Response = EndTxnResponse;
-}
-
-impl KafkaDecode for EndTxnRequest {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        crate::message::ensure_decode_version::<Self>(version)?;
-
-        let transactional_id = if Self::is_flexible(version) {
-            decoder.read_compact_string()?
-        } else {
-            decoder.read_string()?
-        };
-        let producer_id = decoder.read_i64()?;
-        let producer_epoch = decoder.read_i16()?;
-        let committed = decoder.read_bool()?;
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
-
-        Ok(Self {
-            transactional_id,
-            producer_id,
-            producer_epoch,
-            committed,
-            unknown_tagged_fields,
-        })
+    /// Request body for the `EndTxn` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    pub struct EndTxnRequest {
+        /// The ID of the transaction to end.
+        pub transactional_id: StrBytes,
+        /// The producer ID.
+        pub producer_id: i64,
+        /// The current epoch associated with the producer.
+        pub producer_epoch: i16,
+        /// True if the transaction was committed, false if it was aborted.
+        pub committed: bool,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
     }
-}
 
-impl KafkaEncode for EndTxnRequest {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        crate::message::ensure_encode_version::<Self>(version)?;
-
-        if Self::is_flexible(version) {
-            encoder.write_compact_string(&self.transactional_id)?;
-        } else {
-            encoder.write_string(&self.transactional_id)?;
-        }
-        encoder.write_i64(self.producer_id)?;
-        encoder.write_i16(self.producer_epoch)?;
-        encoder.write_bool(self.committed)?;
-
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: Self::NAME,
-                version,
-            });
-        }
-
-        Ok(())
+    impl KafkaMessage for EndTxnRequest {
+        const NAME: &'static str = "EndTxnRequest";
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 5);
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(3, 5));
     }
-}
 
-/// Response body for the `EndTxn` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct EndTxnResponse {
-    /// The duration in milliseconds for which the request was throttled due to a quota violation, or zero if the request did not violate any quota.
-    pub throttle_time_ms: i32,
-    /// The error code, or 0 if there was no error.
-    pub error_code: i16,
-    /// The producer ID.
-    pub producer_id: i64,
-    /// The current epoch associated with the producer.
-    pub producer_epoch: i16,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
+    impl KafkaRequest for EndTxnRequest {
+        const API_KEY: ApiKey = ApiKey::new(26);
+    }
 
-impl Default for EndTxnResponse {
-    fn default() -> Self {
-        Self {
-            throttle_time_ms: 0,
-            error_code: 0,
-            producer_id: -1,
-            producer_epoch: -1,
-            unknown_tagged_fields: TaggedFields::default(),
+    impl RequestResponsePair for EndTxnRequest {
+        type Response = super::EndTxnResponse;
+    }
+
+    impl KafkaDecode for EndTxnRequest {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            crate::message::ensure_decode_version::<Self>(version)?;
+
+            let transactional_id = if Self::is_flexible(version) {
+                decoder.read_compact_string()?
+            } else {
+                decoder.read_string()?
+            };
+            let producer_id = decoder.read_i64()?;
+            let producer_epoch = decoder.read_i16()?;
+            let committed = decoder.read_bool()?;
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
+
+            Ok(Self {
+                transactional_id,
+                producer_id,
+                producer_epoch,
+                committed,
+                unknown_tagged_fields,
+            })
         }
     }
-}
 
-impl KafkaMessage for EndTxnResponse {
-    const NAME: &'static str = "EndTxnResponse";
-    const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 5);
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(3, 5));
-}
+    impl KafkaEncode for EndTxnRequest {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            crate::message::ensure_encode_version::<Self>(version)?;
 
-impl KafkaResponse for EndTxnResponse {
-    const API_KEY: ApiKey = ApiKey::new(26);
-}
-
-impl KafkaDecode for EndTxnResponse {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        crate::message::ensure_decode_version::<Self>(version)?;
-
-        let throttle_time_ms = decoder.read_i32()?;
-        let error_code = decoder.read_i16()?;
-        let producer_id = if version.value() >= 5 {
-            decoder.read_i64()?
-        } else {
-            -1
-        };
-        let producer_epoch = if version.value() >= 5 {
-            decoder.read_i16()?
-        } else {
-            -1
-        };
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
-
-        Ok(Self {
-            throttle_time_ms,
-            error_code,
-            producer_id,
-            producer_epoch,
-            unknown_tagged_fields,
-        })
-    }
-}
-
-impl KafkaEncode for EndTxnResponse {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        crate::message::ensure_encode_version::<Self>(version)?;
-
-        encoder.write_i32(self.throttle_time_ms)?;
-        encoder.write_i16(self.error_code)?;
-        if version.value() >= 5 {
+            if Self::is_flexible(version) {
+                encoder.write_compact_string(&self.transactional_id)?;
+            } else {
+                encoder.write_string(&self.transactional_id)?;
+            }
             encoder.write_i64(self.producer_id)?;
-        }
-        if version.value() >= 5 {
             encoder.write_i16(self.producer_epoch)?;
-        }
+            encoder.write_bool(self.committed)?;
 
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: Self::NAME,
-                version,
-            });
-        }
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: Self::NAME,
+                    version,
+                });
+            }
 
-        Ok(())
+            Ok(())
+        }
     }
 }
+
+/// `EndTxnResponse` and every struct it declares, under upstream's own names.
+///
+/// [`EndTxnResponse`](crate::EndTxnResponse) is re-exported flat, so this path never has to be
+/// written to name the message itself.
+pub mod end_txn_response {
+    use kafka_wire_core::{
+        ApiKey, ApiVersion, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
+        KafkaEncode, TaggedFields, VersionRange,
+    };
+
+    use crate::{KafkaMessage, KafkaResponse};
+
+    /// Response body for the `EndTxn` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Eq, PartialEq)]
+    pub struct EndTxnResponse {
+        /// The duration in milliseconds for which the request was throttled due to a quota violation, or zero if the request did not violate any quota.
+        pub throttle_time_ms: i32,
+        /// The error code, or 0 if there was no error.
+        pub error_code: i16,
+        /// The producer ID.
+        pub producer_id: i64,
+        /// The current epoch associated with the producer.
+        pub producer_epoch: i16,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl Default for EndTxnResponse {
+        fn default() -> Self {
+            Self {
+                throttle_time_ms: 0,
+                error_code: 0,
+                producer_id: -1,
+                producer_epoch: -1,
+                unknown_tagged_fields: TaggedFields::default(),
+            }
+        }
+    }
+
+    impl KafkaMessage for EndTxnResponse {
+        const NAME: &'static str = "EndTxnResponse";
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 5);
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(3, 5));
+    }
+
+    impl KafkaResponse for EndTxnResponse {
+        const API_KEY: ApiKey = ApiKey::new(26);
+    }
+
+    impl KafkaDecode for EndTxnResponse {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            crate::message::ensure_decode_version::<Self>(version)?;
+
+            let throttle_time_ms = decoder.read_i32()?;
+            let error_code = decoder.read_i16()?;
+            let producer_id = if version.value() >= 5 {
+                decoder.read_i64()?
+            } else {
+                -1
+            };
+            let producer_epoch = if version.value() >= 5 {
+                decoder.read_i16()?
+            } else {
+                -1
+            };
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
+
+            Ok(Self {
+                throttle_time_ms,
+                error_code,
+                producer_id,
+                producer_epoch,
+                unknown_tagged_fields,
+            })
+        }
+    }
+
+    impl KafkaEncode for EndTxnResponse {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            crate::message::ensure_encode_version::<Self>(version)?;
+
+            encoder.write_i32(self.throttle_time_ms)?;
+            encoder.write_i16(self.error_code)?;
+            if version.value() >= 5 {
+                encoder.write_i64(self.producer_id)?;
+            }
+            if version.value() >= 5 {
+                encoder.write_i16(self.producer_epoch)?;
+            }
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: Self::NAME,
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+}
+
+use kafka_wire_core::VersionRange;
+
+use crate::{MessageDescriptor, MessageDirection};
+
+pub use end_txn_request::EndTxnRequest;
+pub use end_txn_response::EndTxnResponse;
 
 /// Static metadata for [`EndTxnRequest`].
 pub const END_TXN_REQUEST_DESCRIPTOR: MessageDescriptor = MessageDescriptor::new(

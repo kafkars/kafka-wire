@@ -5,171 +5,194 @@
 //! Request SHA-256: `1556141d5913cac338a92008b7476f4ff9c38a1fab404c37fc50765f840ce08e`.
 //! Response SHA-256: `f9df279f563c08855a3683f070960a11f6f9dd6b371eee9baa5d022f09b5cfca`.
 
-use kafka_wire_core::{
-    ApiKey, ApiVersion, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
-    KafkaEncode, TaggedFields, VersionRange,
-};
+/// `AllocateProducerIdsRequest` and every struct it declares, under upstream's own names.
+///
+/// [`AllocateProducerIdsRequest`](crate::AllocateProducerIdsRequest) is re-exported flat, so this path never has to be
+/// written to name the message itself.
+pub mod allocate_producer_ids_request {
+    use kafka_wire_core::{
+        ApiKey, ApiVersion, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
+        KafkaEncode, TaggedFields, VersionRange,
+    };
 
-use crate::{
-    KafkaMessage, KafkaRequest, KafkaResponse, MessageDescriptor, MessageDirection,
-    RequestResponsePair,
-};
+    use crate::{KafkaMessage, KafkaRequest, RequestResponsePair};
 
-/// Request body for the `AllocateProducerIds` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct AllocateProducerIdsRequest {
-    /// The ID of the requesting broker.
-    pub broker_id: i32,
-    /// The epoch of the requesting broker.
-    pub broker_epoch: i64,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
+    /// Request body for the `AllocateProducerIds` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Eq, PartialEq)]
+    pub struct AllocateProducerIdsRequest {
+        /// The ID of the requesting broker.
+        pub broker_id: i32,
+        /// The epoch of the requesting broker.
+        pub broker_epoch: i64,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
+    }
 
-impl Default for AllocateProducerIdsRequest {
-    fn default() -> Self {
-        Self {
-            broker_id: 0,
-            broker_epoch: -1,
-            unknown_tagged_fields: TaggedFields::default(),
+    impl Default for AllocateProducerIdsRequest {
+        fn default() -> Self {
+            Self {
+                broker_id: 0,
+                broker_epoch: -1,
+                unknown_tagged_fields: TaggedFields::default(),
+            }
+        }
+    }
+
+    impl KafkaMessage for AllocateProducerIdsRequest {
+        const NAME: &'static str = "AllocateProducerIdsRequest";
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 0);
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 0));
+    }
+
+    impl KafkaRequest for AllocateProducerIdsRequest {
+        const API_KEY: ApiKey = ApiKey::new(67);
+    }
+
+    impl RequestResponsePair for AllocateProducerIdsRequest {
+        type Response = super::AllocateProducerIdsResponse;
+    }
+
+    impl KafkaDecode for AllocateProducerIdsRequest {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            crate::message::ensure_decode_version::<Self>(version)?;
+
+            let broker_id = decoder.read_i32()?;
+            let broker_epoch = decoder.read_i64()?;
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
+
+            Ok(Self {
+                broker_id,
+                broker_epoch,
+                unknown_tagged_fields,
+            })
+        }
+    }
+
+    impl KafkaEncode for AllocateProducerIdsRequest {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            crate::message::ensure_encode_version::<Self>(version)?;
+
+            encoder.write_i32(self.broker_id)?;
+            encoder.write_i64(self.broker_epoch)?;
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: Self::NAME,
+                    version,
+                });
+            }
+
+            Ok(())
         }
     }
 }
 
-impl KafkaMessage for AllocateProducerIdsRequest {
-    const NAME: &'static str = "AllocateProducerIdsRequest";
-    const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 0);
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 0));
-}
+/// `AllocateProducerIdsResponse` and every struct it declares, under upstream's own names.
+///
+/// [`AllocateProducerIdsResponse`](crate::AllocateProducerIdsResponse) is re-exported flat, so this path never has to be
+/// written to name the message itself.
+pub mod allocate_producer_ids_response {
+    use kafka_wire_core::{
+        ApiKey, ApiVersion, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
+        KafkaEncode, TaggedFields, VersionRange,
+    };
 
-impl KafkaRequest for AllocateProducerIdsRequest {
-    const API_KEY: ApiKey = ApiKey::new(67);
-}
+    use crate::{KafkaMessage, KafkaResponse};
 
-impl RequestResponsePair for AllocateProducerIdsRequest {
-    type Response = AllocateProducerIdsResponse;
-}
-
-impl KafkaDecode for AllocateProducerIdsRequest {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        crate::message::ensure_decode_version::<Self>(version)?;
-
-        let broker_id = decoder.read_i32()?;
-        let broker_epoch = decoder.read_i64()?;
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
-
-        Ok(Self {
-            broker_id,
-            broker_epoch,
-            unknown_tagged_fields,
-        })
+    /// Response body for the `AllocateProducerIds` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    pub struct AllocateProducerIdsResponse {
+        /// The duration in milliseconds for which the request was throttled due to a quota violation, or zero if the request did not violate any quota.
+        pub throttle_time_ms: i32,
+        /// The top level response error code.
+        pub error_code: i16,
+        /// The first producer ID in this range, inclusive.
+        pub producer_id_start: i64,
+        /// The number of producer `IDs` in this range.
+        pub producer_id_len: i32,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
     }
-}
 
-impl KafkaEncode for AllocateProducerIdsRequest {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        crate::message::ensure_encode_version::<Self>(version)?;
+    impl KafkaMessage for AllocateProducerIdsResponse {
+        const NAME: &'static str = "AllocateProducerIdsResponse";
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 0);
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 0));
+    }
 
-        encoder.write_i32(self.broker_id)?;
-        encoder.write_i64(self.broker_epoch)?;
+    impl KafkaResponse for AllocateProducerIdsResponse {
+        const API_KEY: ApiKey = ApiKey::new(67);
+    }
 
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: Self::NAME,
-                version,
-            });
+    impl KafkaDecode for AllocateProducerIdsResponse {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            crate::message::ensure_decode_version::<Self>(version)?;
+
+            let throttle_time_ms = decoder.read_i32()?;
+            let error_code = decoder.read_i16()?;
+            let producer_id_start = decoder.read_i64()?;
+            let producer_id_len = decoder.read_i32()?;
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
+
+            Ok(Self {
+                throttle_time_ms,
+                error_code,
+                producer_id_start,
+                producer_id_len,
+                unknown_tagged_fields,
+            })
         }
-
-        Ok(())
     }
-}
 
-/// Response body for the `AllocateProducerIds` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct AllocateProducerIdsResponse {
-    /// The duration in milliseconds for which the request was throttled due to a quota violation, or zero if the request did not violate any quota.
-    pub throttle_time_ms: i32,
-    /// The top level response error code.
-    pub error_code: i16,
-    /// The first producer ID in this range, inclusive.
-    pub producer_id_start: i64,
-    /// The number of producer `IDs` in this range.
-    pub producer_id_len: i32,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
+    impl KafkaEncode for AllocateProducerIdsResponse {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            crate::message::ensure_encode_version::<Self>(version)?;
 
-impl KafkaMessage for AllocateProducerIdsResponse {
-    const NAME: &'static str = "AllocateProducerIdsResponse";
-    const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 0);
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 0));
-}
+            encoder.write_i32(self.throttle_time_ms)?;
+            encoder.write_i16(self.error_code)?;
+            encoder.write_i64(self.producer_id_start)?;
+            encoder.write_i32(self.producer_id_len)?;
 
-impl KafkaResponse for AllocateProducerIdsResponse {
-    const API_KEY: ApiKey = ApiKey::new(67);
-}
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: Self::NAME,
+                    version,
+                });
+            }
 
-impl KafkaDecode for AllocateProducerIdsResponse {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        crate::message::ensure_decode_version::<Self>(version)?;
-
-        let throttle_time_ms = decoder.read_i32()?;
-        let error_code = decoder.read_i16()?;
-        let producer_id_start = decoder.read_i64()?;
-        let producer_id_len = decoder.read_i32()?;
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
-
-        Ok(Self {
-            throttle_time_ms,
-            error_code,
-            producer_id_start,
-            producer_id_len,
-            unknown_tagged_fields,
-        })
-    }
-}
-
-impl KafkaEncode for AllocateProducerIdsResponse {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        crate::message::ensure_encode_version::<Self>(version)?;
-
-        encoder.write_i32(self.throttle_time_ms)?;
-        encoder.write_i16(self.error_code)?;
-        encoder.write_i64(self.producer_id_start)?;
-        encoder.write_i32(self.producer_id_len)?;
-
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: Self::NAME,
-                version,
-            });
+            Ok(())
         }
-
-        Ok(())
     }
 }
+
+use kafka_wire_core::VersionRange;
+
+use crate::{MessageDescriptor, MessageDirection};
+
+pub use allocate_producer_ids_request::AllocateProducerIdsRequest;
+pub use allocate_producer_ids_response::AllocateProducerIdsResponse;
 
 /// Static metadata for [`AllocateProducerIdsRequest`].
 pub const ALLOCATE_PRODUCER_IDS_REQUEST_DESCRIPTOR: MessageDescriptor = MessageDescriptor::new(

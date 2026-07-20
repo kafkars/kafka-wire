@@ -5,855 +5,878 @@
 //! Request SHA-256: `4dd85dfe9585b9f59210ba78bc60b5c86d7684614c3a8829b8dea343f22a1d36`.
 //! Response SHA-256: `482b7171b2c41172213b9d8c7842998938c386872a0c89f209cc0e0427d4b4d8`.
 
-use kafka_wire_core::{
-    ApiKey, ApiVersion, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
-    KafkaEncode, StrBytes, TaggedFields, Uuid, VersionRange,
-};
+/// `MetadataRequest` and every struct it declares, under upstream's own names.
+///
+/// [`MetadataRequest`](crate::MetadataRequest) is re-exported flat, so this path never has to be
+/// written to name the message itself.
+pub mod metadata_request {
+    use kafka_wire_core::{
+        ApiKey, ApiVersion, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
+        KafkaEncode, StrBytes, TaggedFields, Uuid, VersionRange,
+    };
 
-use crate::{
-    KafkaMessage, KafkaRequest, KafkaResponse, MessageDescriptor, MessageDirection,
-    RequestResponsePair,
-};
+    use crate::{KafkaMessage, KafkaRequest, RequestResponsePair};
 
-/// `MetadataRequestTopic` as declared by the `Metadata` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct MetadataRequestTopic {
-    /// The topic id.
-    pub topic_id: Uuid,
-    /// The topic name.
-    pub name: Option<StrBytes>,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
-
-impl MetadataRequestTopic {
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(9, 13));
-
-    fn is_flexible(version: ApiVersion) -> bool {
-        Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+    /// `MetadataRequestTopic` as declared by the `Metadata` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Eq, PartialEq)]
+    pub struct MetadataRequestTopic {
+        /// The topic id.
+        pub topic_id: Uuid,
+        /// The topic name.
+        pub name: Option<StrBytes>,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
     }
-}
 
-impl Default for MetadataRequestTopic {
-    fn default() -> Self {
-        Self {
-            topic_id: Uuid::ZERO,
-            name: Some(StrBytes::default()),
-            unknown_tagged_fields: TaggedFields::default(),
+    impl MetadataRequestTopic {
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(9, 13));
+
+        fn is_flexible(version: ApiVersion) -> bool {
+            Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+        }
+    }
+
+    impl Default for MetadataRequestTopic {
+        fn default() -> Self {
+            Self {
+                topic_id: Uuid::ZERO,
+                name: Some(StrBytes::default()),
+                unknown_tagged_fields: TaggedFields::default(),
+            }
+        }
+    }
+
+    impl KafkaDecode for MetadataRequestTopic {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            let topic_id = if version.value() >= 10 {
+                decoder.read_uuid()?
+            } else {
+                Uuid::ZERO
+            };
+            let name = if version.value() >= 10 {
+                decoder.read_compact_nullable_string()?
+            } else {
+                Some(if Self::is_flexible(version) {
+                    decoder.read_compact_string()?
+                } else {
+                    decoder.read_string()?
+                })
+            };
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
+
+            Ok(Self {
+                topic_id,
+                name,
+                unknown_tagged_fields,
+            })
+        }
+    }
+
+    impl KafkaEncode for MetadataRequestTopic {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            if version.value() >= 10 {
+                encoder.write_uuid(self.topic_id)?;
+            }
+            if version.value() <= 9 && self.name.is_none() {
+                return Err(EncodeError::NullNotAllowed {
+                    message: "MetadataRequestTopic",
+                    field: "Name",
+                    version,
+                });
+            }
+            if Self::is_flexible(version) {
+                encoder.write_compact_nullable_string(self.name.as_ref())?;
+            } else {
+                encoder.write_nullable_string(self.name.as_ref())?;
+            }
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "MetadataRequestTopic",
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+
+    /// Request body for the `Metadata` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Eq, PartialEq)]
+    pub struct MetadataRequest {
+        /// The topics to fetch metadata for.
+        pub topics: Option<Vec<MetadataRequestTopic>>,
+        /// If this is true, the broker may auto-create topics that we requested which do not already exist, if it is configured to do so.
+        pub allow_auto_topic_creation: bool,
+        /// Whether to include cluster authorized operations.
+        pub include_cluster_authorized_operations: bool,
+        /// Whether to include topic authorized operations.
+        pub include_topic_authorized_operations: bool,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl Default for MetadataRequest {
+        fn default() -> Self {
+            Self {
+                topics: Some(Vec::new()),
+                allow_auto_topic_creation: true,
+                include_cluster_authorized_operations: false,
+                include_topic_authorized_operations: false,
+                unknown_tagged_fields: TaggedFields::default(),
+            }
+        }
+    }
+
+    impl KafkaMessage for MetadataRequest {
+        const NAME: &'static str = "MetadataRequest";
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 13);
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(9, 13));
+    }
+
+    impl KafkaRequest for MetadataRequest {
+        const API_KEY: ApiKey = ApiKey::new(3);
+    }
+
+    impl RequestResponsePair for MetadataRequest {
+        type Response = super::MetadataResponse;
+    }
+
+    impl KafkaDecode for MetadataRequest {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            crate::message::ensure_decode_version::<Self>(version)?;
+
+            let topics = {
+                let length = if version.value() >= 1 {
+                    if Self::is_flexible(version) {
+                        decoder.read_compact_nullable_array_len()?
+                    } else {
+                        decoder.read_nullable_array_len()?
+                    }
+                } else {
+                    Some(decoder.read_array_len()?)
+                };
+                length
+                    .map(|length| {
+                        decoder.read_vec(length, |decoder| {
+                            MetadataRequestTopic::decode(decoder, version)
+                        })
+                    })
+                    .transpose()?
+            };
+            let allow_auto_topic_creation = if version.value() >= 4 {
+                decoder.read_bool()?
+            } else {
+                true
+            };
+            let include_cluster_authorized_operations =
+                if version.value() >= 8 && version.value() <= 10 {
+                    decoder.read_bool()?
+                } else {
+                    false
+                };
+            let include_topic_authorized_operations = if version.value() >= 8 {
+                decoder.read_bool()?
+            } else {
+                false
+            };
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
+
+            Ok(Self {
+                topics,
+                allow_auto_topic_creation,
+                include_cluster_authorized_operations,
+                include_topic_authorized_operations,
+                unknown_tagged_fields,
+            })
+        }
+    }
+
+    impl KafkaEncode for MetadataRequest {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            crate::message::ensure_encode_version::<Self>(version)?;
+
+            if version.value() < 4 && !self.allow_auto_topic_creation {
+                return Err(EncodeError::FieldNotRepresentable {
+                    message: Self::NAME,
+                    field: "AllowAutoTopicCreation",
+                    version,
+                });
+            }
+            if (version.value() < 8 || version.value() > 10)
+                && self.include_cluster_authorized_operations
+            {
+                return Err(EncodeError::FieldNotRepresentable {
+                    message: Self::NAME,
+                    field: "IncludeClusterAuthorizedOperations",
+                    version,
+                });
+            }
+            if version.value() < 8 && self.include_topic_authorized_operations {
+                return Err(EncodeError::FieldNotRepresentable {
+                    message: Self::NAME,
+                    field: "IncludeTopicAuthorizedOperations",
+                    version,
+                });
+            }
+
+            if version.value() <= 0 && self.topics.is_none() {
+                return Err(EncodeError::NullNotAllowed {
+                    message: Self::NAME,
+                    field: "Topics",
+                    version,
+                });
+            }
+            if Self::is_flexible(version) {
+                encoder.write_compact_nullable_array_len(self.topics.as_ref().map(Vec::len))?;
+            } else {
+                encoder.write_nullable_array_len(self.topics.as_ref().map(Vec::len))?;
+            }
+            if let Some(values) = &self.topics {
+                for value in values {
+                    value.encode(encoder, version)?;
+                }
+            }
+            if version.value() >= 4 {
+                encoder.write_bool(self.allow_auto_topic_creation)?;
+            }
+            if version.value() >= 8 && version.value() <= 10 {
+                encoder.write_bool(self.include_cluster_authorized_operations)?;
+            }
+            if version.value() >= 8 {
+                encoder.write_bool(self.include_topic_authorized_operations)?;
+            }
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: Self::NAME,
+                    version,
+                });
+            }
+
+            Ok(())
         }
     }
 }
 
-impl KafkaDecode for MetadataRequestTopic {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        let topic_id = if version.value() >= 10 {
-            decoder.read_uuid()?
-        } else {
-            Uuid::ZERO
-        };
-        let name = if version.value() >= 10 {
-            decoder.read_compact_nullable_string()?
-        } else {
-            Some(if Self::is_flexible(version) {
+/// `MetadataResponse` and every struct it declares, under upstream's own names.
+///
+/// [`MetadataResponse`](crate::MetadataResponse) is re-exported flat, so this path never has to be
+/// written to name the message itself.
+pub mod metadata_response {
+    use kafka_wire_core::{
+        ApiKey, ApiVersion, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
+        KafkaEncode, StrBytes, TaggedFields, Uuid, VersionRange,
+    };
+
+    use crate::{KafkaMessage, KafkaResponse};
+
+    /// `MetadataResponseBroker` as declared by the `Metadata` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    pub struct MetadataResponseBroker {
+        /// The broker ID.
+        pub node_id: i32,
+        /// The broker hostname.
+        pub host: StrBytes,
+        /// The broker port.
+        pub port: i32,
+        /// The rack of the broker, or null if it has not been assigned to a rack.
+        pub rack: Option<StrBytes>,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl MetadataResponseBroker {
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(9, 13));
+
+        fn is_flexible(version: ApiVersion) -> bool {
+            Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+        }
+    }
+
+    impl KafkaDecode for MetadataResponseBroker {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            let node_id = decoder.read_i32()?;
+            let host = if Self::is_flexible(version) {
                 decoder.read_compact_string()?
             } else {
                 decoder.read_string()?
-            })
-        };
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
-
-        Ok(Self {
-            topic_id,
-            name,
-            unknown_tagged_fields,
-        })
-    }
-}
-
-impl KafkaEncode for MetadataRequestTopic {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        if version.value() >= 10 {
-            encoder.write_uuid(self.topic_id)?;
-        }
-        if version.value() <= 9 && self.name.is_none() {
-            return Err(EncodeError::NullNotAllowed {
-                message: "MetadataRequestTopic",
-                field: "Name",
-                version,
-            });
-        }
-        if Self::is_flexible(version) {
-            encoder.write_compact_nullable_string(self.name.as_ref())?;
-        } else {
-            encoder.write_nullable_string(self.name.as_ref())?;
-        }
-
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: "MetadataRequestTopic",
-                version,
-            });
-        }
-
-        Ok(())
-    }
-}
-
-/// Request body for the `Metadata` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct MetadataRequest {
-    /// The topics to fetch metadata for.
-    pub topics: Option<Vec<MetadataRequestTopic>>,
-    /// If this is true, the broker may auto-create topics that we requested which do not already exist, if it is configured to do so.
-    pub allow_auto_topic_creation: bool,
-    /// Whether to include cluster authorized operations.
-    pub include_cluster_authorized_operations: bool,
-    /// Whether to include topic authorized operations.
-    pub include_topic_authorized_operations: bool,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
-
-impl Default for MetadataRequest {
-    fn default() -> Self {
-        Self {
-            topics: Some(Vec::new()),
-            allow_auto_topic_creation: true,
-            include_cluster_authorized_operations: false,
-            include_topic_authorized_operations: false,
-            unknown_tagged_fields: TaggedFields::default(),
-        }
-    }
-}
-
-impl KafkaMessage for MetadataRequest {
-    const NAME: &'static str = "MetadataRequest";
-    const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 13);
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(9, 13));
-}
-
-impl KafkaRequest for MetadataRequest {
-    const API_KEY: ApiKey = ApiKey::new(3);
-}
-
-impl RequestResponsePair for MetadataRequest {
-    type Response = MetadataResponse;
-}
-
-impl KafkaDecode for MetadataRequest {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        crate::message::ensure_decode_version::<Self>(version)?;
-
-        let topics = {
-            let length = if version.value() >= 1 {
+            };
+            let port = decoder.read_i32()?;
+            let rack = if version.value() >= 1 {
                 if Self::is_flexible(version) {
-                    decoder.read_compact_nullable_array_len()?
+                    decoder.read_compact_nullable_string()?
                 } else {
-                    decoder.read_nullable_array_len()?
+                    decoder.read_nullable_string()?
                 }
             } else {
-                Some(decoder.read_array_len()?)
+                None
             };
-            length
-                .map(|length| {
-                    decoder.read_vec(length, |decoder| {
-                        MetadataRequestTopic::decode(decoder, version)
-                    })
-                })
-                .transpose()?
-        };
-        let allow_auto_topic_creation = if version.value() >= 4 {
-            decoder.read_bool()?
-        } else {
-            true
-        };
-        let include_cluster_authorized_operations = if version.value() >= 8 && version.value() <= 10
-        {
-            decoder.read_bool()?
-        } else {
-            false
-        };
-        let include_topic_authorized_operations = if version.value() >= 8 {
-            decoder.read_bool()?
-        } else {
-            false
-        };
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
 
-        Ok(Self {
-            topics,
-            allow_auto_topic_creation,
-            include_cluster_authorized_operations,
-            include_topic_authorized_operations,
-            unknown_tagged_fields,
-        })
+            Ok(Self {
+                node_id,
+                host,
+                port,
+                rack,
+                unknown_tagged_fields,
+            })
+        }
     }
-}
 
-impl KafkaEncode for MetadataRequest {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        crate::message::ensure_encode_version::<Self>(version)?;
+    impl KafkaEncode for MetadataResponseBroker {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            encoder.write_i32(self.node_id)?;
+            if Self::is_flexible(version) {
+                encoder.write_compact_string(&self.host)?;
+            } else {
+                encoder.write_string(&self.host)?;
+            }
+            encoder.write_i32(self.port)?;
+            if version.value() >= 1 {
+                if Self::is_flexible(version) {
+                    encoder.write_compact_nullable_string(self.rack.as_ref())?;
+                } else {
+                    encoder.write_nullable_string(self.rack.as_ref())?;
+                }
+            }
 
-        if version.value() < 4 && !self.allow_auto_topic_creation {
-            return Err(EncodeError::FieldNotRepresentable {
-                message: Self::NAME,
-                field: "AllowAutoTopicCreation",
-                version,
-            });
-        }
-        if (version.value() < 8 || version.value() > 10)
-            && self.include_cluster_authorized_operations
-        {
-            return Err(EncodeError::FieldNotRepresentable {
-                message: Self::NAME,
-                field: "IncludeClusterAuthorizedOperations",
-                version,
-            });
-        }
-        if version.value() < 8 && self.include_topic_authorized_operations {
-            return Err(EncodeError::FieldNotRepresentable {
-                message: Self::NAME,
-                field: "IncludeTopicAuthorizedOperations",
-                version,
-            });
-        }
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "MetadataResponseBroker",
+                    version,
+                });
+            }
 
-        if version.value() <= 0 && self.topics.is_none() {
-            return Err(EncodeError::NullNotAllowed {
-                message: Self::NAME,
-                field: "Topics",
-                version,
-            });
+            Ok(())
         }
-        if Self::is_flexible(version) {
-            encoder.write_compact_nullable_array_len(self.topics.as_ref().map(Vec::len))?;
-        } else {
-            encoder.write_nullable_array_len(self.topics.as_ref().map(Vec::len))?;
+    }
+
+    /// `MetadataResponseTopic` as declared by the `Metadata` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Eq, PartialEq)]
+    pub struct MetadataResponseTopic {
+        /// The topic error, or 0 if there was no error.
+        pub error_code: i16,
+        /// The topic name. Null for non-existing topics queried by ID. This is never null when `ErrorCode` is zero. One of Name and `TopicId` is always populated.
+        pub name: Option<StrBytes>,
+        /// The topic id. Zero for non-existing topics queried by name. This is never zero when `ErrorCode` is zero. One of Name and `TopicId` is always populated.
+        pub topic_id: Uuid,
+        /// True if the topic is internal.
+        pub is_internal: bool,
+        /// Each partition in the topic.
+        pub partitions: Vec<MetadataResponsePartition>,
+        /// 32-bit bitfield to represent authorized operations for this topic.
+        pub topic_authorized_operations: i32,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl MetadataResponseTopic {
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(9, 13));
+
+        fn is_flexible(version: ApiVersion) -> bool {
+            Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
         }
-        if let Some(values) = &self.topics {
-            for value in values {
+    }
+
+    impl Default for MetadataResponseTopic {
+        fn default() -> Self {
+            Self {
+                error_code: 0,
+                name: Some(StrBytes::default()),
+                topic_id: Uuid::ZERO,
+                is_internal: false,
+                partitions: Vec::new(),
+                topic_authorized_operations: -2_147_483_648,
+                unknown_tagged_fields: TaggedFields::default(),
+            }
+        }
+    }
+
+    impl KafkaDecode for MetadataResponseTopic {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            let error_code = decoder.read_i16()?;
+            let name = if version.value() >= 12 {
+                decoder.read_compact_nullable_string()?
+            } else {
+                Some(if Self::is_flexible(version) {
+                    decoder.read_compact_string()?
+                } else {
+                    decoder.read_string()?
+                })
+            };
+            let topic_id = if version.value() >= 10 {
+                decoder.read_uuid()?
+            } else {
+                Uuid::ZERO
+            };
+            let is_internal = if version.value() >= 1 {
+                decoder.read_bool()?
+            } else {
+                false
+            };
+            let partitions = {
+                let length = if Self::is_flexible(version) {
+                    decoder.read_compact_array_len()?
+                } else {
+                    decoder.read_array_len()?
+                };
+                decoder.read_vec(length, |decoder| {
+                    MetadataResponsePartition::decode(decoder, version)
+                })?
+            };
+            let topic_authorized_operations = if version.value() >= 8 {
+                decoder.read_i32()?
+            } else {
+                -2_147_483_648
+            };
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
+
+            Ok(Self {
+                error_code,
+                name,
+                topic_id,
+                is_internal,
+                partitions,
+                topic_authorized_operations,
+                unknown_tagged_fields,
+            })
+        }
+    }
+
+    impl KafkaEncode for MetadataResponseTopic {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            encoder.write_i16(self.error_code)?;
+            if version.value() <= 11 && self.name.is_none() {
+                return Err(EncodeError::NullNotAllowed {
+                    message: "MetadataResponseTopic",
+                    field: "Name",
+                    version,
+                });
+            }
+            if Self::is_flexible(version) {
+                encoder.write_compact_nullable_string(self.name.as_ref())?;
+            } else {
+                encoder.write_nullable_string(self.name.as_ref())?;
+            }
+            if version.value() >= 10 {
+                encoder.write_uuid(self.topic_id)?;
+            }
+            if version.value() >= 1 {
+                encoder.write_bool(self.is_internal)?;
+            }
+            if Self::is_flexible(version) {
+                encoder.write_compact_array_len(self.partitions.len())?;
+            } else {
+                encoder.write_array_len(self.partitions.len())?;
+            }
+            for value in &self.partitions {
                 value.encode(encoder, version)?;
             }
-        }
-        if version.value() >= 4 {
-            encoder.write_bool(self.allow_auto_topic_creation)?;
-        }
-        if version.value() >= 8 && version.value() <= 10 {
-            encoder.write_bool(self.include_cluster_authorized_operations)?;
-        }
-        if version.value() >= 8 {
-            encoder.write_bool(self.include_topic_authorized_operations)?;
-        }
-
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: Self::NAME,
-                version,
-            });
-        }
-
-        Ok(())
-    }
-}
-
-/// `MetadataResponseBroker` as declared by the `Metadata` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct MetadataResponseBroker {
-    /// The broker ID.
-    pub node_id: i32,
-    /// The broker hostname.
-    pub host: StrBytes,
-    /// The broker port.
-    pub port: i32,
-    /// The rack of the broker, or null if it has not been assigned to a rack.
-    pub rack: Option<StrBytes>,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
-
-impl MetadataResponseBroker {
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(9, 13));
-
-    fn is_flexible(version: ApiVersion) -> bool {
-        Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
-    }
-}
-
-impl KafkaDecode for MetadataResponseBroker {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        let node_id = decoder.read_i32()?;
-        let host = if Self::is_flexible(version) {
-            decoder.read_compact_string()?
-        } else {
-            decoder.read_string()?
-        };
-        let port = decoder.read_i32()?;
-        let rack = if version.value() >= 1 {
-            if Self::is_flexible(version) {
-                decoder.read_compact_nullable_string()?
-            } else {
-                decoder.read_nullable_string()?
+            if version.value() >= 8 {
+                encoder.write_i32(self.topic_authorized_operations)?;
             }
-        } else {
-            None
-        };
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
 
-        Ok(Self {
-            node_id,
-            host,
-            port,
-            rack,
-            unknown_tagged_fields,
-        })
-    }
-}
-
-impl KafkaEncode for MetadataResponseBroker {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        encoder.write_i32(self.node_id)?;
-        if Self::is_flexible(version) {
-            encoder.write_compact_string(&self.host)?;
-        } else {
-            encoder.write_string(&self.host)?;
-        }
-        encoder.write_i32(self.port)?;
-        if version.value() >= 1 {
             if Self::is_flexible(version) {
-                encoder.write_compact_nullable_string(self.rack.as_ref())?;
-            } else {
-                encoder.write_nullable_string(self.rack.as_ref())?;
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "MetadataResponseTopic",
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+
+    /// `MetadataResponsePartition` as declared by the `Metadata` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Eq, PartialEq)]
+    pub struct MetadataResponsePartition {
+        /// The partition error, or 0 if there was no error.
+        pub error_code: i16,
+        /// The partition index.
+        pub partition_index: i32,
+        /// The ID of the leader broker.
+        pub leader_id: i32,
+        /// The leader epoch of this partition.
+        pub leader_epoch: i32,
+        /// The set of all nodes that host this partition.
+        pub replica_nodes: Vec<i32>,
+        /// The set of nodes that are in sync with the leader for this partition.
+        pub isr_nodes: Vec<i32>,
+        /// The set of offline replicas of this partition.
+        pub offline_replicas: Vec<i32>,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl MetadataResponsePartition {
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(9, 13));
+
+        fn is_flexible(version: ApiVersion) -> bool {
+            Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+        }
+    }
+
+    impl Default for MetadataResponsePartition {
+        fn default() -> Self {
+            Self {
+                error_code: 0,
+                partition_index: 0,
+                leader_id: 0,
+                leader_epoch: -1,
+                replica_nodes: Vec::new(),
+                isr_nodes: Vec::new(),
+                offline_replicas: Vec::new(),
+                unknown_tagged_fields: TaggedFields::default(),
             }
         }
-
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: "MetadataResponseBroker",
-                version,
-            });
-        }
-
-        Ok(())
     }
-}
 
-/// `MetadataResponseTopic` as declared by the `Metadata` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct MetadataResponseTopic {
-    /// The topic error, or 0 if there was no error.
-    pub error_code: i16,
-    /// The topic name. Null for non-existing topics queried by ID. This is never null when `ErrorCode` is zero. One of Name and `TopicId` is always populated.
-    pub name: Option<StrBytes>,
-    /// The topic id. Zero for non-existing topics queried by name. This is never zero when `ErrorCode` is zero. One of Name and `TopicId` is always populated.
-    pub topic_id: Uuid,
-    /// True if the topic is internal.
-    pub is_internal: bool,
-    /// Each partition in the topic.
-    pub partitions: Vec<MetadataResponsePartition>,
-    /// 32-bit bitfield to represent authorized operations for this topic.
-    pub topic_authorized_operations: i32,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
-
-impl MetadataResponseTopic {
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(9, 13));
-
-    fn is_flexible(version: ApiVersion) -> bool {
-        Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
-    }
-}
-
-impl Default for MetadataResponseTopic {
-    fn default() -> Self {
-        Self {
-            error_code: 0,
-            name: Some(StrBytes::default()),
-            topic_id: Uuid::ZERO,
-            is_internal: false,
-            partitions: Vec::new(),
-            topic_authorized_operations: -2_147_483_648,
-            unknown_tagged_fields: TaggedFields::default(),
-        }
-    }
-}
-
-impl KafkaDecode for MetadataResponseTopic {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        let error_code = decoder.read_i16()?;
-        let name = if version.value() >= 12 {
-            decoder.read_compact_nullable_string()?
-        } else {
-            Some(if Self::is_flexible(version) {
-                decoder.read_compact_string()?
+    impl KafkaDecode for MetadataResponsePartition {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            let error_code = decoder.read_i16()?;
+            let partition_index = decoder.read_i32()?;
+            let leader_id = decoder.read_i32()?;
+            let leader_epoch = if version.value() >= 7 {
+                decoder.read_i32()?
             } else {
-                decoder.read_string()?
+                -1
+            };
+            let replica_nodes = {
+                let length = if Self::is_flexible(version) {
+                    decoder.read_compact_array_len()?
+                } else {
+                    decoder.read_array_len()?
+                };
+                decoder.read_vec(length, Decoder::read_i32)?
+            };
+            let isr_nodes = {
+                let length = if Self::is_flexible(version) {
+                    decoder.read_compact_array_len()?
+                } else {
+                    decoder.read_array_len()?
+                };
+                decoder.read_vec(length, Decoder::read_i32)?
+            };
+            let offline_replicas = if version.value() >= 5 {
+                let length = if Self::is_flexible(version) {
+                    decoder.read_compact_array_len()?
+                } else {
+                    decoder.read_array_len()?
+                };
+                decoder.read_vec(length, Decoder::read_i32)?
+            } else {
+                Vec::new()
+            };
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
+
+            Ok(Self {
+                error_code,
+                partition_index,
+                leader_id,
+                leader_epoch,
+                replica_nodes,
+                isr_nodes,
+                offline_replicas,
+                unknown_tagged_fields,
             })
-        };
-        let topic_id = if version.value() >= 10 {
-            decoder.read_uuid()?
-        } else {
-            Uuid::ZERO
-        };
-        let is_internal = if version.value() >= 1 {
-            decoder.read_bool()?
-        } else {
-            false
-        };
-        let partitions = {
-            let length = if Self::is_flexible(version) {
-                decoder.read_compact_array_len()?
-            } else {
-                decoder.read_array_len()?
-            };
-            decoder.read_vec(length, |decoder| {
-                MetadataResponsePartition::decode(decoder, version)
-            })?
-        };
-        let topic_authorized_operations = if version.value() >= 8 {
-            decoder.read_i32()?
-        } else {
-            -2_147_483_648
-        };
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
-
-        Ok(Self {
-            error_code,
-            name,
-            topic_id,
-            is_internal,
-            partitions,
-            topic_authorized_operations,
-            unknown_tagged_fields,
-        })
-    }
-}
-
-impl KafkaEncode for MetadataResponseTopic {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        encoder.write_i16(self.error_code)?;
-        if version.value() <= 11 && self.name.is_none() {
-            return Err(EncodeError::NullNotAllowed {
-                message: "MetadataResponseTopic",
-                field: "Name",
-                version,
-            });
-        }
-        if Self::is_flexible(version) {
-            encoder.write_compact_nullable_string(self.name.as_ref())?;
-        } else {
-            encoder.write_nullable_string(self.name.as_ref())?;
-        }
-        if version.value() >= 10 {
-            encoder.write_uuid(self.topic_id)?;
-        }
-        if version.value() >= 1 {
-            encoder.write_bool(self.is_internal)?;
-        }
-        if Self::is_flexible(version) {
-            encoder.write_compact_array_len(self.partitions.len())?;
-        } else {
-            encoder.write_array_len(self.partitions.len())?;
-        }
-        for value in &self.partitions {
-            value.encode(encoder, version)?;
-        }
-        if version.value() >= 8 {
-            encoder.write_i32(self.topic_authorized_operations)?;
-        }
-
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: "MetadataResponseTopic",
-                version,
-            });
-        }
-
-        Ok(())
-    }
-}
-
-/// `MetadataResponsePartition` as declared by the `Metadata` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct MetadataResponsePartition {
-    /// The partition error, or 0 if there was no error.
-    pub error_code: i16,
-    /// The partition index.
-    pub partition_index: i32,
-    /// The ID of the leader broker.
-    pub leader_id: i32,
-    /// The leader epoch of this partition.
-    pub leader_epoch: i32,
-    /// The set of all nodes that host this partition.
-    pub replica_nodes: Vec<i32>,
-    /// The set of nodes that are in sync with the leader for this partition.
-    pub isr_nodes: Vec<i32>,
-    /// The set of offline replicas of this partition.
-    pub offline_replicas: Vec<i32>,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
-
-impl MetadataResponsePartition {
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(9, 13));
-
-    fn is_flexible(version: ApiVersion) -> bool {
-        Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
-    }
-}
-
-impl Default for MetadataResponsePartition {
-    fn default() -> Self {
-        Self {
-            error_code: 0,
-            partition_index: 0,
-            leader_id: 0,
-            leader_epoch: -1,
-            replica_nodes: Vec::new(),
-            isr_nodes: Vec::new(),
-            offline_replicas: Vec::new(),
-            unknown_tagged_fields: TaggedFields::default(),
         }
     }
-}
 
-impl KafkaDecode for MetadataResponsePartition {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        let error_code = decoder.read_i16()?;
-        let partition_index = decoder.read_i32()?;
-        let leader_id = decoder.read_i32()?;
-        let leader_epoch = if version.value() >= 7 {
-            decoder.read_i32()?
-        } else {
-            -1
-        };
-        let replica_nodes = {
-            let length = if Self::is_flexible(version) {
-                decoder.read_compact_array_len()?
-            } else {
-                decoder.read_array_len()?
-            };
-            decoder.read_vec(length, Decoder::read_i32)?
-        };
-        let isr_nodes = {
-            let length = if Self::is_flexible(version) {
-                decoder.read_compact_array_len()?
-            } else {
-                decoder.read_array_len()?
-            };
-            decoder.read_vec(length, Decoder::read_i32)?
-        };
-        let offline_replicas = if version.value() >= 5 {
-            let length = if Self::is_flexible(version) {
-                decoder.read_compact_array_len()?
-            } else {
-                decoder.read_array_len()?
-            };
-            decoder.read_vec(length, Decoder::read_i32)?
-        } else {
-            Vec::new()
-        };
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
-
-        Ok(Self {
-            error_code,
-            partition_index,
-            leader_id,
-            leader_epoch,
-            replica_nodes,
-            isr_nodes,
-            offline_replicas,
-            unknown_tagged_fields,
-        })
-    }
-}
-
-impl KafkaEncode for MetadataResponsePartition {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        encoder.write_i16(self.error_code)?;
-        encoder.write_i32(self.partition_index)?;
-        encoder.write_i32(self.leader_id)?;
-        if version.value() >= 7 {
-            encoder.write_i32(self.leader_epoch)?;
-        }
-        if Self::is_flexible(version) {
-            encoder.write_compact_array_len(self.replica_nodes.len())?;
-        } else {
-            encoder.write_array_len(self.replica_nodes.len())?;
-        }
-        for value in &self.replica_nodes {
-            encoder.write_i32(*value)?;
-        }
-        if Self::is_flexible(version) {
-            encoder.write_compact_array_len(self.isr_nodes.len())?;
-        } else {
-            encoder.write_array_len(self.isr_nodes.len())?;
-        }
-        for value in &self.isr_nodes {
-            encoder.write_i32(*value)?;
-        }
-        if version.value() >= 5 {
-            if Self::is_flexible(version) {
-                encoder.write_compact_array_len(self.offline_replicas.len())?;
-            } else {
-                encoder.write_array_len(self.offline_replicas.len())?;
+    impl KafkaEncode for MetadataResponsePartition {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            encoder.write_i16(self.error_code)?;
+            encoder.write_i32(self.partition_index)?;
+            encoder.write_i32(self.leader_id)?;
+            if version.value() >= 7 {
+                encoder.write_i32(self.leader_epoch)?;
             }
-            for value in &self.offline_replicas {
+            if Self::is_flexible(version) {
+                encoder.write_compact_array_len(self.replica_nodes.len())?;
+            } else {
+                encoder.write_array_len(self.replica_nodes.len())?;
+            }
+            for value in &self.replica_nodes {
                 encoder.write_i32(*value)?;
             }
-        }
-
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: "MetadataResponsePartition",
-                version,
-            });
-        }
-
-        Ok(())
-    }
-}
-
-/// Response body for the `Metadata` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct MetadataResponse {
-    /// The duration in milliseconds for which the request was throttled due to a quota violation, or zero if the request did not violate any quota.
-    pub throttle_time_ms: i32,
-    /// A list of brokers present in the cluster.
-    pub brokers: Vec<MetadataResponseBroker>,
-    /// The cluster ID that responding broker belongs to.
-    pub cluster_id: Option<StrBytes>,
-    /// The ID of the controller broker.
-    pub controller_id: i32,
-    /// Each topic in the response.
-    pub topics: Vec<MetadataResponseTopic>,
-    /// 32-bit bitfield to represent authorized operations for this cluster.
-    pub cluster_authorized_operations: i32,
-    /// The top-level error code, or 0 if there was no error.
-    pub error_code: i16,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
-
-impl Default for MetadataResponse {
-    fn default() -> Self {
-        Self {
-            throttle_time_ms: 0,
-            brokers: Vec::new(),
-            cluster_id: None,
-            controller_id: -1,
-            topics: Vec::new(),
-            cluster_authorized_operations: -2_147_483_648,
-            error_code: 0,
-            unknown_tagged_fields: TaggedFields::default(),
-        }
-    }
-}
-
-impl KafkaMessage for MetadataResponse {
-    const NAME: &'static str = "MetadataResponse";
-    const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 13);
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(9, 13));
-}
-
-impl KafkaResponse for MetadataResponse {
-    const API_KEY: ApiKey = ApiKey::new(3);
-}
-
-impl KafkaDecode for MetadataResponse {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        crate::message::ensure_decode_version::<Self>(version)?;
-
-        let throttle_time_ms = if version.value() >= 3 {
-            decoder.read_i32()?
-        } else {
-            0
-        };
-        let brokers = {
-            let length = if Self::is_flexible(version) {
-                decoder.read_compact_array_len()?
-            } else {
-                decoder.read_array_len()?
-            };
-            decoder.read_vec(length, |decoder| {
-                MetadataResponseBroker::decode(decoder, version)
-            })?
-        };
-        let cluster_id = if version.value() >= 2 {
             if Self::is_flexible(version) {
-                decoder.read_compact_nullable_string()?
+                encoder.write_compact_array_len(self.isr_nodes.len())?;
             } else {
-                decoder.read_nullable_string()?
+                encoder.write_array_len(self.isr_nodes.len())?;
             }
-        } else {
-            None
-        };
-        let controller_id = if version.value() >= 1 {
-            decoder.read_i32()?
-        } else {
-            -1
-        };
-        let topics = {
-            let length = if Self::is_flexible(version) {
-                decoder.read_compact_array_len()?
-            } else {
-                decoder.read_array_len()?
-            };
-            decoder.read_vec(length, |decoder| {
-                MetadataResponseTopic::decode(decoder, version)
-            })?
-        };
-        let cluster_authorized_operations = if version.value() >= 8 && version.value() <= 10 {
-            decoder.read_i32()?
-        } else {
-            -2_147_483_648
-        };
-        let error_code = if version.value() >= 13 {
-            decoder.read_i16()?
-        } else {
-            0
-        };
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
+            for value in &self.isr_nodes {
+                encoder.write_i32(*value)?;
+            }
+            if version.value() >= 5 {
+                if Self::is_flexible(version) {
+                    encoder.write_compact_array_len(self.offline_replicas.len())?;
+                } else {
+                    encoder.write_array_len(self.offline_replicas.len())?;
+                }
+                for value in &self.offline_replicas {
+                    encoder.write_i32(*value)?;
+                }
+            }
 
-        Ok(Self {
-            throttle_time_ms,
-            brokers,
-            cluster_id,
-            controller_id,
-            topics,
-            cluster_authorized_operations,
-            error_code,
-            unknown_tagged_fields,
-        })
-    }
-}
-
-impl KafkaEncode for MetadataResponse {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        crate::message::ensure_encode_version::<Self>(version)?;
-
-        if (version.value() < 8 || version.value() > 10)
-            && self.cluster_authorized_operations != -2_147_483_648
-        {
-            return Err(EncodeError::FieldNotRepresentable {
-                message: Self::NAME,
-                field: "ClusterAuthorizedOperations",
-                version,
-            });
-        }
-
-        if version.value() >= 3 {
-            encoder.write_i32(self.throttle_time_ms)?;
-        }
-        if Self::is_flexible(version) {
-            encoder.write_compact_array_len(self.brokers.len())?;
-        } else {
-            encoder.write_array_len(self.brokers.len())?;
-        }
-        for value in &self.brokers {
-            value.encode(encoder, version)?;
-        }
-        if version.value() >= 2 {
             if Self::is_flexible(version) {
-                encoder.write_compact_nullable_string(self.cluster_id.as_ref())?;
-            } else {
-                encoder.write_nullable_string(self.cluster_id.as_ref())?;
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "MetadataResponsePartition",
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+
+    /// Response body for the `Metadata` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Eq, PartialEq)]
+    pub struct MetadataResponse {
+        /// The duration in milliseconds for which the request was throttled due to a quota violation, or zero if the request did not violate any quota.
+        pub throttle_time_ms: i32,
+        /// A list of brokers present in the cluster.
+        pub brokers: Vec<MetadataResponseBroker>,
+        /// The cluster ID that responding broker belongs to.
+        pub cluster_id: Option<StrBytes>,
+        /// The ID of the controller broker.
+        pub controller_id: i32,
+        /// Each topic in the response.
+        pub topics: Vec<MetadataResponseTopic>,
+        /// 32-bit bitfield to represent authorized operations for this cluster.
+        pub cluster_authorized_operations: i32,
+        /// The top-level error code, or 0 if there was no error.
+        pub error_code: i16,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl Default for MetadataResponse {
+        fn default() -> Self {
+            Self {
+                throttle_time_ms: 0,
+                brokers: Vec::new(),
+                cluster_id: None,
+                controller_id: -1,
+                topics: Vec::new(),
+                cluster_authorized_operations: -2_147_483_648,
+                error_code: 0,
+                unknown_tagged_fields: TaggedFields::default(),
             }
         }
-        if version.value() >= 1 {
-            encoder.write_i32(self.controller_id)?;
-        }
-        if Self::is_flexible(version) {
-            encoder.write_compact_array_len(self.topics.len())?;
-        } else {
-            encoder.write_array_len(self.topics.len())?;
-        }
-        for value in &self.topics {
-            value.encode(encoder, version)?;
-        }
-        if version.value() >= 8 && version.value() <= 10 {
-            encoder.write_i32(self.cluster_authorized_operations)?;
-        }
-        if version.value() >= 13 {
-            encoder.write_i16(self.error_code)?;
-        }
+    }
 
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: Self::NAME,
-                version,
-            });
-        }
+    impl KafkaMessage for MetadataResponse {
+        const NAME: &'static str = "MetadataResponse";
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 13);
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(9, 13));
+    }
 
-        Ok(())
+    impl KafkaResponse for MetadataResponse {
+        const API_KEY: ApiKey = ApiKey::new(3);
+    }
+
+    impl KafkaDecode for MetadataResponse {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            crate::message::ensure_decode_version::<Self>(version)?;
+
+            let throttle_time_ms = if version.value() >= 3 {
+                decoder.read_i32()?
+            } else {
+                0
+            };
+            let brokers = {
+                let length = if Self::is_flexible(version) {
+                    decoder.read_compact_array_len()?
+                } else {
+                    decoder.read_array_len()?
+                };
+                decoder.read_vec(length, |decoder| {
+                    MetadataResponseBroker::decode(decoder, version)
+                })?
+            };
+            let cluster_id = if version.value() >= 2 {
+                if Self::is_flexible(version) {
+                    decoder.read_compact_nullable_string()?
+                } else {
+                    decoder.read_nullable_string()?
+                }
+            } else {
+                None
+            };
+            let controller_id = if version.value() >= 1 {
+                decoder.read_i32()?
+            } else {
+                -1
+            };
+            let topics = {
+                let length = if Self::is_flexible(version) {
+                    decoder.read_compact_array_len()?
+                } else {
+                    decoder.read_array_len()?
+                };
+                decoder.read_vec(length, |decoder| {
+                    MetadataResponseTopic::decode(decoder, version)
+                })?
+            };
+            let cluster_authorized_operations = if version.value() >= 8 && version.value() <= 10 {
+                decoder.read_i32()?
+            } else {
+                -2_147_483_648
+            };
+            let error_code = if version.value() >= 13 {
+                decoder.read_i16()?
+            } else {
+                0
+            };
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
+
+            Ok(Self {
+                throttle_time_ms,
+                brokers,
+                cluster_id,
+                controller_id,
+                topics,
+                cluster_authorized_operations,
+                error_code,
+                unknown_tagged_fields,
+            })
+        }
+    }
+
+    impl KafkaEncode for MetadataResponse {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            crate::message::ensure_encode_version::<Self>(version)?;
+
+            if (version.value() < 8 || version.value() > 10)
+                && self.cluster_authorized_operations != -2_147_483_648
+            {
+                return Err(EncodeError::FieldNotRepresentable {
+                    message: Self::NAME,
+                    field: "ClusterAuthorizedOperations",
+                    version,
+                });
+            }
+
+            if version.value() >= 3 {
+                encoder.write_i32(self.throttle_time_ms)?;
+            }
+            if Self::is_flexible(version) {
+                encoder.write_compact_array_len(self.brokers.len())?;
+            } else {
+                encoder.write_array_len(self.brokers.len())?;
+            }
+            for value in &self.brokers {
+                value.encode(encoder, version)?;
+            }
+            if version.value() >= 2 {
+                if Self::is_flexible(version) {
+                    encoder.write_compact_nullable_string(self.cluster_id.as_ref())?;
+                } else {
+                    encoder.write_nullable_string(self.cluster_id.as_ref())?;
+                }
+            }
+            if version.value() >= 1 {
+                encoder.write_i32(self.controller_id)?;
+            }
+            if Self::is_flexible(version) {
+                encoder.write_compact_array_len(self.topics.len())?;
+            } else {
+                encoder.write_array_len(self.topics.len())?;
+            }
+            for value in &self.topics {
+                value.encode(encoder, version)?;
+            }
+            if version.value() >= 8 && version.value() <= 10 {
+                encoder.write_i32(self.cluster_authorized_operations)?;
+            }
+            if version.value() >= 13 {
+                encoder.write_i16(self.error_code)?;
+            }
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: Self::NAME,
+                    version,
+                });
+            }
+
+            Ok(())
+        }
     }
 }
+
+use kafka_wire_core::VersionRange;
+
+use crate::{MessageDescriptor, MessageDirection};
+
+pub use metadata_request::MetadataRequest;
+pub use metadata_response::MetadataResponse;
 
 /// Static metadata for [`MetadataRequest`].
 pub const METADATA_REQUEST_DESCRIPTOR: MessageDescriptor = MessageDescriptor::new(

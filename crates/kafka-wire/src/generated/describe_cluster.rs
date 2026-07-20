@@ -5,343 +5,366 @@
 //! Request SHA-256: `821b86c736d98bdd3de825daa56edd30fb46d39b8a156f273f3985d0d09c00b1`.
 //! Response SHA-256: `04a23344c659434c30914a76f161d6705d2028864800e735b20fe85bb8efd407`.
 
-use kafka_wire_core::{
-    ApiKey, ApiVersion, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
-    KafkaEncode, StrBytes, TaggedFields, VersionRange,
-};
+/// `DescribeClusterRequest` and every struct it declares, under upstream's own names.
+///
+/// [`DescribeClusterRequest`](crate::DescribeClusterRequest) is re-exported flat, so this path never has to be
+/// written to name the message itself.
+pub mod describe_cluster_request {
+    use kafka_wire_core::{
+        ApiKey, ApiVersion, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
+        KafkaEncode, TaggedFields, VersionRange,
+    };
 
-use crate::{
-    KafkaMessage, KafkaRequest, KafkaResponse, MessageDescriptor, MessageDirection,
-    RequestResponsePair,
-};
+    use crate::{KafkaMessage, KafkaRequest, RequestResponsePair};
 
-/// Request body for the `DescribeCluster` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct DescribeClusterRequest {
-    /// Whether to include cluster authorized operations.
-    pub include_cluster_authorized_operations: bool,
-    /// The endpoint type to describe. 1=brokers, 2=controllers.
-    pub endpoint_type: i8,
-    /// Whether to include fenced brokers when listing brokers.
-    pub include_fenced_brokers: bool,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
+    /// Request body for the `DescribeCluster` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Eq, PartialEq)]
+    pub struct DescribeClusterRequest {
+        /// Whether to include cluster authorized operations.
+        pub include_cluster_authorized_operations: bool,
+        /// The endpoint type to describe. 1=brokers, 2=controllers.
+        pub endpoint_type: i8,
+        /// Whether to include fenced brokers when listing brokers.
+        pub include_fenced_brokers: bool,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
+    }
 
-impl Default for DescribeClusterRequest {
-    fn default() -> Self {
-        Self {
-            include_cluster_authorized_operations: false,
-            endpoint_type: 1,
-            include_fenced_brokers: false,
-            unknown_tagged_fields: TaggedFields::default(),
+    impl Default for DescribeClusterRequest {
+        fn default() -> Self {
+            Self {
+                include_cluster_authorized_operations: false,
+                endpoint_type: 1,
+                include_fenced_brokers: false,
+                unknown_tagged_fields: TaggedFields::default(),
+            }
+        }
+    }
+
+    impl KafkaMessage for DescribeClusterRequest {
+        const NAME: &'static str = "DescribeClusterRequest";
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 2);
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 2));
+    }
+
+    impl KafkaRequest for DescribeClusterRequest {
+        const API_KEY: ApiKey = ApiKey::new(60);
+    }
+
+    impl RequestResponsePair for DescribeClusterRequest {
+        type Response = super::DescribeClusterResponse;
+    }
+
+    impl KafkaDecode for DescribeClusterRequest {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            crate::message::ensure_decode_version::<Self>(version)?;
+
+            let include_cluster_authorized_operations = decoder.read_bool()?;
+            let endpoint_type = if version.value() >= 1 {
+                decoder.read_i8()?
+            } else {
+                1
+            };
+            let include_fenced_brokers = if version.value() >= 2 {
+                decoder.read_bool()?
+            } else {
+                false
+            };
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
+
+            Ok(Self {
+                include_cluster_authorized_operations,
+                endpoint_type,
+                include_fenced_brokers,
+                unknown_tagged_fields,
+            })
+        }
+    }
+
+    impl KafkaEncode for DescribeClusterRequest {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            crate::message::ensure_encode_version::<Self>(version)?;
+
+            if version.value() < 1 && self.endpoint_type != 1 {
+                return Err(EncodeError::FieldNotRepresentable {
+                    message: Self::NAME,
+                    field: "EndpointType",
+                    version,
+                });
+            }
+            if version.value() < 2 && self.include_fenced_brokers {
+                return Err(EncodeError::FieldNotRepresentable {
+                    message: Self::NAME,
+                    field: "IncludeFencedBrokers",
+                    version,
+                });
+            }
+
+            encoder.write_bool(self.include_cluster_authorized_operations)?;
+            if version.value() >= 1 {
+                encoder.write_i8(self.endpoint_type)?;
+            }
+            if version.value() >= 2 {
+                encoder.write_bool(self.include_fenced_brokers)?;
+            }
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: Self::NAME,
+                    version,
+                });
+            }
+
+            Ok(())
         }
     }
 }
 
-impl KafkaMessage for DescribeClusterRequest {
-    const NAME: &'static str = "DescribeClusterRequest";
-    const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 2);
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 2));
-}
+/// `DescribeClusterResponse` and every struct it declares, under upstream's own names.
+///
+/// [`DescribeClusterResponse`](crate::DescribeClusterResponse) is re-exported flat, so this path never has to be
+/// written to name the message itself.
+pub mod describe_cluster_response {
+    use kafka_wire_core::{
+        ApiKey, ApiVersion, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
+        KafkaEncode, StrBytes, TaggedFields, VersionRange,
+    };
 
-impl KafkaRequest for DescribeClusterRequest {
-    const API_KEY: ApiKey = ApiKey::new(60);
-}
+    use crate::{KafkaMessage, KafkaResponse};
 
-impl RequestResponsePair for DescribeClusterRequest {
-    type Response = DescribeClusterResponse;
-}
+    /// `DescribeClusterBroker` as declared by the `DescribeCluster` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    pub struct DescribeClusterBroker {
+        /// The broker ID.
+        pub broker_id: i32,
+        /// The broker hostname.
+        pub host: StrBytes,
+        /// The broker port.
+        pub port: i32,
+        /// The rack of the broker, or null if it has not been assigned to a rack.
+        pub rack: Option<StrBytes>,
+        /// Whether the broker is fenced.
+        pub is_fenced: bool,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
+    }
 
-impl KafkaDecode for DescribeClusterRequest {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        crate::message::ensure_decode_version::<Self>(version)?;
+    impl DescribeClusterBroker {
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 2));
 
-        let include_cluster_authorized_operations = decoder.read_bool()?;
-        let endpoint_type = if version.value() >= 1 {
-            decoder.read_i8()?
-        } else {
-            1
-        };
-        let include_fenced_brokers = if version.value() >= 2 {
-            decoder.read_bool()?
-        } else {
-            false
-        };
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
+        fn is_flexible(version: ApiVersion) -> bool {
+            Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+        }
+    }
 
-        Ok(Self {
-            include_cluster_authorized_operations,
-            endpoint_type,
-            include_fenced_brokers,
-            unknown_tagged_fields,
-        })
+    impl KafkaDecode for DescribeClusterBroker {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            let broker_id = decoder.read_i32()?;
+            let host = decoder.read_compact_string()?;
+            let port = decoder.read_i32()?;
+            let rack = decoder.read_compact_nullable_string()?;
+            let is_fenced = if version.value() >= 2 {
+                decoder.read_bool()?
+            } else {
+                false
+            };
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
+
+            Ok(Self {
+                broker_id,
+                host,
+                port,
+                rack,
+                is_fenced,
+                unknown_tagged_fields,
+            })
+        }
+    }
+
+    impl KafkaEncode for DescribeClusterBroker {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            encoder.write_i32(self.broker_id)?;
+            encoder.write_compact_string(&self.host)?;
+            encoder.write_i32(self.port)?;
+            encoder.write_compact_nullable_string(self.rack.as_ref())?;
+            if version.value() >= 2 {
+                encoder.write_bool(self.is_fenced)?;
+            }
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "DescribeClusterBroker",
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+
+    /// Response body for the `DescribeCluster` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Eq, PartialEq)]
+    pub struct DescribeClusterResponse {
+        /// The duration in milliseconds for which the request was throttled due to a quota violation, or zero if the request did not violate any quota.
+        pub throttle_time_ms: i32,
+        /// The top-level error code, or 0 if there was no error.
+        pub error_code: i16,
+        /// The top-level error message, or null if there was no error.
+        pub error_message: Option<StrBytes>,
+        /// The endpoint type that was described. 1=brokers, 2=controllers.
+        pub endpoint_type: i8,
+        /// The cluster ID that responding broker belongs to.
+        pub cluster_id: StrBytes,
+        /// The ID of the controller. When handled by a controller, returns the current voter leader ID. When handled by a broker, returns a random alive broker ID as a fallback.
+        pub controller_id: i32,
+        /// Each broker in the response.
+        pub brokers: Vec<DescribeClusterBroker>,
+        /// 32-bit bitfield to represent authorized operations for this cluster.
+        pub cluster_authorized_operations: i32,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl Default for DescribeClusterResponse {
+        fn default() -> Self {
+            Self {
+                throttle_time_ms: 0,
+                error_code: 0,
+                error_message: None,
+                endpoint_type: 1,
+                cluster_id: StrBytes::default(),
+                controller_id: -1,
+                brokers: Vec::new(),
+                cluster_authorized_operations: -2_147_483_648,
+                unknown_tagged_fields: TaggedFields::default(),
+            }
+        }
+    }
+
+    impl KafkaMessage for DescribeClusterResponse {
+        const NAME: &'static str = "DescribeClusterResponse";
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 2);
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 2));
+    }
+
+    impl KafkaResponse for DescribeClusterResponse {
+        const API_KEY: ApiKey = ApiKey::new(60);
+    }
+
+    impl KafkaDecode for DescribeClusterResponse {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            crate::message::ensure_decode_version::<Self>(version)?;
+
+            let throttle_time_ms = decoder.read_i32()?;
+            let error_code = decoder.read_i16()?;
+            let error_message = decoder.read_compact_nullable_string()?;
+            let endpoint_type = if version.value() >= 1 {
+                decoder.read_i8()?
+            } else {
+                1
+            };
+            let cluster_id = decoder.read_compact_string()?;
+            let controller_id = decoder.read_i32()?;
+            let brokers = {
+                let length = decoder.read_compact_array_len()?;
+                decoder.read_vec(length, |decoder| {
+                    DescribeClusterBroker::decode(decoder, version)
+                })?
+            };
+            let cluster_authorized_operations = decoder.read_i32()?;
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
+
+            Ok(Self {
+                throttle_time_ms,
+                error_code,
+                error_message,
+                endpoint_type,
+                cluster_id,
+                controller_id,
+                brokers,
+                cluster_authorized_operations,
+                unknown_tagged_fields,
+            })
+        }
+    }
+
+    impl KafkaEncode for DescribeClusterResponse {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            crate::message::ensure_encode_version::<Self>(version)?;
+
+            if version.value() < 1 && self.endpoint_type != 1 {
+                return Err(EncodeError::FieldNotRepresentable {
+                    message: Self::NAME,
+                    field: "EndpointType",
+                    version,
+                });
+            }
+
+            encoder.write_i32(self.throttle_time_ms)?;
+            encoder.write_i16(self.error_code)?;
+            encoder.write_compact_nullable_string(self.error_message.as_ref())?;
+            if version.value() >= 1 {
+                encoder.write_i8(self.endpoint_type)?;
+            }
+            encoder.write_compact_string(&self.cluster_id)?;
+            encoder.write_i32(self.controller_id)?;
+            encoder.write_compact_array_len(self.brokers.len())?;
+            for value in &self.brokers {
+                value.encode(encoder, version)?;
+            }
+            encoder.write_i32(self.cluster_authorized_operations)?;
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: Self::NAME,
+                    version,
+                });
+            }
+
+            Ok(())
+        }
     }
 }
 
-impl KafkaEncode for DescribeClusterRequest {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        crate::message::ensure_encode_version::<Self>(version)?;
+use kafka_wire_core::VersionRange;
 
-        if version.value() < 1 && self.endpoint_type != 1 {
-            return Err(EncodeError::FieldNotRepresentable {
-                message: Self::NAME,
-                field: "EndpointType",
-                version,
-            });
-        }
-        if version.value() < 2 && self.include_fenced_brokers {
-            return Err(EncodeError::FieldNotRepresentable {
-                message: Self::NAME,
-                field: "IncludeFencedBrokers",
-                version,
-            });
-        }
+use crate::{MessageDescriptor, MessageDirection};
 
-        encoder.write_bool(self.include_cluster_authorized_operations)?;
-        if version.value() >= 1 {
-            encoder.write_i8(self.endpoint_type)?;
-        }
-        if version.value() >= 2 {
-            encoder.write_bool(self.include_fenced_brokers)?;
-        }
-
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: Self::NAME,
-                version,
-            });
-        }
-
-        Ok(())
-    }
-}
-
-/// `DescribeClusterBroker` as declared by the `DescribeCluster` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct DescribeClusterResponseBroker {
-    /// The broker ID.
-    pub broker_id: i32,
-    /// The broker hostname.
-    pub host: StrBytes,
-    /// The broker port.
-    pub port: i32,
-    /// The rack of the broker, or null if it has not been assigned to a rack.
-    pub rack: Option<StrBytes>,
-    /// Whether the broker is fenced.
-    pub is_fenced: bool,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
-
-impl DescribeClusterResponseBroker {
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 2));
-
-    fn is_flexible(version: ApiVersion) -> bool {
-        Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
-    }
-}
-
-impl KafkaDecode for DescribeClusterResponseBroker {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        let broker_id = decoder.read_i32()?;
-        let host = decoder.read_compact_string()?;
-        let port = decoder.read_i32()?;
-        let rack = decoder.read_compact_nullable_string()?;
-        let is_fenced = if version.value() >= 2 {
-            decoder.read_bool()?
-        } else {
-            false
-        };
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
-
-        Ok(Self {
-            broker_id,
-            host,
-            port,
-            rack,
-            is_fenced,
-            unknown_tagged_fields,
-        })
-    }
-}
-
-impl KafkaEncode for DescribeClusterResponseBroker {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        encoder.write_i32(self.broker_id)?;
-        encoder.write_compact_string(&self.host)?;
-        encoder.write_i32(self.port)?;
-        encoder.write_compact_nullable_string(self.rack.as_ref())?;
-        if version.value() >= 2 {
-            encoder.write_bool(self.is_fenced)?;
-        }
-
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: "DescribeClusterResponseBroker",
-                version,
-            });
-        }
-
-        Ok(())
-    }
-}
-
-/// Response body for the `DescribeCluster` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct DescribeClusterResponse {
-    /// The duration in milliseconds for which the request was throttled due to a quota violation, or zero if the request did not violate any quota.
-    pub throttle_time_ms: i32,
-    /// The top-level error code, or 0 if there was no error.
-    pub error_code: i16,
-    /// The top-level error message, or null if there was no error.
-    pub error_message: Option<StrBytes>,
-    /// The endpoint type that was described. 1=brokers, 2=controllers.
-    pub endpoint_type: i8,
-    /// The cluster ID that responding broker belongs to.
-    pub cluster_id: StrBytes,
-    /// The ID of the controller. When handled by a controller, returns the current voter leader ID. When handled by a broker, returns a random alive broker ID as a fallback.
-    pub controller_id: i32,
-    /// Each broker in the response.
-    pub brokers: Vec<DescribeClusterResponseBroker>,
-    /// 32-bit bitfield to represent authorized operations for this cluster.
-    pub cluster_authorized_operations: i32,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
-
-impl Default for DescribeClusterResponse {
-    fn default() -> Self {
-        Self {
-            throttle_time_ms: 0,
-            error_code: 0,
-            error_message: None,
-            endpoint_type: 1,
-            cluster_id: StrBytes::default(),
-            controller_id: -1,
-            brokers: Vec::new(),
-            cluster_authorized_operations: -2_147_483_648,
-            unknown_tagged_fields: TaggedFields::default(),
-        }
-    }
-}
-
-impl KafkaMessage for DescribeClusterResponse {
-    const NAME: &'static str = "DescribeClusterResponse";
-    const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 2);
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 2));
-}
-
-impl KafkaResponse for DescribeClusterResponse {
-    const API_KEY: ApiKey = ApiKey::new(60);
-}
-
-impl KafkaDecode for DescribeClusterResponse {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        crate::message::ensure_decode_version::<Self>(version)?;
-
-        let throttle_time_ms = decoder.read_i32()?;
-        let error_code = decoder.read_i16()?;
-        let error_message = decoder.read_compact_nullable_string()?;
-        let endpoint_type = if version.value() >= 1 {
-            decoder.read_i8()?
-        } else {
-            1
-        };
-        let cluster_id = decoder.read_compact_string()?;
-        let controller_id = decoder.read_i32()?;
-        let brokers = {
-            let length = decoder.read_compact_array_len()?;
-            decoder.read_vec(length, |decoder| {
-                DescribeClusterResponseBroker::decode(decoder, version)
-            })?
-        };
-        let cluster_authorized_operations = decoder.read_i32()?;
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
-
-        Ok(Self {
-            throttle_time_ms,
-            error_code,
-            error_message,
-            endpoint_type,
-            cluster_id,
-            controller_id,
-            brokers,
-            cluster_authorized_operations,
-            unknown_tagged_fields,
-        })
-    }
-}
-
-impl KafkaEncode for DescribeClusterResponse {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        crate::message::ensure_encode_version::<Self>(version)?;
-
-        if version.value() < 1 && self.endpoint_type != 1 {
-            return Err(EncodeError::FieldNotRepresentable {
-                message: Self::NAME,
-                field: "EndpointType",
-                version,
-            });
-        }
-
-        encoder.write_i32(self.throttle_time_ms)?;
-        encoder.write_i16(self.error_code)?;
-        encoder.write_compact_nullable_string(self.error_message.as_ref())?;
-        if version.value() >= 1 {
-            encoder.write_i8(self.endpoint_type)?;
-        }
-        encoder.write_compact_string(&self.cluster_id)?;
-        encoder.write_i32(self.controller_id)?;
-        encoder.write_compact_array_len(self.brokers.len())?;
-        for value in &self.brokers {
-            value.encode(encoder, version)?;
-        }
-        encoder.write_i32(self.cluster_authorized_operations)?;
-
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: Self::NAME,
-                version,
-            });
-        }
-
-        Ok(())
-    }
-}
+pub use describe_cluster_request::DescribeClusterRequest;
+pub use describe_cluster_response::DescribeClusterResponse;
 
 /// Static metadata for [`DescribeClusterRequest`].
 pub const DESCRIBE_CLUSTER_REQUEST_DESCRIPTOR: MessageDescriptor = MessageDescriptor::new(

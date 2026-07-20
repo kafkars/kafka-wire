@@ -5,324 +5,343 @@
 //! Request SHA-256: `c0a31e10bc7525cd0d61a49e4035a8ab67ae49387d20db61205dc4a060f07769`.
 //! Response SHA-256: `d14d889ed117bb0c2d5c2a39b3937f6df997abc443a5ad7ac754d4112ec6aeae`.
 
-use kafka_wire_core::{
-    ApiKey, ApiVersion, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
-    KafkaEncode, StrBytes, TaggedFields, VersionRange,
-};
+/// `DescribeTransactionsRequest` and every struct it declares, under upstream's own names.
+///
+/// [`DescribeTransactionsRequest`](crate::DescribeTransactionsRequest) is re-exported flat, so this path never has to be
+/// written to name the message itself.
+pub mod describe_transactions_request {
+    use kafka_wire_core::{
+        ApiKey, ApiVersion, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
+        KafkaEncode, StrBytes, TaggedFields, VersionRange,
+    };
 
-use crate::{
-    KafkaMessage, KafkaRequest, KafkaResponse, MessageDescriptor, MessageDirection,
-    RequestResponsePair,
-};
+    use crate::{KafkaMessage, KafkaRequest, RequestResponsePair};
 
-/// Request body for the `DescribeTransactions` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct DescribeTransactionsRequest {
-    /// Array of `transactionalIds` to include in describe results. If empty, then no results will be returned.
-    pub transactional_ids: Vec<StrBytes>,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
-
-impl KafkaMessage for DescribeTransactionsRequest {
-    const NAME: &'static str = "DescribeTransactionsRequest";
-    const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 0);
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 0));
-}
-
-impl KafkaRequest for DescribeTransactionsRequest {
-    const API_KEY: ApiKey = ApiKey::new(65);
-}
-
-impl RequestResponsePair for DescribeTransactionsRequest {
-    type Response = DescribeTransactionsResponse;
-}
-
-impl KafkaDecode for DescribeTransactionsRequest {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        crate::message::ensure_decode_version::<Self>(version)?;
-
-        let transactional_ids = {
-            let length = decoder.read_compact_array_len()?;
-            decoder.read_vec(length, Decoder::read_compact_string)?
-        };
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
-
-        Ok(Self {
-            transactional_ids,
-            unknown_tagged_fields,
-        })
+    /// Request body for the `DescribeTransactions` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    pub struct DescribeTransactionsRequest {
+        /// Array of `transactionalIds` to include in describe results. If empty, then no results will be returned.
+        pub transactional_ids: Vec<StrBytes>,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
     }
-}
 
-impl KafkaEncode for DescribeTransactionsRequest {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        crate::message::ensure_encode_version::<Self>(version)?;
+    impl KafkaMessage for DescribeTransactionsRequest {
+        const NAME: &'static str = "DescribeTransactionsRequest";
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 0);
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 0));
+    }
 
-        encoder.write_compact_array_len(self.transactional_ids.len())?;
-        for value in &self.transactional_ids {
-            encoder.write_compact_string(value)?;
+    impl KafkaRequest for DescribeTransactionsRequest {
+        const API_KEY: ApiKey = ApiKey::new(65);
+    }
+
+    impl RequestResponsePair for DescribeTransactionsRequest {
+        type Response = super::DescribeTransactionsResponse;
+    }
+
+    impl KafkaDecode for DescribeTransactionsRequest {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            crate::message::ensure_decode_version::<Self>(version)?;
+
+            let transactional_ids = {
+                let length = decoder.read_compact_array_len()?;
+                decoder.read_vec(length, Decoder::read_compact_string)?
+            };
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
+
+            Ok(Self {
+                transactional_ids,
+                unknown_tagged_fields,
+            })
         }
+    }
 
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: Self::NAME,
-                version,
-            });
+    impl KafkaEncode for DescribeTransactionsRequest {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            crate::message::ensure_encode_version::<Self>(version)?;
+
+            encoder.write_compact_array_len(self.transactional_ids.len())?;
+            for value in &self.transactional_ids {
+                encoder.write_compact_string(value)?;
+            }
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: Self::NAME,
+                    version,
+                });
+            }
+
+            Ok(())
         }
-
-        Ok(())
     }
 }
 
-/// `TransactionState` as declared by the `DescribeTransactions` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct DescribeTransactionsResponseTransactionState {
-    /// The error code.
-    pub error_code: i16,
-    /// The transactional id.
-    pub transactional_id: StrBytes,
-    /// The current transaction state of the producer.
-    pub transaction_state: StrBytes,
-    /// The timeout in milliseconds for the transaction.
-    pub transaction_timeout_ms: i32,
-    /// The start time of the transaction in milliseconds.
-    pub transaction_start_time_ms: i64,
-    /// The current producer id associated with the transaction.
-    pub producer_id: i64,
-    /// The current epoch associated with the producer id.
-    pub producer_epoch: i16,
-    /// The set of partitions included in the current transaction (if active). When a transaction is preparing to commit or abort, this will include only partitions which do not have markers.
-    pub topics: Vec<DescribeTransactionsResponseTopicData>,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
+/// `DescribeTransactionsResponse` and every struct it declares, under upstream's own names.
+///
+/// [`DescribeTransactionsResponse`](crate::DescribeTransactionsResponse) is re-exported flat, so this path never has to be
+/// written to name the message itself.
+pub mod describe_transactions_response {
+    use kafka_wire_core::{
+        ApiKey, ApiVersion, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
+        KafkaEncode, StrBytes, TaggedFields, VersionRange,
+    };
 
-impl DescribeTransactionsResponseTransactionState {
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 0));
+    use crate::{KafkaMessage, KafkaResponse};
 
-    fn is_flexible(version: ApiVersion) -> bool {
-        Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+    /// `TransactionState` as declared by the `DescribeTransactions` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    pub struct TransactionState {
+        /// The error code.
+        pub error_code: i16,
+        /// The transactional id.
+        pub transactional_id: StrBytes,
+        /// The current transaction state of the producer.
+        pub transaction_state: StrBytes,
+        /// The timeout in milliseconds for the transaction.
+        pub transaction_timeout_ms: i32,
+        /// The start time of the transaction in milliseconds.
+        pub transaction_start_time_ms: i64,
+        /// The current producer id associated with the transaction.
+        pub producer_id: i64,
+        /// The current epoch associated with the producer id.
+        pub producer_epoch: i16,
+        /// The set of partitions included in the current transaction (if active). When a transaction is preparing to commit or abort, this will include only partitions which do not have markers.
+        pub topics: Vec<TopicData>,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
     }
-}
 
-impl KafkaDecode for DescribeTransactionsResponseTransactionState {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        let error_code = decoder.read_i16()?;
-        let transactional_id = decoder.read_compact_string()?;
-        let transaction_state = decoder.read_compact_string()?;
-        let transaction_timeout_ms = decoder.read_i32()?;
-        let transaction_start_time_ms = decoder.read_i64()?;
-        let producer_id = decoder.read_i64()?;
-        let producer_epoch = decoder.read_i16()?;
-        let topics = {
-            let length = decoder.read_compact_array_len()?;
-            decoder.read_vec(length, |decoder| {
-                DescribeTransactionsResponseTopicData::decode(decoder, version)
-            })?
-        };
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
+    impl TransactionState {
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 0));
 
-        Ok(Self {
-            error_code,
-            transactional_id,
-            transaction_state,
-            transaction_timeout_ms,
-            transaction_start_time_ms,
-            producer_id,
-            producer_epoch,
-            topics,
-            unknown_tagged_fields,
-        })
-    }
-}
-
-impl KafkaEncode for DescribeTransactionsResponseTransactionState {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        encoder.write_i16(self.error_code)?;
-        encoder.write_compact_string(&self.transactional_id)?;
-        encoder.write_compact_string(&self.transaction_state)?;
-        encoder.write_i32(self.transaction_timeout_ms)?;
-        encoder.write_i64(self.transaction_start_time_ms)?;
-        encoder.write_i64(self.producer_id)?;
-        encoder.write_i16(self.producer_epoch)?;
-        encoder.write_compact_array_len(self.topics.len())?;
-        for value in &self.topics {
-            value.encode(encoder, version)?;
+        fn is_flexible(version: ApiVersion) -> bool {
+            Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
         }
+    }
 
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: "DescribeTransactionsResponseTransactionState",
-                version,
-            });
+    impl KafkaDecode for TransactionState {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            let error_code = decoder.read_i16()?;
+            let transactional_id = decoder.read_compact_string()?;
+            let transaction_state = decoder.read_compact_string()?;
+            let transaction_timeout_ms = decoder.read_i32()?;
+            let transaction_start_time_ms = decoder.read_i64()?;
+            let producer_id = decoder.read_i64()?;
+            let producer_epoch = decoder.read_i16()?;
+            let topics = {
+                let length = decoder.read_compact_array_len()?;
+                decoder.read_vec(length, |decoder| TopicData::decode(decoder, version))?
+            };
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
+
+            Ok(Self {
+                error_code,
+                transactional_id,
+                transaction_state,
+                transaction_timeout_ms,
+                transaction_start_time_ms,
+                producer_id,
+                producer_epoch,
+                topics,
+                unknown_tagged_fields,
+            })
         }
-
-        Ok(())
     }
-}
 
-/// `TopicData` as declared by the `DescribeTransactions` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct DescribeTransactionsResponseTopicData {
-    /// The topic name.
-    pub topic: StrBytes,
-    /// The partition ids included in the current transaction.
-    pub partitions: Vec<i32>,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
+    impl KafkaEncode for TransactionState {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            encoder.write_i16(self.error_code)?;
+            encoder.write_compact_string(&self.transactional_id)?;
+            encoder.write_compact_string(&self.transaction_state)?;
+            encoder.write_i32(self.transaction_timeout_ms)?;
+            encoder.write_i64(self.transaction_start_time_ms)?;
+            encoder.write_i64(self.producer_id)?;
+            encoder.write_i16(self.producer_epoch)?;
+            encoder.write_compact_array_len(self.topics.len())?;
+            for value in &self.topics {
+                value.encode(encoder, version)?;
+            }
 
-impl DescribeTransactionsResponseTopicData {
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 0));
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "TransactionState",
+                    version,
+                });
+            }
 
-    fn is_flexible(version: ApiVersion) -> bool {
-        Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
-    }
-}
-
-impl KafkaDecode for DescribeTransactionsResponseTopicData {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        let topic = decoder.read_compact_string()?;
-        let partitions = {
-            let length = decoder.read_compact_array_len()?;
-            decoder.read_vec(length, Decoder::read_i32)?
-        };
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
-
-        Ok(Self {
-            topic,
-            partitions,
-            unknown_tagged_fields,
-        })
-    }
-}
-
-impl KafkaEncode for DescribeTransactionsResponseTopicData {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        encoder.write_compact_string(&self.topic)?;
-        encoder.write_compact_array_len(self.partitions.len())?;
-        for value in &self.partitions {
-            encoder.write_i32(*value)?;
+            Ok(())
         }
+    }
 
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: "DescribeTransactionsResponseTopicData",
-                version,
-            });
+    /// `TopicData` as declared by the `DescribeTransactions` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    pub struct TopicData {
+        /// The topic name.
+        pub topic: StrBytes,
+        /// The partition ids included in the current transaction.
+        pub partitions: Vec<i32>,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl TopicData {
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 0));
+
+        fn is_flexible(version: ApiVersion) -> bool {
+            Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
         }
+    }
 
-        Ok(())
+    impl KafkaDecode for TopicData {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            let topic = decoder.read_compact_string()?;
+            let partitions = {
+                let length = decoder.read_compact_array_len()?;
+                decoder.read_vec(length, Decoder::read_i32)?
+            };
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
+
+            Ok(Self {
+                topic,
+                partitions,
+                unknown_tagged_fields,
+            })
+        }
+    }
+
+    impl KafkaEncode for TopicData {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            encoder.write_compact_string(&self.topic)?;
+            encoder.write_compact_array_len(self.partitions.len())?;
+            for value in &self.partitions {
+                encoder.write_i32(*value)?;
+            }
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "TopicData",
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+
+    /// Response body for the `DescribeTransactions` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    pub struct DescribeTransactionsResponse {
+        /// The duration in milliseconds for which the request was throttled due to a quota violation, or zero if the request did not violate any quota.
+        pub throttle_time_ms: i32,
+        /// The current state of the transaction.
+        pub transaction_states: Vec<TransactionState>,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl KafkaMessage for DescribeTransactionsResponse {
+        const NAME: &'static str = "DescribeTransactionsResponse";
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 0);
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 0));
+    }
+
+    impl KafkaResponse for DescribeTransactionsResponse {
+        const API_KEY: ApiKey = ApiKey::new(65);
+    }
+
+    impl KafkaDecode for DescribeTransactionsResponse {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            crate::message::ensure_decode_version::<Self>(version)?;
+
+            let throttle_time_ms = decoder.read_i32()?;
+            let transaction_states = {
+                let length = decoder.read_compact_array_len()?;
+                decoder.read_vec(length, |decoder| TransactionState::decode(decoder, version))?
+            };
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
+
+            Ok(Self {
+                throttle_time_ms,
+                transaction_states,
+                unknown_tagged_fields,
+            })
+        }
+    }
+
+    impl KafkaEncode for DescribeTransactionsResponse {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            crate::message::ensure_encode_version::<Self>(version)?;
+
+            encoder.write_i32(self.throttle_time_ms)?;
+            encoder.write_compact_array_len(self.transaction_states.len())?;
+            for value in &self.transaction_states {
+                value.encode(encoder, version)?;
+            }
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: Self::NAME,
+                    version,
+                });
+            }
+
+            Ok(())
+        }
     }
 }
 
-/// Response body for the `DescribeTransactions` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct DescribeTransactionsResponse {
-    /// The duration in milliseconds for which the request was throttled due to a quota violation, or zero if the request did not violate any quota.
-    pub throttle_time_ms: i32,
-    /// The current state of the transaction.
-    pub transaction_states: Vec<DescribeTransactionsResponseTransactionState>,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
+use kafka_wire_core::VersionRange;
 
-impl KafkaMessage for DescribeTransactionsResponse {
-    const NAME: &'static str = "DescribeTransactionsResponse";
-    const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 0);
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 0));
-}
+use crate::{MessageDescriptor, MessageDirection};
 
-impl KafkaResponse for DescribeTransactionsResponse {
-    const API_KEY: ApiKey = ApiKey::new(65);
-}
-
-impl KafkaDecode for DescribeTransactionsResponse {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        crate::message::ensure_decode_version::<Self>(version)?;
-
-        let throttle_time_ms = decoder.read_i32()?;
-        let transaction_states = {
-            let length = decoder.read_compact_array_len()?;
-            decoder.read_vec(length, |decoder| {
-                DescribeTransactionsResponseTransactionState::decode(decoder, version)
-            })?
-        };
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
-
-        Ok(Self {
-            throttle_time_ms,
-            transaction_states,
-            unknown_tagged_fields,
-        })
-    }
-}
-
-impl KafkaEncode for DescribeTransactionsResponse {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        crate::message::ensure_encode_version::<Self>(version)?;
-
-        encoder.write_i32(self.throttle_time_ms)?;
-        encoder.write_compact_array_len(self.transaction_states.len())?;
-        for value in &self.transaction_states {
-            value.encode(encoder, version)?;
-        }
-
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: Self::NAME,
-                version,
-            });
-        }
-
-        Ok(())
-    }
-}
+pub use describe_transactions_request::DescribeTransactionsRequest;
+pub use describe_transactions_response::DescribeTransactionsResponse;
 
 /// Static metadata for [`DescribeTransactionsRequest`].
 pub const DESCRIBE_TRANSACTIONS_REQUEST_DESCRIPTOR: MessageDescriptor = MessageDescriptor::new(

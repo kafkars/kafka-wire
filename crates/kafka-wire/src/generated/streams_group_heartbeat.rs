@@ -5,1496 +5,1482 @@
 //! Request SHA-256: `1318238857eec6af5c43d142936d92da23d0cbba967b4bf51131d8c0934e3d01`.
 //! Response SHA-256: `c8583e7b25b6fc1c80f8f189bfd39d2a5dcbf7ca008d1ce45d7e5058aeeeb292`.
 
-use kafka_wire_core::{
-    ApiKey, ApiVersion, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
-    KafkaEncode, StrBytes, TaggedFields, VersionRange,
-};
+/// `StreamsGroupHeartbeatRequest` and every struct it declares, under upstream's own names.
+///
+/// [`StreamsGroupHeartbeatRequest`](crate::StreamsGroupHeartbeatRequest) is re-exported flat, so this path never has to be
+/// written to name the message itself.
+pub mod streams_group_heartbeat_request {
+    use kafka_wire_core::{
+        ApiKey, ApiVersion, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
+        KafkaEncode, StrBytes, TaggedFields, VersionRange,
+    };
 
-use crate::{
-    KafkaMessage, KafkaRequest, KafkaResponse, MessageDescriptor, MessageDirection,
-    RequestResponsePair,
-};
+    use crate::{KafkaMessage, KafkaRequest, RequestResponsePair};
 
-/// `KeyValue` as declared by the `StreamsGroupHeartbeat` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct StreamsGroupHeartbeatRequestKeyValue {
-    /// key of the config.
-    pub key: StrBytes,
-    /// value of the config.
-    pub value: StrBytes,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
-
-impl StreamsGroupHeartbeatRequestKeyValue {
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 1));
-
-    fn is_flexible(version: ApiVersion) -> bool {
-        Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+    /// `KeyValue` as declared by the `StreamsGroupHeartbeat` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    pub struct KeyValue {
+        /// key of the config.
+        pub key: StrBytes,
+        /// value of the config.
+        pub value: StrBytes,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
     }
-}
 
-impl KafkaDecode for StreamsGroupHeartbeatRequestKeyValue {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        let key = decoder.read_compact_string()?;
-        let value = decoder.read_compact_string()?;
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
+    impl KeyValue {
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 1));
 
-        Ok(Self {
-            key,
-            value,
-            unknown_tagged_fields,
-        })
-    }
-}
-
-impl KafkaEncode for StreamsGroupHeartbeatRequestKeyValue {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        encoder.write_compact_string(&self.key)?;
-        encoder.write_compact_string(&self.value)?;
-
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: "StreamsGroupHeartbeatRequestKeyValue",
-                version,
-            });
-        }
-
-        Ok(())
-    }
-}
-
-/// `TopicInfo` as declared by the `StreamsGroupHeartbeat` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct StreamsGroupHeartbeatRequestTopicInfo {
-    /// The name of the topic.
-    pub name: StrBytes,
-    /// The number of partitions in the topic. Can be 0 if no specific number of partitions is enforced. Always 0 for changelog topics.
-    pub partitions: i32,
-    /// The replication factor of the topic. Can be 0 if the default replication factor should be used.
-    pub replication_factor: i16,
-    /// Topic-level configurations as key-value pairs.
-    pub topic_configs: Vec<StreamsGroupHeartbeatRequestKeyValue>,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
-
-impl StreamsGroupHeartbeatRequestTopicInfo {
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 1));
-
-    fn is_flexible(version: ApiVersion) -> bool {
-        Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
-    }
-}
-
-impl KafkaDecode for StreamsGroupHeartbeatRequestTopicInfo {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        let name = decoder.read_compact_string()?;
-        let partitions = decoder.read_i32()?;
-        let replication_factor = decoder.read_i16()?;
-        let topic_configs = {
-            let length = decoder.read_compact_array_len()?;
-            decoder.read_vec(length, |decoder| {
-                StreamsGroupHeartbeatRequestKeyValue::decode(decoder, version)
-            })?
-        };
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
-
-        Ok(Self {
-            name,
-            partitions,
-            replication_factor,
-            topic_configs,
-            unknown_tagged_fields,
-        })
-    }
-}
-
-impl KafkaEncode for StreamsGroupHeartbeatRequestTopicInfo {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        encoder.write_compact_string(&self.name)?;
-        encoder.write_i32(self.partitions)?;
-        encoder.write_i16(self.replication_factor)?;
-        encoder.write_compact_array_len(self.topic_configs.len())?;
-        for value in &self.topic_configs {
-            value.encode(encoder, version)?;
-        }
-
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: "StreamsGroupHeartbeatRequestTopicInfo",
-                version,
-            });
-        }
-
-        Ok(())
-    }
-}
-
-/// `Endpoint` as declared by the `StreamsGroupHeartbeat` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct StreamsGroupHeartbeatRequestEndpoint {
-    /// host of the endpoint.
-    pub host: StrBytes,
-    /// port of the endpoint.
-    pub port: u16,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
-
-impl StreamsGroupHeartbeatRequestEndpoint {
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 1));
-
-    fn is_flexible(version: ApiVersion) -> bool {
-        Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
-    }
-}
-
-impl KafkaDecode for StreamsGroupHeartbeatRequestEndpoint {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        let host = decoder.read_compact_string()?;
-        let port = decoder.read_u16()?;
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
-
-        Ok(Self {
-            host,
-            port,
-            unknown_tagged_fields,
-        })
-    }
-}
-
-impl KafkaEncode for StreamsGroupHeartbeatRequestEndpoint {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        encoder.write_compact_string(&self.host)?;
-        encoder.write_u16(self.port)?;
-
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: "StreamsGroupHeartbeatRequestEndpoint",
-                version,
-            });
-        }
-
-        Ok(())
-    }
-}
-
-/// `TaskOffset` as declared by the `StreamsGroupHeartbeat` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct StreamsGroupHeartbeatRequestTaskOffset {
-    /// The subtopology identifier.
-    pub subtopology_id: StrBytes,
-    /// The partition.
-    pub partition: i32,
-    /// The offset.
-    pub offset: i64,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
-
-impl StreamsGroupHeartbeatRequestTaskOffset {
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 1));
-
-    fn is_flexible(version: ApiVersion) -> bool {
-        Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
-    }
-}
-
-impl KafkaDecode for StreamsGroupHeartbeatRequestTaskOffset {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        let subtopology_id = decoder.read_compact_string()?;
-        let partition = decoder.read_i32()?;
-        let offset = decoder.read_i64()?;
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
-
-        Ok(Self {
-            subtopology_id,
-            partition,
-            offset,
-            unknown_tagged_fields,
-        })
-    }
-}
-
-impl KafkaEncode for StreamsGroupHeartbeatRequestTaskOffset {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        encoder.write_compact_string(&self.subtopology_id)?;
-        encoder.write_i32(self.partition)?;
-        encoder.write_i64(self.offset)?;
-
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: "StreamsGroupHeartbeatRequestTaskOffset",
-                version,
-            });
-        }
-
-        Ok(())
-    }
-}
-
-/// `TaskIds` as declared by the `StreamsGroupHeartbeat` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct StreamsGroupHeartbeatRequestTaskIds {
-    /// The subtopology identifier.
-    pub subtopology_id: StrBytes,
-    /// The partitions of the input topics processed by this member.
-    pub partitions: Vec<i32>,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
-
-impl StreamsGroupHeartbeatRequestTaskIds {
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 1));
-
-    fn is_flexible(version: ApiVersion) -> bool {
-        Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
-    }
-}
-
-impl KafkaDecode for StreamsGroupHeartbeatRequestTaskIds {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        let subtopology_id = decoder.read_compact_string()?;
-        let partitions = {
-            let length = decoder.read_compact_array_len()?;
-            decoder.read_vec(length, Decoder::read_i32)?
-        };
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
-
-        Ok(Self {
-            subtopology_id,
-            partitions,
-            unknown_tagged_fields,
-        })
-    }
-}
-
-impl KafkaEncode for StreamsGroupHeartbeatRequestTaskIds {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        encoder.write_compact_string(&self.subtopology_id)?;
-        encoder.write_compact_array_len(self.partitions.len())?;
-        for value in &self.partitions {
-            encoder.write_i32(*value)?;
-        }
-
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: "StreamsGroupHeartbeatRequestTaskIds",
-                version,
-            });
-        }
-
-        Ok(())
-    }
-}
-
-/// `Topology` as declared by the `StreamsGroupHeartbeat` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct StreamsGroupHeartbeatRequestTopology {
-    /// The epoch of the topology. Used to check if the topology corresponds to the topology initialized on the brokers.
-    pub epoch: i32,
-    /// The sub-topologies of the streams application.
-    pub subtopologies: Vec<StreamsGroupHeartbeatRequestSubtopology>,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
-
-impl StreamsGroupHeartbeatRequestTopology {
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 1));
-
-    fn is_flexible(version: ApiVersion) -> bool {
-        Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
-    }
-}
-
-impl KafkaDecode for StreamsGroupHeartbeatRequestTopology {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        let epoch = decoder.read_i32()?;
-        let subtopologies = {
-            let length = decoder.read_compact_array_len()?;
-            decoder.read_vec(length, |decoder| {
-                StreamsGroupHeartbeatRequestSubtopology::decode(decoder, version)
-            })?
-        };
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
-
-        Ok(Self {
-            epoch,
-            subtopologies,
-            unknown_tagged_fields,
-        })
-    }
-}
-
-impl KafkaEncode for StreamsGroupHeartbeatRequestTopology {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        encoder.write_i32(self.epoch)?;
-        encoder.write_compact_array_len(self.subtopologies.len())?;
-        for value in &self.subtopologies {
-            value.encode(encoder, version)?;
-        }
-
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: "StreamsGroupHeartbeatRequestTopology",
-                version,
-            });
-        }
-
-        Ok(())
-    }
-}
-
-/// `Subtopology` as declared by the `StreamsGroupHeartbeat` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct StreamsGroupHeartbeatRequestSubtopology {
-    /// String to uniquely identify the subtopology. Deterministically generated from the topology.
-    pub subtopology_id: StrBytes,
-    /// The topics the topology reads from.
-    pub source_topics: Vec<StrBytes>,
-    /// The regular expressions identifying topics the subtopology reads from.
-    pub source_topic_regex: Vec<StrBytes>,
-    /// The set of state changelog topics associated with this subtopology. Created automatically.
-    pub state_changelog_topics: Vec<StreamsGroupHeartbeatRequestTopicInfo>,
-    /// The repartition topics the subtopology writes to.
-    pub repartition_sink_topics: Vec<StrBytes>,
-    /// The set of source topics that are internally created repartition topics. Created automatically.
-    pub repartition_source_topics: Vec<StreamsGroupHeartbeatRequestTopicInfo>,
-    /// A subset of source topics that must be copartitioned.
-    pub copartition_groups: Vec<StreamsGroupHeartbeatRequestCopartitionGroup>,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
-
-impl StreamsGroupHeartbeatRequestSubtopology {
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 1));
-
-    fn is_flexible(version: ApiVersion) -> bool {
-        Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
-    }
-}
-
-impl KafkaDecode for StreamsGroupHeartbeatRequestSubtopology {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        let subtopology_id = decoder.read_compact_string()?;
-        let source_topics = {
-            let length = decoder.read_compact_array_len()?;
-            decoder.read_vec(length, Decoder::read_compact_string)?
-        };
-        let source_topic_regex = {
-            let length = decoder.read_compact_array_len()?;
-            decoder.read_vec(length, Decoder::read_compact_string)?
-        };
-        let state_changelog_topics = {
-            let length = decoder.read_compact_array_len()?;
-            decoder.read_vec(length, |decoder| {
-                StreamsGroupHeartbeatRequestTopicInfo::decode(decoder, version)
-            })?
-        };
-        let repartition_sink_topics = {
-            let length = decoder.read_compact_array_len()?;
-            decoder.read_vec(length, Decoder::read_compact_string)?
-        };
-        let repartition_source_topics = {
-            let length = decoder.read_compact_array_len()?;
-            decoder.read_vec(length, |decoder| {
-                StreamsGroupHeartbeatRequestTopicInfo::decode(decoder, version)
-            })?
-        };
-        let copartition_groups = {
-            let length = decoder.read_compact_array_len()?;
-            decoder.read_vec(length, |decoder| {
-                StreamsGroupHeartbeatRequestCopartitionGroup::decode(decoder, version)
-            })?
-        };
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
-
-        Ok(Self {
-            subtopology_id,
-            source_topics,
-            source_topic_regex,
-            state_changelog_topics,
-            repartition_sink_topics,
-            repartition_source_topics,
-            copartition_groups,
-            unknown_tagged_fields,
-        })
-    }
-}
-
-impl KafkaEncode for StreamsGroupHeartbeatRequestSubtopology {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        encoder.write_compact_string(&self.subtopology_id)?;
-        encoder.write_compact_array_len(self.source_topics.len())?;
-        for value in &self.source_topics {
-            encoder.write_compact_string(value)?;
-        }
-        encoder.write_compact_array_len(self.source_topic_regex.len())?;
-        for value in &self.source_topic_regex {
-            encoder.write_compact_string(value)?;
-        }
-        encoder.write_compact_array_len(self.state_changelog_topics.len())?;
-        for value in &self.state_changelog_topics {
-            value.encode(encoder, version)?;
-        }
-        encoder.write_compact_array_len(self.repartition_sink_topics.len())?;
-        for value in &self.repartition_sink_topics {
-            encoder.write_compact_string(value)?;
-        }
-        encoder.write_compact_array_len(self.repartition_source_topics.len())?;
-        for value in &self.repartition_source_topics {
-            value.encode(encoder, version)?;
-        }
-        encoder.write_compact_array_len(self.copartition_groups.len())?;
-        for value in &self.copartition_groups {
-            value.encode(encoder, version)?;
-        }
-
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: "StreamsGroupHeartbeatRequestSubtopology",
-                version,
-            });
-        }
-
-        Ok(())
-    }
-}
-
-/// `CopartitionGroup` as declared by the `StreamsGroupHeartbeat` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct StreamsGroupHeartbeatRequestCopartitionGroup {
-    /// The topics the topology reads from. Index into the array on the subtopology level.
-    pub source_topics: Vec<i16>,
-    /// Regular expressions identifying topics the subtopology reads from. Index into the array on the subtopology level.
-    pub source_topic_regex: Vec<i16>,
-    /// The set of source topics that are internally created repartition topics. Index into the array on the subtopology level.
-    pub repartition_source_topics: Vec<i16>,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
-
-impl StreamsGroupHeartbeatRequestCopartitionGroup {
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 1));
-
-    fn is_flexible(version: ApiVersion) -> bool {
-        Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
-    }
-}
-
-impl KafkaDecode for StreamsGroupHeartbeatRequestCopartitionGroup {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        let source_topics = {
-            let length = decoder.read_compact_array_len()?;
-            decoder.read_vec(length, Decoder::read_i16)?
-        };
-        let source_topic_regex = {
-            let length = decoder.read_compact_array_len()?;
-            decoder.read_vec(length, Decoder::read_i16)?
-        };
-        let repartition_source_topics = {
-            let length = decoder.read_compact_array_len()?;
-            decoder.read_vec(length, Decoder::read_i16)?
-        };
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
-
-        Ok(Self {
-            source_topics,
-            source_topic_regex,
-            repartition_source_topics,
-            unknown_tagged_fields,
-        })
-    }
-}
-
-impl KafkaEncode for StreamsGroupHeartbeatRequestCopartitionGroup {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        encoder.write_compact_array_len(self.source_topics.len())?;
-        for value in &self.source_topics {
-            encoder.write_i16(*value)?;
-        }
-        encoder.write_compact_array_len(self.source_topic_regex.len())?;
-        for value in &self.source_topic_regex {
-            encoder.write_i16(*value)?;
-        }
-        encoder.write_compact_array_len(self.repartition_source_topics.len())?;
-        for value in &self.repartition_source_topics {
-            encoder.write_i16(*value)?;
-        }
-
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: "StreamsGroupHeartbeatRequestCopartitionGroup",
-                version,
-            });
-        }
-
-        Ok(())
-    }
-}
-
-/// Request body for the `StreamsGroupHeartbeat` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct StreamsGroupHeartbeatRequest {
-    /// The group identifier.
-    pub group_id: StrBytes,
-    /// The member ID generated by the streams consumer. The member ID must be kept during the entire lifetime of the streams consumer process.
-    pub member_id: StrBytes,
-    /// The current member epoch; 0 to join the group; -1 to leave the group; -2 to indicate that the static member will rejoin.
-    pub member_epoch: i32,
-    /// The current endpoint epoch of this client, represents the latest endpoint epoch this client received.
-    pub endpoint_information_epoch: i32,
-    /// null if not provided or if it didn't change since the last heartbeat; the instance ID for static membership otherwise.
-    pub instance_id: Option<StrBytes>,
-    /// null if not provided or if it didn't change since the last heartbeat; the rack ID of the member otherwise.
-    pub rack_id: Option<StrBytes>,
-    /// -1 if it didn't change since the last heartbeat; the maximum time in milliseconds that the coordinator will wait on the member to revoke its tasks otherwise.
-    pub rebalance_timeout_ms: i32,
-    /// The topology metadata of the streams application. Used to initialize the topology of the group and to check if the topology corresponds to the topology initialized for the group. Only sent when `memberEpoch` = 0, must be non-empty. Null otherwise.
-    pub topology: Option<StreamsGroupHeartbeatRequestTopology>,
-    /// Currently owned active tasks for this client. Null if unchanged since last heartbeat.
-    pub active_tasks: Option<Vec<StreamsGroupHeartbeatRequestTaskIds>>,
-    /// Currently owned standby tasks for this client. Null if unchanged since last heartbeat.
-    pub standby_tasks: Option<Vec<StreamsGroupHeartbeatRequestTaskIds>>,
-    /// Currently owned warm-up tasks for this client. Null if unchanged since last heartbeat.
-    pub warmup_tasks: Option<Vec<StreamsGroupHeartbeatRequestTaskIds>>,
-    /// Identity of the streams instance that may have multiple consumers. Null if unchanged since last heartbeat.
-    pub process_id: Option<StrBytes>,
-    /// User-defined endpoint for Interactive Queries. Null if unchanged since last heartbeat, or if not defined on the client.
-    pub user_endpoint: Option<StreamsGroupHeartbeatRequestEndpoint>,
-    /// Used for rack-aware assignment algorithm. Null if unchanged since last heartbeat.
-    pub client_tags: Option<Vec<StreamsGroupHeartbeatRequestKeyValue>>,
-    /// Cumulative changelog offsets for tasks. Only updated when a warm-up task has caught up, and according to the task offset interval. Null if unchanged since last heartbeat.
-    pub task_offsets: Option<Vec<StreamsGroupHeartbeatRequestTaskOffset>>,
-    /// Cumulative changelog end-offsets for tasks. Only updated when a warm-up task has caught up, and according to the task offset interval. Null if unchanged since last heartbeat.
-    pub task_end_offsets: Option<Vec<StreamsGroupHeartbeatRequestTaskOffset>>,
-    /// Whether all Streams clients in the group should shut down.
-    pub shutdown_application: bool,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
-
-impl Default for StreamsGroupHeartbeatRequest {
-    fn default() -> Self {
-        Self {
-            group_id: StrBytes::default(),
-            member_id: StrBytes::default(),
-            member_epoch: 0,
-            endpoint_information_epoch: 0,
-            instance_id: None,
-            rack_id: None,
-            rebalance_timeout_ms: -1,
-            topology: None,
-            active_tasks: None,
-            standby_tasks: None,
-            warmup_tasks: None,
-            process_id: None,
-            user_endpoint: None,
-            client_tags: None,
-            task_offsets: None,
-            task_end_offsets: None,
-            shutdown_application: false,
-            unknown_tagged_fields: TaggedFields::default(),
+        fn is_flexible(version: ApiVersion) -> bool {
+            Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
         }
     }
-}
 
-impl KafkaMessage for StreamsGroupHeartbeatRequest {
-    const NAME: &'static str = "StreamsGroupHeartbeatRequest";
-    const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 1);
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 1));
-}
+    impl KafkaDecode for KeyValue {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            let key = decoder.read_compact_string()?;
+            let value = decoder.read_compact_string()?;
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
 
-impl KafkaRequest for StreamsGroupHeartbeatRequest {
-    const API_KEY: ApiKey = ApiKey::new(88);
-}
-
-impl RequestResponsePair for StreamsGroupHeartbeatRequest {
-    type Response = StreamsGroupHeartbeatResponse;
-}
-
-impl KafkaDecode for StreamsGroupHeartbeatRequest {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        crate::message::ensure_decode_version::<Self>(version)?;
-
-        let group_id = decoder.read_compact_string()?;
-        let member_id = decoder.read_compact_string()?;
-        let member_epoch = decoder.read_i32()?;
-        let endpoint_information_epoch = decoder.read_i32()?;
-        let instance_id = decoder.read_compact_nullable_string()?;
-        let rack_id = decoder.read_compact_nullable_string()?;
-        let rebalance_timeout_ms = decoder.read_i32()?;
-        let topology = if decoder.read_struct_presence()? {
-            Some(StreamsGroupHeartbeatRequestTopology::decode(
-                decoder, version,
-            )?)
-        } else {
-            None
-        };
-        let active_tasks = {
-            let length = decoder.read_compact_nullable_array_len()?;
-            length
-                .map(|length| {
-                    decoder.read_vec(length, |decoder| {
-                        StreamsGroupHeartbeatRequestTaskIds::decode(decoder, version)
-                    })
-                })
-                .transpose()?
-        };
-        let standby_tasks = {
-            let length = decoder.read_compact_nullable_array_len()?;
-            length
-                .map(|length| {
-                    decoder.read_vec(length, |decoder| {
-                        StreamsGroupHeartbeatRequestTaskIds::decode(decoder, version)
-                    })
-                })
-                .transpose()?
-        };
-        let warmup_tasks = {
-            let length = decoder.read_compact_nullable_array_len()?;
-            length
-                .map(|length| {
-                    decoder.read_vec(length, |decoder| {
-                        StreamsGroupHeartbeatRequestTaskIds::decode(decoder, version)
-                    })
-                })
-                .transpose()?
-        };
-        let process_id = decoder.read_compact_nullable_string()?;
-        let user_endpoint = if decoder.read_struct_presence()? {
-            Some(StreamsGroupHeartbeatRequestEndpoint::decode(
-                decoder, version,
-            )?)
-        } else {
-            None
-        };
-        let client_tags = {
-            let length = decoder.read_compact_nullable_array_len()?;
-            length
-                .map(|length| {
-                    decoder.read_vec(length, |decoder| {
-                        StreamsGroupHeartbeatRequestKeyValue::decode(decoder, version)
-                    })
-                })
-                .transpose()?
-        };
-        let task_offsets = {
-            let length = decoder.read_compact_nullable_array_len()?;
-            length
-                .map(|length| {
-                    decoder.read_vec(length, |decoder| {
-                        StreamsGroupHeartbeatRequestTaskOffset::decode(decoder, version)
-                    })
-                })
-                .transpose()?
-        };
-        let task_end_offsets = {
-            let length = decoder.read_compact_nullable_array_len()?;
-            length
-                .map(|length| {
-                    decoder.read_vec(length, |decoder| {
-                        StreamsGroupHeartbeatRequestTaskOffset::decode(decoder, version)
-                    })
-                })
-                .transpose()?
-        };
-        let shutdown_application = decoder.read_bool()?;
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
-
-        Ok(Self {
-            group_id,
-            member_id,
-            member_epoch,
-            endpoint_information_epoch,
-            instance_id,
-            rack_id,
-            rebalance_timeout_ms,
-            topology,
-            active_tasks,
-            standby_tasks,
-            warmup_tasks,
-            process_id,
-            user_endpoint,
-            client_tags,
-            task_offsets,
-            task_end_offsets,
-            shutdown_application,
-            unknown_tagged_fields,
-        })
-    }
-}
-
-impl KafkaEncode for StreamsGroupHeartbeatRequest {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        crate::message::ensure_encode_version::<Self>(version)?;
-
-        encoder.write_compact_string(&self.group_id)?;
-        encoder.write_compact_string(&self.member_id)?;
-        encoder.write_i32(self.member_epoch)?;
-        encoder.write_i32(self.endpoint_information_epoch)?;
-        encoder.write_compact_nullable_string(self.instance_id.as_ref())?;
-        encoder.write_compact_nullable_string(self.rack_id.as_ref())?;
-        encoder.write_i32(self.rebalance_timeout_ms)?;
-        if let Some(value) = &self.topology {
-            encoder.write_struct_presence(true)?;
-            value.encode(encoder, version)?;
-        } else {
-            encoder.write_struct_presence(false)?;
+            Ok(Self {
+                key,
+                value,
+                unknown_tagged_fields,
+            })
         }
-        encoder.write_compact_nullable_array_len(self.active_tasks.as_ref().map(Vec::len))?;
-        if let Some(values) = &self.active_tasks {
-            for value in values {
+    }
+
+    impl KafkaEncode for KeyValue {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            encoder.write_compact_string(&self.key)?;
+            encoder.write_compact_string(&self.value)?;
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "KeyValue",
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+
+    /// `TopicInfo` as declared by the `StreamsGroupHeartbeat` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    pub struct TopicInfo {
+        /// The name of the topic.
+        pub name: StrBytes,
+        /// The number of partitions in the topic. Can be 0 if no specific number of partitions is enforced. Always 0 for changelog topics.
+        pub partitions: i32,
+        /// The replication factor of the topic. Can be 0 if the default replication factor should be used.
+        pub replication_factor: i16,
+        /// Topic-level configurations as key-value pairs.
+        pub topic_configs: Vec<KeyValue>,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl TopicInfo {
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 1));
+
+        fn is_flexible(version: ApiVersion) -> bool {
+            Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+        }
+    }
+
+    impl KafkaDecode for TopicInfo {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            let name = decoder.read_compact_string()?;
+            let partitions = decoder.read_i32()?;
+            let replication_factor = decoder.read_i16()?;
+            let topic_configs = {
+                let length = decoder.read_compact_array_len()?;
+                decoder.read_vec(length, |decoder| KeyValue::decode(decoder, version))?
+            };
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
+
+            Ok(Self {
+                name,
+                partitions,
+                replication_factor,
+                topic_configs,
+                unknown_tagged_fields,
+            })
+        }
+    }
+
+    impl KafkaEncode for TopicInfo {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            encoder.write_compact_string(&self.name)?;
+            encoder.write_i32(self.partitions)?;
+            encoder.write_i16(self.replication_factor)?;
+            encoder.write_compact_array_len(self.topic_configs.len())?;
+            for value in &self.topic_configs {
                 value.encode(encoder, version)?;
             }
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "TopicInfo",
+                    version,
+                });
+            }
+
+            Ok(())
         }
-        encoder.write_compact_nullable_array_len(self.standby_tasks.as_ref().map(Vec::len))?;
-        if let Some(values) = &self.standby_tasks {
-            for value in values {
+    }
+
+    /// `Endpoint` as declared by the `StreamsGroupHeartbeat` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    pub struct Endpoint {
+        /// host of the endpoint.
+        pub host: StrBytes,
+        /// port of the endpoint.
+        pub port: u16,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl Endpoint {
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 1));
+
+        fn is_flexible(version: ApiVersion) -> bool {
+            Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+        }
+    }
+
+    impl KafkaDecode for Endpoint {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            let host = decoder.read_compact_string()?;
+            let port = decoder.read_u16()?;
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
+
+            Ok(Self {
+                host,
+                port,
+                unknown_tagged_fields,
+            })
+        }
+    }
+
+    impl KafkaEncode for Endpoint {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            encoder.write_compact_string(&self.host)?;
+            encoder.write_u16(self.port)?;
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "Endpoint",
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+
+    /// `TaskOffset` as declared by the `StreamsGroupHeartbeat` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    pub struct TaskOffset {
+        /// The subtopology identifier.
+        pub subtopology_id: StrBytes,
+        /// The partition.
+        pub partition: i32,
+        /// The offset.
+        pub offset: i64,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl TaskOffset {
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 1));
+
+        fn is_flexible(version: ApiVersion) -> bool {
+            Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+        }
+    }
+
+    impl KafkaDecode for TaskOffset {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            let subtopology_id = decoder.read_compact_string()?;
+            let partition = decoder.read_i32()?;
+            let offset = decoder.read_i64()?;
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
+
+            Ok(Self {
+                subtopology_id,
+                partition,
+                offset,
+                unknown_tagged_fields,
+            })
+        }
+    }
+
+    impl KafkaEncode for TaskOffset {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            encoder.write_compact_string(&self.subtopology_id)?;
+            encoder.write_i32(self.partition)?;
+            encoder.write_i64(self.offset)?;
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "TaskOffset",
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+
+    /// `TaskIds` as declared by the `StreamsGroupHeartbeat` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    pub struct TaskIds {
+        /// The subtopology identifier.
+        pub subtopology_id: StrBytes,
+        /// The partitions of the input topics processed by this member.
+        pub partitions: Vec<i32>,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl TaskIds {
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 1));
+
+        fn is_flexible(version: ApiVersion) -> bool {
+            Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+        }
+    }
+
+    impl KafkaDecode for TaskIds {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            let subtopology_id = decoder.read_compact_string()?;
+            let partitions = {
+                let length = decoder.read_compact_array_len()?;
+                decoder.read_vec(length, Decoder::read_i32)?
+            };
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
+
+            Ok(Self {
+                subtopology_id,
+                partitions,
+                unknown_tagged_fields,
+            })
+        }
+    }
+
+    impl KafkaEncode for TaskIds {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            encoder.write_compact_string(&self.subtopology_id)?;
+            encoder.write_compact_array_len(self.partitions.len())?;
+            for value in &self.partitions {
+                encoder.write_i32(*value)?;
+            }
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "TaskIds",
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+
+    /// `Topology` as declared by the `StreamsGroupHeartbeat` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    pub struct Topology {
+        /// The epoch of the topology. Used to check if the topology corresponds to the topology initialized on the brokers.
+        pub epoch: i32,
+        /// The sub-topologies of the streams application.
+        pub subtopologies: Vec<Subtopology>,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl Topology {
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 1));
+
+        fn is_flexible(version: ApiVersion) -> bool {
+            Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+        }
+    }
+
+    impl KafkaDecode for Topology {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            let epoch = decoder.read_i32()?;
+            let subtopologies = {
+                let length = decoder.read_compact_array_len()?;
+                decoder.read_vec(length, |decoder| Subtopology::decode(decoder, version))?
+            };
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
+
+            Ok(Self {
+                epoch,
+                subtopologies,
+                unknown_tagged_fields,
+            })
+        }
+    }
+
+    impl KafkaEncode for Topology {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            encoder.write_i32(self.epoch)?;
+            encoder.write_compact_array_len(self.subtopologies.len())?;
+            for value in &self.subtopologies {
                 value.encode(encoder, version)?;
             }
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "Topology",
+                    version,
+                });
+            }
+
+            Ok(())
         }
-        encoder.write_compact_nullable_array_len(self.warmup_tasks.as_ref().map(Vec::len))?;
-        if let Some(values) = &self.warmup_tasks {
-            for value in values {
+    }
+
+    /// `Subtopology` as declared by the `StreamsGroupHeartbeat` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    pub struct Subtopology {
+        /// String to uniquely identify the subtopology. Deterministically generated from the topology.
+        pub subtopology_id: StrBytes,
+        /// The topics the topology reads from.
+        pub source_topics: Vec<StrBytes>,
+        /// The regular expressions identifying topics the subtopology reads from.
+        pub source_topic_regex: Vec<StrBytes>,
+        /// The set of state changelog topics associated with this subtopology. Created automatically.
+        pub state_changelog_topics: Vec<TopicInfo>,
+        /// The repartition topics the subtopology writes to.
+        pub repartition_sink_topics: Vec<StrBytes>,
+        /// The set of source topics that are internally created repartition topics. Created automatically.
+        pub repartition_source_topics: Vec<TopicInfo>,
+        /// A subset of source topics that must be copartitioned.
+        pub copartition_groups: Vec<CopartitionGroup>,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl Subtopology {
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 1));
+
+        fn is_flexible(version: ApiVersion) -> bool {
+            Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+        }
+    }
+
+    impl KafkaDecode for Subtopology {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            let subtopology_id = decoder.read_compact_string()?;
+            let source_topics = {
+                let length = decoder.read_compact_array_len()?;
+                decoder.read_vec(length, Decoder::read_compact_string)?
+            };
+            let source_topic_regex = {
+                let length = decoder.read_compact_array_len()?;
+                decoder.read_vec(length, Decoder::read_compact_string)?
+            };
+            let state_changelog_topics = {
+                let length = decoder.read_compact_array_len()?;
+                decoder.read_vec(length, |decoder| TopicInfo::decode(decoder, version))?
+            };
+            let repartition_sink_topics = {
+                let length = decoder.read_compact_array_len()?;
+                decoder.read_vec(length, Decoder::read_compact_string)?
+            };
+            let repartition_source_topics = {
+                let length = decoder.read_compact_array_len()?;
+                decoder.read_vec(length, |decoder| TopicInfo::decode(decoder, version))?
+            };
+            let copartition_groups = {
+                let length = decoder.read_compact_array_len()?;
+                decoder.read_vec(length, |decoder| CopartitionGroup::decode(decoder, version))?
+            };
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
+
+            Ok(Self {
+                subtopology_id,
+                source_topics,
+                source_topic_regex,
+                state_changelog_topics,
+                repartition_sink_topics,
+                repartition_source_topics,
+                copartition_groups,
+                unknown_tagged_fields,
+            })
+        }
+    }
+
+    impl KafkaEncode for Subtopology {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            encoder.write_compact_string(&self.subtopology_id)?;
+            encoder.write_compact_array_len(self.source_topics.len())?;
+            for value in &self.source_topics {
+                encoder.write_compact_string(value)?;
+            }
+            encoder.write_compact_array_len(self.source_topic_regex.len())?;
+            for value in &self.source_topic_regex {
+                encoder.write_compact_string(value)?;
+            }
+            encoder.write_compact_array_len(self.state_changelog_topics.len())?;
+            for value in &self.state_changelog_topics {
                 value.encode(encoder, version)?;
             }
-        }
-        encoder.write_compact_nullable_string(self.process_id.as_ref())?;
-        if let Some(value) = &self.user_endpoint {
-            encoder.write_struct_presence(true)?;
-            value.encode(encoder, version)?;
-        } else {
-            encoder.write_struct_presence(false)?;
-        }
-        encoder.write_compact_nullable_array_len(self.client_tags.as_ref().map(Vec::len))?;
-        if let Some(values) = &self.client_tags {
-            for value in values {
+            encoder.write_compact_array_len(self.repartition_sink_topics.len())?;
+            for value in &self.repartition_sink_topics {
+                encoder.write_compact_string(value)?;
+            }
+            encoder.write_compact_array_len(self.repartition_source_topics.len())?;
+            for value in &self.repartition_source_topics {
                 value.encode(encoder, version)?;
             }
-        }
-        encoder.write_compact_nullable_array_len(self.task_offsets.as_ref().map(Vec::len))?;
-        if let Some(values) = &self.task_offsets {
-            for value in values {
+            encoder.write_compact_array_len(self.copartition_groups.len())?;
+            for value in &self.copartition_groups {
                 value.encode(encoder, version)?;
             }
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "Subtopology",
+                    version,
+                });
+            }
+
+            Ok(())
         }
-        encoder.write_compact_nullable_array_len(self.task_end_offsets.as_ref().map(Vec::len))?;
-        if let Some(values) = &self.task_end_offsets {
-            for value in values {
-                value.encode(encoder, version)?;
+    }
+
+    /// `CopartitionGroup` as declared by the `StreamsGroupHeartbeat` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    pub struct CopartitionGroup {
+        /// The topics the topology reads from. Index into the array on the subtopology level.
+        pub source_topics: Vec<i16>,
+        /// Regular expressions identifying topics the subtopology reads from. Index into the array on the subtopology level.
+        pub source_topic_regex: Vec<i16>,
+        /// The set of source topics that are internally created repartition topics. Index into the array on the subtopology level.
+        pub repartition_source_topics: Vec<i16>,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl CopartitionGroup {
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 1));
+
+        fn is_flexible(version: ApiVersion) -> bool {
+            Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+        }
+    }
+
+    impl KafkaDecode for CopartitionGroup {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            let source_topics = {
+                let length = decoder.read_compact_array_len()?;
+                decoder.read_vec(length, Decoder::read_i16)?
+            };
+            let source_topic_regex = {
+                let length = decoder.read_compact_array_len()?;
+                decoder.read_vec(length, Decoder::read_i16)?
+            };
+            let repartition_source_topics = {
+                let length = decoder.read_compact_array_len()?;
+                decoder.read_vec(length, Decoder::read_i16)?
+            };
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
+
+            Ok(Self {
+                source_topics,
+                source_topic_regex,
+                repartition_source_topics,
+                unknown_tagged_fields,
+            })
+        }
+    }
+
+    impl KafkaEncode for CopartitionGroup {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            encoder.write_compact_array_len(self.source_topics.len())?;
+            for value in &self.source_topics {
+                encoder.write_i16(*value)?;
+            }
+            encoder.write_compact_array_len(self.source_topic_regex.len())?;
+            for value in &self.source_topic_regex {
+                encoder.write_i16(*value)?;
+            }
+            encoder.write_compact_array_len(self.repartition_source_topics.len())?;
+            for value in &self.repartition_source_topics {
+                encoder.write_i16(*value)?;
+            }
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "CopartitionGroup",
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+
+    /// Request body for the `StreamsGroupHeartbeat` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Eq, PartialEq)]
+    pub struct StreamsGroupHeartbeatRequest {
+        /// The group identifier.
+        pub group_id: StrBytes,
+        /// The member ID generated by the streams consumer. The member ID must be kept during the entire lifetime of the streams consumer process.
+        pub member_id: StrBytes,
+        /// The current member epoch; 0 to join the group; -1 to leave the group; -2 to indicate that the static member will rejoin.
+        pub member_epoch: i32,
+        /// The current endpoint epoch of this client, represents the latest endpoint epoch this client received.
+        pub endpoint_information_epoch: i32,
+        /// null if not provided or if it didn't change since the last heartbeat; the instance ID for static membership otherwise.
+        pub instance_id: Option<StrBytes>,
+        /// null if not provided or if it didn't change since the last heartbeat; the rack ID of the member otherwise.
+        pub rack_id: Option<StrBytes>,
+        /// -1 if it didn't change since the last heartbeat; the maximum time in milliseconds that the coordinator will wait on the member to revoke its tasks otherwise.
+        pub rebalance_timeout_ms: i32,
+        /// The topology metadata of the streams application. Used to initialize the topology of the group and to check if the topology corresponds to the topology initialized for the group. Only sent when `memberEpoch` = 0, must be non-empty. Null otherwise.
+        pub topology: Option<Topology>,
+        /// Currently owned active tasks for this client. Null if unchanged since last heartbeat.
+        pub active_tasks: Option<Vec<TaskIds>>,
+        /// Currently owned standby tasks for this client. Null if unchanged since last heartbeat.
+        pub standby_tasks: Option<Vec<TaskIds>>,
+        /// Currently owned warm-up tasks for this client. Null if unchanged since last heartbeat.
+        pub warmup_tasks: Option<Vec<TaskIds>>,
+        /// Identity of the streams instance that may have multiple consumers. Null if unchanged since last heartbeat.
+        pub process_id: Option<StrBytes>,
+        /// User-defined endpoint for Interactive Queries. Null if unchanged since last heartbeat, or if not defined on the client.
+        pub user_endpoint: Option<Endpoint>,
+        /// Used for rack-aware assignment algorithm. Null if unchanged since last heartbeat.
+        pub client_tags: Option<Vec<KeyValue>>,
+        /// Cumulative changelog offsets for tasks. Only updated when a warm-up task has caught up, and according to the task offset interval. Null if unchanged since last heartbeat.
+        pub task_offsets: Option<Vec<TaskOffset>>,
+        /// Cumulative changelog end-offsets for tasks. Only updated when a warm-up task has caught up, and according to the task offset interval. Null if unchanged since last heartbeat.
+        pub task_end_offsets: Option<Vec<TaskOffset>>,
+        /// Whether all Streams clients in the group should shut down.
+        pub shutdown_application: bool,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl Default for StreamsGroupHeartbeatRequest {
+        fn default() -> Self {
+            Self {
+                group_id: StrBytes::default(),
+                member_id: StrBytes::default(),
+                member_epoch: 0,
+                endpoint_information_epoch: 0,
+                instance_id: None,
+                rack_id: None,
+                rebalance_timeout_ms: -1,
+                topology: None,
+                active_tasks: None,
+                standby_tasks: None,
+                warmup_tasks: None,
+                process_id: None,
+                user_endpoint: None,
+                client_tags: None,
+                task_offsets: None,
+                task_end_offsets: None,
+                shutdown_application: false,
+                unknown_tagged_fields: TaggedFields::default(),
             }
         }
-        encoder.write_bool(self.shutdown_application)?;
-
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: Self::NAME,
-                version,
-            });
-        }
-
-        Ok(())
     }
-}
 
-/// `Status` as declared by the `StreamsGroupHeartbeat` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct StreamsGroupHeartbeatResponseStatus {
-    /// A code to indicate that a particular status is active for the group membership.
-    pub status_code: i8,
-    /// A string representation of the status.
-    pub status_detail: StrBytes,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
-
-impl StreamsGroupHeartbeatResponseStatus {
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 1));
-
-    fn is_flexible(version: ApiVersion) -> bool {
-        Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+    impl KafkaMessage for StreamsGroupHeartbeatRequest {
+        const NAME: &'static str = "StreamsGroupHeartbeatRequest";
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 1);
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 1));
     }
-}
 
-impl KafkaDecode for StreamsGroupHeartbeatResponseStatus {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        let status_code = decoder.read_i8()?;
-        let status_detail = decoder.read_compact_string()?;
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
-
-        Ok(Self {
-            status_code,
-            status_detail,
-            unknown_tagged_fields,
-        })
+    impl KafkaRequest for StreamsGroupHeartbeatRequest {
+        const API_KEY: ApiKey = ApiKey::new(88);
     }
-}
 
-impl KafkaEncode for StreamsGroupHeartbeatResponseStatus {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        encoder.write_i8(self.status_code)?;
-        encoder.write_compact_string(&self.status_detail)?;
-
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: "StreamsGroupHeartbeatResponseStatus",
-                version,
-            });
-        }
-
-        Ok(())
+    impl RequestResponsePair for StreamsGroupHeartbeatRequest {
+        type Response = super::StreamsGroupHeartbeatResponse;
     }
-}
 
-/// `TopicPartition` as declared by the `StreamsGroupHeartbeat` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct StreamsGroupHeartbeatResponseTopicPartition {
-    /// topic name.
-    pub topic: StrBytes,
-    /// partitions.
-    pub partitions: Vec<i32>,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
+    impl KafkaDecode for StreamsGroupHeartbeatRequest {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            crate::message::ensure_decode_version::<Self>(version)?;
 
-impl StreamsGroupHeartbeatResponseTopicPartition {
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 1));
-
-    fn is_flexible(version: ApiVersion) -> bool {
-        Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
-    }
-}
-
-impl KafkaDecode for StreamsGroupHeartbeatResponseTopicPartition {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        let topic = decoder.read_compact_string()?;
-        let partitions = {
-            let length = decoder.read_compact_array_len()?;
-            decoder.read_vec(length, Decoder::read_i32)?
-        };
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
-
-        Ok(Self {
-            topic,
-            partitions,
-            unknown_tagged_fields,
-        })
-    }
-}
-
-impl KafkaEncode for StreamsGroupHeartbeatResponseTopicPartition {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        encoder.write_compact_string(&self.topic)?;
-        encoder.write_compact_array_len(self.partitions.len())?;
-        for value in &self.partitions {
-            encoder.write_i32(*value)?;
-        }
-
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: "StreamsGroupHeartbeatResponseTopicPartition",
-                version,
-            });
-        }
-
-        Ok(())
-    }
-}
-
-/// `TaskIds` as declared by the `StreamsGroupHeartbeat` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct StreamsGroupHeartbeatResponseTaskIds {
-    /// The subtopology identifier.
-    pub subtopology_id: StrBytes,
-    /// The partitions of the input topics processed by this member.
-    pub partitions: Vec<i32>,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
-
-impl StreamsGroupHeartbeatResponseTaskIds {
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 1));
-
-    fn is_flexible(version: ApiVersion) -> bool {
-        Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
-    }
-}
-
-impl KafkaDecode for StreamsGroupHeartbeatResponseTaskIds {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        let subtopology_id = decoder.read_compact_string()?;
-        let partitions = {
-            let length = decoder.read_compact_array_len()?;
-            decoder.read_vec(length, Decoder::read_i32)?
-        };
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
-
-        Ok(Self {
-            subtopology_id,
-            partitions,
-            unknown_tagged_fields,
-        })
-    }
-}
-
-impl KafkaEncode for StreamsGroupHeartbeatResponseTaskIds {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        encoder.write_compact_string(&self.subtopology_id)?;
-        encoder.write_compact_array_len(self.partitions.len())?;
-        for value in &self.partitions {
-            encoder.write_i32(*value)?;
-        }
-
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: "StreamsGroupHeartbeatResponseTaskIds",
-                version,
-            });
-        }
-
-        Ok(())
-    }
-}
-
-/// `Endpoint` as declared by the `StreamsGroupHeartbeat` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct StreamsGroupHeartbeatResponseEndpoint {
-    /// host of the endpoint.
-    pub host: StrBytes,
-    /// port of the endpoint.
-    pub port: u16,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
-
-impl StreamsGroupHeartbeatResponseEndpoint {
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 1));
-
-    fn is_flexible(version: ApiVersion) -> bool {
-        Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
-    }
-}
-
-impl KafkaDecode for StreamsGroupHeartbeatResponseEndpoint {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        let host = decoder.read_compact_string()?;
-        let port = decoder.read_u16()?;
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
-
-        Ok(Self {
-            host,
-            port,
-            unknown_tagged_fields,
-        })
-    }
-}
-
-impl KafkaEncode for StreamsGroupHeartbeatResponseEndpoint {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        encoder.write_compact_string(&self.host)?;
-        encoder.write_u16(self.port)?;
-
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: "StreamsGroupHeartbeatResponseEndpoint",
-                version,
-            });
-        }
-
-        Ok(())
-    }
-}
-
-/// `EndpointToPartitions` as declared by the `StreamsGroupHeartbeat` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct StreamsGroupHeartbeatResponseEndpointToPartitions {
-    /// User-defined endpoint to connect to the node.
-    pub user_endpoint: StreamsGroupHeartbeatResponseEndpoint,
-    /// All topic partitions materialized by active tasks on the node.
-    pub active_partitions: Vec<StreamsGroupHeartbeatResponseTopicPartition>,
-    /// All topic partitions materialized by standby tasks on the node.
-    pub standby_partitions: Vec<StreamsGroupHeartbeatResponseTopicPartition>,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
-
-impl StreamsGroupHeartbeatResponseEndpointToPartitions {
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 1));
-
-    fn is_flexible(version: ApiVersion) -> bool {
-        Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
-    }
-}
-
-impl KafkaDecode for StreamsGroupHeartbeatResponseEndpointToPartitions {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        let user_endpoint = StreamsGroupHeartbeatResponseEndpoint::decode(decoder, version)?;
-        let active_partitions = {
-            let length = decoder.read_compact_array_len()?;
-            decoder.read_vec(length, |decoder| {
-                StreamsGroupHeartbeatResponseTopicPartition::decode(decoder, version)
-            })?
-        };
-        let standby_partitions = {
-            let length = decoder.read_compact_array_len()?;
-            decoder.read_vec(length, |decoder| {
-                StreamsGroupHeartbeatResponseTopicPartition::decode(decoder, version)
-            })?
-        };
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
-
-        Ok(Self {
-            user_endpoint,
-            active_partitions,
-            standby_partitions,
-            unknown_tagged_fields,
-        })
-    }
-}
-
-impl KafkaEncode for StreamsGroupHeartbeatResponseEndpointToPartitions {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        self.user_endpoint.encode(encoder, version)?;
-        encoder.write_compact_array_len(self.active_partitions.len())?;
-        for value in &self.active_partitions {
-            value.encode(encoder, version)?;
-        }
-        encoder.write_compact_array_len(self.standby_partitions.len())?;
-        for value in &self.standby_partitions {
-            value.encode(encoder, version)?;
-        }
-
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: "StreamsGroupHeartbeatResponseEndpointToPartitions",
-                version,
-            });
-        }
-
-        Ok(())
-    }
-}
-
-/// Response body for the `StreamsGroupHeartbeat` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct StreamsGroupHeartbeatResponse {
-    /// The duration in milliseconds for which the request was throttled due to a quota violation, or zero if the request did not violate any quota.
-    pub throttle_time_ms: i32,
-    /// The top-level error code, or 0 if there was no error.
-    pub error_code: i16,
-    /// The top-level error message, or null if there was no error.
-    pub error_message: Option<StrBytes>,
-    /// The member id is always generated by the streams consumer.
-    pub member_id: StrBytes,
-    /// The member epoch.
-    pub member_epoch: i32,
-    /// The heartbeat interval in milliseconds.
-    pub heartbeat_interval_ms: i32,
-    /// Deprecated. The maximum acceptable lag (number of offsets to catch up) for a client to be considered caught-up enough to receive an active task assignment. Use `AcceptableRecoveryLag` instead.
-    pub acceptable_recovery_lag_legacy: i32,
-    /// The interval in which the task changelog offsets on a client are updated on the broker. The offsets are sent with the next heartbeat after this time has passed.
-    pub task_offset_interval_ms: i32,
-    /// The maximum acceptable lag (number of offsets to catch up) for a client to be considered caught-up enough to receive an active task assignment. A value of -1 indicates the broker does not support this configuration.
-    pub acceptable_recovery_lag: i64,
-    /// Indicate zero or more status for the group.
-    pub status: Option<Vec<StreamsGroupHeartbeatResponseStatus>>,
-    /// Assigned active tasks for this client. Null if unchanged since last heartbeat.
-    pub active_tasks: Option<Vec<StreamsGroupHeartbeatResponseTaskIds>>,
-    /// Assigned standby tasks for this client. Null if unchanged since last heartbeat.
-    pub standby_tasks: Option<Vec<StreamsGroupHeartbeatResponseTaskIds>>,
-    /// Assigned warm-up tasks for this client. Null if unchanged since last heartbeat.
-    pub warmup_tasks: Option<Vec<StreamsGroupHeartbeatResponseTaskIds>>,
-    /// True if the broker does not have an up-to-date topology description for this group. The client should send the topology description via `StreamsGroupTopologyDescriptionUpdate`.
-    pub topology_description_required: bool,
-    /// The endpoint epoch set in the response.
-    pub endpoint_information_epoch: i32,
-    /// Global assignment information used for IQ. Null if unchanged since last heartbeat.
-    pub partitions_by_user_endpoint: Option<Vec<StreamsGroupHeartbeatResponseEndpointToPartitions>>,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
-
-impl Default for StreamsGroupHeartbeatResponse {
-    fn default() -> Self {
-        Self {
-            throttle_time_ms: 0,
-            error_code: 0,
-            error_message: None,
-            member_id: StrBytes::default(),
-            member_epoch: 0,
-            heartbeat_interval_ms: 0,
-            acceptable_recovery_lag_legacy: 0,
-            task_offset_interval_ms: 0,
-            acceptable_recovery_lag: -1,
-            status: Some(Vec::new()),
-            active_tasks: None,
-            standby_tasks: None,
-            warmup_tasks: None,
-            topology_description_required: false,
-            endpoint_information_epoch: 0,
-            partitions_by_user_endpoint: None,
-            unknown_tagged_fields: TaggedFields::default(),
-        }
-    }
-}
-
-impl KafkaMessage for StreamsGroupHeartbeatResponse {
-    const NAME: &'static str = "StreamsGroupHeartbeatResponse";
-    const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 1);
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 1));
-}
-
-impl KafkaResponse for StreamsGroupHeartbeatResponse {
-    const API_KEY: ApiKey = ApiKey::new(88);
-}
-
-impl KafkaDecode for StreamsGroupHeartbeatResponse {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        crate::message::ensure_decode_version::<Self>(version)?;
-
-        let throttle_time_ms = decoder.read_i32()?;
-        let error_code = decoder.read_i16()?;
-        let error_message = decoder.read_compact_nullable_string()?;
-        let member_id = decoder.read_compact_string()?;
-        let member_epoch = decoder.read_i32()?;
-        let heartbeat_interval_ms = decoder.read_i32()?;
-        let acceptable_recovery_lag_legacy = if version.value() <= 0 {
-            decoder.read_i32()?
-        } else {
-            0
-        };
-        let task_offset_interval_ms = decoder.read_i32()?;
-        let acceptable_recovery_lag = if version.value() >= 1 {
-            decoder.read_i64()?
-        } else {
-            -1
-        };
-        let status = {
-            let length = decoder.read_compact_nullable_array_len()?;
-            length
-                .map(|length| {
-                    decoder.read_vec(length, |decoder| {
-                        StreamsGroupHeartbeatResponseStatus::decode(decoder, version)
+            let group_id = decoder.read_compact_string()?;
+            let member_id = decoder.read_compact_string()?;
+            let member_epoch = decoder.read_i32()?;
+            let endpoint_information_epoch = decoder.read_i32()?;
+            let instance_id = decoder.read_compact_nullable_string()?;
+            let rack_id = decoder.read_compact_nullable_string()?;
+            let rebalance_timeout_ms = decoder.read_i32()?;
+            let topology = if decoder.read_struct_presence()? {
+                Some(Topology::decode(decoder, version)?)
+            } else {
+                None
+            };
+            let active_tasks = {
+                let length = decoder.read_compact_nullable_array_len()?;
+                length
+                    .map(|length| {
+                        decoder.read_vec(length, |decoder| TaskIds::decode(decoder, version))
                     })
-                })
-                .transpose()?
-        };
-        let active_tasks = {
-            let length = decoder.read_compact_nullable_array_len()?;
-            length
-                .map(|length| {
-                    decoder.read_vec(length, |decoder| {
-                        StreamsGroupHeartbeatResponseTaskIds::decode(decoder, version)
+                    .transpose()?
+            };
+            let standby_tasks = {
+                let length = decoder.read_compact_nullable_array_len()?;
+                length
+                    .map(|length| {
+                        decoder.read_vec(length, |decoder| TaskIds::decode(decoder, version))
                     })
-                })
-                .transpose()?
-        };
-        let standby_tasks = {
-            let length = decoder.read_compact_nullable_array_len()?;
-            length
-                .map(|length| {
-                    decoder.read_vec(length, |decoder| {
-                        StreamsGroupHeartbeatResponseTaskIds::decode(decoder, version)
+                    .transpose()?
+            };
+            let warmup_tasks = {
+                let length = decoder.read_compact_nullable_array_len()?;
+                length
+                    .map(|length| {
+                        decoder.read_vec(length, |decoder| TaskIds::decode(decoder, version))
                     })
-                })
-                .transpose()?
-        };
-        let warmup_tasks = {
-            let length = decoder.read_compact_nullable_array_len()?;
-            length
-                .map(|length| {
-                    decoder.read_vec(length, |decoder| {
-                        StreamsGroupHeartbeatResponseTaskIds::decode(decoder, version)
+                    .transpose()?
+            };
+            let process_id = decoder.read_compact_nullable_string()?;
+            let user_endpoint = if decoder.read_struct_presence()? {
+                Some(Endpoint::decode(decoder, version)?)
+            } else {
+                None
+            };
+            let client_tags = {
+                let length = decoder.read_compact_nullable_array_len()?;
+                length
+                    .map(|length| {
+                        decoder.read_vec(length, |decoder| KeyValue::decode(decoder, version))
                     })
-                })
-                .transpose()?
-        };
-        let topology_description_required = if version.value() >= 1 {
-            decoder.read_bool()?
-        } else {
-            false
-        };
-        let endpoint_information_epoch = decoder.read_i32()?;
-        let partitions_by_user_endpoint = {
-            let length = decoder.read_compact_nullable_array_len()?;
-            length
-                .map(|length| {
-                    decoder.read_vec(length, |decoder| {
-                        StreamsGroupHeartbeatResponseEndpointToPartitions::decode(decoder, version)
+                    .transpose()?
+            };
+            let task_offsets = {
+                let length = decoder.read_compact_nullable_array_len()?;
+                length
+                    .map(|length| {
+                        decoder.read_vec(length, |decoder| TaskOffset::decode(decoder, version))
                     })
-                })
-                .transpose()?
-        };
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
+                    .transpose()?
+            };
+            let task_end_offsets = {
+                let length = decoder.read_compact_nullable_array_len()?;
+                length
+                    .map(|length| {
+                        decoder.read_vec(length, |decoder| TaskOffset::decode(decoder, version))
+                    })
+                    .transpose()?
+            };
+            let shutdown_application = decoder.read_bool()?;
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
 
-        Ok(Self {
-            throttle_time_ms,
-            error_code,
-            error_message,
-            member_id,
-            member_epoch,
-            heartbeat_interval_ms,
-            acceptable_recovery_lag_legacy,
-            task_offset_interval_ms,
-            acceptable_recovery_lag,
-            status,
-            active_tasks,
-            standby_tasks,
-            warmup_tasks,
-            topology_description_required,
-            endpoint_information_epoch,
-            partitions_by_user_endpoint,
-            unknown_tagged_fields,
-        })
+            Ok(Self {
+                group_id,
+                member_id,
+                member_epoch,
+                endpoint_information_epoch,
+                instance_id,
+                rack_id,
+                rebalance_timeout_ms,
+                topology,
+                active_tasks,
+                standby_tasks,
+                warmup_tasks,
+                process_id,
+                user_endpoint,
+                client_tags,
+                task_offsets,
+                task_end_offsets,
+                shutdown_application,
+                unknown_tagged_fields,
+            })
+        }
+    }
+
+    impl KafkaEncode for StreamsGroupHeartbeatRequest {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            crate::message::ensure_encode_version::<Self>(version)?;
+
+            encoder.write_compact_string(&self.group_id)?;
+            encoder.write_compact_string(&self.member_id)?;
+            encoder.write_i32(self.member_epoch)?;
+            encoder.write_i32(self.endpoint_information_epoch)?;
+            encoder.write_compact_nullable_string(self.instance_id.as_ref())?;
+            encoder.write_compact_nullable_string(self.rack_id.as_ref())?;
+            encoder.write_i32(self.rebalance_timeout_ms)?;
+            if let Some(value) = &self.topology {
+                encoder.write_struct_presence(true)?;
+                value.encode(encoder, version)?;
+            } else {
+                encoder.write_struct_presence(false)?;
+            }
+            encoder.write_compact_nullable_array_len(self.active_tasks.as_ref().map(Vec::len))?;
+            if let Some(values) = &self.active_tasks {
+                for value in values {
+                    value.encode(encoder, version)?;
+                }
+            }
+            encoder.write_compact_nullable_array_len(self.standby_tasks.as_ref().map(Vec::len))?;
+            if let Some(values) = &self.standby_tasks {
+                for value in values {
+                    value.encode(encoder, version)?;
+                }
+            }
+            encoder.write_compact_nullable_array_len(self.warmup_tasks.as_ref().map(Vec::len))?;
+            if let Some(values) = &self.warmup_tasks {
+                for value in values {
+                    value.encode(encoder, version)?;
+                }
+            }
+            encoder.write_compact_nullable_string(self.process_id.as_ref())?;
+            if let Some(value) = &self.user_endpoint {
+                encoder.write_struct_presence(true)?;
+                value.encode(encoder, version)?;
+            } else {
+                encoder.write_struct_presence(false)?;
+            }
+            encoder.write_compact_nullable_array_len(self.client_tags.as_ref().map(Vec::len))?;
+            if let Some(values) = &self.client_tags {
+                for value in values {
+                    value.encode(encoder, version)?;
+                }
+            }
+            encoder.write_compact_nullable_array_len(self.task_offsets.as_ref().map(Vec::len))?;
+            if let Some(values) = &self.task_offsets {
+                for value in values {
+                    value.encode(encoder, version)?;
+                }
+            }
+            encoder
+                .write_compact_nullable_array_len(self.task_end_offsets.as_ref().map(Vec::len))?;
+            if let Some(values) = &self.task_end_offsets {
+                for value in values {
+                    value.encode(encoder, version)?;
+                }
+            }
+            encoder.write_bool(self.shutdown_application)?;
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: Self::NAME,
+                    version,
+                });
+            }
+
+            Ok(())
+        }
     }
 }
 
-impl KafkaEncode for StreamsGroupHeartbeatResponse {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        crate::message::ensure_encode_version::<Self>(version)?;
+/// `StreamsGroupHeartbeatResponse` and every struct it declares, under upstream's own names.
+///
+/// [`StreamsGroupHeartbeatResponse`](crate::StreamsGroupHeartbeatResponse) is re-exported flat, so this path never has to be
+/// written to name the message itself.
+pub mod streams_group_heartbeat_response {
+    use kafka_wire_core::{
+        ApiKey, ApiVersion, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
+        KafkaEncode, StrBytes, TaggedFields, VersionRange,
+    };
 
-        if version.value() > 0 && self.acceptable_recovery_lag_legacy != 0 {
-            return Err(EncodeError::FieldNotRepresentable {
-                message: Self::NAME,
-                field: "AcceptableRecoveryLagLegacy",
-                version,
-            });
-        }
-        if version.value() < 1 && self.topology_description_required {
-            return Err(EncodeError::FieldNotRepresentable {
-                message: Self::NAME,
-                field: "TopologyDescriptionRequired",
-                version,
-            });
-        }
+    use crate::{KafkaMessage, KafkaResponse};
 
-        encoder.write_i32(self.throttle_time_ms)?;
-        encoder.write_i16(self.error_code)?;
-        encoder.write_compact_nullable_string(self.error_message.as_ref())?;
-        encoder.write_compact_string(&self.member_id)?;
-        encoder.write_i32(self.member_epoch)?;
-        encoder.write_i32(self.heartbeat_interval_ms)?;
-        if version.value() <= 0 {
-            encoder.write_i32(self.acceptable_recovery_lag_legacy)?;
-        }
-        encoder.write_i32(self.task_offset_interval_ms)?;
-        if version.value() >= 1 {
-            encoder.write_i64(self.acceptable_recovery_lag)?;
-        }
-        encoder.write_compact_nullable_array_len(self.status.as_ref().map(Vec::len))?;
-        if let Some(values) = &self.status {
-            for value in values {
-                value.encode(encoder, version)?;
-            }
-        }
-        encoder.write_compact_nullable_array_len(self.active_tasks.as_ref().map(Vec::len))?;
-        if let Some(values) = &self.active_tasks {
-            for value in values {
-                value.encode(encoder, version)?;
-            }
-        }
-        encoder.write_compact_nullable_array_len(self.standby_tasks.as_ref().map(Vec::len))?;
-        if let Some(values) = &self.standby_tasks {
-            for value in values {
-                value.encode(encoder, version)?;
-            }
-        }
-        encoder.write_compact_nullable_array_len(self.warmup_tasks.as_ref().map(Vec::len))?;
-        if let Some(values) = &self.warmup_tasks {
-            for value in values {
-                value.encode(encoder, version)?;
-            }
-        }
-        if version.value() >= 1 {
-            encoder.write_bool(self.topology_description_required)?;
-        }
-        encoder.write_i32(self.endpoint_information_epoch)?;
-        encoder.write_compact_nullable_array_len(
-            self.partitions_by_user_endpoint.as_ref().map(Vec::len),
-        )?;
-        if let Some(values) = &self.partitions_by_user_endpoint {
-            for value in values {
-                value.encode(encoder, version)?;
-            }
-        }
+    /// `Status` as declared by the `StreamsGroupHeartbeat` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    pub struct Status {
+        /// A code to indicate that a particular status is active for the group membership.
+        pub status_code: i8,
+        /// A string representation of the status.
+        pub status_detail: StrBytes,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
+    }
 
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: Self::NAME,
-                version,
-            });
-        }
+    impl Status {
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 1));
 
-        Ok(())
+        fn is_flexible(version: ApiVersion) -> bool {
+            Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+        }
+    }
+
+    impl KafkaDecode for Status {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            let status_code = decoder.read_i8()?;
+            let status_detail = decoder.read_compact_string()?;
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
+
+            Ok(Self {
+                status_code,
+                status_detail,
+                unknown_tagged_fields,
+            })
+        }
+    }
+
+    impl KafkaEncode for Status {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            encoder.write_i8(self.status_code)?;
+            encoder.write_compact_string(&self.status_detail)?;
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "Status",
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+
+    /// `TopicPartition` as declared by the `StreamsGroupHeartbeat` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    pub struct TopicPartition {
+        /// topic name.
+        pub topic: StrBytes,
+        /// partitions.
+        pub partitions: Vec<i32>,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl TopicPartition {
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 1));
+
+        fn is_flexible(version: ApiVersion) -> bool {
+            Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+        }
+    }
+
+    impl KafkaDecode for TopicPartition {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            let topic = decoder.read_compact_string()?;
+            let partitions = {
+                let length = decoder.read_compact_array_len()?;
+                decoder.read_vec(length, Decoder::read_i32)?
+            };
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
+
+            Ok(Self {
+                topic,
+                partitions,
+                unknown_tagged_fields,
+            })
+        }
+    }
+
+    impl KafkaEncode for TopicPartition {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            encoder.write_compact_string(&self.topic)?;
+            encoder.write_compact_array_len(self.partitions.len())?;
+            for value in &self.partitions {
+                encoder.write_i32(*value)?;
+            }
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "TopicPartition",
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+
+    /// `TaskIds` as declared by the `StreamsGroupHeartbeat` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    pub struct TaskIds {
+        /// The subtopology identifier.
+        pub subtopology_id: StrBytes,
+        /// The partitions of the input topics processed by this member.
+        pub partitions: Vec<i32>,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl TaskIds {
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 1));
+
+        fn is_flexible(version: ApiVersion) -> bool {
+            Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+        }
+    }
+
+    impl KafkaDecode for TaskIds {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            let subtopology_id = decoder.read_compact_string()?;
+            let partitions = {
+                let length = decoder.read_compact_array_len()?;
+                decoder.read_vec(length, Decoder::read_i32)?
+            };
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
+
+            Ok(Self {
+                subtopology_id,
+                partitions,
+                unknown_tagged_fields,
+            })
+        }
+    }
+
+    impl KafkaEncode for TaskIds {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            encoder.write_compact_string(&self.subtopology_id)?;
+            encoder.write_compact_array_len(self.partitions.len())?;
+            for value in &self.partitions {
+                encoder.write_i32(*value)?;
+            }
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "TaskIds",
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+
+    /// `Endpoint` as declared by the `StreamsGroupHeartbeat` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    pub struct Endpoint {
+        /// host of the endpoint.
+        pub host: StrBytes,
+        /// port of the endpoint.
+        pub port: u16,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl Endpoint {
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 1));
+
+        fn is_flexible(version: ApiVersion) -> bool {
+            Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+        }
+    }
+
+    impl KafkaDecode for Endpoint {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            let host = decoder.read_compact_string()?;
+            let port = decoder.read_u16()?;
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
+
+            Ok(Self {
+                host,
+                port,
+                unknown_tagged_fields,
+            })
+        }
+    }
+
+    impl KafkaEncode for Endpoint {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            encoder.write_compact_string(&self.host)?;
+            encoder.write_u16(self.port)?;
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "Endpoint",
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+
+    /// `EndpointToPartitions` as declared by the `StreamsGroupHeartbeat` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    pub struct EndpointToPartitions {
+        /// User-defined endpoint to connect to the node.
+        pub user_endpoint: Endpoint,
+        /// All topic partitions materialized by active tasks on the node.
+        pub active_partitions: Vec<TopicPartition>,
+        /// All topic partitions materialized by standby tasks on the node.
+        pub standby_partitions: Vec<TopicPartition>,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl EndpointToPartitions {
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 1));
+
+        fn is_flexible(version: ApiVersion) -> bool {
+            Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+        }
+    }
+
+    impl KafkaDecode for EndpointToPartitions {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            let user_endpoint = Endpoint::decode(decoder, version)?;
+            let active_partitions = {
+                let length = decoder.read_compact_array_len()?;
+                decoder.read_vec(length, |decoder| TopicPartition::decode(decoder, version))?
+            };
+            let standby_partitions = {
+                let length = decoder.read_compact_array_len()?;
+                decoder.read_vec(length, |decoder| TopicPartition::decode(decoder, version))?
+            };
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
+
+            Ok(Self {
+                user_endpoint,
+                active_partitions,
+                standby_partitions,
+                unknown_tagged_fields,
+            })
+        }
+    }
+
+    impl KafkaEncode for EndpointToPartitions {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.user_endpoint.encode(encoder, version)?;
+            encoder.write_compact_array_len(self.active_partitions.len())?;
+            for value in &self.active_partitions {
+                value.encode(encoder, version)?;
+            }
+            encoder.write_compact_array_len(self.standby_partitions.len())?;
+            for value in &self.standby_partitions {
+                value.encode(encoder, version)?;
+            }
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "EndpointToPartitions",
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+
+    /// Response body for the `StreamsGroupHeartbeat` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Eq, PartialEq)]
+    pub struct StreamsGroupHeartbeatResponse {
+        /// The duration in milliseconds for which the request was throttled due to a quota violation, or zero if the request did not violate any quota.
+        pub throttle_time_ms: i32,
+        /// The top-level error code, or 0 if there was no error.
+        pub error_code: i16,
+        /// The top-level error message, or null if there was no error.
+        pub error_message: Option<StrBytes>,
+        /// The member id is always generated by the streams consumer.
+        pub member_id: StrBytes,
+        /// The member epoch.
+        pub member_epoch: i32,
+        /// The heartbeat interval in milliseconds.
+        pub heartbeat_interval_ms: i32,
+        /// Deprecated. The maximum acceptable lag (number of offsets to catch up) for a client to be considered caught-up enough to receive an active task assignment. Use `AcceptableRecoveryLag` instead.
+        pub acceptable_recovery_lag_legacy: i32,
+        /// The interval in which the task changelog offsets on a client are updated on the broker. The offsets are sent with the next heartbeat after this time has passed.
+        pub task_offset_interval_ms: i32,
+        /// The maximum acceptable lag (number of offsets to catch up) for a client to be considered caught-up enough to receive an active task assignment. A value of -1 indicates the broker does not support this configuration.
+        pub acceptable_recovery_lag: i64,
+        /// Indicate zero or more status for the group.
+        pub status: Option<Vec<Status>>,
+        /// Assigned active tasks for this client. Null if unchanged since last heartbeat.
+        pub active_tasks: Option<Vec<TaskIds>>,
+        /// Assigned standby tasks for this client. Null if unchanged since last heartbeat.
+        pub standby_tasks: Option<Vec<TaskIds>>,
+        /// Assigned warm-up tasks for this client. Null if unchanged since last heartbeat.
+        pub warmup_tasks: Option<Vec<TaskIds>>,
+        /// True if the broker does not have an up-to-date topology description for this group. The client should send the topology description via `StreamsGroupTopologyDescriptionUpdate`.
+        pub topology_description_required: bool,
+        /// The endpoint epoch set in the response.
+        pub endpoint_information_epoch: i32,
+        /// Global assignment information used for IQ. Null if unchanged since last heartbeat.
+        pub partitions_by_user_endpoint: Option<Vec<EndpointToPartitions>>,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl Default for StreamsGroupHeartbeatResponse {
+        fn default() -> Self {
+            Self {
+                throttle_time_ms: 0,
+                error_code: 0,
+                error_message: None,
+                member_id: StrBytes::default(),
+                member_epoch: 0,
+                heartbeat_interval_ms: 0,
+                acceptable_recovery_lag_legacy: 0,
+                task_offset_interval_ms: 0,
+                acceptable_recovery_lag: -1,
+                status: Some(Vec::new()),
+                active_tasks: None,
+                standby_tasks: None,
+                warmup_tasks: None,
+                topology_description_required: false,
+                endpoint_information_epoch: 0,
+                partitions_by_user_endpoint: None,
+                unknown_tagged_fields: TaggedFields::default(),
+            }
+        }
+    }
+
+    impl KafkaMessage for StreamsGroupHeartbeatResponse {
+        const NAME: &'static str = "StreamsGroupHeartbeatResponse";
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 1);
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 1));
+    }
+
+    impl KafkaResponse for StreamsGroupHeartbeatResponse {
+        const API_KEY: ApiKey = ApiKey::new(88);
+    }
+
+    impl KafkaDecode for StreamsGroupHeartbeatResponse {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            crate::message::ensure_decode_version::<Self>(version)?;
+
+            let throttle_time_ms = decoder.read_i32()?;
+            let error_code = decoder.read_i16()?;
+            let error_message = decoder.read_compact_nullable_string()?;
+            let member_id = decoder.read_compact_string()?;
+            let member_epoch = decoder.read_i32()?;
+            let heartbeat_interval_ms = decoder.read_i32()?;
+            let acceptable_recovery_lag_legacy = if version.value() <= 0 {
+                decoder.read_i32()?
+            } else {
+                0
+            };
+            let task_offset_interval_ms = decoder.read_i32()?;
+            let acceptable_recovery_lag = if version.value() >= 1 {
+                decoder.read_i64()?
+            } else {
+                -1
+            };
+            let status = {
+                let length = decoder.read_compact_nullable_array_len()?;
+                length
+                    .map(|length| {
+                        decoder.read_vec(length, |decoder| Status::decode(decoder, version))
+                    })
+                    .transpose()?
+            };
+            let active_tasks = {
+                let length = decoder.read_compact_nullable_array_len()?;
+                length
+                    .map(|length| {
+                        decoder.read_vec(length, |decoder| TaskIds::decode(decoder, version))
+                    })
+                    .transpose()?
+            };
+            let standby_tasks = {
+                let length = decoder.read_compact_nullable_array_len()?;
+                length
+                    .map(|length| {
+                        decoder.read_vec(length, |decoder| TaskIds::decode(decoder, version))
+                    })
+                    .transpose()?
+            };
+            let warmup_tasks = {
+                let length = decoder.read_compact_nullable_array_len()?;
+                length
+                    .map(|length| {
+                        decoder.read_vec(length, |decoder| TaskIds::decode(decoder, version))
+                    })
+                    .transpose()?
+            };
+            let topology_description_required = if version.value() >= 1 {
+                decoder.read_bool()?
+            } else {
+                false
+            };
+            let endpoint_information_epoch = decoder.read_i32()?;
+            let partitions_by_user_endpoint = {
+                let length = decoder.read_compact_nullable_array_len()?;
+                length
+                    .map(|length| {
+                        decoder.read_vec(length, |decoder| {
+                            EndpointToPartitions::decode(decoder, version)
+                        })
+                    })
+                    .transpose()?
+            };
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
+
+            Ok(Self {
+                throttle_time_ms,
+                error_code,
+                error_message,
+                member_id,
+                member_epoch,
+                heartbeat_interval_ms,
+                acceptable_recovery_lag_legacy,
+                task_offset_interval_ms,
+                acceptable_recovery_lag,
+                status,
+                active_tasks,
+                standby_tasks,
+                warmup_tasks,
+                topology_description_required,
+                endpoint_information_epoch,
+                partitions_by_user_endpoint,
+                unknown_tagged_fields,
+            })
+        }
+    }
+
+    impl KafkaEncode for StreamsGroupHeartbeatResponse {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            crate::message::ensure_encode_version::<Self>(version)?;
+
+            if version.value() > 0 && self.acceptable_recovery_lag_legacy != 0 {
+                return Err(EncodeError::FieldNotRepresentable {
+                    message: Self::NAME,
+                    field: "AcceptableRecoveryLagLegacy",
+                    version,
+                });
+            }
+            if version.value() < 1 && self.topology_description_required {
+                return Err(EncodeError::FieldNotRepresentable {
+                    message: Self::NAME,
+                    field: "TopologyDescriptionRequired",
+                    version,
+                });
+            }
+
+            encoder.write_i32(self.throttle_time_ms)?;
+            encoder.write_i16(self.error_code)?;
+            encoder.write_compact_nullable_string(self.error_message.as_ref())?;
+            encoder.write_compact_string(&self.member_id)?;
+            encoder.write_i32(self.member_epoch)?;
+            encoder.write_i32(self.heartbeat_interval_ms)?;
+            if version.value() <= 0 {
+                encoder.write_i32(self.acceptable_recovery_lag_legacy)?;
+            }
+            encoder.write_i32(self.task_offset_interval_ms)?;
+            if version.value() >= 1 {
+                encoder.write_i64(self.acceptable_recovery_lag)?;
+            }
+            encoder.write_compact_nullable_array_len(self.status.as_ref().map(Vec::len))?;
+            if let Some(values) = &self.status {
+                for value in values {
+                    value.encode(encoder, version)?;
+                }
+            }
+            encoder.write_compact_nullable_array_len(self.active_tasks.as_ref().map(Vec::len))?;
+            if let Some(values) = &self.active_tasks {
+                for value in values {
+                    value.encode(encoder, version)?;
+                }
+            }
+            encoder.write_compact_nullable_array_len(self.standby_tasks.as_ref().map(Vec::len))?;
+            if let Some(values) = &self.standby_tasks {
+                for value in values {
+                    value.encode(encoder, version)?;
+                }
+            }
+            encoder.write_compact_nullable_array_len(self.warmup_tasks.as_ref().map(Vec::len))?;
+            if let Some(values) = &self.warmup_tasks {
+                for value in values {
+                    value.encode(encoder, version)?;
+                }
+            }
+            if version.value() >= 1 {
+                encoder.write_bool(self.topology_description_required)?;
+            }
+            encoder.write_i32(self.endpoint_information_epoch)?;
+            encoder.write_compact_nullable_array_len(
+                self.partitions_by_user_endpoint.as_ref().map(Vec::len),
+            )?;
+            if let Some(values) = &self.partitions_by_user_endpoint {
+                for value in values {
+                    value.encode(encoder, version)?;
+                }
+            }
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: Self::NAME,
+                    version,
+                });
+            }
+
+            Ok(())
+        }
     }
 }
+
+use kafka_wire_core::VersionRange;
+
+use crate::{MessageDescriptor, MessageDirection};
+
+pub use streams_group_heartbeat_request::StreamsGroupHeartbeatRequest;
+pub use streams_group_heartbeat_response::StreamsGroupHeartbeatResponse;
 
 /// Static metadata for [`StreamsGroupHeartbeatRequest`].
 pub const STREAMS_GROUP_HEARTBEAT_REQUEST_DESCRIPTOR: MessageDescriptor = MessageDescriptor::new(

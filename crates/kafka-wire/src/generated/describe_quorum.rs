@@ -5,796 +5,803 @@
 //! Request SHA-256: `353fc7fa21acea57e2b7805fb2d716ff573cc80314fc14db071a460b8a0eb618`.
 //! Response SHA-256: `d30ca71d8a6f40056e80174ea5b7319a281c9edcececfce8a09454683f5fe498`.
 
-use kafka_wire_core::{
-    ApiKey, ApiVersion, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
-    KafkaEncode, StrBytes, TaggedFields, Uuid, VersionRange,
-};
+/// `DescribeQuorumRequest` and every struct it declares, under upstream's own names.
+///
+/// [`DescribeQuorumRequest`](crate::DescribeQuorumRequest) is re-exported flat, so this path never has to be
+/// written to name the message itself.
+pub mod describe_quorum_request {
+    use kafka_wire_core::{
+        ApiKey, ApiVersion, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
+        KafkaEncode, StrBytes, TaggedFields, VersionRange,
+    };
 
-use crate::{
-    KafkaMessage, KafkaRequest, KafkaResponse, MessageDescriptor, MessageDirection,
-    RequestResponsePair,
-};
+    use crate::{KafkaMessage, KafkaRequest, RequestResponsePair};
 
-/// `TopicData` as declared by the `DescribeQuorum` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct DescribeQuorumRequestTopicData {
-    /// The topic name.
-    pub topic_name: StrBytes,
-    /// The partitions to describe.
-    pub partitions: Vec<DescribeQuorumRequestPartitionData>,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
-
-impl DescribeQuorumRequestTopicData {
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 2));
-
-    fn is_flexible(version: ApiVersion) -> bool {
-        Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+    /// `TopicData` as declared by the `DescribeQuorum` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    pub struct TopicData {
+        /// The topic name.
+        pub topic_name: StrBytes,
+        /// The partitions to describe.
+        pub partitions: Vec<PartitionData>,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
     }
-}
 
-impl KafkaDecode for DescribeQuorumRequestTopicData {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        let topic_name = decoder.read_compact_string()?;
-        let partitions = {
-            let length = decoder.read_compact_array_len()?;
-            decoder.read_vec(length, |decoder| {
-                DescribeQuorumRequestPartitionData::decode(decoder, version)
-            })?
-        };
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
+    impl TopicData {
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 2));
 
-        Ok(Self {
-            topic_name,
-            partitions,
-            unknown_tagged_fields,
-        })
-    }
-}
-
-impl KafkaEncode for DescribeQuorumRequestTopicData {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        encoder.write_compact_string(&self.topic_name)?;
-        encoder.write_compact_array_len(self.partitions.len())?;
-        for value in &self.partitions {
-            value.encode(encoder, version)?;
-        }
-
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: "DescribeQuorumRequestTopicData",
-                version,
-            });
-        }
-
-        Ok(())
-    }
-}
-
-/// `PartitionData` as declared by the `DescribeQuorum` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct DescribeQuorumRequestPartitionData {
-    /// The partition index.
-    pub partition_index: i32,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
-
-impl DescribeQuorumRequestPartitionData {
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 2));
-
-    fn is_flexible(version: ApiVersion) -> bool {
-        Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
-    }
-}
-
-impl KafkaDecode for DescribeQuorumRequestPartitionData {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        let partition_index = decoder.read_i32()?;
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
-
-        Ok(Self {
-            partition_index,
-            unknown_tagged_fields,
-        })
-    }
-}
-
-impl KafkaEncode for DescribeQuorumRequestPartitionData {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        encoder.write_i32(self.partition_index)?;
-
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: "DescribeQuorumRequestPartitionData",
-                version,
-            });
-        }
-
-        Ok(())
-    }
-}
-
-/// Request body for the `DescribeQuorum` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct DescribeQuorumRequest {
-    /// The topics to describe.
-    pub topics: Vec<DescribeQuorumRequestTopicData>,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
-
-impl KafkaMessage for DescribeQuorumRequest {
-    const NAME: &'static str = "DescribeQuorumRequest";
-    const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 2);
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 2));
-}
-
-impl KafkaRequest for DescribeQuorumRequest {
-    const API_KEY: ApiKey = ApiKey::new(55);
-}
-
-impl RequestResponsePair for DescribeQuorumRequest {
-    type Response = DescribeQuorumResponse;
-}
-
-impl KafkaDecode for DescribeQuorumRequest {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        crate::message::ensure_decode_version::<Self>(version)?;
-
-        let topics = {
-            let length = decoder.read_compact_array_len()?;
-            decoder.read_vec(length, |decoder| {
-                DescribeQuorumRequestTopicData::decode(decoder, version)
-            })?
-        };
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
-
-        Ok(Self {
-            topics,
-            unknown_tagged_fields,
-        })
-    }
-}
-
-impl KafkaEncode for DescribeQuorumRequest {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        crate::message::ensure_encode_version::<Self>(version)?;
-
-        encoder.write_compact_array_len(self.topics.len())?;
-        for value in &self.topics {
-            value.encode(encoder, version)?;
-        }
-
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: Self::NAME,
-                version,
-            });
-        }
-
-        Ok(())
-    }
-}
-
-/// `ReplicaState` as declared by the `DescribeQuorum` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct DescribeQuorumResponseReplicaState {
-    /// The ID of the replica.
-    pub replica_id: i32,
-    /// The replica directory ID of the replica.
-    pub replica_directory_id: Uuid,
-    /// The last known log end offset of the follower or -1 if it is unknown.
-    pub log_end_offset: i64,
-    /// The last known leader wall clock time time when a follower fetched from the leader. This is reported as -1 both for the current leader or if it is unknown for a voter.
-    pub last_fetch_timestamp: i64,
-    /// The leader wall clock append time of the offset for which the follower made the most recent fetch request. This is reported as the current time for the leader and -1 if unknown for a voter.
-    pub last_caught_up_timestamp: i64,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
-
-impl DescribeQuorumResponseReplicaState {
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 2));
-
-    fn is_flexible(version: ApiVersion) -> bool {
-        Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
-    }
-}
-
-impl Default for DescribeQuorumResponseReplicaState {
-    fn default() -> Self {
-        Self {
-            replica_id: 0,
-            replica_directory_id: Uuid::ZERO,
-            log_end_offset: 0,
-            last_fetch_timestamp: -1,
-            last_caught_up_timestamp: -1,
-            unknown_tagged_fields: TaggedFields::default(),
+        fn is_flexible(version: ApiVersion) -> bool {
+            Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
         }
     }
-}
 
-impl KafkaDecode for DescribeQuorumResponseReplicaState {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        let replica_id = decoder.read_i32()?;
-        let replica_directory_id = if version.value() >= 2 {
-            decoder.read_uuid()?
-        } else {
-            Uuid::ZERO
-        };
-        let log_end_offset = decoder.read_i64()?;
-        let last_fetch_timestamp = if version.value() >= 1 {
-            decoder.read_i64()?
-        } else {
-            -1
-        };
-        let last_caught_up_timestamp = if version.value() >= 1 {
-            decoder.read_i64()?
-        } else {
-            -1
-        };
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
+    impl KafkaDecode for TopicData {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            let topic_name = decoder.read_compact_string()?;
+            let partitions = {
+                let length = decoder.read_compact_array_len()?;
+                decoder.read_vec(length, |decoder| PartitionData::decode(decoder, version))?
+            };
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
 
-        Ok(Self {
-            replica_id,
-            replica_directory_id,
-            log_end_offset,
-            last_fetch_timestamp,
-            last_caught_up_timestamp,
-            unknown_tagged_fields,
-        })
-    }
-}
-
-impl KafkaEncode for DescribeQuorumResponseReplicaState {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        encoder.write_i32(self.replica_id)?;
-        if version.value() >= 2 {
-            encoder.write_uuid(self.replica_directory_id)?;
-        }
-        encoder.write_i64(self.log_end_offset)?;
-        if version.value() >= 1 {
-            encoder.write_i64(self.last_fetch_timestamp)?;
-        }
-        if version.value() >= 1 {
-            encoder.write_i64(self.last_caught_up_timestamp)?;
-        }
-
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: "DescribeQuorumResponseReplicaState",
-                version,
-            });
-        }
-
-        Ok(())
-    }
-}
-
-/// `TopicData` as declared by the `DescribeQuorum` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct DescribeQuorumResponseTopicData {
-    /// The topic name.
-    pub topic_name: StrBytes,
-    /// The partition data.
-    pub partitions: Vec<DescribeQuorumResponsePartitionData>,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
-
-impl DescribeQuorumResponseTopicData {
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 2));
-
-    fn is_flexible(version: ApiVersion) -> bool {
-        Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
-    }
-}
-
-impl KafkaDecode for DescribeQuorumResponseTopicData {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        let topic_name = decoder.read_compact_string()?;
-        let partitions = {
-            let length = decoder.read_compact_array_len()?;
-            decoder.read_vec(length, |decoder| {
-                DescribeQuorumResponsePartitionData::decode(decoder, version)
-            })?
-        };
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
-
-        Ok(Self {
-            topic_name,
-            partitions,
-            unknown_tagged_fields,
-        })
-    }
-}
-
-impl KafkaEncode for DescribeQuorumResponseTopicData {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        encoder.write_compact_string(&self.topic_name)?;
-        encoder.write_compact_array_len(self.partitions.len())?;
-        for value in &self.partitions {
-            value.encode(encoder, version)?;
-        }
-
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: "DescribeQuorumResponseTopicData",
-                version,
-            });
-        }
-
-        Ok(())
-    }
-}
-
-/// `PartitionData` as declared by the `DescribeQuorum` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct DescribeQuorumResponsePartitionData {
-    /// The partition index.
-    pub partition_index: i32,
-    /// The partition error code.
-    pub error_code: i16,
-    /// The error message, or null if there was no error.
-    pub error_message: Option<StrBytes>,
-    /// The ID of the current leader or -1 if the leader is unknown.
-    pub leader_id: i32,
-    /// The latest known leader epoch.
-    pub leader_epoch: i32,
-    /// The high water mark.
-    pub high_watermark: i64,
-    /// The current voters of the partition.
-    pub current_voters: Vec<DescribeQuorumResponseReplicaState>,
-    /// The observers of the partition.
-    pub observers: Vec<DescribeQuorumResponseReplicaState>,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
-
-impl DescribeQuorumResponsePartitionData {
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 2));
-
-    fn is_flexible(version: ApiVersion) -> bool {
-        Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
-    }
-}
-
-impl Default for DescribeQuorumResponsePartitionData {
-    fn default() -> Self {
-        Self {
-            partition_index: 0,
-            error_code: 0,
-            error_message: Some(StrBytes::default()),
-            leader_id: 0,
-            leader_epoch: 0,
-            high_watermark: 0,
-            current_voters: Vec::new(),
-            observers: Vec::new(),
-            unknown_tagged_fields: TaggedFields::default(),
+            Ok(Self {
+                topic_name,
+                partitions,
+                unknown_tagged_fields,
+            })
         }
     }
-}
 
-impl KafkaDecode for DescribeQuorumResponsePartitionData {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        let partition_index = decoder.read_i32()?;
-        let error_code = decoder.read_i16()?;
-        let error_message = if version.value() >= 2 {
-            decoder.read_compact_nullable_string()?
-        } else {
-            Some(StrBytes::default())
-        };
-        let leader_id = decoder.read_i32()?;
-        let leader_epoch = decoder.read_i32()?;
-        let high_watermark = decoder.read_i64()?;
-        let current_voters = {
-            let length = decoder.read_compact_array_len()?;
-            decoder.read_vec(length, |decoder| {
-                DescribeQuorumResponseReplicaState::decode(decoder, version)
-            })?
-        };
-        let observers = {
-            let length = decoder.read_compact_array_len()?;
-            decoder.read_vec(length, |decoder| {
-                DescribeQuorumResponseReplicaState::decode(decoder, version)
-            })?
-        };
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
-
-        Ok(Self {
-            partition_index,
-            error_code,
-            error_message,
-            leader_id,
-            leader_epoch,
-            high_watermark,
-            current_voters,
-            observers,
-            unknown_tagged_fields,
-        })
-    }
-}
-
-impl KafkaEncode for DescribeQuorumResponsePartitionData {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        encoder.write_i32(self.partition_index)?;
-        encoder.write_i16(self.error_code)?;
-        if version.value() >= 2 {
-            encoder.write_compact_nullable_string(self.error_message.as_ref())?;
-        }
-        encoder.write_i32(self.leader_id)?;
-        encoder.write_i32(self.leader_epoch)?;
-        encoder.write_i64(self.high_watermark)?;
-        encoder.write_compact_array_len(self.current_voters.len())?;
-        for value in &self.current_voters {
-            value.encode(encoder, version)?;
-        }
-        encoder.write_compact_array_len(self.observers.len())?;
-        for value in &self.observers {
-            value.encode(encoder, version)?;
-        }
-
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: "DescribeQuorumResponsePartitionData",
-                version,
-            });
-        }
-
-        Ok(())
-    }
-}
-
-/// `Node` as declared by the `DescribeQuorum` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct DescribeQuorumResponseNode {
-    /// The ID of the associated node.
-    pub node_id: i32,
-    /// The listeners of this controller.
-    pub listeners: Vec<DescribeQuorumResponseListener>,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
-
-impl DescribeQuorumResponseNode {
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 2));
-
-    fn is_flexible(version: ApiVersion) -> bool {
-        Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
-    }
-}
-
-impl KafkaDecode for DescribeQuorumResponseNode {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        let node_id = if version.value() >= 2 {
-            decoder.read_i32()?
-        } else {
-            0
-        };
-        let listeners = if version.value() >= 2 {
-            let length = decoder.read_compact_array_len()?;
-            decoder.read_vec(length, |decoder| {
-                DescribeQuorumResponseListener::decode(decoder, version)
-            })?
-        } else {
-            Vec::new()
-        };
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
-
-        Ok(Self {
-            node_id,
-            listeners,
-            unknown_tagged_fields,
-        })
-    }
-}
-
-impl KafkaEncode for DescribeQuorumResponseNode {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        if version.value() >= 2 {
-            encoder.write_i32(self.node_id)?;
-        }
-        if version.value() >= 2 {
-            encoder.write_compact_array_len(self.listeners.len())?;
-            for value in &self.listeners {
+    impl KafkaEncode for TopicData {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            encoder.write_compact_string(&self.topic_name)?;
+            encoder.write_compact_array_len(self.partitions.len())?;
+            for value in &self.partitions {
                 value.encode(encoder, version)?;
             }
-        }
 
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: "DescribeQuorumResponseNode",
-                version,
-            });
-        }
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "TopicData",
+                    version,
+                });
+            }
 
-        Ok(())
-    }
-}
-
-/// `Listener` as declared by the `DescribeQuorum` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct DescribeQuorumResponseListener {
-    /// The name of the endpoint.
-    pub name: StrBytes,
-    /// The hostname.
-    pub host: StrBytes,
-    /// The port.
-    pub port: u16,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
-
-impl DescribeQuorumResponseListener {
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 2));
-
-    fn is_flexible(version: ApiVersion) -> bool {
-        Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
-    }
-}
-
-impl KafkaDecode for DescribeQuorumResponseListener {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        let name = if version.value() >= 2 {
-            decoder.read_compact_string()?
-        } else {
-            StrBytes::default()
-        };
-        let host = if version.value() >= 2 {
-            decoder.read_compact_string()?
-        } else {
-            StrBytes::default()
-        };
-        let port = if version.value() >= 2 {
-            decoder.read_u16()?
-        } else {
-            0
-        };
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
-
-        Ok(Self {
-            name,
-            host,
-            port,
-            unknown_tagged_fields,
-        })
-    }
-}
-
-impl KafkaEncode for DescribeQuorumResponseListener {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        if version.value() >= 2 {
-            encoder.write_compact_string(&self.name)?;
-        }
-        if version.value() >= 2 {
-            encoder.write_compact_string(&self.host)?;
-        }
-        if version.value() >= 2 {
-            encoder.write_u16(self.port)?;
-        }
-
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: "DescribeQuorumResponseListener",
-                version,
-            });
-        }
-
-        Ok(())
-    }
-}
-
-/// Response body for the `DescribeQuorum` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct DescribeQuorumResponse {
-    /// The top level error code.
-    pub error_code: i16,
-    /// The error message, or null if there was no error.
-    pub error_message: Option<StrBytes>,
-    /// The response from the describe quorum API.
-    pub topics: Vec<DescribeQuorumResponseTopicData>,
-    /// The nodes in the quorum.
-    pub nodes: Vec<DescribeQuorumResponseNode>,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
-
-impl Default for DescribeQuorumResponse {
-    fn default() -> Self {
-        Self {
-            error_code: 0,
-            error_message: Some(StrBytes::default()),
-            topics: Vec::new(),
-            nodes: Vec::new(),
-            unknown_tagged_fields: TaggedFields::default(),
+            Ok(())
         }
     }
-}
 
-impl KafkaMessage for DescribeQuorumResponse {
-    const NAME: &'static str = "DescribeQuorumResponse";
-    const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 2);
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 2));
-}
-
-impl KafkaResponse for DescribeQuorumResponse {
-    const API_KEY: ApiKey = ApiKey::new(55);
-}
-
-impl KafkaDecode for DescribeQuorumResponse {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        crate::message::ensure_decode_version::<Self>(version)?;
-
-        let error_code = decoder.read_i16()?;
-        let error_message = if version.value() >= 2 {
-            decoder.read_compact_nullable_string()?
-        } else {
-            Some(StrBytes::default())
-        };
-        let topics = {
-            let length = decoder.read_compact_array_len()?;
-            decoder.read_vec(length, |decoder| {
-                DescribeQuorumResponseTopicData::decode(decoder, version)
-            })?
-        };
-        let nodes = if version.value() >= 2 {
-            let length = decoder.read_compact_array_len()?;
-            decoder.read_vec(length, |decoder| {
-                DescribeQuorumResponseNode::decode(decoder, version)
-            })?
-        } else {
-            Vec::new()
-        };
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
-
-        Ok(Self {
-            error_code,
-            error_message,
-            topics,
-            nodes,
-            unknown_tagged_fields,
-        })
+    /// `PartitionData` as declared by the `DescribeQuorum` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    pub struct PartitionData {
+        /// The partition index.
+        pub partition_index: i32,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
     }
-}
 
-impl KafkaEncode for DescribeQuorumResponse {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        crate::message::ensure_encode_version::<Self>(version)?;
+    impl PartitionData {
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 2));
 
-        if version.value() < 2 && !self.nodes.is_empty() {
-            return Err(EncodeError::FieldNotRepresentable {
-                message: Self::NAME,
-                field: "Nodes",
-                version,
-            });
+        fn is_flexible(version: ApiVersion) -> bool {
+            Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
         }
+    }
 
-        encoder.write_i16(self.error_code)?;
-        if version.value() >= 2 {
-            encoder.write_compact_nullable_string(self.error_message.as_ref())?;
+    impl KafkaDecode for PartitionData {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            let partition_index = decoder.read_i32()?;
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
+
+            Ok(Self {
+                partition_index,
+                unknown_tagged_fields,
+            })
         }
-        encoder.write_compact_array_len(self.topics.len())?;
-        for value in &self.topics {
-            value.encode(encoder, version)?;
+    }
+
+    impl KafkaEncode for PartitionData {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            encoder.write_i32(self.partition_index)?;
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "PartitionData",
+                    version,
+                });
+            }
+
+            Ok(())
         }
-        if version.value() >= 2 {
-            encoder.write_compact_array_len(self.nodes.len())?;
-            for value in &self.nodes {
+    }
+
+    /// Request body for the `DescribeQuorum` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    pub struct DescribeQuorumRequest {
+        /// The topics to describe.
+        pub topics: Vec<TopicData>,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl KafkaMessage for DescribeQuorumRequest {
+        const NAME: &'static str = "DescribeQuorumRequest";
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 2);
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 2));
+    }
+
+    impl KafkaRequest for DescribeQuorumRequest {
+        const API_KEY: ApiKey = ApiKey::new(55);
+    }
+
+    impl RequestResponsePair for DescribeQuorumRequest {
+        type Response = super::DescribeQuorumResponse;
+    }
+
+    impl KafkaDecode for DescribeQuorumRequest {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            crate::message::ensure_decode_version::<Self>(version)?;
+
+            let topics = {
+                let length = decoder.read_compact_array_len()?;
+                decoder.read_vec(length, |decoder| TopicData::decode(decoder, version))?
+            };
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
+
+            Ok(Self {
+                topics,
+                unknown_tagged_fields,
+            })
+        }
+    }
+
+    impl KafkaEncode for DescribeQuorumRequest {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            crate::message::ensure_encode_version::<Self>(version)?;
+
+            encoder.write_compact_array_len(self.topics.len())?;
+            for value in &self.topics {
                 value.encode(encoder, version)?;
             }
-        }
 
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: Self::NAME,
-                version,
-            });
-        }
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: Self::NAME,
+                    version,
+                });
+            }
 
-        Ok(())
+            Ok(())
+        }
     }
 }
+
+/// `DescribeQuorumResponse` and every struct it declares, under upstream's own names.
+///
+/// [`DescribeQuorumResponse`](crate::DescribeQuorumResponse) is re-exported flat, so this path never has to be
+/// written to name the message itself.
+pub mod describe_quorum_response {
+    use kafka_wire_core::{
+        ApiKey, ApiVersion, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
+        KafkaEncode, StrBytes, TaggedFields, Uuid, VersionRange,
+    };
+
+    use crate::{KafkaMessage, KafkaResponse};
+
+    /// `ReplicaState` as declared by the `DescribeQuorum` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Eq, PartialEq)]
+    pub struct ReplicaState {
+        /// The ID of the replica.
+        pub replica_id: i32,
+        /// The replica directory ID of the replica.
+        pub replica_directory_id: Uuid,
+        /// The last known log end offset of the follower or -1 if it is unknown.
+        pub log_end_offset: i64,
+        /// The last known leader wall clock time time when a follower fetched from the leader. This is reported as -1 both for the current leader or if it is unknown for a voter.
+        pub last_fetch_timestamp: i64,
+        /// The leader wall clock append time of the offset for which the follower made the most recent fetch request. This is reported as the current time for the leader and -1 if unknown for a voter.
+        pub last_caught_up_timestamp: i64,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl ReplicaState {
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 2));
+
+        fn is_flexible(version: ApiVersion) -> bool {
+            Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+        }
+    }
+
+    impl Default for ReplicaState {
+        fn default() -> Self {
+            Self {
+                replica_id: 0,
+                replica_directory_id: Uuid::ZERO,
+                log_end_offset: 0,
+                last_fetch_timestamp: -1,
+                last_caught_up_timestamp: -1,
+                unknown_tagged_fields: TaggedFields::default(),
+            }
+        }
+    }
+
+    impl KafkaDecode for ReplicaState {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            let replica_id = decoder.read_i32()?;
+            let replica_directory_id = if version.value() >= 2 {
+                decoder.read_uuid()?
+            } else {
+                Uuid::ZERO
+            };
+            let log_end_offset = decoder.read_i64()?;
+            let last_fetch_timestamp = if version.value() >= 1 {
+                decoder.read_i64()?
+            } else {
+                -1
+            };
+            let last_caught_up_timestamp = if version.value() >= 1 {
+                decoder.read_i64()?
+            } else {
+                -1
+            };
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
+
+            Ok(Self {
+                replica_id,
+                replica_directory_id,
+                log_end_offset,
+                last_fetch_timestamp,
+                last_caught_up_timestamp,
+                unknown_tagged_fields,
+            })
+        }
+    }
+
+    impl KafkaEncode for ReplicaState {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            encoder.write_i32(self.replica_id)?;
+            if version.value() >= 2 {
+                encoder.write_uuid(self.replica_directory_id)?;
+            }
+            encoder.write_i64(self.log_end_offset)?;
+            if version.value() >= 1 {
+                encoder.write_i64(self.last_fetch_timestamp)?;
+            }
+            if version.value() >= 1 {
+                encoder.write_i64(self.last_caught_up_timestamp)?;
+            }
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "ReplicaState",
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+
+    /// `TopicData` as declared by the `DescribeQuorum` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    pub struct TopicData {
+        /// The topic name.
+        pub topic_name: StrBytes,
+        /// The partition data.
+        pub partitions: Vec<PartitionData>,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl TopicData {
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 2));
+
+        fn is_flexible(version: ApiVersion) -> bool {
+            Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+        }
+    }
+
+    impl KafkaDecode for TopicData {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            let topic_name = decoder.read_compact_string()?;
+            let partitions = {
+                let length = decoder.read_compact_array_len()?;
+                decoder.read_vec(length, |decoder| PartitionData::decode(decoder, version))?
+            };
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
+
+            Ok(Self {
+                topic_name,
+                partitions,
+                unknown_tagged_fields,
+            })
+        }
+    }
+
+    impl KafkaEncode for TopicData {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            encoder.write_compact_string(&self.topic_name)?;
+            encoder.write_compact_array_len(self.partitions.len())?;
+            for value in &self.partitions {
+                value.encode(encoder, version)?;
+            }
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "TopicData",
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+
+    /// `PartitionData` as declared by the `DescribeQuorum` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Eq, PartialEq)]
+    pub struct PartitionData {
+        /// The partition index.
+        pub partition_index: i32,
+        /// The partition error code.
+        pub error_code: i16,
+        /// The error message, or null if there was no error.
+        pub error_message: Option<StrBytes>,
+        /// The ID of the current leader or -1 if the leader is unknown.
+        pub leader_id: i32,
+        /// The latest known leader epoch.
+        pub leader_epoch: i32,
+        /// The high water mark.
+        pub high_watermark: i64,
+        /// The current voters of the partition.
+        pub current_voters: Vec<ReplicaState>,
+        /// The observers of the partition.
+        pub observers: Vec<ReplicaState>,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl PartitionData {
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 2));
+
+        fn is_flexible(version: ApiVersion) -> bool {
+            Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+        }
+    }
+
+    impl Default for PartitionData {
+        fn default() -> Self {
+            Self {
+                partition_index: 0,
+                error_code: 0,
+                error_message: Some(StrBytes::default()),
+                leader_id: 0,
+                leader_epoch: 0,
+                high_watermark: 0,
+                current_voters: Vec::new(),
+                observers: Vec::new(),
+                unknown_tagged_fields: TaggedFields::default(),
+            }
+        }
+    }
+
+    impl KafkaDecode for PartitionData {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            let partition_index = decoder.read_i32()?;
+            let error_code = decoder.read_i16()?;
+            let error_message = if version.value() >= 2 {
+                decoder.read_compact_nullable_string()?
+            } else {
+                Some(StrBytes::default())
+            };
+            let leader_id = decoder.read_i32()?;
+            let leader_epoch = decoder.read_i32()?;
+            let high_watermark = decoder.read_i64()?;
+            let current_voters = {
+                let length = decoder.read_compact_array_len()?;
+                decoder.read_vec(length, |decoder| ReplicaState::decode(decoder, version))?
+            };
+            let observers = {
+                let length = decoder.read_compact_array_len()?;
+                decoder.read_vec(length, |decoder| ReplicaState::decode(decoder, version))?
+            };
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
+
+            Ok(Self {
+                partition_index,
+                error_code,
+                error_message,
+                leader_id,
+                leader_epoch,
+                high_watermark,
+                current_voters,
+                observers,
+                unknown_tagged_fields,
+            })
+        }
+    }
+
+    impl KafkaEncode for PartitionData {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            encoder.write_i32(self.partition_index)?;
+            encoder.write_i16(self.error_code)?;
+            if version.value() >= 2 {
+                encoder.write_compact_nullable_string(self.error_message.as_ref())?;
+            }
+            encoder.write_i32(self.leader_id)?;
+            encoder.write_i32(self.leader_epoch)?;
+            encoder.write_i64(self.high_watermark)?;
+            encoder.write_compact_array_len(self.current_voters.len())?;
+            for value in &self.current_voters {
+                value.encode(encoder, version)?;
+            }
+            encoder.write_compact_array_len(self.observers.len())?;
+            for value in &self.observers {
+                value.encode(encoder, version)?;
+            }
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "PartitionData",
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+
+    /// `Node` as declared by the `DescribeQuorum` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    pub struct Node {
+        /// The ID of the associated node.
+        pub node_id: i32,
+        /// The listeners of this controller.
+        pub listeners: Vec<Listener>,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl Node {
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 2));
+
+        fn is_flexible(version: ApiVersion) -> bool {
+            Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+        }
+    }
+
+    impl KafkaDecode for Node {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            let node_id = if version.value() >= 2 {
+                decoder.read_i32()?
+            } else {
+                0
+            };
+            let listeners = if version.value() >= 2 {
+                let length = decoder.read_compact_array_len()?;
+                decoder.read_vec(length, |decoder| Listener::decode(decoder, version))?
+            } else {
+                Vec::new()
+            };
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
+
+            Ok(Self {
+                node_id,
+                listeners,
+                unknown_tagged_fields,
+            })
+        }
+    }
+
+    impl KafkaEncode for Node {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            if version.value() >= 2 {
+                encoder.write_i32(self.node_id)?;
+            }
+            if version.value() >= 2 {
+                encoder.write_compact_array_len(self.listeners.len())?;
+                for value in &self.listeners {
+                    value.encode(encoder, version)?;
+                }
+            }
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "Node",
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+
+    /// `Listener` as declared by the `DescribeQuorum` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    pub struct Listener {
+        /// The name of the endpoint.
+        pub name: StrBytes,
+        /// The hostname.
+        pub host: StrBytes,
+        /// The port.
+        pub port: u16,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl Listener {
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 2));
+
+        fn is_flexible(version: ApiVersion) -> bool {
+            Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+        }
+    }
+
+    impl KafkaDecode for Listener {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            let name = if version.value() >= 2 {
+                decoder.read_compact_string()?
+            } else {
+                StrBytes::default()
+            };
+            let host = if version.value() >= 2 {
+                decoder.read_compact_string()?
+            } else {
+                StrBytes::default()
+            };
+            let port = if version.value() >= 2 {
+                decoder.read_u16()?
+            } else {
+                0
+            };
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
+
+            Ok(Self {
+                name,
+                host,
+                port,
+                unknown_tagged_fields,
+            })
+        }
+    }
+
+    impl KafkaEncode for Listener {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            if version.value() >= 2 {
+                encoder.write_compact_string(&self.name)?;
+            }
+            if version.value() >= 2 {
+                encoder.write_compact_string(&self.host)?;
+            }
+            if version.value() >= 2 {
+                encoder.write_u16(self.port)?;
+            }
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "Listener",
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+
+    /// Response body for the `DescribeQuorum` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Eq, PartialEq)]
+    pub struct DescribeQuorumResponse {
+        /// The top level error code.
+        pub error_code: i16,
+        /// The error message, or null if there was no error.
+        pub error_message: Option<StrBytes>,
+        /// The response from the describe quorum API.
+        pub topics: Vec<TopicData>,
+        /// The nodes in the quorum.
+        pub nodes: Vec<Node>,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl Default for DescribeQuorumResponse {
+        fn default() -> Self {
+            Self {
+                error_code: 0,
+                error_message: Some(StrBytes::default()),
+                topics: Vec::new(),
+                nodes: Vec::new(),
+                unknown_tagged_fields: TaggedFields::default(),
+            }
+        }
+    }
+
+    impl KafkaMessage for DescribeQuorumResponse {
+        const NAME: &'static str = "DescribeQuorumResponse";
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 2);
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 2));
+    }
+
+    impl KafkaResponse for DescribeQuorumResponse {
+        const API_KEY: ApiKey = ApiKey::new(55);
+    }
+
+    impl KafkaDecode for DescribeQuorumResponse {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            crate::message::ensure_decode_version::<Self>(version)?;
+
+            let error_code = decoder.read_i16()?;
+            let error_message = if version.value() >= 2 {
+                decoder.read_compact_nullable_string()?
+            } else {
+                Some(StrBytes::default())
+            };
+            let topics = {
+                let length = decoder.read_compact_array_len()?;
+                decoder.read_vec(length, |decoder| TopicData::decode(decoder, version))?
+            };
+            let nodes = if version.value() >= 2 {
+                let length = decoder.read_compact_array_len()?;
+                decoder.read_vec(length, |decoder| Node::decode(decoder, version))?
+            } else {
+                Vec::new()
+            };
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
+
+            Ok(Self {
+                error_code,
+                error_message,
+                topics,
+                nodes,
+                unknown_tagged_fields,
+            })
+        }
+    }
+
+    impl KafkaEncode for DescribeQuorumResponse {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            crate::message::ensure_encode_version::<Self>(version)?;
+
+            if version.value() < 2 && !self.nodes.is_empty() {
+                return Err(EncodeError::FieldNotRepresentable {
+                    message: Self::NAME,
+                    field: "Nodes",
+                    version,
+                });
+            }
+
+            encoder.write_i16(self.error_code)?;
+            if version.value() >= 2 {
+                encoder.write_compact_nullable_string(self.error_message.as_ref())?;
+            }
+            encoder.write_compact_array_len(self.topics.len())?;
+            for value in &self.topics {
+                value.encode(encoder, version)?;
+            }
+            if version.value() >= 2 {
+                encoder.write_compact_array_len(self.nodes.len())?;
+                for value in &self.nodes {
+                    value.encode(encoder, version)?;
+                }
+            }
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: Self::NAME,
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+}
+
+use kafka_wire_core::VersionRange;
+
+use crate::{MessageDescriptor, MessageDirection};
+
+pub use describe_quorum_request::DescribeQuorumRequest;
+pub use describe_quorum_response::DescribeQuorumResponse;
 
 /// Static metadata for [`DescribeQuorumRequest`].
 pub const DESCRIBE_QUORUM_REQUEST_DESCRIPTOR: MessageDescriptor = MessageDescriptor::new(

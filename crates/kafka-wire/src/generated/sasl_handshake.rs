@@ -5,116 +5,139 @@
 //! Request SHA-256: `2316215be78ce0bc79f5ce08f825cf317f3c104ac38ee609581454de7634df47`.
 //! Response SHA-256: `a7aa00f2fa01ecf31674a39a243bd4d2d284c9cd1993ce6501f93b57c1f90ba9`.
 
-use kafka_wire_core::{
-    ApiKey, ApiVersion, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
-    KafkaEncode, StrBytes, VersionRange,
-};
+/// `SaslHandshakeRequest` and every struct it declares, under upstream's own names.
+///
+/// [`SaslHandshakeRequest`](crate::SaslHandshakeRequest) is re-exported flat, so this path never has to be
+/// written to name the message itself.
+pub mod sasl_handshake_request {
+    use kafka_wire_core::{
+        ApiKey, ApiVersion, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
+        KafkaEncode, StrBytes, VersionRange,
+    };
 
-use crate::{
-    KafkaMessage, KafkaRequest, KafkaResponse, MessageDescriptor, MessageDirection,
-    RequestResponsePair,
-};
+    use crate::{KafkaMessage, KafkaRequest, RequestResponsePair};
 
-/// Request body for the `SaslHandshake` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct SaslHandshakeRequest {
-    /// The SASL mechanism chosen by the client.
-    pub mechanism: StrBytes,
-}
-
-impl KafkaMessage for SaslHandshakeRequest {
-    const NAME: &'static str = "SaslHandshakeRequest";
-    const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 1);
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = None;
-}
-
-impl KafkaRequest for SaslHandshakeRequest {
-    const API_KEY: ApiKey = ApiKey::new(17);
-}
-
-impl RequestResponsePair for SaslHandshakeRequest {
-    type Response = SaslHandshakeResponse;
-}
-
-impl KafkaDecode for SaslHandshakeRequest {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        crate::message::ensure_decode_version::<Self>(version)?;
-
-        let mechanism = decoder.read_string()?;
-
-        Ok(Self { mechanism })
+    /// Request body for the `SaslHandshake` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    pub struct SaslHandshakeRequest {
+        /// The SASL mechanism chosen by the client.
+        pub mechanism: StrBytes,
     }
-}
 
-impl KafkaEncode for SaslHandshakeRequest {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        crate::message::ensure_encode_version::<Self>(version)?;
-
-        encoder.write_string(&self.mechanism)?;
-
-        Ok(())
+    impl KafkaMessage for SaslHandshakeRequest {
+        const NAME: &'static str = "SaslHandshakeRequest";
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 1);
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = None;
     }
-}
 
-/// Response body for the `SaslHandshake` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct SaslHandshakeResponse {
-    /// The error code, or 0 if there was no error.
-    pub error_code: i16,
-    /// The mechanisms enabled in the server.
-    pub mechanisms: Vec<StrBytes>,
-}
-
-impl KafkaMessage for SaslHandshakeResponse {
-    const NAME: &'static str = "SaslHandshakeResponse";
-    const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 1);
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = None;
-}
-
-impl KafkaResponse for SaslHandshakeResponse {
-    const API_KEY: ApiKey = ApiKey::new(17);
-}
-
-impl KafkaDecode for SaslHandshakeResponse {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        crate::message::ensure_decode_version::<Self>(version)?;
-
-        let error_code = decoder.read_i16()?;
-        let mechanisms = {
-            let length = decoder.read_array_len()?;
-            decoder.read_vec(length, Decoder::read_string)?
-        };
-
-        Ok(Self {
-            error_code,
-            mechanisms,
-        })
+    impl KafkaRequest for SaslHandshakeRequest {
+        const API_KEY: ApiKey = ApiKey::new(17);
     }
-}
 
-impl KafkaEncode for SaslHandshakeResponse {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        crate::message::ensure_encode_version::<Self>(version)?;
+    impl RequestResponsePair for SaslHandshakeRequest {
+        type Response = super::SaslHandshakeResponse;
+    }
 
-        encoder.write_i16(self.error_code)?;
-        encoder.write_array_len(self.mechanisms.len())?;
-        for value in &self.mechanisms {
-            encoder.write_string(value)?;
+    impl KafkaDecode for SaslHandshakeRequest {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            crate::message::ensure_decode_version::<Self>(version)?;
+
+            let mechanism = decoder.read_string()?;
+
+            Ok(Self { mechanism })
         }
+    }
 
-        Ok(())
+    impl KafkaEncode for SaslHandshakeRequest {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            crate::message::ensure_encode_version::<Self>(version)?;
+
+            encoder.write_string(&self.mechanism)?;
+
+            Ok(())
+        }
     }
 }
+
+/// `SaslHandshakeResponse` and every struct it declares, under upstream's own names.
+///
+/// [`SaslHandshakeResponse`](crate::SaslHandshakeResponse) is re-exported flat, so this path never has to be
+/// written to name the message itself.
+pub mod sasl_handshake_response {
+    use kafka_wire_core::{
+        ApiKey, ApiVersion, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
+        KafkaEncode, StrBytes, VersionRange,
+    };
+
+    use crate::{KafkaMessage, KafkaResponse};
+
+    /// Response body for the `SaslHandshake` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    pub struct SaslHandshakeResponse {
+        /// The error code, or 0 if there was no error.
+        pub error_code: i16,
+        /// The mechanisms enabled in the server.
+        pub mechanisms: Vec<StrBytes>,
+    }
+
+    impl KafkaMessage for SaslHandshakeResponse {
+        const NAME: &'static str = "SaslHandshakeResponse";
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 1);
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = None;
+    }
+
+    impl KafkaResponse for SaslHandshakeResponse {
+        const API_KEY: ApiKey = ApiKey::new(17);
+    }
+
+    impl KafkaDecode for SaslHandshakeResponse {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            crate::message::ensure_decode_version::<Self>(version)?;
+
+            let error_code = decoder.read_i16()?;
+            let mechanisms = {
+                let length = decoder.read_array_len()?;
+                decoder.read_vec(length, Decoder::read_string)?
+            };
+
+            Ok(Self {
+                error_code,
+                mechanisms,
+            })
+        }
+    }
+
+    impl KafkaEncode for SaslHandshakeResponse {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            crate::message::ensure_encode_version::<Self>(version)?;
+
+            encoder.write_i16(self.error_code)?;
+            encoder.write_array_len(self.mechanisms.len())?;
+            for value in &self.mechanisms {
+                encoder.write_string(value)?;
+            }
+
+            Ok(())
+        }
+    }
+}
+
+use kafka_wire_core::VersionRange;
+
+use crate::{MessageDescriptor, MessageDirection};
+
+pub use sasl_handshake_request::SaslHandshakeRequest;
+pub use sasl_handshake_response::SaslHandshakeResponse;
 
 /// Static metadata for [`SaslHandshakeRequest`].
 pub const SASL_HANDSHAKE_REQUEST_DESCRIPTOR: MessageDescriptor = MessageDescriptor::new(

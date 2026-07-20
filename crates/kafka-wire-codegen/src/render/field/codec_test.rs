@@ -209,7 +209,7 @@ fn fixed_width_cells() -> Vec<Cell> {
             ty: struct_type("TopicData"),
             nullable: false,
             flexible: "none",
-            read: "ProbeRequestTopicData::decode(decoder, version)?",
+            read: "TopicData::decode(decoder, version)?",
             write: "self.probe.encode(encoder, version)?;",
         },
     ]

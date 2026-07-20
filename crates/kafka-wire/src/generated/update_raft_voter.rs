@@ -5,419 +5,438 @@
 //! Request SHA-256: `4a7a157d482b6c76cecb1237e58243463c184ccc0c05e4c8818ca35cbb0eda52`.
 //! Response SHA-256: `eee0ca272b4853f79e047cd681fafeab6ee90eed6f43f2434c570b799bb4855e`.
 
-use kafka_wire_core::{
-    ApiKey, ApiVersion, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
-    KafkaEncode, KnownTags, StrBytes, TagOutcome, TaggedFields, Uuid, VersionRange,
-};
+/// `UpdateRaftVoterRequest` and every struct it declares, under upstream's own names.
+///
+/// [`UpdateRaftVoterRequest`](crate::UpdateRaftVoterRequest) is re-exported flat, so this path never has to be
+/// written to name the message itself.
+pub mod update_raft_voter_request {
+    use kafka_wire_core::{
+        ApiKey, ApiVersion, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
+        KafkaEncode, StrBytes, TaggedFields, Uuid, VersionRange,
+    };
 
-use crate::{
-    KafkaMessage, KafkaRequest, KafkaResponse, MessageDescriptor, MessageDirection,
-    RequestResponsePair,
-};
+    use crate::{KafkaMessage, KafkaRequest, RequestResponsePair};
 
-/// `Listener` as declared by the `UpdateRaftVoter` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct UpdateRaftVoterRequestListener {
-    /// The name of the endpoint.
-    pub name: StrBytes,
-    /// The hostname.
-    pub host: StrBytes,
-    /// The port.
-    pub port: u16,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
-
-impl UpdateRaftVoterRequestListener {
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 0));
-
-    fn is_flexible(version: ApiVersion) -> bool {
-        Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+    /// `Listener` as declared by the `UpdateRaftVoter` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    pub struct Listener {
+        /// The name of the endpoint.
+        pub name: StrBytes,
+        /// The hostname.
+        pub host: StrBytes,
+        /// The port.
+        pub port: u16,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
     }
-}
 
-impl KafkaDecode for UpdateRaftVoterRequestListener {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        let name = decoder.read_compact_string()?;
-        let host = decoder.read_compact_string()?;
-        let port = decoder.read_u16()?;
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
+    impl Listener {
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 0));
 
-        Ok(Self {
-            name,
-            host,
-            port,
-            unknown_tagged_fields,
-        })
-    }
-}
-
-impl KafkaEncode for UpdateRaftVoterRequestListener {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        encoder.write_compact_string(&self.name)?;
-        encoder.write_compact_string(&self.host)?;
-        encoder.write_u16(self.port)?;
-
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: "UpdateRaftVoterRequestListener",
-                version,
-            });
-        }
-
-        Ok(())
-    }
-}
-
-/// `KRaftVersionFeature` as declared by the `UpdateRaftVoter` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct UpdateRaftVoterRequestKRaftVersionFeature {
-    /// The minimum supported `KRaft` protocol version.
-    pub min_supported_version: i16,
-    /// The maximum supported `KRaft` protocol version.
-    pub max_supported_version: i16,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
-
-impl UpdateRaftVoterRequestKRaftVersionFeature {
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 0));
-
-    fn is_flexible(version: ApiVersion) -> bool {
-        Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
-    }
-}
-
-impl KafkaDecode for UpdateRaftVoterRequestKRaftVersionFeature {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        let min_supported_version = decoder.read_i16()?;
-        let max_supported_version = decoder.read_i16()?;
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
-
-        Ok(Self {
-            min_supported_version,
-            max_supported_version,
-            unknown_tagged_fields,
-        })
-    }
-}
-
-impl KafkaEncode for UpdateRaftVoterRequestKRaftVersionFeature {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        encoder.write_i16(self.min_supported_version)?;
-        encoder.write_i16(self.max_supported_version)?;
-
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: "UpdateRaftVoterRequestKRaftVersionFeature",
-                version,
-            });
-        }
-
-        Ok(())
-    }
-}
-
-/// Request body for the `UpdateRaftVoter` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct UpdateRaftVoterRequest {
-    /// The cluster id.
-    pub cluster_id: Option<StrBytes>,
-    /// The current leader epoch of the partition, -1 for unknown leader epoch.
-    pub current_leader_epoch: i32,
-    /// The replica id of the voter getting updated in the topic partition.
-    pub voter_id: i32,
-    /// The directory id of the voter getting updated in the topic partition.
-    pub voter_directory_id: Uuid,
-    /// The endpoint that can be used to communicate with the leader.
-    pub listeners: Vec<UpdateRaftVoterRequestListener>,
-    /// The range of versions of the protocol that the replica supports.
-    pub k_raft_version_feature: UpdateRaftVoterRequestKRaftVersionFeature,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
-
-impl Default for UpdateRaftVoterRequest {
-    fn default() -> Self {
-        Self {
-            cluster_id: Some(StrBytes::default()),
-            current_leader_epoch: 0,
-            voter_id: 0,
-            voter_directory_id: Uuid::ZERO,
-            listeners: Vec::new(),
-            k_raft_version_feature: UpdateRaftVoterRequestKRaftVersionFeature::default(),
-            unknown_tagged_fields: TaggedFields::default(),
+        fn is_flexible(version: ApiVersion) -> bool {
+            Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
         }
     }
-}
 
-impl KafkaMessage for UpdateRaftVoterRequest {
-    const NAME: &'static str = "UpdateRaftVoterRequest";
-    const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 0);
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 0));
-}
+    impl KafkaDecode for Listener {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            let name = decoder.read_compact_string()?;
+            let host = decoder.read_compact_string()?;
+            let port = decoder.read_u16()?;
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
 
-impl KafkaRequest for UpdateRaftVoterRequest {
-    const API_KEY: ApiKey = ApiKey::new(82);
-}
-
-impl RequestResponsePair for UpdateRaftVoterRequest {
-    type Response = UpdateRaftVoterResponse;
-}
-
-impl KafkaDecode for UpdateRaftVoterRequest {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        crate::message::ensure_decode_version::<Self>(version)?;
-
-        let cluster_id = decoder.read_compact_nullable_string()?;
-        let current_leader_epoch = decoder.read_i32()?;
-        let voter_id = decoder.read_i32()?;
-        let voter_directory_id = decoder.read_uuid()?;
-        let listeners = {
-            let length = decoder.read_compact_array_len()?;
-            decoder.read_vec(length, |decoder| {
-                UpdateRaftVoterRequestListener::decode(decoder, version)
-            })?
-        };
-        let k_raft_version_feature =
-            UpdateRaftVoterRequestKRaftVersionFeature::decode(decoder, version)?;
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
-
-        Ok(Self {
-            cluster_id,
-            current_leader_epoch,
-            voter_id,
-            voter_directory_id,
-            listeners,
-            k_raft_version_feature,
-            unknown_tagged_fields,
-        })
-    }
-}
-
-impl KafkaEncode for UpdateRaftVoterRequest {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        crate::message::ensure_encode_version::<Self>(version)?;
-
-        encoder.write_compact_nullable_string(self.cluster_id.as_ref())?;
-        encoder.write_i32(self.current_leader_epoch)?;
-        encoder.write_i32(self.voter_id)?;
-        encoder.write_uuid(self.voter_directory_id)?;
-        encoder.write_compact_array_len(self.listeners.len())?;
-        for value in &self.listeners {
-            value.encode(encoder, version)?;
-        }
-        self.k_raft_version_feature.encode(encoder, version)?;
-
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: Self::NAME,
-                version,
-            });
-        }
-
-        Ok(())
-    }
-}
-
-/// `CurrentLeader` as declared by the `UpdateRaftVoter` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct UpdateRaftVoterResponseCurrentLeader {
-    /// The replica id of the current leader or -1 if the leader is unknown.
-    pub leader_id: i32,
-    /// The latest known leader epoch.
-    pub leader_epoch: i32,
-    /// The node's hostname.
-    pub host: StrBytes,
-    /// The node's port.
-    pub port: i32,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
-
-impl UpdateRaftVoterResponseCurrentLeader {
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 0));
-
-    fn is_flexible(version: ApiVersion) -> bool {
-        Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
-    }
-}
-
-impl Default for UpdateRaftVoterResponseCurrentLeader {
-    fn default() -> Self {
-        Self {
-            leader_id: -1,
-            leader_epoch: -1,
-            host: StrBytes::default(),
-            port: 0,
-            unknown_tagged_fields: TaggedFields::default(),
+            Ok(Self {
+                name,
+                host,
+                port,
+                unknown_tagged_fields,
+            })
         }
     }
-}
 
-impl KafkaDecode for UpdateRaftVoterResponseCurrentLeader {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        let leader_id = decoder.read_i32()?;
-        let leader_epoch = decoder.read_i32()?;
-        let host = decoder.read_compact_string()?;
-        let port = decoder.read_i32()?;
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
+    impl KafkaEncode for Listener {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            encoder.write_compact_string(&self.name)?;
+            encoder.write_compact_string(&self.host)?;
+            encoder.write_u16(self.port)?;
 
-        Ok(Self {
-            leader_id,
-            leader_epoch,
-            host,
-            port,
-            unknown_tagged_fields,
-        })
-    }
-}
-
-impl KafkaEncode for UpdateRaftVoterResponseCurrentLeader {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        encoder.write_i32(self.leader_id)?;
-        encoder.write_i32(self.leader_epoch)?;
-        encoder.write_compact_string(&self.host)?;
-        encoder.write_i32(self.port)?;
-
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: "UpdateRaftVoterResponseCurrentLeader",
-                version,
-            });
-        }
-
-        Ok(())
-    }
-}
-
-/// Response body for the `UpdateRaftVoter` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct UpdateRaftVoterResponse {
-    /// The duration in milliseconds for which the request was throttled due to a quota violation, or zero if the request did not violate any quota.
-    pub throttle_time_ms: i32,
-    /// The error code, or 0 if there was no error.
-    pub error_code: i16,
-    /// Details of the current Raft cluster leader.
-    pub current_leader: UpdateRaftVoterResponseCurrentLeader,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
-
-impl KafkaMessage for UpdateRaftVoterResponse {
-    const NAME: &'static str = "UpdateRaftVoterResponse";
-    const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 0);
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 0));
-}
-
-impl KafkaResponse for UpdateRaftVoterResponse {
-    const API_KEY: ApiKey = ApiKey::new(82);
-}
-
-impl KafkaDecode for UpdateRaftVoterResponse {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        crate::message::ensure_decode_version::<Self>(version)?;
-
-        let throttle_time_ms = decoder.read_i32()?;
-        let error_code = decoder.read_i16()?;
-        let mut current_leader: UpdateRaftVoterResponseCurrentLeader =
-            UpdateRaftVoterResponseCurrentLeader::default();
-        let mut unknown_tagged_fields = TaggedFields::default();
-        if Self::is_flexible(version) {
-            unknown_tagged_fields = decoder.read_tagged_fields_with(|tag, decoder| match tag {
-                0 => {
-                    current_leader =
-                        UpdateRaftVoterResponseCurrentLeader::decode(decoder, version)?;
-                    Ok(TagOutcome::Decoded)
-                }
-                _ => Ok(TagOutcome::Retained),
-            })?;
-        }
-
-        Ok(Self {
-            throttle_time_ms,
-            error_code,
-            current_leader,
-            unknown_tagged_fields,
-        })
-    }
-}
-
-impl KafkaEncode for UpdateRaftVoterResponse {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        crate::message::ensure_encode_version::<Self>(version)?;
-
-        encoder.write_i32(self.throttle_time_ms)?;
-        encoder.write_i16(self.error_code)?;
-
-        if Self::is_flexible(version) {
-            let mut known = KnownTags::new();
-            if self.current_leader != UpdateRaftVoterResponseCurrentLeader::default() {
-                known.write(0, |encoder| {
-                    self.current_leader.encode(encoder, version)?;
-                    Ok(())
-                })?;
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "Listener",
+                    version,
+                });
             }
-            encoder.write_merged_tagged_fields(known, &self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: Self::NAME,
-                version,
-            });
-        }
 
-        Ok(())
+            Ok(())
+        }
+    }
+
+    /// `KRaftVersionFeature` as declared by the `UpdateRaftVoter` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    pub struct KRaftVersionFeature {
+        /// The minimum supported `KRaft` protocol version.
+        pub min_supported_version: i16,
+        /// The maximum supported `KRaft` protocol version.
+        pub max_supported_version: i16,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl KRaftVersionFeature {
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 0));
+
+        fn is_flexible(version: ApiVersion) -> bool {
+            Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+        }
+    }
+
+    impl KafkaDecode for KRaftVersionFeature {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            let min_supported_version = decoder.read_i16()?;
+            let max_supported_version = decoder.read_i16()?;
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
+
+            Ok(Self {
+                min_supported_version,
+                max_supported_version,
+                unknown_tagged_fields,
+            })
+        }
+    }
+
+    impl KafkaEncode for KRaftVersionFeature {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            encoder.write_i16(self.min_supported_version)?;
+            encoder.write_i16(self.max_supported_version)?;
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "KRaftVersionFeature",
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+
+    /// Request body for the `UpdateRaftVoter` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Eq, PartialEq)]
+    pub struct UpdateRaftVoterRequest {
+        /// The cluster id.
+        pub cluster_id: Option<StrBytes>,
+        /// The current leader epoch of the partition, -1 for unknown leader epoch.
+        pub current_leader_epoch: i32,
+        /// The replica id of the voter getting updated in the topic partition.
+        pub voter_id: i32,
+        /// The directory id of the voter getting updated in the topic partition.
+        pub voter_directory_id: Uuid,
+        /// The endpoint that can be used to communicate with the leader.
+        pub listeners: Vec<Listener>,
+        /// The range of versions of the protocol that the replica supports.
+        pub k_raft_version_feature: KRaftVersionFeature,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl Default for UpdateRaftVoterRequest {
+        fn default() -> Self {
+            Self {
+                cluster_id: Some(StrBytes::default()),
+                current_leader_epoch: 0,
+                voter_id: 0,
+                voter_directory_id: Uuid::ZERO,
+                listeners: Vec::new(),
+                k_raft_version_feature: KRaftVersionFeature::default(),
+                unknown_tagged_fields: TaggedFields::default(),
+            }
+        }
+    }
+
+    impl KafkaMessage for UpdateRaftVoterRequest {
+        const NAME: &'static str = "UpdateRaftVoterRequest";
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 0);
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 0));
+    }
+
+    impl KafkaRequest for UpdateRaftVoterRequest {
+        const API_KEY: ApiKey = ApiKey::new(82);
+    }
+
+    impl RequestResponsePair for UpdateRaftVoterRequest {
+        type Response = super::UpdateRaftVoterResponse;
+    }
+
+    impl KafkaDecode for UpdateRaftVoterRequest {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            crate::message::ensure_decode_version::<Self>(version)?;
+
+            let cluster_id = decoder.read_compact_nullable_string()?;
+            let current_leader_epoch = decoder.read_i32()?;
+            let voter_id = decoder.read_i32()?;
+            let voter_directory_id = decoder.read_uuid()?;
+            let listeners = {
+                let length = decoder.read_compact_array_len()?;
+                decoder.read_vec(length, |decoder| Listener::decode(decoder, version))?
+            };
+            let k_raft_version_feature = KRaftVersionFeature::decode(decoder, version)?;
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
+
+            Ok(Self {
+                cluster_id,
+                current_leader_epoch,
+                voter_id,
+                voter_directory_id,
+                listeners,
+                k_raft_version_feature,
+                unknown_tagged_fields,
+            })
+        }
+    }
+
+    impl KafkaEncode for UpdateRaftVoterRequest {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            crate::message::ensure_encode_version::<Self>(version)?;
+
+            encoder.write_compact_nullable_string(self.cluster_id.as_ref())?;
+            encoder.write_i32(self.current_leader_epoch)?;
+            encoder.write_i32(self.voter_id)?;
+            encoder.write_uuid(self.voter_directory_id)?;
+            encoder.write_compact_array_len(self.listeners.len())?;
+            for value in &self.listeners {
+                value.encode(encoder, version)?;
+            }
+            self.k_raft_version_feature.encode(encoder, version)?;
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: Self::NAME,
+                    version,
+                });
+            }
+
+            Ok(())
+        }
     }
 }
+
+/// `UpdateRaftVoterResponse` and every struct it declares, under upstream's own names.
+///
+/// [`UpdateRaftVoterResponse`](crate::UpdateRaftVoterResponse) is re-exported flat, so this path never has to be
+/// written to name the message itself.
+pub mod update_raft_voter_response {
+    use kafka_wire_core::{
+        ApiKey, ApiVersion, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
+        KafkaEncode, KnownTags, StrBytes, TagOutcome, TaggedFields, VersionRange,
+    };
+
+    use crate::{KafkaMessage, KafkaResponse};
+
+    /// `CurrentLeader` as declared by the `UpdateRaftVoter` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Eq, PartialEq)]
+    pub struct CurrentLeader {
+        /// The replica id of the current leader or -1 if the leader is unknown.
+        pub leader_id: i32,
+        /// The latest known leader epoch.
+        pub leader_epoch: i32,
+        /// The node's hostname.
+        pub host: StrBytes,
+        /// The node's port.
+        pub port: i32,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl CurrentLeader {
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 0));
+
+        fn is_flexible(version: ApiVersion) -> bool {
+            Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+        }
+    }
+
+    impl Default for CurrentLeader {
+        fn default() -> Self {
+            Self {
+                leader_id: -1,
+                leader_epoch: -1,
+                host: StrBytes::default(),
+                port: 0,
+                unknown_tagged_fields: TaggedFields::default(),
+            }
+        }
+    }
+
+    impl KafkaDecode for CurrentLeader {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            let leader_id = decoder.read_i32()?;
+            let leader_epoch = decoder.read_i32()?;
+            let host = decoder.read_compact_string()?;
+            let port = decoder.read_i32()?;
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
+
+            Ok(Self {
+                leader_id,
+                leader_epoch,
+                host,
+                port,
+                unknown_tagged_fields,
+            })
+        }
+    }
+
+    impl KafkaEncode for CurrentLeader {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            encoder.write_i32(self.leader_id)?;
+            encoder.write_i32(self.leader_epoch)?;
+            encoder.write_compact_string(&self.host)?;
+            encoder.write_i32(self.port)?;
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "CurrentLeader",
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+
+    /// Response body for the `UpdateRaftVoter` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    pub struct UpdateRaftVoterResponse {
+        /// The duration in milliseconds for which the request was throttled due to a quota violation, or zero if the request did not violate any quota.
+        pub throttle_time_ms: i32,
+        /// The error code, or 0 if there was no error.
+        pub error_code: i16,
+        /// Details of the current Raft cluster leader.
+        pub current_leader: CurrentLeader,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl KafkaMessage for UpdateRaftVoterResponse {
+        const NAME: &'static str = "UpdateRaftVoterResponse";
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 0);
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 0));
+    }
+
+    impl KafkaResponse for UpdateRaftVoterResponse {
+        const API_KEY: ApiKey = ApiKey::new(82);
+    }
+
+    impl KafkaDecode for UpdateRaftVoterResponse {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            crate::message::ensure_decode_version::<Self>(version)?;
+
+            let throttle_time_ms = decoder.read_i32()?;
+            let error_code = decoder.read_i16()?;
+            let mut current_leader: CurrentLeader = CurrentLeader::default();
+            let mut unknown_tagged_fields = TaggedFields::default();
+            if Self::is_flexible(version) {
+                unknown_tagged_fields =
+                    decoder.read_tagged_fields_with(|tag, decoder| match tag {
+                        0 => {
+                            current_leader = CurrentLeader::decode(decoder, version)?;
+                            Ok(TagOutcome::Decoded)
+                        }
+                        _ => Ok(TagOutcome::Retained),
+                    })?;
+            }
+
+            Ok(Self {
+                throttle_time_ms,
+                error_code,
+                current_leader,
+                unknown_tagged_fields,
+            })
+        }
+    }
+
+    impl KafkaEncode for UpdateRaftVoterResponse {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            crate::message::ensure_encode_version::<Self>(version)?;
+
+            encoder.write_i32(self.throttle_time_ms)?;
+            encoder.write_i16(self.error_code)?;
+
+            if Self::is_flexible(version) {
+                let mut known = KnownTags::new();
+                if self.current_leader != CurrentLeader::default() {
+                    known.write(0, |encoder| {
+                        self.current_leader.encode(encoder, version)?;
+                        Ok(())
+                    })?;
+                }
+                encoder.write_merged_tagged_fields(known, &self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: Self::NAME,
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+}
+
+use kafka_wire_core::VersionRange;
+
+use crate::{MessageDescriptor, MessageDirection};
+
+pub use update_raft_voter_request::UpdateRaftVoterRequest;
+pub use update_raft_voter_response::UpdateRaftVoterResponse;
 
 /// Static metadata for [`UpdateRaftVoterRequest`].
 pub const UPDATE_RAFT_VOTER_REQUEST_DESCRIPTOR: MessageDescriptor = MessageDescriptor::new(

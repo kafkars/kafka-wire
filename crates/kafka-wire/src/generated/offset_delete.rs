@@ -5,278 +5,301 @@
 //! Request SHA-256: `9508470c5727082e6212e8ca43e6966a79874495ead10cf724824b5934ee2a39`.
 //! Response SHA-256: `ea99e5b080ad9ed6b56d19e9e749b9a4e5c37dbcd6aa69a663e97ff9fc7a1656`.
 
-use kafka_wire_core::{
-    ApiKey, ApiVersion, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
-    KafkaEncode, StrBytes, VersionRange,
-};
+/// `OffsetDeleteRequest` and every struct it declares, under upstream's own names.
+///
+/// [`OffsetDeleteRequest`](crate::OffsetDeleteRequest) is re-exported flat, so this path never has to be
+/// written to name the message itself.
+pub mod offset_delete_request {
+    use kafka_wire_core::{
+        ApiKey, ApiVersion, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
+        KafkaEncode, StrBytes, VersionRange,
+    };
 
-use crate::{
-    KafkaMessage, KafkaRequest, KafkaResponse, MessageDescriptor, MessageDirection,
-    RequestResponsePair,
-};
+    use crate::{KafkaMessage, KafkaRequest, RequestResponsePair};
 
-/// `OffsetDeleteRequestTopic` as declared by the `OffsetDelete` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct OffsetDeleteRequestTopic {
-    /// The topic name.
-    pub name: StrBytes,
-    /// Each partition to delete offsets for.
-    pub partitions: Vec<OffsetDeleteRequestPartition>,
-}
-
-impl KafkaDecode for OffsetDeleteRequestTopic {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        let name = decoder.read_string()?;
-        let partitions = {
-            let length = decoder.read_array_len()?;
-            decoder.read_vec(length, |decoder| {
-                OffsetDeleteRequestPartition::decode(decoder, version)
-            })?
-        };
-
-        Ok(Self { name, partitions })
+    /// `OffsetDeleteRequestTopic` as declared by the `OffsetDelete` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    pub struct OffsetDeleteRequestTopic {
+        /// The topic name.
+        pub name: StrBytes,
+        /// Each partition to delete offsets for.
+        pub partitions: Vec<OffsetDeleteRequestPartition>,
     }
-}
 
-impl KafkaEncode for OffsetDeleteRequestTopic {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        encoder.write_string(&self.name)?;
-        encoder.write_array_len(self.partitions.len())?;
-        for value in &self.partitions {
-            value.encode(encoder, version)?;
+    impl KafkaDecode for OffsetDeleteRequestTopic {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            let name = decoder.read_string()?;
+            let partitions = {
+                let length = decoder.read_array_len()?;
+                decoder.read_vec(length, |decoder| {
+                    OffsetDeleteRequestPartition::decode(decoder, version)
+                })?
+            };
+
+            Ok(Self { name, partitions })
         }
-
-        Ok(())
     }
-}
 
-/// `OffsetDeleteRequestPartition` as declared by the `OffsetDelete` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct OffsetDeleteRequestPartition {
-    /// The partition index.
-    pub partition_index: i32,
-}
+    impl KafkaEncode for OffsetDeleteRequestTopic {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            encoder.write_string(&self.name)?;
+            encoder.write_array_len(self.partitions.len())?;
+            for value in &self.partitions {
+                value.encode(encoder, version)?;
+            }
 
-impl KafkaDecode for OffsetDeleteRequestPartition {
-    fn decode(decoder: &mut Decoder, _version: ApiVersion) -> Result<Self, DecodeError> {
-        let partition_index = decoder.read_i32()?;
-
-        Ok(Self { partition_index })
-    }
-}
-
-impl KafkaEncode for OffsetDeleteRequestPartition {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        _version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        encoder.write_i32(self.partition_index)?;
-
-        Ok(())
-    }
-}
-
-/// Request body for the `OffsetDelete` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct OffsetDeleteRequest {
-    /// The unique group identifier.
-    pub group_id: StrBytes,
-    /// The topics to delete offsets for.
-    pub topics: Vec<OffsetDeleteRequestTopic>,
-}
-
-impl KafkaMessage for OffsetDeleteRequest {
-    const NAME: &'static str = "OffsetDeleteRequest";
-    const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 0);
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = None;
-}
-
-impl KafkaRequest for OffsetDeleteRequest {
-    const API_KEY: ApiKey = ApiKey::new(47);
-}
-
-impl RequestResponsePair for OffsetDeleteRequest {
-    type Response = OffsetDeleteResponse;
-}
-
-impl KafkaDecode for OffsetDeleteRequest {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        crate::message::ensure_decode_version::<Self>(version)?;
-
-        let group_id = decoder.read_string()?;
-        let topics = {
-            let length = decoder.read_array_len()?;
-            decoder.read_vec(length, |decoder| {
-                OffsetDeleteRequestTopic::decode(decoder, version)
-            })?
-        };
-
-        Ok(Self { group_id, topics })
-    }
-}
-
-impl KafkaEncode for OffsetDeleteRequest {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        crate::message::ensure_encode_version::<Self>(version)?;
-
-        encoder.write_string(&self.group_id)?;
-        encoder.write_array_len(self.topics.len())?;
-        for value in &self.topics {
-            value.encode(encoder, version)?;
+            Ok(())
         }
-
-        Ok(())
     }
-}
 
-/// `OffsetDeleteResponseTopic` as declared by the `OffsetDelete` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct OffsetDeleteResponseTopic {
-    /// The topic name.
-    pub name: StrBytes,
-    /// The responses for each partition in the topic.
-    pub partitions: Vec<OffsetDeleteResponsePartition>,
-}
-
-impl KafkaDecode for OffsetDeleteResponseTopic {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        let name = decoder.read_string()?;
-        let partitions = {
-            let length = decoder.read_array_len()?;
-            decoder.read_vec(length, |decoder| {
-                OffsetDeleteResponsePartition::decode(decoder, version)
-            })?
-        };
-
-        Ok(Self { name, partitions })
+    /// `OffsetDeleteRequestPartition` as declared by the `OffsetDelete` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    pub struct OffsetDeleteRequestPartition {
+        /// The partition index.
+        pub partition_index: i32,
     }
-}
 
-impl KafkaEncode for OffsetDeleteResponseTopic {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        encoder.write_string(&self.name)?;
-        encoder.write_array_len(self.partitions.len())?;
-        for value in &self.partitions {
-            value.encode(encoder, version)?;
+    impl KafkaDecode for OffsetDeleteRequestPartition {
+        fn decode(decoder: &mut Decoder, _version: ApiVersion) -> Result<Self, DecodeError> {
+            let partition_index = decoder.read_i32()?;
+
+            Ok(Self { partition_index })
         }
-
-        Ok(())
     }
-}
 
-/// `OffsetDeleteResponsePartition` as declared by the `OffsetDelete` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct OffsetDeleteResponsePartition {
-    /// The partition index.
-    pub partition_index: i32,
-    /// The error code, or 0 if there was no error.
-    pub error_code: i16,
-}
+    impl KafkaEncode for OffsetDeleteRequestPartition {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            _version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            encoder.write_i32(self.partition_index)?;
 
-impl KafkaDecode for OffsetDeleteResponsePartition {
-    fn decode(decoder: &mut Decoder, _version: ApiVersion) -> Result<Self, DecodeError> {
-        let partition_index = decoder.read_i32()?;
-        let error_code = decoder.read_i16()?;
-
-        Ok(Self {
-            partition_index,
-            error_code,
-        })
-    }
-}
-
-impl KafkaEncode for OffsetDeleteResponsePartition {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        _version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        encoder.write_i32(self.partition_index)?;
-        encoder.write_i16(self.error_code)?;
-
-        Ok(())
-    }
-}
-
-/// Response body for the `OffsetDelete` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct OffsetDeleteResponse {
-    /// The top-level error code, or 0 if there was no error.
-    pub error_code: i16,
-    /// The duration in milliseconds for which the request was throttled due to a quota violation, or zero if the request did not violate any quota.
-    pub throttle_time_ms: i32,
-    /// The responses for each topic.
-    pub topics: Vec<OffsetDeleteResponseTopic>,
-}
-
-impl KafkaMessage for OffsetDeleteResponse {
-    const NAME: &'static str = "OffsetDeleteResponse";
-    const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 0);
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = None;
-}
-
-impl KafkaResponse for OffsetDeleteResponse {
-    const API_KEY: ApiKey = ApiKey::new(47);
-}
-
-impl KafkaDecode for OffsetDeleteResponse {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        crate::message::ensure_decode_version::<Self>(version)?;
-
-        let error_code = decoder.read_i16()?;
-        let throttle_time_ms = decoder.read_i32()?;
-        let topics = {
-            let length = decoder.read_array_len()?;
-            decoder.read_vec(length, |decoder| {
-                OffsetDeleteResponseTopic::decode(decoder, version)
-            })?
-        };
-
-        Ok(Self {
-            error_code,
-            throttle_time_ms,
-            topics,
-        })
-    }
-}
-
-impl KafkaEncode for OffsetDeleteResponse {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        crate::message::ensure_encode_version::<Self>(version)?;
-
-        encoder.write_i16(self.error_code)?;
-        encoder.write_i32(self.throttle_time_ms)?;
-        encoder.write_array_len(self.topics.len())?;
-        for value in &self.topics {
-            value.encode(encoder, version)?;
+            Ok(())
         }
+    }
 
-        Ok(())
+    /// Request body for the `OffsetDelete` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    pub struct OffsetDeleteRequest {
+        /// The unique group identifier.
+        pub group_id: StrBytes,
+        /// The topics to delete offsets for.
+        pub topics: Vec<OffsetDeleteRequestTopic>,
+    }
+
+    impl KafkaMessage for OffsetDeleteRequest {
+        const NAME: &'static str = "OffsetDeleteRequest";
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 0);
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = None;
+    }
+
+    impl KafkaRequest for OffsetDeleteRequest {
+        const API_KEY: ApiKey = ApiKey::new(47);
+    }
+
+    impl RequestResponsePair for OffsetDeleteRequest {
+        type Response = super::OffsetDeleteResponse;
+    }
+
+    impl KafkaDecode for OffsetDeleteRequest {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            crate::message::ensure_decode_version::<Self>(version)?;
+
+            let group_id = decoder.read_string()?;
+            let topics = {
+                let length = decoder.read_array_len()?;
+                decoder.read_vec(length, |decoder| {
+                    OffsetDeleteRequestTopic::decode(decoder, version)
+                })?
+            };
+
+            Ok(Self { group_id, topics })
+        }
+    }
+
+    impl KafkaEncode for OffsetDeleteRequest {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            crate::message::ensure_encode_version::<Self>(version)?;
+
+            encoder.write_string(&self.group_id)?;
+            encoder.write_array_len(self.topics.len())?;
+            for value in &self.topics {
+                value.encode(encoder, version)?;
+            }
+
+            Ok(())
+        }
     }
 }
+
+/// `OffsetDeleteResponse` and every struct it declares, under upstream's own names.
+///
+/// [`OffsetDeleteResponse`](crate::OffsetDeleteResponse) is re-exported flat, so this path never has to be
+/// written to name the message itself.
+pub mod offset_delete_response {
+    use kafka_wire_core::{
+        ApiKey, ApiVersion, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
+        KafkaEncode, StrBytes, VersionRange,
+    };
+
+    use crate::{KafkaMessage, KafkaResponse};
+
+    /// `OffsetDeleteResponseTopic` as declared by the `OffsetDelete` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    pub struct OffsetDeleteResponseTopic {
+        /// The topic name.
+        pub name: StrBytes,
+        /// The responses for each partition in the topic.
+        pub partitions: Vec<OffsetDeleteResponsePartition>,
+    }
+
+    impl KafkaDecode for OffsetDeleteResponseTopic {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            let name = decoder.read_string()?;
+            let partitions = {
+                let length = decoder.read_array_len()?;
+                decoder.read_vec(length, |decoder| {
+                    OffsetDeleteResponsePartition::decode(decoder, version)
+                })?
+            };
+
+            Ok(Self { name, partitions })
+        }
+    }
+
+    impl KafkaEncode for OffsetDeleteResponseTopic {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            encoder.write_string(&self.name)?;
+            encoder.write_array_len(self.partitions.len())?;
+            for value in &self.partitions {
+                value.encode(encoder, version)?;
+            }
+
+            Ok(())
+        }
+    }
+
+    /// `OffsetDeleteResponsePartition` as declared by the `OffsetDelete` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    pub struct OffsetDeleteResponsePartition {
+        /// The partition index.
+        pub partition_index: i32,
+        /// The error code, or 0 if there was no error.
+        pub error_code: i16,
+    }
+
+    impl KafkaDecode for OffsetDeleteResponsePartition {
+        fn decode(decoder: &mut Decoder, _version: ApiVersion) -> Result<Self, DecodeError> {
+            let partition_index = decoder.read_i32()?;
+            let error_code = decoder.read_i16()?;
+
+            Ok(Self {
+                partition_index,
+                error_code,
+            })
+        }
+    }
+
+    impl KafkaEncode for OffsetDeleteResponsePartition {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            _version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            encoder.write_i32(self.partition_index)?;
+            encoder.write_i16(self.error_code)?;
+
+            Ok(())
+        }
+    }
+
+    /// Response body for the `OffsetDelete` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    pub struct OffsetDeleteResponse {
+        /// The top-level error code, or 0 if there was no error.
+        pub error_code: i16,
+        /// The duration in milliseconds for which the request was throttled due to a quota violation, or zero if the request did not violate any quota.
+        pub throttle_time_ms: i32,
+        /// The responses for each topic.
+        pub topics: Vec<OffsetDeleteResponseTopic>,
+    }
+
+    impl KafkaMessage for OffsetDeleteResponse {
+        const NAME: &'static str = "OffsetDeleteResponse";
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 0);
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = None;
+    }
+
+    impl KafkaResponse for OffsetDeleteResponse {
+        const API_KEY: ApiKey = ApiKey::new(47);
+    }
+
+    impl KafkaDecode for OffsetDeleteResponse {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            crate::message::ensure_decode_version::<Self>(version)?;
+
+            let error_code = decoder.read_i16()?;
+            let throttle_time_ms = decoder.read_i32()?;
+            let topics = {
+                let length = decoder.read_array_len()?;
+                decoder.read_vec(length, |decoder| {
+                    OffsetDeleteResponseTopic::decode(decoder, version)
+                })?
+            };
+
+            Ok(Self {
+                error_code,
+                throttle_time_ms,
+                topics,
+            })
+        }
+    }
+
+    impl KafkaEncode for OffsetDeleteResponse {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            crate::message::ensure_encode_version::<Self>(version)?;
+
+            encoder.write_i16(self.error_code)?;
+            encoder.write_i32(self.throttle_time_ms)?;
+            encoder.write_array_len(self.topics.len())?;
+            for value in &self.topics {
+                value.encode(encoder, version)?;
+            }
+
+            Ok(())
+        }
+    }
+}
+
+use kafka_wire_core::VersionRange;
+
+use crate::{MessageDescriptor, MessageDirection};
+
+pub use offset_delete_request::OffsetDeleteRequest;
+pub use offset_delete_response::OffsetDeleteResponse;
 
 /// Static metadata for [`OffsetDeleteRequest`].
 pub const OFFSET_DELETE_REQUEST_DESCRIPTOR: MessageDescriptor = MessageDescriptor::new(

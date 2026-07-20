@@ -5,400 +5,419 @@
 //! Request SHA-256: `03a4823687c4cc12db2759fc14ef63541dbe4efa67e8d584bf8d84063312de11`.
 //! Response SHA-256: `1722ffb8d92c71b1fcd567f128c757ff097b8654dfccc8ee72d2f7d83ff6c28e`.
 
-use kafka_wire_core::{
-    ApiKey, ApiVersion, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
-    KafkaEncode, StrBytes, TaggedFields, Uuid, VersionRange,
-};
+/// `BrokerRegistrationRequest` and every struct it declares, under upstream's own names.
+///
+/// [`BrokerRegistrationRequest`](crate::BrokerRegistrationRequest) is re-exported flat, so this path never has to be
+/// written to name the message itself.
+pub mod broker_registration_request {
+    use kafka_wire_core::{
+        ApiKey, ApiVersion, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
+        KafkaEncode, StrBytes, TaggedFields, Uuid, VersionRange,
+    };
 
-use crate::{
-    KafkaMessage, KafkaRequest, KafkaResponse, MessageDescriptor, MessageDirection,
-    RequestResponsePair,
-};
+    use crate::{KafkaMessage, KafkaRequest, RequestResponsePair};
 
-/// `Listener` as declared by the `BrokerRegistration` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct BrokerRegistrationRequestListener {
-    /// The name of the endpoint.
-    pub name: StrBytes,
-    /// The hostname.
-    pub host: StrBytes,
-    /// The port.
-    pub port: u16,
-    /// The security protocol.
-    pub security_protocol: i16,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
-
-impl BrokerRegistrationRequestListener {
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 4));
-
-    fn is_flexible(version: ApiVersion) -> bool {
-        Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+    /// `Listener` as declared by the `BrokerRegistration` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    pub struct Listener {
+        /// The name of the endpoint.
+        pub name: StrBytes,
+        /// The hostname.
+        pub host: StrBytes,
+        /// The port.
+        pub port: u16,
+        /// The security protocol.
+        pub security_protocol: i16,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
     }
-}
 
-impl KafkaDecode for BrokerRegistrationRequestListener {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        let name = decoder.read_compact_string()?;
-        let host = decoder.read_compact_string()?;
-        let port = decoder.read_u16()?;
-        let security_protocol = decoder.read_i16()?;
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
+    impl Listener {
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 4));
 
-        Ok(Self {
-            name,
-            host,
-            port,
-            security_protocol,
-            unknown_tagged_fields,
-        })
-    }
-}
-
-impl KafkaEncode for BrokerRegistrationRequestListener {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        encoder.write_compact_string(&self.name)?;
-        encoder.write_compact_string(&self.host)?;
-        encoder.write_u16(self.port)?;
-        encoder.write_i16(self.security_protocol)?;
-
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: "BrokerRegistrationRequestListener",
-                version,
-            });
-        }
-
-        Ok(())
-    }
-}
-
-/// `Feature` as declared by the `BrokerRegistration` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct BrokerRegistrationRequestFeature {
-    /// The feature name.
-    pub name: StrBytes,
-    /// The minimum supported feature level.
-    pub min_supported_version: i16,
-    /// The maximum supported feature level.
-    pub max_supported_version: i16,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
-
-impl BrokerRegistrationRequestFeature {
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 4));
-
-    fn is_flexible(version: ApiVersion) -> bool {
-        Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
-    }
-}
-
-impl KafkaDecode for BrokerRegistrationRequestFeature {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        let name = decoder.read_compact_string()?;
-        let min_supported_version = decoder.read_i16()?;
-        let max_supported_version = decoder.read_i16()?;
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
-
-        Ok(Self {
-            name,
-            min_supported_version,
-            max_supported_version,
-            unknown_tagged_fields,
-        })
-    }
-}
-
-impl KafkaEncode for BrokerRegistrationRequestFeature {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        encoder.write_compact_string(&self.name)?;
-        encoder.write_i16(self.min_supported_version)?;
-        encoder.write_i16(self.max_supported_version)?;
-
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: "BrokerRegistrationRequestFeature",
-                version,
-            });
-        }
-
-        Ok(())
-    }
-}
-
-/// Request body for the `BrokerRegistration` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct BrokerRegistrationRequest {
-    /// The broker ID.
-    pub broker_id: i32,
-    /// The cluster id of the broker process.
-    pub cluster_id: StrBytes,
-    /// The incarnation id of the broker process.
-    pub incarnation_id: Uuid,
-    /// The listeners of this broker.
-    pub listeners: Vec<BrokerRegistrationRequestListener>,
-    /// The features on this broker. Note: in v0-v3, features with `MinSupportedVersion` = 0 are omitted.
-    pub features: Vec<BrokerRegistrationRequestFeature>,
-    /// The rack which this broker is in.
-    pub rack: Option<StrBytes>,
-    /// If the required configurations for ZK migration are present, this value is set to true.
-    pub is_migrating_zk_broker: bool,
-    /// Log directories configured in this broker which are available.
-    pub log_dirs: Vec<Uuid>,
-    /// The epoch before a clean shutdown.
-    pub previous_broker_epoch: i64,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
-
-impl Default for BrokerRegistrationRequest {
-    fn default() -> Self {
-        Self {
-            broker_id: 0,
-            cluster_id: StrBytes::default(),
-            incarnation_id: Uuid::ZERO,
-            listeners: Vec::new(),
-            features: Vec::new(),
-            rack: Some(StrBytes::default()),
-            is_migrating_zk_broker: false,
-            log_dirs: Vec::new(),
-            previous_broker_epoch: -1,
-            unknown_tagged_fields: TaggedFields::default(),
+        fn is_flexible(version: ApiVersion) -> bool {
+            Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
         }
     }
-}
 
-impl KafkaMessage for BrokerRegistrationRequest {
-    const NAME: &'static str = "BrokerRegistrationRequest";
-    const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 4);
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 4));
-}
+    impl KafkaDecode for Listener {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            let name = decoder.read_compact_string()?;
+            let host = decoder.read_compact_string()?;
+            let port = decoder.read_u16()?;
+            let security_protocol = decoder.read_i16()?;
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
 
-impl KafkaRequest for BrokerRegistrationRequest {
-    const API_KEY: ApiKey = ApiKey::new(62);
-}
-
-impl RequestResponsePair for BrokerRegistrationRequest {
-    type Response = BrokerRegistrationResponse;
-}
-
-impl KafkaDecode for BrokerRegistrationRequest {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        crate::message::ensure_decode_version::<Self>(version)?;
-
-        let broker_id = decoder.read_i32()?;
-        let cluster_id = decoder.read_compact_string()?;
-        let incarnation_id = decoder.read_uuid()?;
-        let listeners = {
-            let length = decoder.read_compact_array_len()?;
-            decoder.read_vec(length, |decoder| {
-                BrokerRegistrationRequestListener::decode(decoder, version)
-            })?
-        };
-        let features = {
-            let length = decoder.read_compact_array_len()?;
-            decoder.read_vec(length, |decoder| {
-                BrokerRegistrationRequestFeature::decode(decoder, version)
-            })?
-        };
-        let rack = decoder.read_compact_nullable_string()?;
-        let is_migrating_zk_broker = if version.value() >= 1 {
-            decoder.read_bool()?
-        } else {
-            false
-        };
-        let log_dirs = if version.value() >= 2 {
-            let length = decoder.read_compact_array_len()?;
-            decoder.read_vec(length, Decoder::read_uuid)?
-        } else {
-            Vec::new()
-        };
-        let previous_broker_epoch = if version.value() >= 3 {
-            decoder.read_i64()?
-        } else {
-            -1
-        };
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
-
-        Ok(Self {
-            broker_id,
-            cluster_id,
-            incarnation_id,
-            listeners,
-            features,
-            rack,
-            is_migrating_zk_broker,
-            log_dirs,
-            previous_broker_epoch,
-            unknown_tagged_fields,
-        })
+            Ok(Self {
+                name,
+                host,
+                port,
+                security_protocol,
+                unknown_tagged_fields,
+            })
+        }
     }
-}
 
-impl KafkaEncode for BrokerRegistrationRequest {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        crate::message::ensure_encode_version::<Self>(version)?;
+    impl KafkaEncode for Listener {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            encoder.write_compact_string(&self.name)?;
+            encoder.write_compact_string(&self.host)?;
+            encoder.write_u16(self.port)?;
+            encoder.write_i16(self.security_protocol)?;
 
-        if version.value() < 1 && self.is_migrating_zk_broker {
-            return Err(EncodeError::FieldNotRepresentable {
-                message: Self::NAME,
-                field: "IsMigratingZkBroker",
-                version,
-            });
-        }
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "Listener",
+                    version,
+                });
+            }
 
-        encoder.write_i32(self.broker_id)?;
-        encoder.write_compact_string(&self.cluster_id)?;
-        encoder.write_uuid(self.incarnation_id)?;
-        encoder.write_compact_array_len(self.listeners.len())?;
-        for value in &self.listeners {
-            value.encode(encoder, version)?;
+            Ok(())
         }
-        encoder.write_compact_array_len(self.features.len())?;
-        for value in &self.features {
-            value.encode(encoder, version)?;
+    }
+
+    /// `Feature` as declared by the `BrokerRegistration` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    pub struct Feature {
+        /// The feature name.
+        pub name: StrBytes,
+        /// The minimum supported feature level.
+        pub min_supported_version: i16,
+        /// The maximum supported feature level.
+        pub max_supported_version: i16,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl Feature {
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 4));
+
+        fn is_flexible(version: ApiVersion) -> bool {
+            Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
         }
-        encoder.write_compact_nullable_string(self.rack.as_ref())?;
-        if version.value() >= 1 {
-            encoder.write_bool(self.is_migrating_zk_broker)?;
+    }
+
+    impl KafkaDecode for Feature {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            let name = decoder.read_compact_string()?;
+            let min_supported_version = decoder.read_i16()?;
+            let max_supported_version = decoder.read_i16()?;
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
+
+            Ok(Self {
+                name,
+                min_supported_version,
+                max_supported_version,
+                unknown_tagged_fields,
+            })
         }
-        if version.value() >= 2 {
-            encoder.write_compact_array_len(self.log_dirs.len())?;
-            for value in &self.log_dirs {
-                encoder.write_uuid(*value)?;
+    }
+
+    impl KafkaEncode for Feature {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            encoder.write_compact_string(&self.name)?;
+            encoder.write_i16(self.min_supported_version)?;
+            encoder.write_i16(self.max_supported_version)?;
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "Feature",
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+
+    /// Request body for the `BrokerRegistration` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Eq, PartialEq)]
+    pub struct BrokerRegistrationRequest {
+        /// The broker ID.
+        pub broker_id: i32,
+        /// The cluster id of the broker process.
+        pub cluster_id: StrBytes,
+        /// The incarnation id of the broker process.
+        pub incarnation_id: Uuid,
+        /// The listeners of this broker.
+        pub listeners: Vec<Listener>,
+        /// The features on this broker. Note: in v0-v3, features with `MinSupportedVersion` = 0 are omitted.
+        pub features: Vec<Feature>,
+        /// The rack which this broker is in.
+        pub rack: Option<StrBytes>,
+        /// If the required configurations for ZK migration are present, this value is set to true.
+        pub is_migrating_zk_broker: bool,
+        /// Log directories configured in this broker which are available.
+        pub log_dirs: Vec<Uuid>,
+        /// The epoch before a clean shutdown.
+        pub previous_broker_epoch: i64,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl Default for BrokerRegistrationRequest {
+        fn default() -> Self {
+            Self {
+                broker_id: 0,
+                cluster_id: StrBytes::default(),
+                incarnation_id: Uuid::ZERO,
+                listeners: Vec::new(),
+                features: Vec::new(),
+                rack: Some(StrBytes::default()),
+                is_migrating_zk_broker: false,
+                log_dirs: Vec::new(),
+                previous_broker_epoch: -1,
+                unknown_tagged_fields: TaggedFields::default(),
             }
         }
-        if version.value() >= 3 {
-            encoder.write_i64(self.previous_broker_epoch)?;
-        }
+    }
 
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: Self::NAME,
-                version,
-            });
-        }
+    impl KafkaMessage for BrokerRegistrationRequest {
+        const NAME: &'static str = "BrokerRegistrationRequest";
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 4);
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 4));
+    }
 
-        Ok(())
+    impl KafkaRequest for BrokerRegistrationRequest {
+        const API_KEY: ApiKey = ApiKey::new(62);
+    }
+
+    impl RequestResponsePair for BrokerRegistrationRequest {
+        type Response = super::BrokerRegistrationResponse;
+    }
+
+    impl KafkaDecode for BrokerRegistrationRequest {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            crate::message::ensure_decode_version::<Self>(version)?;
+
+            let broker_id = decoder.read_i32()?;
+            let cluster_id = decoder.read_compact_string()?;
+            let incarnation_id = decoder.read_uuid()?;
+            let listeners = {
+                let length = decoder.read_compact_array_len()?;
+                decoder.read_vec(length, |decoder| Listener::decode(decoder, version))?
+            };
+            let features = {
+                let length = decoder.read_compact_array_len()?;
+                decoder.read_vec(length, |decoder| Feature::decode(decoder, version))?
+            };
+            let rack = decoder.read_compact_nullable_string()?;
+            let is_migrating_zk_broker = if version.value() >= 1 {
+                decoder.read_bool()?
+            } else {
+                false
+            };
+            let log_dirs = if version.value() >= 2 {
+                let length = decoder.read_compact_array_len()?;
+                decoder.read_vec(length, Decoder::read_uuid)?
+            } else {
+                Vec::new()
+            };
+            let previous_broker_epoch = if version.value() >= 3 {
+                decoder.read_i64()?
+            } else {
+                -1
+            };
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
+
+            Ok(Self {
+                broker_id,
+                cluster_id,
+                incarnation_id,
+                listeners,
+                features,
+                rack,
+                is_migrating_zk_broker,
+                log_dirs,
+                previous_broker_epoch,
+                unknown_tagged_fields,
+            })
+        }
+    }
+
+    impl KafkaEncode for BrokerRegistrationRequest {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            crate::message::ensure_encode_version::<Self>(version)?;
+
+            if version.value() < 1 && self.is_migrating_zk_broker {
+                return Err(EncodeError::FieldNotRepresentable {
+                    message: Self::NAME,
+                    field: "IsMigratingZkBroker",
+                    version,
+                });
+            }
+
+            encoder.write_i32(self.broker_id)?;
+            encoder.write_compact_string(&self.cluster_id)?;
+            encoder.write_uuid(self.incarnation_id)?;
+            encoder.write_compact_array_len(self.listeners.len())?;
+            for value in &self.listeners {
+                value.encode(encoder, version)?;
+            }
+            encoder.write_compact_array_len(self.features.len())?;
+            for value in &self.features {
+                value.encode(encoder, version)?;
+            }
+            encoder.write_compact_nullable_string(self.rack.as_ref())?;
+            if version.value() >= 1 {
+                encoder.write_bool(self.is_migrating_zk_broker)?;
+            }
+            if version.value() >= 2 {
+                encoder.write_compact_array_len(self.log_dirs.len())?;
+                for value in &self.log_dirs {
+                    encoder.write_uuid(*value)?;
+                }
+            }
+            if version.value() >= 3 {
+                encoder.write_i64(self.previous_broker_epoch)?;
+            }
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: Self::NAME,
+                    version,
+                });
+            }
+
+            Ok(())
+        }
     }
 }
 
-/// Response body for the `BrokerRegistration` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct BrokerRegistrationResponse {
-    /// Duration in milliseconds for which the request was throttled due to a quota violation, or zero if the request did not violate any quota.
-    pub throttle_time_ms: i32,
-    /// The error code, or 0 if there was no error.
-    pub error_code: i16,
-    /// The broker's assigned epoch, or -1 if none was assigned.
-    pub broker_epoch: i64,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
+/// `BrokerRegistrationResponse` and every struct it declares, under upstream's own names.
+///
+/// [`BrokerRegistrationResponse`](crate::BrokerRegistrationResponse) is re-exported flat, so this path never has to be
+/// written to name the message itself.
+pub mod broker_registration_response {
+    use kafka_wire_core::{
+        ApiKey, ApiVersion, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
+        KafkaEncode, TaggedFields, VersionRange,
+    };
 
-impl Default for BrokerRegistrationResponse {
-    fn default() -> Self {
-        Self {
-            throttle_time_ms: 0,
-            error_code: 0,
-            broker_epoch: -1,
-            unknown_tagged_fields: TaggedFields::default(),
+    use crate::{KafkaMessage, KafkaResponse};
+
+    /// Response body for the `BrokerRegistration` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Eq, PartialEq)]
+    pub struct BrokerRegistrationResponse {
+        /// Duration in milliseconds for which the request was throttled due to a quota violation, or zero if the request did not violate any quota.
+        pub throttle_time_ms: i32,
+        /// The error code, or 0 if there was no error.
+        pub error_code: i16,
+        /// The broker's assigned epoch, or -1 if none was assigned.
+        pub broker_epoch: i64,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl Default for BrokerRegistrationResponse {
+        fn default() -> Self {
+            Self {
+                throttle_time_ms: 0,
+                error_code: 0,
+                broker_epoch: -1,
+                unknown_tagged_fields: TaggedFields::default(),
+            }
+        }
+    }
+
+    impl KafkaMessage for BrokerRegistrationResponse {
+        const NAME: &'static str = "BrokerRegistrationResponse";
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 4);
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 4));
+    }
+
+    impl KafkaResponse for BrokerRegistrationResponse {
+        const API_KEY: ApiKey = ApiKey::new(62);
+    }
+
+    impl KafkaDecode for BrokerRegistrationResponse {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            crate::message::ensure_decode_version::<Self>(version)?;
+
+            let throttle_time_ms = decoder.read_i32()?;
+            let error_code = decoder.read_i16()?;
+            let broker_epoch = decoder.read_i64()?;
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
+
+            Ok(Self {
+                throttle_time_ms,
+                error_code,
+                broker_epoch,
+                unknown_tagged_fields,
+            })
+        }
+    }
+
+    impl KafkaEncode for BrokerRegistrationResponse {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            crate::message::ensure_encode_version::<Self>(version)?;
+
+            encoder.write_i32(self.throttle_time_ms)?;
+            encoder.write_i16(self.error_code)?;
+            encoder.write_i64(self.broker_epoch)?;
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: Self::NAME,
+                    version,
+                });
+            }
+
+            Ok(())
         }
     }
 }
 
-impl KafkaMessage for BrokerRegistrationResponse {
-    const NAME: &'static str = "BrokerRegistrationResponse";
-    const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 4);
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 4));
-}
+use kafka_wire_core::VersionRange;
 
-impl KafkaResponse for BrokerRegistrationResponse {
-    const API_KEY: ApiKey = ApiKey::new(62);
-}
+use crate::{MessageDescriptor, MessageDirection};
 
-impl KafkaDecode for BrokerRegistrationResponse {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        crate::message::ensure_decode_version::<Self>(version)?;
-
-        let throttle_time_ms = decoder.read_i32()?;
-        let error_code = decoder.read_i16()?;
-        let broker_epoch = decoder.read_i64()?;
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
-
-        Ok(Self {
-            throttle_time_ms,
-            error_code,
-            broker_epoch,
-            unknown_tagged_fields,
-        })
-    }
-}
-
-impl KafkaEncode for BrokerRegistrationResponse {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        crate::message::ensure_encode_version::<Self>(version)?;
-
-        encoder.write_i32(self.throttle_time_ms)?;
-        encoder.write_i16(self.error_code)?;
-        encoder.write_i64(self.broker_epoch)?;
-
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: Self::NAME,
-                version,
-            });
-        }
-
-        Ok(())
-    }
-}
+pub use broker_registration_request::BrokerRegistrationRequest;
+pub use broker_registration_response::BrokerRegistrationResponse;
 
 /// Static metadata for [`BrokerRegistrationRequest`].
 pub const BROKER_REGISTRATION_REQUEST_DESCRIPTOR: MessageDescriptor = MessageDescriptor::new(

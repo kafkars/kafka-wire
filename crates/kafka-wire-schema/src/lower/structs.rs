@@ -9,7 +9,7 @@
 //!
 //! The walk is total: a duplicate name is recorded twice rather than dropped,
 //! because losing one of two same-named declarations here would hide the very
-//! collision the earlier flat naming rule requires be reported.
+//! collision the module-scoped naming rule's guard requires be reported.
 
 use crate::{CommonStruct, Field, StructDeclaration, StructOrigin, StructRef, StructTable};
 
@@ -17,8 +17,8 @@ use crate::{CommonStruct, Field, StructDeclaration, StructOrigin, StructRef, Str
 ///
 /// Order is each `commonStructs` entry followed by the inline bodies nested
 /// inside it, then the inline bodies of the root field tree. That is the order
-/// upstream wrote the declarations in, which the earlier flat naming rule fixes as generated item
-/// order.
+/// upstream wrote the declarations in, which the earlier flat naming rule fixed as generated item
+/// order and the module-scoped naming rule leaves untouched.
 pub(super) fn collect_struct_table(
     common_structs: &[CommonStruct],
     fields: &[Field],

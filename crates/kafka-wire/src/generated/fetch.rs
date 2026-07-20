@@ -5,1526 +5,1545 @@
 //! Request SHA-256: `40d679a103935abe707055c2f3dde3aefcdb0eb13a00e51a71f2e0832d2033ba`.
 //! Response SHA-256: `102c7b46666469d29d9810d2437ed10cb66cd90ee1050820405b6acfff94e002`.
 
-use kafka_wire_core::{
-    ApiKey, ApiVersion, Bytes, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder,
-    KafkaDecode, KafkaEncode, KnownTags, StrBytes, TagOutcome, TaggedFields, Uuid, VersionRange,
-};
+/// `FetchRequest` and every struct it declares, under upstream's own names.
+///
+/// [`FetchRequest`](crate::FetchRequest) is re-exported flat, so this path never has to be
+/// written to name the message itself.
+pub mod fetch_request {
+    use kafka_wire_core::{
+        ApiKey, ApiVersion, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
+        KafkaEncode, KnownTags, StrBytes, TagOutcome, TaggedFields, Uuid, VersionRange,
+    };
 
-use crate::{
-    KafkaMessage, KafkaRequest, KafkaResponse, MessageDescriptor, MessageDirection,
-    RequestResponsePair,
-};
+    use crate::{KafkaMessage, KafkaRequest, RequestResponsePair};
 
-/// `ReplicaState` as declared by the `Fetch` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct FetchRequestReplicaState {
-    /// The replica ID of the follower, or -1 if this request is from a consumer.
-    pub replica_id: i32,
-    /// The epoch of this follower, or -1 if not available.
-    pub replica_epoch: i64,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
-
-impl FetchRequestReplicaState {
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(12, 18));
-
-    fn is_flexible(version: ApiVersion) -> bool {
-        Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+    /// `ReplicaState` as declared by the `Fetch` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Eq, PartialEq)]
+    pub struct ReplicaState {
+        /// The replica ID of the follower, or -1 if this request is from a consumer.
+        pub replica_id: i32,
+        /// The epoch of this follower, or -1 if not available.
+        pub replica_epoch: i64,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
     }
-}
 
-impl Default for FetchRequestReplicaState {
-    fn default() -> Self {
-        Self {
-            replica_id: -1,
-            replica_epoch: -1,
-            unknown_tagged_fields: TaggedFields::default(),
+    impl ReplicaState {
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(12, 18));
+
+        fn is_flexible(version: ApiVersion) -> bool {
+            Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
         }
     }
-}
 
-impl KafkaDecode for FetchRequestReplicaState {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        let replica_id = if version.value() >= 15 {
-            decoder.read_i32()?
-        } else {
-            -1
-        };
-        let replica_epoch = if version.value() >= 15 {
-            decoder.read_i64()?
-        } else {
-            -1
-        };
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
-
-        Ok(Self {
-            replica_id,
-            replica_epoch,
-            unknown_tagged_fields,
-        })
-    }
-}
-
-impl KafkaEncode for FetchRequestReplicaState {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        if version.value() >= 15 {
-            encoder.write_i32(self.replica_id)?;
-        }
-        if version.value() >= 15 {
-            encoder.write_i64(self.replica_epoch)?;
-        }
-
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: "FetchRequestReplicaState",
-                version,
-            });
-        }
-
-        Ok(())
-    }
-}
-
-/// `FetchTopic` as declared by the `Fetch` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct FetchRequestTopic {
-    /// The name of the topic to fetch.
-    pub topic: StrBytes,
-    /// The unique topic ID.
-    pub topic_id: Uuid,
-    /// The partitions to fetch.
-    pub partitions: Vec<FetchRequestPartition>,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
-
-impl FetchRequestTopic {
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(12, 18));
-
-    fn is_flexible(version: ApiVersion) -> bool {
-        Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
-    }
-}
-
-impl KafkaDecode for FetchRequestTopic {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        let topic = if version.value() <= 12 {
-            if Self::is_flexible(version) {
-                decoder.read_compact_string()?
-            } else {
-                decoder.read_string()?
+    impl Default for ReplicaState {
+        fn default() -> Self {
+            Self {
+                replica_id: -1,
+                replica_epoch: -1,
+                unknown_tagged_fields: TaggedFields::default(),
             }
-        } else {
-            StrBytes::default()
-        };
-        let topic_id = if version.value() >= 13 {
-            decoder.read_uuid()?
-        } else {
-            Uuid::ZERO
-        };
-        let partitions = {
-            let length = if Self::is_flexible(version) {
-                decoder.read_compact_array_len()?
+        }
+    }
+
+    impl KafkaDecode for ReplicaState {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            let replica_id = if version.value() >= 15 {
+                decoder.read_i32()?
             } else {
-                decoder.read_array_len()?
+                -1
             };
-            decoder.read_vec(length, |decoder| {
-                FetchRequestPartition::decode(decoder, version)
-            })?
-        };
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
-
-        Ok(Self {
-            topic,
-            topic_id,
-            partitions,
-            unknown_tagged_fields,
-        })
-    }
-}
-
-impl KafkaEncode for FetchRequestTopic {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        if version.value() <= 12 {
-            if Self::is_flexible(version) {
-                encoder.write_compact_string(&self.topic)?;
+            let replica_epoch = if version.value() >= 15 {
+                decoder.read_i64()?
             } else {
-                encoder.write_string(&self.topic)?;
-            }
-        }
-        if version.value() >= 13 {
-            encoder.write_uuid(self.topic_id)?;
-        }
-        if Self::is_flexible(version) {
-            encoder.write_compact_array_len(self.partitions.len())?;
-        } else {
-            encoder.write_array_len(self.partitions.len())?;
-        }
-        for value in &self.partitions {
-            value.encode(encoder, version)?;
-        }
-
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: "FetchRequestTopic",
-                version,
-            });
-        }
-
-        Ok(())
-    }
-}
-
-/// `FetchPartition` as declared by the `Fetch` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct FetchRequestPartition {
-    /// The partition index.
-    pub partition: i32,
-    /// The current leader epoch of the partition.
-    pub current_leader_epoch: i32,
-    /// The message offset.
-    pub fetch_offset: i64,
-    /// The epoch of the last fetched record or -1 if there is none.
-    pub last_fetched_epoch: i32,
-    /// The earliest available offset of the follower replica. The field is only used when the request is sent by the follower.
-    pub log_start_offset: i64,
-    /// The maximum bytes to fetch from this partition. See KIP-74 for cases where this limit may not be honored.
-    pub partition_max_bytes: i32,
-    /// The directory id of the follower fetching.
-    pub replica_directory_id: Uuid,
-    /// The high-watermark known by the replica. -1 if the high-watermark is not known and 9223372036854775807 if the feature is not supported.
-    pub high_watermark: i64,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
-
-impl FetchRequestPartition {
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(12, 18));
-
-    fn is_flexible(version: ApiVersion) -> bool {
-        Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
-    }
-}
-
-impl Default for FetchRequestPartition {
-    fn default() -> Self {
-        Self {
-            partition: 0,
-            current_leader_epoch: -1,
-            fetch_offset: 0,
-            last_fetched_epoch: -1,
-            log_start_offset: -1,
-            partition_max_bytes: 0,
-            replica_directory_id: Uuid::ZERO,
-            high_watermark: 9_223_372_036_854_775_807,
-            unknown_tagged_fields: TaggedFields::default(),
-        }
-    }
-}
-
-impl KafkaDecode for FetchRequestPartition {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        let partition = decoder.read_i32()?;
-        let current_leader_epoch = if version.value() >= 9 {
-            decoder.read_i32()?
-        } else {
-            -1
-        };
-        let fetch_offset = decoder.read_i64()?;
-        let last_fetched_epoch = if version.value() >= 12 {
-            decoder.read_i32()?
-        } else {
-            -1
-        };
-        let log_start_offset = if version.value() >= 5 {
-            decoder.read_i64()?
-        } else {
-            -1
-        };
-        let partition_max_bytes = decoder.read_i32()?;
-        let mut replica_directory_id: Uuid = Uuid::ZERO;
-        let mut high_watermark: i64 = 9_223_372_036_854_775_807;
-        let mut unknown_tagged_fields = TaggedFields::default();
-        if Self::is_flexible(version) {
-            unknown_tagged_fields = decoder.read_tagged_fields_with(|tag, decoder| match tag {
-                0 if version.value() >= 17 => {
-                    replica_directory_id = decoder.read_uuid()?;
-                    Ok(TagOutcome::Decoded)
-                }
-                1 if version.value() >= 18 => {
-                    high_watermark = decoder.read_i64()?;
-                    Ok(TagOutcome::Decoded)
-                }
-                _ => Ok(TagOutcome::Retained),
-            })?;
-        }
-
-        Ok(Self {
-            partition,
-            current_leader_epoch,
-            fetch_offset,
-            last_fetched_epoch,
-            log_start_offset,
-            partition_max_bytes,
-            replica_directory_id,
-            high_watermark,
-            unknown_tagged_fields,
-        })
-    }
-}
-
-impl KafkaEncode for FetchRequestPartition {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        encoder.write_i32(self.partition)?;
-        if version.value() >= 9 {
-            encoder.write_i32(self.current_leader_epoch)?;
-        }
-        encoder.write_i64(self.fetch_offset)?;
-        if version.value() >= 12 {
-            encoder.write_i32(self.last_fetched_epoch)?;
-        }
-        if version.value() >= 5 {
-            encoder.write_i64(self.log_start_offset)?;
-        }
-        encoder.write_i32(self.partition_max_bytes)?;
-
-        if Self::is_flexible(version) {
-            let mut known = KnownTags::new();
-            if version.value() >= 17 && self.replica_directory_id != Uuid::ZERO {
-                known.write(0, |encoder| {
-                    encoder.write_uuid(self.replica_directory_id)?;
-                    Ok(())
-                })?;
-            }
-            if version.value() >= 18 && self.high_watermark != 9_223_372_036_854_775_807 {
-                known.write(1, |encoder| {
-                    encoder.write_i64(self.high_watermark)?;
-                    Ok(())
-                })?;
-            }
-            encoder.write_merged_tagged_fields(known, &self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: "FetchRequestPartition",
-                version,
-            });
-        }
-
-        Ok(())
-    }
-}
-
-/// `ForgottenTopic` as declared by the `Fetch` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct FetchRequestForgottenTopic {
-    /// The topic name.
-    pub topic: StrBytes,
-    /// The unique topic ID.
-    pub topic_id: Uuid,
-    /// The partitions indexes to forget.
-    pub partitions: Vec<i32>,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
-
-impl FetchRequestForgottenTopic {
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(12, 18));
-
-    fn is_flexible(version: ApiVersion) -> bool {
-        Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
-    }
-}
-
-impl KafkaDecode for FetchRequestForgottenTopic {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        let topic = if version.value() >= 7 && version.value() <= 12 {
-            if Self::is_flexible(version) {
-                decoder.read_compact_string()?
-            } else {
-                decoder.read_string()?
-            }
-        } else {
-            StrBytes::default()
-        };
-        let topic_id = if version.value() >= 13 {
-            decoder.read_uuid()?
-        } else {
-            Uuid::ZERO
-        };
-        let partitions = if version.value() >= 7 {
-            let length = if Self::is_flexible(version) {
-                decoder.read_compact_array_len()?
-            } else {
-                decoder.read_array_len()?
+                -1
             };
-            decoder.read_vec(length, Decoder::read_i32)?
-        } else {
-            Vec::new()
-        };
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
-
-        Ok(Self {
-            topic,
-            topic_id,
-            partitions,
-            unknown_tagged_fields,
-        })
-    }
-}
-
-impl KafkaEncode for FetchRequestForgottenTopic {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        if version.value() >= 7 && version.value() <= 12 {
-            if Self::is_flexible(version) {
-                encoder.write_compact_string(&self.topic)?;
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
             } else {
-                encoder.write_string(&self.topic)?;
+                TaggedFields::default()
+            };
+
+            Ok(Self {
+                replica_id,
+                replica_epoch,
+                unknown_tagged_fields,
+            })
+        }
+    }
+
+    impl KafkaEncode for ReplicaState {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            if version.value() >= 15 {
+                encoder.write_i32(self.replica_id)?;
             }
+            if version.value() >= 15 {
+                encoder.write_i64(self.replica_epoch)?;
+            }
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "ReplicaState",
+                    version,
+                });
+            }
+
+            Ok(())
         }
-        if version.value() >= 13 {
-            encoder.write_uuid(self.topic_id)?;
+    }
+
+    /// `FetchTopic` as declared by the `Fetch` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    pub struct FetchTopic {
+        /// The name of the topic to fetch.
+        pub topic: StrBytes,
+        /// The unique topic ID.
+        pub topic_id: Uuid,
+        /// The partitions to fetch.
+        pub partitions: Vec<FetchPartition>,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl FetchTopic {
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(12, 18));
+
+        fn is_flexible(version: ApiVersion) -> bool {
+            Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
         }
-        if version.value() >= 7 {
+    }
+
+    impl KafkaDecode for FetchTopic {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            let topic = if version.value() <= 12 {
+                if Self::is_flexible(version) {
+                    decoder.read_compact_string()?
+                } else {
+                    decoder.read_string()?
+                }
+            } else {
+                StrBytes::default()
+            };
+            let topic_id = if version.value() >= 13 {
+                decoder.read_uuid()?
+            } else {
+                Uuid::ZERO
+            };
+            let partitions = {
+                let length = if Self::is_flexible(version) {
+                    decoder.read_compact_array_len()?
+                } else {
+                    decoder.read_array_len()?
+                };
+                decoder.read_vec(length, |decoder| FetchPartition::decode(decoder, version))?
+            };
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
+
+            Ok(Self {
+                topic,
+                topic_id,
+                partitions,
+                unknown_tagged_fields,
+            })
+        }
+    }
+
+    impl KafkaEncode for FetchTopic {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            if version.value() <= 12 {
+                if Self::is_flexible(version) {
+                    encoder.write_compact_string(&self.topic)?;
+                } else {
+                    encoder.write_string(&self.topic)?;
+                }
+            }
+            if version.value() >= 13 {
+                encoder.write_uuid(self.topic_id)?;
+            }
             if Self::is_flexible(version) {
                 encoder.write_compact_array_len(self.partitions.len())?;
             } else {
                 encoder.write_array_len(self.partitions.len())?;
             }
             for value in &self.partitions {
-                encoder.write_i32(*value)?;
-            }
-        }
-
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: "FetchRequestForgottenTopic",
-                version,
-            });
-        }
-
-        Ok(())
-    }
-}
-
-/// Request body for the `Fetch` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct FetchRequest {
-    /// The `clusterId` if known. This is used to validate metadata fetches prior to broker registration.
-    pub cluster_id: Option<StrBytes>,
-    /// The broker ID of the follower, of -1 if this request is from a consumer.
-    pub replica_id: i32,
-    /// The state of the replica in the follower.
-    pub replica_state: FetchRequestReplicaState,
-    /// The maximum time in milliseconds to wait for the response.
-    pub max_wait_ms: i32,
-    /// The minimum bytes to accumulate in the response.
-    pub min_bytes: i32,
-    /// The maximum bytes to fetch. See KIP-74 for cases where this limit may not be honored.
-    pub max_bytes: i32,
-    /// This setting controls the visibility of transactional records. Using `READ_UNCOMMITTED` (`isolation_level` = 0) makes all records visible. With `READ_COMMITTED` (`isolation_level` = 1), non-transactional and COMMITTED transactional records are visible. To be more concrete, `READ_COMMITTED` returns all data from offsets smaller than the current LSO (last stable offset), and enables the inclusion of the list of aborted transactions in the result, which allows consumers to discard ABORTED transactional records.
-    pub isolation_level: i8,
-    /// The fetch session ID.
-    pub session_id: i32,
-    /// The fetch session epoch, which is used for ordering requests in a session.
-    pub session_epoch: i32,
-    /// The topics to fetch.
-    pub topics: Vec<FetchRequestTopic>,
-    /// In an incremental fetch request, the partitions to remove.
-    pub forgotten_topics_data: Vec<FetchRequestForgottenTopic>,
-    /// Rack ID of the consumer making this request.
-    pub rack_id: StrBytes,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
-
-impl Default for FetchRequest {
-    fn default() -> Self {
-        Self {
-            cluster_id: None,
-            replica_id: -1,
-            replica_state: FetchRequestReplicaState::default(),
-            max_wait_ms: 0,
-            min_bytes: 0,
-            max_bytes: 2_147_483_647,
-            isolation_level: 0,
-            session_id: 0,
-            session_epoch: -1,
-            topics: Vec::new(),
-            forgotten_topics_data: Vec::new(),
-            rack_id: StrBytes::default(),
-            unknown_tagged_fields: TaggedFields::default(),
-        }
-    }
-}
-
-impl KafkaMessage for FetchRequest {
-    const NAME: &'static str = "FetchRequest";
-    const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(4, 18);
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(12, 18));
-}
-
-impl KafkaRequest for FetchRequest {
-    const API_KEY: ApiKey = ApiKey::new(1);
-}
-
-impl RequestResponsePair for FetchRequest {
-    type Response = FetchResponse;
-}
-
-impl KafkaDecode for FetchRequest {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        crate::message::ensure_decode_version::<Self>(version)?;
-
-        let replica_id = if version.value() <= 14 {
-            decoder.read_i32()?
-        } else {
-            -1
-        };
-        let max_wait_ms = decoder.read_i32()?;
-        let min_bytes = decoder.read_i32()?;
-        let max_bytes = decoder.read_i32()?;
-        let isolation_level = decoder.read_i8()?;
-        let session_id = if version.value() >= 7 {
-            decoder.read_i32()?
-        } else {
-            0
-        };
-        let session_epoch = if version.value() >= 7 {
-            decoder.read_i32()?
-        } else {
-            -1
-        };
-        let topics = {
-            let length = if Self::is_flexible(version) {
-                decoder.read_compact_array_len()?
-            } else {
-                decoder.read_array_len()?
-            };
-            decoder.read_vec(length, |decoder| {
-                FetchRequestTopic::decode(decoder, version)
-            })?
-        };
-        let forgotten_topics_data = if version.value() >= 7 {
-            let length = if Self::is_flexible(version) {
-                decoder.read_compact_array_len()?
-            } else {
-                decoder.read_array_len()?
-            };
-            decoder.read_vec(length, |decoder| {
-                FetchRequestForgottenTopic::decode(decoder, version)
-            })?
-        } else {
-            Vec::new()
-        };
-        let rack_id = if version.value() >= 11 {
-            if Self::is_flexible(version) {
-                decoder.read_compact_string()?
-            } else {
-                decoder.read_string()?
-            }
-        } else {
-            StrBytes::default()
-        };
-        let mut cluster_id: Option<StrBytes> = None;
-        let mut replica_state: FetchRequestReplicaState = FetchRequestReplicaState::default();
-        let mut unknown_tagged_fields = TaggedFields::default();
-        if Self::is_flexible(version) {
-            unknown_tagged_fields = decoder.read_tagged_fields_with(|tag, decoder| match tag {
-                0 => {
-                    cluster_id = decoder.read_compact_nullable_string()?;
-                    Ok(TagOutcome::Decoded)
-                }
-                1 if version.value() >= 15 => {
-                    replica_state = FetchRequestReplicaState::decode(decoder, version)?;
-                    Ok(TagOutcome::Decoded)
-                }
-                _ => Ok(TagOutcome::Retained),
-            })?;
-        }
-
-        Ok(Self {
-            cluster_id,
-            replica_id,
-            replica_state,
-            max_wait_ms,
-            min_bytes,
-            max_bytes,
-            isolation_level,
-            session_id,
-            session_epoch,
-            topics,
-            forgotten_topics_data,
-            rack_id,
-            unknown_tagged_fields,
-        })
-    }
-}
-
-impl KafkaEncode for FetchRequest {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        crate::message::ensure_encode_version::<Self>(version)?;
-
-        if version.value() > 14 && self.replica_id != -1 {
-            return Err(EncodeError::FieldNotRepresentable {
-                message: Self::NAME,
-                field: "ReplicaId",
-                version,
-            });
-        }
-        if version.value() < 15 && self.replica_state != FetchRequestReplicaState::default() {
-            return Err(EncodeError::FieldNotRepresentable {
-                message: Self::NAME,
-                field: "ReplicaState",
-                version,
-            });
-        }
-        if version.value() < 7 && !self.forgotten_topics_data.is_empty() {
-            return Err(EncodeError::FieldNotRepresentable {
-                message: Self::NAME,
-                field: "ForgottenTopicsData",
-                version,
-            });
-        }
-
-        if version.value() <= 14 {
-            encoder.write_i32(self.replica_id)?;
-        }
-        encoder.write_i32(self.max_wait_ms)?;
-        encoder.write_i32(self.min_bytes)?;
-        encoder.write_i32(self.max_bytes)?;
-        encoder.write_i8(self.isolation_level)?;
-        if version.value() >= 7 {
-            encoder.write_i32(self.session_id)?;
-        }
-        if version.value() >= 7 {
-            encoder.write_i32(self.session_epoch)?;
-        }
-        if Self::is_flexible(version) {
-            encoder.write_compact_array_len(self.topics.len())?;
-        } else {
-            encoder.write_array_len(self.topics.len())?;
-        }
-        for value in &self.topics {
-            value.encode(encoder, version)?;
-        }
-        if version.value() >= 7 {
-            if Self::is_flexible(version) {
-                encoder.write_compact_array_len(self.forgotten_topics_data.len())?;
-            } else {
-                encoder.write_array_len(self.forgotten_topics_data.len())?;
-            }
-            for value in &self.forgotten_topics_data {
                 value.encode(encoder, version)?;
             }
-        }
-        if version.value() >= 11 {
+
             if Self::is_flexible(version) {
-                encoder.write_compact_string(&self.rack_id)?;
-            } else {
-                encoder.write_string(&self.rack_id)?;
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "FetchTopic",
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+
+    /// `FetchPartition` as declared by the `Fetch` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Eq, PartialEq)]
+    pub struct FetchPartition {
+        /// The partition index.
+        pub partition: i32,
+        /// The current leader epoch of the partition.
+        pub current_leader_epoch: i32,
+        /// The message offset.
+        pub fetch_offset: i64,
+        /// The epoch of the last fetched record or -1 if there is none.
+        pub last_fetched_epoch: i32,
+        /// The earliest available offset of the follower replica. The field is only used when the request is sent by the follower.
+        pub log_start_offset: i64,
+        /// The maximum bytes to fetch from this partition. See KIP-74 for cases where this limit may not be honored.
+        pub partition_max_bytes: i32,
+        /// The directory id of the follower fetching.
+        pub replica_directory_id: Uuid,
+        /// The high-watermark known by the replica. -1 if the high-watermark is not known and 9223372036854775807 if the feature is not supported.
+        pub high_watermark: i64,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl FetchPartition {
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(12, 18));
+
+        fn is_flexible(version: ApiVersion) -> bool {
+            Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+        }
+    }
+
+    impl Default for FetchPartition {
+        fn default() -> Self {
+            Self {
+                partition: 0,
+                current_leader_epoch: -1,
+                fetch_offset: 0,
+                last_fetched_epoch: -1,
+                log_start_offset: -1,
+                partition_max_bytes: 0,
+                replica_directory_id: Uuid::ZERO,
+                high_watermark: 9_223_372_036_854_775_807,
+                unknown_tagged_fields: TaggedFields::default(),
             }
         }
-
-        if Self::is_flexible(version) {
-            let mut known = KnownTags::new();
-            if self.cluster_id.is_some() {
-                known.write(0, |encoder| {
-                    encoder.write_compact_nullable_string(self.cluster_id.as_ref())?;
-                    Ok(())
-                })?;
-            }
-            if version.value() >= 15 && self.replica_state != FetchRequestReplicaState::default() {
-                known.write(1, |encoder| {
-                    self.replica_state.encode(encoder, version)?;
-                    Ok(())
-                })?;
-            }
-            encoder.write_merged_tagged_fields(known, &self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: Self::NAME,
-                version,
-            });
-        }
-
-        Ok(())
     }
-}
 
-/// `FetchableTopicResponse` as declared by the `Fetch` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct FetchResponseFetchableTopicResponse {
-    /// The topic name.
-    pub topic: StrBytes,
-    /// The unique topic ID.
-    pub topic_id: Uuid,
-    /// The topic partitions.
-    pub partitions: Vec<FetchResponsePartitionData>,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
-
-impl FetchResponseFetchableTopicResponse {
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(12, 18));
-
-    fn is_flexible(version: ApiVersion) -> bool {
-        Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
-    }
-}
-
-impl KafkaDecode for FetchResponseFetchableTopicResponse {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        let topic = if version.value() <= 12 {
-            if Self::is_flexible(version) {
-                decoder.read_compact_string()?
+    impl KafkaDecode for FetchPartition {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            let partition = decoder.read_i32()?;
+            let current_leader_epoch = if version.value() >= 9 {
+                decoder.read_i32()?
             } else {
-                decoder.read_string()?
-            }
-        } else {
-            StrBytes::default()
-        };
-        let topic_id = if version.value() >= 13 {
-            decoder.read_uuid()?
-        } else {
-            Uuid::ZERO
-        };
-        let partitions = {
-            let length = if Self::is_flexible(version) {
-                decoder.read_compact_array_len()?
-            } else {
-                decoder.read_array_len()?
+                -1
             };
-            decoder.read_vec(length, |decoder| {
-                FetchResponsePartitionData::decode(decoder, version)
-            })?
-        };
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
-
-        Ok(Self {
-            topic,
-            topic_id,
-            partitions,
-            unknown_tagged_fields,
-        })
-    }
-}
-
-impl KafkaEncode for FetchResponseFetchableTopicResponse {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        if version.value() <= 12 {
-            if Self::is_flexible(version) {
-                encoder.write_compact_string(&self.topic)?;
+            let fetch_offset = decoder.read_i64()?;
+            let last_fetched_epoch = if version.value() >= 12 {
+                decoder.read_i32()?
             } else {
-                encoder.write_string(&self.topic)?;
+                -1
+            };
+            let log_start_offset = if version.value() >= 5 {
+                decoder.read_i64()?
+            } else {
+                -1
+            };
+            let partition_max_bytes = decoder.read_i32()?;
+            let mut replica_directory_id: Uuid = Uuid::ZERO;
+            let mut high_watermark: i64 = 9_223_372_036_854_775_807;
+            let mut unknown_tagged_fields = TaggedFields::default();
+            if Self::is_flexible(version) {
+                unknown_tagged_fields =
+                    decoder.read_tagged_fields_with(|tag, decoder| match tag {
+                        0 if version.value() >= 17 => {
+                            replica_directory_id = decoder.read_uuid()?;
+                            Ok(TagOutcome::Decoded)
+                        }
+                        1 if version.value() >= 18 => {
+                            high_watermark = decoder.read_i64()?;
+                            Ok(TagOutcome::Decoded)
+                        }
+                        _ => Ok(TagOutcome::Retained),
+                    })?;
+            }
+
+            Ok(Self {
+                partition,
+                current_leader_epoch,
+                fetch_offset,
+                last_fetched_epoch,
+                log_start_offset,
+                partition_max_bytes,
+                replica_directory_id,
+                high_watermark,
+                unknown_tagged_fields,
+            })
+        }
+    }
+
+    impl KafkaEncode for FetchPartition {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            encoder.write_i32(self.partition)?;
+            if version.value() >= 9 {
+                encoder.write_i32(self.current_leader_epoch)?;
+            }
+            encoder.write_i64(self.fetch_offset)?;
+            if version.value() >= 12 {
+                encoder.write_i32(self.last_fetched_epoch)?;
+            }
+            if version.value() >= 5 {
+                encoder.write_i64(self.log_start_offset)?;
+            }
+            encoder.write_i32(self.partition_max_bytes)?;
+
+            if Self::is_flexible(version) {
+                let mut known = KnownTags::new();
+                if version.value() >= 17 && self.replica_directory_id != Uuid::ZERO {
+                    known.write(0, |encoder| {
+                        encoder.write_uuid(self.replica_directory_id)?;
+                        Ok(())
+                    })?;
+                }
+                if version.value() >= 18 && self.high_watermark != 9_223_372_036_854_775_807 {
+                    known.write(1, |encoder| {
+                        encoder.write_i64(self.high_watermark)?;
+                        Ok(())
+                    })?;
+                }
+                encoder.write_merged_tagged_fields(known, &self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "FetchPartition",
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+
+    /// `ForgottenTopic` as declared by the `Fetch` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    pub struct ForgottenTopic {
+        /// The topic name.
+        pub topic: StrBytes,
+        /// The unique topic ID.
+        pub topic_id: Uuid,
+        /// The partitions indexes to forget.
+        pub partitions: Vec<i32>,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl ForgottenTopic {
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(12, 18));
+
+        fn is_flexible(version: ApiVersion) -> bool {
+            Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+        }
+    }
+
+    impl KafkaDecode for ForgottenTopic {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            let topic = if version.value() >= 7 && version.value() <= 12 {
+                if Self::is_flexible(version) {
+                    decoder.read_compact_string()?
+                } else {
+                    decoder.read_string()?
+                }
+            } else {
+                StrBytes::default()
+            };
+            let topic_id = if version.value() >= 13 {
+                decoder.read_uuid()?
+            } else {
+                Uuid::ZERO
+            };
+            let partitions = if version.value() >= 7 {
+                let length = if Self::is_flexible(version) {
+                    decoder.read_compact_array_len()?
+                } else {
+                    decoder.read_array_len()?
+                };
+                decoder.read_vec(length, Decoder::read_i32)?
+            } else {
+                Vec::new()
+            };
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
+
+            Ok(Self {
+                topic,
+                topic_id,
+                partitions,
+                unknown_tagged_fields,
+            })
+        }
+    }
+
+    impl KafkaEncode for ForgottenTopic {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            if version.value() >= 7 && version.value() <= 12 {
+                if Self::is_flexible(version) {
+                    encoder.write_compact_string(&self.topic)?;
+                } else {
+                    encoder.write_string(&self.topic)?;
+                }
+            }
+            if version.value() >= 13 {
+                encoder.write_uuid(self.topic_id)?;
+            }
+            if version.value() >= 7 {
+                if Self::is_flexible(version) {
+                    encoder.write_compact_array_len(self.partitions.len())?;
+                } else {
+                    encoder.write_array_len(self.partitions.len())?;
+                }
+                for value in &self.partitions {
+                    encoder.write_i32(*value)?;
+                }
+            }
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "ForgottenTopic",
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+
+    /// Request body for the `Fetch` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Eq, PartialEq)]
+    pub struct FetchRequest {
+        /// The `clusterId` if known. This is used to validate metadata fetches prior to broker registration.
+        pub cluster_id: Option<StrBytes>,
+        /// The broker ID of the follower, of -1 if this request is from a consumer.
+        pub replica_id: i32,
+        /// The state of the replica in the follower.
+        pub replica_state: ReplicaState,
+        /// The maximum time in milliseconds to wait for the response.
+        pub max_wait_ms: i32,
+        /// The minimum bytes to accumulate in the response.
+        pub min_bytes: i32,
+        /// The maximum bytes to fetch. See KIP-74 for cases where this limit may not be honored.
+        pub max_bytes: i32,
+        /// This setting controls the visibility of transactional records. Using `READ_UNCOMMITTED` (`isolation_level` = 0) makes all records visible. With `READ_COMMITTED` (`isolation_level` = 1), non-transactional and COMMITTED transactional records are visible. To be more concrete, `READ_COMMITTED` returns all data from offsets smaller than the current LSO (last stable offset), and enables the inclusion of the list of aborted transactions in the result, which allows consumers to discard ABORTED transactional records.
+        pub isolation_level: i8,
+        /// The fetch session ID.
+        pub session_id: i32,
+        /// The fetch session epoch, which is used for ordering requests in a session.
+        pub session_epoch: i32,
+        /// The topics to fetch.
+        pub topics: Vec<FetchTopic>,
+        /// In an incremental fetch request, the partitions to remove.
+        pub forgotten_topics_data: Vec<ForgottenTopic>,
+        /// Rack ID of the consumer making this request.
+        pub rack_id: StrBytes,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl Default for FetchRequest {
+        fn default() -> Self {
+            Self {
+                cluster_id: None,
+                replica_id: -1,
+                replica_state: ReplicaState::default(),
+                max_wait_ms: 0,
+                min_bytes: 0,
+                max_bytes: 2_147_483_647,
+                isolation_level: 0,
+                session_id: 0,
+                session_epoch: -1,
+                topics: Vec::new(),
+                forgotten_topics_data: Vec::new(),
+                rack_id: StrBytes::default(),
+                unknown_tagged_fields: TaggedFields::default(),
             }
         }
-        if version.value() >= 13 {
-            encoder.write_uuid(self.topic_id)?;
-        }
-        if Self::is_flexible(version) {
-            encoder.write_compact_array_len(self.partitions.len())?;
-        } else {
-            encoder.write_array_len(self.partitions.len())?;
-        }
-        for value in &self.partitions {
-            value.encode(encoder, version)?;
-        }
-
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: "FetchResponseFetchableTopicResponse",
-                version,
-            });
-        }
-
-        Ok(())
     }
-}
 
-/// `PartitionData` as declared by the `Fetch` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct FetchResponsePartitionData {
-    /// The partition index.
-    pub partition_index: i32,
-    /// The error code, or 0 if there was no fetch error.
-    pub error_code: i16,
-    /// The current high water mark.
-    pub high_watermark: i64,
-    /// The last stable offset (or LSO) of the partition. This is the last offset such that the state of all transactional records prior to this offset have been decided (ABORTED or COMMITTED).
-    pub last_stable_offset: i64,
-    /// The current log start offset.
-    pub log_start_offset: i64,
-    /// In case divergence is detected based on the `LastFetchedEpoch` and `FetchOffset` in the request, this field indicates the largest epoch and its end offset such that subsequent records are known to diverge.
-    pub diverging_epoch: FetchResponseEpochEndOffset,
-    /// The current leader of the partition.
-    pub current_leader: FetchResponseLeaderIdAndEpoch,
-    /// In the case of fetching an offset less than the `LogStartOffset`, this is the end offset and epoch that should be used in the `FetchSnapshot` request.
-    pub snapshot_id: FetchResponseSnapshotId,
-    /// The aborted transactions.
-    pub aborted_transactions: Option<Vec<FetchResponseAbortedTransaction>>,
-    /// The preferred read replica for the consumer to use on its next fetch request.
-    pub preferred_read_replica: i32,
-    /// The record data.
-    pub records: Option<Bytes>,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
-
-impl FetchResponsePartitionData {
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(12, 18));
-
-    fn is_flexible(version: ApiVersion) -> bool {
-        Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+    impl KafkaMessage for FetchRequest {
+        const NAME: &'static str = "FetchRequest";
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(4, 18);
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(12, 18));
     }
-}
 
-impl Default for FetchResponsePartitionData {
-    fn default() -> Self {
-        Self {
-            partition_index: 0,
-            error_code: 0,
-            high_watermark: 0,
-            last_stable_offset: -1,
-            log_start_offset: -1,
-            diverging_epoch: FetchResponseEpochEndOffset::default(),
-            current_leader: FetchResponseLeaderIdAndEpoch::default(),
-            snapshot_id: FetchResponseSnapshotId::default(),
-            aborted_transactions: Some(Vec::new()),
-            preferred_read_replica: -1,
-            records: Some(Bytes::default()),
-            unknown_tagged_fields: TaggedFields::default(),
-        }
+    impl KafkaRequest for FetchRequest {
+        const API_KEY: ApiKey = ApiKey::new(1);
     }
-}
 
-impl KafkaDecode for FetchResponsePartitionData {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        let partition_index = decoder.read_i32()?;
-        let error_code = decoder.read_i16()?;
-        let high_watermark = decoder.read_i64()?;
-        let last_stable_offset = decoder.read_i64()?;
-        let log_start_offset = if version.value() >= 5 {
-            decoder.read_i64()?
-        } else {
-            -1
-        };
-        let aborted_transactions = {
-            let length = if Self::is_flexible(version) {
-                decoder.read_compact_nullable_array_len()?
+    impl RequestResponsePair for FetchRequest {
+        type Response = super::FetchResponse;
+    }
+
+    impl KafkaDecode for FetchRequest {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            crate::message::ensure_decode_version::<Self>(version)?;
+
+            let replica_id = if version.value() <= 14 {
+                decoder.read_i32()?
             } else {
-                decoder.read_nullable_array_len()?
+                -1
             };
-            length
-                .map(|length| {
-                    decoder.read_vec(length, |decoder| {
-                        FetchResponseAbortedTransaction::decode(decoder, version)
-                    })
-                })
-                .transpose()?
-        };
-        let preferred_read_replica = if version.value() >= 11 {
-            decoder.read_i32()?
-        } else {
-            -1
-        };
-        let records = if Self::is_flexible(version) {
-            decoder.read_compact_nullable_bytes()?
-        } else {
-            decoder.read_nullable_bytes()?
-        };
-        let mut diverging_epoch: FetchResponseEpochEndOffset =
-            FetchResponseEpochEndOffset::default();
-        let mut current_leader: FetchResponseLeaderIdAndEpoch =
-            FetchResponseLeaderIdAndEpoch::default();
-        let mut snapshot_id: FetchResponseSnapshotId = FetchResponseSnapshotId::default();
-        let mut unknown_tagged_fields = TaggedFields::default();
-        if Self::is_flexible(version) {
-            unknown_tagged_fields = decoder.read_tagged_fields_with(|tag, decoder| match tag {
-                0 => {
-                    diverging_epoch = FetchResponseEpochEndOffset::decode(decoder, version)?;
-                    Ok(TagOutcome::Decoded)
+            let max_wait_ms = decoder.read_i32()?;
+            let min_bytes = decoder.read_i32()?;
+            let max_bytes = decoder.read_i32()?;
+            let isolation_level = decoder.read_i8()?;
+            let session_id = if version.value() >= 7 {
+                decoder.read_i32()?
+            } else {
+                0
+            };
+            let session_epoch = if version.value() >= 7 {
+                decoder.read_i32()?
+            } else {
+                -1
+            };
+            let topics = {
+                let length = if Self::is_flexible(version) {
+                    decoder.read_compact_array_len()?
+                } else {
+                    decoder.read_array_len()?
+                };
+                decoder.read_vec(length, |decoder| FetchTopic::decode(decoder, version))?
+            };
+            let forgotten_topics_data = if version.value() >= 7 {
+                let length = if Self::is_flexible(version) {
+                    decoder.read_compact_array_len()?
+                } else {
+                    decoder.read_array_len()?
+                };
+                decoder.read_vec(length, |decoder| ForgottenTopic::decode(decoder, version))?
+            } else {
+                Vec::new()
+            };
+            let rack_id = if version.value() >= 11 {
+                if Self::is_flexible(version) {
+                    decoder.read_compact_string()?
+                } else {
+                    decoder.read_string()?
                 }
-                1 => {
-                    current_leader = FetchResponseLeaderIdAndEpoch::decode(decoder, version)?;
-                    Ok(TagOutcome::Decoded)
-                }
-                2 => {
-                    snapshot_id = FetchResponseSnapshotId::decode(decoder, version)?;
-                    Ok(TagOutcome::Decoded)
-                }
-                _ => Ok(TagOutcome::Retained),
-            })?;
-        }
+            } else {
+                StrBytes::default()
+            };
+            let mut cluster_id: Option<StrBytes> = None;
+            let mut replica_state: ReplicaState = ReplicaState::default();
+            let mut unknown_tagged_fields = TaggedFields::default();
+            if Self::is_flexible(version) {
+                unknown_tagged_fields =
+                    decoder.read_tagged_fields_with(|tag, decoder| match tag {
+                        0 => {
+                            cluster_id = decoder.read_compact_nullable_string()?;
+                            Ok(TagOutcome::Decoded)
+                        }
+                        1 if version.value() >= 15 => {
+                            replica_state = ReplicaState::decode(decoder, version)?;
+                            Ok(TagOutcome::Decoded)
+                        }
+                        _ => Ok(TagOutcome::Retained),
+                    })?;
+            }
 
-        Ok(Self {
-            partition_index,
-            error_code,
-            high_watermark,
-            last_stable_offset,
-            log_start_offset,
-            diverging_epoch,
-            current_leader,
-            snapshot_id,
-            aborted_transactions,
-            preferred_read_replica,
-            records,
-            unknown_tagged_fields,
-        })
+            Ok(Self {
+                cluster_id,
+                replica_id,
+                replica_state,
+                max_wait_ms,
+                min_bytes,
+                max_bytes,
+                isolation_level,
+                session_id,
+                session_epoch,
+                topics,
+                forgotten_topics_data,
+                rack_id,
+                unknown_tagged_fields,
+            })
+        }
     }
-}
 
-impl KafkaEncode for FetchResponsePartitionData {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        encoder.write_i32(self.partition_index)?;
-        encoder.write_i16(self.error_code)?;
-        encoder.write_i64(self.high_watermark)?;
-        encoder.write_i64(self.last_stable_offset)?;
-        if version.value() >= 5 {
-            encoder.write_i64(self.log_start_offset)?;
-        }
-        if Self::is_flexible(version) {
-            encoder.write_compact_nullable_array_len(
-                self.aborted_transactions.as_ref().map(Vec::len),
-            )?;
-        } else {
-            encoder.write_nullable_array_len(self.aborted_transactions.as_ref().map(Vec::len))?;
-        }
-        if let Some(values) = &self.aborted_transactions {
-            for value in values {
+    impl KafkaEncode for FetchRequest {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            crate::message::ensure_encode_version::<Self>(version)?;
+
+            if version.value() > 14 && self.replica_id != -1 {
+                return Err(EncodeError::FieldNotRepresentable {
+                    message: Self::NAME,
+                    field: "ReplicaId",
+                    version,
+                });
+            }
+            if version.value() < 15 && self.replica_state != ReplicaState::default() {
+                return Err(EncodeError::FieldNotRepresentable {
+                    message: Self::NAME,
+                    field: "ReplicaState",
+                    version,
+                });
+            }
+            if version.value() < 7 && !self.forgotten_topics_data.is_empty() {
+                return Err(EncodeError::FieldNotRepresentable {
+                    message: Self::NAME,
+                    field: "ForgottenTopicsData",
+                    version,
+                });
+            }
+
+            if version.value() <= 14 {
+                encoder.write_i32(self.replica_id)?;
+            }
+            encoder.write_i32(self.max_wait_ms)?;
+            encoder.write_i32(self.min_bytes)?;
+            encoder.write_i32(self.max_bytes)?;
+            encoder.write_i8(self.isolation_level)?;
+            if version.value() >= 7 {
+                encoder.write_i32(self.session_id)?;
+            }
+            if version.value() >= 7 {
+                encoder.write_i32(self.session_epoch)?;
+            }
+            if Self::is_flexible(version) {
+                encoder.write_compact_array_len(self.topics.len())?;
+            } else {
+                encoder.write_array_len(self.topics.len())?;
+            }
+            for value in &self.topics {
                 value.encode(encoder, version)?;
             }
-        }
-        if version.value() >= 11 {
-            encoder.write_i32(self.preferred_read_replica)?;
-        }
-        if Self::is_flexible(version) {
-            encoder.write_compact_nullable_bytes(self.records.as_deref())?;
-        } else {
-            encoder.write_nullable_bytes(self.records.as_deref())?;
-        }
-
-        if Self::is_flexible(version) {
-            let mut known = KnownTags::new();
-            if self.diverging_epoch != FetchResponseEpochEndOffset::default() {
-                known.write(0, |encoder| {
-                    self.diverging_epoch.encode(encoder, version)?;
-                    Ok(())
-                })?;
+            if version.value() >= 7 {
+                if Self::is_flexible(version) {
+                    encoder.write_compact_array_len(self.forgotten_topics_data.len())?;
+                } else {
+                    encoder.write_array_len(self.forgotten_topics_data.len())?;
+                }
+                for value in &self.forgotten_topics_data {
+                    value.encode(encoder, version)?;
+                }
             }
-            if self.current_leader != FetchResponseLeaderIdAndEpoch::default() {
-                known.write(1, |encoder| {
-                    self.current_leader.encode(encoder, version)?;
-                    Ok(())
-                })?;
+            if version.value() >= 11 {
+                if Self::is_flexible(version) {
+                    encoder.write_compact_string(&self.rack_id)?;
+                } else {
+                    encoder.write_string(&self.rack_id)?;
+                }
             }
-            if self.snapshot_id != FetchResponseSnapshotId::default() {
-                known.write(2, |encoder| {
-                    self.snapshot_id.encode(encoder, version)?;
-                    Ok(())
-                })?;
+
+            if Self::is_flexible(version) {
+                let mut known = KnownTags::new();
+                if self.cluster_id.is_some() {
+                    known.write(0, |encoder| {
+                        encoder.write_compact_nullable_string(self.cluster_id.as_ref())?;
+                        Ok(())
+                    })?;
+                }
+                if version.value() >= 15 && self.replica_state != ReplicaState::default() {
+                    known.write(1, |encoder| {
+                        self.replica_state.encode(encoder, version)?;
+                        Ok(())
+                    })?;
+                }
+                encoder.write_merged_tagged_fields(known, &self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: Self::NAME,
+                    version,
+                });
             }
-            encoder.write_merged_tagged_fields(known, &self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: "FetchResponsePartitionData",
-                version,
-            });
-        }
 
-        Ok(())
-    }
-}
-
-/// `EpochEndOffset` as declared by the `Fetch` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct FetchResponseEpochEndOffset {
-    /// The largest epoch.
-    pub epoch: i32,
-    /// The end offset of the epoch.
-    pub end_offset: i64,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
-
-impl FetchResponseEpochEndOffset {
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(12, 18));
-
-    fn is_flexible(version: ApiVersion) -> bool {
-        Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
-    }
-}
-
-impl Default for FetchResponseEpochEndOffset {
-    fn default() -> Self {
-        Self {
-            epoch: -1,
-            end_offset: -1,
-            unknown_tagged_fields: TaggedFields::default(),
+            Ok(())
         }
     }
 }
 
-impl KafkaDecode for FetchResponseEpochEndOffset {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        let epoch = if version.value() >= 12 {
-            decoder.read_i32()?
-        } else {
-            -1
-        };
-        let end_offset = if version.value() >= 12 {
-            decoder.read_i64()?
-        } else {
-            -1
-        };
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
+/// `FetchResponse` and every struct it declares, under upstream's own names.
+///
+/// [`FetchResponse`](crate::FetchResponse) is re-exported flat, so this path never has to be
+/// written to name the message itself.
+pub mod fetch_response {
+    use kafka_wire_core::{
+        ApiKey, ApiVersion, Bytes, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder,
+        KafkaDecode, KafkaEncode, KnownTags, StrBytes, TagOutcome, TaggedFields, Uuid,
+        VersionRange,
+    };
 
-        Ok(Self {
-            epoch,
-            end_offset,
-            unknown_tagged_fields,
-        })
+    use crate::{KafkaMessage, KafkaResponse};
+
+    /// `FetchableTopicResponse` as declared by the `Fetch` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    pub struct FetchableTopicResponse {
+        /// The topic name.
+        pub topic: StrBytes,
+        /// The unique topic ID.
+        pub topic_id: Uuid,
+        /// The topic partitions.
+        pub partitions: Vec<PartitionData>,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
     }
-}
 
-impl KafkaEncode for FetchResponseEpochEndOffset {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        if version.value() >= 12 {
-            encoder.write_i32(self.epoch)?;
-        }
-        if version.value() >= 12 {
-            encoder.write_i64(self.end_offset)?;
-        }
+    impl FetchableTopicResponse {
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(12, 18));
 
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: "FetchResponseEpochEndOffset",
-                version,
-            });
-        }
-
-        Ok(())
-    }
-}
-
-/// `LeaderIdAndEpoch` as declared by the `Fetch` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct FetchResponseLeaderIdAndEpoch {
-    /// The ID of the current leader or -1 if the leader is unknown.
-    pub leader_id: i32,
-    /// The latest known leader epoch.
-    pub leader_epoch: i32,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
-
-impl FetchResponseLeaderIdAndEpoch {
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(12, 18));
-
-    fn is_flexible(version: ApiVersion) -> bool {
-        Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
-    }
-}
-
-impl Default for FetchResponseLeaderIdAndEpoch {
-    fn default() -> Self {
-        Self {
-            leader_id: -1,
-            leader_epoch: -1,
-            unknown_tagged_fields: TaggedFields::default(),
+        fn is_flexible(version: ApiVersion) -> bool {
+            Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
         }
     }
-}
 
-impl KafkaDecode for FetchResponseLeaderIdAndEpoch {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        let leader_id = if version.value() >= 12 {
-            decoder.read_i32()?
-        } else {
-            -1
-        };
-        let leader_epoch = if version.value() >= 12 {
-            decoder.read_i32()?
-        } else {
-            -1
-        };
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
-
-        Ok(Self {
-            leader_id,
-            leader_epoch,
-            unknown_tagged_fields,
-        })
-    }
-}
-
-impl KafkaEncode for FetchResponseLeaderIdAndEpoch {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        if version.value() >= 12 {
-            encoder.write_i32(self.leader_id)?;
-        }
-        if version.value() >= 12 {
-            encoder.write_i32(self.leader_epoch)?;
-        }
-
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: "FetchResponseLeaderIdAndEpoch",
-                version,
-            });
-        }
-
-        Ok(())
-    }
-}
-
-/// `SnapshotId` as declared by the `Fetch` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct FetchResponseSnapshotId {
-    /// The end offset of the epoch.
-    pub end_offset: i64,
-    /// The largest epoch.
-    pub epoch: i32,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
-
-impl FetchResponseSnapshotId {
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(12, 18));
-
-    fn is_flexible(version: ApiVersion) -> bool {
-        Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
-    }
-}
-
-impl Default for FetchResponseSnapshotId {
-    fn default() -> Self {
-        Self {
-            end_offset: -1,
-            epoch: -1,
-            unknown_tagged_fields: TaggedFields::default(),
-        }
-    }
-}
-
-impl KafkaDecode for FetchResponseSnapshotId {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        let end_offset = decoder.read_i64()?;
-        let epoch = decoder.read_i32()?;
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
-
-        Ok(Self {
-            end_offset,
-            epoch,
-            unknown_tagged_fields,
-        })
-    }
-}
-
-impl KafkaEncode for FetchResponseSnapshotId {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        encoder.write_i64(self.end_offset)?;
-        encoder.write_i32(self.epoch)?;
-
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: "FetchResponseSnapshotId",
-                version,
-            });
-        }
-
-        Ok(())
-    }
-}
-
-/// `AbortedTransaction` as declared by the `Fetch` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct FetchResponseAbortedTransaction {
-    /// The producer id associated with the aborted transaction.
-    pub producer_id: i64,
-    /// The first offset in the aborted transaction.
-    pub first_offset: i64,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
-
-impl FetchResponseAbortedTransaction {
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(12, 18));
-
-    fn is_flexible(version: ApiVersion) -> bool {
-        Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
-    }
-}
-
-impl KafkaDecode for FetchResponseAbortedTransaction {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        let producer_id = decoder.read_i64()?;
-        let first_offset = decoder.read_i64()?;
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
-
-        Ok(Self {
-            producer_id,
-            first_offset,
-            unknown_tagged_fields,
-        })
-    }
-}
-
-impl KafkaEncode for FetchResponseAbortedTransaction {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        encoder.write_i64(self.producer_id)?;
-        encoder.write_i64(self.first_offset)?;
-
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: "FetchResponseAbortedTransaction",
-                version,
-            });
-        }
-
-        Ok(())
-    }
-}
-
-/// `NodeEndpoint` as declared by the `Fetch` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct FetchResponseNodeEndpoint {
-    /// The ID of the associated node.
-    pub node_id: i32,
-    /// The node's hostname.
-    pub host: StrBytes,
-    /// The node's port.
-    pub port: i32,
-    /// The rack of the node, or null if it has not been assigned to a rack.
-    pub rack: Option<StrBytes>,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
-
-impl FetchResponseNodeEndpoint {
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(12, 18));
-
-    fn is_flexible(version: ApiVersion) -> bool {
-        Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
-    }
-}
-
-impl KafkaDecode for FetchResponseNodeEndpoint {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        let node_id = if version.value() >= 16 {
-            decoder.read_i32()?
-        } else {
-            0
-        };
-        let host = if version.value() >= 16 {
-            decoder.read_compact_string()?
-        } else {
-            StrBytes::default()
-        };
-        let port = if version.value() >= 16 {
-            decoder.read_i32()?
-        } else {
-            0
-        };
-        let rack = if version.value() >= 16 {
-            decoder.read_compact_nullable_string()?
-        } else {
-            None
-        };
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
-
-        Ok(Self {
-            node_id,
-            host,
-            port,
-            rack,
-            unknown_tagged_fields,
-        })
-    }
-}
-
-impl KafkaEncode for FetchResponseNodeEndpoint {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        if version.value() >= 16 {
-            encoder.write_i32(self.node_id)?;
-        }
-        if version.value() >= 16 {
-            encoder.write_compact_string(&self.host)?;
-        }
-        if version.value() >= 16 {
-            encoder.write_i32(self.port)?;
-        }
-        if version.value() >= 16 {
-            encoder.write_compact_nullable_string(self.rack.as_ref())?;
-        }
-
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: "FetchResponseNodeEndpoint",
-                version,
-            });
-        }
-
-        Ok(())
-    }
-}
-
-/// Response body for the `Fetch` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct FetchResponse {
-    /// The duration in milliseconds for which the request was throttled due to a quota violation, or zero if the request did not violate any quota.
-    pub throttle_time_ms: i32,
-    /// The top level response error code.
-    pub error_code: i16,
-    /// The fetch session ID, or 0 if this is not part of a fetch session.
-    pub session_id: i32,
-    /// The response topics.
-    pub responses: Vec<FetchResponseFetchableTopicResponse>,
-    /// Endpoints for all current-leaders enumerated in `PartitionData`, with errors `NOT_LEADER_OR_FOLLOWER` & `FENCED_LEADER_EPOCH`.
-    pub node_endpoints: Vec<FetchResponseNodeEndpoint>,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
-
-impl KafkaMessage for FetchResponse {
-    const NAME: &'static str = "FetchResponse";
-    const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(4, 18);
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(12, 18));
-}
-
-impl KafkaResponse for FetchResponse {
-    const API_KEY: ApiKey = ApiKey::new(1);
-}
-
-impl KafkaDecode for FetchResponse {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        crate::message::ensure_decode_version::<Self>(version)?;
-
-        let throttle_time_ms = decoder.read_i32()?;
-        let error_code = if version.value() >= 7 {
-            decoder.read_i16()?
-        } else {
-            0
-        };
-        let session_id = if version.value() >= 7 {
-            decoder.read_i32()?
-        } else {
-            0
-        };
-        let responses = {
-            let length = if Self::is_flexible(version) {
-                decoder.read_compact_array_len()?
+    impl KafkaDecode for FetchableTopicResponse {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            let topic = if version.value() <= 12 {
+                if Self::is_flexible(version) {
+                    decoder.read_compact_string()?
+                } else {
+                    decoder.read_string()?
+                }
             } else {
-                decoder.read_array_len()?
+                StrBytes::default()
             };
-            decoder.read_vec(length, |decoder| {
-                FetchResponseFetchableTopicResponse::decode(decoder, version)
-            })?
-        };
-        let mut node_endpoints: Vec<FetchResponseNodeEndpoint> = Vec::new();
-        let mut unknown_tagged_fields = TaggedFields::default();
-        if Self::is_flexible(version) {
-            unknown_tagged_fields = decoder.read_tagged_fields_with(|tag, decoder| match tag {
-                0 if version.value() >= 16 => {
-                    node_endpoints = {
-                        let length = decoder.read_compact_array_len()?;
+            let topic_id = if version.value() >= 13 {
+                decoder.read_uuid()?
+            } else {
+                Uuid::ZERO
+            };
+            let partitions = {
+                let length = if Self::is_flexible(version) {
+                    decoder.read_compact_array_len()?
+                } else {
+                    decoder.read_array_len()?
+                };
+                decoder.read_vec(length, |decoder| PartitionData::decode(decoder, version))?
+            };
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
+
+            Ok(Self {
+                topic,
+                topic_id,
+                partitions,
+                unknown_tagged_fields,
+            })
+        }
+    }
+
+    impl KafkaEncode for FetchableTopicResponse {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            if version.value() <= 12 {
+                if Self::is_flexible(version) {
+                    encoder.write_compact_string(&self.topic)?;
+                } else {
+                    encoder.write_string(&self.topic)?;
+                }
+            }
+            if version.value() >= 13 {
+                encoder.write_uuid(self.topic_id)?;
+            }
+            if Self::is_flexible(version) {
+                encoder.write_compact_array_len(self.partitions.len())?;
+            } else {
+                encoder.write_array_len(self.partitions.len())?;
+            }
+            for value in &self.partitions {
+                value.encode(encoder, version)?;
+            }
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "FetchableTopicResponse",
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+
+    /// `PartitionData` as declared by the `Fetch` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Eq, PartialEq)]
+    pub struct PartitionData {
+        /// The partition index.
+        pub partition_index: i32,
+        /// The error code, or 0 if there was no fetch error.
+        pub error_code: i16,
+        /// The current high water mark.
+        pub high_watermark: i64,
+        /// The last stable offset (or LSO) of the partition. This is the last offset such that the state of all transactional records prior to this offset have been decided (ABORTED or COMMITTED).
+        pub last_stable_offset: i64,
+        /// The current log start offset.
+        pub log_start_offset: i64,
+        /// In case divergence is detected based on the `LastFetchedEpoch` and `FetchOffset` in the request, this field indicates the largest epoch and its end offset such that subsequent records are known to diverge.
+        pub diverging_epoch: EpochEndOffset,
+        /// The current leader of the partition.
+        pub current_leader: LeaderIdAndEpoch,
+        /// In the case of fetching an offset less than the `LogStartOffset`, this is the end offset and epoch that should be used in the `FetchSnapshot` request.
+        pub snapshot_id: SnapshotId,
+        /// The aborted transactions.
+        pub aborted_transactions: Option<Vec<AbortedTransaction>>,
+        /// The preferred read replica for the consumer to use on its next fetch request.
+        pub preferred_read_replica: i32,
+        /// The record data.
+        pub records: Option<Bytes>,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl PartitionData {
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(12, 18));
+
+        fn is_flexible(version: ApiVersion) -> bool {
+            Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+        }
+    }
+
+    impl Default for PartitionData {
+        fn default() -> Self {
+            Self {
+                partition_index: 0,
+                error_code: 0,
+                high_watermark: 0,
+                last_stable_offset: -1,
+                log_start_offset: -1,
+                diverging_epoch: EpochEndOffset::default(),
+                current_leader: LeaderIdAndEpoch::default(),
+                snapshot_id: SnapshotId::default(),
+                aborted_transactions: Some(Vec::new()),
+                preferred_read_replica: -1,
+                records: Some(Bytes::default()),
+                unknown_tagged_fields: TaggedFields::default(),
+            }
+        }
+    }
+
+    impl KafkaDecode for PartitionData {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            let partition_index = decoder.read_i32()?;
+            let error_code = decoder.read_i16()?;
+            let high_watermark = decoder.read_i64()?;
+            let last_stable_offset = decoder.read_i64()?;
+            let log_start_offset = if version.value() >= 5 {
+                decoder.read_i64()?
+            } else {
+                -1
+            };
+            let aborted_transactions = {
+                let length = if Self::is_flexible(version) {
+                    decoder.read_compact_nullable_array_len()?
+                } else {
+                    decoder.read_nullable_array_len()?
+                };
+                length
+                    .map(|length| {
                         decoder.read_vec(length, |decoder| {
-                            FetchResponseNodeEndpoint::decode(decoder, version)
-                        })?
-                    };
-                    Ok(TagOutcome::Decoded)
-                }
-                _ => Ok(TagOutcome::Retained),
-            })?;
-        }
-
-        Ok(Self {
-            throttle_time_ms,
-            error_code,
-            session_id,
-            responses,
-            node_endpoints,
-            unknown_tagged_fields,
-        })
-    }
-}
-
-impl KafkaEncode for FetchResponse {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        crate::message::ensure_encode_version::<Self>(version)?;
-
-        if version.value() < 7 && self.session_id != 0 {
-            return Err(EncodeError::FieldNotRepresentable {
-                message: Self::NAME,
-                field: "SessionId",
-                version,
-            });
-        }
-        if version.value() < 16 && !self.node_endpoints.is_empty() {
-            return Err(EncodeError::FieldNotRepresentable {
-                message: Self::NAME,
-                field: "NodeEndpoints",
-                version,
-            });
-        }
-
-        encoder.write_i32(self.throttle_time_ms)?;
-        if version.value() >= 7 {
-            encoder.write_i16(self.error_code)?;
-        }
-        if version.value() >= 7 {
-            encoder.write_i32(self.session_id)?;
-        }
-        if Self::is_flexible(version) {
-            encoder.write_compact_array_len(self.responses.len())?;
-        } else {
-            encoder.write_array_len(self.responses.len())?;
-        }
-        for value in &self.responses {
-            value.encode(encoder, version)?;
-        }
-
-        if Self::is_flexible(version) {
-            let mut known = KnownTags::new();
-            if version.value() >= 16 && !self.node_endpoints.is_empty() {
-                known.write(0, |encoder| {
-                    encoder.write_compact_array_len(self.node_endpoints.len())?;
-                    for value in &self.node_endpoints {
-                        value.encode(encoder, version)?;
-                    }
-                    Ok(())
-                })?;
+                            AbortedTransaction::decode(decoder, version)
+                        })
+                    })
+                    .transpose()?
+            };
+            let preferred_read_replica = if version.value() >= 11 {
+                decoder.read_i32()?
+            } else {
+                -1
+            };
+            let records = if Self::is_flexible(version) {
+                decoder.read_compact_nullable_bytes()?
+            } else {
+                decoder.read_nullable_bytes()?
+            };
+            let mut diverging_epoch: EpochEndOffset = EpochEndOffset::default();
+            let mut current_leader: LeaderIdAndEpoch = LeaderIdAndEpoch::default();
+            let mut snapshot_id: SnapshotId = SnapshotId::default();
+            let mut unknown_tagged_fields = TaggedFields::default();
+            if Self::is_flexible(version) {
+                unknown_tagged_fields =
+                    decoder.read_tagged_fields_with(|tag, decoder| match tag {
+                        0 => {
+                            diverging_epoch = EpochEndOffset::decode(decoder, version)?;
+                            Ok(TagOutcome::Decoded)
+                        }
+                        1 => {
+                            current_leader = LeaderIdAndEpoch::decode(decoder, version)?;
+                            Ok(TagOutcome::Decoded)
+                        }
+                        2 => {
+                            snapshot_id = SnapshotId::decode(decoder, version)?;
+                            Ok(TagOutcome::Decoded)
+                        }
+                        _ => Ok(TagOutcome::Retained),
+                    })?;
             }
-            encoder.write_merged_tagged_fields(known, &self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: Self::NAME,
-                version,
-            });
-        }
 
-        Ok(())
+            Ok(Self {
+                partition_index,
+                error_code,
+                high_watermark,
+                last_stable_offset,
+                log_start_offset,
+                diverging_epoch,
+                current_leader,
+                snapshot_id,
+                aborted_transactions,
+                preferred_read_replica,
+                records,
+                unknown_tagged_fields,
+            })
+        }
+    }
+
+    impl KafkaEncode for PartitionData {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            encoder.write_i32(self.partition_index)?;
+            encoder.write_i16(self.error_code)?;
+            encoder.write_i64(self.high_watermark)?;
+            encoder.write_i64(self.last_stable_offset)?;
+            if version.value() >= 5 {
+                encoder.write_i64(self.log_start_offset)?;
+            }
+            if Self::is_flexible(version) {
+                encoder.write_compact_nullable_array_len(
+                    self.aborted_transactions.as_ref().map(Vec::len),
+                )?;
+            } else {
+                encoder
+                    .write_nullable_array_len(self.aborted_transactions.as_ref().map(Vec::len))?;
+            }
+            if let Some(values) = &self.aborted_transactions {
+                for value in values {
+                    value.encode(encoder, version)?;
+                }
+            }
+            if version.value() >= 11 {
+                encoder.write_i32(self.preferred_read_replica)?;
+            }
+            if Self::is_flexible(version) {
+                encoder.write_compact_nullable_bytes(self.records.as_deref())?;
+            } else {
+                encoder.write_nullable_bytes(self.records.as_deref())?;
+            }
+
+            if Self::is_flexible(version) {
+                let mut known = KnownTags::new();
+                if self.diverging_epoch != EpochEndOffset::default() {
+                    known.write(0, |encoder| {
+                        self.diverging_epoch.encode(encoder, version)?;
+                        Ok(())
+                    })?;
+                }
+                if self.current_leader != LeaderIdAndEpoch::default() {
+                    known.write(1, |encoder| {
+                        self.current_leader.encode(encoder, version)?;
+                        Ok(())
+                    })?;
+                }
+                if self.snapshot_id != SnapshotId::default() {
+                    known.write(2, |encoder| {
+                        self.snapshot_id.encode(encoder, version)?;
+                        Ok(())
+                    })?;
+                }
+                encoder.write_merged_tagged_fields(known, &self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "PartitionData",
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+
+    /// `EpochEndOffset` as declared by the `Fetch` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Eq, PartialEq)]
+    pub struct EpochEndOffset {
+        /// The largest epoch.
+        pub epoch: i32,
+        /// The end offset of the epoch.
+        pub end_offset: i64,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl EpochEndOffset {
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(12, 18));
+
+        fn is_flexible(version: ApiVersion) -> bool {
+            Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+        }
+    }
+
+    impl Default for EpochEndOffset {
+        fn default() -> Self {
+            Self {
+                epoch: -1,
+                end_offset: -1,
+                unknown_tagged_fields: TaggedFields::default(),
+            }
+        }
+    }
+
+    impl KafkaDecode for EpochEndOffset {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            let epoch = if version.value() >= 12 {
+                decoder.read_i32()?
+            } else {
+                -1
+            };
+            let end_offset = if version.value() >= 12 {
+                decoder.read_i64()?
+            } else {
+                -1
+            };
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
+
+            Ok(Self {
+                epoch,
+                end_offset,
+                unknown_tagged_fields,
+            })
+        }
+    }
+
+    impl KafkaEncode for EpochEndOffset {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            if version.value() >= 12 {
+                encoder.write_i32(self.epoch)?;
+            }
+            if version.value() >= 12 {
+                encoder.write_i64(self.end_offset)?;
+            }
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "EpochEndOffset",
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+
+    /// `LeaderIdAndEpoch` as declared by the `Fetch` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Eq, PartialEq)]
+    pub struct LeaderIdAndEpoch {
+        /// The ID of the current leader or -1 if the leader is unknown.
+        pub leader_id: i32,
+        /// The latest known leader epoch.
+        pub leader_epoch: i32,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl LeaderIdAndEpoch {
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(12, 18));
+
+        fn is_flexible(version: ApiVersion) -> bool {
+            Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+        }
+    }
+
+    impl Default for LeaderIdAndEpoch {
+        fn default() -> Self {
+            Self {
+                leader_id: -1,
+                leader_epoch: -1,
+                unknown_tagged_fields: TaggedFields::default(),
+            }
+        }
+    }
+
+    impl KafkaDecode for LeaderIdAndEpoch {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            let leader_id = if version.value() >= 12 {
+                decoder.read_i32()?
+            } else {
+                -1
+            };
+            let leader_epoch = if version.value() >= 12 {
+                decoder.read_i32()?
+            } else {
+                -1
+            };
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
+
+            Ok(Self {
+                leader_id,
+                leader_epoch,
+                unknown_tagged_fields,
+            })
+        }
+    }
+
+    impl KafkaEncode for LeaderIdAndEpoch {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            if version.value() >= 12 {
+                encoder.write_i32(self.leader_id)?;
+            }
+            if version.value() >= 12 {
+                encoder.write_i32(self.leader_epoch)?;
+            }
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "LeaderIdAndEpoch",
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+
+    /// `SnapshotId` as declared by the `Fetch` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Eq, PartialEq)]
+    pub struct SnapshotId {
+        /// The end offset of the epoch.
+        pub end_offset: i64,
+        /// The largest epoch.
+        pub epoch: i32,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl SnapshotId {
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(12, 18));
+
+        fn is_flexible(version: ApiVersion) -> bool {
+            Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+        }
+    }
+
+    impl Default for SnapshotId {
+        fn default() -> Self {
+            Self {
+                end_offset: -1,
+                epoch: -1,
+                unknown_tagged_fields: TaggedFields::default(),
+            }
+        }
+    }
+
+    impl KafkaDecode for SnapshotId {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            let end_offset = decoder.read_i64()?;
+            let epoch = decoder.read_i32()?;
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
+
+            Ok(Self {
+                end_offset,
+                epoch,
+                unknown_tagged_fields,
+            })
+        }
+    }
+
+    impl KafkaEncode for SnapshotId {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            encoder.write_i64(self.end_offset)?;
+            encoder.write_i32(self.epoch)?;
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "SnapshotId",
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+
+    /// `AbortedTransaction` as declared by the `Fetch` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    pub struct AbortedTransaction {
+        /// The producer id associated with the aborted transaction.
+        pub producer_id: i64,
+        /// The first offset in the aborted transaction.
+        pub first_offset: i64,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl AbortedTransaction {
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(12, 18));
+
+        fn is_flexible(version: ApiVersion) -> bool {
+            Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+        }
+    }
+
+    impl KafkaDecode for AbortedTransaction {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            let producer_id = decoder.read_i64()?;
+            let first_offset = decoder.read_i64()?;
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
+
+            Ok(Self {
+                producer_id,
+                first_offset,
+                unknown_tagged_fields,
+            })
+        }
+    }
+
+    impl KafkaEncode for AbortedTransaction {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            encoder.write_i64(self.producer_id)?;
+            encoder.write_i64(self.first_offset)?;
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "AbortedTransaction",
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+
+    /// `NodeEndpoint` as declared by the `Fetch` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    pub struct NodeEndpoint {
+        /// The ID of the associated node.
+        pub node_id: i32,
+        /// The node's hostname.
+        pub host: StrBytes,
+        /// The node's port.
+        pub port: i32,
+        /// The rack of the node, or null if it has not been assigned to a rack.
+        pub rack: Option<StrBytes>,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl NodeEndpoint {
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(12, 18));
+
+        fn is_flexible(version: ApiVersion) -> bool {
+            Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+        }
+    }
+
+    impl KafkaDecode for NodeEndpoint {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            let node_id = if version.value() >= 16 {
+                decoder.read_i32()?
+            } else {
+                0
+            };
+            let host = if version.value() >= 16 {
+                decoder.read_compact_string()?
+            } else {
+                StrBytes::default()
+            };
+            let port = if version.value() >= 16 {
+                decoder.read_i32()?
+            } else {
+                0
+            };
+            let rack = if version.value() >= 16 {
+                decoder.read_compact_nullable_string()?
+            } else {
+                None
+            };
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
+
+            Ok(Self {
+                node_id,
+                host,
+                port,
+                rack,
+                unknown_tagged_fields,
+            })
+        }
+    }
+
+    impl KafkaEncode for NodeEndpoint {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            if version.value() >= 16 {
+                encoder.write_i32(self.node_id)?;
+            }
+            if version.value() >= 16 {
+                encoder.write_compact_string(&self.host)?;
+            }
+            if version.value() >= 16 {
+                encoder.write_i32(self.port)?;
+            }
+            if version.value() >= 16 {
+                encoder.write_compact_nullable_string(self.rack.as_ref())?;
+            }
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "NodeEndpoint",
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+
+    /// Response body for the `Fetch` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    pub struct FetchResponse {
+        /// The duration in milliseconds for which the request was throttled due to a quota violation, or zero if the request did not violate any quota.
+        pub throttle_time_ms: i32,
+        /// The top level response error code.
+        pub error_code: i16,
+        /// The fetch session ID, or 0 if this is not part of a fetch session.
+        pub session_id: i32,
+        /// The response topics.
+        pub responses: Vec<FetchableTopicResponse>,
+        /// Endpoints for all current-leaders enumerated in `PartitionData`, with errors `NOT_LEADER_OR_FOLLOWER` & `FENCED_LEADER_EPOCH`.
+        pub node_endpoints: Vec<NodeEndpoint>,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl KafkaMessage for FetchResponse {
+        const NAME: &'static str = "FetchResponse";
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(4, 18);
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(12, 18));
+    }
+
+    impl KafkaResponse for FetchResponse {
+        const API_KEY: ApiKey = ApiKey::new(1);
+    }
+
+    impl KafkaDecode for FetchResponse {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            crate::message::ensure_decode_version::<Self>(version)?;
+
+            let throttle_time_ms = decoder.read_i32()?;
+            let error_code = if version.value() >= 7 {
+                decoder.read_i16()?
+            } else {
+                0
+            };
+            let session_id = if version.value() >= 7 {
+                decoder.read_i32()?
+            } else {
+                0
+            };
+            let responses = {
+                let length = if Self::is_flexible(version) {
+                    decoder.read_compact_array_len()?
+                } else {
+                    decoder.read_array_len()?
+                };
+                decoder.read_vec(length, |decoder| {
+                    FetchableTopicResponse::decode(decoder, version)
+                })?
+            };
+            let mut node_endpoints: Vec<NodeEndpoint> = Vec::new();
+            let mut unknown_tagged_fields = TaggedFields::default();
+            if Self::is_flexible(version) {
+                unknown_tagged_fields =
+                    decoder.read_tagged_fields_with(|tag, decoder| match tag {
+                        0 if version.value() >= 16 => {
+                            node_endpoints = {
+                                let length = decoder.read_compact_array_len()?;
+                                decoder.read_vec(length, |decoder| {
+                                    NodeEndpoint::decode(decoder, version)
+                                })?
+                            };
+                            Ok(TagOutcome::Decoded)
+                        }
+                        _ => Ok(TagOutcome::Retained),
+                    })?;
+            }
+
+            Ok(Self {
+                throttle_time_ms,
+                error_code,
+                session_id,
+                responses,
+                node_endpoints,
+                unknown_tagged_fields,
+            })
+        }
+    }
+
+    impl KafkaEncode for FetchResponse {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            crate::message::ensure_encode_version::<Self>(version)?;
+
+            if version.value() < 7 && self.session_id != 0 {
+                return Err(EncodeError::FieldNotRepresentable {
+                    message: Self::NAME,
+                    field: "SessionId",
+                    version,
+                });
+            }
+            if version.value() < 16 && !self.node_endpoints.is_empty() {
+                return Err(EncodeError::FieldNotRepresentable {
+                    message: Self::NAME,
+                    field: "NodeEndpoints",
+                    version,
+                });
+            }
+
+            encoder.write_i32(self.throttle_time_ms)?;
+            if version.value() >= 7 {
+                encoder.write_i16(self.error_code)?;
+            }
+            if version.value() >= 7 {
+                encoder.write_i32(self.session_id)?;
+            }
+            if Self::is_flexible(version) {
+                encoder.write_compact_array_len(self.responses.len())?;
+            } else {
+                encoder.write_array_len(self.responses.len())?;
+            }
+            for value in &self.responses {
+                value.encode(encoder, version)?;
+            }
+
+            if Self::is_flexible(version) {
+                let mut known = KnownTags::new();
+                if version.value() >= 16 && !self.node_endpoints.is_empty() {
+                    known.write(0, |encoder| {
+                        encoder.write_compact_array_len(self.node_endpoints.len())?;
+                        for value in &self.node_endpoints {
+                            value.encode(encoder, version)?;
+                        }
+                        Ok(())
+                    })?;
+                }
+                encoder.write_merged_tagged_fields(known, &self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: Self::NAME,
+                    version,
+                });
+            }
+
+            Ok(())
+        }
     }
 }
+
+use kafka_wire_core::VersionRange;
+
+use crate::{MessageDescriptor, MessageDirection};
+
+pub use fetch_request::FetchRequest;
+pub use fetch_response::FetchResponse;
 
 /// Static metadata for [`FetchRequest`].
 pub const FETCH_REQUEST_DESCRIPTOR: MessageDescriptor = MessageDescriptor::new(

@@ -5,404 +5,423 @@
 //! Request SHA-256: `e3551378a9f2d59fb65de32641f79f40ea5a9b5a554ee668ed06d182c5064323`.
 //! Response SHA-256: `2ead5ef7c1fc92546da6c50bc703e0ed13eee56ae108dfc76857c9069b6cde8b`.
 
-use kafka_wire_core::{
-    ApiKey, ApiVersion, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
-    KafkaEncode, StrBytes, TaggedFields, VersionRange,
-};
+/// `DescribeUserScramCredentialsRequest` and every struct it declares, under upstream's own names.
+///
+/// [`DescribeUserScramCredentialsRequest`](crate::DescribeUserScramCredentialsRequest) is re-exported flat, so this path never has to be
+/// written to name the message itself.
+pub mod describe_user_scram_credentials_request {
+    use kafka_wire_core::{
+        ApiKey, ApiVersion, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
+        KafkaEncode, StrBytes, TaggedFields, VersionRange,
+    };
 
-use crate::{
-    KafkaMessage, KafkaRequest, KafkaResponse, MessageDescriptor, MessageDirection,
-    RequestResponsePair,
-};
+    use crate::{KafkaMessage, KafkaRequest, RequestResponsePair};
 
-/// `UserName` as declared by the `DescribeUserScramCredentials` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct DescribeUserScramCredentialsRequestUserName {
-    /// The user name.
-    pub name: StrBytes,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
-
-impl DescribeUserScramCredentialsRequestUserName {
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 0));
-
-    fn is_flexible(version: ApiVersion) -> bool {
-        Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+    /// `UserName` as declared by the `DescribeUserScramCredentials` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    pub struct UserName {
+        /// The user name.
+        pub name: StrBytes,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
     }
-}
 
-impl KafkaDecode for DescribeUserScramCredentialsRequestUserName {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        let name = decoder.read_compact_string()?;
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
+    impl UserName {
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 0));
 
-        Ok(Self {
-            name,
-            unknown_tagged_fields,
-        })
-    }
-}
-
-impl KafkaEncode for DescribeUserScramCredentialsRequestUserName {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        encoder.write_compact_string(&self.name)?;
-
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: "DescribeUserScramCredentialsRequestUserName",
-                version,
-            });
-        }
-
-        Ok(())
-    }
-}
-
-/// Request body for the `DescribeUserScramCredentials` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct DescribeUserScramCredentialsRequest {
-    /// The users to describe, or null/empty to describe all users.
-    pub users: Option<Vec<DescribeUserScramCredentialsRequestUserName>>,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
-
-impl Default for DescribeUserScramCredentialsRequest {
-    fn default() -> Self {
-        Self {
-            users: Some(Vec::new()),
-            unknown_tagged_fields: TaggedFields::default(),
+        fn is_flexible(version: ApiVersion) -> bool {
+            Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
         }
     }
-}
 
-impl KafkaMessage for DescribeUserScramCredentialsRequest {
-    const NAME: &'static str = "DescribeUserScramCredentialsRequest";
-    const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 0);
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 0));
-}
+    impl KafkaDecode for UserName {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            let name = decoder.read_compact_string()?;
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
 
-impl KafkaRequest for DescribeUserScramCredentialsRequest {
-    const API_KEY: ApiKey = ApiKey::new(50);
-}
-
-impl RequestResponsePair for DescribeUserScramCredentialsRequest {
-    type Response = DescribeUserScramCredentialsResponse;
-}
-
-impl KafkaDecode for DescribeUserScramCredentialsRequest {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        crate::message::ensure_decode_version::<Self>(version)?;
-
-        let users = {
-            let length = decoder.read_compact_nullable_array_len()?;
-            length
-                .map(|length| {
-                    decoder.read_vec(length, |decoder| {
-                        DescribeUserScramCredentialsRequestUserName::decode(decoder, version)
-                    })
-                })
-                .transpose()?
-        };
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
-
-        Ok(Self {
-            users,
-            unknown_tagged_fields,
-        })
+            Ok(Self {
+                name,
+                unknown_tagged_fields,
+            })
+        }
     }
-}
 
-impl KafkaEncode for DescribeUserScramCredentialsRequest {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        crate::message::ensure_encode_version::<Self>(version)?;
+    impl KafkaEncode for UserName {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            encoder.write_compact_string(&self.name)?;
 
-        encoder.write_compact_nullable_array_len(self.users.as_ref().map(Vec::len))?;
-        if let Some(values) = &self.users {
-            for value in values {
-                value.encode(encoder, version)?;
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "UserName",
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+
+    /// Request body for the `DescribeUserScramCredentials` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Eq, PartialEq)]
+    pub struct DescribeUserScramCredentialsRequest {
+        /// The users to describe, or null/empty to describe all users.
+        pub users: Option<Vec<UserName>>,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl Default for DescribeUserScramCredentialsRequest {
+        fn default() -> Self {
+            Self {
+                users: Some(Vec::new()),
+                unknown_tagged_fields: TaggedFields::default(),
             }
         }
-
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: Self::NAME,
-                version,
-            });
-        }
-
-        Ok(())
     }
-}
 
-/// `DescribeUserScramCredentialsResult` as declared by the `DescribeUserScramCredentials` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct DescribeUserScramCredentialsResponseResult {
-    /// The user name.
-    pub user: StrBytes,
-    /// The user-level error code.
-    pub error_code: i16,
-    /// The user-level error message, if any.
-    pub error_message: Option<StrBytes>,
-    /// The mechanism and related information associated with the user's SCRAM credentials.
-    pub credential_infos: Vec<DescribeUserScramCredentialsResponseCredentialInfo>,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
-
-impl DescribeUserScramCredentialsResponseResult {
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 0));
-
-    fn is_flexible(version: ApiVersion) -> bool {
-        Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+    impl KafkaMessage for DescribeUserScramCredentialsRequest {
+        const NAME: &'static str = "DescribeUserScramCredentialsRequest";
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 0);
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 0));
     }
-}
 
-impl Default for DescribeUserScramCredentialsResponseResult {
-    fn default() -> Self {
-        Self {
-            user: StrBytes::default(),
-            error_code: 0,
-            error_message: Some(StrBytes::default()),
-            credential_infos: Vec::new(),
-            unknown_tagged_fields: TaggedFields::default(),
+    impl KafkaRequest for DescribeUserScramCredentialsRequest {
+        const API_KEY: ApiKey = ApiKey::new(50);
+    }
+
+    impl RequestResponsePair for DescribeUserScramCredentialsRequest {
+        type Response = super::DescribeUserScramCredentialsResponse;
+    }
+
+    impl KafkaDecode for DescribeUserScramCredentialsRequest {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            crate::message::ensure_decode_version::<Self>(version)?;
+
+            let users = {
+                let length = decoder.read_compact_nullable_array_len()?;
+                length
+                    .map(|length| {
+                        decoder.read_vec(length, |decoder| UserName::decode(decoder, version))
+                    })
+                    .transpose()?
+            };
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
+
+            Ok(Self {
+                users,
+                unknown_tagged_fields,
+            })
         }
     }
-}
 
-impl KafkaDecode for DescribeUserScramCredentialsResponseResult {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        let user = decoder.read_compact_string()?;
-        let error_code = decoder.read_i16()?;
-        let error_message = decoder.read_compact_nullable_string()?;
-        let credential_infos = {
-            let length = decoder.read_compact_array_len()?;
-            decoder.read_vec(length, |decoder| {
-                DescribeUserScramCredentialsResponseCredentialInfo::decode(decoder, version)
-            })?
-        };
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
+    impl KafkaEncode for DescribeUserScramCredentialsRequest {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            crate::message::ensure_encode_version::<Self>(version)?;
 
-        Ok(Self {
-            user,
-            error_code,
-            error_message,
-            credential_infos,
-            unknown_tagged_fields,
-        })
-    }
-}
+            encoder.write_compact_nullable_array_len(self.users.as_ref().map(Vec::len))?;
+            if let Some(values) = &self.users {
+                for value in values {
+                    value.encode(encoder, version)?;
+                }
+            }
 
-impl KafkaEncode for DescribeUserScramCredentialsResponseResult {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        encoder.write_compact_string(&self.user)?;
-        encoder.write_i16(self.error_code)?;
-        encoder.write_compact_nullable_string(self.error_message.as_ref())?;
-        encoder.write_compact_array_len(self.credential_infos.len())?;
-        for value in &self.credential_infos {
-            value.encode(encoder, version)?;
-        }
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: Self::NAME,
+                    version,
+                });
+            }
 
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: "DescribeUserScramCredentialsResponseResult",
-                version,
-            });
-        }
-
-        Ok(())
-    }
-}
-
-/// `CredentialInfo` as declared by the `DescribeUserScramCredentials` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct DescribeUserScramCredentialsResponseCredentialInfo {
-    /// The SCRAM mechanism.
-    pub mechanism: i8,
-    /// The number of iterations used in the SCRAM credential.
-    pub iterations: i32,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
-
-impl DescribeUserScramCredentialsResponseCredentialInfo {
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 0));
-
-    fn is_flexible(version: ApiVersion) -> bool {
-        Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
-    }
-}
-
-impl KafkaDecode for DescribeUserScramCredentialsResponseCredentialInfo {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        let mechanism = decoder.read_i8()?;
-        let iterations = decoder.read_i32()?;
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
-
-        Ok(Self {
-            mechanism,
-            iterations,
-            unknown_tagged_fields,
-        })
-    }
-}
-
-impl KafkaEncode for DescribeUserScramCredentialsResponseCredentialInfo {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        encoder.write_i8(self.mechanism)?;
-        encoder.write_i32(self.iterations)?;
-
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: "DescribeUserScramCredentialsResponseCredentialInfo",
-                version,
-            });
-        }
-
-        Ok(())
-    }
-}
-
-/// Response body for the `DescribeUserScramCredentials` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct DescribeUserScramCredentialsResponse {
-    /// The duration in milliseconds for which the request was throttled due to a quota violation, or zero if the request did not violate any quota.
-    pub throttle_time_ms: i32,
-    /// The message-level error code, 0 except for user authorization or infrastructure issues.
-    pub error_code: i16,
-    /// The message-level error message, if any.
-    pub error_message: Option<StrBytes>,
-    /// The results for descriptions, one per user.
-    pub results: Vec<DescribeUserScramCredentialsResponseResult>,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
-
-impl Default for DescribeUserScramCredentialsResponse {
-    fn default() -> Self {
-        Self {
-            throttle_time_ms: 0,
-            error_code: 0,
-            error_message: Some(StrBytes::default()),
-            results: Vec::new(),
-            unknown_tagged_fields: TaggedFields::default(),
+            Ok(())
         }
     }
 }
 
-impl KafkaMessage for DescribeUserScramCredentialsResponse {
-    const NAME: &'static str = "DescribeUserScramCredentialsResponse";
-    const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 0);
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 0));
-}
+/// `DescribeUserScramCredentialsResponse` and every struct it declares, under upstream's own names.
+///
+/// [`DescribeUserScramCredentialsResponse`](crate::DescribeUserScramCredentialsResponse) is re-exported flat, so this path never has to be
+/// written to name the message itself.
+pub mod describe_user_scram_credentials_response {
+    use kafka_wire_core::{
+        ApiKey, ApiVersion, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
+        KafkaEncode, StrBytes, TaggedFields, VersionRange,
+    };
 
-impl KafkaResponse for DescribeUserScramCredentialsResponse {
-    const API_KEY: ApiKey = ApiKey::new(50);
-}
+    use crate::{KafkaMessage, KafkaResponse};
 
-impl KafkaDecode for DescribeUserScramCredentialsResponse {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        crate::message::ensure_decode_version::<Self>(version)?;
+    /// `DescribeUserScramCredentialsResult` as declared by the `DescribeUserScramCredentials` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Eq, PartialEq)]
+    pub struct DescribeUserScramCredentialsResult {
+        /// The user name.
+        pub user: StrBytes,
+        /// The user-level error code.
+        pub error_code: i16,
+        /// The user-level error message, if any.
+        pub error_message: Option<StrBytes>,
+        /// The mechanism and related information associated with the user's SCRAM credentials.
+        pub credential_infos: Vec<CredentialInfo>,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
+    }
 
-        let throttle_time_ms = decoder.read_i32()?;
-        let error_code = decoder.read_i16()?;
-        let error_message = decoder.read_compact_nullable_string()?;
-        let results = {
-            let length = decoder.read_compact_array_len()?;
-            decoder.read_vec(length, |decoder| {
-                DescribeUserScramCredentialsResponseResult::decode(decoder, version)
-            })?
-        };
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
+    impl DescribeUserScramCredentialsResult {
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 0));
 
-        Ok(Self {
-            throttle_time_ms,
-            error_code,
-            error_message,
-            results,
-            unknown_tagged_fields,
-        })
+        fn is_flexible(version: ApiVersion) -> bool {
+            Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+        }
+    }
+
+    impl Default for DescribeUserScramCredentialsResult {
+        fn default() -> Self {
+            Self {
+                user: StrBytes::default(),
+                error_code: 0,
+                error_message: Some(StrBytes::default()),
+                credential_infos: Vec::new(),
+                unknown_tagged_fields: TaggedFields::default(),
+            }
+        }
+    }
+
+    impl KafkaDecode for DescribeUserScramCredentialsResult {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            let user = decoder.read_compact_string()?;
+            let error_code = decoder.read_i16()?;
+            let error_message = decoder.read_compact_nullable_string()?;
+            let credential_infos = {
+                let length = decoder.read_compact_array_len()?;
+                decoder.read_vec(length, |decoder| CredentialInfo::decode(decoder, version))?
+            };
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
+
+            Ok(Self {
+                user,
+                error_code,
+                error_message,
+                credential_infos,
+                unknown_tagged_fields,
+            })
+        }
+    }
+
+    impl KafkaEncode for DescribeUserScramCredentialsResult {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            encoder.write_compact_string(&self.user)?;
+            encoder.write_i16(self.error_code)?;
+            encoder.write_compact_nullable_string(self.error_message.as_ref())?;
+            encoder.write_compact_array_len(self.credential_infos.len())?;
+            for value in &self.credential_infos {
+                value.encode(encoder, version)?;
+            }
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "DescribeUserScramCredentialsResult",
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+
+    /// `CredentialInfo` as declared by the `DescribeUserScramCredentials` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    pub struct CredentialInfo {
+        /// The SCRAM mechanism.
+        pub mechanism: i8,
+        /// The number of iterations used in the SCRAM credential.
+        pub iterations: i32,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl CredentialInfo {
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 0));
+
+        fn is_flexible(version: ApiVersion) -> bool {
+            Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+        }
+    }
+
+    impl KafkaDecode for CredentialInfo {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            let mechanism = decoder.read_i8()?;
+            let iterations = decoder.read_i32()?;
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
+
+            Ok(Self {
+                mechanism,
+                iterations,
+                unknown_tagged_fields,
+            })
+        }
+    }
+
+    impl KafkaEncode for CredentialInfo {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            encoder.write_i8(self.mechanism)?;
+            encoder.write_i32(self.iterations)?;
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "CredentialInfo",
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+
+    /// Response body for the `DescribeUserScramCredentials` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Eq, PartialEq)]
+    pub struct DescribeUserScramCredentialsResponse {
+        /// The duration in milliseconds for which the request was throttled due to a quota violation, or zero if the request did not violate any quota.
+        pub throttle_time_ms: i32,
+        /// The message-level error code, 0 except for user authorization or infrastructure issues.
+        pub error_code: i16,
+        /// The message-level error message, if any.
+        pub error_message: Option<StrBytes>,
+        /// The results for descriptions, one per user.
+        pub results: Vec<DescribeUserScramCredentialsResult>,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl Default for DescribeUserScramCredentialsResponse {
+        fn default() -> Self {
+            Self {
+                throttle_time_ms: 0,
+                error_code: 0,
+                error_message: Some(StrBytes::default()),
+                results: Vec::new(),
+                unknown_tagged_fields: TaggedFields::default(),
+            }
+        }
+    }
+
+    impl KafkaMessage for DescribeUserScramCredentialsResponse {
+        const NAME: &'static str = "DescribeUserScramCredentialsResponse";
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 0);
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 0));
+    }
+
+    impl KafkaResponse for DescribeUserScramCredentialsResponse {
+        const API_KEY: ApiKey = ApiKey::new(50);
+    }
+
+    impl KafkaDecode for DescribeUserScramCredentialsResponse {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            crate::message::ensure_decode_version::<Self>(version)?;
+
+            let throttle_time_ms = decoder.read_i32()?;
+            let error_code = decoder.read_i16()?;
+            let error_message = decoder.read_compact_nullable_string()?;
+            let results = {
+                let length = decoder.read_compact_array_len()?;
+                decoder.read_vec(length, |decoder| {
+                    DescribeUserScramCredentialsResult::decode(decoder, version)
+                })?
+            };
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
+
+            Ok(Self {
+                throttle_time_ms,
+                error_code,
+                error_message,
+                results,
+                unknown_tagged_fields,
+            })
+        }
+    }
+
+    impl KafkaEncode for DescribeUserScramCredentialsResponse {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            crate::message::ensure_encode_version::<Self>(version)?;
+
+            encoder.write_i32(self.throttle_time_ms)?;
+            encoder.write_i16(self.error_code)?;
+            encoder.write_compact_nullable_string(self.error_message.as_ref())?;
+            encoder.write_compact_array_len(self.results.len())?;
+            for value in &self.results {
+                value.encode(encoder, version)?;
+            }
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: Self::NAME,
+                    version,
+                });
+            }
+
+            Ok(())
+        }
     }
 }
 
-impl KafkaEncode for DescribeUserScramCredentialsResponse {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        crate::message::ensure_encode_version::<Self>(version)?;
+use kafka_wire_core::VersionRange;
 
-        encoder.write_i32(self.throttle_time_ms)?;
-        encoder.write_i16(self.error_code)?;
-        encoder.write_compact_nullable_string(self.error_message.as_ref())?;
-        encoder.write_compact_array_len(self.results.len())?;
-        for value in &self.results {
-            value.encode(encoder, version)?;
-        }
+use crate::{MessageDescriptor, MessageDirection};
 
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: Self::NAME,
-                version,
-            });
-        }
-
-        Ok(())
-    }
-}
+pub use describe_user_scram_credentials_request::DescribeUserScramCredentialsRequest;
+pub use describe_user_scram_credentials_response::DescribeUserScramCredentialsResponse;
 
 /// Static metadata for [`DescribeUserScramCredentialsRequest`].
 pub const DESCRIBE_USER_SCRAM_CREDENTIALS_REQUEST_DESCRIPTOR: MessageDescriptor =

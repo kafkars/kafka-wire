@@ -5,517 +5,536 @@
 //! Request SHA-256: `09ed6a85622e808357af2df8141e908b62871aff531f54fb6fa85875dcebbf6c`.
 //! Response SHA-256: `449f1c0669ef193216066d605ae9dc87a7524006eb421b34e3ed2ed0d8012225`.
 
-use kafka_wire_core::{
-    ApiKey, ApiVersion, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
-    KafkaEncode, StrBytes, TaggedFields, VersionRange,
-};
+/// `AlterPartitionReassignmentsRequest` and every struct it declares, under upstream's own names.
+///
+/// [`AlterPartitionReassignmentsRequest`](crate::AlterPartitionReassignmentsRequest) is re-exported flat, so this path never has to be
+/// written to name the message itself.
+pub mod alter_partition_reassignments_request {
+    use kafka_wire_core::{
+        ApiKey, ApiVersion, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
+        KafkaEncode, StrBytes, TaggedFields, VersionRange,
+    };
 
-use crate::{
-    KafkaMessage, KafkaRequest, KafkaResponse, MessageDescriptor, MessageDirection,
-    RequestResponsePair,
-};
+    use crate::{KafkaMessage, KafkaRequest, RequestResponsePair};
 
-/// `ReassignableTopic` as declared by the `AlterPartitionReassignments` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct AlterPartitionReassignmentsRequestReassignableTopic {
-    /// The topic name.
-    pub name: StrBytes,
-    /// The partitions to reassign.
-    pub partitions: Vec<AlterPartitionReassignmentsRequestReassignablePartition>,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
-
-impl AlterPartitionReassignmentsRequestReassignableTopic {
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 1));
-
-    fn is_flexible(version: ApiVersion) -> bool {
-        Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+    /// `ReassignableTopic` as declared by the `AlterPartitionReassignments` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    pub struct ReassignableTopic {
+        /// The topic name.
+        pub name: StrBytes,
+        /// The partitions to reassign.
+        pub partitions: Vec<ReassignablePartition>,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
     }
-}
 
-impl KafkaDecode for AlterPartitionReassignmentsRequestReassignableTopic {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        let name = decoder.read_compact_string()?;
-        let partitions = {
-            let length = decoder.read_compact_array_len()?;
-            decoder.read_vec(length, |decoder| {
-                AlterPartitionReassignmentsRequestReassignablePartition::decode(decoder, version)
-            })?
-        };
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
+    impl ReassignableTopic {
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 1));
 
-        Ok(Self {
-            name,
-            partitions,
-            unknown_tagged_fields,
-        })
-    }
-}
-
-impl KafkaEncode for AlterPartitionReassignmentsRequestReassignableTopic {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        encoder.write_compact_string(&self.name)?;
-        encoder.write_compact_array_len(self.partitions.len())?;
-        for value in &self.partitions {
-            value.encode(encoder, version)?;
+        fn is_flexible(version: ApiVersion) -> bool {
+            Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
         }
+    }
 
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: "AlterPartitionReassignmentsRequestReassignableTopic",
-                version,
-            });
+    impl KafkaDecode for ReassignableTopic {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            let name = decoder.read_compact_string()?;
+            let partitions = {
+                let length = decoder.read_compact_array_len()?;
+                decoder.read_vec(length, |decoder| {
+                    ReassignablePartition::decode(decoder, version)
+                })?
+            };
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
+
+            Ok(Self {
+                name,
+                partitions,
+                unknown_tagged_fields,
+            })
         }
-
-        Ok(())
     }
-}
 
-/// `ReassignablePartition` as declared by the `AlterPartitionReassignments` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct AlterPartitionReassignmentsRequestReassignablePartition {
-    /// The partition index.
-    pub partition_index: i32,
-    /// The replicas to place the partitions on, or null to cancel a pending reassignment for this partition.
-    pub replicas: Option<Vec<i32>>,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
+    impl KafkaEncode for ReassignableTopic {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            encoder.write_compact_string(&self.name)?;
+            encoder.write_compact_array_len(self.partitions.len())?;
+            for value in &self.partitions {
+                value.encode(encoder, version)?;
+            }
 
-impl AlterPartitionReassignmentsRequestReassignablePartition {
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 1));
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "ReassignableTopic",
+                    version,
+                });
+            }
 
-    fn is_flexible(version: ApiVersion) -> bool {
-        Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+            Ok(())
+        }
     }
-}
 
-impl KafkaDecode for AlterPartitionReassignmentsRequestReassignablePartition {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        let partition_index = decoder.read_i32()?;
-        let replicas = {
-            let length = decoder.read_compact_nullable_array_len()?;
-            length
-                .map(|length| decoder.read_vec(length, Decoder::read_i32))
-                .transpose()?
-        };
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
-
-        Ok(Self {
-            partition_index,
-            replicas,
-            unknown_tagged_fields,
-        })
+    /// `ReassignablePartition` as declared by the `AlterPartitionReassignments` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    pub struct ReassignablePartition {
+        /// The partition index.
+        pub partition_index: i32,
+        /// The replicas to place the partitions on, or null to cancel a pending reassignment for this partition.
+        pub replicas: Option<Vec<i32>>,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
     }
-}
 
-impl KafkaEncode for AlterPartitionReassignmentsRequestReassignablePartition {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        encoder.write_i32(self.partition_index)?;
-        encoder.write_compact_nullable_array_len(self.replicas.as_ref().map(Vec::len))?;
-        if let Some(values) = &self.replicas {
-            for value in values {
-                encoder.write_i32(*value)?;
+    impl ReassignablePartition {
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 1));
+
+        fn is_flexible(version: ApiVersion) -> bool {
+            Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+        }
+    }
+
+    impl KafkaDecode for ReassignablePartition {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            let partition_index = decoder.read_i32()?;
+            let replicas = {
+                let length = decoder.read_compact_nullable_array_len()?;
+                length
+                    .map(|length| decoder.read_vec(length, Decoder::read_i32))
+                    .transpose()?
+            };
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
+
+            Ok(Self {
+                partition_index,
+                replicas,
+                unknown_tagged_fields,
+            })
+        }
+    }
+
+    impl KafkaEncode for ReassignablePartition {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            encoder.write_i32(self.partition_index)?;
+            encoder.write_compact_nullable_array_len(self.replicas.as_ref().map(Vec::len))?;
+            if let Some(values) = &self.replicas {
+                for value in values {
+                    encoder.write_i32(*value)?;
+                }
+            }
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "ReassignablePartition",
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+
+    /// Request body for the `AlterPartitionReassignments` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Eq, PartialEq)]
+    pub struct AlterPartitionReassignmentsRequest {
+        /// The time in ms to wait for the request to complete.
+        pub timeout_ms: i32,
+        /// The option indicating whether changing the replication factor of any given partition as part of this request is a valid move.
+        pub allow_replication_factor_change: bool,
+        /// The topics to reassign.
+        pub topics: Vec<ReassignableTopic>,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl Default for AlterPartitionReassignmentsRequest {
+        fn default() -> Self {
+            Self {
+                timeout_ms: 60_000,
+                allow_replication_factor_change: true,
+                topics: Vec::new(),
+                unknown_tagged_fields: TaggedFields::default(),
             }
         }
-
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: "AlterPartitionReassignmentsRequestReassignablePartition",
-                version,
-            });
-        }
-
-        Ok(())
     }
-}
 
-/// Request body for the `AlterPartitionReassignments` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct AlterPartitionReassignmentsRequest {
-    /// The time in ms to wait for the request to complete.
-    pub timeout_ms: i32,
-    /// The option indicating whether changing the replication factor of any given partition as part of this request is a valid move.
-    pub allow_replication_factor_change: bool,
-    /// The topics to reassign.
-    pub topics: Vec<AlterPartitionReassignmentsRequestReassignableTopic>,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
+    impl KafkaMessage for AlterPartitionReassignmentsRequest {
+        const NAME: &'static str = "AlterPartitionReassignmentsRequest";
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 1);
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 1));
+    }
 
-impl Default for AlterPartitionReassignmentsRequest {
-    fn default() -> Self {
-        Self {
-            timeout_ms: 60_000,
-            allow_replication_factor_change: true,
-            topics: Vec::new(),
-            unknown_tagged_fields: TaggedFields::default(),
+    impl KafkaRequest for AlterPartitionReassignmentsRequest {
+        const API_KEY: ApiKey = ApiKey::new(45);
+    }
+
+    impl RequestResponsePair for AlterPartitionReassignmentsRequest {
+        type Response = super::AlterPartitionReassignmentsResponse;
+    }
+
+    impl KafkaDecode for AlterPartitionReassignmentsRequest {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            crate::message::ensure_decode_version::<Self>(version)?;
+
+            let timeout_ms = decoder.read_i32()?;
+            let allow_replication_factor_change = if version.value() >= 1 {
+                decoder.read_bool()?
+            } else {
+                true
+            };
+            let topics = {
+                let length = decoder.read_compact_array_len()?;
+                decoder.read_vec(length, |decoder| {
+                    ReassignableTopic::decode(decoder, version)
+                })?
+            };
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
+
+            Ok(Self {
+                timeout_ms,
+                allow_replication_factor_change,
+                topics,
+                unknown_tagged_fields,
+            })
         }
     }
-}
 
-impl KafkaMessage for AlterPartitionReassignmentsRequest {
-    const NAME: &'static str = "AlterPartitionReassignmentsRequest";
-    const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 1);
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 1));
-}
+    impl KafkaEncode for AlterPartitionReassignmentsRequest {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            crate::message::ensure_encode_version::<Self>(version)?;
 
-impl KafkaRequest for AlterPartitionReassignmentsRequest {
-    const API_KEY: ApiKey = ApiKey::new(45);
-}
+            if version.value() < 1 && !self.allow_replication_factor_change {
+                return Err(EncodeError::FieldNotRepresentable {
+                    message: Self::NAME,
+                    field: "AllowReplicationFactorChange",
+                    version,
+                });
+            }
 
-impl RequestResponsePair for AlterPartitionReassignmentsRequest {
-    type Response = AlterPartitionReassignmentsResponse;
-}
+            encoder.write_i32(self.timeout_ms)?;
+            if version.value() >= 1 {
+                encoder.write_bool(self.allow_replication_factor_change)?;
+            }
+            encoder.write_compact_array_len(self.topics.len())?;
+            for value in &self.topics {
+                value.encode(encoder, version)?;
+            }
 
-impl KafkaDecode for AlterPartitionReassignmentsRequest {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        crate::message::ensure_decode_version::<Self>(version)?;
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: Self::NAME,
+                    version,
+                });
+            }
 
-        let timeout_ms = decoder.read_i32()?;
-        let allow_replication_factor_change = if version.value() >= 1 {
-            decoder.read_bool()?
-        } else {
-            true
-        };
-        let topics = {
-            let length = decoder.read_compact_array_len()?;
-            decoder.read_vec(length, |decoder| {
-                AlterPartitionReassignmentsRequestReassignableTopic::decode(decoder, version)
-            })?
-        };
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
-
-        Ok(Self {
-            timeout_ms,
-            allow_replication_factor_change,
-            topics,
-            unknown_tagged_fields,
-        })
-    }
-}
-
-impl KafkaEncode for AlterPartitionReassignmentsRequest {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        crate::message::ensure_encode_version::<Self>(version)?;
-
-        if version.value() < 1 && !self.allow_replication_factor_change {
-            return Err(EncodeError::FieldNotRepresentable {
-                message: Self::NAME,
-                field: "AllowReplicationFactorChange",
-                version,
-            });
-        }
-
-        encoder.write_i32(self.timeout_ms)?;
-        if version.value() >= 1 {
-            encoder.write_bool(self.allow_replication_factor_change)?;
-        }
-        encoder.write_compact_array_len(self.topics.len())?;
-        for value in &self.topics {
-            value.encode(encoder, version)?;
-        }
-
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: Self::NAME,
-                version,
-            });
-        }
-
-        Ok(())
-    }
-}
-
-/// `ReassignableTopicResponse` as declared by the `AlterPartitionReassignments` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct AlterPartitionReassignmentsResponseReassignableTopicResponse {
-    /// The topic name.
-    pub name: StrBytes,
-    /// The responses to partitions to reassign.
-    pub partitions: Vec<AlterPartitionReassignmentsResponseReassignablePartitionResponse>,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
-
-impl AlterPartitionReassignmentsResponseReassignableTopicResponse {
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 1));
-
-    fn is_flexible(version: ApiVersion) -> bool {
-        Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
-    }
-}
-
-impl KafkaDecode for AlterPartitionReassignmentsResponseReassignableTopicResponse {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        let name = decoder.read_compact_string()?;
-        let partitions = {
-            let length = decoder.read_compact_array_len()?;
-            decoder.read_vec(length, |decoder| {
-                AlterPartitionReassignmentsResponseReassignablePartitionResponse::decode(
-                    decoder, version,
-                )
-            })?
-        };
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
-
-        Ok(Self {
-            name,
-            partitions,
-            unknown_tagged_fields,
-        })
-    }
-}
-
-impl KafkaEncode for AlterPartitionReassignmentsResponseReassignableTopicResponse {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        encoder.write_compact_string(&self.name)?;
-        encoder.write_compact_array_len(self.partitions.len())?;
-        for value in &self.partitions {
-            value.encode(encoder, version)?;
-        }
-
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: "AlterPartitionReassignmentsResponseReassignableTopicResponse",
-                version,
-            });
-        }
-
-        Ok(())
-    }
-}
-
-/// `ReassignablePartitionResponse` as declared by the `AlterPartitionReassignments` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct AlterPartitionReassignmentsResponseReassignablePartitionResponse {
-    /// The partition index.
-    pub partition_index: i32,
-    /// The error code for this partition, or 0 if there was no error.
-    pub error_code: i16,
-    /// The error message for this partition, or null if there was no error.
-    pub error_message: Option<StrBytes>,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
-
-impl AlterPartitionReassignmentsResponseReassignablePartitionResponse {
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 1));
-
-    fn is_flexible(version: ApiVersion) -> bool {
-        Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
-    }
-}
-
-impl Default for AlterPartitionReassignmentsResponseReassignablePartitionResponse {
-    fn default() -> Self {
-        Self {
-            partition_index: 0,
-            error_code: 0,
-            error_message: Some(StrBytes::default()),
-            unknown_tagged_fields: TaggedFields::default(),
+            Ok(())
         }
     }
 }
 
-impl KafkaDecode for AlterPartitionReassignmentsResponseReassignablePartitionResponse {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        let partition_index = decoder.read_i32()?;
-        let error_code = decoder.read_i16()?;
-        let error_message = decoder.read_compact_nullable_string()?;
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
+/// `AlterPartitionReassignmentsResponse` and every struct it declares, under upstream's own names.
+///
+/// [`AlterPartitionReassignmentsResponse`](crate::AlterPartitionReassignmentsResponse) is re-exported flat, so this path never has to be
+/// written to name the message itself.
+pub mod alter_partition_reassignments_response {
+    use kafka_wire_core::{
+        ApiKey, ApiVersion, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
+        KafkaEncode, StrBytes, TaggedFields, VersionRange,
+    };
 
-        Ok(Self {
-            partition_index,
-            error_code,
-            error_message,
-            unknown_tagged_fields,
-        })
+    use crate::{KafkaMessage, KafkaResponse};
+
+    /// `ReassignableTopicResponse` as declared by the `AlterPartitionReassignments` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    pub struct ReassignableTopicResponse {
+        /// The topic name.
+        pub name: StrBytes,
+        /// The responses to partitions to reassign.
+        pub partitions: Vec<ReassignablePartitionResponse>,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl ReassignableTopicResponse {
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 1));
+
+        fn is_flexible(version: ApiVersion) -> bool {
+            Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+        }
+    }
+
+    impl KafkaDecode for ReassignableTopicResponse {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            let name = decoder.read_compact_string()?;
+            let partitions = {
+                let length = decoder.read_compact_array_len()?;
+                decoder.read_vec(length, |decoder| {
+                    ReassignablePartitionResponse::decode(decoder, version)
+                })?
+            };
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
+
+            Ok(Self {
+                name,
+                partitions,
+                unknown_tagged_fields,
+            })
+        }
+    }
+
+    impl KafkaEncode for ReassignableTopicResponse {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            encoder.write_compact_string(&self.name)?;
+            encoder.write_compact_array_len(self.partitions.len())?;
+            for value in &self.partitions {
+                value.encode(encoder, version)?;
+            }
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "ReassignableTopicResponse",
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+
+    /// `ReassignablePartitionResponse` as declared by the `AlterPartitionReassignments` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Eq, PartialEq)]
+    pub struct ReassignablePartitionResponse {
+        /// The partition index.
+        pub partition_index: i32,
+        /// The error code for this partition, or 0 if there was no error.
+        pub error_code: i16,
+        /// The error message for this partition, or null if there was no error.
+        pub error_message: Option<StrBytes>,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl ReassignablePartitionResponse {
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 1));
+
+        fn is_flexible(version: ApiVersion) -> bool {
+            Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+        }
+    }
+
+    impl Default for ReassignablePartitionResponse {
+        fn default() -> Self {
+            Self {
+                partition_index: 0,
+                error_code: 0,
+                error_message: Some(StrBytes::default()),
+                unknown_tagged_fields: TaggedFields::default(),
+            }
+        }
+    }
+
+    impl KafkaDecode for ReassignablePartitionResponse {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            let partition_index = decoder.read_i32()?;
+            let error_code = decoder.read_i16()?;
+            let error_message = decoder.read_compact_nullable_string()?;
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
+
+            Ok(Self {
+                partition_index,
+                error_code,
+                error_message,
+                unknown_tagged_fields,
+            })
+        }
+    }
+
+    impl KafkaEncode for ReassignablePartitionResponse {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            encoder.write_i32(self.partition_index)?;
+            encoder.write_i16(self.error_code)?;
+            encoder.write_compact_nullable_string(self.error_message.as_ref())?;
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "ReassignablePartitionResponse",
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+
+    /// Response body for the `AlterPartitionReassignments` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Eq, PartialEq)]
+    pub struct AlterPartitionReassignmentsResponse {
+        /// The duration in milliseconds for which the request was throttled due to a quota violation, or zero if the request did not violate any quota.
+        pub throttle_time_ms: i32,
+        /// The option indicating whether changing the replication factor of any given partition as part of the request was allowed.
+        pub allow_replication_factor_change: bool,
+        /// The top-level error code, or 0 if there was no error.
+        pub error_code: i16,
+        /// The top-level error message, or null if there was no error.
+        pub error_message: Option<StrBytes>,
+        /// The responses to topics to reassign.
+        pub responses: Vec<ReassignableTopicResponse>,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl Default for AlterPartitionReassignmentsResponse {
+        fn default() -> Self {
+            Self {
+                throttle_time_ms: 0,
+                allow_replication_factor_change: true,
+                error_code: 0,
+                error_message: Some(StrBytes::default()),
+                responses: Vec::new(),
+                unknown_tagged_fields: TaggedFields::default(),
+            }
+        }
+    }
+
+    impl KafkaMessage for AlterPartitionReassignmentsResponse {
+        const NAME: &'static str = "AlterPartitionReassignmentsResponse";
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 1);
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 1));
+    }
+
+    impl KafkaResponse for AlterPartitionReassignmentsResponse {
+        const API_KEY: ApiKey = ApiKey::new(45);
+    }
+
+    impl KafkaDecode for AlterPartitionReassignmentsResponse {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            crate::message::ensure_decode_version::<Self>(version)?;
+
+            let throttle_time_ms = decoder.read_i32()?;
+            let allow_replication_factor_change = if version.value() >= 1 {
+                decoder.read_bool()?
+            } else {
+                true
+            };
+            let error_code = decoder.read_i16()?;
+            let error_message = decoder.read_compact_nullable_string()?;
+            let responses = {
+                let length = decoder.read_compact_array_len()?;
+                decoder.read_vec(length, |decoder| {
+                    ReassignableTopicResponse::decode(decoder, version)
+                })?
+            };
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
+
+            Ok(Self {
+                throttle_time_ms,
+                allow_replication_factor_change,
+                error_code,
+                error_message,
+                responses,
+                unknown_tagged_fields,
+            })
+        }
+    }
+
+    impl KafkaEncode for AlterPartitionReassignmentsResponse {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            crate::message::ensure_encode_version::<Self>(version)?;
+
+            encoder.write_i32(self.throttle_time_ms)?;
+            if version.value() >= 1 {
+                encoder.write_bool(self.allow_replication_factor_change)?;
+            }
+            encoder.write_i16(self.error_code)?;
+            encoder.write_compact_nullable_string(self.error_message.as_ref())?;
+            encoder.write_compact_array_len(self.responses.len())?;
+            for value in &self.responses {
+                value.encode(encoder, version)?;
+            }
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: Self::NAME,
+                    version,
+                });
+            }
+
+            Ok(())
+        }
     }
 }
 
-impl KafkaEncode for AlterPartitionReassignmentsResponseReassignablePartitionResponse {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        encoder.write_i32(self.partition_index)?;
-        encoder.write_i16(self.error_code)?;
-        encoder.write_compact_nullable_string(self.error_message.as_ref())?;
+use kafka_wire_core::VersionRange;
 
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: "AlterPartitionReassignmentsResponseReassignablePartitionResponse",
-                version,
-            });
-        }
+use crate::{MessageDescriptor, MessageDirection};
 
-        Ok(())
-    }
-}
-
-/// Response body for the `AlterPartitionReassignments` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct AlterPartitionReassignmentsResponse {
-    /// The duration in milliseconds for which the request was throttled due to a quota violation, or zero if the request did not violate any quota.
-    pub throttle_time_ms: i32,
-    /// The option indicating whether changing the replication factor of any given partition as part of the request was allowed.
-    pub allow_replication_factor_change: bool,
-    /// The top-level error code, or 0 if there was no error.
-    pub error_code: i16,
-    /// The top-level error message, or null if there was no error.
-    pub error_message: Option<StrBytes>,
-    /// The responses to topics to reassign.
-    pub responses: Vec<AlterPartitionReassignmentsResponseReassignableTopicResponse>,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
-
-impl Default for AlterPartitionReassignmentsResponse {
-    fn default() -> Self {
-        Self {
-            throttle_time_ms: 0,
-            allow_replication_factor_change: true,
-            error_code: 0,
-            error_message: Some(StrBytes::default()),
-            responses: Vec::new(),
-            unknown_tagged_fields: TaggedFields::default(),
-        }
-    }
-}
-
-impl KafkaMessage for AlterPartitionReassignmentsResponse {
-    const NAME: &'static str = "AlterPartitionReassignmentsResponse";
-    const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 1);
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 1));
-}
-
-impl KafkaResponse for AlterPartitionReassignmentsResponse {
-    const API_KEY: ApiKey = ApiKey::new(45);
-}
-
-impl KafkaDecode for AlterPartitionReassignmentsResponse {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        crate::message::ensure_decode_version::<Self>(version)?;
-
-        let throttle_time_ms = decoder.read_i32()?;
-        let allow_replication_factor_change = if version.value() >= 1 {
-            decoder.read_bool()?
-        } else {
-            true
-        };
-        let error_code = decoder.read_i16()?;
-        let error_message = decoder.read_compact_nullable_string()?;
-        let responses = {
-            let length = decoder.read_compact_array_len()?;
-            decoder.read_vec(length, |decoder| {
-                AlterPartitionReassignmentsResponseReassignableTopicResponse::decode(
-                    decoder, version,
-                )
-            })?
-        };
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
-
-        Ok(Self {
-            throttle_time_ms,
-            allow_replication_factor_change,
-            error_code,
-            error_message,
-            responses,
-            unknown_tagged_fields,
-        })
-    }
-}
-
-impl KafkaEncode for AlterPartitionReassignmentsResponse {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        crate::message::ensure_encode_version::<Self>(version)?;
-
-        encoder.write_i32(self.throttle_time_ms)?;
-        if version.value() >= 1 {
-            encoder.write_bool(self.allow_replication_factor_change)?;
-        }
-        encoder.write_i16(self.error_code)?;
-        encoder.write_compact_nullable_string(self.error_message.as_ref())?;
-        encoder.write_compact_array_len(self.responses.len())?;
-        for value in &self.responses {
-            value.encode(encoder, version)?;
-        }
-
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: Self::NAME,
-                version,
-            });
-        }
-
-        Ok(())
-    }
-}
+pub use alter_partition_reassignments_request::AlterPartitionReassignmentsRequest;
+pub use alter_partition_reassignments_response::AlterPartitionReassignmentsResponse;
 
 /// Static metadata for [`AlterPartitionReassignmentsRequest`].
 pub const ALTER_PARTITION_REASSIGNMENTS_REQUEST_DESCRIPTOR: MessageDescriptor =

@@ -5,761 +5,783 @@
 //! Request SHA-256: `decf707610f04693c50357f10f9afc9128856f04dc0a3ca6fa53091091455725`.
 //! Response SHA-256: `d41587291449d365b7db4c662fb91ac38c7b99ddeaac41e54a27bcd92b840eac`.
 
-use kafka_wire_core::{
-    ApiKey, ApiVersion, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
-    KafkaEncode, KnownTags, StrBytes, TagOutcome, TaggedFields, Uuid, VersionRange,
-};
+/// `CreateTopicsRequest` and every struct it declares, under upstream's own names.
+///
+/// [`CreateTopicsRequest`](crate::CreateTopicsRequest) is re-exported flat, so this path never has to be
+/// written to name the message itself.
+pub mod create_topics_request {
+    use kafka_wire_core::{
+        ApiKey, ApiVersion, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
+        KafkaEncode, StrBytes, TaggedFields, VersionRange,
+    };
 
-use crate::{
-    KafkaMessage, KafkaRequest, KafkaResponse, MessageDescriptor, MessageDirection,
-    RequestResponsePair,
-};
+    use crate::{KafkaMessage, KafkaRequest, RequestResponsePair};
 
-/// `CreatableTopic` as declared by the `CreateTopics` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct CreateTopicsRequestCreatableTopic {
-    /// The topic name.
-    pub name: StrBytes,
-    /// The number of partitions to create in the topic, or -1 if we are either specifying a manual partition assignment or using the default partitions.
-    pub num_partitions: i32,
-    /// The number of replicas to create for each partition in the topic, or -1 if we are either specifying a manual partition assignment or using the default replication factor.
-    pub replication_factor: i16,
-    /// The manual partition assignment, or the empty array if we are using automatic assignment.
-    pub assignments: Vec<CreateTopicsRequestCreatableReplicaAssignment>,
-    /// The custom topic configurations to set.
-    pub configs: Vec<CreateTopicsRequestCreatableTopicConfig>,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
-
-impl CreateTopicsRequestCreatableTopic {
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(5, 7));
-
-    fn is_flexible(version: ApiVersion) -> bool {
-        Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+    /// `CreatableTopic` as declared by the `CreateTopics` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    pub struct CreatableTopic {
+        /// The topic name.
+        pub name: StrBytes,
+        /// The number of partitions to create in the topic, or -1 if we are either specifying a manual partition assignment or using the default partitions.
+        pub num_partitions: i32,
+        /// The number of replicas to create for each partition in the topic, or -1 if we are either specifying a manual partition assignment or using the default replication factor.
+        pub replication_factor: i16,
+        /// The manual partition assignment, or the empty array if we are using automatic assignment.
+        pub assignments: Vec<CreatableReplicaAssignment>,
+        /// The custom topic configurations to set.
+        pub configs: Vec<CreatableTopicConfig>,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
     }
-}
 
-impl KafkaDecode for CreateTopicsRequestCreatableTopic {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        let name = if Self::is_flexible(version) {
-            decoder.read_compact_string()?
-        } else {
-            decoder.read_string()?
-        };
-        let num_partitions = decoder.read_i32()?;
-        let replication_factor = decoder.read_i16()?;
-        let assignments = {
-            let length = if Self::is_flexible(version) {
-                decoder.read_compact_array_len()?
+    impl CreatableTopic {
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(5, 7));
+
+        fn is_flexible(version: ApiVersion) -> bool {
+            Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+        }
+    }
+
+    impl KafkaDecode for CreatableTopic {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            let name = if Self::is_flexible(version) {
+                decoder.read_compact_string()?
             } else {
-                decoder.read_array_len()?
+                decoder.read_string()?
             };
-            decoder.read_vec(length, |decoder| {
-                CreateTopicsRequestCreatableReplicaAssignment::decode(decoder, version)
-            })?
-        };
-        let configs = {
-            let length = if Self::is_flexible(version) {
-                decoder.read_compact_array_len()?
+            let num_partitions = decoder.read_i32()?;
+            let replication_factor = decoder.read_i16()?;
+            let assignments = {
+                let length = if Self::is_flexible(version) {
+                    decoder.read_compact_array_len()?
+                } else {
+                    decoder.read_array_len()?
+                };
+                decoder.read_vec(length, |decoder| {
+                    CreatableReplicaAssignment::decode(decoder, version)
+                })?
+            };
+            let configs = {
+                let length = if Self::is_flexible(version) {
+                    decoder.read_compact_array_len()?
+                } else {
+                    decoder.read_array_len()?
+                };
+                decoder.read_vec(length, |decoder| {
+                    CreatableTopicConfig::decode(decoder, version)
+                })?
+            };
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
             } else {
-                decoder.read_array_len()?
+                TaggedFields::default()
             };
-            decoder.read_vec(length, |decoder| {
-                CreateTopicsRequestCreatableTopicConfig::decode(decoder, version)
-            })?
-        };
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
 
-        Ok(Self {
-            name,
-            num_partitions,
-            replication_factor,
-            assignments,
-            configs,
-            unknown_tagged_fields,
-        })
+            Ok(Self {
+                name,
+                num_partitions,
+                replication_factor,
+                assignments,
+                configs,
+                unknown_tagged_fields,
+            })
+        }
     }
-}
 
-impl KafkaEncode for CreateTopicsRequestCreatableTopic {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        if Self::is_flexible(version) {
-            encoder.write_compact_string(&self.name)?;
-        } else {
-            encoder.write_string(&self.name)?;
-        }
-        encoder.write_i32(self.num_partitions)?;
-        encoder.write_i16(self.replication_factor)?;
-        if Self::is_flexible(version) {
-            encoder.write_compact_array_len(self.assignments.len())?;
-        } else {
-            encoder.write_array_len(self.assignments.len())?;
-        }
-        for value in &self.assignments {
-            value.encode(encoder, version)?;
-        }
-        if Self::is_flexible(version) {
-            encoder.write_compact_array_len(self.configs.len())?;
-        } else {
-            encoder.write_array_len(self.configs.len())?;
-        }
-        for value in &self.configs {
-            value.encode(encoder, version)?;
-        }
-
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: "CreateTopicsRequestCreatableTopic",
-                version,
-            });
-        }
-
-        Ok(())
-    }
-}
-
-/// `CreatableReplicaAssignment` as declared by the `CreateTopics` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct CreateTopicsRequestCreatableReplicaAssignment {
-    /// The partition index.
-    pub partition_index: i32,
-    /// The brokers to place the partition on.
-    pub broker_ids: Vec<i32>,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
-
-impl CreateTopicsRequestCreatableReplicaAssignment {
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(5, 7));
-
-    fn is_flexible(version: ApiVersion) -> bool {
-        Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
-    }
-}
-
-impl KafkaDecode for CreateTopicsRequestCreatableReplicaAssignment {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        let partition_index = decoder.read_i32()?;
-        let broker_ids = {
-            let length = if Self::is_flexible(version) {
-                decoder.read_compact_array_len()?
+    impl KafkaEncode for CreatableTopic {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            if Self::is_flexible(version) {
+                encoder.write_compact_string(&self.name)?;
             } else {
-                decoder.read_array_len()?
-            };
-            decoder.read_vec(length, Decoder::read_i32)?
-        };
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
-
-        Ok(Self {
-            partition_index,
-            broker_ids,
-            unknown_tagged_fields,
-        })
-    }
-}
-
-impl KafkaEncode for CreateTopicsRequestCreatableReplicaAssignment {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        encoder.write_i32(self.partition_index)?;
-        if Self::is_flexible(version) {
-            encoder.write_compact_array_len(self.broker_ids.len())?;
-        } else {
-            encoder.write_array_len(self.broker_ids.len())?;
-        }
-        for value in &self.broker_ids {
-            encoder.write_i32(*value)?;
-        }
-
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: "CreateTopicsRequestCreatableReplicaAssignment",
-                version,
-            });
-        }
-
-        Ok(())
-    }
-}
-
-/// `CreatableTopicConfig` as declared by the `CreateTopics` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct CreateTopicsRequestCreatableTopicConfig {
-    /// The configuration name.
-    pub name: StrBytes,
-    /// The configuration value.
-    pub value: Option<StrBytes>,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
-
-impl CreateTopicsRequestCreatableTopicConfig {
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(5, 7));
-
-    fn is_flexible(version: ApiVersion) -> bool {
-        Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
-    }
-}
-
-impl Default for CreateTopicsRequestCreatableTopicConfig {
-    fn default() -> Self {
-        Self {
-            name: StrBytes::default(),
-            value: Some(StrBytes::default()),
-            unknown_tagged_fields: TaggedFields::default(),
-        }
-    }
-}
-
-impl KafkaDecode for CreateTopicsRequestCreatableTopicConfig {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        let name = if Self::is_flexible(version) {
-            decoder.read_compact_string()?
-        } else {
-            decoder.read_string()?
-        };
-        let value = if Self::is_flexible(version) {
-            decoder.read_compact_nullable_string()?
-        } else {
-            decoder.read_nullable_string()?
-        };
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
-
-        Ok(Self {
-            name,
-            value,
-            unknown_tagged_fields,
-        })
-    }
-}
-
-impl KafkaEncode for CreateTopicsRequestCreatableTopicConfig {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        if Self::is_flexible(version) {
-            encoder.write_compact_string(&self.name)?;
-        } else {
-            encoder.write_string(&self.name)?;
-        }
-        if Self::is_flexible(version) {
-            encoder.write_compact_nullable_string(self.value.as_ref())?;
-        } else {
-            encoder.write_nullable_string(self.value.as_ref())?;
-        }
-
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: "CreateTopicsRequestCreatableTopicConfig",
-                version,
-            });
-        }
-
-        Ok(())
-    }
-}
-
-/// Request body for the `CreateTopics` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct CreateTopicsRequest {
-    /// The topics to create.
-    pub topics: Vec<CreateTopicsRequestCreatableTopic>,
-    /// How long to wait in milliseconds before timing out the request.
-    pub timeout_ms: i32,
-    /// If true, check that the topics can be created as specified, but don't create anything.
-    pub validate_only: bool,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
-
-impl Default for CreateTopicsRequest {
-    fn default() -> Self {
-        Self {
-            topics: Vec::new(),
-            timeout_ms: 60_000,
-            validate_only: false,
-            unknown_tagged_fields: TaggedFields::default(),
-        }
-    }
-}
-
-impl KafkaMessage for CreateTopicsRequest {
-    const NAME: &'static str = "CreateTopicsRequest";
-    const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(2, 7);
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(5, 7));
-}
-
-impl KafkaRequest for CreateTopicsRequest {
-    const API_KEY: ApiKey = ApiKey::new(19);
-}
-
-impl RequestResponsePair for CreateTopicsRequest {
-    type Response = CreateTopicsResponse;
-}
-
-impl KafkaDecode for CreateTopicsRequest {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        crate::message::ensure_decode_version::<Self>(version)?;
-
-        let topics = {
-            let length = if Self::is_flexible(version) {
-                decoder.read_compact_array_len()?
-            } else {
-                decoder.read_array_len()?
-            };
-            decoder.read_vec(length, |decoder| {
-                CreateTopicsRequestCreatableTopic::decode(decoder, version)
-            })?
-        };
-        let timeout_ms = decoder.read_i32()?;
-        let validate_only = decoder.read_bool()?;
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
-
-        Ok(Self {
-            topics,
-            timeout_ms,
-            validate_only,
-            unknown_tagged_fields,
-        })
-    }
-}
-
-impl KafkaEncode for CreateTopicsRequest {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        crate::message::ensure_encode_version::<Self>(version)?;
-
-        if Self::is_flexible(version) {
-            encoder.write_compact_array_len(self.topics.len())?;
-        } else {
-            encoder.write_array_len(self.topics.len())?;
-        }
-        for value in &self.topics {
-            value.encode(encoder, version)?;
-        }
-        encoder.write_i32(self.timeout_ms)?;
-        encoder.write_bool(self.validate_only)?;
-
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: Self::NAME,
-                version,
-            });
-        }
-
-        Ok(())
-    }
-}
-
-/// `CreatableTopicResult` as declared by the `CreateTopics` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct CreateTopicsResponseCreatableTopicResult {
-    /// The topic name.
-    pub name: StrBytes,
-    /// The unique topic ID.
-    pub topic_id: Uuid,
-    /// The error code, or 0 if there was no error.
-    pub error_code: i16,
-    /// The error message, or null if there was no error.
-    pub error_message: Option<StrBytes>,
-    /// Optional topic config error returned if configs are not returned in the response.
-    pub topic_config_error_code: i16,
-    /// Number of partitions of the topic.
-    pub num_partitions: i32,
-    /// Replication factor of the topic.
-    pub replication_factor: i16,
-    /// Configuration of the topic.
-    pub configs: Option<Vec<CreateTopicsResponseCreatableTopicConfigs>>,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
-
-impl CreateTopicsResponseCreatableTopicResult {
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(5, 7));
-
-    fn is_flexible(version: ApiVersion) -> bool {
-        Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
-    }
-}
-
-impl Default for CreateTopicsResponseCreatableTopicResult {
-    fn default() -> Self {
-        Self {
-            name: StrBytes::default(),
-            topic_id: Uuid::ZERO,
-            error_code: 0,
-            error_message: Some(StrBytes::default()),
-            topic_config_error_code: 0,
-            num_partitions: -1,
-            replication_factor: -1,
-            configs: Some(Vec::new()),
-            unknown_tagged_fields: TaggedFields::default(),
-        }
-    }
-}
-
-impl KafkaDecode for CreateTopicsResponseCreatableTopicResult {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        let name = if Self::is_flexible(version) {
-            decoder.read_compact_string()?
-        } else {
-            decoder.read_string()?
-        };
-        let topic_id = if version.value() >= 7 {
-            decoder.read_uuid()?
-        } else {
-            Uuid::ZERO
-        };
-        let error_code = decoder.read_i16()?;
-        let error_message = if Self::is_flexible(version) {
-            decoder.read_compact_nullable_string()?
-        } else {
-            decoder.read_nullable_string()?
-        };
-        let num_partitions = if version.value() >= 5 {
-            decoder.read_i32()?
-        } else {
-            -1
-        };
-        let replication_factor = if version.value() >= 5 {
-            decoder.read_i16()?
-        } else {
-            -1
-        };
-        let configs = if version.value() >= 5 {
-            let length = decoder.read_compact_nullable_array_len()?;
-            length
-                .map(|length| {
-                    decoder.read_vec(length, |decoder| {
-                        CreateTopicsResponseCreatableTopicConfigs::decode(decoder, version)
-                    })
-                })
-                .transpose()?
-        } else {
-            Some(Vec::new())
-        };
-        let mut topic_config_error_code: i16 = 0;
-        let mut unknown_tagged_fields = TaggedFields::default();
-        if Self::is_flexible(version) {
-            unknown_tagged_fields = decoder.read_tagged_fields_with(|tag, decoder| match tag {
-                0 => {
-                    topic_config_error_code = decoder.read_i16()?;
-                    Ok(TagOutcome::Decoded)
-                }
-                _ => Ok(TagOutcome::Retained),
-            })?;
-        }
-
-        Ok(Self {
-            name,
-            topic_id,
-            error_code,
-            error_message,
-            topic_config_error_code,
-            num_partitions,
-            replication_factor,
-            configs,
-            unknown_tagged_fields,
-        })
-    }
-}
-
-impl KafkaEncode for CreateTopicsResponseCreatableTopicResult {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        if Self::is_flexible(version) {
-            encoder.write_compact_string(&self.name)?;
-        } else {
-            encoder.write_string(&self.name)?;
-        }
-        if version.value() >= 7 {
-            encoder.write_uuid(self.topic_id)?;
-        }
-        encoder.write_i16(self.error_code)?;
-        if Self::is_flexible(version) {
-            encoder.write_compact_nullable_string(self.error_message.as_ref())?;
-        } else {
-            encoder.write_nullable_string(self.error_message.as_ref())?;
-        }
-        if version.value() >= 5 {
+                encoder.write_string(&self.name)?;
+            }
             encoder.write_i32(self.num_partitions)?;
-        }
-        if version.value() >= 5 {
             encoder.write_i16(self.replication_factor)?;
+            if Self::is_flexible(version) {
+                encoder.write_compact_array_len(self.assignments.len())?;
+            } else {
+                encoder.write_array_len(self.assignments.len())?;
+            }
+            for value in &self.assignments {
+                value.encode(encoder, version)?;
+            }
+            if Self::is_flexible(version) {
+                encoder.write_compact_array_len(self.configs.len())?;
+            } else {
+                encoder.write_array_len(self.configs.len())?;
+            }
+            for value in &self.configs {
+                value.encode(encoder, version)?;
+            }
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "CreatableTopic",
+                    version,
+                });
+            }
+
+            Ok(())
         }
-        if version.value() >= 5 {
-            encoder.write_compact_nullable_array_len(self.configs.as_ref().map(Vec::len))?;
-            if let Some(values) = &self.configs {
-                for value in values {
-                    value.encode(encoder, version)?;
+    }
+
+    /// `CreatableReplicaAssignment` as declared by the `CreateTopics` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    pub struct CreatableReplicaAssignment {
+        /// The partition index.
+        pub partition_index: i32,
+        /// The brokers to place the partition on.
+        pub broker_ids: Vec<i32>,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl CreatableReplicaAssignment {
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(5, 7));
+
+        fn is_flexible(version: ApiVersion) -> bool {
+            Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+        }
+    }
+
+    impl KafkaDecode for CreatableReplicaAssignment {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            let partition_index = decoder.read_i32()?;
+            let broker_ids = {
+                let length = if Self::is_flexible(version) {
+                    decoder.read_compact_array_len()?
+                } else {
+                    decoder.read_array_len()?
+                };
+                decoder.read_vec(length, Decoder::read_i32)?
+            };
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
+
+            Ok(Self {
+                partition_index,
+                broker_ids,
+                unknown_tagged_fields,
+            })
+        }
+    }
+
+    impl KafkaEncode for CreatableReplicaAssignment {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            encoder.write_i32(self.partition_index)?;
+            if Self::is_flexible(version) {
+                encoder.write_compact_array_len(self.broker_ids.len())?;
+            } else {
+                encoder.write_array_len(self.broker_ids.len())?;
+            }
+            for value in &self.broker_ids {
+                encoder.write_i32(*value)?;
+            }
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "CreatableReplicaAssignment",
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+
+    /// `CreatableTopicConfig` as declared by the `CreateTopics` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Eq, PartialEq)]
+    pub struct CreatableTopicConfig {
+        /// The configuration name.
+        pub name: StrBytes,
+        /// The configuration value.
+        pub value: Option<StrBytes>,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl CreatableTopicConfig {
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(5, 7));
+
+        fn is_flexible(version: ApiVersion) -> bool {
+            Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+        }
+    }
+
+    impl Default for CreatableTopicConfig {
+        fn default() -> Self {
+            Self {
+                name: StrBytes::default(),
+                value: Some(StrBytes::default()),
+                unknown_tagged_fields: TaggedFields::default(),
+            }
+        }
+    }
+
+    impl KafkaDecode for CreatableTopicConfig {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            let name = if Self::is_flexible(version) {
+                decoder.read_compact_string()?
+            } else {
+                decoder.read_string()?
+            };
+            let value = if Self::is_flexible(version) {
+                decoder.read_compact_nullable_string()?
+            } else {
+                decoder.read_nullable_string()?
+            };
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
+
+            Ok(Self {
+                name,
+                value,
+                unknown_tagged_fields,
+            })
+        }
+    }
+
+    impl KafkaEncode for CreatableTopicConfig {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            if Self::is_flexible(version) {
+                encoder.write_compact_string(&self.name)?;
+            } else {
+                encoder.write_string(&self.name)?;
+            }
+            if Self::is_flexible(version) {
+                encoder.write_compact_nullable_string(self.value.as_ref())?;
+            } else {
+                encoder.write_nullable_string(self.value.as_ref())?;
+            }
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "CreatableTopicConfig",
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+
+    /// Request body for the `CreateTopics` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Eq, PartialEq)]
+    pub struct CreateTopicsRequest {
+        /// The topics to create.
+        pub topics: Vec<CreatableTopic>,
+        /// How long to wait in milliseconds before timing out the request.
+        pub timeout_ms: i32,
+        /// If true, check that the topics can be created as specified, but don't create anything.
+        pub validate_only: bool,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl Default for CreateTopicsRequest {
+        fn default() -> Self {
+            Self {
+                topics: Vec::new(),
+                timeout_ms: 60_000,
+                validate_only: false,
+                unknown_tagged_fields: TaggedFields::default(),
+            }
+        }
+    }
+
+    impl KafkaMessage for CreateTopicsRequest {
+        const NAME: &'static str = "CreateTopicsRequest";
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(2, 7);
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(5, 7));
+    }
+
+    impl KafkaRequest for CreateTopicsRequest {
+        const API_KEY: ApiKey = ApiKey::new(19);
+    }
+
+    impl RequestResponsePair for CreateTopicsRequest {
+        type Response = super::CreateTopicsResponse;
+    }
+
+    impl KafkaDecode for CreateTopicsRequest {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            crate::message::ensure_decode_version::<Self>(version)?;
+
+            let topics = {
+                let length = if Self::is_flexible(version) {
+                    decoder.read_compact_array_len()?
+                } else {
+                    decoder.read_array_len()?
+                };
+                decoder.read_vec(length, |decoder| CreatableTopic::decode(decoder, version))?
+            };
+            let timeout_ms = decoder.read_i32()?;
+            let validate_only = decoder.read_bool()?;
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
+
+            Ok(Self {
+                topics,
+                timeout_ms,
+                validate_only,
+                unknown_tagged_fields,
+            })
+        }
+    }
+
+    impl KafkaEncode for CreateTopicsRequest {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            crate::message::ensure_encode_version::<Self>(version)?;
+
+            if Self::is_flexible(version) {
+                encoder.write_compact_array_len(self.topics.len())?;
+            } else {
+                encoder.write_array_len(self.topics.len())?;
+            }
+            for value in &self.topics {
+                value.encode(encoder, version)?;
+            }
+            encoder.write_i32(self.timeout_ms)?;
+            encoder.write_bool(self.validate_only)?;
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: Self::NAME,
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+}
+
+/// `CreateTopicsResponse` and every struct it declares, under upstream's own names.
+///
+/// [`CreateTopicsResponse`](crate::CreateTopicsResponse) is re-exported flat, so this path never has to be
+/// written to name the message itself.
+pub mod create_topics_response {
+    use kafka_wire_core::{
+        ApiKey, ApiVersion, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
+        KafkaEncode, KnownTags, StrBytes, TagOutcome, TaggedFields, Uuid, VersionRange,
+    };
+
+    use crate::{KafkaMessage, KafkaResponse};
+
+    /// `CreatableTopicResult` as declared by the `CreateTopics` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Eq, PartialEq)]
+    pub struct CreatableTopicResult {
+        /// The topic name.
+        pub name: StrBytes,
+        /// The unique topic ID.
+        pub topic_id: Uuid,
+        /// The error code, or 0 if there was no error.
+        pub error_code: i16,
+        /// The error message, or null if there was no error.
+        pub error_message: Option<StrBytes>,
+        /// Optional topic config error returned if configs are not returned in the response.
+        pub topic_config_error_code: i16,
+        /// Number of partitions of the topic.
+        pub num_partitions: i32,
+        /// Replication factor of the topic.
+        pub replication_factor: i16,
+        /// Configuration of the topic.
+        pub configs: Option<Vec<CreatableTopicConfigs>>,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl CreatableTopicResult {
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(5, 7));
+
+        fn is_flexible(version: ApiVersion) -> bool {
+            Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+        }
+    }
+
+    impl Default for CreatableTopicResult {
+        fn default() -> Self {
+            Self {
+                name: StrBytes::default(),
+                topic_id: Uuid::ZERO,
+                error_code: 0,
+                error_message: Some(StrBytes::default()),
+                topic_config_error_code: 0,
+                num_partitions: -1,
+                replication_factor: -1,
+                configs: Some(Vec::new()),
+                unknown_tagged_fields: TaggedFields::default(),
+            }
+        }
+    }
+
+    impl KafkaDecode for CreatableTopicResult {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            let name = if Self::is_flexible(version) {
+                decoder.read_compact_string()?
+            } else {
+                decoder.read_string()?
+            };
+            let topic_id = if version.value() >= 7 {
+                decoder.read_uuid()?
+            } else {
+                Uuid::ZERO
+            };
+            let error_code = decoder.read_i16()?;
+            let error_message = if Self::is_flexible(version) {
+                decoder.read_compact_nullable_string()?
+            } else {
+                decoder.read_nullable_string()?
+            };
+            let num_partitions = if version.value() >= 5 {
+                decoder.read_i32()?
+            } else {
+                -1
+            };
+            let replication_factor = if version.value() >= 5 {
+                decoder.read_i16()?
+            } else {
+                -1
+            };
+            let configs = if version.value() >= 5 {
+                let length = decoder.read_compact_nullable_array_len()?;
+                length
+                    .map(|length| {
+                        decoder.read_vec(length, |decoder| {
+                            CreatableTopicConfigs::decode(decoder, version)
+                        })
+                    })
+                    .transpose()?
+            } else {
+                Some(Vec::new())
+            };
+            let mut topic_config_error_code: i16 = 0;
+            let mut unknown_tagged_fields = TaggedFields::default();
+            if Self::is_flexible(version) {
+                unknown_tagged_fields =
+                    decoder.read_tagged_fields_with(|tag, decoder| match tag {
+                        0 => {
+                            topic_config_error_code = decoder.read_i16()?;
+                            Ok(TagOutcome::Decoded)
+                        }
+                        _ => Ok(TagOutcome::Retained),
+                    })?;
+            }
+
+            Ok(Self {
+                name,
+                topic_id,
+                error_code,
+                error_message,
+                topic_config_error_code,
+                num_partitions,
+                replication_factor,
+                configs,
+                unknown_tagged_fields,
+            })
+        }
+    }
+
+    impl KafkaEncode for CreatableTopicResult {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            if Self::is_flexible(version) {
+                encoder.write_compact_string(&self.name)?;
+            } else {
+                encoder.write_string(&self.name)?;
+            }
+            if version.value() >= 7 {
+                encoder.write_uuid(self.topic_id)?;
+            }
+            encoder.write_i16(self.error_code)?;
+            if Self::is_flexible(version) {
+                encoder.write_compact_nullable_string(self.error_message.as_ref())?;
+            } else {
+                encoder.write_nullable_string(self.error_message.as_ref())?;
+            }
+            if version.value() >= 5 {
+                encoder.write_i32(self.num_partitions)?;
+            }
+            if version.value() >= 5 {
+                encoder.write_i16(self.replication_factor)?;
+            }
+            if version.value() >= 5 {
+                encoder.write_compact_nullable_array_len(self.configs.as_ref().map(Vec::len))?;
+                if let Some(values) = &self.configs {
+                    for value in values {
+                        value.encode(encoder, version)?;
+                    }
                 }
             }
-        }
 
-        if Self::is_flexible(version) {
-            let mut known = KnownTags::new();
-            if self.topic_config_error_code != 0 {
-                known.write(0, |encoder| {
-                    encoder.write_i16(self.topic_config_error_code)?;
-                    Ok(())
-                })?;
+            if Self::is_flexible(version) {
+                let mut known = KnownTags::new();
+                if self.topic_config_error_code != 0 {
+                    known.write(0, |encoder| {
+                        encoder.write_i16(self.topic_config_error_code)?;
+                        Ok(())
+                    })?;
+                }
+                encoder.write_merged_tagged_fields(known, &self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "CreatableTopicResult",
+                    version,
+                });
             }
-            encoder.write_merged_tagged_fields(known, &self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: "CreateTopicsResponseCreatableTopicResult",
-                version,
-            });
-        }
 
-        Ok(())
-    }
-}
-
-/// `CreatableTopicConfigs` as declared by the `CreateTopics` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct CreateTopicsResponseCreatableTopicConfigs {
-    /// The configuration name.
-    pub name: StrBytes,
-    /// The configuration value.
-    pub value: Option<StrBytes>,
-    /// True if the configuration is read-only.
-    pub read_only: bool,
-    /// The configuration source.
-    pub config_source: i8,
-    /// True if this configuration is sensitive.
-    pub is_sensitive: bool,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
-
-impl CreateTopicsResponseCreatableTopicConfigs {
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(5, 7));
-
-    fn is_flexible(version: ApiVersion) -> bool {
-        Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
-    }
-}
-
-impl Default for CreateTopicsResponseCreatableTopicConfigs {
-    fn default() -> Self {
-        Self {
-            name: StrBytes::default(),
-            value: Some(StrBytes::default()),
-            read_only: false,
-            config_source: -1,
-            is_sensitive: false,
-            unknown_tagged_fields: TaggedFields::default(),
+            Ok(())
         }
     }
-}
 
-impl KafkaDecode for CreateTopicsResponseCreatableTopicConfigs {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        let name = if version.value() >= 5 {
-            decoder.read_compact_string()?
-        } else {
-            StrBytes::default()
-        };
-        let value = if version.value() >= 5 {
-            decoder.read_compact_nullable_string()?
-        } else {
-            Some(StrBytes::default())
-        };
-        let read_only = if version.value() >= 5 {
-            decoder.read_bool()?
-        } else {
-            false
-        };
-        let config_source = if version.value() >= 5 {
-            decoder.read_i8()?
-        } else {
-            -1
-        };
-        let is_sensitive = if version.value() >= 5 {
-            decoder.read_bool()?
-        } else {
-            false
-        };
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
-
-        Ok(Self {
-            name,
-            value,
-            read_only,
-            config_source,
-            is_sensitive,
-            unknown_tagged_fields,
-        })
+    /// `CreatableTopicConfigs` as declared by the `CreateTopics` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Eq, PartialEq)]
+    pub struct CreatableTopicConfigs {
+        /// The configuration name.
+        pub name: StrBytes,
+        /// The configuration value.
+        pub value: Option<StrBytes>,
+        /// True if the configuration is read-only.
+        pub read_only: bool,
+        /// The configuration source.
+        pub config_source: i8,
+        /// True if this configuration is sensitive.
+        pub is_sensitive: bool,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
     }
-}
 
-impl KafkaEncode for CreateTopicsResponseCreatableTopicConfigs {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        if version.value() >= 5 {
-            encoder.write_compact_string(&self.name)?;
-        }
-        if version.value() >= 5 {
-            encoder.write_compact_nullable_string(self.value.as_ref())?;
-        }
-        if version.value() >= 5 {
-            encoder.write_bool(self.read_only)?;
-        }
-        if version.value() >= 5 {
-            encoder.write_i8(self.config_source)?;
-        }
-        if version.value() >= 5 {
-            encoder.write_bool(self.is_sensitive)?;
-        }
+    impl CreatableTopicConfigs {
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(5, 7));
 
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: "CreateTopicsResponseCreatableTopicConfigs",
-                version,
-            });
+        fn is_flexible(version: ApiVersion) -> bool {
+            Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
         }
-
-        Ok(())
     }
-}
 
-/// Response body for the `CreateTopics` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct CreateTopicsResponse {
-    /// The duration in milliseconds for which the request was throttled due to a quota violation, or zero if the request did not violate any quota.
-    pub throttle_time_ms: i32,
-    /// Results for each topic we tried to create.
-    pub topics: Vec<CreateTopicsResponseCreatableTopicResult>,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
+    impl Default for CreatableTopicConfigs {
+        fn default() -> Self {
+            Self {
+                name: StrBytes::default(),
+                value: Some(StrBytes::default()),
+                read_only: false,
+                config_source: -1,
+                is_sensitive: false,
+                unknown_tagged_fields: TaggedFields::default(),
+            }
+        }
+    }
 
-impl KafkaMessage for CreateTopicsResponse {
-    const NAME: &'static str = "CreateTopicsResponse";
-    const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(2, 7);
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(5, 7));
-}
-
-impl KafkaResponse for CreateTopicsResponse {
-    const API_KEY: ApiKey = ApiKey::new(19);
-}
-
-impl KafkaDecode for CreateTopicsResponse {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        crate::message::ensure_decode_version::<Self>(version)?;
-
-        let throttle_time_ms = decoder.read_i32()?;
-        let topics = {
-            let length = if Self::is_flexible(version) {
-                decoder.read_compact_array_len()?
+    impl KafkaDecode for CreatableTopicConfigs {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            let name = if version.value() >= 5 {
+                decoder.read_compact_string()?
             } else {
-                decoder.read_array_len()?
+                StrBytes::default()
             };
-            decoder.read_vec(length, |decoder| {
-                CreateTopicsResponseCreatableTopicResult::decode(decoder, version)
-            })?
-        };
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
+            let value = if version.value() >= 5 {
+                decoder.read_compact_nullable_string()?
+            } else {
+                Some(StrBytes::default())
+            };
+            let read_only = if version.value() >= 5 {
+                decoder.read_bool()?
+            } else {
+                false
+            };
+            let config_source = if version.value() >= 5 {
+                decoder.read_i8()?
+            } else {
+                -1
+            };
+            let is_sensitive = if version.value() >= 5 {
+                decoder.read_bool()?
+            } else {
+                false
+            };
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
 
-        Ok(Self {
-            throttle_time_ms,
-            topics,
-            unknown_tagged_fields,
-        })
+            Ok(Self {
+                name,
+                value,
+                read_only,
+                config_source,
+                is_sensitive,
+                unknown_tagged_fields,
+            })
+        }
+    }
+
+    impl KafkaEncode for CreatableTopicConfigs {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            if version.value() >= 5 {
+                encoder.write_compact_string(&self.name)?;
+            }
+            if version.value() >= 5 {
+                encoder.write_compact_nullable_string(self.value.as_ref())?;
+            }
+            if version.value() >= 5 {
+                encoder.write_bool(self.read_only)?;
+            }
+            if version.value() >= 5 {
+                encoder.write_i8(self.config_source)?;
+            }
+            if version.value() >= 5 {
+                encoder.write_bool(self.is_sensitive)?;
+            }
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "CreatableTopicConfigs",
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+
+    /// Response body for the `CreateTopics` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    pub struct CreateTopicsResponse {
+        /// The duration in milliseconds for which the request was throttled due to a quota violation, or zero if the request did not violate any quota.
+        pub throttle_time_ms: i32,
+        /// Results for each topic we tried to create.
+        pub topics: Vec<CreatableTopicResult>,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl KafkaMessage for CreateTopicsResponse {
+        const NAME: &'static str = "CreateTopicsResponse";
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(2, 7);
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(5, 7));
+    }
+
+    impl KafkaResponse for CreateTopicsResponse {
+        const API_KEY: ApiKey = ApiKey::new(19);
+    }
+
+    impl KafkaDecode for CreateTopicsResponse {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            crate::message::ensure_decode_version::<Self>(version)?;
+
+            let throttle_time_ms = decoder.read_i32()?;
+            let topics = {
+                let length = if Self::is_flexible(version) {
+                    decoder.read_compact_array_len()?
+                } else {
+                    decoder.read_array_len()?
+                };
+                decoder.read_vec(length, |decoder| {
+                    CreatableTopicResult::decode(decoder, version)
+                })?
+            };
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
+
+            Ok(Self {
+                throttle_time_ms,
+                topics,
+                unknown_tagged_fields,
+            })
+        }
+    }
+
+    impl KafkaEncode for CreateTopicsResponse {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            crate::message::ensure_encode_version::<Self>(version)?;
+
+            encoder.write_i32(self.throttle_time_ms)?;
+            if Self::is_flexible(version) {
+                encoder.write_compact_array_len(self.topics.len())?;
+            } else {
+                encoder.write_array_len(self.topics.len())?;
+            }
+            for value in &self.topics {
+                value.encode(encoder, version)?;
+            }
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: Self::NAME,
+                    version,
+                });
+            }
+
+            Ok(())
+        }
     }
 }
 
-impl KafkaEncode for CreateTopicsResponse {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        crate::message::ensure_encode_version::<Self>(version)?;
+use kafka_wire_core::VersionRange;
 
-        encoder.write_i32(self.throttle_time_ms)?;
-        if Self::is_flexible(version) {
-            encoder.write_compact_array_len(self.topics.len())?;
-        } else {
-            encoder.write_array_len(self.topics.len())?;
-        }
-        for value in &self.topics {
-            value.encode(encoder, version)?;
-        }
+use crate::{MessageDescriptor, MessageDirection};
 
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: Self::NAME,
-                version,
-            });
-        }
-
-        Ok(())
-    }
-}
+pub use create_topics_request::CreateTopicsRequest;
+pub use create_topics_response::CreateTopicsResponse;
 
 /// Static metadata for [`CreateTopicsRequest`].
 pub const CREATE_TOPICS_REQUEST_DESCRIPTOR: MessageDescriptor = MessageDescriptor::new(

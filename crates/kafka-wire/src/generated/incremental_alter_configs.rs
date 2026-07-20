@@ -5,464 +5,483 @@
 //! Request SHA-256: `04647313728edab580e5f53c798a0ab0e5873f1d01f16bac7ba6dd723c229b43`.
 //! Response SHA-256: `0f493130b3bddfa6d00fa5ca0d3ee043c321edda42d963b6dfa5a2990896a90a`.
 
-use kafka_wire_core::{
-    ApiKey, ApiVersion, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
-    KafkaEncode, StrBytes, TaggedFields, VersionRange,
-};
+/// `IncrementalAlterConfigsRequest` and every struct it declares, under upstream's own names.
+///
+/// [`IncrementalAlterConfigsRequest`](crate::IncrementalAlterConfigsRequest) is re-exported flat, so this path never has to be
+/// written to name the message itself.
+pub mod incremental_alter_configs_request {
+    use kafka_wire_core::{
+        ApiKey, ApiVersion, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
+        KafkaEncode, StrBytes, TaggedFields, VersionRange,
+    };
 
-use crate::{
-    KafkaMessage, KafkaRequest, KafkaResponse, MessageDescriptor, MessageDirection,
-    RequestResponsePair,
-};
+    use crate::{KafkaMessage, KafkaRequest, RequestResponsePair};
 
-/// `AlterConfigsResource` as declared by the `IncrementalAlterConfigs` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct IncrementalAlterConfigsRequestAlterConfigsResource {
-    /// The resource type.
-    pub resource_type: i8,
-    /// The resource name.
-    pub resource_name: StrBytes,
-    /// The configurations.
-    pub configs: Vec<IncrementalAlterConfigsRequestAlterableConfig>,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
-
-impl IncrementalAlterConfigsRequestAlterConfigsResource {
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(1, 1));
-
-    fn is_flexible(version: ApiVersion) -> bool {
-        Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+    /// `AlterConfigsResource` as declared by the `IncrementalAlterConfigs` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    pub struct AlterConfigsResource {
+        /// The resource type.
+        pub resource_type: i8,
+        /// The resource name.
+        pub resource_name: StrBytes,
+        /// The configurations.
+        pub configs: Vec<AlterableConfig>,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
     }
-}
 
-impl KafkaDecode for IncrementalAlterConfigsRequestAlterConfigsResource {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        let resource_type = decoder.read_i8()?;
-        let resource_name = if Self::is_flexible(version) {
-            decoder.read_compact_string()?
-        } else {
-            decoder.read_string()?
-        };
-        let configs = {
-            let length = if Self::is_flexible(version) {
-                decoder.read_compact_array_len()?
+    impl AlterConfigsResource {
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(1, 1));
+
+        fn is_flexible(version: ApiVersion) -> bool {
+            Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+        }
+    }
+
+    impl KafkaDecode for AlterConfigsResource {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            let resource_type = decoder.read_i8()?;
+            let resource_name = if Self::is_flexible(version) {
+                decoder.read_compact_string()?
             } else {
-                decoder.read_array_len()?
+                decoder.read_string()?
             };
-            decoder.read_vec(length, |decoder| {
-                IncrementalAlterConfigsRequestAlterableConfig::decode(decoder, version)
-            })?
-        };
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
-
-        Ok(Self {
-            resource_type,
-            resource_name,
-            configs,
-            unknown_tagged_fields,
-        })
-    }
-}
-
-impl KafkaEncode for IncrementalAlterConfigsRequestAlterConfigsResource {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        encoder.write_i8(self.resource_type)?;
-        if Self::is_flexible(version) {
-            encoder.write_compact_string(&self.resource_name)?;
-        } else {
-            encoder.write_string(&self.resource_name)?;
-        }
-        if Self::is_flexible(version) {
-            encoder.write_compact_array_len(self.configs.len())?;
-        } else {
-            encoder.write_array_len(self.configs.len())?;
-        }
-        for value in &self.configs {
-            value.encode(encoder, version)?;
-        }
-
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: "IncrementalAlterConfigsRequestAlterConfigsResource",
-                version,
-            });
-        }
-
-        Ok(())
-    }
-}
-
-/// `AlterableConfig` as declared by the `IncrementalAlterConfigs` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct IncrementalAlterConfigsRequestAlterableConfig {
-    /// The configuration key name.
-    pub name: StrBytes,
-    /// The type (Set, Delete, Append, Subtract) of operation.
-    pub config_operation: i8,
-    /// The value to set for the configuration key.
-    pub value: Option<StrBytes>,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
-
-impl IncrementalAlterConfigsRequestAlterableConfig {
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(1, 1));
-
-    fn is_flexible(version: ApiVersion) -> bool {
-        Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
-    }
-}
-
-impl Default for IncrementalAlterConfigsRequestAlterableConfig {
-    fn default() -> Self {
-        Self {
-            name: StrBytes::default(),
-            config_operation: 0,
-            value: Some(StrBytes::default()),
-            unknown_tagged_fields: TaggedFields::default(),
-        }
-    }
-}
-
-impl KafkaDecode for IncrementalAlterConfigsRequestAlterableConfig {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        let name = if Self::is_flexible(version) {
-            decoder.read_compact_string()?
-        } else {
-            decoder.read_string()?
-        };
-        let config_operation = decoder.read_i8()?;
-        let value = if Self::is_flexible(version) {
-            decoder.read_compact_nullable_string()?
-        } else {
-            decoder.read_nullable_string()?
-        };
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
-
-        Ok(Self {
-            name,
-            config_operation,
-            value,
-            unknown_tagged_fields,
-        })
-    }
-}
-
-impl KafkaEncode for IncrementalAlterConfigsRequestAlterableConfig {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        if Self::is_flexible(version) {
-            encoder.write_compact_string(&self.name)?;
-        } else {
-            encoder.write_string(&self.name)?;
-        }
-        encoder.write_i8(self.config_operation)?;
-        if Self::is_flexible(version) {
-            encoder.write_compact_nullable_string(self.value.as_ref())?;
-        } else {
-            encoder.write_nullable_string(self.value.as_ref())?;
-        }
-
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: "IncrementalAlterConfigsRequestAlterableConfig",
-                version,
-            });
-        }
-
-        Ok(())
-    }
-}
-
-/// Request body for the `IncrementalAlterConfigs` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct IncrementalAlterConfigsRequest {
-    /// The incremental updates for each resource.
-    pub resources: Vec<IncrementalAlterConfigsRequestAlterConfigsResource>,
-    /// True if we should validate the request, but not change the configurations.
-    pub validate_only: bool,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
-
-impl KafkaMessage for IncrementalAlterConfigsRequest {
-    const NAME: &'static str = "IncrementalAlterConfigsRequest";
-    const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 1);
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(1, 1));
-}
-
-impl KafkaRequest for IncrementalAlterConfigsRequest {
-    const API_KEY: ApiKey = ApiKey::new(44);
-}
-
-impl RequestResponsePair for IncrementalAlterConfigsRequest {
-    type Response = IncrementalAlterConfigsResponse;
-}
-
-impl KafkaDecode for IncrementalAlterConfigsRequest {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        crate::message::ensure_decode_version::<Self>(version)?;
-
-        let resources = {
-            let length = if Self::is_flexible(version) {
-                decoder.read_compact_array_len()?
+            let configs = {
+                let length = if Self::is_flexible(version) {
+                    decoder.read_compact_array_len()?
+                } else {
+                    decoder.read_array_len()?
+                };
+                decoder.read_vec(length, |decoder| AlterableConfig::decode(decoder, version))?
+            };
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
             } else {
-                decoder.read_array_len()?
+                TaggedFields::default()
             };
-            decoder.read_vec(length, |decoder| {
-                IncrementalAlterConfigsRequestAlterConfigsResource::decode(decoder, version)
-            })?
-        };
-        let validate_only = decoder.read_bool()?;
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
 
-        Ok(Self {
-            resources,
-            validate_only,
-            unknown_tagged_fields,
-        })
-    }
-}
-
-impl KafkaEncode for IncrementalAlterConfigsRequest {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        crate::message::ensure_encode_version::<Self>(version)?;
-
-        if Self::is_flexible(version) {
-            encoder.write_compact_array_len(self.resources.len())?;
-        } else {
-            encoder.write_array_len(self.resources.len())?;
-        }
-        for value in &self.resources {
-            value.encode(encoder, version)?;
-        }
-        encoder.write_bool(self.validate_only)?;
-
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: Self::NAME,
-                version,
-            });
-        }
-
-        Ok(())
-    }
-}
-
-/// `AlterConfigsResourceResponse` as declared by the `IncrementalAlterConfigs` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct IncrementalAlterConfigsResponseAlterConfigsResourceResponse {
-    /// The resource error code.
-    pub error_code: i16,
-    /// The resource error message, or null if there was no error.
-    pub error_message: Option<StrBytes>,
-    /// The resource type.
-    pub resource_type: i8,
-    /// The resource name.
-    pub resource_name: StrBytes,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
-
-impl IncrementalAlterConfigsResponseAlterConfigsResourceResponse {
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(1, 1));
-
-    fn is_flexible(version: ApiVersion) -> bool {
-        Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
-    }
-}
-
-impl Default for IncrementalAlterConfigsResponseAlterConfigsResourceResponse {
-    fn default() -> Self {
-        Self {
-            error_code: 0,
-            error_message: Some(StrBytes::default()),
-            resource_type: 0,
-            resource_name: StrBytes::default(),
-            unknown_tagged_fields: TaggedFields::default(),
+            Ok(Self {
+                resource_type,
+                resource_name,
+                configs,
+                unknown_tagged_fields,
+            })
         }
     }
-}
 
-impl KafkaDecode for IncrementalAlterConfigsResponseAlterConfigsResourceResponse {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        let error_code = decoder.read_i16()?;
-        let error_message = if Self::is_flexible(version) {
-            decoder.read_compact_nullable_string()?
-        } else {
-            decoder.read_nullable_string()?
-        };
-        let resource_type = decoder.read_i8()?;
-        let resource_name = if Self::is_flexible(version) {
-            decoder.read_compact_string()?
-        } else {
-            decoder.read_string()?
-        };
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
-
-        Ok(Self {
-            error_code,
-            error_message,
-            resource_type,
-            resource_name,
-            unknown_tagged_fields,
-        })
-    }
-}
-
-impl KafkaEncode for IncrementalAlterConfigsResponseAlterConfigsResourceResponse {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        encoder.write_i16(self.error_code)?;
-        if Self::is_flexible(version) {
-            encoder.write_compact_nullable_string(self.error_message.as_ref())?;
-        } else {
-            encoder.write_nullable_string(self.error_message.as_ref())?;
-        }
-        encoder.write_i8(self.resource_type)?;
-        if Self::is_flexible(version) {
-            encoder.write_compact_string(&self.resource_name)?;
-        } else {
-            encoder.write_string(&self.resource_name)?;
-        }
-
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: "IncrementalAlterConfigsResponseAlterConfigsResourceResponse",
-                version,
-            });
-        }
-
-        Ok(())
-    }
-}
-
-/// Response body for the `IncrementalAlterConfigs` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct IncrementalAlterConfigsResponse {
-    /// Duration in milliseconds for which the request was throttled due to a quota violation, or zero if the request did not violate any quota.
-    pub throttle_time_ms: i32,
-    /// The responses for each resource.
-    pub responses: Vec<IncrementalAlterConfigsResponseAlterConfigsResourceResponse>,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
-
-impl KafkaMessage for IncrementalAlterConfigsResponse {
-    const NAME: &'static str = "IncrementalAlterConfigsResponse";
-    const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 1);
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(1, 1));
-}
-
-impl KafkaResponse for IncrementalAlterConfigsResponse {
-    const API_KEY: ApiKey = ApiKey::new(44);
-}
-
-impl KafkaDecode for IncrementalAlterConfigsResponse {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        crate::message::ensure_decode_version::<Self>(version)?;
-
-        let throttle_time_ms = decoder.read_i32()?;
-        let responses = {
-            let length = if Self::is_flexible(version) {
-                decoder.read_compact_array_len()?
+    impl KafkaEncode for AlterConfigsResource {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            encoder.write_i8(self.resource_type)?;
+            if Self::is_flexible(version) {
+                encoder.write_compact_string(&self.resource_name)?;
             } else {
-                decoder.read_array_len()?
+                encoder.write_string(&self.resource_name)?;
+            }
+            if Self::is_flexible(version) {
+                encoder.write_compact_array_len(self.configs.len())?;
+            } else {
+                encoder.write_array_len(self.configs.len())?;
+            }
+            for value in &self.configs {
+                value.encode(encoder, version)?;
+            }
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "AlterConfigsResource",
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+
+    /// `AlterableConfig` as declared by the `IncrementalAlterConfigs` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Eq, PartialEq)]
+    pub struct AlterableConfig {
+        /// The configuration key name.
+        pub name: StrBytes,
+        /// The type (Set, Delete, Append, Subtract) of operation.
+        pub config_operation: i8,
+        /// The value to set for the configuration key.
+        pub value: Option<StrBytes>,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl AlterableConfig {
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(1, 1));
+
+        fn is_flexible(version: ApiVersion) -> bool {
+            Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+        }
+    }
+
+    impl Default for AlterableConfig {
+        fn default() -> Self {
+            Self {
+                name: StrBytes::default(),
+                config_operation: 0,
+                value: Some(StrBytes::default()),
+                unknown_tagged_fields: TaggedFields::default(),
+            }
+        }
+    }
+
+    impl KafkaDecode for AlterableConfig {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            let name = if Self::is_flexible(version) {
+                decoder.read_compact_string()?
+            } else {
+                decoder.read_string()?
             };
-            decoder.read_vec(length, |decoder| {
-                IncrementalAlterConfigsResponseAlterConfigsResourceResponse::decode(
-                    decoder, version,
-                )
-            })?
-        };
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
+            let config_operation = decoder.read_i8()?;
+            let value = if Self::is_flexible(version) {
+                decoder.read_compact_nullable_string()?
+            } else {
+                decoder.read_nullable_string()?
+            };
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
 
-        Ok(Self {
-            throttle_time_ms,
-            responses,
-            unknown_tagged_fields,
-        })
+            Ok(Self {
+                name,
+                config_operation,
+                value,
+                unknown_tagged_fields,
+            })
+        }
+    }
+
+    impl KafkaEncode for AlterableConfig {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            if Self::is_flexible(version) {
+                encoder.write_compact_string(&self.name)?;
+            } else {
+                encoder.write_string(&self.name)?;
+            }
+            encoder.write_i8(self.config_operation)?;
+            if Self::is_flexible(version) {
+                encoder.write_compact_nullable_string(self.value.as_ref())?;
+            } else {
+                encoder.write_nullable_string(self.value.as_ref())?;
+            }
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "AlterableConfig",
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+
+    /// Request body for the `IncrementalAlterConfigs` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    pub struct IncrementalAlterConfigsRequest {
+        /// The incremental updates for each resource.
+        pub resources: Vec<AlterConfigsResource>,
+        /// True if we should validate the request, but not change the configurations.
+        pub validate_only: bool,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl KafkaMessage for IncrementalAlterConfigsRequest {
+        const NAME: &'static str = "IncrementalAlterConfigsRequest";
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 1);
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(1, 1));
+    }
+
+    impl KafkaRequest for IncrementalAlterConfigsRequest {
+        const API_KEY: ApiKey = ApiKey::new(44);
+    }
+
+    impl RequestResponsePair for IncrementalAlterConfigsRequest {
+        type Response = super::IncrementalAlterConfigsResponse;
+    }
+
+    impl KafkaDecode for IncrementalAlterConfigsRequest {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            crate::message::ensure_decode_version::<Self>(version)?;
+
+            let resources = {
+                let length = if Self::is_flexible(version) {
+                    decoder.read_compact_array_len()?
+                } else {
+                    decoder.read_array_len()?
+                };
+                decoder.read_vec(length, |decoder| {
+                    AlterConfigsResource::decode(decoder, version)
+                })?
+            };
+            let validate_only = decoder.read_bool()?;
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
+
+            Ok(Self {
+                resources,
+                validate_only,
+                unknown_tagged_fields,
+            })
+        }
+    }
+
+    impl KafkaEncode for IncrementalAlterConfigsRequest {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            crate::message::ensure_encode_version::<Self>(version)?;
+
+            if Self::is_flexible(version) {
+                encoder.write_compact_array_len(self.resources.len())?;
+            } else {
+                encoder.write_array_len(self.resources.len())?;
+            }
+            for value in &self.resources {
+                value.encode(encoder, version)?;
+            }
+            encoder.write_bool(self.validate_only)?;
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: Self::NAME,
+                    version,
+                });
+            }
+
+            Ok(())
+        }
     }
 }
 
-impl KafkaEncode for IncrementalAlterConfigsResponse {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        crate::message::ensure_encode_version::<Self>(version)?;
+/// `IncrementalAlterConfigsResponse` and every struct it declares, under upstream's own names.
+///
+/// [`IncrementalAlterConfigsResponse`](crate::IncrementalAlterConfigsResponse) is re-exported flat, so this path never has to be
+/// written to name the message itself.
+pub mod incremental_alter_configs_response {
+    use kafka_wire_core::{
+        ApiKey, ApiVersion, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
+        KafkaEncode, StrBytes, TaggedFields, VersionRange,
+    };
 
-        encoder.write_i32(self.throttle_time_ms)?;
-        if Self::is_flexible(version) {
-            encoder.write_compact_array_len(self.responses.len())?;
-        } else {
-            encoder.write_array_len(self.responses.len())?;
-        }
-        for value in &self.responses {
-            value.encode(encoder, version)?;
-        }
+    use crate::{KafkaMessage, KafkaResponse};
 
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: Self::NAME,
-                version,
-            });
-        }
+    /// `AlterConfigsResourceResponse` as declared by the `IncrementalAlterConfigs` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Eq, PartialEq)]
+    pub struct AlterConfigsResourceResponse {
+        /// The resource error code.
+        pub error_code: i16,
+        /// The resource error message, or null if there was no error.
+        pub error_message: Option<StrBytes>,
+        /// The resource type.
+        pub resource_type: i8,
+        /// The resource name.
+        pub resource_name: StrBytes,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
+    }
 
-        Ok(())
+    impl AlterConfigsResourceResponse {
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(1, 1));
+
+        fn is_flexible(version: ApiVersion) -> bool {
+            Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+        }
+    }
+
+    impl Default for AlterConfigsResourceResponse {
+        fn default() -> Self {
+            Self {
+                error_code: 0,
+                error_message: Some(StrBytes::default()),
+                resource_type: 0,
+                resource_name: StrBytes::default(),
+                unknown_tagged_fields: TaggedFields::default(),
+            }
+        }
+    }
+
+    impl KafkaDecode for AlterConfigsResourceResponse {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            let error_code = decoder.read_i16()?;
+            let error_message = if Self::is_flexible(version) {
+                decoder.read_compact_nullable_string()?
+            } else {
+                decoder.read_nullable_string()?
+            };
+            let resource_type = decoder.read_i8()?;
+            let resource_name = if Self::is_flexible(version) {
+                decoder.read_compact_string()?
+            } else {
+                decoder.read_string()?
+            };
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
+
+            Ok(Self {
+                error_code,
+                error_message,
+                resource_type,
+                resource_name,
+                unknown_tagged_fields,
+            })
+        }
+    }
+
+    impl KafkaEncode for AlterConfigsResourceResponse {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            encoder.write_i16(self.error_code)?;
+            if Self::is_flexible(version) {
+                encoder.write_compact_nullable_string(self.error_message.as_ref())?;
+            } else {
+                encoder.write_nullable_string(self.error_message.as_ref())?;
+            }
+            encoder.write_i8(self.resource_type)?;
+            if Self::is_flexible(version) {
+                encoder.write_compact_string(&self.resource_name)?;
+            } else {
+                encoder.write_string(&self.resource_name)?;
+            }
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "AlterConfigsResourceResponse",
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+
+    /// Response body for the `IncrementalAlterConfigs` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    pub struct IncrementalAlterConfigsResponse {
+        /// Duration in milliseconds for which the request was throttled due to a quota violation, or zero if the request did not violate any quota.
+        pub throttle_time_ms: i32,
+        /// The responses for each resource.
+        pub responses: Vec<AlterConfigsResourceResponse>,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl KafkaMessage for IncrementalAlterConfigsResponse {
+        const NAME: &'static str = "IncrementalAlterConfigsResponse";
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 1);
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(1, 1));
+    }
+
+    impl KafkaResponse for IncrementalAlterConfigsResponse {
+        const API_KEY: ApiKey = ApiKey::new(44);
+    }
+
+    impl KafkaDecode for IncrementalAlterConfigsResponse {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            crate::message::ensure_decode_version::<Self>(version)?;
+
+            let throttle_time_ms = decoder.read_i32()?;
+            let responses = {
+                let length = if Self::is_flexible(version) {
+                    decoder.read_compact_array_len()?
+                } else {
+                    decoder.read_array_len()?
+                };
+                decoder.read_vec(length, |decoder| {
+                    AlterConfigsResourceResponse::decode(decoder, version)
+                })?
+            };
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
+
+            Ok(Self {
+                throttle_time_ms,
+                responses,
+                unknown_tagged_fields,
+            })
+        }
+    }
+
+    impl KafkaEncode for IncrementalAlterConfigsResponse {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            crate::message::ensure_encode_version::<Self>(version)?;
+
+            encoder.write_i32(self.throttle_time_ms)?;
+            if Self::is_flexible(version) {
+                encoder.write_compact_array_len(self.responses.len())?;
+            } else {
+                encoder.write_array_len(self.responses.len())?;
+            }
+            for value in &self.responses {
+                value.encode(encoder, version)?;
+            }
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: Self::NAME,
+                    version,
+                });
+            }
+
+            Ok(())
+        }
     }
 }
+
+use kafka_wire_core::VersionRange;
+
+use crate::{MessageDescriptor, MessageDirection};
+
+pub use incremental_alter_configs_request::IncrementalAlterConfigsRequest;
+pub use incremental_alter_configs_response::IncrementalAlterConfigsResponse;
 
 /// Static metadata for [`IncrementalAlterConfigsRequest`].
 pub const INCREMENTAL_ALTER_CONFIGS_REQUEST_DESCRIPTOR: MessageDescriptor = MessageDescriptor::new(

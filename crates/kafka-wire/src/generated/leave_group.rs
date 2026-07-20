@@ -5,453 +5,472 @@
 //! Request SHA-256: `e551ed6d237e705fb1a57b9c6e7ef9a13f98aac3ed9ca9ff8aaeedae3e839a2a`.
 //! Response SHA-256: `f996eb5731bd5a19139b6c2fe0214bbedc11168a968cb691ea0abe3ff28a6ca1`.
 
-use kafka_wire_core::{
-    ApiKey, ApiVersion, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
-    KafkaEncode, StrBytes, TaggedFields, VersionRange,
-};
+/// `LeaveGroupRequest` and every struct it declares, under upstream's own names.
+///
+/// [`LeaveGroupRequest`](crate::LeaveGroupRequest) is re-exported flat, so this path never has to be
+/// written to name the message itself.
+pub mod leave_group_request {
+    use kafka_wire_core::{
+        ApiKey, ApiVersion, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
+        KafkaEncode, StrBytes, TaggedFields, VersionRange,
+    };
 
-use crate::{
-    KafkaMessage, KafkaRequest, KafkaResponse, MessageDescriptor, MessageDirection,
-    RequestResponsePair,
-};
+    use crate::{KafkaMessage, KafkaRequest, RequestResponsePair};
 
-/// `MemberIdentity` as declared by the `LeaveGroup` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct LeaveGroupRequestMemberIdentity {
-    /// The member ID to remove from the group.
-    pub member_id: StrBytes,
-    /// The group instance ID to remove from the group.
-    pub group_instance_id: Option<StrBytes>,
-    /// The reason why the member left the group.
-    pub reason: Option<StrBytes>,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
-
-impl LeaveGroupRequestMemberIdentity {
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(4, 5));
-
-    fn is_flexible(version: ApiVersion) -> bool {
-        Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+    /// `MemberIdentity` as declared by the `LeaveGroup` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    pub struct MemberIdentity {
+        /// The member ID to remove from the group.
+        pub member_id: StrBytes,
+        /// The group instance ID to remove from the group.
+        pub group_instance_id: Option<StrBytes>,
+        /// The reason why the member left the group.
+        pub reason: Option<StrBytes>,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
     }
-}
 
-impl KafkaDecode for LeaveGroupRequestMemberIdentity {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        let member_id = if version.value() >= 3 {
-            if Self::is_flexible(version) {
-                decoder.read_compact_string()?
-            } else {
-                decoder.read_string()?
-            }
-        } else {
-            StrBytes::default()
-        };
-        let group_instance_id = if version.value() >= 3 {
-            if Self::is_flexible(version) {
-                decoder.read_compact_nullable_string()?
-            } else {
-                decoder.read_nullable_string()?
-            }
-        } else {
-            None
-        };
-        let reason = if version.value() >= 5 {
-            decoder.read_compact_nullable_string()?
-        } else {
-            None
-        };
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
+    impl MemberIdentity {
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(4, 5));
 
-        Ok(Self {
-            member_id,
-            group_instance_id,
-            reason,
-            unknown_tagged_fields,
-        })
+        fn is_flexible(version: ApiVersion) -> bool {
+            Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+        }
     }
-}
 
-impl KafkaEncode for LeaveGroupRequestMemberIdentity {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        if version.value() >= 3 {
-            if Self::is_flexible(version) {
-                encoder.write_compact_string(&self.member_id)?;
+    impl KafkaDecode for MemberIdentity {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            let member_id = if version.value() >= 3 {
+                if Self::is_flexible(version) {
+                    decoder.read_compact_string()?
+                } else {
+                    decoder.read_string()?
+                }
             } else {
-                encoder.write_string(&self.member_id)?;
-            }
-        }
-        if version.value() >= 3 {
-            if Self::is_flexible(version) {
-                encoder.write_compact_nullable_string(self.group_instance_id.as_ref())?;
-            } else {
-                encoder.write_nullable_string(self.group_instance_id.as_ref())?;
-            }
-        }
-        if version.value() >= 5 {
-            encoder.write_compact_nullable_string(self.reason.as_ref())?;
-        }
-
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: "LeaveGroupRequestMemberIdentity",
-                version,
-            });
-        }
-
-        Ok(())
-    }
-}
-
-/// Request body for the `LeaveGroup` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct LeaveGroupRequest {
-    /// The ID of the group to leave.
-    pub group_id: StrBytes,
-    /// The member ID to remove from the group.
-    pub member_id: StrBytes,
-    /// List of leaving member identities.
-    pub members: Vec<LeaveGroupRequestMemberIdentity>,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
-
-impl KafkaMessage for LeaveGroupRequest {
-    const NAME: &'static str = "LeaveGroupRequest";
-    const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 5);
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(4, 5));
-}
-
-impl KafkaRequest for LeaveGroupRequest {
-    const API_KEY: ApiKey = ApiKey::new(13);
-}
-
-impl RequestResponsePair for LeaveGroupRequest {
-    type Response = LeaveGroupResponse;
-}
-
-impl KafkaDecode for LeaveGroupRequest {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        crate::message::ensure_decode_version::<Self>(version)?;
-
-        let group_id = if Self::is_flexible(version) {
-            decoder.read_compact_string()?
-        } else {
-            decoder.read_string()?
-        };
-        let member_id = if version.value() <= 2 {
-            decoder.read_string()?
-        } else {
-            StrBytes::default()
-        };
-        let members = if version.value() >= 3 {
-            let length = if Self::is_flexible(version) {
-                decoder.read_compact_array_len()?
-            } else {
-                decoder.read_array_len()?
+                StrBytes::default()
             };
-            decoder.read_vec(length, |decoder| {
-                LeaveGroupRequestMemberIdentity::decode(decoder, version)
-            })?
-        } else {
-            Vec::new()
-        };
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
-
-        Ok(Self {
-            group_id,
-            member_id,
-            members,
-            unknown_tagged_fields,
-        })
-    }
-}
-
-impl KafkaEncode for LeaveGroupRequest {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        crate::message::ensure_encode_version::<Self>(version)?;
-
-        if version.value() > 2 && !self.member_id.is_empty() {
-            return Err(EncodeError::FieldNotRepresentable {
-                message: Self::NAME,
-                field: "MemberId",
-                version,
-            });
-        }
-        if version.value() < 3 && !self.members.is_empty() {
-            return Err(EncodeError::FieldNotRepresentable {
-                message: Self::NAME,
-                field: "Members",
-                version,
-            });
-        }
-
-        if Self::is_flexible(version) {
-            encoder.write_compact_string(&self.group_id)?;
-        } else {
-            encoder.write_string(&self.group_id)?;
-        }
-        if version.value() <= 2 {
-            encoder.write_string(&self.member_id)?;
-        }
-        if version.value() >= 3 {
-            if Self::is_flexible(version) {
-                encoder.write_compact_array_len(self.members.len())?;
+            let group_instance_id = if version.value() >= 3 {
+                if Self::is_flexible(version) {
+                    decoder.read_compact_nullable_string()?
+                } else {
+                    decoder.read_nullable_string()?
+                }
             } else {
-                encoder.write_array_len(self.members.len())?;
+                None
+            };
+            let reason = if version.value() >= 5 {
+                decoder.read_compact_nullable_string()?
+            } else {
+                None
+            };
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
+
+            Ok(Self {
+                member_id,
+                group_instance_id,
+                reason,
+                unknown_tagged_fields,
+            })
+        }
+    }
+
+    impl KafkaEncode for MemberIdentity {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            if version.value() >= 3 {
+                if Self::is_flexible(version) {
+                    encoder.write_compact_string(&self.member_id)?;
+                } else {
+                    encoder.write_string(&self.member_id)?;
+                }
             }
-            for value in &self.members {
-                value.encode(encoder, version)?;
+            if version.value() >= 3 {
+                if Self::is_flexible(version) {
+                    encoder.write_compact_nullable_string(self.group_instance_id.as_ref())?;
+                } else {
+                    encoder.write_nullable_string(self.group_instance_id.as_ref())?;
+                }
             }
-        }
+            if version.value() >= 5 {
+                encoder.write_compact_nullable_string(self.reason.as_ref())?;
+            }
 
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: Self::NAME,
-                version,
-            });
-        }
-
-        Ok(())
-    }
-}
-
-/// `MemberResponse` as declared by the `LeaveGroup` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct LeaveGroupResponseMemberResponse {
-    /// The member ID to remove from the group.
-    pub member_id: StrBytes,
-    /// The group instance ID to remove from the group.
-    pub group_instance_id: Option<StrBytes>,
-    /// The error code, or 0 if there was no error.
-    pub error_code: i16,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
-
-impl LeaveGroupResponseMemberResponse {
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(4, 5));
-
-    fn is_flexible(version: ApiVersion) -> bool {
-        Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
-    }
-}
-
-impl Default for LeaveGroupResponseMemberResponse {
-    fn default() -> Self {
-        Self {
-            member_id: StrBytes::default(),
-            group_instance_id: Some(StrBytes::default()),
-            error_code: 0,
-            unknown_tagged_fields: TaggedFields::default(),
-        }
-    }
-}
-
-impl KafkaDecode for LeaveGroupResponseMemberResponse {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        let member_id = if version.value() >= 3 {
             if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "MemberIdentity",
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+
+    /// Request body for the `LeaveGroup` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    pub struct LeaveGroupRequest {
+        /// The ID of the group to leave.
+        pub group_id: StrBytes,
+        /// The member ID to remove from the group.
+        pub member_id: StrBytes,
+        /// List of leaving member identities.
+        pub members: Vec<MemberIdentity>,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl KafkaMessage for LeaveGroupRequest {
+        const NAME: &'static str = "LeaveGroupRequest";
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 5);
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(4, 5));
+    }
+
+    impl KafkaRequest for LeaveGroupRequest {
+        const API_KEY: ApiKey = ApiKey::new(13);
+    }
+
+    impl RequestResponsePair for LeaveGroupRequest {
+        type Response = super::LeaveGroupResponse;
+    }
+
+    impl KafkaDecode for LeaveGroupRequest {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            crate::message::ensure_decode_version::<Self>(version)?;
+
+            let group_id = if Self::is_flexible(version) {
                 decoder.read_compact_string()?
             } else {
                 decoder.read_string()?
-            }
-        } else {
-            StrBytes::default()
-        };
-        let group_instance_id = if version.value() >= 3 {
-            if Self::is_flexible(version) {
-                decoder.read_compact_nullable_string()?
+            };
+            let member_id = if version.value() <= 2 {
+                decoder.read_string()?
             } else {
-                decoder.read_nullable_string()?
-            }
-        } else {
-            Some(StrBytes::default())
-        };
-        let error_code = if version.value() >= 3 {
-            decoder.read_i16()?
-        } else {
-            0
-        };
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
+                StrBytes::default()
+            };
+            let members = if version.value() >= 3 {
+                let length = if Self::is_flexible(version) {
+                    decoder.read_compact_array_len()?
+                } else {
+                    decoder.read_array_len()?
+                };
+                decoder.read_vec(length, |decoder| MemberIdentity::decode(decoder, version))?
+            } else {
+                Vec::new()
+            };
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
 
-        Ok(Self {
-            member_id,
-            group_instance_id,
-            error_code,
-            unknown_tagged_fields,
-        })
+            Ok(Self {
+                group_id,
+                member_id,
+                members,
+                unknown_tagged_fields,
+            })
+        }
+    }
+
+    impl KafkaEncode for LeaveGroupRequest {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            crate::message::ensure_encode_version::<Self>(version)?;
+
+            if version.value() > 2 && !self.member_id.is_empty() {
+                return Err(EncodeError::FieldNotRepresentable {
+                    message: Self::NAME,
+                    field: "MemberId",
+                    version,
+                });
+            }
+            if version.value() < 3 && !self.members.is_empty() {
+                return Err(EncodeError::FieldNotRepresentable {
+                    message: Self::NAME,
+                    field: "Members",
+                    version,
+                });
+            }
+
+            if Self::is_flexible(version) {
+                encoder.write_compact_string(&self.group_id)?;
+            } else {
+                encoder.write_string(&self.group_id)?;
+            }
+            if version.value() <= 2 {
+                encoder.write_string(&self.member_id)?;
+            }
+            if version.value() >= 3 {
+                if Self::is_flexible(version) {
+                    encoder.write_compact_array_len(self.members.len())?;
+                } else {
+                    encoder.write_array_len(self.members.len())?;
+                }
+                for value in &self.members {
+                    value.encode(encoder, version)?;
+                }
+            }
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: Self::NAME,
+                    version,
+                });
+            }
+
+            Ok(())
+        }
     }
 }
 
-impl KafkaEncode for LeaveGroupResponseMemberResponse {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        if version.value() >= 3 {
-            if Self::is_flexible(version) {
-                encoder.write_compact_string(&self.member_id)?;
-            } else {
-                encoder.write_string(&self.member_id)?;
+/// `LeaveGroupResponse` and every struct it declares, under upstream's own names.
+///
+/// [`LeaveGroupResponse`](crate::LeaveGroupResponse) is re-exported flat, so this path never has to be
+/// written to name the message itself.
+pub mod leave_group_response {
+    use kafka_wire_core::{
+        ApiKey, ApiVersion, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
+        KafkaEncode, StrBytes, TaggedFields, VersionRange,
+    };
+
+    use crate::{KafkaMessage, KafkaResponse};
+
+    /// `MemberResponse` as declared by the `LeaveGroup` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Eq, PartialEq)]
+    pub struct MemberResponse {
+        /// The member ID to remove from the group.
+        pub member_id: StrBytes,
+        /// The group instance ID to remove from the group.
+        pub group_instance_id: Option<StrBytes>,
+        /// The error code, or 0 if there was no error.
+        pub error_code: i16,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl MemberResponse {
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(4, 5));
+
+        fn is_flexible(version: ApiVersion) -> bool {
+            Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+        }
+    }
+
+    impl Default for MemberResponse {
+        fn default() -> Self {
+            Self {
+                member_id: StrBytes::default(),
+                group_instance_id: Some(StrBytes::default()),
+                error_code: 0,
+                unknown_tagged_fields: TaggedFields::default(),
             }
         }
-        if version.value() >= 3 {
-            if Self::is_flexible(version) {
-                encoder.write_compact_nullable_string(self.group_instance_id.as_ref())?;
+    }
+
+    impl KafkaDecode for MemberResponse {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            let member_id = if version.value() >= 3 {
+                if Self::is_flexible(version) {
+                    decoder.read_compact_string()?
+                } else {
+                    decoder.read_string()?
+                }
             } else {
-                encoder.write_nullable_string(self.group_instance_id.as_ref())?;
-            }
+                StrBytes::default()
+            };
+            let group_instance_id = if version.value() >= 3 {
+                if Self::is_flexible(version) {
+                    decoder.read_compact_nullable_string()?
+                } else {
+                    decoder.read_nullable_string()?
+                }
+            } else {
+                Some(StrBytes::default())
+            };
+            let error_code = if version.value() >= 3 {
+                decoder.read_i16()?
+            } else {
+                0
+            };
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
+
+            Ok(Self {
+                member_id,
+                group_instance_id,
+                error_code,
+                unknown_tagged_fields,
+            })
         }
-        if version.value() >= 3 {
+    }
+
+    impl KafkaEncode for MemberResponse {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            if version.value() >= 3 {
+                if Self::is_flexible(version) {
+                    encoder.write_compact_string(&self.member_id)?;
+                } else {
+                    encoder.write_string(&self.member_id)?;
+                }
+            }
+            if version.value() >= 3 {
+                if Self::is_flexible(version) {
+                    encoder.write_compact_nullable_string(self.group_instance_id.as_ref())?;
+                } else {
+                    encoder.write_nullable_string(self.group_instance_id.as_ref())?;
+                }
+            }
+            if version.value() >= 3 {
+                encoder.write_i16(self.error_code)?;
+            }
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "MemberResponse",
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+
+    /// Response body for the `LeaveGroup` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    pub struct LeaveGroupResponse {
+        /// The duration in milliseconds for which the request was throttled due to a quota violation, or zero if the request did not violate any quota.
+        pub throttle_time_ms: i32,
+        /// The error code, or 0 if there was no error.
+        pub error_code: i16,
+        /// List of leaving member responses.
+        pub members: Vec<MemberResponse>,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl KafkaMessage for LeaveGroupResponse {
+        const NAME: &'static str = "LeaveGroupResponse";
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 5);
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(4, 5));
+    }
+
+    impl KafkaResponse for LeaveGroupResponse {
+        const API_KEY: ApiKey = ApiKey::new(13);
+    }
+
+    impl KafkaDecode for LeaveGroupResponse {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            crate::message::ensure_decode_version::<Self>(version)?;
+
+            let throttle_time_ms = if version.value() >= 1 {
+                decoder.read_i32()?
+            } else {
+                0
+            };
+            let error_code = decoder.read_i16()?;
+            let members = if version.value() >= 3 {
+                let length = if Self::is_flexible(version) {
+                    decoder.read_compact_array_len()?
+                } else {
+                    decoder.read_array_len()?
+                };
+                decoder.read_vec(length, |decoder| MemberResponse::decode(decoder, version))?
+            } else {
+                Vec::new()
+            };
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
+
+            Ok(Self {
+                throttle_time_ms,
+                error_code,
+                members,
+                unknown_tagged_fields,
+            })
+        }
+    }
+
+    impl KafkaEncode for LeaveGroupResponse {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            crate::message::ensure_encode_version::<Self>(version)?;
+
+            if version.value() < 3 && !self.members.is_empty() {
+                return Err(EncodeError::FieldNotRepresentable {
+                    message: Self::NAME,
+                    field: "Members",
+                    version,
+                });
+            }
+
+            if version.value() >= 1 {
+                encoder.write_i32(self.throttle_time_ms)?;
+            }
             encoder.write_i16(self.error_code)?;
-        }
+            if version.value() >= 3 {
+                if Self::is_flexible(version) {
+                    encoder.write_compact_array_len(self.members.len())?;
+                } else {
+                    encoder.write_array_len(self.members.len())?;
+                }
+                for value in &self.members {
+                    value.encode(encoder, version)?;
+                }
+            }
 
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: "LeaveGroupResponseMemberResponse",
-                version,
-            });
-        }
-
-        Ok(())
-    }
-}
-
-/// Response body for the `LeaveGroup` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct LeaveGroupResponse {
-    /// The duration in milliseconds for which the request was throttled due to a quota violation, or zero if the request did not violate any quota.
-    pub throttle_time_ms: i32,
-    /// The error code, or 0 if there was no error.
-    pub error_code: i16,
-    /// List of leaving member responses.
-    pub members: Vec<LeaveGroupResponseMemberResponse>,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
-
-impl KafkaMessage for LeaveGroupResponse {
-    const NAME: &'static str = "LeaveGroupResponse";
-    const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 5);
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(4, 5));
-}
-
-impl KafkaResponse for LeaveGroupResponse {
-    const API_KEY: ApiKey = ApiKey::new(13);
-}
-
-impl KafkaDecode for LeaveGroupResponse {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        crate::message::ensure_decode_version::<Self>(version)?;
-
-        let throttle_time_ms = if version.value() >= 1 {
-            decoder.read_i32()?
-        } else {
-            0
-        };
-        let error_code = decoder.read_i16()?;
-        let members = if version.value() >= 3 {
-            let length = if Self::is_flexible(version) {
-                decoder.read_compact_array_len()?
-            } else {
-                decoder.read_array_len()?
-            };
-            decoder.read_vec(length, |decoder| {
-                LeaveGroupResponseMemberResponse::decode(decoder, version)
-            })?
-        } else {
-            Vec::new()
-        };
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
-
-        Ok(Self {
-            throttle_time_ms,
-            error_code,
-            members,
-            unknown_tagged_fields,
-        })
-    }
-}
-
-impl KafkaEncode for LeaveGroupResponse {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        crate::message::ensure_encode_version::<Self>(version)?;
-
-        if version.value() < 3 && !self.members.is_empty() {
-            return Err(EncodeError::FieldNotRepresentable {
-                message: Self::NAME,
-                field: "Members",
-                version,
-            });
-        }
-
-        if version.value() >= 1 {
-            encoder.write_i32(self.throttle_time_ms)?;
-        }
-        encoder.write_i16(self.error_code)?;
-        if version.value() >= 3 {
             if Self::is_flexible(version) {
-                encoder.write_compact_array_len(self.members.len())?;
-            } else {
-                encoder.write_array_len(self.members.len())?;
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: Self::NAME,
+                    version,
+                });
             }
-            for value in &self.members {
-                value.encode(encoder, version)?;
-            }
-        }
 
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: Self::NAME,
-                version,
-            });
+            Ok(())
         }
-
-        Ok(())
     }
 }
+
+use kafka_wire_core::VersionRange;
+
+use crate::{MessageDescriptor, MessageDirection};
+
+pub use leave_group_request::LeaveGroupRequest;
+pub use leave_group_response::LeaveGroupResponse;
 
 /// Static metadata for [`LeaveGroupRequest`].
 pub const LEAVE_GROUP_REQUEST_DESCRIPTOR: MessageDescriptor = MessageDescriptor::new(

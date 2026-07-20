@@ -5,490 +5,511 @@
 //! Request SHA-256: `36b2407c1b6964bf1a8b5e405fe317844c0f00d8e946efeaa3fb3df858ab373d`.
 //! Response SHA-256: `23ecf9485b51be6433378e8ca82d2ff2d8db2255e2815fb68d7328eab8e07be1`.
 
-use kafka_wire_core::{
-    ApiKey, ApiVersion, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
-    KafkaEncode, StrBytes, TaggedFields, VersionRange,
-};
+/// `AlterReplicaLogDirsRequest` and every struct it declares, under upstream's own names.
+///
+/// [`AlterReplicaLogDirsRequest`](crate::AlterReplicaLogDirsRequest) is re-exported flat, so this path never has to be
+/// written to name the message itself.
+pub mod alter_replica_log_dirs_request {
+    use kafka_wire_core::{
+        ApiKey, ApiVersion, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
+        KafkaEncode, StrBytes, TaggedFields, VersionRange,
+    };
 
-use crate::{
-    KafkaMessage, KafkaRequest, KafkaResponse, MessageDescriptor, MessageDirection,
-    RequestResponsePair,
-};
+    use crate::{KafkaMessage, KafkaRequest, RequestResponsePair};
 
-/// `AlterReplicaLogDir` as declared by the `AlterReplicaLogDirs` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct AlterReplicaLogDirsRequestAlterReplicaLogDir {
-    /// The absolute directory path.
-    pub path: StrBytes,
-    /// The topics to add to the directory.
-    pub topics: Vec<AlterReplicaLogDirsRequestAlterReplicaLogDirTopic>,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
-
-impl AlterReplicaLogDirsRequestAlterReplicaLogDir {
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(2, 2));
-
-    fn is_flexible(version: ApiVersion) -> bool {
-        Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+    /// `AlterReplicaLogDir` as declared by the `AlterReplicaLogDirs` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    pub struct AlterReplicaLogDir {
+        /// The absolute directory path.
+        pub path: StrBytes,
+        /// The topics to add to the directory.
+        pub topics: Vec<AlterReplicaLogDirTopic>,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
     }
-}
 
-impl KafkaDecode for AlterReplicaLogDirsRequestAlterReplicaLogDir {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        let path = if Self::is_flexible(version) {
-            decoder.read_compact_string()?
-        } else {
-            decoder.read_string()?
-        };
-        let topics = {
-            let length = if Self::is_flexible(version) {
-                decoder.read_compact_array_len()?
+    impl AlterReplicaLogDir {
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(2, 2));
+
+        fn is_flexible(version: ApiVersion) -> bool {
+            Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+        }
+    }
+
+    impl KafkaDecode for AlterReplicaLogDir {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            let path = if Self::is_flexible(version) {
+                decoder.read_compact_string()?
             } else {
-                decoder.read_array_len()?
+                decoder.read_string()?
             };
-            decoder.read_vec(length, |decoder| {
-                AlterReplicaLogDirsRequestAlterReplicaLogDirTopic::decode(decoder, version)
-            })?
-        };
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
-
-        Ok(Self {
-            path,
-            topics,
-            unknown_tagged_fields,
-        })
-    }
-}
-
-impl KafkaEncode for AlterReplicaLogDirsRequestAlterReplicaLogDir {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        if Self::is_flexible(version) {
-            encoder.write_compact_string(&self.path)?;
-        } else {
-            encoder.write_string(&self.path)?;
-        }
-        if Self::is_flexible(version) {
-            encoder.write_compact_array_len(self.topics.len())?;
-        } else {
-            encoder.write_array_len(self.topics.len())?;
-        }
-        for value in &self.topics {
-            value.encode(encoder, version)?;
-        }
-
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: "AlterReplicaLogDirsRequestAlterReplicaLogDir",
-                version,
-            });
-        }
-
-        Ok(())
-    }
-}
-
-/// `AlterReplicaLogDirTopic` as declared by the `AlterReplicaLogDirs` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct AlterReplicaLogDirsRequestAlterReplicaLogDirTopic {
-    /// The topic name.
-    pub name: StrBytes,
-    /// The partition indexes.
-    pub partitions: Vec<i32>,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
-
-impl AlterReplicaLogDirsRequestAlterReplicaLogDirTopic {
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(2, 2));
-
-    fn is_flexible(version: ApiVersion) -> bool {
-        Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
-    }
-}
-
-impl KafkaDecode for AlterReplicaLogDirsRequestAlterReplicaLogDirTopic {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        let name = if Self::is_flexible(version) {
-            decoder.read_compact_string()?
-        } else {
-            decoder.read_string()?
-        };
-        let partitions = {
-            let length = if Self::is_flexible(version) {
-                decoder.read_compact_array_len()?
+            let topics = {
+                let length = if Self::is_flexible(version) {
+                    decoder.read_compact_array_len()?
+                } else {
+                    decoder.read_array_len()?
+                };
+                decoder.read_vec(length, |decoder| {
+                    AlterReplicaLogDirTopic::decode(decoder, version)
+                })?
+            };
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
             } else {
-                decoder.read_array_len()?
+                TaggedFields::default()
             };
-            decoder.read_vec(length, Decoder::read_i32)?
-        };
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
 
-        Ok(Self {
-            name,
-            partitions,
-            unknown_tagged_fields,
-        })
+            Ok(Self {
+                path,
+                topics,
+                unknown_tagged_fields,
+            })
+        }
     }
-}
 
-impl KafkaEncode for AlterReplicaLogDirsRequestAlterReplicaLogDirTopic {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        if Self::is_flexible(version) {
-            encoder.write_compact_string(&self.name)?;
-        } else {
-            encoder.write_string(&self.name)?;
-        }
-        if Self::is_flexible(version) {
-            encoder.write_compact_array_len(self.partitions.len())?;
-        } else {
-            encoder.write_array_len(self.partitions.len())?;
-        }
-        for value in &self.partitions {
-            encoder.write_i32(*value)?;
-        }
-
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: "AlterReplicaLogDirsRequestAlterReplicaLogDirTopic",
-                version,
-            });
-        }
-
-        Ok(())
-    }
-}
-
-/// Request body for the `AlterReplicaLogDirs` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct AlterReplicaLogDirsRequest {
-    /// The alterations to make for each directory.
-    pub dirs: Vec<AlterReplicaLogDirsRequestAlterReplicaLogDir>,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
-
-impl KafkaMessage for AlterReplicaLogDirsRequest {
-    const NAME: &'static str = "AlterReplicaLogDirsRequest";
-    const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(1, 2);
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(2, 2));
-}
-
-impl KafkaRequest for AlterReplicaLogDirsRequest {
-    const API_KEY: ApiKey = ApiKey::new(34);
-}
-
-impl RequestResponsePair for AlterReplicaLogDirsRequest {
-    type Response = AlterReplicaLogDirsResponse;
-}
-
-impl KafkaDecode for AlterReplicaLogDirsRequest {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        crate::message::ensure_decode_version::<Self>(version)?;
-
-        let dirs = {
-            let length = if Self::is_flexible(version) {
-                decoder.read_compact_array_len()?
+    impl KafkaEncode for AlterReplicaLogDir {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            if Self::is_flexible(version) {
+                encoder.write_compact_string(&self.path)?;
             } else {
-                decoder.read_array_len()?
-            };
-            decoder.read_vec(length, |decoder| {
-                AlterReplicaLogDirsRequestAlterReplicaLogDir::decode(decoder, version)
-            })?
-        };
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
-
-        Ok(Self {
-            dirs,
-            unknown_tagged_fields,
-        })
-    }
-}
-
-impl KafkaEncode for AlterReplicaLogDirsRequest {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        crate::message::ensure_encode_version::<Self>(version)?;
-
-        if Self::is_flexible(version) {
-            encoder.write_compact_array_len(self.dirs.len())?;
-        } else {
-            encoder.write_array_len(self.dirs.len())?;
-        }
-        for value in &self.dirs {
-            value.encode(encoder, version)?;
-        }
-
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: Self::NAME,
-                version,
-            });
-        }
-
-        Ok(())
-    }
-}
-
-/// `AlterReplicaLogDirTopicResult` as declared by the `AlterReplicaLogDirs` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct AlterReplicaLogDirsResponseAlterReplicaLogDirTopicResult {
-    /// The name of the topic.
-    pub topic_name: StrBytes,
-    /// The results for each partition.
-    pub partitions: Vec<AlterReplicaLogDirsResponseAlterReplicaLogDirPartitionResult>,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
-
-impl AlterReplicaLogDirsResponseAlterReplicaLogDirTopicResult {
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(2, 2));
-
-    fn is_flexible(version: ApiVersion) -> bool {
-        Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
-    }
-}
-
-impl KafkaDecode for AlterReplicaLogDirsResponseAlterReplicaLogDirTopicResult {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        let topic_name = if Self::is_flexible(version) {
-            decoder.read_compact_string()?
-        } else {
-            decoder.read_string()?
-        };
-        let partitions = {
-            let length = if Self::is_flexible(version) {
-                decoder.read_compact_array_len()?
+                encoder.write_string(&self.path)?;
+            }
+            if Self::is_flexible(version) {
+                encoder.write_compact_array_len(self.topics.len())?;
             } else {
-                decoder.read_array_len()?
-            };
-            decoder.read_vec(length, |decoder| {
-                AlterReplicaLogDirsResponseAlterReplicaLogDirPartitionResult::decode(
-                    decoder, version,
-                )
-            })?
-        };
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
+                encoder.write_array_len(self.topics.len())?;
+            }
+            for value in &self.topics {
+                value.encode(encoder, version)?;
+            }
 
-        Ok(Self {
-            topic_name,
-            partitions,
-            unknown_tagged_fields,
-        })
-    }
-}
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "AlterReplicaLogDir",
+                    version,
+                });
+            }
 
-impl KafkaEncode for AlterReplicaLogDirsResponseAlterReplicaLogDirTopicResult {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        if Self::is_flexible(version) {
-            encoder.write_compact_string(&self.topic_name)?;
-        } else {
-            encoder.write_string(&self.topic_name)?;
+            Ok(())
         }
-        if Self::is_flexible(version) {
-            encoder.write_compact_array_len(self.partitions.len())?;
-        } else {
-            encoder.write_array_len(self.partitions.len())?;
-        }
-        for value in &self.partitions {
-            value.encode(encoder, version)?;
-        }
-
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: "AlterReplicaLogDirsResponseAlterReplicaLogDirTopicResult",
-                version,
-            });
-        }
-
-        Ok(())
     }
-}
 
-/// `AlterReplicaLogDirPartitionResult` as declared by the `AlterReplicaLogDirs` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct AlterReplicaLogDirsResponseAlterReplicaLogDirPartitionResult {
-    /// The partition index.
-    pub partition_index: i32,
-    /// The error code, or 0 if there was no error.
-    pub error_code: i16,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
-
-impl AlterReplicaLogDirsResponseAlterReplicaLogDirPartitionResult {
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(2, 2));
-
-    fn is_flexible(version: ApiVersion) -> bool {
-        Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+    /// `AlterReplicaLogDirTopic` as declared by the `AlterReplicaLogDirs` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    pub struct AlterReplicaLogDirTopic {
+        /// The topic name.
+        pub name: StrBytes,
+        /// The partition indexes.
+        pub partitions: Vec<i32>,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
     }
-}
 
-impl KafkaDecode for AlterReplicaLogDirsResponseAlterReplicaLogDirPartitionResult {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        let partition_index = decoder.read_i32()?;
-        let error_code = decoder.read_i16()?;
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
+    impl AlterReplicaLogDirTopic {
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(2, 2));
 
-        Ok(Self {
-            partition_index,
-            error_code,
-            unknown_tagged_fields,
-        })
-    }
-}
-
-impl KafkaEncode for AlterReplicaLogDirsResponseAlterReplicaLogDirPartitionResult {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        encoder.write_i32(self.partition_index)?;
-        encoder.write_i16(self.error_code)?;
-
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: "AlterReplicaLogDirsResponseAlterReplicaLogDirPartitionResult",
-                version,
-            });
+        fn is_flexible(version: ApiVersion) -> bool {
+            Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
         }
-
-        Ok(())
     }
-}
 
-/// Response body for the `AlterReplicaLogDirs` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct AlterReplicaLogDirsResponse {
-    /// Duration in milliseconds for which the request was throttled due to a quota violation, or zero if the request did not violate any quota.
-    pub throttle_time_ms: i32,
-    /// The results for each topic.
-    pub results: Vec<AlterReplicaLogDirsResponseAlterReplicaLogDirTopicResult>,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
-
-impl KafkaMessage for AlterReplicaLogDirsResponse {
-    const NAME: &'static str = "AlterReplicaLogDirsResponse";
-    const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(1, 2);
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(2, 2));
-}
-
-impl KafkaResponse for AlterReplicaLogDirsResponse {
-    const API_KEY: ApiKey = ApiKey::new(34);
-}
-
-impl KafkaDecode for AlterReplicaLogDirsResponse {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        crate::message::ensure_decode_version::<Self>(version)?;
-
-        let throttle_time_ms = decoder.read_i32()?;
-        let results = {
-            let length = if Self::is_flexible(version) {
-                decoder.read_compact_array_len()?
+    impl KafkaDecode for AlterReplicaLogDirTopic {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            let name = if Self::is_flexible(version) {
+                decoder.read_compact_string()?
             } else {
-                decoder.read_array_len()?
+                decoder.read_string()?
             };
-            decoder.read_vec(length, |decoder| {
-                AlterReplicaLogDirsResponseAlterReplicaLogDirTopicResult::decode(decoder, version)
-            })?
-        };
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
+            let partitions = {
+                let length = if Self::is_flexible(version) {
+                    decoder.read_compact_array_len()?
+                } else {
+                    decoder.read_array_len()?
+                };
+                decoder.read_vec(length, Decoder::read_i32)?
+            };
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
 
-        Ok(Self {
-            throttle_time_ms,
-            results,
-            unknown_tagged_fields,
-        })
+            Ok(Self {
+                name,
+                partitions,
+                unknown_tagged_fields,
+            })
+        }
+    }
+
+    impl KafkaEncode for AlterReplicaLogDirTopic {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            if Self::is_flexible(version) {
+                encoder.write_compact_string(&self.name)?;
+            } else {
+                encoder.write_string(&self.name)?;
+            }
+            if Self::is_flexible(version) {
+                encoder.write_compact_array_len(self.partitions.len())?;
+            } else {
+                encoder.write_array_len(self.partitions.len())?;
+            }
+            for value in &self.partitions {
+                encoder.write_i32(*value)?;
+            }
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "AlterReplicaLogDirTopic",
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+
+    /// Request body for the `AlterReplicaLogDirs` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    pub struct AlterReplicaLogDirsRequest {
+        /// The alterations to make for each directory.
+        pub dirs: Vec<AlterReplicaLogDir>,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl KafkaMessage for AlterReplicaLogDirsRequest {
+        const NAME: &'static str = "AlterReplicaLogDirsRequest";
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(1, 2);
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(2, 2));
+    }
+
+    impl KafkaRequest for AlterReplicaLogDirsRequest {
+        const API_KEY: ApiKey = ApiKey::new(34);
+    }
+
+    impl RequestResponsePair for AlterReplicaLogDirsRequest {
+        type Response = super::AlterReplicaLogDirsResponse;
+    }
+
+    impl KafkaDecode for AlterReplicaLogDirsRequest {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            crate::message::ensure_decode_version::<Self>(version)?;
+
+            let dirs = {
+                let length = if Self::is_flexible(version) {
+                    decoder.read_compact_array_len()?
+                } else {
+                    decoder.read_array_len()?
+                };
+                decoder.read_vec(length, |decoder| {
+                    AlterReplicaLogDir::decode(decoder, version)
+                })?
+            };
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
+
+            Ok(Self {
+                dirs,
+                unknown_tagged_fields,
+            })
+        }
+    }
+
+    impl KafkaEncode for AlterReplicaLogDirsRequest {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            crate::message::ensure_encode_version::<Self>(version)?;
+
+            if Self::is_flexible(version) {
+                encoder.write_compact_array_len(self.dirs.len())?;
+            } else {
+                encoder.write_array_len(self.dirs.len())?;
+            }
+            for value in &self.dirs {
+                value.encode(encoder, version)?;
+            }
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: Self::NAME,
+                    version,
+                });
+            }
+
+            Ok(())
+        }
     }
 }
 
-impl KafkaEncode for AlterReplicaLogDirsResponse {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        crate::message::ensure_encode_version::<Self>(version)?;
+/// `AlterReplicaLogDirsResponse` and every struct it declares, under upstream's own names.
+///
+/// [`AlterReplicaLogDirsResponse`](crate::AlterReplicaLogDirsResponse) is re-exported flat, so this path never has to be
+/// written to name the message itself.
+pub mod alter_replica_log_dirs_response {
+    use kafka_wire_core::{
+        ApiKey, ApiVersion, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
+        KafkaEncode, StrBytes, TaggedFields, VersionRange,
+    };
 
-        encoder.write_i32(self.throttle_time_ms)?;
-        if Self::is_flexible(version) {
-            encoder.write_compact_array_len(self.results.len())?;
-        } else {
-            encoder.write_array_len(self.results.len())?;
-        }
-        for value in &self.results {
-            value.encode(encoder, version)?;
-        }
+    use crate::{KafkaMessage, KafkaResponse};
 
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: Self::NAME,
-                version,
-            });
-        }
+    /// `AlterReplicaLogDirTopicResult` as declared by the `AlterReplicaLogDirs` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    pub struct AlterReplicaLogDirTopicResult {
+        /// The name of the topic.
+        pub topic_name: StrBytes,
+        /// The results for each partition.
+        pub partitions: Vec<AlterReplicaLogDirPartitionResult>,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
+    }
 
-        Ok(())
+    impl AlterReplicaLogDirTopicResult {
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(2, 2));
+
+        fn is_flexible(version: ApiVersion) -> bool {
+            Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+        }
+    }
+
+    impl KafkaDecode for AlterReplicaLogDirTopicResult {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            let topic_name = if Self::is_flexible(version) {
+                decoder.read_compact_string()?
+            } else {
+                decoder.read_string()?
+            };
+            let partitions = {
+                let length = if Self::is_flexible(version) {
+                    decoder.read_compact_array_len()?
+                } else {
+                    decoder.read_array_len()?
+                };
+                decoder.read_vec(length, |decoder| {
+                    AlterReplicaLogDirPartitionResult::decode(decoder, version)
+                })?
+            };
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
+
+            Ok(Self {
+                topic_name,
+                partitions,
+                unknown_tagged_fields,
+            })
+        }
+    }
+
+    impl KafkaEncode for AlterReplicaLogDirTopicResult {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            if Self::is_flexible(version) {
+                encoder.write_compact_string(&self.topic_name)?;
+            } else {
+                encoder.write_string(&self.topic_name)?;
+            }
+            if Self::is_flexible(version) {
+                encoder.write_compact_array_len(self.partitions.len())?;
+            } else {
+                encoder.write_array_len(self.partitions.len())?;
+            }
+            for value in &self.partitions {
+                value.encode(encoder, version)?;
+            }
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "AlterReplicaLogDirTopicResult",
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+
+    /// `AlterReplicaLogDirPartitionResult` as declared by the `AlterReplicaLogDirs` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    pub struct AlterReplicaLogDirPartitionResult {
+        /// The partition index.
+        pub partition_index: i32,
+        /// The error code, or 0 if there was no error.
+        pub error_code: i16,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl AlterReplicaLogDirPartitionResult {
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(2, 2));
+
+        fn is_flexible(version: ApiVersion) -> bool {
+            Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+        }
+    }
+
+    impl KafkaDecode for AlterReplicaLogDirPartitionResult {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            let partition_index = decoder.read_i32()?;
+            let error_code = decoder.read_i16()?;
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
+
+            Ok(Self {
+                partition_index,
+                error_code,
+                unknown_tagged_fields,
+            })
+        }
+    }
+
+    impl KafkaEncode for AlterReplicaLogDirPartitionResult {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            encoder.write_i32(self.partition_index)?;
+            encoder.write_i16(self.error_code)?;
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "AlterReplicaLogDirPartitionResult",
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+
+    /// Response body for the `AlterReplicaLogDirs` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    pub struct AlterReplicaLogDirsResponse {
+        /// Duration in milliseconds for which the request was throttled due to a quota violation, or zero if the request did not violate any quota.
+        pub throttle_time_ms: i32,
+        /// The results for each topic.
+        pub results: Vec<AlterReplicaLogDirTopicResult>,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl KafkaMessage for AlterReplicaLogDirsResponse {
+        const NAME: &'static str = "AlterReplicaLogDirsResponse";
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(1, 2);
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(2, 2));
+    }
+
+    impl KafkaResponse for AlterReplicaLogDirsResponse {
+        const API_KEY: ApiKey = ApiKey::new(34);
+    }
+
+    impl KafkaDecode for AlterReplicaLogDirsResponse {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            crate::message::ensure_decode_version::<Self>(version)?;
+
+            let throttle_time_ms = decoder.read_i32()?;
+            let results = {
+                let length = if Self::is_flexible(version) {
+                    decoder.read_compact_array_len()?
+                } else {
+                    decoder.read_array_len()?
+                };
+                decoder.read_vec(length, |decoder| {
+                    AlterReplicaLogDirTopicResult::decode(decoder, version)
+                })?
+            };
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
+
+            Ok(Self {
+                throttle_time_ms,
+                results,
+                unknown_tagged_fields,
+            })
+        }
+    }
+
+    impl KafkaEncode for AlterReplicaLogDirsResponse {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            crate::message::ensure_encode_version::<Self>(version)?;
+
+            encoder.write_i32(self.throttle_time_ms)?;
+            if Self::is_flexible(version) {
+                encoder.write_compact_array_len(self.results.len())?;
+            } else {
+                encoder.write_array_len(self.results.len())?;
+            }
+            for value in &self.results {
+                value.encode(encoder, version)?;
+            }
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: Self::NAME,
+                    version,
+                });
+            }
+
+            Ok(())
+        }
     }
 }
+
+use kafka_wire_core::VersionRange;
+
+use crate::{MessageDescriptor, MessageDirection};
+
+pub use alter_replica_log_dirs_request::AlterReplicaLogDirsRequest;
+pub use alter_replica_log_dirs_response::AlterReplicaLogDirsResponse;
 
 /// Static metadata for [`AlterReplicaLogDirsRequest`].
 pub const ALTER_REPLICA_LOG_DIRS_REQUEST_DESCRIPTOR: MessageDescriptor = MessageDescriptor::new(

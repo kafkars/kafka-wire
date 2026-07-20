@@ -5,164 +5,187 @@
 //! Request SHA-256: `a7f118857c35f3e6cf95b3b81eee31e13080ba92345b3016aa7525f6e70f9c3b`.
 //! Response SHA-256: `e0e3e4c82e5cd796480b95b6dc79d691e8994fae89c77699d09fb8b351a322e7`.
 
-use kafka_wire_core::{
-    ApiKey, ApiVersion, Bytes, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder,
-    KafkaDecode, KafkaEncode, TaggedFields, VersionRange,
-};
+/// `ExpireDelegationTokenRequest` and every struct it declares, under upstream's own names.
+///
+/// [`ExpireDelegationTokenRequest`](crate::ExpireDelegationTokenRequest) is re-exported flat, so this path never has to be
+/// written to name the message itself.
+pub mod expire_delegation_token_request {
+    use kafka_wire_core::{
+        ApiKey, ApiVersion, Bytes, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder,
+        KafkaDecode, KafkaEncode, TaggedFields, VersionRange,
+    };
 
-use crate::{
-    KafkaMessage, KafkaRequest, KafkaResponse, MessageDescriptor, MessageDirection,
-    RequestResponsePair,
-};
+    use crate::{KafkaMessage, KafkaRequest, RequestResponsePair};
 
-/// Request body for the `ExpireDelegationToken` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct ExpireDelegationTokenRequest {
-    /// The HMAC of the delegation token to be expired.
-    pub hmac: Bytes,
-    /// The expiry time period in milliseconds.
-    pub expiry_time_period_ms: i64,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
-
-impl KafkaMessage for ExpireDelegationTokenRequest {
-    const NAME: &'static str = "ExpireDelegationTokenRequest";
-    const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(1, 2);
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(2, 2));
-}
-
-impl KafkaRequest for ExpireDelegationTokenRequest {
-    const API_KEY: ApiKey = ApiKey::new(40);
-}
-
-impl RequestResponsePair for ExpireDelegationTokenRequest {
-    type Response = ExpireDelegationTokenResponse;
-}
-
-impl KafkaDecode for ExpireDelegationTokenRequest {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        crate::message::ensure_decode_version::<Self>(version)?;
-
-        let hmac = if Self::is_flexible(version) {
-            decoder.read_compact_bytes()?
-        } else {
-            decoder.read_bytes()?
-        };
-        let expiry_time_period_ms = decoder.read_i64()?;
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
-
-        Ok(Self {
-            hmac,
-            expiry_time_period_ms,
-            unknown_tagged_fields,
-        })
+    /// Request body for the `ExpireDelegationToken` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    pub struct ExpireDelegationTokenRequest {
+        /// The HMAC of the delegation token to be expired.
+        pub hmac: Bytes,
+        /// The expiry time period in milliseconds.
+        pub expiry_time_period_ms: i64,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
     }
-}
 
-impl KafkaEncode for ExpireDelegationTokenRequest {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        crate::message::ensure_encode_version::<Self>(version)?;
+    impl KafkaMessage for ExpireDelegationTokenRequest {
+        const NAME: &'static str = "ExpireDelegationTokenRequest";
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(1, 2);
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(2, 2));
+    }
 
-        if Self::is_flexible(version) {
-            encoder.write_compact_bytes(&self.hmac)?;
-        } else {
-            encoder.write_bytes(&self.hmac)?;
+    impl KafkaRequest for ExpireDelegationTokenRequest {
+        const API_KEY: ApiKey = ApiKey::new(40);
+    }
+
+    impl RequestResponsePair for ExpireDelegationTokenRequest {
+        type Response = super::ExpireDelegationTokenResponse;
+    }
+
+    impl KafkaDecode for ExpireDelegationTokenRequest {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            crate::message::ensure_decode_version::<Self>(version)?;
+
+            let hmac = if Self::is_flexible(version) {
+                decoder.read_compact_bytes()?
+            } else {
+                decoder.read_bytes()?
+            };
+            let expiry_time_period_ms = decoder.read_i64()?;
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
+
+            Ok(Self {
+                hmac,
+                expiry_time_period_ms,
+                unknown_tagged_fields,
+            })
         }
-        encoder.write_i64(self.expiry_time_period_ms)?;
+    }
 
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: Self::NAME,
-                version,
-            });
+    impl KafkaEncode for ExpireDelegationTokenRequest {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            crate::message::ensure_encode_version::<Self>(version)?;
+
+            if Self::is_flexible(version) {
+                encoder.write_compact_bytes(&self.hmac)?;
+            } else {
+                encoder.write_bytes(&self.hmac)?;
+            }
+            encoder.write_i64(self.expiry_time_period_ms)?;
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: Self::NAME,
+                    version,
+                });
+            }
+
+            Ok(())
         }
-
-        Ok(())
     }
 }
 
-/// Response body for the `ExpireDelegationToken` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct ExpireDelegationTokenResponse {
-    /// The error code, or 0 if there was no error.
-    pub error_code: i16,
-    /// The timestamp in milliseconds at which this token expires.
-    pub expiry_timestamp_ms: i64,
-    /// The duration in milliseconds for which the request was throttled due to a quota violation, or zero if the request did not violate any quota.
-    pub throttle_time_ms: i32,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
+/// `ExpireDelegationTokenResponse` and every struct it declares, under upstream's own names.
+///
+/// [`ExpireDelegationTokenResponse`](crate::ExpireDelegationTokenResponse) is re-exported flat, so this path never has to be
+/// written to name the message itself.
+pub mod expire_delegation_token_response {
+    use kafka_wire_core::{
+        ApiKey, ApiVersion, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
+        KafkaEncode, TaggedFields, VersionRange,
+    };
 
-impl KafkaMessage for ExpireDelegationTokenResponse {
-    const NAME: &'static str = "ExpireDelegationTokenResponse";
-    const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(1, 2);
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(2, 2));
-}
+    use crate::{KafkaMessage, KafkaResponse};
 
-impl KafkaResponse for ExpireDelegationTokenResponse {
-    const API_KEY: ApiKey = ApiKey::new(40);
-}
-
-impl KafkaDecode for ExpireDelegationTokenResponse {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        crate::message::ensure_decode_version::<Self>(version)?;
-
-        let error_code = decoder.read_i16()?;
-        let expiry_timestamp_ms = decoder.read_i64()?;
-        let throttle_time_ms = decoder.read_i32()?;
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
-
-        Ok(Self {
-            error_code,
-            expiry_timestamp_ms,
-            throttle_time_ms,
-            unknown_tagged_fields,
-        })
+    /// Response body for the `ExpireDelegationToken` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    pub struct ExpireDelegationTokenResponse {
+        /// The error code, or 0 if there was no error.
+        pub error_code: i16,
+        /// The timestamp in milliseconds at which this token expires.
+        pub expiry_timestamp_ms: i64,
+        /// The duration in milliseconds for which the request was throttled due to a quota violation, or zero if the request did not violate any quota.
+        pub throttle_time_ms: i32,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
     }
-}
 
-impl KafkaEncode for ExpireDelegationTokenResponse {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        crate::message::ensure_encode_version::<Self>(version)?;
+    impl KafkaMessage for ExpireDelegationTokenResponse {
+        const NAME: &'static str = "ExpireDelegationTokenResponse";
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(1, 2);
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(2, 2));
+    }
 
-        encoder.write_i16(self.error_code)?;
-        encoder.write_i64(self.expiry_timestamp_ms)?;
-        encoder.write_i32(self.throttle_time_ms)?;
+    impl KafkaResponse for ExpireDelegationTokenResponse {
+        const API_KEY: ApiKey = ApiKey::new(40);
+    }
 
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: Self::NAME,
-                version,
-            });
+    impl KafkaDecode for ExpireDelegationTokenResponse {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            crate::message::ensure_decode_version::<Self>(version)?;
+
+            let error_code = decoder.read_i16()?;
+            let expiry_timestamp_ms = decoder.read_i64()?;
+            let throttle_time_ms = decoder.read_i32()?;
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
+
+            Ok(Self {
+                error_code,
+                expiry_timestamp_ms,
+                throttle_time_ms,
+                unknown_tagged_fields,
+            })
         }
+    }
 
-        Ok(())
+    impl KafkaEncode for ExpireDelegationTokenResponse {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            crate::message::ensure_encode_version::<Self>(version)?;
+
+            encoder.write_i16(self.error_code)?;
+            encoder.write_i64(self.expiry_timestamp_ms)?;
+            encoder.write_i32(self.throttle_time_ms)?;
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: Self::NAME,
+                    version,
+                });
+            }
+
+            Ok(())
+        }
     }
 }
+
+use kafka_wire_core::VersionRange;
+
+use crate::{MessageDescriptor, MessageDirection};
+
+pub use expire_delegation_token_request::ExpireDelegationTokenRequest;
+pub use expire_delegation_token_response::ExpireDelegationTokenResponse;
 
 /// Static metadata for [`ExpireDelegationTokenRequest`].
 pub const EXPIRE_DELEGATION_TOKEN_REQUEST_DESCRIPTOR: MessageDescriptor = MessageDescriptor::new(

@@ -10,6 +10,7 @@ use crate::{
 
 use super::{
     codec::{render_decode, render_encode},
+    imports::spell,
     prose::sentence,
     structs::render_declared_structs,
 };
@@ -63,7 +64,10 @@ pub(super) fn render_message(
     }
     if !message.effective_flexible_versions().is_empty() {
         rust.line("/// Unknown flexible-version tagged fields retained for forwarding.");
-        rust.line("pub unknown_tagged_fields: TaggedFields,");
+        rust.line(format!(
+            "pub unknown_tagged_fields: {},",
+            spell(message, "TaggedFields")
+        ));
     }
     rust.close("");
     rust.blank();
@@ -89,7 +93,10 @@ fn render_default(rust: &mut RustText, message: &Message) {
         ));
     }
     if !message.effective_flexible_versions().is_empty() {
-        rust.line("unknown_tagged_fields: TaggedFields::default(),");
+        rust.line(format!(
+            "unknown_tagged_fields: {}::default(),",
+            spell(message, "TaggedFields")
+        ));
     }
     rust.close("");
     rust.close("");
@@ -99,9 +106,11 @@ fn render_default(rust: &mut RustText, message: &Message) {
 
 fn render_metadata_impls(rust: &mut RustText, message: &Message, group: &ApiGroup) {
     let (start, end) = message.valid_versions.single_bounded().unwrap_or((0, 0));
-    let flexible = option_range(&message.effective_flexible_versions());
+    let range = spell(message, "VersionRange");
+    let flexible = option_range(&message.effective_flexible_versions(), &range);
     rust.open(format!(
-        "impl KafkaMessage for {}",
+        "impl {} for {}",
+        spell(message, "KafkaMessage"),
         message.name.rust_type()
     ));
     rust.line(format!(
@@ -109,10 +118,10 @@ fn render_metadata_impls(rust: &mut RustText, message: &Message, group: &ApiGrou
         message.name.protocol()
     ));
     rust.line(format!(
-        "const SUPPORTED_VERSIONS: VersionRange = VersionRange::new({start}, {end});"
+        "const SUPPORTED_VERSIONS: {range} = {range}::new({start}, {end});"
     ));
     rust.line(format!(
-        "const FLEXIBLE_VERSIONS: Option<VersionRange> = {flexible};"
+        "const FLEXIBLE_VERSIONS: Option<{range}> = {flexible};"
     ));
     rust.close("");
     rust.blank();
@@ -121,11 +130,13 @@ fn render_metadata_impls(rust: &mut RustText, message: &Message, group: &ApiGrou
         MessageKind::Request => render_request_metadata(rust, message, group),
         MessageKind::Response => {
             rust.open(format!(
-                "impl KafkaResponse for {}",
+                "impl {} for {}",
+                spell(message, "KafkaResponse"),
                 message.name.rust_type()
             ));
             rust.line(format!(
-                "const API_KEY: ApiKey = ApiKey::new({});",
+                "const API_KEY: {0} = {0}::new({1});",
+                spell(message, "ApiKey"),
                 group.api_key
             ));
             rust.close("");
@@ -138,11 +149,13 @@ fn render_metadata_impls(rust: &mut RustText, message: &Message, group: &ApiGrou
 
 fn render_request_metadata(rust: &mut RustText, message: &Message, group: &ApiGroup) {
     rust.open(format!(
-        "impl KafkaRequest for {}",
+        "impl {} for {}",
+        spell(message, "KafkaRequest"),
         message.name.rust_type()
     ));
     rust.line(format!(
-        "const API_KEY: ApiKey = ApiKey::new({});",
+        "const API_KEY: {0} = {0}::new({1});",
+        spell(message, "ApiKey"),
         group.api_key
     ));
     rust.close("");
@@ -150,11 +163,16 @@ fn render_request_metadata(rust: &mut RustText, message: &Message, group: &ApiGr
 
     if let Some(response) = &group.response {
         rust.open(format!(
-            "impl RequestResponsePair for {}",
+            "impl {} for {}",
+            spell(message, "RequestResponsePair"),
             message.name.rust_type()
         ));
+        // The one reference that crosses a module boundary, and it reads the
+        // file-level flat re-export rather than the response's own module: the
+        // re-export is what `kafka_wire::ProduceResponse` already resolves
+        // to, so the pairing names exactly the type a caller names.
         rust.line(format!(
-            "type Response = {};",
+            "type Response = super::{};",
             response.message.name.rust_type()
         ));
         rust.close("");
@@ -162,9 +180,9 @@ fn render_request_metadata(rust: &mut RustText, message: &Message, group: &ApiGr
     }
 }
 
-fn option_range(versions: &kafka_wire_schema::VersionSet) -> String {
+fn option_range(versions: &kafka_wire_schema::VersionSet, range: &str) -> String {
     versions.single_bounded().map_or_else(
         || "None".to_owned(),
-        |(start, end)| format!("Some(VersionRange::new({start}, {end}))"),
+        |(start, end)| format!("Some({range}::new({start}, {end}))"),
     )
 }

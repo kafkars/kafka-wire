@@ -5,302 +5,325 @@
 //! Request SHA-256: `a0450f46bdd8178c83d5cead0c53028f5ff282d382527fdbf53f0eaa0f39c8c6`.
 //! Response SHA-256: `d0d1264bee6371bd39e1d7020860329ef4cb791a51196e6dd643fe5b3084b0fe`.
 
-use kafka_wire_core::{
-    ApiKey, ApiVersion, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
-    KafkaEncode, StrBytes, TaggedFields, Uuid, VersionRange,
-};
+/// `DeleteShareGroupOffsetsRequest` and every struct it declares, under upstream's own names.
+///
+/// [`DeleteShareGroupOffsetsRequest`](crate::DeleteShareGroupOffsetsRequest) is re-exported flat, so this path never has to be
+/// written to name the message itself.
+pub mod delete_share_group_offsets_request {
+    use kafka_wire_core::{
+        ApiKey, ApiVersion, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
+        KafkaEncode, StrBytes, TaggedFields, VersionRange,
+    };
 
-use crate::{
-    KafkaMessage, KafkaRequest, KafkaResponse, MessageDescriptor, MessageDirection,
-    RequestResponsePair,
-};
+    use crate::{KafkaMessage, KafkaRequest, RequestResponsePair};
 
-/// `DeleteShareGroupOffsetsRequestTopic` as declared by the `DeleteShareGroupOffsets` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct DeleteShareGroupOffsetsRequestTopic {
-    /// The topic name.
-    pub topic_name: StrBytes,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
-
-impl DeleteShareGroupOffsetsRequestTopic {
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 0));
-
-    fn is_flexible(version: ApiVersion) -> bool {
-        Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+    /// `DeleteShareGroupOffsetsRequestTopic` as declared by the `DeleteShareGroupOffsets` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    pub struct DeleteShareGroupOffsetsRequestTopic {
+        /// The topic name.
+        pub topic_name: StrBytes,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
     }
-}
 
-impl KafkaDecode for DeleteShareGroupOffsetsRequestTopic {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        let topic_name = decoder.read_compact_string()?;
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
+    impl DeleteShareGroupOffsetsRequestTopic {
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 0));
 
-        Ok(Self {
-            topic_name,
-            unknown_tagged_fields,
-        })
-    }
-}
-
-impl KafkaEncode for DeleteShareGroupOffsetsRequestTopic {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        encoder.write_compact_string(&self.topic_name)?;
-
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: "DeleteShareGroupOffsetsRequestTopic",
-                version,
-            });
+        fn is_flexible(version: ApiVersion) -> bool {
+            Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
         }
-
-        Ok(())
     }
-}
 
-/// Request body for the `DeleteShareGroupOffsets` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct DeleteShareGroupOffsetsRequest {
-    /// The group identifier.
-    pub group_id: StrBytes,
-    /// The topics to delete offsets for.
-    pub topics: Vec<DeleteShareGroupOffsetsRequestTopic>,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
+    impl KafkaDecode for DeleteShareGroupOffsetsRequestTopic {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            let topic_name = decoder.read_compact_string()?;
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
 
-impl KafkaMessage for DeleteShareGroupOffsetsRequest {
-    const NAME: &'static str = "DeleteShareGroupOffsetsRequest";
-    const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 0);
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 0));
-}
-
-impl KafkaRequest for DeleteShareGroupOffsetsRequest {
-    const API_KEY: ApiKey = ApiKey::new(92);
-}
-
-impl RequestResponsePair for DeleteShareGroupOffsetsRequest {
-    type Response = DeleteShareGroupOffsetsResponse;
-}
-
-impl KafkaDecode for DeleteShareGroupOffsetsRequest {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        crate::message::ensure_decode_version::<Self>(version)?;
-
-        let group_id = decoder.read_compact_string()?;
-        let topics = {
-            let length = decoder.read_compact_array_len()?;
-            decoder.read_vec(length, |decoder| {
-                DeleteShareGroupOffsetsRequestTopic::decode(decoder, version)
-            })?
-        };
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
-
-        Ok(Self {
-            group_id,
-            topics,
-            unknown_tagged_fields,
-        })
-    }
-}
-
-impl KafkaEncode for DeleteShareGroupOffsetsRequest {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        crate::message::ensure_encode_version::<Self>(version)?;
-
-        encoder.write_compact_string(&self.group_id)?;
-        encoder.write_compact_array_len(self.topics.len())?;
-        for value in &self.topics {
-            value.encode(encoder, version)?;
+            Ok(Self {
+                topic_name,
+                unknown_tagged_fields,
+            })
         }
+    }
 
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: Self::NAME,
-                version,
-            });
+    impl KafkaEncode for DeleteShareGroupOffsetsRequestTopic {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            encoder.write_compact_string(&self.topic_name)?;
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "DeleteShareGroupOffsetsRequestTopic",
+                    version,
+                });
+            }
+
+            Ok(())
         }
-
-        Ok(())
     }
-}
 
-/// `DeleteShareGroupOffsetsResponseTopic` as declared by the `DeleteShareGroupOffsets` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct DeleteShareGroupOffsetsResponseTopic {
-    /// The topic name.
-    pub topic_name: StrBytes,
-    /// The unique topic ID.
-    pub topic_id: Uuid,
-    /// The topic-level error code, or 0 if there was no error.
-    pub error_code: i16,
-    /// The topic-level error message, or null if there was no error.
-    pub error_message: Option<StrBytes>,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
-
-impl DeleteShareGroupOffsetsResponseTopic {
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 0));
-
-    fn is_flexible(version: ApiVersion) -> bool {
-        Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+    /// Request body for the `DeleteShareGroupOffsets` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    pub struct DeleteShareGroupOffsetsRequest {
+        /// The group identifier.
+        pub group_id: StrBytes,
+        /// The topics to delete offsets for.
+        pub topics: Vec<DeleteShareGroupOffsetsRequestTopic>,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
     }
-}
 
-impl KafkaDecode for DeleteShareGroupOffsetsResponseTopic {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        let topic_name = decoder.read_compact_string()?;
-        let topic_id = decoder.read_uuid()?;
-        let error_code = decoder.read_i16()?;
-        let error_message = decoder.read_compact_nullable_string()?;
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
-
-        Ok(Self {
-            topic_name,
-            topic_id,
-            error_code,
-            error_message,
-            unknown_tagged_fields,
-        })
+    impl KafkaMessage for DeleteShareGroupOffsetsRequest {
+        const NAME: &'static str = "DeleteShareGroupOffsetsRequest";
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 0);
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 0));
     }
-}
 
-impl KafkaEncode for DeleteShareGroupOffsetsResponseTopic {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        encoder.write_compact_string(&self.topic_name)?;
-        encoder.write_uuid(self.topic_id)?;
-        encoder.write_i16(self.error_code)?;
-        encoder.write_compact_nullable_string(self.error_message.as_ref())?;
+    impl KafkaRequest for DeleteShareGroupOffsetsRequest {
+        const API_KEY: ApiKey = ApiKey::new(92);
+    }
 
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: "DeleteShareGroupOffsetsResponseTopic",
-                version,
-            });
+    impl RequestResponsePair for DeleteShareGroupOffsetsRequest {
+        type Response = super::DeleteShareGroupOffsetsResponse;
+    }
+
+    impl KafkaDecode for DeleteShareGroupOffsetsRequest {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            crate::message::ensure_decode_version::<Self>(version)?;
+
+            let group_id = decoder.read_compact_string()?;
+            let topics = {
+                let length = decoder.read_compact_array_len()?;
+                decoder.read_vec(length, |decoder| {
+                    DeleteShareGroupOffsetsRequestTopic::decode(decoder, version)
+                })?
+            };
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
+
+            Ok(Self {
+                group_id,
+                topics,
+                unknown_tagged_fields,
+            })
         }
-
-        Ok(())
     }
-}
 
-/// Response body for the `DeleteShareGroupOffsets` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct DeleteShareGroupOffsetsResponse {
-    /// The duration in milliseconds for which the request was throttled due to a quota violation, or zero if the request did not violate any quota.
-    pub throttle_time_ms: i32,
-    /// The top-level error code, or 0 if there was no error.
-    pub error_code: i16,
-    /// The top-level error message, or null if there was no error.
-    pub error_message: Option<StrBytes>,
-    /// The results for each topic.
-    pub responses: Vec<DeleteShareGroupOffsetsResponseTopic>,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
+    impl KafkaEncode for DeleteShareGroupOffsetsRequest {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            crate::message::ensure_encode_version::<Self>(version)?;
 
-impl KafkaMessage for DeleteShareGroupOffsetsResponse {
-    const NAME: &'static str = "DeleteShareGroupOffsetsResponse";
-    const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 0);
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 0));
-}
+            encoder.write_compact_string(&self.group_id)?;
+            encoder.write_compact_array_len(self.topics.len())?;
+            for value in &self.topics {
+                value.encode(encoder, version)?;
+            }
 
-impl KafkaResponse for DeleteShareGroupOffsetsResponse {
-    const API_KEY: ApiKey = ApiKey::new(92);
-}
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: Self::NAME,
+                    version,
+                });
+            }
 
-impl KafkaDecode for DeleteShareGroupOffsetsResponse {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        crate::message::ensure_decode_version::<Self>(version)?;
-
-        let throttle_time_ms = decoder.read_i32()?;
-        let error_code = decoder.read_i16()?;
-        let error_message = decoder.read_compact_nullable_string()?;
-        let responses = {
-            let length = decoder.read_compact_array_len()?;
-            decoder.read_vec(length, |decoder| {
-                DeleteShareGroupOffsetsResponseTopic::decode(decoder, version)
-            })?
-        };
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
-
-        Ok(Self {
-            throttle_time_ms,
-            error_code,
-            error_message,
-            responses,
-            unknown_tagged_fields,
-        })
-    }
-}
-
-impl KafkaEncode for DeleteShareGroupOffsetsResponse {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        crate::message::ensure_encode_version::<Self>(version)?;
-
-        encoder.write_i32(self.throttle_time_ms)?;
-        encoder.write_i16(self.error_code)?;
-        encoder.write_compact_nullable_string(self.error_message.as_ref())?;
-        encoder.write_compact_array_len(self.responses.len())?;
-        for value in &self.responses {
-            value.encode(encoder, version)?;
+            Ok(())
         }
-
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: Self::NAME,
-                version,
-            });
-        }
-
-        Ok(())
     }
 }
+
+/// `DeleteShareGroupOffsetsResponse` and every struct it declares, under upstream's own names.
+///
+/// [`DeleteShareGroupOffsetsResponse`](crate::DeleteShareGroupOffsetsResponse) is re-exported flat, so this path never has to be
+/// written to name the message itself.
+pub mod delete_share_group_offsets_response {
+    use kafka_wire_core::{
+        ApiKey, ApiVersion, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
+        KafkaEncode, StrBytes, TaggedFields, Uuid, VersionRange,
+    };
+
+    use crate::{KafkaMessage, KafkaResponse};
+
+    /// `DeleteShareGroupOffsetsResponseTopic` as declared by the `DeleteShareGroupOffsets` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    pub struct DeleteShareGroupOffsetsResponseTopic {
+        /// The topic name.
+        pub topic_name: StrBytes,
+        /// The unique topic ID.
+        pub topic_id: Uuid,
+        /// The topic-level error code, or 0 if there was no error.
+        pub error_code: i16,
+        /// The topic-level error message, or null if there was no error.
+        pub error_message: Option<StrBytes>,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl DeleteShareGroupOffsetsResponseTopic {
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 0));
+
+        fn is_flexible(version: ApiVersion) -> bool {
+            Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+        }
+    }
+
+    impl KafkaDecode for DeleteShareGroupOffsetsResponseTopic {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            let topic_name = decoder.read_compact_string()?;
+            let topic_id = decoder.read_uuid()?;
+            let error_code = decoder.read_i16()?;
+            let error_message = decoder.read_compact_nullable_string()?;
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
+
+            Ok(Self {
+                topic_name,
+                topic_id,
+                error_code,
+                error_message,
+                unknown_tagged_fields,
+            })
+        }
+    }
+
+    impl KafkaEncode for DeleteShareGroupOffsetsResponseTopic {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            encoder.write_compact_string(&self.topic_name)?;
+            encoder.write_uuid(self.topic_id)?;
+            encoder.write_i16(self.error_code)?;
+            encoder.write_compact_nullable_string(self.error_message.as_ref())?;
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "DeleteShareGroupOffsetsResponseTopic",
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+
+    /// Response body for the `DeleteShareGroupOffsets` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    pub struct DeleteShareGroupOffsetsResponse {
+        /// The duration in milliseconds for which the request was throttled due to a quota violation, or zero if the request did not violate any quota.
+        pub throttle_time_ms: i32,
+        /// The top-level error code, or 0 if there was no error.
+        pub error_code: i16,
+        /// The top-level error message, or null if there was no error.
+        pub error_message: Option<StrBytes>,
+        /// The results for each topic.
+        pub responses: Vec<DeleteShareGroupOffsetsResponseTopic>,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl KafkaMessage for DeleteShareGroupOffsetsResponse {
+        const NAME: &'static str = "DeleteShareGroupOffsetsResponse";
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 0);
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 0));
+    }
+
+    impl KafkaResponse for DeleteShareGroupOffsetsResponse {
+        const API_KEY: ApiKey = ApiKey::new(92);
+    }
+
+    impl KafkaDecode for DeleteShareGroupOffsetsResponse {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            crate::message::ensure_decode_version::<Self>(version)?;
+
+            let throttle_time_ms = decoder.read_i32()?;
+            let error_code = decoder.read_i16()?;
+            let error_message = decoder.read_compact_nullable_string()?;
+            let responses = {
+                let length = decoder.read_compact_array_len()?;
+                decoder.read_vec(length, |decoder| {
+                    DeleteShareGroupOffsetsResponseTopic::decode(decoder, version)
+                })?
+            };
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
+
+            Ok(Self {
+                throttle_time_ms,
+                error_code,
+                error_message,
+                responses,
+                unknown_tagged_fields,
+            })
+        }
+    }
+
+    impl KafkaEncode for DeleteShareGroupOffsetsResponse {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            crate::message::ensure_encode_version::<Self>(version)?;
+
+            encoder.write_i32(self.throttle_time_ms)?;
+            encoder.write_i16(self.error_code)?;
+            encoder.write_compact_nullable_string(self.error_message.as_ref())?;
+            encoder.write_compact_array_len(self.responses.len())?;
+            for value in &self.responses {
+                value.encode(encoder, version)?;
+            }
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: Self::NAME,
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+}
+
+use kafka_wire_core::VersionRange;
+
+use crate::{MessageDescriptor, MessageDirection};
+
+pub use delete_share_group_offsets_request::DeleteShareGroupOffsetsRequest;
+pub use delete_share_group_offsets_response::DeleteShareGroupOffsetsResponse;
 
 /// Static metadata for [`DeleteShareGroupOffsetsRequest`].
 pub const DELETE_SHARE_GROUP_OFFSETS_REQUEST_DESCRIPTOR: MessageDescriptor = MessageDescriptor::new(

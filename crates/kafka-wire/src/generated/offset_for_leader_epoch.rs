@@ -5,525 +5,546 @@
 //! Request SHA-256: `341c272be52bde0e409785743a29f9e4d894714c80d9c7dc2954a13133d062c7`.
 //! Response SHA-256: `ea89286746354b8b70d8e4798f0accd1fd5b57cf92dce3293723ca9d504e0a2a`.
 
-use kafka_wire_core::{
-    ApiKey, ApiVersion, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
-    KafkaEncode, StrBytes, TaggedFields, VersionRange,
-};
+/// `OffsetForLeaderEpochRequest` and every struct it declares, under upstream's own names.
+///
+/// [`OffsetForLeaderEpochRequest`](crate::OffsetForLeaderEpochRequest) is re-exported flat, so this path never has to be
+/// written to name the message itself.
+pub mod offset_for_leader_epoch_request {
+    use kafka_wire_core::{
+        ApiKey, ApiVersion, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
+        KafkaEncode, StrBytes, TaggedFields, VersionRange,
+    };
 
-use crate::{
-    KafkaMessage, KafkaRequest, KafkaResponse, MessageDescriptor, MessageDirection,
-    RequestResponsePair,
-};
+    use crate::{KafkaMessage, KafkaRequest, RequestResponsePair};
 
-/// `OffsetForLeaderTopic` as declared by the `OffsetForLeaderEpoch` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct OffsetForLeaderEpochRequestOffsetForLeaderTopic {
-    /// The topic name.
-    pub topic: StrBytes,
-    /// Each partition to get offsets for.
-    pub partitions: Vec<OffsetForLeaderEpochRequestOffsetForLeaderPartition>,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
-
-impl OffsetForLeaderEpochRequestOffsetForLeaderTopic {
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(4, 4));
-
-    fn is_flexible(version: ApiVersion) -> bool {
-        Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+    /// `OffsetForLeaderTopic` as declared by the `OffsetForLeaderEpoch` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    pub struct OffsetForLeaderTopic {
+        /// The topic name.
+        pub topic: StrBytes,
+        /// Each partition to get offsets for.
+        pub partitions: Vec<OffsetForLeaderPartition>,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
     }
-}
 
-impl KafkaDecode for OffsetForLeaderEpochRequestOffsetForLeaderTopic {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        let topic = if Self::is_flexible(version) {
-            decoder.read_compact_string()?
-        } else {
-            decoder.read_string()?
-        };
-        let partitions = {
-            let length = if Self::is_flexible(version) {
-                decoder.read_compact_array_len()?
+    impl OffsetForLeaderTopic {
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(4, 4));
+
+        fn is_flexible(version: ApiVersion) -> bool {
+            Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+        }
+    }
+
+    impl KafkaDecode for OffsetForLeaderTopic {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            let topic = if Self::is_flexible(version) {
+                decoder.read_compact_string()?
             } else {
-                decoder.read_array_len()?
+                decoder.read_string()?
             };
-            decoder.read_vec(length, |decoder| {
-                OffsetForLeaderEpochRequestOffsetForLeaderPartition::decode(decoder, version)
-            })?
-        };
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
-
-        Ok(Self {
-            topic,
-            partitions,
-            unknown_tagged_fields,
-        })
-    }
-}
-
-impl KafkaEncode for OffsetForLeaderEpochRequestOffsetForLeaderTopic {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        if Self::is_flexible(version) {
-            encoder.write_compact_string(&self.topic)?;
-        } else {
-            encoder.write_string(&self.topic)?;
-        }
-        if Self::is_flexible(version) {
-            encoder.write_compact_array_len(self.partitions.len())?;
-        } else {
-            encoder.write_array_len(self.partitions.len())?;
-        }
-        for value in &self.partitions {
-            value.encode(encoder, version)?;
-        }
-
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: "OffsetForLeaderEpochRequestOffsetForLeaderTopic",
-                version,
-            });
-        }
-
-        Ok(())
-    }
-}
-
-/// `OffsetForLeaderPartition` as declared by the `OffsetForLeaderEpoch` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct OffsetForLeaderEpochRequestOffsetForLeaderPartition {
-    /// The partition index.
-    pub partition: i32,
-    /// An epoch used to fence consumers/replicas with old metadata. If the epoch provided by the client is larger than the current epoch known to the broker, then the `UNKNOWN_LEADER_EPOCH` error code will be returned. If the provided epoch is smaller, then the `FENCED_LEADER_EPOCH` error code will be returned.
-    pub current_leader_epoch: i32,
-    /// The epoch to look up an offset for.
-    pub leader_epoch: i32,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
-
-impl OffsetForLeaderEpochRequestOffsetForLeaderPartition {
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(4, 4));
-
-    fn is_flexible(version: ApiVersion) -> bool {
-        Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
-    }
-}
-
-impl Default for OffsetForLeaderEpochRequestOffsetForLeaderPartition {
-    fn default() -> Self {
-        Self {
-            partition: 0,
-            current_leader_epoch: -1,
-            leader_epoch: 0,
-            unknown_tagged_fields: TaggedFields::default(),
-        }
-    }
-}
-
-impl KafkaDecode for OffsetForLeaderEpochRequestOffsetForLeaderPartition {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        let partition = decoder.read_i32()?;
-        let current_leader_epoch = decoder.read_i32()?;
-        let leader_epoch = decoder.read_i32()?;
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
-
-        Ok(Self {
-            partition,
-            current_leader_epoch,
-            leader_epoch,
-            unknown_tagged_fields,
-        })
-    }
-}
-
-impl KafkaEncode for OffsetForLeaderEpochRequestOffsetForLeaderPartition {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        encoder.write_i32(self.partition)?;
-        encoder.write_i32(self.current_leader_epoch)?;
-        encoder.write_i32(self.leader_epoch)?;
-
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: "OffsetForLeaderEpochRequestOffsetForLeaderPartition",
-                version,
-            });
-        }
-
-        Ok(())
-    }
-}
-
-/// Request body for the `OffsetForLeaderEpoch` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct OffsetForLeaderEpochRequest {
-    /// The broker ID of the follower, of -1 if this request is from a consumer.
-    pub replica_id: i32,
-    /// Each topic to get offsets for.
-    pub topics: Vec<OffsetForLeaderEpochRequestOffsetForLeaderTopic>,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
-
-impl Default for OffsetForLeaderEpochRequest {
-    fn default() -> Self {
-        Self {
-            replica_id: -2,
-            topics: Vec::new(),
-            unknown_tagged_fields: TaggedFields::default(),
-        }
-    }
-}
-
-impl KafkaMessage for OffsetForLeaderEpochRequest {
-    const NAME: &'static str = "OffsetForLeaderEpochRequest";
-    const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(2, 4);
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(4, 4));
-}
-
-impl KafkaRequest for OffsetForLeaderEpochRequest {
-    const API_KEY: ApiKey = ApiKey::new(23);
-}
-
-impl RequestResponsePair for OffsetForLeaderEpochRequest {
-    type Response = OffsetForLeaderEpochResponse;
-}
-
-impl KafkaDecode for OffsetForLeaderEpochRequest {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        crate::message::ensure_decode_version::<Self>(version)?;
-
-        let replica_id = if version.value() >= 3 {
-            decoder.read_i32()?
-        } else {
-            -2
-        };
-        let topics = {
-            let length = if Self::is_flexible(version) {
-                decoder.read_compact_array_len()?
+            let partitions = {
+                let length = if Self::is_flexible(version) {
+                    decoder.read_compact_array_len()?
+                } else {
+                    decoder.read_array_len()?
+                };
+                decoder.read_vec(length, |decoder| {
+                    OffsetForLeaderPartition::decode(decoder, version)
+                })?
+            };
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
             } else {
-                decoder.read_array_len()?
+                TaggedFields::default()
             };
-            decoder.read_vec(length, |decoder| {
-                OffsetForLeaderEpochRequestOffsetForLeaderTopic::decode(decoder, version)
-            })?
-        };
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
 
-        Ok(Self {
-            replica_id,
-            topics,
-            unknown_tagged_fields,
-        })
+            Ok(Self {
+                topic,
+                partitions,
+                unknown_tagged_fields,
+            })
+        }
     }
-}
 
-impl KafkaEncode for OffsetForLeaderEpochRequest {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        crate::message::ensure_encode_version::<Self>(version)?;
-
-        if version.value() >= 3 {
-            encoder.write_i32(self.replica_id)?;
-        }
-        if Self::is_flexible(version) {
-            encoder.write_compact_array_len(self.topics.len())?;
-        } else {
-            encoder.write_array_len(self.topics.len())?;
-        }
-        for value in &self.topics {
-            value.encode(encoder, version)?;
-        }
-
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: Self::NAME,
-                version,
-            });
-        }
-
-        Ok(())
-    }
-}
-
-/// `OffsetForLeaderTopicResult` as declared by the `OffsetForLeaderEpoch` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct OffsetForLeaderEpochResponseOffsetForLeaderTopicResult {
-    /// The topic name.
-    pub topic: StrBytes,
-    /// Each partition in the topic we fetched offsets for.
-    pub partitions: Vec<OffsetForLeaderEpochResponseEpochEndOffset>,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
-
-impl OffsetForLeaderEpochResponseOffsetForLeaderTopicResult {
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(4, 4));
-
-    fn is_flexible(version: ApiVersion) -> bool {
-        Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
-    }
-}
-
-impl KafkaDecode for OffsetForLeaderEpochResponseOffsetForLeaderTopicResult {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        let topic = if Self::is_flexible(version) {
-            decoder.read_compact_string()?
-        } else {
-            decoder.read_string()?
-        };
-        let partitions = {
-            let length = if Self::is_flexible(version) {
-                decoder.read_compact_array_len()?
+    impl KafkaEncode for OffsetForLeaderTopic {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            if Self::is_flexible(version) {
+                encoder.write_compact_string(&self.topic)?;
             } else {
-                decoder.read_array_len()?
-            };
-            decoder.read_vec(length, |decoder| {
-                OffsetForLeaderEpochResponseEpochEndOffset::decode(decoder, version)
-            })?
-        };
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
-
-        Ok(Self {
-            topic,
-            partitions,
-            unknown_tagged_fields,
-        })
-    }
-}
-
-impl KafkaEncode for OffsetForLeaderEpochResponseOffsetForLeaderTopicResult {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        if Self::is_flexible(version) {
-            encoder.write_compact_string(&self.topic)?;
-        } else {
-            encoder.write_string(&self.topic)?;
-        }
-        if Self::is_flexible(version) {
-            encoder.write_compact_array_len(self.partitions.len())?;
-        } else {
-            encoder.write_array_len(self.partitions.len())?;
-        }
-        for value in &self.partitions {
-            value.encode(encoder, version)?;
-        }
-
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: "OffsetForLeaderEpochResponseOffsetForLeaderTopicResult",
-                version,
-            });
-        }
-
-        Ok(())
-    }
-}
-
-/// `EpochEndOffset` as declared by the `OffsetForLeaderEpoch` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct OffsetForLeaderEpochResponseEpochEndOffset {
-    /// The error code 0, or if there was no error.
-    pub error_code: i16,
-    /// The partition index.
-    pub partition: i32,
-    /// The leader epoch of the partition.
-    pub leader_epoch: i32,
-    /// The end offset of the epoch.
-    pub end_offset: i64,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
-
-impl OffsetForLeaderEpochResponseEpochEndOffset {
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(4, 4));
-
-    fn is_flexible(version: ApiVersion) -> bool {
-        Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
-    }
-}
-
-impl Default for OffsetForLeaderEpochResponseEpochEndOffset {
-    fn default() -> Self {
-        Self {
-            error_code: 0,
-            partition: 0,
-            leader_epoch: -1,
-            end_offset: -1,
-            unknown_tagged_fields: TaggedFields::default(),
-        }
-    }
-}
-
-impl KafkaDecode for OffsetForLeaderEpochResponseEpochEndOffset {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        let error_code = decoder.read_i16()?;
-        let partition = decoder.read_i32()?;
-        let leader_epoch = decoder.read_i32()?;
-        let end_offset = decoder.read_i64()?;
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
-
-        Ok(Self {
-            error_code,
-            partition,
-            leader_epoch,
-            end_offset,
-            unknown_tagged_fields,
-        })
-    }
-}
-
-impl KafkaEncode for OffsetForLeaderEpochResponseEpochEndOffset {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        encoder.write_i16(self.error_code)?;
-        encoder.write_i32(self.partition)?;
-        encoder.write_i32(self.leader_epoch)?;
-        encoder.write_i64(self.end_offset)?;
-
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: "OffsetForLeaderEpochResponseEpochEndOffset",
-                version,
-            });
-        }
-
-        Ok(())
-    }
-}
-
-/// Response body for the `OffsetForLeaderEpoch` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct OffsetForLeaderEpochResponse {
-    /// The duration in milliseconds for which the request was throttled due to a quota violation, or zero if the request did not violate any quota.
-    pub throttle_time_ms: i32,
-    /// Each topic we fetched offsets for.
-    pub topics: Vec<OffsetForLeaderEpochResponseOffsetForLeaderTopicResult>,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
-
-impl KafkaMessage for OffsetForLeaderEpochResponse {
-    const NAME: &'static str = "OffsetForLeaderEpochResponse";
-    const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(2, 4);
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(4, 4));
-}
-
-impl KafkaResponse for OffsetForLeaderEpochResponse {
-    const API_KEY: ApiKey = ApiKey::new(23);
-}
-
-impl KafkaDecode for OffsetForLeaderEpochResponse {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        crate::message::ensure_decode_version::<Self>(version)?;
-
-        let throttle_time_ms = decoder.read_i32()?;
-        let topics = {
-            let length = if Self::is_flexible(version) {
-                decoder.read_compact_array_len()?
+                encoder.write_string(&self.topic)?;
+            }
+            if Self::is_flexible(version) {
+                encoder.write_compact_array_len(self.partitions.len())?;
             } else {
-                decoder.read_array_len()?
+                encoder.write_array_len(self.partitions.len())?;
+            }
+            for value in &self.partitions {
+                value.encode(encoder, version)?;
+            }
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "OffsetForLeaderTopic",
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+
+    /// `OffsetForLeaderPartition` as declared by the `OffsetForLeaderEpoch` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Eq, PartialEq)]
+    pub struct OffsetForLeaderPartition {
+        /// The partition index.
+        pub partition: i32,
+        /// An epoch used to fence consumers/replicas with old metadata. If the epoch provided by the client is larger than the current epoch known to the broker, then the `UNKNOWN_LEADER_EPOCH` error code will be returned. If the provided epoch is smaller, then the `FENCED_LEADER_EPOCH` error code will be returned.
+        pub current_leader_epoch: i32,
+        /// The epoch to look up an offset for.
+        pub leader_epoch: i32,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl OffsetForLeaderPartition {
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(4, 4));
+
+        fn is_flexible(version: ApiVersion) -> bool {
+            Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+        }
+    }
+
+    impl Default for OffsetForLeaderPartition {
+        fn default() -> Self {
+            Self {
+                partition: 0,
+                current_leader_epoch: -1,
+                leader_epoch: 0,
+                unknown_tagged_fields: TaggedFields::default(),
+            }
+        }
+    }
+
+    impl KafkaDecode for OffsetForLeaderPartition {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            let partition = decoder.read_i32()?;
+            let current_leader_epoch = decoder.read_i32()?;
+            let leader_epoch = decoder.read_i32()?;
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
             };
-            decoder.read_vec(length, |decoder| {
-                OffsetForLeaderEpochResponseOffsetForLeaderTopicResult::decode(decoder, version)
-            })?
-        };
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
 
-        Ok(Self {
-            throttle_time_ms,
-            topics,
-            unknown_tagged_fields,
-        })
+            Ok(Self {
+                partition,
+                current_leader_epoch,
+                leader_epoch,
+                unknown_tagged_fields,
+            })
+        }
+    }
+
+    impl KafkaEncode for OffsetForLeaderPartition {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            encoder.write_i32(self.partition)?;
+            encoder.write_i32(self.current_leader_epoch)?;
+            encoder.write_i32(self.leader_epoch)?;
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "OffsetForLeaderPartition",
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+
+    /// Request body for the `OffsetForLeaderEpoch` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Eq, PartialEq)]
+    pub struct OffsetForLeaderEpochRequest {
+        /// The broker ID of the follower, of -1 if this request is from a consumer.
+        pub replica_id: i32,
+        /// Each topic to get offsets for.
+        pub topics: Vec<OffsetForLeaderTopic>,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl Default for OffsetForLeaderEpochRequest {
+        fn default() -> Self {
+            Self {
+                replica_id: -2,
+                topics: Vec::new(),
+                unknown_tagged_fields: TaggedFields::default(),
+            }
+        }
+    }
+
+    impl KafkaMessage for OffsetForLeaderEpochRequest {
+        const NAME: &'static str = "OffsetForLeaderEpochRequest";
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(2, 4);
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(4, 4));
+    }
+
+    impl KafkaRequest for OffsetForLeaderEpochRequest {
+        const API_KEY: ApiKey = ApiKey::new(23);
+    }
+
+    impl RequestResponsePair for OffsetForLeaderEpochRequest {
+        type Response = super::OffsetForLeaderEpochResponse;
+    }
+
+    impl KafkaDecode for OffsetForLeaderEpochRequest {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            crate::message::ensure_decode_version::<Self>(version)?;
+
+            let replica_id = if version.value() >= 3 {
+                decoder.read_i32()?
+            } else {
+                -2
+            };
+            let topics = {
+                let length = if Self::is_flexible(version) {
+                    decoder.read_compact_array_len()?
+                } else {
+                    decoder.read_array_len()?
+                };
+                decoder.read_vec(length, |decoder| {
+                    OffsetForLeaderTopic::decode(decoder, version)
+                })?
+            };
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
+
+            Ok(Self {
+                replica_id,
+                topics,
+                unknown_tagged_fields,
+            })
+        }
+    }
+
+    impl KafkaEncode for OffsetForLeaderEpochRequest {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            crate::message::ensure_encode_version::<Self>(version)?;
+
+            if version.value() >= 3 {
+                encoder.write_i32(self.replica_id)?;
+            }
+            if Self::is_flexible(version) {
+                encoder.write_compact_array_len(self.topics.len())?;
+            } else {
+                encoder.write_array_len(self.topics.len())?;
+            }
+            for value in &self.topics {
+                value.encode(encoder, version)?;
+            }
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: Self::NAME,
+                    version,
+                });
+            }
+
+            Ok(())
+        }
     }
 }
 
-impl KafkaEncode for OffsetForLeaderEpochResponse {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        crate::message::ensure_encode_version::<Self>(version)?;
+/// `OffsetForLeaderEpochResponse` and every struct it declares, under upstream's own names.
+///
+/// [`OffsetForLeaderEpochResponse`](crate::OffsetForLeaderEpochResponse) is re-exported flat, so this path never has to be
+/// written to name the message itself.
+pub mod offset_for_leader_epoch_response {
+    use kafka_wire_core::{
+        ApiKey, ApiVersion, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
+        KafkaEncode, StrBytes, TaggedFields, VersionRange,
+    };
 
-        encoder.write_i32(self.throttle_time_ms)?;
-        if Self::is_flexible(version) {
-            encoder.write_compact_array_len(self.topics.len())?;
-        } else {
-            encoder.write_array_len(self.topics.len())?;
-        }
-        for value in &self.topics {
-            value.encode(encoder, version)?;
-        }
+    use crate::{KafkaMessage, KafkaResponse};
 
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: Self::NAME,
-                version,
-            });
-        }
+    /// `OffsetForLeaderTopicResult` as declared by the `OffsetForLeaderEpoch` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    pub struct OffsetForLeaderTopicResult {
+        /// The topic name.
+        pub topic: StrBytes,
+        /// Each partition in the topic we fetched offsets for.
+        pub partitions: Vec<EpochEndOffset>,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
+    }
 
-        Ok(())
+    impl OffsetForLeaderTopicResult {
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(4, 4));
+
+        fn is_flexible(version: ApiVersion) -> bool {
+            Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+        }
+    }
+
+    impl KafkaDecode for OffsetForLeaderTopicResult {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            let topic = if Self::is_flexible(version) {
+                decoder.read_compact_string()?
+            } else {
+                decoder.read_string()?
+            };
+            let partitions = {
+                let length = if Self::is_flexible(version) {
+                    decoder.read_compact_array_len()?
+                } else {
+                    decoder.read_array_len()?
+                };
+                decoder.read_vec(length, |decoder| EpochEndOffset::decode(decoder, version))?
+            };
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
+
+            Ok(Self {
+                topic,
+                partitions,
+                unknown_tagged_fields,
+            })
+        }
+    }
+
+    impl KafkaEncode for OffsetForLeaderTopicResult {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            if Self::is_flexible(version) {
+                encoder.write_compact_string(&self.topic)?;
+            } else {
+                encoder.write_string(&self.topic)?;
+            }
+            if Self::is_flexible(version) {
+                encoder.write_compact_array_len(self.partitions.len())?;
+            } else {
+                encoder.write_array_len(self.partitions.len())?;
+            }
+            for value in &self.partitions {
+                value.encode(encoder, version)?;
+            }
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "OffsetForLeaderTopicResult",
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+
+    /// `EpochEndOffset` as declared by the `OffsetForLeaderEpoch` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Eq, PartialEq)]
+    pub struct EpochEndOffset {
+        /// The error code 0, or if there was no error.
+        pub error_code: i16,
+        /// The partition index.
+        pub partition: i32,
+        /// The leader epoch of the partition.
+        pub leader_epoch: i32,
+        /// The end offset of the epoch.
+        pub end_offset: i64,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl EpochEndOffset {
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(4, 4));
+
+        fn is_flexible(version: ApiVersion) -> bool {
+            Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+        }
+    }
+
+    impl Default for EpochEndOffset {
+        fn default() -> Self {
+            Self {
+                error_code: 0,
+                partition: 0,
+                leader_epoch: -1,
+                end_offset: -1,
+                unknown_tagged_fields: TaggedFields::default(),
+            }
+        }
+    }
+
+    impl KafkaDecode for EpochEndOffset {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            let error_code = decoder.read_i16()?;
+            let partition = decoder.read_i32()?;
+            let leader_epoch = decoder.read_i32()?;
+            let end_offset = decoder.read_i64()?;
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
+
+            Ok(Self {
+                error_code,
+                partition,
+                leader_epoch,
+                end_offset,
+                unknown_tagged_fields,
+            })
+        }
+    }
+
+    impl KafkaEncode for EpochEndOffset {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            encoder.write_i16(self.error_code)?;
+            encoder.write_i32(self.partition)?;
+            encoder.write_i32(self.leader_epoch)?;
+            encoder.write_i64(self.end_offset)?;
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "EpochEndOffset",
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+
+    /// Response body for the `OffsetForLeaderEpoch` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    pub struct OffsetForLeaderEpochResponse {
+        /// The duration in milliseconds for which the request was throttled due to a quota violation, or zero if the request did not violate any quota.
+        pub throttle_time_ms: i32,
+        /// Each topic we fetched offsets for.
+        pub topics: Vec<OffsetForLeaderTopicResult>,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl KafkaMessage for OffsetForLeaderEpochResponse {
+        const NAME: &'static str = "OffsetForLeaderEpochResponse";
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(2, 4);
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(4, 4));
+    }
+
+    impl KafkaResponse for OffsetForLeaderEpochResponse {
+        const API_KEY: ApiKey = ApiKey::new(23);
+    }
+
+    impl KafkaDecode for OffsetForLeaderEpochResponse {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            crate::message::ensure_decode_version::<Self>(version)?;
+
+            let throttle_time_ms = decoder.read_i32()?;
+            let topics = {
+                let length = if Self::is_flexible(version) {
+                    decoder.read_compact_array_len()?
+                } else {
+                    decoder.read_array_len()?
+                };
+                decoder.read_vec(length, |decoder| {
+                    OffsetForLeaderTopicResult::decode(decoder, version)
+                })?
+            };
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
+
+            Ok(Self {
+                throttle_time_ms,
+                topics,
+                unknown_tagged_fields,
+            })
+        }
+    }
+
+    impl KafkaEncode for OffsetForLeaderEpochResponse {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            crate::message::ensure_encode_version::<Self>(version)?;
+
+            encoder.write_i32(self.throttle_time_ms)?;
+            if Self::is_flexible(version) {
+                encoder.write_compact_array_len(self.topics.len())?;
+            } else {
+                encoder.write_array_len(self.topics.len())?;
+            }
+            for value in &self.topics {
+                value.encode(encoder, version)?;
+            }
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: Self::NAME,
+                    version,
+                });
+            }
+
+            Ok(())
+        }
     }
 }
+
+use kafka_wire_core::VersionRange;
+
+use crate::{MessageDescriptor, MessageDirection};
+
+pub use offset_for_leader_epoch_request::OffsetForLeaderEpochRequest;
+pub use offset_for_leader_epoch_response::OffsetForLeaderEpochResponse;
 
 /// Static metadata for [`OffsetForLeaderEpochRequest`].
 pub const OFFSET_FOR_LEADER_EPOCH_REQUEST_DESCRIPTOR: MessageDescriptor = MessageDescriptor::new(

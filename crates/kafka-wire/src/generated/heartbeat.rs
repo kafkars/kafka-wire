@@ -5,205 +5,228 @@
 //! Request SHA-256: `6ed614f2ad68e2d7708c6338810ba9840b07d6e9e2795f326517c6aefd7cfd6b`.
 //! Response SHA-256: `adf2e14be527af92b93733b46e3102b806b4a9b91eb2147a40cbe3bda5e6dfb9`.
 
-use kafka_wire_core::{
-    ApiKey, ApiVersion, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
-    KafkaEncode, StrBytes, TaggedFields, VersionRange,
-};
+/// `HeartbeatRequest` and every struct it declares, under upstream's own names.
+///
+/// [`HeartbeatRequest`](crate::HeartbeatRequest) is re-exported flat, so this path never has to be
+/// written to name the message itself.
+pub mod heartbeat_request {
+    use kafka_wire_core::{
+        ApiKey, ApiVersion, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
+        KafkaEncode, StrBytes, TaggedFields, VersionRange,
+    };
 
-use crate::{
-    KafkaMessage, KafkaRequest, KafkaResponse, MessageDescriptor, MessageDirection,
-    RequestResponsePair,
-};
+    use crate::{KafkaMessage, KafkaRequest, RequestResponsePair};
 
-/// Request body for the `Heartbeat` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct HeartbeatRequest {
-    /// The group id.
-    pub group_id: StrBytes,
-    /// The generation of the group.
-    pub generation_id: i32,
-    /// The member ID.
-    pub member_id: StrBytes,
-    /// The unique identifier of the consumer instance provided by end user.
-    pub group_instance_id: Option<StrBytes>,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
+    /// Request body for the `Heartbeat` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    pub struct HeartbeatRequest {
+        /// The group id.
+        pub group_id: StrBytes,
+        /// The generation of the group.
+        pub generation_id: i32,
+        /// The member ID.
+        pub member_id: StrBytes,
+        /// The unique identifier of the consumer instance provided by end user.
+        pub group_instance_id: Option<StrBytes>,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
+    }
 
-impl KafkaMessage for HeartbeatRequest {
-    const NAME: &'static str = "HeartbeatRequest";
-    const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 4);
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(4, 4));
-}
+    impl KafkaMessage for HeartbeatRequest {
+        const NAME: &'static str = "HeartbeatRequest";
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 4);
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(4, 4));
+    }
 
-impl KafkaRequest for HeartbeatRequest {
-    const API_KEY: ApiKey = ApiKey::new(12);
-}
+    impl KafkaRequest for HeartbeatRequest {
+        const API_KEY: ApiKey = ApiKey::new(12);
+    }
 
-impl RequestResponsePair for HeartbeatRequest {
-    type Response = HeartbeatResponse;
-}
+    impl RequestResponsePair for HeartbeatRequest {
+        type Response = super::HeartbeatResponse;
+    }
 
-impl KafkaDecode for HeartbeatRequest {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        crate::message::ensure_decode_version::<Self>(version)?;
+    impl KafkaDecode for HeartbeatRequest {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            crate::message::ensure_decode_version::<Self>(version)?;
 
-        let group_id = if Self::is_flexible(version) {
-            decoder.read_compact_string()?
-        } else {
-            decoder.read_string()?
-        };
-        let generation_id = decoder.read_i32()?;
-        let member_id = if Self::is_flexible(version) {
-            decoder.read_compact_string()?
-        } else {
-            decoder.read_string()?
-        };
-        let group_instance_id = if version.value() >= 3 {
-            if Self::is_flexible(version) {
-                decoder.read_compact_nullable_string()?
+            let group_id = if Self::is_flexible(version) {
+                decoder.read_compact_string()?
             } else {
-                decoder.read_nullable_string()?
-            }
-        } else {
-            None
-        };
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
-
-        Ok(Self {
-            group_id,
-            generation_id,
-            member_id,
-            group_instance_id,
-            unknown_tagged_fields,
-        })
-    }
-}
-
-impl KafkaEncode for HeartbeatRequest {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        crate::message::ensure_encode_version::<Self>(version)?;
-
-        if version.value() < 3 && self.group_instance_id.is_some() {
-            return Err(EncodeError::FieldNotRepresentable {
-                message: Self::NAME,
-                field: "GroupInstanceId",
-                version,
-            });
-        }
-
-        if Self::is_flexible(version) {
-            encoder.write_compact_string(&self.group_id)?;
-        } else {
-            encoder.write_string(&self.group_id)?;
-        }
-        encoder.write_i32(self.generation_id)?;
-        if Self::is_flexible(version) {
-            encoder.write_compact_string(&self.member_id)?;
-        } else {
-            encoder.write_string(&self.member_id)?;
-        }
-        if version.value() >= 3 {
-            if Self::is_flexible(version) {
-                encoder.write_compact_nullable_string(self.group_instance_id.as_ref())?;
+                decoder.read_string()?
+            };
+            let generation_id = decoder.read_i32()?;
+            let member_id = if Self::is_flexible(version) {
+                decoder.read_compact_string()?
             } else {
-                encoder.write_nullable_string(self.group_instance_id.as_ref())?;
+                decoder.read_string()?
+            };
+            let group_instance_id = if version.value() >= 3 {
+                if Self::is_flexible(version) {
+                    decoder.read_compact_nullable_string()?
+                } else {
+                    decoder.read_nullable_string()?
+                }
+            } else {
+                None
+            };
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
+
+            Ok(Self {
+                group_id,
+                generation_id,
+                member_id,
+                group_instance_id,
+                unknown_tagged_fields,
+            })
+        }
+    }
+
+    impl KafkaEncode for HeartbeatRequest {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            crate::message::ensure_encode_version::<Self>(version)?;
+
+            if version.value() < 3 && self.group_instance_id.is_some() {
+                return Err(EncodeError::FieldNotRepresentable {
+                    message: Self::NAME,
+                    field: "GroupInstanceId",
+                    version,
+                });
             }
-        }
 
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: Self::NAME,
-                version,
-            });
-        }
+            if Self::is_flexible(version) {
+                encoder.write_compact_string(&self.group_id)?;
+            } else {
+                encoder.write_string(&self.group_id)?;
+            }
+            encoder.write_i32(self.generation_id)?;
+            if Self::is_flexible(version) {
+                encoder.write_compact_string(&self.member_id)?;
+            } else {
+                encoder.write_string(&self.member_id)?;
+            }
+            if version.value() >= 3 {
+                if Self::is_flexible(version) {
+                    encoder.write_compact_nullable_string(self.group_instance_id.as_ref())?;
+                } else {
+                    encoder.write_nullable_string(self.group_instance_id.as_ref())?;
+                }
+            }
 
-        Ok(())
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: Self::NAME,
+                    version,
+                });
+            }
+
+            Ok(())
+        }
     }
 }
 
-/// Response body for the `Heartbeat` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct HeartbeatResponse {
-    /// The duration in milliseconds for which the request was throttled due to a quota violation, or zero if the request did not violate any quota.
-    pub throttle_time_ms: i32,
-    /// The error code, or 0 if there was no error.
-    pub error_code: i16,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
+/// `HeartbeatResponse` and every struct it declares, under upstream's own names.
+///
+/// [`HeartbeatResponse`](crate::HeartbeatResponse) is re-exported flat, so this path never has to be
+/// written to name the message itself.
+pub mod heartbeat_response {
+    use kafka_wire_core::{
+        ApiKey, ApiVersion, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
+        KafkaEncode, TaggedFields, VersionRange,
+    };
 
-impl KafkaMessage for HeartbeatResponse {
-    const NAME: &'static str = "HeartbeatResponse";
-    const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 4);
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(4, 4));
-}
+    use crate::{KafkaMessage, KafkaResponse};
 
-impl KafkaResponse for HeartbeatResponse {
-    const API_KEY: ApiKey = ApiKey::new(12);
-}
+    /// Response body for the `Heartbeat` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    pub struct HeartbeatResponse {
+        /// The duration in milliseconds for which the request was throttled due to a quota violation, or zero if the request did not violate any quota.
+        pub throttle_time_ms: i32,
+        /// The error code, or 0 if there was no error.
+        pub error_code: i16,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
+    }
 
-impl KafkaDecode for HeartbeatResponse {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        crate::message::ensure_decode_version::<Self>(version)?;
+    impl KafkaMessage for HeartbeatResponse {
+        const NAME: &'static str = "HeartbeatResponse";
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 4);
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(4, 4));
+    }
 
-        let throttle_time_ms = if version.value() >= 1 {
-            decoder.read_i32()?
-        } else {
-            0
-        };
-        let error_code = decoder.read_i16()?;
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
+    impl KafkaResponse for HeartbeatResponse {
+        const API_KEY: ApiKey = ApiKey::new(12);
+    }
 
-        Ok(Self {
-            throttle_time_ms,
-            error_code,
-            unknown_tagged_fields,
-        })
+    impl KafkaDecode for HeartbeatResponse {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            crate::message::ensure_decode_version::<Self>(version)?;
+
+            let throttle_time_ms = if version.value() >= 1 {
+                decoder.read_i32()?
+            } else {
+                0
+            };
+            let error_code = decoder.read_i16()?;
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
+
+            Ok(Self {
+                throttle_time_ms,
+                error_code,
+                unknown_tagged_fields,
+            })
+        }
+    }
+
+    impl KafkaEncode for HeartbeatResponse {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            crate::message::ensure_encode_version::<Self>(version)?;
+
+            if version.value() >= 1 {
+                encoder.write_i32(self.throttle_time_ms)?;
+            }
+            encoder.write_i16(self.error_code)?;
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: Self::NAME,
+                    version,
+                });
+            }
+
+            Ok(())
+        }
     }
 }
 
-impl KafkaEncode for HeartbeatResponse {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        crate::message::ensure_encode_version::<Self>(version)?;
+use kafka_wire_core::VersionRange;
 
-        if version.value() >= 1 {
-            encoder.write_i32(self.throttle_time_ms)?;
-        }
-        encoder.write_i16(self.error_code)?;
+use crate::{MessageDescriptor, MessageDirection};
 
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: Self::NAME,
-                version,
-            });
-        }
-
-        Ok(())
-    }
-}
+pub use heartbeat_request::HeartbeatRequest;
+pub use heartbeat_response::HeartbeatResponse;
 
 /// Static metadata for [`HeartbeatRequest`].
 pub const HEARTBEAT_REQUEST_DESCRIPTOR: MessageDescriptor = MessageDescriptor::new(

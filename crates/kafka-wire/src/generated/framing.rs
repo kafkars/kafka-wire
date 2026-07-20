@@ -6,1145 +6,1309 @@
 //! These answer to no API key: a header frames a message rather than being
 //! one, so nothing here carries a descriptor or a request/response pair.
 
-use kafka_wire_core::{
-    ApiVersion, Bytes, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
-    KafkaEncode, StrBytes, TaggedFields, Uuid, VersionRange,
-};
+/// `AbortedTxn` and every struct it declares, under upstream's own names.
+///
+/// [`AbortedTxn`](crate::AbortedTxn) is re-exported flat, so this path never has to be
+/// written to name the message itself.
+pub mod aborted_txn {
+    use kafka_wire_core::{
+        ApiVersion, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
+        KafkaEncode, VersionRange,
+    };
 
-use crate::KafkaMessage;
+    use crate::KafkaMessage;
 
-/// `AbortedTxn` as declared by the `AbortedTxn` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct AbortedTxn {
-    /// The producer id associated with the aborted transaction.
-    pub producer_id: i64,
-    /// The first offset in the aborted transaction.
-    pub first_offset: i64,
-    /// The last offset in the aborted transaction.
-    pub last_offset: i64,
-    /// The last stable offset at the time the transaction was aborted.
-    pub last_stable_offset: i64,
-}
-
-impl KafkaMessage for AbortedTxn {
-    const NAME: &'static str = "AbortedTxn";
-    const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 0);
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = None;
-}
-
-impl KafkaDecode for AbortedTxn {
-    fn decode(decoder: &mut Decoder, _version: ApiVersion) -> Result<Self, DecodeError> {
-        let producer_id = decoder.read_i64()?;
-        let first_offset = decoder.read_i64()?;
-        let last_offset = decoder.read_i64()?;
-        let last_stable_offset = decoder.read_i64()?;
-
-        Ok(Self {
-            producer_id,
-            first_offset,
-            last_offset,
-            last_stable_offset,
-        })
+    /// `AbortedTxn` as declared by the `AbortedTxn` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    pub struct AbortedTxn {
+        /// The producer id associated with the aborted transaction.
+        pub producer_id: i64,
+        /// The first offset in the aborted transaction.
+        pub first_offset: i64,
+        /// The last offset in the aborted transaction.
+        pub last_offset: i64,
+        /// The last stable offset at the time the transaction was aborted.
+        pub last_stable_offset: i64,
     }
-}
 
-impl KafkaEncode for AbortedTxn {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        _version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        encoder.write_i64(self.producer_id)?;
-        encoder.write_i64(self.first_offset)?;
-        encoder.write_i64(self.last_offset)?;
-        encoder.write_i64(self.last_stable_offset)?;
-
-        Ok(())
+    impl KafkaMessage for AbortedTxn {
+        const NAME: &'static str = "AbortedTxn";
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 0);
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = None;
     }
-}
 
-/// `TopicPartition` as declared by the `ConsumerProtocolAssignment` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct ConsumerProtocolAssignmentTopicPartition {
-    /// The topic name.
-    pub topic: StrBytes,
-    /// The list of partitions assigned to this consumer.
-    pub partitions: Vec<i32>,
-}
+    impl KafkaDecode for AbortedTxn {
+        fn decode(decoder: &mut Decoder, _version: ApiVersion) -> Result<Self, DecodeError> {
+            let producer_id = decoder.read_i64()?;
+            let first_offset = decoder.read_i64()?;
+            let last_offset = decoder.read_i64()?;
+            let last_stable_offset = decoder.read_i64()?;
 
-impl KafkaDecode for ConsumerProtocolAssignmentTopicPartition {
-    fn decode(decoder: &mut Decoder, _version: ApiVersion) -> Result<Self, DecodeError> {
-        let topic = decoder.read_string()?;
-        let partitions = {
-            let length = decoder.read_array_len()?;
-            decoder.read_vec(length, Decoder::read_i32)?
-        };
-
-        Ok(Self { topic, partitions })
-    }
-}
-
-impl KafkaEncode for ConsumerProtocolAssignmentTopicPartition {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        _version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        encoder.write_string(&self.topic)?;
-        encoder.write_array_len(self.partitions.len())?;
-        for value in &self.partitions {
-            encoder.write_i32(*value)?;
+            Ok(Self {
+                producer_id,
+                first_offset,
+                last_offset,
+                last_stable_offset,
+            })
         }
-
-        Ok(())
     }
-}
 
-/// `ConsumerProtocolAssignment` as declared by the `ConsumerProtocolAssignment` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct ConsumerProtocolAssignment {
-    /// The list of topics and partitions assigned to this consumer.
-    pub assigned_partitions: Vec<ConsumerProtocolAssignmentTopicPartition>,
-    /// User data.
-    pub user_data: Option<Bytes>,
-}
+    impl KafkaEncode for AbortedTxn {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            _version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            encoder.write_i64(self.producer_id)?;
+            encoder.write_i64(self.first_offset)?;
+            encoder.write_i64(self.last_offset)?;
+            encoder.write_i64(self.last_stable_offset)?;
 
-impl KafkaMessage for ConsumerProtocolAssignment {
-    const NAME: &'static str = "ConsumerProtocolAssignment";
-    const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 3);
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = None;
-}
-
-impl KafkaDecode for ConsumerProtocolAssignment {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        let assigned_partitions = {
-            let length = decoder.read_array_len()?;
-            decoder.read_vec(length, |decoder| {
-                ConsumerProtocolAssignmentTopicPartition::decode(decoder, version)
-            })?
-        };
-        let user_data = decoder.read_nullable_bytes()?;
-
-        Ok(Self {
-            assigned_partitions,
-            user_data,
-        })
-    }
-}
-
-impl KafkaEncode for ConsumerProtocolAssignment {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        encoder.write_array_len(self.assigned_partitions.len())?;
-        for value in &self.assigned_partitions {
-            value.encode(encoder, version)?;
+            Ok(())
         }
-        encoder.write_nullable_bytes(self.user_data.as_deref())?;
-
-        Ok(())
     }
 }
 
-/// `TopicPartition` as declared by the `ConsumerProtocolSubscription` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct ConsumerProtocolSubscriptionTopicPartition {
-    /// The topic name.
-    pub topic: StrBytes,
-    /// The partition ids.
-    pub partitions: Vec<i32>,
-}
+/// `ConsumerProtocolAssignment` and every struct it declares, under upstream's own names.
+///
+/// [`ConsumerProtocolAssignment`](crate::ConsumerProtocolAssignment) is re-exported flat, so this path never has to be
+/// written to name the message itself.
+pub mod consumer_protocol_assignment {
+    use kafka_wire_core::{
+        ApiVersion, Bytes, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
+        KafkaEncode, StrBytes, VersionRange,
+    };
 
-impl KafkaDecode for ConsumerProtocolSubscriptionTopicPartition {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        let topic = if version.value() >= 1 {
-            decoder.read_string()?
-        } else {
-            StrBytes::default()
-        };
-        let partitions = if version.value() >= 1 {
-            let length = decoder.read_array_len()?;
-            decoder.read_vec(length, Decoder::read_i32)?
-        } else {
-            Vec::new()
-        };
+    use crate::KafkaMessage;
 
-        Ok(Self { topic, partitions })
+    /// `TopicPartition` as declared by the `ConsumerProtocolAssignment` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    pub struct TopicPartition {
+        /// The topic name.
+        pub topic: StrBytes,
+        /// The list of partitions assigned to this consumer.
+        pub partitions: Vec<i32>,
     }
-}
 
-impl KafkaEncode for ConsumerProtocolSubscriptionTopicPartition {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        if version.value() >= 1 {
+    impl KafkaDecode for TopicPartition {
+        fn decode(decoder: &mut Decoder, _version: ApiVersion) -> Result<Self, DecodeError> {
+            let topic = decoder.read_string()?;
+            let partitions = {
+                let length = decoder.read_array_len()?;
+                decoder.read_vec(length, Decoder::read_i32)?
+            };
+
+            Ok(Self { topic, partitions })
+        }
+    }
+
+    impl KafkaEncode for TopicPartition {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            _version: ApiVersion,
+        ) -> Result<(), EncodeError> {
             encoder.write_string(&self.topic)?;
-        }
-        if version.value() >= 1 {
             encoder.write_array_len(self.partitions.len())?;
             for value in &self.partitions {
                 encoder.write_i32(*value)?;
             }
-        }
 
-        Ok(())
-    }
-}
-
-/// `ConsumerProtocolSubscription` as declared by the `ConsumerProtocolSubscription` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct ConsumerProtocolSubscription {
-    /// The topics that the member wants to consume.
-    pub topics: Vec<StrBytes>,
-    /// User data that will be passed back to the consumer.
-    pub user_data: Option<Bytes>,
-    /// The partitions that the member owns.
-    pub owned_partitions: Vec<ConsumerProtocolSubscriptionTopicPartition>,
-    /// The generation id of the member.
-    pub generation_id: i32,
-    /// The rack id of the member.
-    pub rack_id: Option<StrBytes>,
-}
-
-impl KafkaMessage for ConsumerProtocolSubscription {
-    const NAME: &'static str = "ConsumerProtocolSubscription";
-    const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 3);
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = None;
-}
-
-impl Default for ConsumerProtocolSubscription {
-    fn default() -> Self {
-        Self {
-            topics: Vec::new(),
-            user_data: None,
-            owned_partitions: Vec::new(),
-            generation_id: -1,
-            rack_id: None,
+            Ok(())
         }
     }
-}
 
-impl KafkaDecode for ConsumerProtocolSubscription {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        let topics = {
-            let length = decoder.read_array_len()?;
-            decoder.read_vec(length, Decoder::read_string)?
-        };
-        let user_data = decoder.read_nullable_bytes()?;
-        let owned_partitions = if version.value() >= 1 {
-            let length = decoder.read_array_len()?;
-            decoder.read_vec(length, |decoder| {
-                ConsumerProtocolSubscriptionTopicPartition::decode(decoder, version)
-            })?
-        } else {
-            Vec::new()
-        };
-        let generation_id = if version.value() >= 2 {
-            decoder.read_i32()?
-        } else {
-            -1
-        };
-        let rack_id = if version.value() >= 3 {
-            decoder.read_nullable_string()?
-        } else {
-            None
-        };
-
-        Ok(Self {
-            topics,
-            user_data,
-            owned_partitions,
-            generation_id,
-            rack_id,
-        })
+    /// `ConsumerProtocolAssignment` as declared by the `ConsumerProtocolAssignment` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    pub struct ConsumerProtocolAssignment {
+        /// The list of topics and partitions assigned to this consumer.
+        pub assigned_partitions: Vec<TopicPartition>,
+        /// User data.
+        pub user_data: Option<Bytes>,
     }
-}
 
-impl KafkaEncode for ConsumerProtocolSubscription {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        encoder.write_array_len(self.topics.len())?;
-        for value in &self.topics {
-            encoder.write_string(value)?;
+    impl KafkaMessage for ConsumerProtocolAssignment {
+        const NAME: &'static str = "ConsumerProtocolAssignment";
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 3);
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = None;
+    }
+
+    impl KafkaDecode for ConsumerProtocolAssignment {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            let assigned_partitions = {
+                let length = decoder.read_array_len()?;
+                decoder.read_vec(length, |decoder| TopicPartition::decode(decoder, version))?
+            };
+            let user_data = decoder.read_nullable_bytes()?;
+
+            Ok(Self {
+                assigned_partitions,
+                user_data,
+            })
         }
-        encoder.write_nullable_bytes(self.user_data.as_deref())?;
-        if version.value() >= 1 {
-            encoder.write_array_len(self.owned_partitions.len())?;
-            for value in &self.owned_partitions {
+    }
+
+    impl KafkaEncode for ConsumerProtocolAssignment {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            encoder.write_array_len(self.assigned_partitions.len())?;
+            for value in &self.assigned_partitions {
                 value.encode(encoder, version)?;
             }
+            encoder.write_nullable_bytes(self.user_data.as_deref())?;
+
+            Ok(())
         }
-        if version.value() >= 2 {
-            encoder.write_i32(self.generation_id)?;
+    }
+}
+
+/// `ConsumerProtocolSubscription` and every struct it declares, under upstream's own names.
+///
+/// [`ConsumerProtocolSubscription`](crate::ConsumerProtocolSubscription) is re-exported flat, so this path never has to be
+/// written to name the message itself.
+pub mod consumer_protocol_subscription {
+    use kafka_wire_core::{
+        ApiVersion, Bytes, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
+        KafkaEncode, StrBytes, VersionRange,
+    };
+
+    use crate::KafkaMessage;
+
+    /// `TopicPartition` as declared by the `ConsumerProtocolSubscription` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    pub struct TopicPartition {
+        /// The topic name.
+        pub topic: StrBytes,
+        /// The partition ids.
+        pub partitions: Vec<i32>,
+    }
+
+    impl KafkaDecode for TopicPartition {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            let topic = if version.value() >= 1 {
+                decoder.read_string()?
+            } else {
+                StrBytes::default()
+            };
+            let partitions = if version.value() >= 1 {
+                let length = decoder.read_array_len()?;
+                decoder.read_vec(length, Decoder::read_i32)?
+            } else {
+                Vec::new()
+            };
+
+            Ok(Self { topic, partitions })
         }
-        if version.value() >= 3 {
-            encoder.write_nullable_string(self.rack_id.as_ref())?;
+    }
+
+    impl KafkaEncode for TopicPartition {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            if version.value() >= 1 {
+                encoder.write_string(&self.topic)?;
+            }
+            if version.value() >= 1 {
+                encoder.write_array_len(self.partitions.len())?;
+                for value in &self.partitions {
+                    encoder.write_i32(*value)?;
+                }
+            }
+
+            Ok(())
         }
-
-        Ok(())
     }
-}
 
-/// `ControlRecordTypeSchema` as declared by the `ControlRecordTypeSchema` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct ControlRecordTypeSchema {
-    /// The type of the control record, such as commit or abort.
-    pub type_: i16,
-}
-
-impl KafkaMessage for ControlRecordTypeSchema {
-    const NAME: &'static str = "ControlRecordTypeSchema";
-    const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 0);
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = None;
-}
-
-impl KafkaDecode for ControlRecordTypeSchema {
-    fn decode(decoder: &mut Decoder, _version: ApiVersion) -> Result<Self, DecodeError> {
-        let type_ = decoder.read_i16()?;
-
-        Ok(Self { type_ })
+    /// `ConsumerProtocolSubscription` as declared by the `ConsumerProtocolSubscription` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Eq, PartialEq)]
+    pub struct ConsumerProtocolSubscription {
+        /// The topics that the member wants to consume.
+        pub topics: Vec<StrBytes>,
+        /// User data that will be passed back to the consumer.
+        pub user_data: Option<Bytes>,
+        /// The partitions that the member owns.
+        pub owned_partitions: Vec<TopicPartition>,
+        /// The generation id of the member.
+        pub generation_id: i32,
+        /// The rack id of the member.
+        pub rack_id: Option<StrBytes>,
     }
-}
 
-impl KafkaEncode for ControlRecordTypeSchema {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        _version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        encoder.write_i16(self.type_)?;
-
-        Ok(())
+    impl KafkaMessage for ConsumerProtocolSubscription {
+        const NAME: &'static str = "ConsumerProtocolSubscription";
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 3);
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = None;
     }
-}
 
-/// `DefaultPrincipalData` as declared by the `DefaultPrincipalData` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct DefaultPrincipalData {
-    /// The principal type.
-    pub type_: StrBytes,
-    /// The principal name.
-    pub name: StrBytes,
-    /// Whether the principal was authenticated by a delegation token on the forwarding broker.
-    pub token_authenticated: bool,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
-
-impl KafkaMessage for DefaultPrincipalData {
-    const NAME: &'static str = "DefaultPrincipalData";
-    const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 0);
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 0));
-}
-
-impl KafkaDecode for DefaultPrincipalData {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        let type_ = decoder.read_compact_string()?;
-        let name = decoder.read_compact_string()?;
-        let token_authenticated = decoder.read_bool()?;
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
-
-        Ok(Self {
-            type_,
-            name,
-            token_authenticated,
-            unknown_tagged_fields,
-        })
-    }
-}
-
-impl KafkaEncode for DefaultPrincipalData {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        encoder.write_compact_string(&self.type_)?;
-        encoder.write_compact_string(&self.name)?;
-        encoder.write_bool(self.token_authenticated)?;
-
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: "DefaultPrincipalData",
-                version,
-            });
+    impl Default for ConsumerProtocolSubscription {
+        fn default() -> Self {
+            Self {
+                topics: Vec::new(),
+                user_data: None,
+                owned_partitions: Vec::new(),
+                generation_id: -1,
+                rack_id: None,
+            }
         }
-
-        Ok(())
     }
-}
 
-/// `EndTxnMarker` as declared by the `EndTxnMarker` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct EndTxnMarker {
-    /// The coordinator epoch when appending the record.
-    pub coordinator_epoch: i32,
-}
+    impl KafkaDecode for ConsumerProtocolSubscription {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            let topics = {
+                let length = decoder.read_array_len()?;
+                decoder.read_vec(length, Decoder::read_string)?
+            };
+            let user_data = decoder.read_nullable_bytes()?;
+            let owned_partitions = if version.value() >= 1 {
+                let length = decoder.read_array_len()?;
+                decoder.read_vec(length, |decoder| TopicPartition::decode(decoder, version))?
+            } else {
+                Vec::new()
+            };
+            let generation_id = if version.value() >= 2 {
+                decoder.read_i32()?
+            } else {
+                -1
+            };
+            let rack_id = if version.value() >= 3 {
+                decoder.read_nullable_string()?
+            } else {
+                None
+            };
 
-impl KafkaMessage for EndTxnMarker {
-    const NAME: &'static str = "EndTxnMarker";
-    const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 0);
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = None;
-}
-
-impl KafkaDecode for EndTxnMarker {
-    fn decode(decoder: &mut Decoder, _version: ApiVersion) -> Result<Self, DecodeError> {
-        let coordinator_epoch = decoder.read_i32()?;
-
-        Ok(Self { coordinator_epoch })
-    }
-}
-
-impl KafkaEncode for EndTxnMarker {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        _version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        encoder.write_i32(self.coordinator_epoch)?;
-
-        Ok(())
-    }
-}
-
-/// `KRaftVersionRecord` as declared by the `KRaftVersionRecord` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct KRaftVersionRecord {
-    /// The version of the kraft version record.
-    pub version: i16,
-    /// The kraft protocol version.
-    pub k_raft_version: i16,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
-
-impl KafkaMessage for KRaftVersionRecord {
-    const NAME: &'static str = "KRaftVersionRecord";
-    const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 0);
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 0));
-}
-
-impl KafkaDecode for KRaftVersionRecord {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        let version_value = decoder.read_i16()?;
-        let k_raft_version = decoder.read_i16()?;
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
-
-        Ok(Self {
-            version: version_value,
-            k_raft_version,
-            unknown_tagged_fields,
-        })
-    }
-}
-
-impl KafkaEncode for KRaftVersionRecord {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        encoder.write_i16(self.version)?;
-        encoder.write_i16(self.k_raft_version)?;
-
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: "KRaftVersionRecord",
-                version,
-            });
+            Ok(Self {
+                topics,
+                user_data,
+                owned_partitions,
+                generation_id,
+                rack_id,
+            })
         }
+    }
 
-        Ok(())
+    impl KafkaEncode for ConsumerProtocolSubscription {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            encoder.write_array_len(self.topics.len())?;
+            for value in &self.topics {
+                encoder.write_string(value)?;
+            }
+            encoder.write_nullable_bytes(self.user_data.as_deref())?;
+            if version.value() >= 1 {
+                encoder.write_array_len(self.owned_partitions.len())?;
+                for value in &self.owned_partitions {
+                    value.encode(encoder, version)?;
+                }
+            }
+            if version.value() >= 2 {
+                encoder.write_i32(self.generation_id)?;
+            }
+            if version.value() >= 3 {
+                encoder.write_nullable_string(self.rack_id.as_ref())?;
+            }
+
+            Ok(())
+        }
     }
 }
 
-/// `Voter` as declared by the `LeaderChangeMessage` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct LeaderChangeMessageVoter {
-    /// The ID of the voter.
-    pub voter_id: i32,
-    /// The directory id of the voter.
-    pub voter_directory_id: Uuid,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
+/// `ControlRecordTypeSchema` and every struct it declares, under upstream's own names.
+///
+/// [`ControlRecordTypeSchema`](crate::ControlRecordTypeSchema) is re-exported flat, so this path never has to be
+/// written to name the message itself.
+pub mod control_record_type_schema {
+    use kafka_wire_core::{
+        ApiVersion, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
+        KafkaEncode, VersionRange,
+    };
 
-impl LeaderChangeMessageVoter {
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 1));
+    use crate::KafkaMessage;
 
-    fn is_flexible(version: ApiVersion) -> bool {
-        Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+    /// `ControlRecordTypeSchema` as declared by the `ControlRecordTypeSchema` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    pub struct ControlRecordTypeSchema {
+        /// The type of the control record, such as commit or abort.
+        pub type_: i16,
+    }
+
+    impl KafkaMessage for ControlRecordTypeSchema {
+        const NAME: &'static str = "ControlRecordTypeSchema";
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 0);
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = None;
+    }
+
+    impl KafkaDecode for ControlRecordTypeSchema {
+        fn decode(decoder: &mut Decoder, _version: ApiVersion) -> Result<Self, DecodeError> {
+            let type_ = decoder.read_i16()?;
+
+            Ok(Self { type_ })
+        }
+    }
+
+    impl KafkaEncode for ControlRecordTypeSchema {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            _version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            encoder.write_i16(self.type_)?;
+
+            Ok(())
+        }
     }
 }
 
-impl KafkaDecode for LeaderChangeMessageVoter {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        let voter_id = decoder.read_i32()?;
-        let voter_directory_id = if version.value() >= 1 {
-            decoder.read_uuid()?
-        } else {
-            Uuid::ZERO
-        };
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
+/// `DefaultPrincipalData` and every struct it declares, under upstream's own names.
+///
+/// [`DefaultPrincipalData`](crate::DefaultPrincipalData) is re-exported flat, so this path never has to be
+/// written to name the message itself.
+pub mod default_principal_data {
+    use kafka_wire_core::{
+        ApiVersion, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
+        KafkaEncode, StrBytes, TaggedFields, VersionRange,
+    };
 
-        Ok(Self {
-            voter_id,
-            voter_directory_id,
-            unknown_tagged_fields,
-        })
+    use crate::KafkaMessage;
+
+    /// `DefaultPrincipalData` as declared by the `DefaultPrincipalData` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    pub struct DefaultPrincipalData {
+        /// The principal type.
+        pub type_: StrBytes,
+        /// The principal name.
+        pub name: StrBytes,
+        /// Whether the principal was authenticated by a delegation token on the forwarding broker.
+        pub token_authenticated: bool,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl KafkaMessage for DefaultPrincipalData {
+        const NAME: &'static str = "DefaultPrincipalData";
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 0);
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 0));
+    }
+
+    impl KafkaDecode for DefaultPrincipalData {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            let type_ = decoder.read_compact_string()?;
+            let name = decoder.read_compact_string()?;
+            let token_authenticated = decoder.read_bool()?;
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
+
+            Ok(Self {
+                type_,
+                name,
+                token_authenticated,
+                unknown_tagged_fields,
+            })
+        }
+    }
+
+    impl KafkaEncode for DefaultPrincipalData {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            encoder.write_compact_string(&self.type_)?;
+            encoder.write_compact_string(&self.name)?;
+            encoder.write_bool(self.token_authenticated)?;
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "DefaultPrincipalData",
+                    version,
+                });
+            }
+
+            Ok(())
+        }
     }
 }
 
-impl KafkaEncode for LeaderChangeMessageVoter {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        encoder.write_i32(self.voter_id)?;
-        if version.value() >= 1 {
+/// `EndTxnMarker` and every struct it declares, under upstream's own names.
+///
+/// [`EndTxnMarker`](crate::EndTxnMarker) is re-exported flat, so this path never has to be
+/// written to name the message itself.
+pub mod end_txn_marker {
+    use kafka_wire_core::{
+        ApiVersion, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
+        KafkaEncode, VersionRange,
+    };
+
+    use crate::KafkaMessage;
+
+    /// `EndTxnMarker` as declared by the `EndTxnMarker` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    pub struct EndTxnMarker {
+        /// The coordinator epoch when appending the record.
+        pub coordinator_epoch: i32,
+    }
+
+    impl KafkaMessage for EndTxnMarker {
+        const NAME: &'static str = "EndTxnMarker";
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 0);
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = None;
+    }
+
+    impl KafkaDecode for EndTxnMarker {
+        fn decode(decoder: &mut Decoder, _version: ApiVersion) -> Result<Self, DecodeError> {
+            let coordinator_epoch = decoder.read_i32()?;
+
+            Ok(Self { coordinator_epoch })
+        }
+    }
+
+    impl KafkaEncode for EndTxnMarker {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            _version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            encoder.write_i32(self.coordinator_epoch)?;
+
+            Ok(())
+        }
+    }
+}
+
+/// `KRaftVersionRecord` and every struct it declares, under upstream's own names.
+///
+/// [`KRaftVersionRecord`](crate::KRaftVersionRecord) is re-exported flat, so this path never has to be
+/// written to name the message itself.
+pub mod k_raft_version_record {
+    use kafka_wire_core::{
+        ApiVersion, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
+        KafkaEncode, TaggedFields, VersionRange,
+    };
+
+    use crate::KafkaMessage;
+
+    /// `KRaftVersionRecord` as declared by the `KRaftVersionRecord` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    pub struct KRaftVersionRecord {
+        /// The version of the kraft version record.
+        pub version: i16,
+        /// The kraft protocol version.
+        pub k_raft_version: i16,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl KafkaMessage for KRaftVersionRecord {
+        const NAME: &'static str = "KRaftVersionRecord";
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 0);
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 0));
+    }
+
+    impl KafkaDecode for KRaftVersionRecord {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            let version_value = decoder.read_i16()?;
+            let k_raft_version = decoder.read_i16()?;
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
+
+            Ok(Self {
+                version: version_value,
+                k_raft_version,
+                unknown_tagged_fields,
+            })
+        }
+    }
+
+    impl KafkaEncode for KRaftVersionRecord {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            encoder.write_i16(self.version)?;
+            encoder.write_i16(self.k_raft_version)?;
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "KRaftVersionRecord",
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+}
+
+/// `LeaderChangeMessage` and every struct it declares, under upstream's own names.
+///
+/// [`LeaderChangeMessage`](crate::LeaderChangeMessage) is re-exported flat, so this path never has to be
+/// written to name the message itself.
+pub mod leader_change_message {
+    use kafka_wire_core::{
+        ApiVersion, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
+        KafkaEncode, TaggedFields, Uuid, VersionRange,
+    };
+
+    use crate::KafkaMessage;
+
+    /// `Voter` as declared by the `LeaderChangeMessage` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    pub struct Voter {
+        /// The ID of the voter.
+        pub voter_id: i32,
+        /// The directory id of the voter.
+        pub voter_directory_id: Uuid,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl Voter {
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 1));
+
+        fn is_flexible(version: ApiVersion) -> bool {
+            Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+        }
+    }
+
+    impl KafkaDecode for Voter {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            let voter_id = decoder.read_i32()?;
+            let voter_directory_id = if version.value() >= 1 {
+                decoder.read_uuid()?
+            } else {
+                Uuid::ZERO
+            };
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
+
+            Ok(Self {
+                voter_id,
+                voter_directory_id,
+                unknown_tagged_fields,
+            })
+        }
+    }
+
+    impl KafkaEncode for Voter {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            encoder.write_i32(self.voter_id)?;
+            if version.value() >= 1 {
+                encoder.write_uuid(self.voter_directory_id)?;
+            }
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "Voter",
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+
+    /// `LeaderChangeMessage` as declared by the `LeaderChangeMessage` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    pub struct LeaderChangeMessage {
+        /// The version of the leader change message.
+        pub version: i16,
+        /// The ID of the newly elected leader.
+        pub leader_id: i32,
+        /// The set of voters in the quorum for this epoch.
+        pub voters: Vec<Voter>,
+        /// The voters who voted for the leader at the time of election.
+        pub granting_voters: Vec<Voter>,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl KafkaMessage for LeaderChangeMessage {
+        const NAME: &'static str = "LeaderChangeMessage";
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 1);
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 1));
+    }
+
+    impl KafkaDecode for LeaderChangeMessage {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            let version_value = decoder.read_i16()?;
+            let leader_id = decoder.read_i32()?;
+            let voters = {
+                let length = decoder.read_compact_array_len()?;
+                decoder.read_vec(length, |decoder| Voter::decode(decoder, version))?
+            };
+            let granting_voters = {
+                let length = decoder.read_compact_array_len()?;
+                decoder.read_vec(length, |decoder| Voter::decode(decoder, version))?
+            };
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
+
+            Ok(Self {
+                version: version_value,
+                leader_id,
+                voters,
+                granting_voters,
+                unknown_tagged_fields,
+            })
+        }
+    }
+
+    impl KafkaEncode for LeaderChangeMessage {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            encoder.write_i16(self.version)?;
+            encoder.write_i32(self.leader_id)?;
+            encoder.write_compact_array_len(self.voters.len())?;
+            for value in &self.voters {
+                value.encode(encoder, version)?;
+            }
+            encoder.write_compact_array_len(self.granting_voters.len())?;
+            for value in &self.granting_voters {
+                value.encode(encoder, version)?;
+            }
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "LeaderChangeMessage",
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+}
+
+/// `RequestHeader` and every struct it declares, under upstream's own names.
+///
+/// [`RequestHeader`](crate::RequestHeader) is re-exported flat, so this path never has to be
+/// written to name the message itself.
+pub mod request_header {
+    use kafka_wire_core::{
+        ApiVersion, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
+        KafkaEncode, StrBytes, TaggedFields, VersionRange,
+    };
+
+    use crate::KafkaMessage;
+
+    /// `RequestHeader` as declared by the `RequestHeader` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Eq, PartialEq)]
+    pub struct RequestHeader {
+        /// The API key of this request.
+        pub request_api_key: i16,
+        /// The API version of this request.
+        pub request_api_version: i16,
+        /// The correlation ID of this request.
+        pub correlation_id: i32,
+        /// The client ID string.
+        pub client_id: Option<StrBytes>,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl KafkaMessage for RequestHeader {
+        const NAME: &'static str = "RequestHeader";
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(1, 2);
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(2, 2));
+    }
+
+    impl Default for RequestHeader {
+        fn default() -> Self {
+            Self {
+                request_api_key: 0,
+                request_api_version: 0,
+                correlation_id: 0,
+                client_id: Some(StrBytes::default()),
+                unknown_tagged_fields: TaggedFields::default(),
+            }
+        }
+    }
+
+    impl KafkaDecode for RequestHeader {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            let request_api_key = decoder.read_i16()?;
+            let request_api_version = decoder.read_i16()?;
+            let correlation_id = decoder.read_i32()?;
+            let client_id = decoder.read_nullable_string()?;
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
+
+            Ok(Self {
+                request_api_key,
+                request_api_version,
+                correlation_id,
+                client_id,
+                unknown_tagged_fields,
+            })
+        }
+    }
+
+    impl KafkaEncode for RequestHeader {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            encoder.write_i16(self.request_api_key)?;
+            encoder.write_i16(self.request_api_version)?;
+            encoder.write_i32(self.correlation_id)?;
+            encoder.write_nullable_string(self.client_id.as_ref())?;
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "RequestHeader",
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+}
+
+/// `ResponseHeader` and every struct it declares, under upstream's own names.
+///
+/// [`ResponseHeader`](crate::ResponseHeader) is re-exported flat, so this path never has to be
+/// written to name the message itself.
+pub mod response_header {
+    use kafka_wire_core::{
+        ApiVersion, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
+        KafkaEncode, TaggedFields, VersionRange,
+    };
+
+    use crate::KafkaMessage;
+
+    /// `ResponseHeader` as declared by the `ResponseHeader` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    pub struct ResponseHeader {
+        /// The correlation ID of this response.
+        pub correlation_id: i32,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl KafkaMessage for ResponseHeader {
+        const NAME: &'static str = "ResponseHeader";
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 1);
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(1, 1));
+    }
+
+    impl KafkaDecode for ResponseHeader {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            let correlation_id = decoder.read_i32()?;
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
+
+            Ok(Self {
+                correlation_id,
+                unknown_tagged_fields,
+            })
+        }
+    }
+
+    impl KafkaEncode for ResponseHeader {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            encoder.write_i32(self.correlation_id)?;
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "ResponseHeader",
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+}
+
+/// `SnapshotFooterRecord` and every struct it declares, under upstream's own names.
+///
+/// [`SnapshotFooterRecord`](crate::SnapshotFooterRecord) is re-exported flat, so this path never has to be
+/// written to name the message itself.
+pub mod snapshot_footer_record {
+    use kafka_wire_core::{
+        ApiVersion, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
+        KafkaEncode, TaggedFields, VersionRange,
+    };
+
+    use crate::KafkaMessage;
+
+    /// `SnapshotFooterRecord` as declared by the `SnapshotFooterRecord` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    pub struct SnapshotFooterRecord {
+        /// The version of the snapshot footer record.
+        pub version: i16,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl KafkaMessage for SnapshotFooterRecord {
+        const NAME: &'static str = "SnapshotFooterRecord";
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 0);
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 0));
+    }
+
+    impl KafkaDecode for SnapshotFooterRecord {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            let version_value = decoder.read_i16()?;
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
+
+            Ok(Self {
+                version: version_value,
+                unknown_tagged_fields,
+            })
+        }
+    }
+
+    impl KafkaEncode for SnapshotFooterRecord {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            encoder.write_i16(self.version)?;
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "SnapshotFooterRecord",
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+}
+
+/// `SnapshotHeaderRecord` and every struct it declares, under upstream's own names.
+///
+/// [`SnapshotHeaderRecord`](crate::SnapshotHeaderRecord) is re-exported flat, so this path never has to be
+/// written to name the message itself.
+pub mod snapshot_header_record {
+    use kafka_wire_core::{
+        ApiVersion, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
+        KafkaEncode, TaggedFields, VersionRange,
+    };
+
+    use crate::KafkaMessage;
+
+    /// `SnapshotHeaderRecord` as declared by the `SnapshotHeaderRecord` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    pub struct SnapshotHeaderRecord {
+        /// The version of the snapshot header record.
+        pub version: i16,
+        /// The append time of the last record from the log contained in this snapshot.
+        pub last_contained_log_timestamp: i64,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl KafkaMessage for SnapshotHeaderRecord {
+        const NAME: &'static str = "SnapshotHeaderRecord";
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 0);
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 0));
+    }
+
+    impl KafkaDecode for SnapshotHeaderRecord {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            let version_value = decoder.read_i16()?;
+            let last_contained_log_timestamp = decoder.read_i64()?;
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
+
+            Ok(Self {
+                version: version_value,
+                last_contained_log_timestamp,
+                unknown_tagged_fields,
+            })
+        }
+    }
+
+    impl KafkaEncode for SnapshotHeaderRecord {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            encoder.write_i16(self.version)?;
+            encoder.write_i64(self.last_contained_log_timestamp)?;
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "SnapshotHeaderRecord",
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+}
+
+/// `VotersRecord` and every struct it declares, under upstream's own names.
+///
+/// [`VotersRecord`](crate::VotersRecord) is re-exported flat, so this path never has to be
+/// written to name the message itself.
+pub mod voters_record {
+    use kafka_wire_core::{
+        ApiVersion, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
+        KafkaEncode, StrBytes, TaggedFields, Uuid, VersionRange,
+    };
+
+    use crate::KafkaMessage;
+
+    /// `Voter` as declared by the `VotersRecord` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    pub struct Voter {
+        /// The replica id of the voter in the topic partition.
+        pub voter_id: i32,
+        /// The directory id of the voter in the topic partition.
+        pub voter_directory_id: Uuid,
+        /// The endpoint that can be used to communicate with the voter.
+        pub endpoints: Vec<Endpoint>,
+        /// The range of versions of the protocol that the replica supports.
+        pub k_raft_version_feature: KRaftVersionFeature,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl Voter {
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 0));
+
+        fn is_flexible(version: ApiVersion) -> bool {
+            Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+        }
+    }
+
+    impl KafkaDecode for Voter {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            let voter_id = decoder.read_i32()?;
+            let voter_directory_id = decoder.read_uuid()?;
+            let endpoints = {
+                let length = decoder.read_compact_array_len()?;
+                decoder.read_vec(length, |decoder| Endpoint::decode(decoder, version))?
+            };
+            let k_raft_version_feature = KRaftVersionFeature::decode(decoder, version)?;
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
+
+            Ok(Self {
+                voter_id,
+                voter_directory_id,
+                endpoints,
+                k_raft_version_feature,
+                unknown_tagged_fields,
+            })
+        }
+    }
+
+    impl KafkaEncode for Voter {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            encoder.write_i32(self.voter_id)?;
             encoder.write_uuid(self.voter_directory_id)?;
-        }
+            encoder.write_compact_array_len(self.endpoints.len())?;
+            for value in &self.endpoints {
+                value.encode(encoder, version)?;
+            }
+            self.k_raft_version_feature.encode(encoder, version)?;
 
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: "LeaderChangeMessageVoter",
-                version,
-            });
-        }
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "Voter",
+                    version,
+                });
+            }
 
-        Ok(())
-    }
-}
-
-/// `LeaderChangeMessage` as declared by the `LeaderChangeMessage` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct LeaderChangeMessage {
-    /// The version of the leader change message.
-    pub version: i16,
-    /// The ID of the newly elected leader.
-    pub leader_id: i32,
-    /// The set of voters in the quorum for this epoch.
-    pub voters: Vec<LeaderChangeMessageVoter>,
-    /// The voters who voted for the leader at the time of election.
-    pub granting_voters: Vec<LeaderChangeMessageVoter>,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
-
-impl KafkaMessage for LeaderChangeMessage {
-    const NAME: &'static str = "LeaderChangeMessage";
-    const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 1);
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 1));
-}
-
-impl KafkaDecode for LeaderChangeMessage {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        let version_value = decoder.read_i16()?;
-        let leader_id = decoder.read_i32()?;
-        let voters = {
-            let length = decoder.read_compact_array_len()?;
-            decoder.read_vec(length, |decoder| {
-                LeaderChangeMessageVoter::decode(decoder, version)
-            })?
-        };
-        let granting_voters = {
-            let length = decoder.read_compact_array_len()?;
-            decoder.read_vec(length, |decoder| {
-                LeaderChangeMessageVoter::decode(decoder, version)
-            })?
-        };
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
-
-        Ok(Self {
-            version: version_value,
-            leader_id,
-            voters,
-            granting_voters,
-            unknown_tagged_fields,
-        })
-    }
-}
-
-impl KafkaEncode for LeaderChangeMessage {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        encoder.write_i16(self.version)?;
-        encoder.write_i32(self.leader_id)?;
-        encoder.write_compact_array_len(self.voters.len())?;
-        for value in &self.voters {
-            value.encode(encoder, version)?;
-        }
-        encoder.write_compact_array_len(self.granting_voters.len())?;
-        for value in &self.granting_voters {
-            value.encode(encoder, version)?;
-        }
-
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: "LeaderChangeMessage",
-                version,
-            });
-        }
-
-        Ok(())
-    }
-}
-
-/// `RequestHeader` as declared by the `RequestHeader` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct RequestHeader {
-    /// The API key of this request.
-    pub request_api_key: i16,
-    /// The API version of this request.
-    pub request_api_version: i16,
-    /// The correlation ID of this request.
-    pub correlation_id: i32,
-    /// The client ID string.
-    pub client_id: Option<StrBytes>,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
-
-impl KafkaMessage for RequestHeader {
-    const NAME: &'static str = "RequestHeader";
-    const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(1, 2);
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(2, 2));
-}
-
-impl Default for RequestHeader {
-    fn default() -> Self {
-        Self {
-            request_api_key: 0,
-            request_api_version: 0,
-            correlation_id: 0,
-            client_id: Some(StrBytes::default()),
-            unknown_tagged_fields: TaggedFields::default(),
+            Ok(())
         }
     }
-}
 
-impl KafkaDecode for RequestHeader {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        let request_api_key = decoder.read_i16()?;
-        let request_api_version = decoder.read_i16()?;
-        let correlation_id = decoder.read_i32()?;
-        let client_id = decoder.read_nullable_string()?;
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
-
-        Ok(Self {
-            request_api_key,
-            request_api_version,
-            correlation_id,
-            client_id,
-            unknown_tagged_fields,
-        })
+    /// `Endpoint` as declared by the `VotersRecord` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    pub struct Endpoint {
+        /// The name of the endpoint.
+        pub name: StrBytes,
+        /// The hostname.
+        pub host: StrBytes,
+        /// The port.
+        pub port: u16,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
     }
-}
 
-impl KafkaEncode for RequestHeader {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        encoder.write_i16(self.request_api_key)?;
-        encoder.write_i16(self.request_api_version)?;
-        encoder.write_i32(self.correlation_id)?;
-        encoder.write_nullable_string(self.client_id.as_ref())?;
+    impl Endpoint {
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 0));
 
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: "RequestHeader",
-                version,
-            });
+        fn is_flexible(version: ApiVersion) -> bool {
+            Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
         }
-
-        Ok(())
     }
-}
 
-/// `ResponseHeader` as declared by the `ResponseHeader` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct ResponseHeader {
-    /// The correlation ID of this response.
-    pub correlation_id: i32,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
+    impl KafkaDecode for Endpoint {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            let name = decoder.read_compact_string()?;
+            let host = decoder.read_compact_string()?;
+            let port = decoder.read_u16()?;
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
 
-impl KafkaMessage for ResponseHeader {
-    const NAME: &'static str = "ResponseHeader";
-    const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 1);
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(1, 1));
-}
-
-impl KafkaDecode for ResponseHeader {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        let correlation_id = decoder.read_i32()?;
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
-
-        Ok(Self {
-            correlation_id,
-            unknown_tagged_fields,
-        })
-    }
-}
-
-impl KafkaEncode for ResponseHeader {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        encoder.write_i32(self.correlation_id)?;
-
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: "ResponseHeader",
-                version,
-            });
+            Ok(Self {
+                name,
+                host,
+                port,
+                unknown_tagged_fields,
+            })
         }
-
-        Ok(())
     }
-}
 
-/// `SnapshotFooterRecord` as declared by the `SnapshotFooterRecord` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct SnapshotFooterRecord {
-    /// The version of the snapshot footer record.
-    pub version: i16,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
+    impl KafkaEncode for Endpoint {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            encoder.write_compact_string(&self.name)?;
+            encoder.write_compact_string(&self.host)?;
+            encoder.write_u16(self.port)?;
 
-impl KafkaMessage for SnapshotFooterRecord {
-    const NAME: &'static str = "SnapshotFooterRecord";
-    const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 0);
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 0));
-}
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "Endpoint",
+                    version,
+                });
+            }
 
-impl KafkaDecode for SnapshotFooterRecord {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        let version_value = decoder.read_i16()?;
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
-
-        Ok(Self {
-            version: version_value,
-            unknown_tagged_fields,
-        })
-    }
-}
-
-impl KafkaEncode for SnapshotFooterRecord {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        encoder.write_i16(self.version)?;
-
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: "SnapshotFooterRecord",
-                version,
-            });
+            Ok(())
         }
-
-        Ok(())
     }
-}
 
-/// `SnapshotHeaderRecord` as declared by the `SnapshotHeaderRecord` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct SnapshotHeaderRecord {
-    /// The version of the snapshot header record.
-    pub version: i16,
-    /// The append time of the last record from the log contained in this snapshot.
-    pub last_contained_log_timestamp: i64,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
-
-impl KafkaMessage for SnapshotHeaderRecord {
-    const NAME: &'static str = "SnapshotHeaderRecord";
-    const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 0);
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 0));
-}
-
-impl KafkaDecode for SnapshotHeaderRecord {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        let version_value = decoder.read_i16()?;
-        let last_contained_log_timestamp = decoder.read_i64()?;
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
-
-        Ok(Self {
-            version: version_value,
-            last_contained_log_timestamp,
-            unknown_tagged_fields,
-        })
+    /// `KRaftVersionFeature` as declared by the `VotersRecord` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    pub struct KRaftVersionFeature {
+        /// The minimum supported `KRaft` protocol version.
+        pub min_supported_version: i16,
+        /// The maximum supported `KRaft` protocol version.
+        pub max_supported_version: i16,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
     }
-}
 
-impl KafkaEncode for SnapshotHeaderRecord {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        encoder.write_i16(self.version)?;
-        encoder.write_i64(self.last_contained_log_timestamp)?;
+    impl KRaftVersionFeature {
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 0));
 
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: "SnapshotHeaderRecord",
-                version,
-            });
+        fn is_flexible(version: ApiVersion) -> bool {
+            Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
         }
-
-        Ok(())
     }
-}
 
-/// `Voter` as declared by the `VotersRecord` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct VotersRecordVoter {
-    /// The replica id of the voter in the topic partition.
-    pub voter_id: i32,
-    /// The directory id of the voter in the topic partition.
-    pub voter_directory_id: Uuid,
-    /// The endpoint that can be used to communicate with the voter.
-    pub endpoints: Vec<VotersRecordEndpoint>,
-    /// The range of versions of the protocol that the replica supports.
-    pub k_raft_version_feature: VotersRecordKRaftVersionFeature,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
+    impl KafkaDecode for KRaftVersionFeature {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            let min_supported_version = decoder.read_i16()?;
+            let max_supported_version = decoder.read_i16()?;
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
 
-impl VotersRecordVoter {
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 0));
-
-    fn is_flexible(version: ApiVersion) -> bool {
-        Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
-    }
-}
-
-impl KafkaDecode for VotersRecordVoter {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        let voter_id = decoder.read_i32()?;
-        let voter_directory_id = decoder.read_uuid()?;
-        let endpoints = {
-            let length = decoder.read_compact_array_len()?;
-            decoder.read_vec(length, |decoder| {
-                VotersRecordEndpoint::decode(decoder, version)
-            })?
-        };
-        let k_raft_version_feature = VotersRecordKRaftVersionFeature::decode(decoder, version)?;
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
-
-        Ok(Self {
-            voter_id,
-            voter_directory_id,
-            endpoints,
-            k_raft_version_feature,
-            unknown_tagged_fields,
-        })
-    }
-}
-
-impl KafkaEncode for VotersRecordVoter {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        encoder.write_i32(self.voter_id)?;
-        encoder.write_uuid(self.voter_directory_id)?;
-        encoder.write_compact_array_len(self.endpoints.len())?;
-        for value in &self.endpoints {
-            value.encode(encoder, version)?;
+            Ok(Self {
+                min_supported_version,
+                max_supported_version,
+                unknown_tagged_fields,
+            })
         }
-        self.k_raft_version_feature.encode(encoder, version)?;
+    }
 
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: "VotersRecordVoter",
-                version,
-            });
+    impl KafkaEncode for KRaftVersionFeature {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            encoder.write_i16(self.min_supported_version)?;
+            encoder.write_i16(self.max_supported_version)?;
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "KRaftVersionFeature",
+                    version,
+                });
+            }
+
+            Ok(())
         }
-
-        Ok(())
     }
-}
 
-/// `Endpoint` as declared by the `VotersRecord` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct VotersRecordEndpoint {
-    /// The name of the endpoint.
-    pub name: StrBytes,
-    /// The hostname.
-    pub host: StrBytes,
-    /// The port.
-    pub port: u16,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
-
-impl VotersRecordEndpoint {
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 0));
-
-    fn is_flexible(version: ApiVersion) -> bool {
-        Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+    /// `VotersRecord` as declared by the `VotersRecord` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    pub struct VotersRecord {
+        /// The version of the voters record.
+        pub version: i16,
+        /// The set of voters in the quorum for this epoch.
+        pub voters: Vec<Voter>,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
     }
-}
 
-impl KafkaDecode for VotersRecordEndpoint {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        let name = decoder.read_compact_string()?;
-        let host = decoder.read_compact_string()?;
-        let port = decoder.read_u16()?;
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
-
-        Ok(Self {
-            name,
-            host,
-            port,
-            unknown_tagged_fields,
-        })
+    impl KafkaMessage for VotersRecord {
+        const NAME: &'static str = "VotersRecord";
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 0);
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 0));
     }
-}
 
-impl KafkaEncode for VotersRecordEndpoint {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        encoder.write_compact_string(&self.name)?;
-        encoder.write_compact_string(&self.host)?;
-        encoder.write_u16(self.port)?;
+    impl KafkaDecode for VotersRecord {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            let version_value = decoder.read_i16()?;
+            let voters = {
+                let length = decoder.read_compact_array_len()?;
+                decoder.read_vec(length, |decoder| Voter::decode(decoder, version))?
+            };
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
 
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: "VotersRecordEndpoint",
-                version,
-            });
+            Ok(Self {
+                version: version_value,
+                voters,
+                unknown_tagged_fields,
+            })
         }
-
-        Ok(())
     }
-}
 
-/// `KRaftVersionFeature` as declared by the `VotersRecord` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct VotersRecordKRaftVersionFeature {
-    /// The minimum supported `KRaft` protocol version.
-    pub min_supported_version: i16,
-    /// The maximum supported `KRaft` protocol version.
-    pub max_supported_version: i16,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
+    impl KafkaEncode for VotersRecord {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            encoder.write_i16(self.version)?;
+            encoder.write_compact_array_len(self.voters.len())?;
+            for value in &self.voters {
+                value.encode(encoder, version)?;
+            }
 
-impl VotersRecordKRaftVersionFeature {
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 0));
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "VotersRecord",
+                    version,
+                });
+            }
 
-    fn is_flexible(version: ApiVersion) -> bool {
-        Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
-    }
-}
-
-impl KafkaDecode for VotersRecordKRaftVersionFeature {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        let min_supported_version = decoder.read_i16()?;
-        let max_supported_version = decoder.read_i16()?;
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
-
-        Ok(Self {
-            min_supported_version,
-            max_supported_version,
-            unknown_tagged_fields,
-        })
-    }
-}
-
-impl KafkaEncode for VotersRecordKRaftVersionFeature {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        encoder.write_i16(self.min_supported_version)?;
-        encoder.write_i16(self.max_supported_version)?;
-
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: "VotersRecordKRaftVersionFeature",
-                version,
-            });
+            Ok(())
         }
-
-        Ok(())
     }
 }
 
-/// `VotersRecord` as declared by the `VotersRecord` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct VotersRecord {
-    /// The version of the voters record.
-    pub version: i16,
-    /// The set of voters in the quorum for this epoch.
-    pub voters: Vec<VotersRecordVoter>,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
-
-impl KafkaMessage for VotersRecord {
-    const NAME: &'static str = "VotersRecord";
-    const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 0);
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 0));
-}
-
-impl KafkaDecode for VotersRecord {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        let version_value = decoder.read_i16()?;
-        let voters = {
-            let length = decoder.read_compact_array_len()?;
-            decoder.read_vec(length, |decoder| {
-                VotersRecordVoter::decode(decoder, version)
-            })?
-        };
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
-
-        Ok(Self {
-            version: version_value,
-            voters,
-            unknown_tagged_fields,
-        })
-    }
-}
-
-impl KafkaEncode for VotersRecord {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        encoder.write_i16(self.version)?;
-        encoder.write_compact_array_len(self.voters.len())?;
-        for value in &self.voters {
-            value.encode(encoder, version)?;
-        }
-
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: "VotersRecord",
-                version,
-            });
-        }
-
-        Ok(())
-    }
-}
+pub use aborted_txn::AbortedTxn;
+pub use consumer_protocol_assignment::ConsumerProtocolAssignment;
+pub use consumer_protocol_subscription::ConsumerProtocolSubscription;
+pub use control_record_type_schema::ControlRecordTypeSchema;
+pub use default_principal_data::DefaultPrincipalData;
+pub use end_txn_marker::EndTxnMarker;
+pub use k_raft_version_record::KRaftVersionRecord;
+pub use leader_change_message::LeaderChangeMessage;
+pub use request_header::RequestHeader;
+pub use response_header::ResponseHeader;
+pub use snapshot_footer_record::SnapshotFooterRecord;
+pub use snapshot_header_record::SnapshotHeaderRecord;
+pub use voters_record::VotersRecord;

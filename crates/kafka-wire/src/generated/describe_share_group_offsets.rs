@@ -5,563 +5,586 @@
 //! Request SHA-256: `f1ff3872ed908875237c4f69a281b1fe07899837c57198b35497d343fce75021`.
 //! Response SHA-256: `5da70be446cd41ddf1de9d2e95779d43c606113bf633d89c3d492c69e240a4cb`.
 
-use kafka_wire_core::{
-    ApiKey, ApiVersion, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
-    KafkaEncode, StrBytes, TaggedFields, Uuid, VersionRange,
-};
+/// `DescribeShareGroupOffsetsRequest` and every struct it declares, under upstream's own names.
+///
+/// [`DescribeShareGroupOffsetsRequest`](crate::DescribeShareGroupOffsetsRequest) is re-exported flat, so this path never has to be
+/// written to name the message itself.
+pub mod describe_share_group_offsets_request {
+    use kafka_wire_core::{
+        ApiKey, ApiVersion, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
+        KafkaEncode, StrBytes, TaggedFields, VersionRange,
+    };
 
-use crate::{
-    KafkaMessage, KafkaRequest, KafkaResponse, MessageDescriptor, MessageDirection,
-    RequestResponsePair,
-};
+    use crate::{KafkaMessage, KafkaRequest, RequestResponsePair};
 
-/// `DescribeShareGroupOffsetsRequestGroup` as declared by the `DescribeShareGroupOffsets` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct DescribeShareGroupOffsetsRequestGroup {
-    /// The group identifier.
-    pub group_id: StrBytes,
-    /// The topics to describe offsets for, or null for all topic-partitions.
-    pub topics: Option<Vec<DescribeShareGroupOffsetsRequestTopic>>,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
-
-impl DescribeShareGroupOffsetsRequestGroup {
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 1));
-
-    fn is_flexible(version: ApiVersion) -> bool {
-        Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+    /// `DescribeShareGroupOffsetsRequestGroup` as declared by the `DescribeShareGroupOffsets` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Eq, PartialEq)]
+    pub struct DescribeShareGroupOffsetsRequestGroup {
+        /// The group identifier.
+        pub group_id: StrBytes,
+        /// The topics to describe offsets for, or null for all topic-partitions.
+        pub topics: Option<Vec<DescribeShareGroupOffsetsRequestTopic>>,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
     }
-}
 
-impl Default for DescribeShareGroupOffsetsRequestGroup {
-    fn default() -> Self {
-        Self {
-            group_id: StrBytes::default(),
-            topics: Some(Vec::new()),
-            unknown_tagged_fields: TaggedFields::default(),
+    impl DescribeShareGroupOffsetsRequestGroup {
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 1));
+
+        fn is_flexible(version: ApiVersion) -> bool {
+            Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
         }
     }
-}
 
-impl KafkaDecode for DescribeShareGroupOffsetsRequestGroup {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        let group_id = decoder.read_compact_string()?;
-        let topics = {
-            let length = decoder.read_compact_nullable_array_len()?;
-            length
-                .map(|length| {
-                    decoder.read_vec(length, |decoder| {
-                        DescribeShareGroupOffsetsRequestTopic::decode(decoder, version)
-                    })
-                })
-                .transpose()?
-        };
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
-
-        Ok(Self {
-            group_id,
-            topics,
-            unknown_tagged_fields,
-        })
-    }
-}
-
-impl KafkaEncode for DescribeShareGroupOffsetsRequestGroup {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        encoder.write_compact_string(&self.group_id)?;
-        encoder.write_compact_nullable_array_len(self.topics.as_ref().map(Vec::len))?;
-        if let Some(values) = &self.topics {
-            for value in values {
-                value.encode(encoder, version)?;
+    impl Default for DescribeShareGroupOffsetsRequestGroup {
+        fn default() -> Self {
+            Self {
+                group_id: StrBytes::default(),
+                topics: Some(Vec::new()),
+                unknown_tagged_fields: TaggedFields::default(),
             }
         }
+    }
 
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: "DescribeShareGroupOffsetsRequestGroup",
-                version,
-            });
+    impl KafkaDecode for DescribeShareGroupOffsetsRequestGroup {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            let group_id = decoder.read_compact_string()?;
+            let topics = {
+                let length = decoder.read_compact_nullable_array_len()?;
+                length
+                    .map(|length| {
+                        decoder.read_vec(length, |decoder| {
+                            DescribeShareGroupOffsetsRequestTopic::decode(decoder, version)
+                        })
+                    })
+                    .transpose()?
+            };
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
+
+            Ok(Self {
+                group_id,
+                topics,
+                unknown_tagged_fields,
+            })
         }
-
-        Ok(())
     }
-}
 
-/// `DescribeShareGroupOffsetsRequestTopic` as declared by the `DescribeShareGroupOffsets` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct DescribeShareGroupOffsetsRequestTopic {
-    /// The topic name.
-    pub topic_name: StrBytes,
-    /// The partitions.
-    pub partitions: Vec<i32>,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
+    impl KafkaEncode for DescribeShareGroupOffsetsRequestGroup {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            encoder.write_compact_string(&self.group_id)?;
+            encoder.write_compact_nullable_array_len(self.topics.as_ref().map(Vec::len))?;
+            if let Some(values) = &self.topics {
+                for value in values {
+                    value.encode(encoder, version)?;
+                }
+            }
 
-impl DescribeShareGroupOffsetsRequestTopic {
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 1));
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "DescribeShareGroupOffsetsRequestGroup",
+                    version,
+                });
+            }
 
-    fn is_flexible(version: ApiVersion) -> bool {
-        Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
-    }
-}
-
-impl KafkaDecode for DescribeShareGroupOffsetsRequestTopic {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        let topic_name = decoder.read_compact_string()?;
-        let partitions = {
-            let length = decoder.read_compact_array_len()?;
-            decoder.read_vec(length, Decoder::read_i32)?
-        };
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
-
-        Ok(Self {
-            topic_name,
-            partitions,
-            unknown_tagged_fields,
-        })
-    }
-}
-
-impl KafkaEncode for DescribeShareGroupOffsetsRequestTopic {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        encoder.write_compact_string(&self.topic_name)?;
-        encoder.write_compact_array_len(self.partitions.len())?;
-        for value in &self.partitions {
-            encoder.write_i32(*value)?;
+            Ok(())
         }
+    }
 
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: "DescribeShareGroupOffsetsRequestTopic",
-                version,
-            });
+    /// `DescribeShareGroupOffsetsRequestTopic` as declared by the `DescribeShareGroupOffsets` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    pub struct DescribeShareGroupOffsetsRequestTopic {
+        /// The topic name.
+        pub topic_name: StrBytes,
+        /// The partitions.
+        pub partitions: Vec<i32>,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl DescribeShareGroupOffsetsRequestTopic {
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 1));
+
+        fn is_flexible(version: ApiVersion) -> bool {
+            Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
         }
-
-        Ok(())
     }
-}
 
-/// Request body for the `DescribeShareGroupOffsets` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct DescribeShareGroupOffsetsRequest {
-    /// The groups to describe offsets for.
-    pub groups: Vec<DescribeShareGroupOffsetsRequestGroup>,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
+    impl KafkaDecode for DescribeShareGroupOffsetsRequestTopic {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            let topic_name = decoder.read_compact_string()?;
+            let partitions = {
+                let length = decoder.read_compact_array_len()?;
+                decoder.read_vec(length, Decoder::read_i32)?
+            };
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
 
-impl KafkaMessage for DescribeShareGroupOffsetsRequest {
-    const NAME: &'static str = "DescribeShareGroupOffsetsRequest";
-    const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 1);
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 1));
-}
-
-impl KafkaRequest for DescribeShareGroupOffsetsRequest {
-    const API_KEY: ApiKey = ApiKey::new(90);
-}
-
-impl RequestResponsePair for DescribeShareGroupOffsetsRequest {
-    type Response = DescribeShareGroupOffsetsResponse;
-}
-
-impl KafkaDecode for DescribeShareGroupOffsetsRequest {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        crate::message::ensure_decode_version::<Self>(version)?;
-
-        let groups = {
-            let length = decoder.read_compact_array_len()?;
-            decoder.read_vec(length, |decoder| {
-                DescribeShareGroupOffsetsRequestGroup::decode(decoder, version)
-            })?
-        };
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
-
-        Ok(Self {
-            groups,
-            unknown_tagged_fields,
-        })
-    }
-}
-
-impl KafkaEncode for DescribeShareGroupOffsetsRequest {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        crate::message::ensure_encode_version::<Self>(version)?;
-
-        encoder.write_compact_array_len(self.groups.len())?;
-        for value in &self.groups {
-            value.encode(encoder, version)?;
+            Ok(Self {
+                topic_name,
+                partitions,
+                unknown_tagged_fields,
+            })
         }
+    }
 
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: Self::NAME,
-                version,
-            });
+    impl KafkaEncode for DescribeShareGroupOffsetsRequestTopic {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            encoder.write_compact_string(&self.topic_name)?;
+            encoder.write_compact_array_len(self.partitions.len())?;
+            for value in &self.partitions {
+                encoder.write_i32(*value)?;
+            }
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "DescribeShareGroupOffsetsRequestTopic",
+                    version,
+                });
+            }
+
+            Ok(())
         }
-
-        Ok(())
     }
-}
 
-/// `DescribeShareGroupOffsetsResponseGroup` as declared by the `DescribeShareGroupOffsets` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct DescribeShareGroupOffsetsResponseGroup {
-    /// The group identifier.
-    pub group_id: StrBytes,
-    /// The results for each topic.
-    pub topics: Vec<DescribeShareGroupOffsetsResponseTopic>,
-    /// The group-level error code, or 0 if there was no error.
-    pub error_code: i16,
-    /// The group-level error message, or null if there was no error.
-    pub error_message: Option<StrBytes>,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
-
-impl DescribeShareGroupOffsetsResponseGroup {
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 1));
-
-    fn is_flexible(version: ApiVersion) -> bool {
-        Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+    /// Request body for the `DescribeShareGroupOffsets` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    pub struct DescribeShareGroupOffsetsRequest {
+        /// The groups to describe offsets for.
+        pub groups: Vec<DescribeShareGroupOffsetsRequestGroup>,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
     }
-}
 
-impl KafkaDecode for DescribeShareGroupOffsetsResponseGroup {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        let group_id = decoder.read_compact_string()?;
-        let topics = {
-            let length = decoder.read_compact_array_len()?;
-            decoder.read_vec(length, |decoder| {
-                DescribeShareGroupOffsetsResponseTopic::decode(decoder, version)
-            })?
-        };
-        let error_code = decoder.read_i16()?;
-        let error_message = decoder.read_compact_nullable_string()?;
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
-
-        Ok(Self {
-            group_id,
-            topics,
-            error_code,
-            error_message,
-            unknown_tagged_fields,
-        })
+    impl KafkaMessage for DescribeShareGroupOffsetsRequest {
+        const NAME: &'static str = "DescribeShareGroupOffsetsRequest";
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 1);
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 1));
     }
-}
 
-impl KafkaEncode for DescribeShareGroupOffsetsResponseGroup {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        encoder.write_compact_string(&self.group_id)?;
-        encoder.write_compact_array_len(self.topics.len())?;
-        for value in &self.topics {
-            value.encode(encoder, version)?;
+    impl KafkaRequest for DescribeShareGroupOffsetsRequest {
+        const API_KEY: ApiKey = ApiKey::new(90);
+    }
+
+    impl RequestResponsePair for DescribeShareGroupOffsetsRequest {
+        type Response = super::DescribeShareGroupOffsetsResponse;
+    }
+
+    impl KafkaDecode for DescribeShareGroupOffsetsRequest {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            crate::message::ensure_decode_version::<Self>(version)?;
+
+            let groups = {
+                let length = decoder.read_compact_array_len()?;
+                decoder.read_vec(length, |decoder| {
+                    DescribeShareGroupOffsetsRequestGroup::decode(decoder, version)
+                })?
+            };
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
+
+            Ok(Self {
+                groups,
+                unknown_tagged_fields,
+            })
         }
-        encoder.write_i16(self.error_code)?;
-        encoder.write_compact_nullable_string(self.error_message.as_ref())?;
-
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: "DescribeShareGroupOffsetsResponseGroup",
-                version,
-            });
-        }
-
-        Ok(())
     }
-}
 
-/// `DescribeShareGroupOffsetsResponseTopic` as declared by the `DescribeShareGroupOffsets` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct DescribeShareGroupOffsetsResponseTopic {
-    /// The topic name.
-    pub topic_name: StrBytes,
-    /// The unique topic ID.
-    pub topic_id: Uuid,
-    /// .
-    pub partitions: Vec<DescribeShareGroupOffsetsResponsePartition>,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
+    impl KafkaEncode for DescribeShareGroupOffsetsRequest {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            crate::message::ensure_encode_version::<Self>(version)?;
 
-impl DescribeShareGroupOffsetsResponseTopic {
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 1));
+            encoder.write_compact_array_len(self.groups.len())?;
+            for value in &self.groups {
+                value.encode(encoder, version)?;
+            }
 
-    fn is_flexible(version: ApiVersion) -> bool {
-        Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
-    }
-}
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: Self::NAME,
+                    version,
+                });
+            }
 
-impl KafkaDecode for DescribeShareGroupOffsetsResponseTopic {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        let topic_name = decoder.read_compact_string()?;
-        let topic_id = decoder.read_uuid()?;
-        let partitions = {
-            let length = decoder.read_compact_array_len()?;
-            decoder.read_vec(length, |decoder| {
-                DescribeShareGroupOffsetsResponsePartition::decode(decoder, version)
-            })?
-        };
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
-
-        Ok(Self {
-            topic_name,
-            topic_id,
-            partitions,
-            unknown_tagged_fields,
-        })
-    }
-}
-
-impl KafkaEncode for DescribeShareGroupOffsetsResponseTopic {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        encoder.write_compact_string(&self.topic_name)?;
-        encoder.write_uuid(self.topic_id)?;
-        encoder.write_compact_array_len(self.partitions.len())?;
-        for value in &self.partitions {
-            value.encode(encoder, version)?;
-        }
-
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: "DescribeShareGroupOffsetsResponseTopic",
-                version,
-            });
-        }
-
-        Ok(())
-    }
-}
-
-/// `DescribeShareGroupOffsetsResponsePartition` as declared by the `DescribeShareGroupOffsets` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct DescribeShareGroupOffsetsResponsePartition {
-    /// The partition index.
-    pub partition_index: i32,
-    /// The share-partition start offset.
-    pub start_offset: i64,
-    /// The leader epoch of the partition.
-    pub leader_epoch: i32,
-    /// The share-partition lag.
-    pub lag: i64,
-    /// The partition-level error code, or 0 if there was no error.
-    pub error_code: i16,
-    /// The partition-level error message, or null if there was no error.
-    pub error_message: Option<StrBytes>,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
-
-impl DescribeShareGroupOffsetsResponsePartition {
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 1));
-
-    fn is_flexible(version: ApiVersion) -> bool {
-        Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
-    }
-}
-
-impl Default for DescribeShareGroupOffsetsResponsePartition {
-    fn default() -> Self {
-        Self {
-            partition_index: 0,
-            start_offset: 0,
-            leader_epoch: 0,
-            lag: -1,
-            error_code: 0,
-            error_message: None,
-            unknown_tagged_fields: TaggedFields::default(),
+            Ok(())
         }
     }
 }
 
-impl KafkaDecode for DescribeShareGroupOffsetsResponsePartition {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        let partition_index = decoder.read_i32()?;
-        let start_offset = decoder.read_i64()?;
-        let leader_epoch = decoder.read_i32()?;
-        let lag = if version.value() >= 1 {
-            decoder.read_i64()?
-        } else {
-            -1
-        };
-        let error_code = decoder.read_i16()?;
-        let error_message = decoder.read_compact_nullable_string()?;
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
+/// `DescribeShareGroupOffsetsResponse` and every struct it declares, under upstream's own names.
+///
+/// [`DescribeShareGroupOffsetsResponse`](crate::DescribeShareGroupOffsetsResponse) is re-exported flat, so this path never has to be
+/// written to name the message itself.
+pub mod describe_share_group_offsets_response {
+    use kafka_wire_core::{
+        ApiKey, ApiVersion, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
+        KafkaEncode, StrBytes, TaggedFields, Uuid, VersionRange,
+    };
 
-        Ok(Self {
-            partition_index,
-            start_offset,
-            leader_epoch,
-            lag,
-            error_code,
-            error_message,
-            unknown_tagged_fields,
-        })
+    use crate::{KafkaMessage, KafkaResponse};
+
+    /// `DescribeShareGroupOffsetsResponseGroup` as declared by the `DescribeShareGroupOffsets` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    pub struct DescribeShareGroupOffsetsResponseGroup {
+        /// The group identifier.
+        pub group_id: StrBytes,
+        /// The results for each topic.
+        pub topics: Vec<DescribeShareGroupOffsetsResponseTopic>,
+        /// The group-level error code, or 0 if there was no error.
+        pub error_code: i16,
+        /// The group-level error message, or null if there was no error.
+        pub error_message: Option<StrBytes>,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl DescribeShareGroupOffsetsResponseGroup {
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 1));
+
+        fn is_flexible(version: ApiVersion) -> bool {
+            Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+        }
+    }
+
+    impl KafkaDecode for DescribeShareGroupOffsetsResponseGroup {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            let group_id = decoder.read_compact_string()?;
+            let topics = {
+                let length = decoder.read_compact_array_len()?;
+                decoder.read_vec(length, |decoder| {
+                    DescribeShareGroupOffsetsResponseTopic::decode(decoder, version)
+                })?
+            };
+            let error_code = decoder.read_i16()?;
+            let error_message = decoder.read_compact_nullable_string()?;
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
+
+            Ok(Self {
+                group_id,
+                topics,
+                error_code,
+                error_message,
+                unknown_tagged_fields,
+            })
+        }
+    }
+
+    impl KafkaEncode for DescribeShareGroupOffsetsResponseGroup {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            encoder.write_compact_string(&self.group_id)?;
+            encoder.write_compact_array_len(self.topics.len())?;
+            for value in &self.topics {
+                value.encode(encoder, version)?;
+            }
+            encoder.write_i16(self.error_code)?;
+            encoder.write_compact_nullable_string(self.error_message.as_ref())?;
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "DescribeShareGroupOffsetsResponseGroup",
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+
+    /// `DescribeShareGroupOffsetsResponseTopic` as declared by the `DescribeShareGroupOffsets` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    pub struct DescribeShareGroupOffsetsResponseTopic {
+        /// The topic name.
+        pub topic_name: StrBytes,
+        /// The unique topic ID.
+        pub topic_id: Uuid,
+        /// .
+        pub partitions: Vec<DescribeShareGroupOffsetsResponsePartition>,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl DescribeShareGroupOffsetsResponseTopic {
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 1));
+
+        fn is_flexible(version: ApiVersion) -> bool {
+            Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+        }
+    }
+
+    impl KafkaDecode for DescribeShareGroupOffsetsResponseTopic {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            let topic_name = decoder.read_compact_string()?;
+            let topic_id = decoder.read_uuid()?;
+            let partitions = {
+                let length = decoder.read_compact_array_len()?;
+                decoder.read_vec(length, |decoder| {
+                    DescribeShareGroupOffsetsResponsePartition::decode(decoder, version)
+                })?
+            };
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
+
+            Ok(Self {
+                topic_name,
+                topic_id,
+                partitions,
+                unknown_tagged_fields,
+            })
+        }
+    }
+
+    impl KafkaEncode for DescribeShareGroupOffsetsResponseTopic {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            encoder.write_compact_string(&self.topic_name)?;
+            encoder.write_uuid(self.topic_id)?;
+            encoder.write_compact_array_len(self.partitions.len())?;
+            for value in &self.partitions {
+                value.encode(encoder, version)?;
+            }
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "DescribeShareGroupOffsetsResponseTopic",
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+
+    /// `DescribeShareGroupOffsetsResponsePartition` as declared by the `DescribeShareGroupOffsets` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Eq, PartialEq)]
+    pub struct DescribeShareGroupOffsetsResponsePartition {
+        /// The partition index.
+        pub partition_index: i32,
+        /// The share-partition start offset.
+        pub start_offset: i64,
+        /// The leader epoch of the partition.
+        pub leader_epoch: i32,
+        /// The share-partition lag.
+        pub lag: i64,
+        /// The partition-level error code, or 0 if there was no error.
+        pub error_code: i16,
+        /// The partition-level error message, or null if there was no error.
+        pub error_message: Option<StrBytes>,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl DescribeShareGroupOffsetsResponsePartition {
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 1));
+
+        fn is_flexible(version: ApiVersion) -> bool {
+            Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+        }
+    }
+
+    impl Default for DescribeShareGroupOffsetsResponsePartition {
+        fn default() -> Self {
+            Self {
+                partition_index: 0,
+                start_offset: 0,
+                leader_epoch: 0,
+                lag: -1,
+                error_code: 0,
+                error_message: None,
+                unknown_tagged_fields: TaggedFields::default(),
+            }
+        }
+    }
+
+    impl KafkaDecode for DescribeShareGroupOffsetsResponsePartition {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            let partition_index = decoder.read_i32()?;
+            let start_offset = decoder.read_i64()?;
+            let leader_epoch = decoder.read_i32()?;
+            let lag = if version.value() >= 1 {
+                decoder.read_i64()?
+            } else {
+                -1
+            };
+            let error_code = decoder.read_i16()?;
+            let error_message = decoder.read_compact_nullable_string()?;
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
+
+            Ok(Self {
+                partition_index,
+                start_offset,
+                leader_epoch,
+                lag,
+                error_code,
+                error_message,
+                unknown_tagged_fields,
+            })
+        }
+    }
+
+    impl KafkaEncode for DescribeShareGroupOffsetsResponsePartition {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            encoder.write_i32(self.partition_index)?;
+            encoder.write_i64(self.start_offset)?;
+            encoder.write_i32(self.leader_epoch)?;
+            if version.value() >= 1 {
+                encoder.write_i64(self.lag)?;
+            }
+            encoder.write_i16(self.error_code)?;
+            encoder.write_compact_nullable_string(self.error_message.as_ref())?;
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "DescribeShareGroupOffsetsResponsePartition",
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+
+    /// Response body for the `DescribeShareGroupOffsets` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    pub struct DescribeShareGroupOffsetsResponse {
+        /// The duration in milliseconds for which the request was throttled due to a quota violation, or zero if the request did not violate any quota.
+        pub throttle_time_ms: i32,
+        /// The results for each group.
+        pub groups: Vec<DescribeShareGroupOffsetsResponseGroup>,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl KafkaMessage for DescribeShareGroupOffsetsResponse {
+        const NAME: &'static str = "DescribeShareGroupOffsetsResponse";
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 1);
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 1));
+    }
+
+    impl KafkaResponse for DescribeShareGroupOffsetsResponse {
+        const API_KEY: ApiKey = ApiKey::new(90);
+    }
+
+    impl KafkaDecode for DescribeShareGroupOffsetsResponse {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            crate::message::ensure_decode_version::<Self>(version)?;
+
+            let throttle_time_ms = decoder.read_i32()?;
+            let groups = {
+                let length = decoder.read_compact_array_len()?;
+                decoder.read_vec(length, |decoder| {
+                    DescribeShareGroupOffsetsResponseGroup::decode(decoder, version)
+                })?
+            };
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
+
+            Ok(Self {
+                throttle_time_ms,
+                groups,
+                unknown_tagged_fields,
+            })
+        }
+    }
+
+    impl KafkaEncode for DescribeShareGroupOffsetsResponse {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            crate::message::ensure_encode_version::<Self>(version)?;
+
+            encoder.write_i32(self.throttle_time_ms)?;
+            encoder.write_compact_array_len(self.groups.len())?;
+            for value in &self.groups {
+                value.encode(encoder, version)?;
+            }
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: Self::NAME,
+                    version,
+                });
+            }
+
+            Ok(())
+        }
     }
 }
 
-impl KafkaEncode for DescribeShareGroupOffsetsResponsePartition {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        encoder.write_i32(self.partition_index)?;
-        encoder.write_i64(self.start_offset)?;
-        encoder.write_i32(self.leader_epoch)?;
-        if version.value() >= 1 {
-            encoder.write_i64(self.lag)?;
-        }
-        encoder.write_i16(self.error_code)?;
-        encoder.write_compact_nullable_string(self.error_message.as_ref())?;
+use kafka_wire_core::VersionRange;
 
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: "DescribeShareGroupOffsetsResponsePartition",
-                version,
-            });
-        }
+use crate::{MessageDescriptor, MessageDirection};
 
-        Ok(())
-    }
-}
-
-/// Response body for the `DescribeShareGroupOffsets` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct DescribeShareGroupOffsetsResponse {
-    /// The duration in milliseconds for which the request was throttled due to a quota violation, or zero if the request did not violate any quota.
-    pub throttle_time_ms: i32,
-    /// The results for each group.
-    pub groups: Vec<DescribeShareGroupOffsetsResponseGroup>,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
-
-impl KafkaMessage for DescribeShareGroupOffsetsResponse {
-    const NAME: &'static str = "DescribeShareGroupOffsetsResponse";
-    const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 1);
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 1));
-}
-
-impl KafkaResponse for DescribeShareGroupOffsetsResponse {
-    const API_KEY: ApiKey = ApiKey::new(90);
-}
-
-impl KafkaDecode for DescribeShareGroupOffsetsResponse {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        crate::message::ensure_decode_version::<Self>(version)?;
-
-        let throttle_time_ms = decoder.read_i32()?;
-        let groups = {
-            let length = decoder.read_compact_array_len()?;
-            decoder.read_vec(length, |decoder| {
-                DescribeShareGroupOffsetsResponseGroup::decode(decoder, version)
-            })?
-        };
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
-
-        Ok(Self {
-            throttle_time_ms,
-            groups,
-            unknown_tagged_fields,
-        })
-    }
-}
-
-impl KafkaEncode for DescribeShareGroupOffsetsResponse {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        crate::message::ensure_encode_version::<Self>(version)?;
-
-        encoder.write_i32(self.throttle_time_ms)?;
-        encoder.write_compact_array_len(self.groups.len())?;
-        for value in &self.groups {
-            value.encode(encoder, version)?;
-        }
-
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: Self::NAME,
-                version,
-            });
-        }
-
-        Ok(())
-    }
-}
+pub use describe_share_group_offsets_request::DescribeShareGroupOffsetsRequest;
+pub use describe_share_group_offsets_response::DescribeShareGroupOffsetsResponse;
 
 /// Static metadata for [`DescribeShareGroupOffsetsRequest`].
 pub const DESCRIBE_SHARE_GROUP_OFFSETS_REQUEST_DESCRIPTOR: MessageDescriptor =

@@ -1,4 +1,4 @@
-//! the earlier flat naming rule: what name does a nested struct get, and who owns it?
+//! the module-scoped naming rule: what name does a nested struct get, and who owns it?
 //!
 //! Scenario: lower one message, then read the identities its struct table and
 //! its field types now carry. Every case here fixes a generated type name, and
@@ -6,11 +6,13 @@
 //! consumer that imports it — so each case asserts the name itself, never that
 //! some name was produced.
 //!
-//! The rule has two arms: prefix the owning message, or elide it where upstream
-//! already wrote it. Forty of the pinned corpus's 308 declarations take the
-//! second arm, and a regression that collapsed the rule to a pure prefix would
-//! still emit names — just names 75 characters long with the owner spelled
-//! twice. Both arms are therefore asserted by the names they yield.
+//! The rule has one arm now: keep upstream's spelling, and let the message's
+//! module be the scope. What these cases pin down is that the owner is still
+//! *recorded* even though it no longer appears in the name — it is what selects
+//! the module, so a regression that dropped it would emit two structs into one
+//! module and only surface as rustc `E0428` on generated code. The name and the
+//! owner are therefore asserted separately, and a case where two messages
+//! declare one spelling asserts that they differ by owner and by module alone.
 
 #![allow(clippy::expect_used)]
 
@@ -21,11 +23,11 @@ use kafka_wire_schema::{
 };
 
 #[test]
-fn a_nested_struct_is_named_by_the_message_that_declares_it() {
+fn a_nested_struct_keeps_the_spelling_upstream_gave_it() {
     // API key 0, the message the prior-art analysis makes the scope target. Upstream's field
     // name `TopicData` and its struct name `TopicProduceData` are already
-    // distinct, and only the struct name participates: qualification is by the
-    // owning message, never by the field that carries the reference.
+    // distinct, and only the struct name participates: the emitted name is the
+    // declared one, never the field that carries the reference.
     let message = lower(
         r#"{ "apiKey": 0, "type": "request", "name": "ProduceRequest",
              "validVersions": "0-2", "flexibleVersions": "none",
@@ -41,17 +43,24 @@ fn a_nested_struct_is_named_by_the_message_that_declares_it() {
     assert_eq!(
         emitted(&message),
         vec![
-            ("TopicProduceData", "ProduceRequestTopicProduceData"),
-            ("PartitionProduceData", "ProduceRequestPartitionProduceData"),
+            ("TopicProduceData", "TopicProduceData"),
+            ("PartitionProduceData", "PartitionProduceData"),
         ],
     );
+    // The owner survives the name it no longer prefixes: it is what puts both
+    // of these into `produce_request` rather than beside some other message's
+    // `TopicProduceData`.
+    for declaration in message.structs.declarations() {
+        assert_eq!(declaration.name.owner(), "ProduceRequest");
+    }
 }
 
 #[test]
-fn a_name_upstream_already_qualified_is_not_qualified_twice() {
-    // The stutter-elision arm. Re-prefixing here would emit
-    // `DescribeShareGroupOffsetsResponseDescribeShareGroupOffsetsResponsePartition`
-    // at 75 characters; eliding the repeat is what bounds the corpus at 74.
+fn a_name_upstream_already_qualified_is_left_exactly_as_written() {
+    // Upstream hand-qualifies forty of the corpus's declarations, and this is
+    // the longest of them at 42 characters. the earlier flat naming rule had to detect and elide the
+    // repeat to keep it from becoming 75; the module-scoped naming rule has nothing to elide, so this
+    // spelling is simply the corpus's longest name.
     let message = lower(
         r#"{ "apiKey": 90, "type": "response",
              "name": "DescribeShareGroupOffsetsResponse",
@@ -68,45 +77,29 @@ fn a_name_upstream_already_qualified_is_not_qualified_twice() {
         partition.rust_type(),
         "DescribeShareGroupOffsetsResponsePartition",
     );
-    assert_eq!(partition.qualification(), Qualification::AlreadyQualified);
+    assert_eq!(partition.qualification(), Qualification::ModuleScoped);
     assert_eq!(partition.owner(), "DescribeShareGroupOffsetsResponse");
 }
 
 #[test]
-fn elision_needs_a_name_boundary_rather_than_a_text_prefix() {
+fn a_name_that_merely_resembles_its_owner_is_not_touched_either() {
     // `VoteRequestor` begins with `VoteRequest` as bytes while naming something
-    // else, and a struct spelled exactly like its own message is not qualified
-    // at all by keeping it — it would collide with the message type in the
-    // module the two share. Neither is a leading segment of the OWNER, so
-    // neither is left alone.
-    //
-    // Both do open on the API stem `Vote` at a name boundary, so both take the
-    // stem-deduplicated arm rather than repeating it: the qualified name is the
-    // owner plus what follows the stem. `VoteRequestVoteRequestor` would have
-    // been the alternative, and the corpus shows where that leads — prefixing
-    // the whole owner produced a seventy-character type that said
-    // `DescribeUserScramCredentials` twice.
+    // else. the earlier flat naming rule needed a camel-case boundary test to keep from eliding
+    // there and merging two types; no rule inspects the name at all now, so the
+    // hazard is gone rather than guarded. Both spellings pass through whole.
     let message = lower(
         r#"{ "apiKey": 52, "type": "request", "name": "VoteRequest",
              "validVersions": "0", "flexibleVersions": "0+",
              "fields": [
                { "name": "Requestor", "type": "VoteRequestor", "versions": "0+",
-                 "fields": [ { "name": "Id", "type": "int32", "versions": "0+" } ] },
-               { "name": "Echo", "type": "VoteRequest", "versions": "0+",
                  "fields": [ { "name": "Id", "type": "int32", "versions": "0+" } ] } ] }"#,
     );
 
-    assert_eq!(
-        emitted(&message),
-        vec![
-            ("VoteRequestor", "VoteRequestRequestor"),
-            ("VoteRequest", "VoteRequestRequest"),
-        ],
-    );
+    assert_eq!(emitted(&message), vec![("VoteRequestor", "VoteRequestor")]);
     for declaration in message.structs.declarations() {
         assert_eq!(
             declaration.name.qualification(),
-            Qualification::StemDeduplicated,
+            Qualification::ModuleScoped
         );
     }
 }
@@ -114,8 +107,8 @@ fn elision_needs_a_name_boundary_rather_than_a_text_prefix() {
 #[test]
 fn nesting_depth_never_reaches_the_name() {
     // `AlterPartitionRequest` is the corpus's deepest chain. A struct three
-    // levels down is qualified by its message and nothing else, which bounds
-    // every name at `len(message) + len(struct)` however deep upstream nests.
+    // levels down is spelled exactly as upstream spelled it, which bounds every
+    // generated name at `len(struct)` however deep upstream nests.
     let message = lower(
         r#"{ "apiKey": 56, "type": "request", "name": "AlterPartitionRequest",
              "validVersions": "0-3", "flexibleVersions": "0+",
@@ -131,19 +124,20 @@ fn nesting_depth_never_reaches_the_name() {
     assert_eq!(
         emitted(&message),
         vec![
-            ("TopicData", "AlterPartitionRequestTopicData"),
-            ("PartitionData", "AlterPartitionRequestPartitionData"),
-            ("BrokerState", "AlterPartitionRequestBrokerState"),
+            ("TopicData", "TopicData"),
+            ("PartitionData", "PartitionData"),
+            ("BrokerState", "BrokerState"),
         ],
     );
 }
 
 #[test]
-fn the_two_directions_of_one_api_key_stop_colliding() {
+fn the_two_directions_of_one_api_key_differ_by_module_not_by_spelling() {
     // API key 52, the canonical collision. Upstream declares `PartitionData` in
-    // both directions with genuinely different fields, and `kafka-wire-codegen`
-    // renders both into one module. Before qualification this pair was two
-    // rustc E0428s; the point of the rule is that it is now four types.
+    // both directions with genuinely different fields. Under the earlier flat naming rule they were
+    // two different type names in one module; under the module-scoped naming rule they are the *same*
+    // type name in two different modules — which is why the owner has to survive
+    // qualification, and why the module can never be per API key.
     let request = lower(
         r#"{ "apiKey": 52, "type": "request", "name": "VoteRequest",
              "validVersions": "0-1", "flexibleVersions": "0+",
@@ -163,27 +157,32 @@ fn the_two_directions_of_one_api_key_stop_colliding() {
                      { "name": "VoteGranted", "type": "bool", "versions": "0+" } ] } ] } ] }"#,
     );
 
-    assert_eq!(
-        emitted(&request),
-        vec![
-            ("TopicData", "VoteRequestTopicData"),
-            ("PartitionData", "VoteRequestPartitionData"),
-        ],
-    );
-    assert_eq!(
-        emitted(&response),
-        vec![
-            ("TopicData", "VoteResponseTopicData"),
-            ("PartitionData", "VoteResponsePartitionData"),
-        ],
-    );
+    // Identical spellings, in both directions.
+    let names = vec![
+        ("TopicData", "TopicData"),
+        ("PartitionData", "PartitionData"),
+    ];
+    assert_eq!(emitted(&request), names);
+    assert_eq!(emitted(&response), names);
+
+    // Separated by the owner each declaration records, and by the module that
+    // owner names. Nothing else keeps these four types apart.
+    for declaration in request.structs.declarations() {
+        assert_eq!(declaration.name.owner(), "VoteRequest");
+    }
+    for declaration in response.structs.declarations() {
+        assert_eq!(declaration.name.owner(), "VoteResponse");
+    }
+    assert_eq!(request.name.rust_module(), "vote_request");
+    assert_eq!(response.name.rust_module(), "vote_response");
+    assert_ne!(request.name.rust_module(), response.name.rust_module());
 }
 
 #[test]
 fn a_common_struct_takes_the_ordinary_rule_with_no_special_case() {
     // `commonStructs` is a top-level block of one message file, so it is scoped
-    // to one direction and is not shared with the opposite one. It gets the
-    // same owner qualification an inline declaration gets.
+    // to one direction and is not shared with the opposite one. It lands in the
+    // same module an inline declaration lands in, under the same spelling.
     let message = lower(
         r#"{ "apiKey": 55, "type": "response", "name": "DescribeQuorumResponse",
              "validVersions": "0-2", "flexibleVersions": "0+",
@@ -195,14 +194,12 @@ fn a_common_struct_takes_the_ordinary_rule_with_no_special_case() {
                { "name": "Observers", "type": "[]ReplicaState", "versions": "0+" } ] }"#,
     );
 
+    assert_eq!(message.common_structs[0].name.rust_type(), "ReplicaState");
     assert_eq!(
-        message.common_structs[0].name.rust_type(),
-        "DescribeQuorumResponseReplicaState",
+        message.common_structs[0].name.owner(),
+        "DescribeQuorumResponse",
     );
-    assert_eq!(
-        emitted(&message),
-        vec![("ReplicaState", "DescribeQuorumResponseReplicaState")],
-    );
+    assert_eq!(emitted(&message), vec![("ReplicaState", "ReplicaState")]);
 }
 
 #[test]
@@ -240,7 +237,7 @@ fn the_struct_table_unifies_both_declaration_forms_in_source_order() {
             .expect("an inline declaration must resolve by its upstream spelling")
             .name
             .rust_type(),
-        "ExampleRequestInline",
+        "Inline",
     );
     assert!(message.structs.resolve("Absent").is_none());
 }

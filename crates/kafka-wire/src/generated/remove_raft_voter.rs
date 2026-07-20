@@ -5,183 +5,206 @@
 //! Request SHA-256: `97681ec52ffd4b1e301f0a2f5bf4707abd6c38897854f3d66e6e2ed4d12cce4f`.
 //! Response SHA-256: `feef10a5d76ff26b3be178f0cf50056588e2eff24b22897d8149bd5e726b1e44`.
 
-use kafka_wire_core::{
-    ApiKey, ApiVersion, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
-    KafkaEncode, StrBytes, TaggedFields, Uuid, VersionRange,
-};
+/// `RemoveRaftVoterRequest` and every struct it declares, under upstream's own names.
+///
+/// [`RemoveRaftVoterRequest`](crate::RemoveRaftVoterRequest) is re-exported flat, so this path never has to be
+/// written to name the message itself.
+pub mod remove_raft_voter_request {
+    use kafka_wire_core::{
+        ApiKey, ApiVersion, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
+        KafkaEncode, StrBytes, TaggedFields, Uuid, VersionRange,
+    };
 
-use crate::{
-    KafkaMessage, KafkaRequest, KafkaResponse, MessageDescriptor, MessageDirection,
-    RequestResponsePair,
-};
+    use crate::{KafkaMessage, KafkaRequest, RequestResponsePair};
 
-/// Request body for the `RemoveRaftVoter` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct RemoveRaftVoterRequest {
-    /// The cluster id of the request.
-    pub cluster_id: Option<StrBytes>,
-    /// The replica id of the voter getting removed from the topic partition.
-    pub voter_id: i32,
-    /// The directory id of the voter getting removed from the topic partition.
-    pub voter_directory_id: Uuid,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
+    /// Request body for the `RemoveRaftVoter` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Eq, PartialEq)]
+    pub struct RemoveRaftVoterRequest {
+        /// The cluster id of the request.
+        pub cluster_id: Option<StrBytes>,
+        /// The replica id of the voter getting removed from the topic partition.
+        pub voter_id: i32,
+        /// The directory id of the voter getting removed from the topic partition.
+        pub voter_directory_id: Uuid,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
+    }
 
-impl Default for RemoveRaftVoterRequest {
-    fn default() -> Self {
-        Self {
-            cluster_id: Some(StrBytes::default()),
-            voter_id: 0,
-            voter_directory_id: Uuid::ZERO,
-            unknown_tagged_fields: TaggedFields::default(),
+    impl Default for RemoveRaftVoterRequest {
+        fn default() -> Self {
+            Self {
+                cluster_id: Some(StrBytes::default()),
+                voter_id: 0,
+                voter_directory_id: Uuid::ZERO,
+                unknown_tagged_fields: TaggedFields::default(),
+            }
+        }
+    }
+
+    impl KafkaMessage for RemoveRaftVoterRequest {
+        const NAME: &'static str = "RemoveRaftVoterRequest";
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 0);
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 0));
+    }
+
+    impl KafkaRequest for RemoveRaftVoterRequest {
+        const API_KEY: ApiKey = ApiKey::new(81);
+    }
+
+    impl RequestResponsePair for RemoveRaftVoterRequest {
+        type Response = super::RemoveRaftVoterResponse;
+    }
+
+    impl KafkaDecode for RemoveRaftVoterRequest {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            crate::message::ensure_decode_version::<Self>(version)?;
+
+            let cluster_id = decoder.read_compact_nullable_string()?;
+            let voter_id = decoder.read_i32()?;
+            let voter_directory_id = decoder.read_uuid()?;
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
+
+            Ok(Self {
+                cluster_id,
+                voter_id,
+                voter_directory_id,
+                unknown_tagged_fields,
+            })
+        }
+    }
+
+    impl KafkaEncode for RemoveRaftVoterRequest {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            crate::message::ensure_encode_version::<Self>(version)?;
+
+            encoder.write_compact_nullable_string(self.cluster_id.as_ref())?;
+            encoder.write_i32(self.voter_id)?;
+            encoder.write_uuid(self.voter_directory_id)?;
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: Self::NAME,
+                    version,
+                });
+            }
+
+            Ok(())
         }
     }
 }
 
-impl KafkaMessage for RemoveRaftVoterRequest {
-    const NAME: &'static str = "RemoveRaftVoterRequest";
-    const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 0);
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 0));
-}
+/// `RemoveRaftVoterResponse` and every struct it declares, under upstream's own names.
+///
+/// [`RemoveRaftVoterResponse`](crate::RemoveRaftVoterResponse) is re-exported flat, so this path never has to be
+/// written to name the message itself.
+pub mod remove_raft_voter_response {
+    use kafka_wire_core::{
+        ApiKey, ApiVersion, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
+        KafkaEncode, StrBytes, TaggedFields, VersionRange,
+    };
 
-impl KafkaRequest for RemoveRaftVoterRequest {
-    const API_KEY: ApiKey = ApiKey::new(81);
-}
+    use crate::{KafkaMessage, KafkaResponse};
 
-impl RequestResponsePair for RemoveRaftVoterRequest {
-    type Response = RemoveRaftVoterResponse;
-}
-
-impl KafkaDecode for RemoveRaftVoterRequest {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        crate::message::ensure_decode_version::<Self>(version)?;
-
-        let cluster_id = decoder.read_compact_nullable_string()?;
-        let voter_id = decoder.read_i32()?;
-        let voter_directory_id = decoder.read_uuid()?;
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
-
-        Ok(Self {
-            cluster_id,
-            voter_id,
-            voter_directory_id,
-            unknown_tagged_fields,
-        })
+    /// Response body for the `RemoveRaftVoter` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Eq, PartialEq)]
+    pub struct RemoveRaftVoterResponse {
+        /// The duration in milliseconds for which the request was throttled due to a quota violation, or zero if the request did not violate any quota.
+        pub throttle_time_ms: i32,
+        /// The error code, or 0 if there was no error.
+        pub error_code: i16,
+        /// The error message, or null if there was no error.
+        pub error_message: Option<StrBytes>,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
     }
-}
 
-impl KafkaEncode for RemoveRaftVoterRequest {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        crate::message::ensure_encode_version::<Self>(version)?;
-
-        encoder.write_compact_nullable_string(self.cluster_id.as_ref())?;
-        encoder.write_i32(self.voter_id)?;
-        encoder.write_uuid(self.voter_directory_id)?;
-
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: Self::NAME,
-                version,
-            });
-        }
-
-        Ok(())
-    }
-}
-
-/// Response body for the `RemoveRaftVoter` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct RemoveRaftVoterResponse {
-    /// The duration in milliseconds for which the request was throttled due to a quota violation, or zero if the request did not violate any quota.
-    pub throttle_time_ms: i32,
-    /// The error code, or 0 if there was no error.
-    pub error_code: i16,
-    /// The error message, or null if there was no error.
-    pub error_message: Option<StrBytes>,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
-
-impl Default for RemoveRaftVoterResponse {
-    fn default() -> Self {
-        Self {
-            throttle_time_ms: 0,
-            error_code: 0,
-            error_message: Some(StrBytes::default()),
-            unknown_tagged_fields: TaggedFields::default(),
+    impl Default for RemoveRaftVoterResponse {
+        fn default() -> Self {
+            Self {
+                throttle_time_ms: 0,
+                error_code: 0,
+                error_message: Some(StrBytes::default()),
+                unknown_tagged_fields: TaggedFields::default(),
+            }
         }
     }
-}
 
-impl KafkaMessage for RemoveRaftVoterResponse {
-    const NAME: &'static str = "RemoveRaftVoterResponse";
-    const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 0);
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 0));
-}
-
-impl KafkaResponse for RemoveRaftVoterResponse {
-    const API_KEY: ApiKey = ApiKey::new(81);
-}
-
-impl KafkaDecode for RemoveRaftVoterResponse {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        crate::message::ensure_decode_version::<Self>(version)?;
-
-        let throttle_time_ms = decoder.read_i32()?;
-        let error_code = decoder.read_i16()?;
-        let error_message = decoder.read_compact_nullable_string()?;
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
-
-        Ok(Self {
-            throttle_time_ms,
-            error_code,
-            error_message,
-            unknown_tagged_fields,
-        })
+    impl KafkaMessage for RemoveRaftVoterResponse {
+        const NAME: &'static str = "RemoveRaftVoterResponse";
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 0);
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 0));
     }
-}
 
-impl KafkaEncode for RemoveRaftVoterResponse {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        crate::message::ensure_encode_version::<Self>(version)?;
+    impl KafkaResponse for RemoveRaftVoterResponse {
+        const API_KEY: ApiKey = ApiKey::new(81);
+    }
 
-        encoder.write_i32(self.throttle_time_ms)?;
-        encoder.write_i16(self.error_code)?;
-        encoder.write_compact_nullable_string(self.error_message.as_ref())?;
+    impl KafkaDecode for RemoveRaftVoterResponse {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            crate::message::ensure_decode_version::<Self>(version)?;
 
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: Self::NAME,
-                version,
-            });
+            let throttle_time_ms = decoder.read_i32()?;
+            let error_code = decoder.read_i16()?;
+            let error_message = decoder.read_compact_nullable_string()?;
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
+
+            Ok(Self {
+                throttle_time_ms,
+                error_code,
+                error_message,
+                unknown_tagged_fields,
+            })
         }
+    }
 
-        Ok(())
+    impl KafkaEncode for RemoveRaftVoterResponse {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            crate::message::ensure_encode_version::<Self>(version)?;
+
+            encoder.write_i32(self.throttle_time_ms)?;
+            encoder.write_i16(self.error_code)?;
+            encoder.write_compact_nullable_string(self.error_message.as_ref())?;
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: Self::NAME,
+                    version,
+                });
+            }
+
+            Ok(())
+        }
     }
 }
+
+use kafka_wire_core::VersionRange;
+
+use crate::{MessageDescriptor, MessageDirection};
+
+pub use remove_raft_voter_request::RemoveRaftVoterRequest;
+pub use remove_raft_voter_response::RemoveRaftVoterResponse;
 
 /// Static metadata for [`RemoveRaftVoterRequest`].
 pub const REMOVE_RAFT_VOTER_REQUEST_DESCRIPTOR: MessageDescriptor = MessageDescriptor::new(

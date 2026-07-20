@@ -5,166 +5,189 @@
 //! Request SHA-256: `e0b8a799925394fbc2af7c7e0e123aff3fb0fa012da0f204f91a3b3b4b232d73`.
 //! Response SHA-256: `a1de9c0ba764a2f78f374c87a5b9226cf2200d8658938db4e6e8092945137bae`.
 
-use kafka_wire_core::{
-    ApiKey, ApiVersion, Bytes, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder,
-    KafkaDecode, KafkaEncode, TaggedFields, Uuid, VersionRange,
-};
+/// `PushTelemetryRequest` and every struct it declares, under upstream's own names.
+///
+/// [`PushTelemetryRequest`](crate::PushTelemetryRequest) is re-exported flat, so this path never has to be
+/// written to name the message itself.
+pub mod push_telemetry_request {
+    use kafka_wire_core::{
+        ApiKey, ApiVersion, Bytes, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder,
+        KafkaDecode, KafkaEncode, TaggedFields, Uuid, VersionRange,
+    };
 
-use crate::{
-    KafkaMessage, KafkaRequest, KafkaResponse, MessageDescriptor, MessageDirection,
-    RequestResponsePair,
-};
+    use crate::{KafkaMessage, KafkaRequest, RequestResponsePair};
 
-/// Request body for the `PushTelemetry` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct PushTelemetryRequest {
-    /// Unique id for this client instance.
-    pub client_instance_id: Uuid,
-    /// Unique identifier for the current subscription.
-    pub subscription_id: i32,
-    /// Client is terminating the connection.
-    pub terminating: bool,
-    /// Compression codec used to compress the metrics.
-    pub compression_type: i8,
-    /// Metrics encoded in `OpenTelemetry` `MetricsData` v1 protobuf format.
-    pub metrics: Bytes,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
-
-impl KafkaMessage for PushTelemetryRequest {
-    const NAME: &'static str = "PushTelemetryRequest";
-    const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 0);
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 0));
-}
-
-impl KafkaRequest for PushTelemetryRequest {
-    const API_KEY: ApiKey = ApiKey::new(72);
-}
-
-impl RequestResponsePair for PushTelemetryRequest {
-    type Response = PushTelemetryResponse;
-}
-
-impl KafkaDecode for PushTelemetryRequest {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        crate::message::ensure_decode_version::<Self>(version)?;
-
-        let client_instance_id = decoder.read_uuid()?;
-        let subscription_id = decoder.read_i32()?;
-        let terminating = decoder.read_bool()?;
-        let compression_type = decoder.read_i8()?;
-        let metrics = decoder.read_compact_bytes()?;
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
-
-        Ok(Self {
-            client_instance_id,
-            subscription_id,
-            terminating,
-            compression_type,
-            metrics,
-            unknown_tagged_fields,
-        })
+    /// Request body for the `PushTelemetry` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    pub struct PushTelemetryRequest {
+        /// Unique id for this client instance.
+        pub client_instance_id: Uuid,
+        /// Unique identifier for the current subscription.
+        pub subscription_id: i32,
+        /// Client is terminating the connection.
+        pub terminating: bool,
+        /// Compression codec used to compress the metrics.
+        pub compression_type: i8,
+        /// Metrics encoded in `OpenTelemetry` `MetricsData` v1 protobuf format.
+        pub metrics: Bytes,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
     }
-}
 
-impl KafkaEncode for PushTelemetryRequest {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        crate::message::ensure_encode_version::<Self>(version)?;
+    impl KafkaMessage for PushTelemetryRequest {
+        const NAME: &'static str = "PushTelemetryRequest";
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 0);
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 0));
+    }
 
-        encoder.write_uuid(self.client_instance_id)?;
-        encoder.write_i32(self.subscription_id)?;
-        encoder.write_bool(self.terminating)?;
-        encoder.write_i8(self.compression_type)?;
-        encoder.write_compact_bytes(&self.metrics)?;
+    impl KafkaRequest for PushTelemetryRequest {
+        const API_KEY: ApiKey = ApiKey::new(72);
+    }
 
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: Self::NAME,
-                version,
-            });
+    impl RequestResponsePair for PushTelemetryRequest {
+        type Response = super::PushTelemetryResponse;
+    }
+
+    impl KafkaDecode for PushTelemetryRequest {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            crate::message::ensure_decode_version::<Self>(version)?;
+
+            let client_instance_id = decoder.read_uuid()?;
+            let subscription_id = decoder.read_i32()?;
+            let terminating = decoder.read_bool()?;
+            let compression_type = decoder.read_i8()?;
+            let metrics = decoder.read_compact_bytes()?;
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
+
+            Ok(Self {
+                client_instance_id,
+                subscription_id,
+                terminating,
+                compression_type,
+                metrics,
+                unknown_tagged_fields,
+            })
         }
-
-        Ok(())
     }
-}
 
-/// Response body for the `PushTelemetry` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct PushTelemetryResponse {
-    /// The duration in milliseconds for which the request was throttled due to a quota violation, or zero if the request did not violate any quota.
-    pub throttle_time_ms: i32,
-    /// The error code, or 0 if there was no error.
-    pub error_code: i16,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
+    impl KafkaEncode for PushTelemetryRequest {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            crate::message::ensure_encode_version::<Self>(version)?;
 
-impl KafkaMessage for PushTelemetryResponse {
-    const NAME: &'static str = "PushTelemetryResponse";
-    const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 0);
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 0));
-}
+            encoder.write_uuid(self.client_instance_id)?;
+            encoder.write_i32(self.subscription_id)?;
+            encoder.write_bool(self.terminating)?;
+            encoder.write_i8(self.compression_type)?;
+            encoder.write_compact_bytes(&self.metrics)?;
 
-impl KafkaResponse for PushTelemetryResponse {
-    const API_KEY: ApiKey = ApiKey::new(72);
-}
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: Self::NAME,
+                    version,
+                });
+            }
 
-impl KafkaDecode for PushTelemetryResponse {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        crate::message::ensure_decode_version::<Self>(version)?;
-
-        let throttle_time_ms = decoder.read_i32()?;
-        let error_code = decoder.read_i16()?;
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
-
-        Ok(Self {
-            throttle_time_ms,
-            error_code,
-            unknown_tagged_fields,
-        })
-    }
-}
-
-impl KafkaEncode for PushTelemetryResponse {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        crate::message::ensure_encode_version::<Self>(version)?;
-
-        encoder.write_i32(self.throttle_time_ms)?;
-        encoder.write_i16(self.error_code)?;
-
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: Self::NAME,
-                version,
-            });
+            Ok(())
         }
-
-        Ok(())
     }
 }
+
+/// `PushTelemetryResponse` and every struct it declares, under upstream's own names.
+///
+/// [`PushTelemetryResponse`](crate::PushTelemetryResponse) is re-exported flat, so this path never has to be
+/// written to name the message itself.
+pub mod push_telemetry_response {
+    use kafka_wire_core::{
+        ApiKey, ApiVersion, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
+        KafkaEncode, TaggedFields, VersionRange,
+    };
+
+    use crate::{KafkaMessage, KafkaResponse};
+
+    /// Response body for the `PushTelemetry` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    pub struct PushTelemetryResponse {
+        /// The duration in milliseconds for which the request was throttled due to a quota violation, or zero if the request did not violate any quota.
+        pub throttle_time_ms: i32,
+        /// The error code, or 0 if there was no error.
+        pub error_code: i16,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl KafkaMessage for PushTelemetryResponse {
+        const NAME: &'static str = "PushTelemetryResponse";
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 0);
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 0));
+    }
+
+    impl KafkaResponse for PushTelemetryResponse {
+        const API_KEY: ApiKey = ApiKey::new(72);
+    }
+
+    impl KafkaDecode for PushTelemetryResponse {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            crate::message::ensure_decode_version::<Self>(version)?;
+
+            let throttle_time_ms = decoder.read_i32()?;
+            let error_code = decoder.read_i16()?;
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
+
+            Ok(Self {
+                throttle_time_ms,
+                error_code,
+                unknown_tagged_fields,
+            })
+        }
+    }
+
+    impl KafkaEncode for PushTelemetryResponse {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            crate::message::ensure_encode_version::<Self>(version)?;
+
+            encoder.write_i32(self.throttle_time_ms)?;
+            encoder.write_i16(self.error_code)?;
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: Self::NAME,
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+}
+
+use kafka_wire_core::VersionRange;
+
+use crate::{MessageDescriptor, MessageDirection};
+
+pub use push_telemetry_request::PushTelemetryRequest;
+pub use push_telemetry_response::PushTelemetryResponse;
 
 /// Static metadata for [`PushTelemetryRequest`].
 pub const PUSH_TELEMETRY_REQUEST_DESCRIPTOR: MessageDescriptor = MessageDescriptor::new(

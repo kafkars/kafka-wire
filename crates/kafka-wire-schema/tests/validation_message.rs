@@ -203,9 +203,9 @@ fn a_struct_reference_must_resolve_within_its_message() {
 
 #[test]
 fn one_message_may_not_declare_one_struct_name_twice() {
-    // the earlier flat naming rule qualifies nested structs by their owning message, which is only
-    // sufficient because no message declares one name twice. That is a measured
-    // property of today's corpus, so it is asserted rather than assumed.
+    // the module-scoped naming rule scopes nested structs to their owning message's module, which is
+    // only sufficient because no message declares one name twice. That is a
+    // measured property of today's corpus, so it is asserted rather than assumed.
     assert_codes(
         &with_fields(
             r#"{ "name": "Topics", "type": "[]TopicData", "versions": "0+",

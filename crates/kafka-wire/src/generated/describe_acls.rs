@@ -5,453 +5,474 @@
 //! Request SHA-256: `7f0c08b18fa846f0f38eb9418b1728f9915b87355194603650127d7fee2a967d`.
 //! Response SHA-256: `22c882738281e322c44d96894fd2b56d07740e69aee7046304cdb5cefc844a62`.
 
-use kafka_wire_core::{
-    ApiKey, ApiVersion, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
-    KafkaEncode, StrBytes, TaggedFields, VersionRange,
-};
+/// `DescribeAclsRequest` and every struct it declares, under upstream's own names.
+///
+/// [`DescribeAclsRequest`](crate::DescribeAclsRequest) is re-exported flat, so this path never has to be
+/// written to name the message itself.
+pub mod describe_acls_request {
+    use kafka_wire_core::{
+        ApiKey, ApiVersion, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
+        KafkaEncode, StrBytes, TaggedFields, VersionRange,
+    };
 
-use crate::{
-    KafkaMessage, KafkaRequest, KafkaResponse, MessageDescriptor, MessageDirection,
-    RequestResponsePair,
-};
+    use crate::{KafkaMessage, KafkaRequest, RequestResponsePair};
 
-/// Request body for the `DescribeAcls` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct DescribeAclsRequest {
-    /// The resource type.
-    pub resource_type_filter: i8,
-    /// The resource name, or null to match any resource name.
-    pub resource_name_filter: Option<StrBytes>,
-    /// The resource pattern to match.
-    pub pattern_type_filter: i8,
-    /// The principal to match, or null to match any principal.
-    pub principal_filter: Option<StrBytes>,
-    /// The host to match, or null to match any host.
-    pub host_filter: Option<StrBytes>,
-    /// The operation to match.
-    pub operation: i8,
-    /// The permission type to match.
-    pub permission_type: i8,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
+    /// Request body for the `DescribeAcls` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Eq, PartialEq)]
+    pub struct DescribeAclsRequest {
+        /// The resource type.
+        pub resource_type_filter: i8,
+        /// The resource name, or null to match any resource name.
+        pub resource_name_filter: Option<StrBytes>,
+        /// The resource pattern to match.
+        pub pattern_type_filter: i8,
+        /// The principal to match, or null to match any principal.
+        pub principal_filter: Option<StrBytes>,
+        /// The host to match, or null to match any host.
+        pub host_filter: Option<StrBytes>,
+        /// The operation to match.
+        pub operation: i8,
+        /// The permission type to match.
+        pub permission_type: i8,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
+    }
 
-impl Default for DescribeAclsRequest {
-    fn default() -> Self {
-        Self {
-            resource_type_filter: 0,
-            resource_name_filter: Some(StrBytes::default()),
-            pattern_type_filter: 3,
-            principal_filter: Some(StrBytes::default()),
-            host_filter: Some(StrBytes::default()),
-            operation: 0,
-            permission_type: 0,
-            unknown_tagged_fields: TaggedFields::default(),
+    impl Default for DescribeAclsRequest {
+        fn default() -> Self {
+            Self {
+                resource_type_filter: 0,
+                resource_name_filter: Some(StrBytes::default()),
+                pattern_type_filter: 3,
+                principal_filter: Some(StrBytes::default()),
+                host_filter: Some(StrBytes::default()),
+                operation: 0,
+                permission_type: 0,
+                unknown_tagged_fields: TaggedFields::default(),
+            }
         }
     }
-}
 
-impl KafkaMessage for DescribeAclsRequest {
-    const NAME: &'static str = "DescribeAclsRequest";
-    const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(1, 3);
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(2, 3));
-}
-
-impl KafkaRequest for DescribeAclsRequest {
-    const API_KEY: ApiKey = ApiKey::new(29);
-}
-
-impl RequestResponsePair for DescribeAclsRequest {
-    type Response = DescribeAclsResponse;
-}
-
-impl KafkaDecode for DescribeAclsRequest {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        crate::message::ensure_decode_version::<Self>(version)?;
-
-        let resource_type_filter = decoder.read_i8()?;
-        let resource_name_filter = if Self::is_flexible(version) {
-            decoder.read_compact_nullable_string()?
-        } else {
-            decoder.read_nullable_string()?
-        };
-        let pattern_type_filter = decoder.read_i8()?;
-        let principal_filter = if Self::is_flexible(version) {
-            decoder.read_compact_nullable_string()?
-        } else {
-            decoder.read_nullable_string()?
-        };
-        let host_filter = if Self::is_flexible(version) {
-            decoder.read_compact_nullable_string()?
-        } else {
-            decoder.read_nullable_string()?
-        };
-        let operation = decoder.read_i8()?;
-        let permission_type = decoder.read_i8()?;
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
-
-        Ok(Self {
-            resource_type_filter,
-            resource_name_filter,
-            pattern_type_filter,
-            principal_filter,
-            host_filter,
-            operation,
-            permission_type,
-            unknown_tagged_fields,
-        })
+    impl KafkaMessage for DescribeAclsRequest {
+        const NAME: &'static str = "DescribeAclsRequest";
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(1, 3);
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(2, 3));
     }
-}
 
-impl KafkaEncode for DescribeAclsRequest {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        crate::message::ensure_encode_version::<Self>(version)?;
-
-        encoder.write_i8(self.resource_type_filter)?;
-        if Self::is_flexible(version) {
-            encoder.write_compact_nullable_string(self.resource_name_filter.as_ref())?;
-        } else {
-            encoder.write_nullable_string(self.resource_name_filter.as_ref())?;
-        }
-        encoder.write_i8(self.pattern_type_filter)?;
-        if Self::is_flexible(version) {
-            encoder.write_compact_nullable_string(self.principal_filter.as_ref())?;
-        } else {
-            encoder.write_nullable_string(self.principal_filter.as_ref())?;
-        }
-        if Self::is_flexible(version) {
-            encoder.write_compact_nullable_string(self.host_filter.as_ref())?;
-        } else {
-            encoder.write_nullable_string(self.host_filter.as_ref())?;
-        }
-        encoder.write_i8(self.operation)?;
-        encoder.write_i8(self.permission_type)?;
-
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: Self::NAME,
-                version,
-            });
-        }
-
-        Ok(())
+    impl KafkaRequest for DescribeAclsRequest {
+        const API_KEY: ApiKey = ApiKey::new(29);
     }
-}
 
-/// `DescribeAclsResource` as declared by the `DescribeAcls` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct DescribeAclsResponseResource {
-    /// The resource type.
-    pub resource_type: i8,
-    /// The resource name.
-    pub resource_name: StrBytes,
-    /// The resource pattern type.
-    pub pattern_type: i8,
-    /// The `ACLs`.
-    pub acls: Vec<DescribeAclsResponseAclDescription>,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
-
-impl DescribeAclsResponseResource {
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(2, 3));
-
-    fn is_flexible(version: ApiVersion) -> bool {
-        Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+    impl RequestResponsePair for DescribeAclsRequest {
+        type Response = super::DescribeAclsResponse;
     }
-}
 
-impl Default for DescribeAclsResponseResource {
-    fn default() -> Self {
-        Self {
-            resource_type: 0,
-            resource_name: StrBytes::default(),
-            pattern_type: 3,
-            acls: Vec::new(),
-            unknown_tagged_fields: TaggedFields::default(),
-        }
-    }
-}
+    impl KafkaDecode for DescribeAclsRequest {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            crate::message::ensure_decode_version::<Self>(version)?;
 
-impl KafkaDecode for DescribeAclsResponseResource {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        let resource_type = decoder.read_i8()?;
-        let resource_name = if Self::is_flexible(version) {
-            decoder.read_compact_string()?
-        } else {
-            decoder.read_string()?
-        };
-        let pattern_type = decoder.read_i8()?;
-        let acls = {
-            let length = if Self::is_flexible(version) {
-                decoder.read_compact_array_len()?
+            let resource_type_filter = decoder.read_i8()?;
+            let resource_name_filter = if Self::is_flexible(version) {
+                decoder.read_compact_nullable_string()?
             } else {
-                decoder.read_array_len()?
+                decoder.read_nullable_string()?
             };
-            decoder.read_vec(length, |decoder| {
-                DescribeAclsResponseAclDescription::decode(decoder, version)
-            })?
-        };
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
-
-        Ok(Self {
-            resource_type,
-            resource_name,
-            pattern_type,
-            acls,
-            unknown_tagged_fields,
-        })
-    }
-}
-
-impl KafkaEncode for DescribeAclsResponseResource {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        encoder.write_i8(self.resource_type)?;
-        if Self::is_flexible(version) {
-            encoder.write_compact_string(&self.resource_name)?;
-        } else {
-            encoder.write_string(&self.resource_name)?;
-        }
-        encoder.write_i8(self.pattern_type)?;
-        if Self::is_flexible(version) {
-            encoder.write_compact_array_len(self.acls.len())?;
-        } else {
-            encoder.write_array_len(self.acls.len())?;
-        }
-        for value in &self.acls {
-            value.encode(encoder, version)?;
-        }
-
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: "DescribeAclsResponseResource",
-                version,
-            });
-        }
-
-        Ok(())
-    }
-}
-
-/// `AclDescription` as declared by the `DescribeAcls` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct DescribeAclsResponseAclDescription {
-    /// The ACL principal.
-    pub principal: StrBytes,
-    /// The ACL host.
-    pub host: StrBytes,
-    /// The ACL operation.
-    pub operation: i8,
-    /// The ACL permission type.
-    pub permission_type: i8,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
-
-impl DescribeAclsResponseAclDescription {
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(2, 3));
-
-    fn is_flexible(version: ApiVersion) -> bool {
-        Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
-    }
-}
-
-impl KafkaDecode for DescribeAclsResponseAclDescription {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        let principal = if Self::is_flexible(version) {
-            decoder.read_compact_string()?
-        } else {
-            decoder.read_string()?
-        };
-        let host = if Self::is_flexible(version) {
-            decoder.read_compact_string()?
-        } else {
-            decoder.read_string()?
-        };
-        let operation = decoder.read_i8()?;
-        let permission_type = decoder.read_i8()?;
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
-
-        Ok(Self {
-            principal,
-            host,
-            operation,
-            permission_type,
-            unknown_tagged_fields,
-        })
-    }
-}
-
-impl KafkaEncode for DescribeAclsResponseAclDescription {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        if Self::is_flexible(version) {
-            encoder.write_compact_string(&self.principal)?;
-        } else {
-            encoder.write_string(&self.principal)?;
-        }
-        if Self::is_flexible(version) {
-            encoder.write_compact_string(&self.host)?;
-        } else {
-            encoder.write_string(&self.host)?;
-        }
-        encoder.write_i8(self.operation)?;
-        encoder.write_i8(self.permission_type)?;
-
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: "DescribeAclsResponseAclDescription",
-                version,
-            });
-        }
-
-        Ok(())
-    }
-}
-
-/// Response body for the `DescribeAcls` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct DescribeAclsResponse {
-    /// The duration in milliseconds for which the request was throttled due to a quota violation, or zero if the request did not violate any quota.
-    pub throttle_time_ms: i32,
-    /// The error code, or 0 if there was no error.
-    pub error_code: i16,
-    /// The error message, or null if there was no error.
-    pub error_message: Option<StrBytes>,
-    /// Each Resource that is referenced in an ACL.
-    pub resources: Vec<DescribeAclsResponseResource>,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
-
-impl Default for DescribeAclsResponse {
-    fn default() -> Self {
-        Self {
-            throttle_time_ms: 0,
-            error_code: 0,
-            error_message: Some(StrBytes::default()),
-            resources: Vec::new(),
-            unknown_tagged_fields: TaggedFields::default(),
-        }
-    }
-}
-
-impl KafkaMessage for DescribeAclsResponse {
-    const NAME: &'static str = "DescribeAclsResponse";
-    const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(1, 3);
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(2, 3));
-}
-
-impl KafkaResponse for DescribeAclsResponse {
-    const API_KEY: ApiKey = ApiKey::new(29);
-}
-
-impl KafkaDecode for DescribeAclsResponse {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        crate::message::ensure_decode_version::<Self>(version)?;
-
-        let throttle_time_ms = decoder.read_i32()?;
-        let error_code = decoder.read_i16()?;
-        let error_message = if Self::is_flexible(version) {
-            decoder.read_compact_nullable_string()?
-        } else {
-            decoder.read_nullable_string()?
-        };
-        let resources = {
-            let length = if Self::is_flexible(version) {
-                decoder.read_compact_array_len()?
+            let pattern_type_filter = decoder.read_i8()?;
+            let principal_filter = if Self::is_flexible(version) {
+                decoder.read_compact_nullable_string()?
             } else {
-                decoder.read_array_len()?
+                decoder.read_nullable_string()?
             };
-            decoder.read_vec(length, |decoder| {
-                DescribeAclsResponseResource::decode(decoder, version)
-            })?
-        };
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
+            let host_filter = if Self::is_flexible(version) {
+                decoder.read_compact_nullable_string()?
+            } else {
+                decoder.read_nullable_string()?
+            };
+            let operation = decoder.read_i8()?;
+            let permission_type = decoder.read_i8()?;
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
 
-        Ok(Self {
-            throttle_time_ms,
-            error_code,
-            error_message,
-            resources,
-            unknown_tagged_fields,
-        })
+            Ok(Self {
+                resource_type_filter,
+                resource_name_filter,
+                pattern_type_filter,
+                principal_filter,
+                host_filter,
+                operation,
+                permission_type,
+                unknown_tagged_fields,
+            })
+        }
+    }
+
+    impl KafkaEncode for DescribeAclsRequest {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            crate::message::ensure_encode_version::<Self>(version)?;
+
+            encoder.write_i8(self.resource_type_filter)?;
+            if Self::is_flexible(version) {
+                encoder.write_compact_nullable_string(self.resource_name_filter.as_ref())?;
+            } else {
+                encoder.write_nullable_string(self.resource_name_filter.as_ref())?;
+            }
+            encoder.write_i8(self.pattern_type_filter)?;
+            if Self::is_flexible(version) {
+                encoder.write_compact_nullable_string(self.principal_filter.as_ref())?;
+            } else {
+                encoder.write_nullable_string(self.principal_filter.as_ref())?;
+            }
+            if Self::is_flexible(version) {
+                encoder.write_compact_nullable_string(self.host_filter.as_ref())?;
+            } else {
+                encoder.write_nullable_string(self.host_filter.as_ref())?;
+            }
+            encoder.write_i8(self.operation)?;
+            encoder.write_i8(self.permission_type)?;
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: Self::NAME,
+                    version,
+                });
+            }
+
+            Ok(())
+        }
     }
 }
 
-impl KafkaEncode for DescribeAclsResponse {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        crate::message::ensure_encode_version::<Self>(version)?;
+/// `DescribeAclsResponse` and every struct it declares, under upstream's own names.
+///
+/// [`DescribeAclsResponse`](crate::DescribeAclsResponse) is re-exported flat, so this path never has to be
+/// written to name the message itself.
+pub mod describe_acls_response {
+    use kafka_wire_core::{
+        ApiKey, ApiVersion, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
+        KafkaEncode, StrBytes, TaggedFields, VersionRange,
+    };
 
-        encoder.write_i32(self.throttle_time_ms)?;
-        encoder.write_i16(self.error_code)?;
-        if Self::is_flexible(version) {
-            encoder.write_compact_nullable_string(self.error_message.as_ref())?;
-        } else {
-            encoder.write_nullable_string(self.error_message.as_ref())?;
-        }
-        if Self::is_flexible(version) {
-            encoder.write_compact_array_len(self.resources.len())?;
-        } else {
-            encoder.write_array_len(self.resources.len())?;
-        }
-        for value in &self.resources {
-            value.encode(encoder, version)?;
-        }
+    use crate::{KafkaMessage, KafkaResponse};
 
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: Self::NAME,
-                version,
-            });
-        }
+    /// `DescribeAclsResource` as declared by the `DescribeAcls` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Eq, PartialEq)]
+    pub struct DescribeAclsResource {
+        /// The resource type.
+        pub resource_type: i8,
+        /// The resource name.
+        pub resource_name: StrBytes,
+        /// The resource pattern type.
+        pub pattern_type: i8,
+        /// The `ACLs`.
+        pub acls: Vec<AclDescription>,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
+    }
 
-        Ok(())
+    impl DescribeAclsResource {
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(2, 3));
+
+        fn is_flexible(version: ApiVersion) -> bool {
+            Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+        }
+    }
+
+    impl Default for DescribeAclsResource {
+        fn default() -> Self {
+            Self {
+                resource_type: 0,
+                resource_name: StrBytes::default(),
+                pattern_type: 3,
+                acls: Vec::new(),
+                unknown_tagged_fields: TaggedFields::default(),
+            }
+        }
+    }
+
+    impl KafkaDecode for DescribeAclsResource {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            let resource_type = decoder.read_i8()?;
+            let resource_name = if Self::is_flexible(version) {
+                decoder.read_compact_string()?
+            } else {
+                decoder.read_string()?
+            };
+            let pattern_type = decoder.read_i8()?;
+            let acls = {
+                let length = if Self::is_flexible(version) {
+                    decoder.read_compact_array_len()?
+                } else {
+                    decoder.read_array_len()?
+                };
+                decoder.read_vec(length, |decoder| AclDescription::decode(decoder, version))?
+            };
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
+
+            Ok(Self {
+                resource_type,
+                resource_name,
+                pattern_type,
+                acls,
+                unknown_tagged_fields,
+            })
+        }
+    }
+
+    impl KafkaEncode for DescribeAclsResource {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            encoder.write_i8(self.resource_type)?;
+            if Self::is_flexible(version) {
+                encoder.write_compact_string(&self.resource_name)?;
+            } else {
+                encoder.write_string(&self.resource_name)?;
+            }
+            encoder.write_i8(self.pattern_type)?;
+            if Self::is_flexible(version) {
+                encoder.write_compact_array_len(self.acls.len())?;
+            } else {
+                encoder.write_array_len(self.acls.len())?;
+            }
+            for value in &self.acls {
+                value.encode(encoder, version)?;
+            }
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "DescribeAclsResource",
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+
+    /// `AclDescription` as declared by the `DescribeAcls` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    pub struct AclDescription {
+        /// The ACL principal.
+        pub principal: StrBytes,
+        /// The ACL host.
+        pub host: StrBytes,
+        /// The ACL operation.
+        pub operation: i8,
+        /// The ACL permission type.
+        pub permission_type: i8,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl AclDescription {
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(2, 3));
+
+        fn is_flexible(version: ApiVersion) -> bool {
+            Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+        }
+    }
+
+    impl KafkaDecode for AclDescription {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            let principal = if Self::is_flexible(version) {
+                decoder.read_compact_string()?
+            } else {
+                decoder.read_string()?
+            };
+            let host = if Self::is_flexible(version) {
+                decoder.read_compact_string()?
+            } else {
+                decoder.read_string()?
+            };
+            let operation = decoder.read_i8()?;
+            let permission_type = decoder.read_i8()?;
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
+
+            Ok(Self {
+                principal,
+                host,
+                operation,
+                permission_type,
+                unknown_tagged_fields,
+            })
+        }
+    }
+
+    impl KafkaEncode for AclDescription {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            if Self::is_flexible(version) {
+                encoder.write_compact_string(&self.principal)?;
+            } else {
+                encoder.write_string(&self.principal)?;
+            }
+            if Self::is_flexible(version) {
+                encoder.write_compact_string(&self.host)?;
+            } else {
+                encoder.write_string(&self.host)?;
+            }
+            encoder.write_i8(self.operation)?;
+            encoder.write_i8(self.permission_type)?;
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "AclDescription",
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+
+    /// Response body for the `DescribeAcls` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Eq, PartialEq)]
+    pub struct DescribeAclsResponse {
+        /// The duration in milliseconds for which the request was throttled due to a quota violation, or zero if the request did not violate any quota.
+        pub throttle_time_ms: i32,
+        /// The error code, or 0 if there was no error.
+        pub error_code: i16,
+        /// The error message, or null if there was no error.
+        pub error_message: Option<StrBytes>,
+        /// Each Resource that is referenced in an ACL.
+        pub resources: Vec<DescribeAclsResource>,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl Default for DescribeAclsResponse {
+        fn default() -> Self {
+            Self {
+                throttle_time_ms: 0,
+                error_code: 0,
+                error_message: Some(StrBytes::default()),
+                resources: Vec::new(),
+                unknown_tagged_fields: TaggedFields::default(),
+            }
+        }
+    }
+
+    impl KafkaMessage for DescribeAclsResponse {
+        const NAME: &'static str = "DescribeAclsResponse";
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(1, 3);
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(2, 3));
+    }
+
+    impl KafkaResponse for DescribeAclsResponse {
+        const API_KEY: ApiKey = ApiKey::new(29);
+    }
+
+    impl KafkaDecode for DescribeAclsResponse {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            crate::message::ensure_decode_version::<Self>(version)?;
+
+            let throttle_time_ms = decoder.read_i32()?;
+            let error_code = decoder.read_i16()?;
+            let error_message = if Self::is_flexible(version) {
+                decoder.read_compact_nullable_string()?
+            } else {
+                decoder.read_nullable_string()?
+            };
+            let resources = {
+                let length = if Self::is_flexible(version) {
+                    decoder.read_compact_array_len()?
+                } else {
+                    decoder.read_array_len()?
+                };
+                decoder.read_vec(length, |decoder| {
+                    DescribeAclsResource::decode(decoder, version)
+                })?
+            };
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
+
+            Ok(Self {
+                throttle_time_ms,
+                error_code,
+                error_message,
+                resources,
+                unknown_tagged_fields,
+            })
+        }
+    }
+
+    impl KafkaEncode for DescribeAclsResponse {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            crate::message::ensure_encode_version::<Self>(version)?;
+
+            encoder.write_i32(self.throttle_time_ms)?;
+            encoder.write_i16(self.error_code)?;
+            if Self::is_flexible(version) {
+                encoder.write_compact_nullable_string(self.error_message.as_ref())?;
+            } else {
+                encoder.write_nullable_string(self.error_message.as_ref())?;
+            }
+            if Self::is_flexible(version) {
+                encoder.write_compact_array_len(self.resources.len())?;
+            } else {
+                encoder.write_array_len(self.resources.len())?;
+            }
+            for value in &self.resources {
+                value.encode(encoder, version)?;
+            }
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: Self::NAME,
+                    version,
+                });
+            }
+
+            Ok(())
+        }
     }
 }
+
+use kafka_wire_core::VersionRange;
+
+use crate::{MessageDescriptor, MessageDirection};
+
+pub use describe_acls_request::DescribeAclsRequest;
+pub use describe_acls_response::DescribeAclsResponse;
 
 /// Static metadata for [`DescribeAclsRequest`].
 pub const DESCRIBE_ACLS_REQUEST_DESCRIPTOR: MessageDescriptor = MessageDescriptor::new(

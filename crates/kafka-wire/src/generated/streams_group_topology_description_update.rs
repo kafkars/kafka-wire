@@ -5,484 +5,491 @@
 //! Request SHA-256: `2b46742a2ac1c44f6df4083a79c59a7677d1abf731de8ff301251607ca0030f5`.
 //! Response SHA-256: `b994c432e63688e12d9a424b1191e56dac0a48e701ec629ca20407a9c76d336a`.
 
-use kafka_wire_core::{
-    ApiKey, ApiVersion, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
-    KafkaEncode, StrBytes, TaggedFields, VersionRange,
-};
+/// `StreamsGroupTopologyDescriptionUpdateRequest` and every struct it declares, under upstream's own names.
+///
+/// [`StreamsGroupTopologyDescriptionUpdateRequest`](crate::StreamsGroupTopologyDescriptionUpdateRequest) is re-exported flat, so this path never has to be
+/// written to name the message itself.
+pub mod streams_group_topology_description_update_request {
+    use kafka_wire_core::{
+        ApiKey, ApiVersion, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
+        KafkaEncode, StrBytes, TaggedFields, VersionRange,
+    };
 
-use crate::{
-    KafkaMessage, KafkaRequest, KafkaResponse, MessageDescriptor, MessageDirection,
-    RequestResponsePair,
-};
+    use crate::{KafkaMessage, KafkaRequest, RequestResponsePair};
 
-/// `TopologyDescription` as declared by the `StreamsGroupTopologyDescriptionUpdate` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct StreamsGroupTopologyDescriptionUpdateRequestTopologyDescription {
-    /// The subtopologies that make up this topology.
-    pub subtopologies:
-        Vec<StreamsGroupTopologyDescriptionUpdateRequestTopologyDescriptionSubtopology>,
-    /// Global state stores used by this topology.
-    pub global_stores:
-        Vec<StreamsGroupTopologyDescriptionUpdateRequestTopologyDescriptionGlobalStore>,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
-
-impl StreamsGroupTopologyDescriptionUpdateRequestTopologyDescription {
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 0));
-
-    fn is_flexible(version: ApiVersion) -> bool {
-        Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+    /// `TopologyDescription` as declared by the `StreamsGroupTopologyDescriptionUpdate` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    pub struct TopologyDescription {
+        /// The subtopologies that make up this topology.
+        pub subtopologies: Vec<TopologyDescriptionSubtopology>,
+        /// Global state stores used by this topology.
+        pub global_stores: Vec<TopologyDescriptionGlobalStore>,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
     }
-}
 
-impl KafkaDecode for StreamsGroupTopologyDescriptionUpdateRequestTopologyDescription {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        let subtopologies = {
-            let length = decoder.read_compact_array_len()?;
-            decoder.read_vec(length, |decoder| {
-                StreamsGroupTopologyDescriptionUpdateRequestTopologyDescriptionSubtopology::decode(
-                    decoder, version,
-                )
-            })?
-        };
-        let global_stores = {
-            let length = decoder.read_compact_array_len()?;
-            decoder.read_vec(length, |decoder| {
-                StreamsGroupTopologyDescriptionUpdateRequestTopologyDescriptionGlobalStore::decode(
-                    decoder, version,
-                )
-            })?
-        };
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
+    impl TopologyDescription {
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 0));
 
-        Ok(Self {
-            subtopologies,
-            global_stores,
-            unknown_tagged_fields,
-        })
-    }
-}
-
-impl KafkaEncode for StreamsGroupTopologyDescriptionUpdateRequestTopologyDescription {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        encoder.write_compact_array_len(self.subtopologies.len())?;
-        for value in &self.subtopologies {
-            value.encode(encoder, version)?;
+        fn is_flexible(version: ApiVersion) -> bool {
+            Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
         }
-        encoder.write_compact_array_len(self.global_stores.len())?;
-        for value in &self.global_stores {
-            value.encode(encoder, version)?;
+    }
+
+    impl KafkaDecode for TopologyDescription {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            let subtopologies = {
+                let length = decoder.read_compact_array_len()?;
+                decoder.read_vec(length, |decoder| {
+                    TopologyDescriptionSubtopology::decode(decoder, version)
+                })?
+            };
+            let global_stores = {
+                let length = decoder.read_compact_array_len()?;
+                decoder.read_vec(length, |decoder| {
+                    TopologyDescriptionGlobalStore::decode(decoder, version)
+                })?
+            };
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
+
+            Ok(Self {
+                subtopologies,
+                global_stores,
+                unknown_tagged_fields,
+            })
         }
+    }
 
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: "StreamsGroupTopologyDescriptionUpdateRequestTopologyDescription",
-                version,
-            });
+    impl KafkaEncode for TopologyDescription {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            encoder.write_compact_array_len(self.subtopologies.len())?;
+            for value in &self.subtopologies {
+                value.encode(encoder, version)?;
+            }
+            encoder.write_compact_array_len(self.global_stores.len())?;
+            for value in &self.global_stores {
+                value.encode(encoder, version)?;
+            }
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "TopologyDescription",
+                    version,
+                });
+            }
+
+            Ok(())
         }
-
-        Ok(())
     }
-}
 
-/// `TopologyDescriptionSubtopology` as declared by the `StreamsGroupTopologyDescriptionUpdate` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct StreamsGroupTopologyDescriptionUpdateRequestTopologyDescriptionSubtopology {
-    /// The subtopology identifier, unique within the topology.
-    pub subtopology_id: StrBytes,
-    /// The processing nodes in this subtopology.
-    pub nodes: Vec<StreamsGroupTopologyDescriptionUpdateRequestTopologyDescriptionNode>,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
-
-impl StreamsGroupTopologyDescriptionUpdateRequestTopologyDescriptionSubtopology {
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 0));
-
-    fn is_flexible(version: ApiVersion) -> bool {
-        Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+    /// `TopologyDescriptionSubtopology` as declared by the `StreamsGroupTopologyDescriptionUpdate` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    pub struct TopologyDescriptionSubtopology {
+        /// The subtopology identifier, unique within the topology.
+        pub subtopology_id: StrBytes,
+        /// The processing nodes in this subtopology.
+        pub nodes: Vec<TopologyDescriptionNode>,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
     }
-}
 
-impl KafkaDecode for StreamsGroupTopologyDescriptionUpdateRequestTopologyDescriptionSubtopology {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        let subtopology_id = decoder.read_compact_string()?;
-        let nodes = {
-            let length = decoder.read_compact_array_len()?;
-            decoder.read_vec(length, |decoder| {
-                StreamsGroupTopologyDescriptionUpdateRequestTopologyDescriptionNode::decode(
-                    decoder, version,
-                )
-            })?
-        };
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
+    impl TopologyDescriptionSubtopology {
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 0));
 
-        Ok(Self {
-            subtopology_id,
-            nodes,
-            unknown_tagged_fields,
-        })
-    }
-}
-
-impl KafkaEncode for StreamsGroupTopologyDescriptionUpdateRequestTopologyDescriptionSubtopology {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        encoder.write_compact_string(&self.subtopology_id)?;
-        encoder.write_compact_array_len(self.nodes.len())?;
-        for value in &self.nodes {
-            value.encode(encoder, version)?;
+        fn is_flexible(version: ApiVersion) -> bool {
+            Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
         }
+    }
 
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: "StreamsGroupTopologyDescriptionUpdateRequestTopologyDescriptionSubtopology",
-                version,
-            });
+    impl KafkaDecode for TopologyDescriptionSubtopology {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            let subtopology_id = decoder.read_compact_string()?;
+            let nodes = {
+                let length = decoder.read_compact_array_len()?;
+                decoder.read_vec(length, |decoder| {
+                    TopologyDescriptionNode::decode(decoder, version)
+                })?
+            };
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
+
+            Ok(Self {
+                subtopology_id,
+                nodes,
+                unknown_tagged_fields,
+            })
         }
-
-        Ok(())
     }
-}
 
-/// `TopologyDescriptionNode` as declared by the `StreamsGroupTopologyDescriptionUpdate` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct StreamsGroupTopologyDescriptionUpdateRequestTopologyDescriptionNode {
-    /// The name of this node (e.g., KSTREAM-SOURCE-0000000000).
-    pub name: StrBytes,
-    /// The type of this node: 1=SOURCE, 2=PROCESSOR, 3=SINK.
-    pub node_type: i8,
-    /// The source topics this node reads from. Defined only for source nodes, may be empty if source topics are dynamically determined.
-    pub source_topics: Vec<StrBytes>,
-    /// The topic this node writes to. Defined only for sink nodes, may be null if sink topic is dynamically determined.
-    pub sink_topic: Option<StrBytes>,
-    /// The state store names accessed by this node. Defined only for processor nodes.
-    pub stores: Vec<StrBytes>,
-    /// The names of successor nodes in the processing graph. Predecessor relationships are reconstructed from this field.
-    pub successors: Vec<StrBytes>,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
+    impl KafkaEncode for TopologyDescriptionSubtopology {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            encoder.write_compact_string(&self.subtopology_id)?;
+            encoder.write_compact_array_len(self.nodes.len())?;
+            for value in &self.nodes {
+                value.encode(encoder, version)?;
+            }
 
-impl StreamsGroupTopologyDescriptionUpdateRequestTopologyDescriptionNode {
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 0));
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "TopologyDescriptionSubtopology",
+                    version,
+                });
+            }
 
-    fn is_flexible(version: ApiVersion) -> bool {
-        Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
-    }
-}
-
-impl KafkaDecode for StreamsGroupTopologyDescriptionUpdateRequestTopologyDescriptionNode {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        let name = decoder.read_compact_string()?;
-        let node_type = decoder.read_i8()?;
-        let source_topics = {
-            let length = decoder.read_compact_array_len()?;
-            decoder.read_vec(length, Decoder::read_compact_string)?
-        };
-        let sink_topic = decoder.read_compact_nullable_string()?;
-        let stores = {
-            let length = decoder.read_compact_array_len()?;
-            decoder.read_vec(length, Decoder::read_compact_string)?
-        };
-        let successors = {
-            let length = decoder.read_compact_array_len()?;
-            decoder.read_vec(length, Decoder::read_compact_string)?
-        };
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
-
-        Ok(Self {
-            name,
-            node_type,
-            source_topics,
-            sink_topic,
-            stores,
-            successors,
-            unknown_tagged_fields,
-        })
-    }
-}
-
-impl KafkaEncode for StreamsGroupTopologyDescriptionUpdateRequestTopologyDescriptionNode {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        encoder.write_compact_string(&self.name)?;
-        encoder.write_i8(self.node_type)?;
-        encoder.write_compact_array_len(self.source_topics.len())?;
-        for value in &self.source_topics {
-            encoder.write_compact_string(value)?;
+            Ok(())
         }
-        encoder.write_compact_nullable_string(self.sink_topic.as_ref())?;
-        encoder.write_compact_array_len(self.stores.len())?;
-        for value in &self.stores {
-            encoder.write_compact_string(value)?;
+    }
+
+    /// `TopologyDescriptionNode` as declared by the `StreamsGroupTopologyDescriptionUpdate` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    pub struct TopologyDescriptionNode {
+        /// The name of this node (e.g., KSTREAM-SOURCE-0000000000).
+        pub name: StrBytes,
+        /// The type of this node: 1=SOURCE, 2=PROCESSOR, 3=SINK.
+        pub node_type: i8,
+        /// The source topics this node reads from. Defined only for source nodes, may be empty if source topics are dynamically determined.
+        pub source_topics: Vec<StrBytes>,
+        /// The topic this node writes to. Defined only for sink nodes, may be null if sink topic is dynamically determined.
+        pub sink_topic: Option<StrBytes>,
+        /// The state store names accessed by this node. Defined only for processor nodes.
+        pub stores: Vec<StrBytes>,
+        /// The names of successor nodes in the processing graph. Predecessor relationships are reconstructed from this field.
+        pub successors: Vec<StrBytes>,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl TopologyDescriptionNode {
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 0));
+
+        fn is_flexible(version: ApiVersion) -> bool {
+            Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
         }
-        encoder.write_compact_array_len(self.successors.len())?;
-        for value in &self.successors {
-            encoder.write_compact_string(value)?;
+    }
+
+    impl KafkaDecode for TopologyDescriptionNode {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            let name = decoder.read_compact_string()?;
+            let node_type = decoder.read_i8()?;
+            let source_topics = {
+                let length = decoder.read_compact_array_len()?;
+                decoder.read_vec(length, Decoder::read_compact_string)?
+            };
+            let sink_topic = decoder.read_compact_nullable_string()?;
+            let stores = {
+                let length = decoder.read_compact_array_len()?;
+                decoder.read_vec(length, Decoder::read_compact_string)?
+            };
+            let successors = {
+                let length = decoder.read_compact_array_len()?;
+                decoder.read_vec(length, Decoder::read_compact_string)?
+            };
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
+
+            Ok(Self {
+                name,
+                node_type,
+                source_topics,
+                sink_topic,
+                stores,
+                successors,
+                unknown_tagged_fields,
+            })
         }
+    }
 
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: "StreamsGroupTopologyDescriptionUpdateRequestTopologyDescriptionNode",
-                version,
-            });
+    impl KafkaEncode for TopologyDescriptionNode {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            encoder.write_compact_string(&self.name)?;
+            encoder.write_i8(self.node_type)?;
+            encoder.write_compact_array_len(self.source_topics.len())?;
+            for value in &self.source_topics {
+                encoder.write_compact_string(value)?;
+            }
+            encoder.write_compact_nullable_string(self.sink_topic.as_ref())?;
+            encoder.write_compact_array_len(self.stores.len())?;
+            for value in &self.stores {
+                encoder.write_compact_string(value)?;
+            }
+            encoder.write_compact_array_len(self.successors.len())?;
+            for value in &self.successors {
+                encoder.write_compact_string(value)?;
+            }
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "TopologyDescriptionNode",
+                    version,
+                });
+            }
+
+            Ok(())
         }
-
-        Ok(())
     }
-}
 
-/// `TopologyDescriptionGlobalStore` as declared by the `StreamsGroupTopologyDescriptionUpdate` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct StreamsGroupTopologyDescriptionUpdateRequestTopologyDescriptionGlobalStore {
-    /// The source node providing data to the global store.
-    pub source: StreamsGroupTopologyDescriptionUpdateRequestTopologyDescriptionNode,
-    /// The processor node that populates the global store.
-    pub processor: StreamsGroupTopologyDescriptionUpdateRequestTopologyDescriptionNode,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
-
-impl StreamsGroupTopologyDescriptionUpdateRequestTopologyDescriptionGlobalStore {
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 0));
-
-    fn is_flexible(version: ApiVersion) -> bool {
-        Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+    /// `TopologyDescriptionGlobalStore` as declared by the `StreamsGroupTopologyDescriptionUpdate` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    pub struct TopologyDescriptionGlobalStore {
+        /// The source node providing data to the global store.
+        pub source: TopologyDescriptionNode,
+        /// The processor node that populates the global store.
+        pub processor: TopologyDescriptionNode,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
     }
-}
 
-impl KafkaDecode for StreamsGroupTopologyDescriptionUpdateRequestTopologyDescriptionGlobalStore {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        let source = StreamsGroupTopologyDescriptionUpdateRequestTopologyDescriptionNode::decode(
-            decoder, version,
-        )?;
-        let processor =
-            StreamsGroupTopologyDescriptionUpdateRequestTopologyDescriptionNode::decode(
-                decoder, version,
-            )?;
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
+    impl TopologyDescriptionGlobalStore {
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 0));
 
-        Ok(Self {
-            source,
-            processor,
-            unknown_tagged_fields,
-        })
-    }
-}
-
-impl KafkaEncode for StreamsGroupTopologyDescriptionUpdateRequestTopologyDescriptionGlobalStore {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        self.source.encode(encoder, version)?;
-        self.processor.encode(encoder, version)?;
-
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: "StreamsGroupTopologyDescriptionUpdateRequestTopologyDescriptionGlobalStore",
-                version,
-            });
+        fn is_flexible(version: ApiVersion) -> bool {
+            Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
         }
-
-        Ok(())
     }
-}
 
-/// Request body for the `StreamsGroupTopologyDescriptionUpdate` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct StreamsGroupTopologyDescriptionUpdateRequest {
-    /// The streams group identifier.
-    pub group_id: StrBytes,
-    /// The ID of the streams group member sending the push. The broker validates that this member is still in the group; mismatches (including when the group itself has been deleted) are rejected with `UNKNOWN_MEMBER_ID` so the client treats itself as fenced and rejoins.
-    pub member_id: StrBytes,
-    /// The epoch of the topology being described.
-    pub topology_epoch: i32,
-    /// The topology description.
-    pub topology_description: StreamsGroupTopologyDescriptionUpdateRequestTopologyDescription,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
+    impl KafkaDecode for TopologyDescriptionGlobalStore {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            let source = TopologyDescriptionNode::decode(decoder, version)?;
+            let processor = TopologyDescriptionNode::decode(decoder, version)?;
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
 
-impl KafkaMessage for StreamsGroupTopologyDescriptionUpdateRequest {
-    const NAME: &'static str = "StreamsGroupTopologyDescriptionUpdateRequest";
-    const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 0);
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 0));
-}
-
-impl KafkaRequest for StreamsGroupTopologyDescriptionUpdateRequest {
-    const API_KEY: ApiKey = ApiKey::new(93);
-}
-
-impl RequestResponsePair for StreamsGroupTopologyDescriptionUpdateRequest {
-    type Response = StreamsGroupTopologyDescriptionUpdateResponse;
-}
-
-impl KafkaDecode for StreamsGroupTopologyDescriptionUpdateRequest {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        crate::message::ensure_decode_version::<Self>(version)?;
-
-        let group_id = decoder.read_compact_string()?;
-        let member_id = decoder.read_compact_string()?;
-        let topology_epoch = decoder.read_i32()?;
-        let topology_description =
-            StreamsGroupTopologyDescriptionUpdateRequestTopologyDescription::decode(
-                decoder, version,
-            )?;
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
-
-        Ok(Self {
-            group_id,
-            member_id,
-            topology_epoch,
-            topology_description,
-            unknown_tagged_fields,
-        })
-    }
-}
-
-impl KafkaEncode for StreamsGroupTopologyDescriptionUpdateRequest {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        crate::message::ensure_encode_version::<Self>(version)?;
-
-        encoder.write_compact_string(&self.group_id)?;
-        encoder.write_compact_string(&self.member_id)?;
-        encoder.write_i32(self.topology_epoch)?;
-        self.topology_description.encode(encoder, version)?;
-
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: Self::NAME,
-                version,
-            });
+            Ok(Self {
+                source,
+                processor,
+                unknown_tagged_fields,
+            })
         }
-
-        Ok(())
     }
-}
 
-/// Response body for the `StreamsGroupTopologyDescriptionUpdate` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct StreamsGroupTopologyDescriptionUpdateResponse {
-    /// The duration in milliseconds for which the request was throttled due to a quota violation, or zero if the request did not violate any quota.
-    pub throttle_time_ms: i32,
-    /// The top-level error code, or 0 if there was no error.
-    pub error_code: i16,
-    /// The top-level error message, or null if there was no error.
-    pub error_message: Option<StrBytes>,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
+    impl KafkaEncode for TopologyDescriptionGlobalStore {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.source.encode(encoder, version)?;
+            self.processor.encode(encoder, version)?;
 
-impl KafkaMessage for StreamsGroupTopologyDescriptionUpdateResponse {
-    const NAME: &'static str = "StreamsGroupTopologyDescriptionUpdateResponse";
-    const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 0);
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 0));
-}
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "TopologyDescriptionGlobalStore",
+                    version,
+                });
+            }
 
-impl KafkaResponse for StreamsGroupTopologyDescriptionUpdateResponse {
-    const API_KEY: ApiKey = ApiKey::new(93);
-}
-
-impl KafkaDecode for StreamsGroupTopologyDescriptionUpdateResponse {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        crate::message::ensure_decode_version::<Self>(version)?;
-
-        let throttle_time_ms = decoder.read_i32()?;
-        let error_code = decoder.read_i16()?;
-        let error_message = decoder.read_compact_nullable_string()?;
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
-
-        Ok(Self {
-            throttle_time_ms,
-            error_code,
-            error_message,
-            unknown_tagged_fields,
-        })
-    }
-}
-
-impl KafkaEncode for StreamsGroupTopologyDescriptionUpdateResponse {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        crate::message::ensure_encode_version::<Self>(version)?;
-
-        encoder.write_i32(self.throttle_time_ms)?;
-        encoder.write_i16(self.error_code)?;
-        encoder.write_compact_nullable_string(self.error_message.as_ref())?;
-
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: Self::NAME,
-                version,
-            });
+            Ok(())
         }
+    }
 
-        Ok(())
+    /// Request body for the `StreamsGroupTopologyDescriptionUpdate` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    pub struct StreamsGroupTopologyDescriptionUpdateRequest {
+        /// The streams group identifier.
+        pub group_id: StrBytes,
+        /// The ID of the streams group member sending the push. The broker validates that this member is still in the group; mismatches (including when the group itself has been deleted) are rejected with `UNKNOWN_MEMBER_ID` so the client treats itself as fenced and rejoins.
+        pub member_id: StrBytes,
+        /// The epoch of the topology being described.
+        pub topology_epoch: i32,
+        /// The topology description.
+        pub topology_description: TopologyDescription,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl KafkaMessage for StreamsGroupTopologyDescriptionUpdateRequest {
+        const NAME: &'static str = "StreamsGroupTopologyDescriptionUpdateRequest";
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 0);
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 0));
+    }
+
+    impl KafkaRequest for StreamsGroupTopologyDescriptionUpdateRequest {
+        const API_KEY: ApiKey = ApiKey::new(93);
+    }
+
+    impl RequestResponsePair for StreamsGroupTopologyDescriptionUpdateRequest {
+        type Response = super::StreamsGroupTopologyDescriptionUpdateResponse;
+    }
+
+    impl KafkaDecode for StreamsGroupTopologyDescriptionUpdateRequest {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            crate::message::ensure_decode_version::<Self>(version)?;
+
+            let group_id = decoder.read_compact_string()?;
+            let member_id = decoder.read_compact_string()?;
+            let topology_epoch = decoder.read_i32()?;
+            let topology_description = TopologyDescription::decode(decoder, version)?;
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
+
+            Ok(Self {
+                group_id,
+                member_id,
+                topology_epoch,
+                topology_description,
+                unknown_tagged_fields,
+            })
+        }
+    }
+
+    impl KafkaEncode for StreamsGroupTopologyDescriptionUpdateRequest {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            crate::message::ensure_encode_version::<Self>(version)?;
+
+            encoder.write_compact_string(&self.group_id)?;
+            encoder.write_compact_string(&self.member_id)?;
+            encoder.write_i32(self.topology_epoch)?;
+            self.topology_description.encode(encoder, version)?;
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: Self::NAME,
+                    version,
+                });
+            }
+
+            Ok(())
+        }
     }
 }
+
+/// `StreamsGroupTopologyDescriptionUpdateResponse` and every struct it declares, under upstream's own names.
+///
+/// [`StreamsGroupTopologyDescriptionUpdateResponse`](crate::StreamsGroupTopologyDescriptionUpdateResponse) is re-exported flat, so this path never has to be
+/// written to name the message itself.
+pub mod streams_group_topology_description_update_response {
+    use kafka_wire_core::{
+        ApiKey, ApiVersion, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
+        KafkaEncode, StrBytes, TaggedFields, VersionRange,
+    };
+
+    use crate::{KafkaMessage, KafkaResponse};
+
+    /// Response body for the `StreamsGroupTopologyDescriptionUpdate` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    pub struct StreamsGroupTopologyDescriptionUpdateResponse {
+        /// The duration in milliseconds for which the request was throttled due to a quota violation, or zero if the request did not violate any quota.
+        pub throttle_time_ms: i32,
+        /// The top-level error code, or 0 if there was no error.
+        pub error_code: i16,
+        /// The top-level error message, or null if there was no error.
+        pub error_message: Option<StrBytes>,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl KafkaMessage for StreamsGroupTopologyDescriptionUpdateResponse {
+        const NAME: &'static str = "StreamsGroupTopologyDescriptionUpdateResponse";
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 0);
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 0));
+    }
+
+    impl KafkaResponse for StreamsGroupTopologyDescriptionUpdateResponse {
+        const API_KEY: ApiKey = ApiKey::new(93);
+    }
+
+    impl KafkaDecode for StreamsGroupTopologyDescriptionUpdateResponse {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            crate::message::ensure_decode_version::<Self>(version)?;
+
+            let throttle_time_ms = decoder.read_i32()?;
+            let error_code = decoder.read_i16()?;
+            let error_message = decoder.read_compact_nullable_string()?;
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
+
+            Ok(Self {
+                throttle_time_ms,
+                error_code,
+                error_message,
+                unknown_tagged_fields,
+            })
+        }
+    }
+
+    impl KafkaEncode for StreamsGroupTopologyDescriptionUpdateResponse {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            crate::message::ensure_encode_version::<Self>(version)?;
+
+            encoder.write_i32(self.throttle_time_ms)?;
+            encoder.write_i16(self.error_code)?;
+            encoder.write_compact_nullable_string(self.error_message.as_ref())?;
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: Self::NAME,
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+}
+
+use kafka_wire_core::VersionRange;
+
+use crate::{MessageDescriptor, MessageDirection};
+
+pub use streams_group_topology_description_update_request::StreamsGroupTopologyDescriptionUpdateRequest;
+pub use streams_group_topology_description_update_response::StreamsGroupTopologyDescriptionUpdateResponse;
 
 /// Static metadata for [`StreamsGroupTopologyDescriptionUpdateRequest`].
 pub const STREAMS_GROUP_TOPOLOGY_DESCRIPTION_UPDATE_REQUEST_DESCRIPTOR: MessageDescriptor =

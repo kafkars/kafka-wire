@@ -102,12 +102,12 @@ fn declared_types() -> Vec<TypeCell> {
         TypeCell {
             ty: struct_type("TopicData"),
             nullable: false,
-            declared: "ProbeRequestTopicData",
+            declared: "TopicData",
         },
         TypeCell {
             ty: FieldType::Array(Box::new(struct_type("TopicData"))),
             nullable: false,
-            declared: "Vec<ProbeRequestTopicData>",
+            declared: "Vec<TopicData>",
         },
     ]
 }
@@ -258,8 +258,8 @@ fn structured_defaults() -> Vec<DefaultCell> {
             situation: "a non-nullable struct, absent as every member at its own default",
             ty: struct_type("TopicData"),
             default: DefaultValue::StructDefaults,
-            initializer: "ProbeRequestTopicData::default()",
-            non_default: "self.probe != ProbeRequestTopicData::default()",
+            initializer: "TopicData::default()",
+            non_default: "self.probe != TopicData::default()",
             derivable: true,
             nullable: false,
         },

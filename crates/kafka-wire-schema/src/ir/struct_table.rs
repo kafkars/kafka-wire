@@ -36,7 +36,7 @@ impl StructOrigin {
 /// One struct a message declares.
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct StructDeclaration {
-    /// Owner-qualified identity.
+    /// Module-scoped identity: upstream's spelling, bound to its owner.
     pub name: StructRef,
     /// Versions in which this declaration applies.
     ///

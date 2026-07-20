@@ -5,164 +5,187 @@
 //! Request SHA-256: `c87758d9a4f7abf1e7e457107ca0d84e22770c7b5aadf35b4f33b07ee847e544`.
 //! Response SHA-256: `30d8490c8fcc122a11490a33949d24cdcbf1367ba6b3d9c04e5a4241c8b38842`.
 
-use kafka_wire_core::{
-    ApiKey, ApiVersion, Bytes, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder,
-    KafkaDecode, KafkaEncode, TaggedFields, VersionRange,
-};
+/// `RenewDelegationTokenRequest` and every struct it declares, under upstream's own names.
+///
+/// [`RenewDelegationTokenRequest`](crate::RenewDelegationTokenRequest) is re-exported flat, so this path never has to be
+/// written to name the message itself.
+pub mod renew_delegation_token_request {
+    use kafka_wire_core::{
+        ApiKey, ApiVersion, Bytes, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder,
+        KafkaDecode, KafkaEncode, TaggedFields, VersionRange,
+    };
 
-use crate::{
-    KafkaMessage, KafkaRequest, KafkaResponse, MessageDescriptor, MessageDirection,
-    RequestResponsePair,
-};
+    use crate::{KafkaMessage, KafkaRequest, RequestResponsePair};
 
-/// Request body for the `RenewDelegationToken` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct RenewDelegationTokenRequest {
-    /// The HMAC of the delegation token to be renewed.
-    pub hmac: Bytes,
-    /// The renewal time period in milliseconds.
-    pub renew_period_ms: i64,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
-
-impl KafkaMessage for RenewDelegationTokenRequest {
-    const NAME: &'static str = "RenewDelegationTokenRequest";
-    const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(1, 2);
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(2, 2));
-}
-
-impl KafkaRequest for RenewDelegationTokenRequest {
-    const API_KEY: ApiKey = ApiKey::new(39);
-}
-
-impl RequestResponsePair for RenewDelegationTokenRequest {
-    type Response = RenewDelegationTokenResponse;
-}
-
-impl KafkaDecode for RenewDelegationTokenRequest {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        crate::message::ensure_decode_version::<Self>(version)?;
-
-        let hmac = if Self::is_flexible(version) {
-            decoder.read_compact_bytes()?
-        } else {
-            decoder.read_bytes()?
-        };
-        let renew_period_ms = decoder.read_i64()?;
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
-
-        Ok(Self {
-            hmac,
-            renew_period_ms,
-            unknown_tagged_fields,
-        })
+    /// Request body for the `RenewDelegationToken` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    pub struct RenewDelegationTokenRequest {
+        /// The HMAC of the delegation token to be renewed.
+        pub hmac: Bytes,
+        /// The renewal time period in milliseconds.
+        pub renew_period_ms: i64,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
     }
-}
 
-impl KafkaEncode for RenewDelegationTokenRequest {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        crate::message::ensure_encode_version::<Self>(version)?;
+    impl KafkaMessage for RenewDelegationTokenRequest {
+        const NAME: &'static str = "RenewDelegationTokenRequest";
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(1, 2);
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(2, 2));
+    }
 
-        if Self::is_flexible(version) {
-            encoder.write_compact_bytes(&self.hmac)?;
-        } else {
-            encoder.write_bytes(&self.hmac)?;
+    impl KafkaRequest for RenewDelegationTokenRequest {
+        const API_KEY: ApiKey = ApiKey::new(39);
+    }
+
+    impl RequestResponsePair for RenewDelegationTokenRequest {
+        type Response = super::RenewDelegationTokenResponse;
+    }
+
+    impl KafkaDecode for RenewDelegationTokenRequest {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            crate::message::ensure_decode_version::<Self>(version)?;
+
+            let hmac = if Self::is_flexible(version) {
+                decoder.read_compact_bytes()?
+            } else {
+                decoder.read_bytes()?
+            };
+            let renew_period_ms = decoder.read_i64()?;
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
+
+            Ok(Self {
+                hmac,
+                renew_period_ms,
+                unknown_tagged_fields,
+            })
         }
-        encoder.write_i64(self.renew_period_ms)?;
+    }
 
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: Self::NAME,
-                version,
-            });
+    impl KafkaEncode for RenewDelegationTokenRequest {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            crate::message::ensure_encode_version::<Self>(version)?;
+
+            if Self::is_flexible(version) {
+                encoder.write_compact_bytes(&self.hmac)?;
+            } else {
+                encoder.write_bytes(&self.hmac)?;
+            }
+            encoder.write_i64(self.renew_period_ms)?;
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: Self::NAME,
+                    version,
+                });
+            }
+
+            Ok(())
         }
-
-        Ok(())
     }
 }
 
-/// Response body for the `RenewDelegationToken` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct RenewDelegationTokenResponse {
-    /// The error code, or 0 if there was no error.
-    pub error_code: i16,
-    /// The timestamp in milliseconds at which this token expires.
-    pub expiry_timestamp_ms: i64,
-    /// The duration in milliseconds for which the request was throttled due to a quota violation, or zero if the request did not violate any quota.
-    pub throttle_time_ms: i32,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
+/// `RenewDelegationTokenResponse` and every struct it declares, under upstream's own names.
+///
+/// [`RenewDelegationTokenResponse`](crate::RenewDelegationTokenResponse) is re-exported flat, so this path never has to be
+/// written to name the message itself.
+pub mod renew_delegation_token_response {
+    use kafka_wire_core::{
+        ApiKey, ApiVersion, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
+        KafkaEncode, TaggedFields, VersionRange,
+    };
 
-impl KafkaMessage for RenewDelegationTokenResponse {
-    const NAME: &'static str = "RenewDelegationTokenResponse";
-    const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(1, 2);
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(2, 2));
-}
+    use crate::{KafkaMessage, KafkaResponse};
 
-impl KafkaResponse for RenewDelegationTokenResponse {
-    const API_KEY: ApiKey = ApiKey::new(39);
-}
-
-impl KafkaDecode for RenewDelegationTokenResponse {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        crate::message::ensure_decode_version::<Self>(version)?;
-
-        let error_code = decoder.read_i16()?;
-        let expiry_timestamp_ms = decoder.read_i64()?;
-        let throttle_time_ms = decoder.read_i32()?;
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
-
-        Ok(Self {
-            error_code,
-            expiry_timestamp_ms,
-            throttle_time_ms,
-            unknown_tagged_fields,
-        })
+    /// Response body for the `RenewDelegationToken` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    pub struct RenewDelegationTokenResponse {
+        /// The error code, or 0 if there was no error.
+        pub error_code: i16,
+        /// The timestamp in milliseconds at which this token expires.
+        pub expiry_timestamp_ms: i64,
+        /// The duration in milliseconds for which the request was throttled due to a quota violation, or zero if the request did not violate any quota.
+        pub throttle_time_ms: i32,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
     }
-}
 
-impl KafkaEncode for RenewDelegationTokenResponse {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        crate::message::ensure_encode_version::<Self>(version)?;
+    impl KafkaMessage for RenewDelegationTokenResponse {
+        const NAME: &'static str = "RenewDelegationTokenResponse";
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(1, 2);
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(2, 2));
+    }
 
-        encoder.write_i16(self.error_code)?;
-        encoder.write_i64(self.expiry_timestamp_ms)?;
-        encoder.write_i32(self.throttle_time_ms)?;
+    impl KafkaResponse for RenewDelegationTokenResponse {
+        const API_KEY: ApiKey = ApiKey::new(39);
+    }
 
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: Self::NAME,
-                version,
-            });
+    impl KafkaDecode for RenewDelegationTokenResponse {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            crate::message::ensure_decode_version::<Self>(version)?;
+
+            let error_code = decoder.read_i16()?;
+            let expiry_timestamp_ms = decoder.read_i64()?;
+            let throttle_time_ms = decoder.read_i32()?;
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
+
+            Ok(Self {
+                error_code,
+                expiry_timestamp_ms,
+                throttle_time_ms,
+                unknown_tagged_fields,
+            })
         }
+    }
 
-        Ok(())
+    impl KafkaEncode for RenewDelegationTokenResponse {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            crate::message::ensure_encode_version::<Self>(version)?;
+
+            encoder.write_i16(self.error_code)?;
+            encoder.write_i64(self.expiry_timestamp_ms)?;
+            encoder.write_i32(self.throttle_time_ms)?;
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: Self::NAME,
+                    version,
+                });
+            }
+
+            Ok(())
+        }
     }
 }
+
+use kafka_wire_core::VersionRange;
+
+use crate::{MessageDescriptor, MessageDirection};
+
+pub use renew_delegation_token_request::RenewDelegationTokenRequest;
+pub use renew_delegation_token_response::RenewDelegationTokenResponse;
 
 /// Static metadata for [`RenewDelegationTokenRequest`].
 pub const RENEW_DELEGATION_TOKEN_REQUEST_DESCRIPTOR: MessageDescriptor = MessageDescriptor::new(

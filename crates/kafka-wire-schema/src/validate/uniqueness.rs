@@ -1,19 +1,36 @@
-//! Uniqueness of the Rust type names owner qualification produces.
+//! Uniqueness of the Rust type names emission produces, in each of its scopes.
 //!
-//! This file owns the earlier flat naming rule's fourth clause: after qualification, assert that no
-//! two generated types claim one Rust identifier — across every message type
-//! and every owner-qualified nested struct in the set being generated.
+//! This file owns the module-scoped naming rule's collision guard. There are **two** scopes, and
+//! getting them backwards is the whole failure mode this file exists to prevent:
+//!
+//! * **The module.** `kafka-wire-codegen` emits one `pub mod` per message, holding
+//!   the message type and every struct that message declares under upstream's
+//!   own spelling. Two items of one name there are rustc `E0428`. This scope is
+//!   per message and is reset for each one.
+//! * **The crate root.** Only message types are re-exported flat, so that
+//!   `kafka_wire::ProduceRequest` needs no module path. Two message types of
+//!   one name would be an unexportable pair. Nested structs do *not* participate
+//!   — that is exactly what the module-scoped naming rule bought, and putting them back into the
+//!   global map would reject `EntryData` in both directions of
+//!   `AlterClientQuotas`, which is legal and generated today.
+//!
+//! Scoping the global map too widely rejects correct schemas; scoping the module
+//! map too loosely — per API key, say, rather than per message — passes schemas
+//! whose generated Rust then fails to compile, because a request and its
+//! response share an API key and eight keys declare a differently-shaped struct
+//! of one name in each direction. A guard scoped more loosely than the namespace
+//! it protects is a guard that passes while the output fails to compile.
 //!
 //! It deliberately does not own the naming rule (`ir/struct_ref.rs`) or the
 //! shape of any single message's table (`structs.rs`). Those two decide what a
-//! name *is*; this decides whether the corpus as a whole can carry those names,
-//! which no single message can answer about itself.
+//! name *is*; this decides whether the scopes it lands in can carry it.
 //!
-//! This is a check, not an assumption. The invariant that makes message-level
-//! qualification sufficient — no message declaring one name with two shapes — is
-//! a property of today's pinned corpus, and upstream changes it. A future schema
-//! that breaks it must produce a diagnostic naming both declarations, never
-//! emitted Rust that fails to compile and never a silently merged type.
+//! There is a third scope no measurement of the schemas can find, because it
+//! depends on what the emitter imports rather than on what upstream declares: a
+//! declared struct can collide with a name its module imports.
+//! `ApiVersionsResponse` declares `ApiVersion`. That one belongs to
+//! `kafka-wire-codegen`, which owns the import list, and is resolved there by
+//! qualifying the wire type at its point of use.
 
 use std::{collections::BTreeMap, path::PathBuf};
 
@@ -27,34 +44,44 @@ struct Claim {
     description: String,
 }
 
-/// Asserts that every generated type name across `messages` is distinct.
+/// Asserts that no generated type name collides in the scope it is emitted into.
 ///
-/// Message types participate alongside nested structs. `kafka-wire-codegen` renders
-/// one module per API key holding both directions, and the crate facade
-/// re-exports every generated type flat, so a nested struct that qualified to
-/// exactly some message's name would collide with it just as surely as with
-/// another struct.
-///
-/// The check is global rather than per module because the flat facade is what
-/// consumers import through; a name unique within its module but repeated
-/// across two would be unexportable, which is a generation failure discovered
-/// one layer too late.
+/// Message types are checked globally, because they are re-exported flat.
+/// Declared structs are checked against their own message's module only, which
+/// is where they are emitted and the only place they can clash. The message
+/// type participates in its own module too: a struct named exactly like the
+/// message that declares it would be a second item of that name inside the
+/// `pub mod`, whatever the crate root thinks.
 pub fn validate_struct_names(messages: &[Message]) -> Result<(), ValidationErrors> {
-    let mut claimed: BTreeMap<String, Claim> = BTreeMap::new();
+    let mut exported: BTreeMap<String, Claim> = BTreeMap::new();
     let mut errors = Vec::new();
 
     for message in messages {
+        let message_type = message.name.rust_type().to_owned();
+        let describe_message = format!("message `{}`", message.name.protocol());
+
         claim(
-            &mut claimed,
+            &mut exported,
             &mut errors,
             message,
-            message.name.rust_type().to_owned(),
-            format!("message `{}`", message.name.protocol()),
+            message_type.clone(),
+            describe_message.clone(),
+        );
+
+        // Fresh per message: this is the module scope, and a name claimed in one
+        // message says nothing about any other.
+        let mut module: BTreeMap<String, Claim> = BTreeMap::new();
+        claim(
+            &mut module,
+            &mut errors,
+            message,
+            message_type,
+            describe_message,
         );
 
         for declaration in message.structs.declarations() {
             claim(
-                &mut claimed,
+                &mut module,
                 &mut errors,
                 message,
                 declaration.name.rust_type().to_owned(),

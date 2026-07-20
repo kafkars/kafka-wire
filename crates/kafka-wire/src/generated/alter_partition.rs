@@ -5,599 +5,612 @@
 //! Request SHA-256: `8f39831ccdc95202c4b4a04f65527339717419792edff8c16d9732a85a99d996`.
 //! Response SHA-256: `7a0b87f62c4ac42ec87814f6782e0e22bdc88133eb94ca519bcde46444c24afb`.
 
-use kafka_wire_core::{
-    ApiKey, ApiVersion, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
-    KafkaEncode, TaggedFields, Uuid, VersionRange,
-};
+/// `AlterPartitionRequest` and every struct it declares, under upstream's own names.
+///
+/// [`AlterPartitionRequest`](crate::AlterPartitionRequest) is re-exported flat, so this path never has to be
+/// written to name the message itself.
+pub mod alter_partition_request {
+    use kafka_wire_core::{
+        ApiKey, ApiVersion, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
+        KafkaEncode, TaggedFields, Uuid, VersionRange,
+    };
 
-use crate::{
-    KafkaMessage, KafkaRequest, KafkaResponse, MessageDescriptor, MessageDirection,
-    RequestResponsePair,
-};
+    use crate::{KafkaMessage, KafkaRequest, RequestResponsePair};
 
-/// `TopicData` as declared by the `AlterPartition` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct AlterPartitionRequestTopicData {
-    /// The ID of the topic to alter `ISRs` for.
-    pub topic_id: Uuid,
-    /// The partitions to alter `ISRs` for.
-    pub partitions: Vec<AlterPartitionRequestPartitionData>,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
-
-impl AlterPartitionRequestTopicData {
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(2, 3));
-
-    fn is_flexible(version: ApiVersion) -> bool {
-        Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+    /// `TopicData` as declared by the `AlterPartition` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    pub struct TopicData {
+        /// The ID of the topic to alter `ISRs` for.
+        pub topic_id: Uuid,
+        /// The partitions to alter `ISRs` for.
+        pub partitions: Vec<PartitionData>,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
     }
-}
 
-impl KafkaDecode for AlterPartitionRequestTopicData {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        let topic_id = decoder.read_uuid()?;
-        let partitions = {
-            let length = decoder.read_compact_array_len()?;
-            decoder.read_vec(length, |decoder| {
-                AlterPartitionRequestPartitionData::decode(decoder, version)
-            })?
-        };
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
+    impl TopicData {
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(2, 3));
 
-        Ok(Self {
-            topic_id,
-            partitions,
-            unknown_tagged_fields,
-        })
-    }
-}
-
-impl KafkaEncode for AlterPartitionRequestTopicData {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        encoder.write_uuid(self.topic_id)?;
-        encoder.write_compact_array_len(self.partitions.len())?;
-        for value in &self.partitions {
-            value.encode(encoder, version)?;
+        fn is_flexible(version: ApiVersion) -> bool {
+            Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
         }
+    }
 
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: "AlterPartitionRequestTopicData",
-                version,
-            });
+    impl KafkaDecode for TopicData {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            let topic_id = decoder.read_uuid()?;
+            let partitions = {
+                let length = decoder.read_compact_array_len()?;
+                decoder.read_vec(length, |decoder| PartitionData::decode(decoder, version))?
+            };
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
+
+            Ok(Self {
+                topic_id,
+                partitions,
+                unknown_tagged_fields,
+            })
         }
-
-        Ok(())
     }
-}
 
-/// `PartitionData` as declared by the `AlterPartition` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct AlterPartitionRequestPartitionData {
-    /// The partition index.
-    pub partition_index: i32,
-    /// The leader epoch of this partition.
-    pub leader_epoch: i32,
-    /// The ISR for this partition. Deprecated since version 3.
-    pub new_isr: Vec<i32>,
-    /// The ISR for this partition.
-    pub new_isr_with_epochs: Vec<AlterPartitionRequestBrokerState>,
-    /// 1 if the partition is recovering from an unclean leader election; 0 otherwise.
-    pub leader_recovery_state: i8,
-    /// The expected epoch of the partition which is being updated.
-    pub partition_epoch: i32,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
-
-impl AlterPartitionRequestPartitionData {
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(2, 3));
-
-    fn is_flexible(version: ApiVersion) -> bool {
-        Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
-    }
-}
-
-impl KafkaDecode for AlterPartitionRequestPartitionData {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        let partition_index = decoder.read_i32()?;
-        let leader_epoch = decoder.read_i32()?;
-        let new_isr = if version.value() <= 2 {
-            let length = decoder.read_compact_array_len()?;
-            decoder.read_vec(length, Decoder::read_i32)?
-        } else {
-            Vec::new()
-        };
-        let new_isr_with_epochs = if version.value() >= 3 {
-            let length = decoder.read_compact_array_len()?;
-            decoder.read_vec(length, |decoder| {
-                AlterPartitionRequestBrokerState::decode(decoder, version)
-            })?
-        } else {
-            Vec::new()
-        };
-        let leader_recovery_state = decoder.read_i8()?;
-        let partition_epoch = decoder.read_i32()?;
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
-
-        Ok(Self {
-            partition_index,
-            leader_epoch,
-            new_isr,
-            new_isr_with_epochs,
-            leader_recovery_state,
-            partition_epoch,
-            unknown_tagged_fields,
-        })
-    }
-}
-
-impl KafkaEncode for AlterPartitionRequestPartitionData {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        encoder.write_i32(self.partition_index)?;
-        encoder.write_i32(self.leader_epoch)?;
-        if version.value() <= 2 {
-            encoder.write_compact_array_len(self.new_isr.len())?;
-            for value in &self.new_isr {
-                encoder.write_i32(*value)?;
-            }
-        }
-        if version.value() >= 3 {
-            encoder.write_compact_array_len(self.new_isr_with_epochs.len())?;
-            for value in &self.new_isr_with_epochs {
+    impl KafkaEncode for TopicData {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            encoder.write_uuid(self.topic_id)?;
+            encoder.write_compact_array_len(self.partitions.len())?;
+            for value in &self.partitions {
                 value.encode(encoder, version)?;
             }
-        }
-        encoder.write_i8(self.leader_recovery_state)?;
-        encoder.write_i32(self.partition_epoch)?;
 
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: "AlterPartitionRequestPartitionData",
-                version,
-            });
-        }
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "TopicData",
+                    version,
+                });
+            }
 
-        Ok(())
-    }
-}
-
-/// `BrokerState` as declared by the `AlterPartition` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct AlterPartitionRequestBrokerState {
-    /// The ID of the broker.
-    pub broker_id: i32,
-    /// The epoch of the broker. It will be -1 if the epoch check is not supported.
-    pub broker_epoch: i64,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
-
-impl AlterPartitionRequestBrokerState {
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(2, 3));
-
-    fn is_flexible(version: ApiVersion) -> bool {
-        Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
-    }
-}
-
-impl Default for AlterPartitionRequestBrokerState {
-    fn default() -> Self {
-        Self {
-            broker_id: 0,
-            broker_epoch: -1,
-            unknown_tagged_fields: TaggedFields::default(),
+            Ok(())
         }
     }
-}
 
-impl KafkaDecode for AlterPartitionRequestBrokerState {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        let broker_id = if version.value() >= 3 {
-            decoder.read_i32()?
-        } else {
-            0
-        };
-        let broker_epoch = if version.value() >= 3 {
-            decoder.read_i64()?
-        } else {
-            -1
-        };
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
-
-        Ok(Self {
-            broker_id,
-            broker_epoch,
-            unknown_tagged_fields,
-        })
+    /// `PartitionData` as declared by the `AlterPartition` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    pub struct PartitionData {
+        /// The partition index.
+        pub partition_index: i32,
+        /// The leader epoch of this partition.
+        pub leader_epoch: i32,
+        /// The ISR for this partition. Deprecated since version 3.
+        pub new_isr: Vec<i32>,
+        /// The ISR for this partition.
+        pub new_isr_with_epochs: Vec<BrokerState>,
+        /// 1 if the partition is recovering from an unclean leader election; 0 otherwise.
+        pub leader_recovery_state: i8,
+        /// The expected epoch of the partition which is being updated.
+        pub partition_epoch: i32,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
     }
-}
 
-impl KafkaEncode for AlterPartitionRequestBrokerState {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        if version.value() >= 3 {
+    impl PartitionData {
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(2, 3));
+
+        fn is_flexible(version: ApiVersion) -> bool {
+            Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+        }
+    }
+
+    impl KafkaDecode for PartitionData {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            let partition_index = decoder.read_i32()?;
+            let leader_epoch = decoder.read_i32()?;
+            let new_isr = if version.value() <= 2 {
+                let length = decoder.read_compact_array_len()?;
+                decoder.read_vec(length, Decoder::read_i32)?
+            } else {
+                Vec::new()
+            };
+            let new_isr_with_epochs = if version.value() >= 3 {
+                let length = decoder.read_compact_array_len()?;
+                decoder.read_vec(length, |decoder| BrokerState::decode(decoder, version))?
+            } else {
+                Vec::new()
+            };
+            let leader_recovery_state = decoder.read_i8()?;
+            let partition_epoch = decoder.read_i32()?;
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
+
+            Ok(Self {
+                partition_index,
+                leader_epoch,
+                new_isr,
+                new_isr_with_epochs,
+                leader_recovery_state,
+                partition_epoch,
+                unknown_tagged_fields,
+            })
+        }
+    }
+
+    impl KafkaEncode for PartitionData {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            encoder.write_i32(self.partition_index)?;
+            encoder.write_i32(self.leader_epoch)?;
+            if version.value() <= 2 {
+                encoder.write_compact_array_len(self.new_isr.len())?;
+                for value in &self.new_isr {
+                    encoder.write_i32(*value)?;
+                }
+            }
+            if version.value() >= 3 {
+                encoder.write_compact_array_len(self.new_isr_with_epochs.len())?;
+                for value in &self.new_isr_with_epochs {
+                    value.encode(encoder, version)?;
+                }
+            }
+            encoder.write_i8(self.leader_recovery_state)?;
+            encoder.write_i32(self.partition_epoch)?;
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "PartitionData",
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+
+    /// `BrokerState` as declared by the `AlterPartition` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Eq, PartialEq)]
+    pub struct BrokerState {
+        /// The ID of the broker.
+        pub broker_id: i32,
+        /// The epoch of the broker. It will be -1 if the epoch check is not supported.
+        pub broker_epoch: i64,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl BrokerState {
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(2, 3));
+
+        fn is_flexible(version: ApiVersion) -> bool {
+            Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+        }
+    }
+
+    impl Default for BrokerState {
+        fn default() -> Self {
+            Self {
+                broker_id: 0,
+                broker_epoch: -1,
+                unknown_tagged_fields: TaggedFields::default(),
+            }
+        }
+    }
+
+    impl KafkaDecode for BrokerState {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            let broker_id = if version.value() >= 3 {
+                decoder.read_i32()?
+            } else {
+                0
+            };
+            let broker_epoch = if version.value() >= 3 {
+                decoder.read_i64()?
+            } else {
+                -1
+            };
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
+
+            Ok(Self {
+                broker_id,
+                broker_epoch,
+                unknown_tagged_fields,
+            })
+        }
+    }
+
+    impl KafkaEncode for BrokerState {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            if version.value() >= 3 {
+                encoder.write_i32(self.broker_id)?;
+            }
+            if version.value() >= 3 {
+                encoder.write_i64(self.broker_epoch)?;
+            }
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "BrokerState",
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+
+    /// Request body for the `AlterPartition` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Eq, PartialEq)]
+    pub struct AlterPartitionRequest {
+        /// The ID of the requesting broker.
+        pub broker_id: i32,
+        /// The epoch of the requesting broker.
+        pub broker_epoch: i64,
+        /// The topics to alter `ISRs` for.
+        pub topics: Vec<TopicData>,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl Default for AlterPartitionRequest {
+        fn default() -> Self {
+            Self {
+                broker_id: 0,
+                broker_epoch: -1,
+                topics: Vec::new(),
+                unknown_tagged_fields: TaggedFields::default(),
+            }
+        }
+    }
+
+    impl KafkaMessage for AlterPartitionRequest {
+        const NAME: &'static str = "AlterPartitionRequest";
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(2, 3);
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(2, 3));
+    }
+
+    impl KafkaRequest for AlterPartitionRequest {
+        const API_KEY: ApiKey = ApiKey::new(56);
+    }
+
+    impl RequestResponsePair for AlterPartitionRequest {
+        type Response = super::AlterPartitionResponse;
+    }
+
+    impl KafkaDecode for AlterPartitionRequest {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            crate::message::ensure_decode_version::<Self>(version)?;
+
+            let broker_id = decoder.read_i32()?;
+            let broker_epoch = decoder.read_i64()?;
+            let topics = {
+                let length = decoder.read_compact_array_len()?;
+                decoder.read_vec(length, |decoder| TopicData::decode(decoder, version))?
+            };
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
+
+            Ok(Self {
+                broker_id,
+                broker_epoch,
+                topics,
+                unknown_tagged_fields,
+            })
+        }
+    }
+
+    impl KafkaEncode for AlterPartitionRequest {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            crate::message::ensure_encode_version::<Self>(version)?;
+
             encoder.write_i32(self.broker_id)?;
-        }
-        if version.value() >= 3 {
             encoder.write_i64(self.broker_epoch)?;
-        }
+            encoder.write_compact_array_len(self.topics.len())?;
+            for value in &self.topics {
+                value.encode(encoder, version)?;
+            }
 
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: "AlterPartitionRequestBrokerState",
-                version,
-            });
-        }
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: Self::NAME,
+                    version,
+                });
+            }
 
-        Ok(())
-    }
-}
-
-/// Request body for the `AlterPartition` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct AlterPartitionRequest {
-    /// The ID of the requesting broker.
-    pub broker_id: i32,
-    /// The epoch of the requesting broker.
-    pub broker_epoch: i64,
-    /// The topics to alter `ISRs` for.
-    pub topics: Vec<AlterPartitionRequestTopicData>,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
-
-impl Default for AlterPartitionRequest {
-    fn default() -> Self {
-        Self {
-            broker_id: 0,
-            broker_epoch: -1,
-            topics: Vec::new(),
-            unknown_tagged_fields: TaggedFields::default(),
+            Ok(())
         }
     }
 }
 
-impl KafkaMessage for AlterPartitionRequest {
-    const NAME: &'static str = "AlterPartitionRequest";
-    const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(2, 3);
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(2, 3));
-}
+/// `AlterPartitionResponse` and every struct it declares, under upstream's own names.
+///
+/// [`AlterPartitionResponse`](crate::AlterPartitionResponse) is re-exported flat, so this path never has to be
+/// written to name the message itself.
+pub mod alter_partition_response {
+    use kafka_wire_core::{
+        ApiKey, ApiVersion, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
+        KafkaEncode, TaggedFields, Uuid, VersionRange,
+    };
 
-impl KafkaRequest for AlterPartitionRequest {
-    const API_KEY: ApiKey = ApiKey::new(56);
-}
+    use crate::{KafkaMessage, KafkaResponse};
 
-impl RequestResponsePair for AlterPartitionRequest {
-    type Response = AlterPartitionResponse;
-}
-
-impl KafkaDecode for AlterPartitionRequest {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        crate::message::ensure_decode_version::<Self>(version)?;
-
-        let broker_id = decoder.read_i32()?;
-        let broker_epoch = decoder.read_i64()?;
-        let topics = {
-            let length = decoder.read_compact_array_len()?;
-            decoder.read_vec(length, |decoder| {
-                AlterPartitionRequestTopicData::decode(decoder, version)
-            })?
-        };
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
-
-        Ok(Self {
-            broker_id,
-            broker_epoch,
-            topics,
-            unknown_tagged_fields,
-        })
+    /// `TopicData` as declared by the `AlterPartition` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    pub struct TopicData {
+        /// The ID of the topic.
+        pub topic_id: Uuid,
+        /// The responses for each partition.
+        pub partitions: Vec<PartitionData>,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
     }
-}
 
-impl KafkaEncode for AlterPartitionRequest {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        crate::message::ensure_encode_version::<Self>(version)?;
+    impl TopicData {
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(2, 3));
 
-        encoder.write_i32(self.broker_id)?;
-        encoder.write_i64(self.broker_epoch)?;
-        encoder.write_compact_array_len(self.topics.len())?;
-        for value in &self.topics {
-            value.encode(encoder, version)?;
+        fn is_flexible(version: ApiVersion) -> bool {
+            Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
         }
+    }
 
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: Self::NAME,
-                version,
-            });
+    impl KafkaDecode for TopicData {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            let topic_id = decoder.read_uuid()?;
+            let partitions = {
+                let length = decoder.read_compact_array_len()?;
+                decoder.read_vec(length, |decoder| PartitionData::decode(decoder, version))?
+            };
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
+
+            Ok(Self {
+                topic_id,
+                partitions,
+                unknown_tagged_fields,
+            })
         }
-
-        Ok(())
     }
-}
 
-/// `TopicData` as declared by the `AlterPartition` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct AlterPartitionResponseTopicData {
-    /// The ID of the topic.
-    pub topic_id: Uuid,
-    /// The responses for each partition.
-    pub partitions: Vec<AlterPartitionResponsePartitionData>,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
+    impl KafkaEncode for TopicData {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            encoder.write_uuid(self.topic_id)?;
+            encoder.write_compact_array_len(self.partitions.len())?;
+            for value in &self.partitions {
+                value.encode(encoder, version)?;
+            }
 
-impl AlterPartitionResponseTopicData {
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(2, 3));
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "TopicData",
+                    version,
+                });
+            }
 
-    fn is_flexible(version: ApiVersion) -> bool {
-        Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
-    }
-}
-
-impl KafkaDecode for AlterPartitionResponseTopicData {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        let topic_id = decoder.read_uuid()?;
-        let partitions = {
-            let length = decoder.read_compact_array_len()?;
-            decoder.read_vec(length, |decoder| {
-                AlterPartitionResponsePartitionData::decode(decoder, version)
-            })?
-        };
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
-
-        Ok(Self {
-            topic_id,
-            partitions,
-            unknown_tagged_fields,
-        })
-    }
-}
-
-impl KafkaEncode for AlterPartitionResponseTopicData {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        encoder.write_uuid(self.topic_id)?;
-        encoder.write_compact_array_len(self.partitions.len())?;
-        for value in &self.partitions {
-            value.encode(encoder, version)?;
+            Ok(())
         }
+    }
 
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: "AlterPartitionResponseTopicData",
-                version,
-            });
+    /// `PartitionData` as declared by the `AlterPartition` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    pub struct PartitionData {
+        /// The partition index.
+        pub partition_index: i32,
+        /// The partition level error code.
+        pub error_code: i16,
+        /// The broker ID of the leader.
+        pub leader_id: i32,
+        /// The leader epoch.
+        pub leader_epoch: i32,
+        /// The in-sync replica `IDs`.
+        pub isr: Vec<i32>,
+        /// 1 if the partition is recovering from an unclean leader election; 0 otherwise.
+        pub leader_recovery_state: i8,
+        /// The current epoch for the partition for `KRaft` controllers.
+        pub partition_epoch: i32,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl PartitionData {
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(2, 3));
+
+        fn is_flexible(version: ApiVersion) -> bool {
+            Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
         }
-
-        Ok(())
     }
-}
 
-/// `PartitionData` as declared by the `AlterPartition` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct AlterPartitionResponsePartitionData {
-    /// The partition index.
-    pub partition_index: i32,
-    /// The partition level error code.
-    pub error_code: i16,
-    /// The broker ID of the leader.
-    pub leader_id: i32,
-    /// The leader epoch.
-    pub leader_epoch: i32,
-    /// The in-sync replica `IDs`.
-    pub isr: Vec<i32>,
-    /// 1 if the partition is recovering from an unclean leader election; 0 otherwise.
-    pub leader_recovery_state: i8,
-    /// The current epoch for the partition for `KRaft` controllers.
-    pub partition_epoch: i32,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
+    impl KafkaDecode for PartitionData {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            let partition_index = decoder.read_i32()?;
+            let error_code = decoder.read_i16()?;
+            let leader_id = decoder.read_i32()?;
+            let leader_epoch = decoder.read_i32()?;
+            let isr = {
+                let length = decoder.read_compact_array_len()?;
+                decoder.read_vec(length, Decoder::read_i32)?
+            };
+            let leader_recovery_state = decoder.read_i8()?;
+            let partition_epoch = decoder.read_i32()?;
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
 
-impl AlterPartitionResponsePartitionData {
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(2, 3));
-
-    fn is_flexible(version: ApiVersion) -> bool {
-        Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
-    }
-}
-
-impl KafkaDecode for AlterPartitionResponsePartitionData {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        let partition_index = decoder.read_i32()?;
-        let error_code = decoder.read_i16()?;
-        let leader_id = decoder.read_i32()?;
-        let leader_epoch = decoder.read_i32()?;
-        let isr = {
-            let length = decoder.read_compact_array_len()?;
-            decoder.read_vec(length, Decoder::read_i32)?
-        };
-        let leader_recovery_state = decoder.read_i8()?;
-        let partition_epoch = decoder.read_i32()?;
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
-
-        Ok(Self {
-            partition_index,
-            error_code,
-            leader_id,
-            leader_epoch,
-            isr,
-            leader_recovery_state,
-            partition_epoch,
-            unknown_tagged_fields,
-        })
-    }
-}
-
-impl KafkaEncode for AlterPartitionResponsePartitionData {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        encoder.write_i32(self.partition_index)?;
-        encoder.write_i16(self.error_code)?;
-        encoder.write_i32(self.leader_id)?;
-        encoder.write_i32(self.leader_epoch)?;
-        encoder.write_compact_array_len(self.isr.len())?;
-        for value in &self.isr {
-            encoder.write_i32(*value)?;
+            Ok(Self {
+                partition_index,
+                error_code,
+                leader_id,
+                leader_epoch,
+                isr,
+                leader_recovery_state,
+                partition_epoch,
+                unknown_tagged_fields,
+            })
         }
-        encoder.write_i8(self.leader_recovery_state)?;
-        encoder.write_i32(self.partition_epoch)?;
+    }
 
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: "AlterPartitionResponsePartitionData",
-                version,
-            });
+    impl KafkaEncode for PartitionData {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            encoder.write_i32(self.partition_index)?;
+            encoder.write_i16(self.error_code)?;
+            encoder.write_i32(self.leader_id)?;
+            encoder.write_i32(self.leader_epoch)?;
+            encoder.write_compact_array_len(self.isr.len())?;
+            for value in &self.isr {
+                encoder.write_i32(*value)?;
+            }
+            encoder.write_i8(self.leader_recovery_state)?;
+            encoder.write_i32(self.partition_epoch)?;
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "PartitionData",
+                    version,
+                });
+            }
+
+            Ok(())
         }
+    }
 
-        Ok(())
+    /// Response body for the `AlterPartition` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    pub struct AlterPartitionResponse {
+        /// The duration in milliseconds for which the request was throttled due to a quota violation, or zero if the request did not violate any quota.
+        pub throttle_time_ms: i32,
+        /// The top level response error code.
+        pub error_code: i16,
+        /// The responses for each topic.
+        pub topics: Vec<TopicData>,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl KafkaMessage for AlterPartitionResponse {
+        const NAME: &'static str = "AlterPartitionResponse";
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(2, 3);
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(2, 3));
+    }
+
+    impl KafkaResponse for AlterPartitionResponse {
+        const API_KEY: ApiKey = ApiKey::new(56);
+    }
+
+    impl KafkaDecode for AlterPartitionResponse {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            crate::message::ensure_decode_version::<Self>(version)?;
+
+            let throttle_time_ms = decoder.read_i32()?;
+            let error_code = decoder.read_i16()?;
+            let topics = {
+                let length = decoder.read_compact_array_len()?;
+                decoder.read_vec(length, |decoder| TopicData::decode(decoder, version))?
+            };
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
+
+            Ok(Self {
+                throttle_time_ms,
+                error_code,
+                topics,
+                unknown_tagged_fields,
+            })
+        }
+    }
+
+    impl KafkaEncode for AlterPartitionResponse {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            crate::message::ensure_encode_version::<Self>(version)?;
+
+            encoder.write_i32(self.throttle_time_ms)?;
+            encoder.write_i16(self.error_code)?;
+            encoder.write_compact_array_len(self.topics.len())?;
+            for value in &self.topics {
+                value.encode(encoder, version)?;
+            }
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: Self::NAME,
+                    version,
+                });
+            }
+
+            Ok(())
+        }
     }
 }
 
-/// Response body for the `AlterPartition` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct AlterPartitionResponse {
-    /// The duration in milliseconds for which the request was throttled due to a quota violation, or zero if the request did not violate any quota.
-    pub throttle_time_ms: i32,
-    /// The top level response error code.
-    pub error_code: i16,
-    /// The responses for each topic.
-    pub topics: Vec<AlterPartitionResponseTopicData>,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
+use kafka_wire_core::VersionRange;
 
-impl KafkaMessage for AlterPartitionResponse {
-    const NAME: &'static str = "AlterPartitionResponse";
-    const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(2, 3);
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(2, 3));
-}
+use crate::{MessageDescriptor, MessageDirection};
 
-impl KafkaResponse for AlterPartitionResponse {
-    const API_KEY: ApiKey = ApiKey::new(56);
-}
-
-impl KafkaDecode for AlterPartitionResponse {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        crate::message::ensure_decode_version::<Self>(version)?;
-
-        let throttle_time_ms = decoder.read_i32()?;
-        let error_code = decoder.read_i16()?;
-        let topics = {
-            let length = decoder.read_compact_array_len()?;
-            decoder.read_vec(length, |decoder| {
-                AlterPartitionResponseTopicData::decode(decoder, version)
-            })?
-        };
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
-
-        Ok(Self {
-            throttle_time_ms,
-            error_code,
-            topics,
-            unknown_tagged_fields,
-        })
-    }
-}
-
-impl KafkaEncode for AlterPartitionResponse {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        crate::message::ensure_encode_version::<Self>(version)?;
-
-        encoder.write_i32(self.throttle_time_ms)?;
-        encoder.write_i16(self.error_code)?;
-        encoder.write_compact_array_len(self.topics.len())?;
-        for value in &self.topics {
-            value.encode(encoder, version)?;
-        }
-
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: Self::NAME,
-                version,
-            });
-        }
-
-        Ok(())
-    }
-}
+pub use alter_partition_request::AlterPartitionRequest;
+pub use alter_partition_response::AlterPartitionResponse;
 
 /// Static metadata for [`AlterPartitionRequest`].
 pub const ALTER_PARTITION_REQUEST_DESCRIPTOR: MessageDescriptor = MessageDescriptor::new(

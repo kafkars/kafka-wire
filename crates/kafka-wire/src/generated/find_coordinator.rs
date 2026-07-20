@@ -5,478 +5,499 @@
 //! Request SHA-256: `e625da58202598e453add8ef21eba4c1f4b93f1b82b29094d34aa7e5c855b651`.
 //! Response SHA-256: `c4e05c28263f53d0175eb60dde1ff9bd40c21851aa76bc65f19d8a8b9309351a`.
 
-use kafka_wire_core::{
-    ApiKey, ApiVersion, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
-    KafkaEncode, StrBytes, TaggedFields, VersionRange,
-};
+/// `FindCoordinatorRequest` and every struct it declares, under upstream's own names.
+///
+/// [`FindCoordinatorRequest`](crate::FindCoordinatorRequest) is re-exported flat, so this path never has to be
+/// written to name the message itself.
+pub mod find_coordinator_request {
+    use kafka_wire_core::{
+        ApiKey, ApiVersion, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
+        KafkaEncode, StrBytes, TaggedFields, VersionRange,
+    };
 
-use crate::{
-    KafkaMessage, KafkaRequest, KafkaResponse, MessageDescriptor, MessageDirection,
-    RequestResponsePair,
-};
+    use crate::{KafkaMessage, KafkaRequest, RequestResponsePair};
 
-/// Request body for the `FindCoordinator` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct FindCoordinatorRequest {
-    /// The coordinator key.
-    pub key: StrBytes,
-    /// The coordinator key type. (group, transaction, share).
-    pub key_type: i8,
-    /// The coordinator keys.
-    pub coordinator_keys: Vec<StrBytes>,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
+    /// Request body for the `FindCoordinator` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    pub struct FindCoordinatorRequest {
+        /// The coordinator key.
+        pub key: StrBytes,
+        /// The coordinator key type. (group, transaction, share).
+        pub key_type: i8,
+        /// The coordinator keys.
+        pub coordinator_keys: Vec<StrBytes>,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
+    }
 
-impl KafkaMessage for FindCoordinatorRequest {
-    const NAME: &'static str = "FindCoordinatorRequest";
-    const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 6);
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(3, 6));
-}
+    impl KafkaMessage for FindCoordinatorRequest {
+        const NAME: &'static str = "FindCoordinatorRequest";
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 6);
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(3, 6));
+    }
 
-impl KafkaRequest for FindCoordinatorRequest {
-    const API_KEY: ApiKey = ApiKey::new(10);
-}
+    impl KafkaRequest for FindCoordinatorRequest {
+        const API_KEY: ApiKey = ApiKey::new(10);
+    }
 
-impl RequestResponsePair for FindCoordinatorRequest {
-    type Response = FindCoordinatorResponse;
-}
+    impl RequestResponsePair for FindCoordinatorRequest {
+        type Response = super::FindCoordinatorResponse;
+    }
 
-impl KafkaDecode for FindCoordinatorRequest {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        crate::message::ensure_decode_version::<Self>(version)?;
+    impl KafkaDecode for FindCoordinatorRequest {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            crate::message::ensure_decode_version::<Self>(version)?;
 
-        let key = if version.value() <= 3 {
+            let key = if version.value() <= 3 {
+                if Self::is_flexible(version) {
+                    decoder.read_compact_string()?
+                } else {
+                    decoder.read_string()?
+                }
+            } else {
+                StrBytes::default()
+            };
+            let key_type = if version.value() >= 1 {
+                decoder.read_i8()?
+            } else {
+                0
+            };
+            let coordinator_keys = if version.value() >= 4 {
+                let length = decoder.read_compact_array_len()?;
+                decoder.read_vec(length, Decoder::read_compact_string)?
+            } else {
+                Vec::new()
+            };
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
+
+            Ok(Self {
+                key,
+                key_type,
+                coordinator_keys,
+                unknown_tagged_fields,
+            })
+        }
+    }
+
+    impl KafkaEncode for FindCoordinatorRequest {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            crate::message::ensure_encode_version::<Self>(version)?;
+
+            if version.value() > 3 && !self.key.is_empty() {
+                return Err(EncodeError::FieldNotRepresentable {
+                    message: Self::NAME,
+                    field: "Key",
+                    version,
+                });
+            }
+            if version.value() < 1 && self.key_type != 0 {
+                return Err(EncodeError::FieldNotRepresentable {
+                    message: Self::NAME,
+                    field: "KeyType",
+                    version,
+                });
+            }
+            if version.value() < 4 && !self.coordinator_keys.is_empty() {
+                return Err(EncodeError::FieldNotRepresentable {
+                    message: Self::NAME,
+                    field: "CoordinatorKeys",
+                    version,
+                });
+            }
+
+            if version.value() <= 3 {
+                if Self::is_flexible(version) {
+                    encoder.write_compact_string(&self.key)?;
+                } else {
+                    encoder.write_string(&self.key)?;
+                }
+            }
+            if version.value() >= 1 {
+                encoder.write_i8(self.key_type)?;
+            }
+            if version.value() >= 4 {
+                encoder.write_compact_array_len(self.coordinator_keys.len())?;
+                for value in &self.coordinator_keys {
+                    encoder.write_compact_string(value)?;
+                }
+            }
+
             if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: Self::NAME,
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+}
+
+/// `FindCoordinatorResponse` and every struct it declares, under upstream's own names.
+///
+/// [`FindCoordinatorResponse`](crate::FindCoordinatorResponse) is re-exported flat, so this path never has to be
+/// written to name the message itself.
+pub mod find_coordinator_response {
+    use kafka_wire_core::{
+        ApiKey, ApiVersion, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
+        KafkaEncode, StrBytes, TaggedFields, VersionRange,
+    };
+
+    use crate::{KafkaMessage, KafkaResponse};
+
+    /// `Coordinator` as declared by the `FindCoordinator` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Eq, PartialEq)]
+    pub struct Coordinator {
+        /// The coordinator key.
+        pub key: StrBytes,
+        /// The node id.
+        pub node_id: i32,
+        /// The host name.
+        pub host: StrBytes,
+        /// The port.
+        pub port: i32,
+        /// The error code, or 0 if there was no error.
+        pub error_code: i16,
+        /// The error message, or null if there was no error.
+        pub error_message: Option<StrBytes>,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl Coordinator {
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(3, 6));
+
+        fn is_flexible(version: ApiVersion) -> bool {
+            Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+        }
+    }
+
+    impl Default for Coordinator {
+        fn default() -> Self {
+            Self {
+                key: StrBytes::default(),
+                node_id: 0,
+                host: StrBytes::default(),
+                port: 0,
+                error_code: 0,
+                error_message: Some(StrBytes::default()),
+                unknown_tagged_fields: TaggedFields::default(),
+            }
+        }
+    }
+
+    impl KafkaDecode for Coordinator {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            let key = if version.value() >= 4 {
                 decoder.read_compact_string()?
             } else {
-                decoder.read_string()?
-            }
-        } else {
-            StrBytes::default()
-        };
-        let key_type = if version.value() >= 1 {
-            decoder.read_i8()?
-        } else {
-            0
-        };
-        let coordinator_keys = if version.value() >= 4 {
-            let length = decoder.read_compact_array_len()?;
-            decoder.read_vec(length, Decoder::read_compact_string)?
-        } else {
-            Vec::new()
-        };
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
-
-        Ok(Self {
-            key,
-            key_type,
-            coordinator_keys,
-            unknown_tagged_fields,
-        })
-    }
-}
-
-impl KafkaEncode for FindCoordinatorRequest {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        crate::message::ensure_encode_version::<Self>(version)?;
-
-        if version.value() > 3 && !self.key.is_empty() {
-            return Err(EncodeError::FieldNotRepresentable {
-                message: Self::NAME,
-                field: "Key",
-                version,
-            });
-        }
-        if version.value() < 1 && self.key_type != 0 {
-            return Err(EncodeError::FieldNotRepresentable {
-                message: Self::NAME,
-                field: "KeyType",
-                version,
-            });
-        }
-        if version.value() < 4 && !self.coordinator_keys.is_empty() {
-            return Err(EncodeError::FieldNotRepresentable {
-                message: Self::NAME,
-                field: "CoordinatorKeys",
-                version,
-            });
-        }
-
-        if version.value() <= 3 {
-            if Self::is_flexible(version) {
-                encoder.write_compact_string(&self.key)?;
+                StrBytes::default()
+            };
+            let node_id = if version.value() >= 4 {
+                decoder.read_i32()?
             } else {
-                encoder.write_string(&self.key)?;
-            }
-        }
-        if version.value() >= 1 {
-            encoder.write_i8(self.key_type)?;
-        }
-        if version.value() >= 4 {
-            encoder.write_compact_array_len(self.coordinator_keys.len())?;
-            for value in &self.coordinator_keys {
-                encoder.write_compact_string(value)?;
-            }
-        }
-
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: Self::NAME,
-                version,
-            });
-        }
-
-        Ok(())
-    }
-}
-
-/// `Coordinator` as declared by the `FindCoordinator` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct FindCoordinatorResponseCoordinator {
-    /// The coordinator key.
-    pub key: StrBytes,
-    /// The node id.
-    pub node_id: i32,
-    /// The host name.
-    pub host: StrBytes,
-    /// The port.
-    pub port: i32,
-    /// The error code, or 0 if there was no error.
-    pub error_code: i16,
-    /// The error message, or null if there was no error.
-    pub error_message: Option<StrBytes>,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
-
-impl FindCoordinatorResponseCoordinator {
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(3, 6));
-
-    fn is_flexible(version: ApiVersion) -> bool {
-        Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
-    }
-}
-
-impl Default for FindCoordinatorResponseCoordinator {
-    fn default() -> Self {
-        Self {
-            key: StrBytes::default(),
-            node_id: 0,
-            host: StrBytes::default(),
-            port: 0,
-            error_code: 0,
-            error_message: Some(StrBytes::default()),
-            unknown_tagged_fields: TaggedFields::default(),
-        }
-    }
-}
-
-impl KafkaDecode for FindCoordinatorResponseCoordinator {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        let key = if version.value() >= 4 {
-            decoder.read_compact_string()?
-        } else {
-            StrBytes::default()
-        };
-        let node_id = if version.value() >= 4 {
-            decoder.read_i32()?
-        } else {
-            0
-        };
-        let host = if version.value() >= 4 {
-            decoder.read_compact_string()?
-        } else {
-            StrBytes::default()
-        };
-        let port = if version.value() >= 4 {
-            decoder.read_i32()?
-        } else {
-            0
-        };
-        let error_code = if version.value() >= 4 {
-            decoder.read_i16()?
-        } else {
-            0
-        };
-        let error_message = if version.value() >= 4 {
-            decoder.read_compact_nullable_string()?
-        } else {
-            Some(StrBytes::default())
-        };
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
-
-        Ok(Self {
-            key,
-            node_id,
-            host,
-            port,
-            error_code,
-            error_message,
-            unknown_tagged_fields,
-        })
-    }
-}
-
-impl KafkaEncode for FindCoordinatorResponseCoordinator {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        if version.value() >= 4 {
-            encoder.write_compact_string(&self.key)?;
-        }
-        if version.value() >= 4 {
-            encoder.write_i32(self.node_id)?;
-        }
-        if version.value() >= 4 {
-            encoder.write_compact_string(&self.host)?;
-        }
-        if version.value() >= 4 {
-            encoder.write_i32(self.port)?;
-        }
-        if version.value() >= 4 {
-            encoder.write_i16(self.error_code)?;
-        }
-        if version.value() >= 4 {
-            encoder.write_compact_nullable_string(self.error_message.as_ref())?;
-        }
-
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: "FindCoordinatorResponseCoordinator",
-                version,
-            });
-        }
-
-        Ok(())
-    }
-}
-
-/// Response body for the `FindCoordinator` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct FindCoordinatorResponse {
-    /// The duration in milliseconds for which the request was throttled due to a quota violation, or zero if the request did not violate any quota.
-    pub throttle_time_ms: i32,
-    /// The error code, or 0 if there was no error.
-    pub error_code: i16,
-    /// The error message, or null if there was no error.
-    pub error_message: Option<StrBytes>,
-    /// The node id.
-    pub node_id: i32,
-    /// The host name.
-    pub host: StrBytes,
-    /// The port.
-    pub port: i32,
-    /// Each coordinator result in the response.
-    pub coordinators: Vec<FindCoordinatorResponseCoordinator>,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
-
-impl Default for FindCoordinatorResponse {
-    fn default() -> Self {
-        Self {
-            throttle_time_ms: 0,
-            error_code: 0,
-            error_message: Some(StrBytes::default()),
-            node_id: 0,
-            host: StrBytes::default(),
-            port: 0,
-            coordinators: Vec::new(),
-            unknown_tagged_fields: TaggedFields::default(),
-        }
-    }
-}
-
-impl KafkaMessage for FindCoordinatorResponse {
-    const NAME: &'static str = "FindCoordinatorResponse";
-    const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 6);
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(3, 6));
-}
-
-impl KafkaResponse for FindCoordinatorResponse {
-    const API_KEY: ApiKey = ApiKey::new(10);
-}
-
-impl KafkaDecode for FindCoordinatorResponse {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        crate::message::ensure_decode_version::<Self>(version)?;
-
-        let throttle_time_ms = if version.value() >= 1 {
-            decoder.read_i32()?
-        } else {
-            0
-        };
-        let error_code = if version.value() <= 3 {
-            decoder.read_i16()?
-        } else {
-            0
-        };
-        let error_message = if version.value() >= 1 && version.value() <= 3 {
-            if Self::is_flexible(version) {
+                0
+            };
+            let host = if version.value() >= 4 {
+                decoder.read_compact_string()?
+            } else {
+                StrBytes::default()
+            };
+            let port = if version.value() >= 4 {
+                decoder.read_i32()?
+            } else {
+                0
+            };
+            let error_code = if version.value() >= 4 {
+                decoder.read_i16()?
+            } else {
+                0
+            };
+            let error_message = if version.value() >= 4 {
                 decoder.read_compact_nullable_string()?
             } else {
-                decoder.read_nullable_string()?
-            }
-        } else {
-            Some(StrBytes::default())
-        };
-        let node_id = if version.value() <= 3 {
-            decoder.read_i32()?
-        } else {
-            0
-        };
-        let host = if version.value() <= 3 {
-            if Self::is_flexible(version) {
-                decoder.read_compact_string()?
+                Some(StrBytes::default())
+            };
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
             } else {
-                decoder.read_string()?
-            }
-        } else {
-            StrBytes::default()
-        };
-        let port = if version.value() <= 3 {
-            decoder.read_i32()?
-        } else {
-            0
-        };
-        let coordinators = if version.value() >= 4 {
-            let length = decoder.read_compact_array_len()?;
-            decoder.read_vec(length, |decoder| {
-                FindCoordinatorResponseCoordinator::decode(decoder, version)
-            })?
-        } else {
-            Vec::new()
-        };
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
+                TaggedFields::default()
+            };
 
-        Ok(Self {
-            throttle_time_ms,
-            error_code,
-            error_message,
-            node_id,
-            host,
-            port,
-            coordinators,
-            unknown_tagged_fields,
-        })
+            Ok(Self {
+                key,
+                node_id,
+                host,
+                port,
+                error_code,
+                error_message,
+                unknown_tagged_fields,
+            })
+        }
     }
-}
 
-impl KafkaEncode for FindCoordinatorResponse {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        crate::message::ensure_encode_version::<Self>(version)?;
-
-        if version.value() > 3 && self.error_code != 0 {
-            return Err(EncodeError::FieldNotRepresentable {
-                message: Self::NAME,
-                field: "ErrorCode",
-                version,
-            });
-        }
-        if version.value() > 3 && self.node_id != 0 {
-            return Err(EncodeError::FieldNotRepresentable {
-                message: Self::NAME,
-                field: "NodeId",
-                version,
-            });
-        }
-        if version.value() > 3 && !self.host.is_empty() {
-            return Err(EncodeError::FieldNotRepresentable {
-                message: Self::NAME,
-                field: "Host",
-                version,
-            });
-        }
-        if version.value() > 3 && self.port != 0 {
-            return Err(EncodeError::FieldNotRepresentable {
-                message: Self::NAME,
-                field: "Port",
-                version,
-            });
-        }
-        if version.value() < 4 && !self.coordinators.is_empty() {
-            return Err(EncodeError::FieldNotRepresentable {
-                message: Self::NAME,
-                field: "Coordinators",
-                version,
-            });
-        }
-
-        if version.value() >= 1 {
-            encoder.write_i32(self.throttle_time_ms)?;
-        }
-        if version.value() <= 3 {
-            encoder.write_i16(self.error_code)?;
-        }
-        if version.value() >= 1 && version.value() <= 3 {
-            if Self::is_flexible(version) {
-                encoder.write_compact_nullable_string(self.error_message.as_ref())?;
-            } else {
-                encoder.write_nullable_string(self.error_message.as_ref())?;
+    impl KafkaEncode for Coordinator {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            if version.value() >= 4 {
+                encoder.write_compact_string(&self.key)?;
             }
-        }
-        if version.value() <= 3 {
-            encoder.write_i32(self.node_id)?;
-        }
-        if version.value() <= 3 {
-            if Self::is_flexible(version) {
+            if version.value() >= 4 {
+                encoder.write_i32(self.node_id)?;
+            }
+            if version.value() >= 4 {
                 encoder.write_compact_string(&self.host)?;
+            }
+            if version.value() >= 4 {
+                encoder.write_i32(self.port)?;
+            }
+            if version.value() >= 4 {
+                encoder.write_i16(self.error_code)?;
+            }
+            if version.value() >= 4 {
+                encoder.write_compact_nullable_string(self.error_message.as_ref())?;
+            }
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "Coordinator",
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+
+    /// Response body for the `FindCoordinator` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Eq, PartialEq)]
+    pub struct FindCoordinatorResponse {
+        /// The duration in milliseconds for which the request was throttled due to a quota violation, or zero if the request did not violate any quota.
+        pub throttle_time_ms: i32,
+        /// The error code, or 0 if there was no error.
+        pub error_code: i16,
+        /// The error message, or null if there was no error.
+        pub error_message: Option<StrBytes>,
+        /// The node id.
+        pub node_id: i32,
+        /// The host name.
+        pub host: StrBytes,
+        /// The port.
+        pub port: i32,
+        /// Each coordinator result in the response.
+        pub coordinators: Vec<Coordinator>,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl Default for FindCoordinatorResponse {
+        fn default() -> Self {
+            Self {
+                throttle_time_ms: 0,
+                error_code: 0,
+                error_message: Some(StrBytes::default()),
+                node_id: 0,
+                host: StrBytes::default(),
+                port: 0,
+                coordinators: Vec::new(),
+                unknown_tagged_fields: TaggedFields::default(),
+            }
+        }
+    }
+
+    impl KafkaMessage for FindCoordinatorResponse {
+        const NAME: &'static str = "FindCoordinatorResponse";
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 6);
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(3, 6));
+    }
+
+    impl KafkaResponse for FindCoordinatorResponse {
+        const API_KEY: ApiKey = ApiKey::new(10);
+    }
+
+    impl KafkaDecode for FindCoordinatorResponse {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            crate::message::ensure_decode_version::<Self>(version)?;
+
+            let throttle_time_ms = if version.value() >= 1 {
+                decoder.read_i32()?
             } else {
-                encoder.write_string(&self.host)?;
-            }
-        }
-        if version.value() <= 3 {
-            encoder.write_i32(self.port)?;
-        }
-        if version.value() >= 4 {
-            encoder.write_compact_array_len(self.coordinators.len())?;
-            for value in &self.coordinators {
-                value.encode(encoder, version)?;
-            }
-        }
+                0
+            };
+            let error_code = if version.value() <= 3 {
+                decoder.read_i16()?
+            } else {
+                0
+            };
+            let error_message = if version.value() >= 1 && version.value() <= 3 {
+                if Self::is_flexible(version) {
+                    decoder.read_compact_nullable_string()?
+                } else {
+                    decoder.read_nullable_string()?
+                }
+            } else {
+                Some(StrBytes::default())
+            };
+            let node_id = if version.value() <= 3 {
+                decoder.read_i32()?
+            } else {
+                0
+            };
+            let host = if version.value() <= 3 {
+                if Self::is_flexible(version) {
+                    decoder.read_compact_string()?
+                } else {
+                    decoder.read_string()?
+                }
+            } else {
+                StrBytes::default()
+            };
+            let port = if version.value() <= 3 {
+                decoder.read_i32()?
+            } else {
+                0
+            };
+            let coordinators = if version.value() >= 4 {
+                let length = decoder.read_compact_array_len()?;
+                decoder.read_vec(length, |decoder| Coordinator::decode(decoder, version))?
+            } else {
+                Vec::new()
+            };
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
 
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: Self::NAME,
-                version,
-            });
+            Ok(Self {
+                throttle_time_ms,
+                error_code,
+                error_message,
+                node_id,
+                host,
+                port,
+                coordinators,
+                unknown_tagged_fields,
+            })
         }
+    }
 
-        Ok(())
+    impl KafkaEncode for FindCoordinatorResponse {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            crate::message::ensure_encode_version::<Self>(version)?;
+
+            if version.value() > 3 && self.error_code != 0 {
+                return Err(EncodeError::FieldNotRepresentable {
+                    message: Self::NAME,
+                    field: "ErrorCode",
+                    version,
+                });
+            }
+            if version.value() > 3 && self.node_id != 0 {
+                return Err(EncodeError::FieldNotRepresentable {
+                    message: Self::NAME,
+                    field: "NodeId",
+                    version,
+                });
+            }
+            if version.value() > 3 && !self.host.is_empty() {
+                return Err(EncodeError::FieldNotRepresentable {
+                    message: Self::NAME,
+                    field: "Host",
+                    version,
+                });
+            }
+            if version.value() > 3 && self.port != 0 {
+                return Err(EncodeError::FieldNotRepresentable {
+                    message: Self::NAME,
+                    field: "Port",
+                    version,
+                });
+            }
+            if version.value() < 4 && !self.coordinators.is_empty() {
+                return Err(EncodeError::FieldNotRepresentable {
+                    message: Self::NAME,
+                    field: "Coordinators",
+                    version,
+                });
+            }
+
+            if version.value() >= 1 {
+                encoder.write_i32(self.throttle_time_ms)?;
+            }
+            if version.value() <= 3 {
+                encoder.write_i16(self.error_code)?;
+            }
+            if version.value() >= 1 && version.value() <= 3 {
+                if Self::is_flexible(version) {
+                    encoder.write_compact_nullable_string(self.error_message.as_ref())?;
+                } else {
+                    encoder.write_nullable_string(self.error_message.as_ref())?;
+                }
+            }
+            if version.value() <= 3 {
+                encoder.write_i32(self.node_id)?;
+            }
+            if version.value() <= 3 {
+                if Self::is_flexible(version) {
+                    encoder.write_compact_string(&self.host)?;
+                } else {
+                    encoder.write_string(&self.host)?;
+                }
+            }
+            if version.value() <= 3 {
+                encoder.write_i32(self.port)?;
+            }
+            if version.value() >= 4 {
+                encoder.write_compact_array_len(self.coordinators.len())?;
+                for value in &self.coordinators {
+                    value.encode(encoder, version)?;
+                }
+            }
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: Self::NAME,
+                    version,
+                });
+            }
+
+            Ok(())
+        }
     }
 }
+
+use kafka_wire_core::VersionRange;
+
+use crate::{MessageDescriptor, MessageDirection};
+
+pub use find_coordinator_request::FindCoordinatorRequest;
+pub use find_coordinator_response::FindCoordinatorResponse;
 
 /// Static metadata for [`FindCoordinatorRequest`].
 pub const FIND_COORDINATOR_REQUEST_DESCRIPTOR: MessageDescriptor = MessageDescriptor::new(

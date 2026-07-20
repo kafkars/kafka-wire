@@ -5,820 +5,841 @@
 //! Request SHA-256: `0b60d77cd8334228562714399232ed67ee3c6f870ca12c301d429e420651e42f`.
 //! Response SHA-256: `a52685f84229a5df50ad04f9d55e39ccbaab647f6180780f855d91577b58b923`.
 
-use kafka_wire_core::{
-    ApiKey, ApiVersion, Bytes, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder,
-    KafkaDecode, KafkaEncode, KnownTags, StrBytes, TagOutcome, TaggedFields, Uuid, VersionRange,
-};
+/// `FetchSnapshotRequest` and every struct it declares, under upstream's own names.
+///
+/// [`FetchSnapshotRequest`](crate::FetchSnapshotRequest) is re-exported flat, so this path never has to be
+/// written to name the message itself.
+pub mod fetch_snapshot_request {
+    use kafka_wire_core::{
+        ApiKey, ApiVersion, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
+        KafkaEncode, KnownTags, StrBytes, TagOutcome, TaggedFields, Uuid, VersionRange,
+    };
 
-use crate::{
-    KafkaMessage, KafkaRequest, KafkaResponse, MessageDescriptor, MessageDirection,
-    RequestResponsePair,
-};
+    use crate::{KafkaMessage, KafkaRequest, RequestResponsePair};
 
-/// `TopicSnapshot` as declared by the `FetchSnapshot` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct FetchSnapshotRequestTopicSnapshot {
-    /// The name of the topic to fetch.
-    pub name: StrBytes,
-    /// The partitions to fetch.
-    pub partitions: Vec<FetchSnapshotRequestPartitionSnapshot>,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
-
-impl FetchSnapshotRequestTopicSnapshot {
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 1));
-
-    fn is_flexible(version: ApiVersion) -> bool {
-        Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+    /// `TopicSnapshot` as declared by the `FetchSnapshot` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    pub struct TopicSnapshot {
+        /// The name of the topic to fetch.
+        pub name: StrBytes,
+        /// The partitions to fetch.
+        pub partitions: Vec<PartitionSnapshot>,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
     }
-}
 
-impl KafkaDecode for FetchSnapshotRequestTopicSnapshot {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        let name = decoder.read_compact_string()?;
-        let partitions = {
-            let length = decoder.read_compact_array_len()?;
-            decoder.read_vec(length, |decoder| {
-                FetchSnapshotRequestPartitionSnapshot::decode(decoder, version)
-            })?
-        };
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
+    impl TopicSnapshot {
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 1));
 
-        Ok(Self {
-            name,
-            partitions,
-            unknown_tagged_fields,
-        })
-    }
-}
-
-impl KafkaEncode for FetchSnapshotRequestTopicSnapshot {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        encoder.write_compact_string(&self.name)?;
-        encoder.write_compact_array_len(self.partitions.len())?;
-        for value in &self.partitions {
-            value.encode(encoder, version)?;
+        fn is_flexible(version: ApiVersion) -> bool {
+            Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
         }
+    }
 
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: "FetchSnapshotRequestTopicSnapshot",
-                version,
-            });
+    impl KafkaDecode for TopicSnapshot {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            let name = decoder.read_compact_string()?;
+            let partitions = {
+                let length = decoder.read_compact_array_len()?;
+                decoder.read_vec(length, |decoder| {
+                    PartitionSnapshot::decode(decoder, version)
+                })?
+            };
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
+
+            Ok(Self {
+                name,
+                partitions,
+                unknown_tagged_fields,
+            })
         }
-
-        Ok(())
     }
-}
 
-/// `PartitionSnapshot` as declared by the `FetchSnapshot` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct FetchSnapshotRequestPartitionSnapshot {
-    /// The partition index.
-    pub partition: i32,
-    /// The current leader epoch of the partition, -1 for unknown leader epoch.
-    pub current_leader_epoch: i32,
-    /// The snapshot `endOffset` and epoch to fetch.
-    pub snapshot_id: FetchSnapshotRequestSnapshotId,
-    /// The byte position within the snapshot to start fetching from.
-    pub position: i64,
-    /// The directory id of the follower fetching.
-    pub replica_directory_id: Uuid,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
-
-impl FetchSnapshotRequestPartitionSnapshot {
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 1));
-
-    fn is_flexible(version: ApiVersion) -> bool {
-        Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
-    }
-}
-
-impl KafkaDecode for FetchSnapshotRequestPartitionSnapshot {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        let partition = decoder.read_i32()?;
-        let current_leader_epoch = decoder.read_i32()?;
-        let snapshot_id = FetchSnapshotRequestSnapshotId::decode(decoder, version)?;
-        let position = decoder.read_i64()?;
-        let mut replica_directory_id: Uuid = Uuid::ZERO;
-        let mut unknown_tagged_fields = TaggedFields::default();
-        if Self::is_flexible(version) {
-            unknown_tagged_fields = decoder.read_tagged_fields_with(|tag, decoder| match tag {
-                0 if version.value() >= 1 => {
-                    replica_directory_id = decoder.read_uuid()?;
-                    Ok(TagOutcome::Decoded)
-                }
-                _ => Ok(TagOutcome::Retained),
-            })?;
-        }
-
-        Ok(Self {
-            partition,
-            current_leader_epoch,
-            snapshot_id,
-            position,
-            replica_directory_id,
-            unknown_tagged_fields,
-        })
-    }
-}
-
-impl KafkaEncode for FetchSnapshotRequestPartitionSnapshot {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        encoder.write_i32(self.partition)?;
-        encoder.write_i32(self.current_leader_epoch)?;
-        self.snapshot_id.encode(encoder, version)?;
-        encoder.write_i64(self.position)?;
-
-        if Self::is_flexible(version) {
-            let mut known = KnownTags::new();
-            if version.value() >= 1 && self.replica_directory_id != Uuid::ZERO {
-                known.write(0, |encoder| {
-                    encoder.write_uuid(self.replica_directory_id)?;
-                    Ok(())
-                })?;
+    impl KafkaEncode for TopicSnapshot {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            encoder.write_compact_string(&self.name)?;
+            encoder.write_compact_array_len(self.partitions.len())?;
+            for value in &self.partitions {
+                value.encode(encoder, version)?;
             }
-            encoder.write_merged_tagged_fields(known, &self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: "FetchSnapshotRequestPartitionSnapshot",
-                version,
-            });
-        }
 
-        Ok(())
-    }
-}
-
-/// `SnapshotId` as declared by the `FetchSnapshot` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct FetchSnapshotRequestSnapshotId {
-    /// The end offset of the snapshot.
-    pub end_offset: i64,
-    /// The epoch of the snapshot.
-    pub epoch: i32,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
-
-impl FetchSnapshotRequestSnapshotId {
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 1));
-
-    fn is_flexible(version: ApiVersion) -> bool {
-        Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
-    }
-}
-
-impl KafkaDecode for FetchSnapshotRequestSnapshotId {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        let end_offset = decoder.read_i64()?;
-        let epoch = decoder.read_i32()?;
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
-
-        Ok(Self {
-            end_offset,
-            epoch,
-            unknown_tagged_fields,
-        })
-    }
-}
-
-impl KafkaEncode for FetchSnapshotRequestSnapshotId {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        encoder.write_i64(self.end_offset)?;
-        encoder.write_i32(self.epoch)?;
-
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: "FetchSnapshotRequestSnapshotId",
-                version,
-            });
-        }
-
-        Ok(())
-    }
-}
-
-/// Request body for the `FetchSnapshot` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct FetchSnapshotRequest {
-    /// The `clusterId` if known, this is used to validate metadata fetches prior to broker registration.
-    pub cluster_id: Option<StrBytes>,
-    /// The broker ID of the follower.
-    pub replica_id: i32,
-    /// The maximum bytes to fetch from all of the snapshots.
-    pub max_bytes: i32,
-    /// The topics to fetch.
-    pub topics: Vec<FetchSnapshotRequestTopicSnapshot>,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
-
-impl Default for FetchSnapshotRequest {
-    fn default() -> Self {
-        Self {
-            cluster_id: None,
-            replica_id: -1,
-            max_bytes: 2_147_483_647,
-            topics: Vec::new(),
-            unknown_tagged_fields: TaggedFields::default(),
-        }
-    }
-}
-
-impl KafkaMessage for FetchSnapshotRequest {
-    const NAME: &'static str = "FetchSnapshotRequest";
-    const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 1);
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 1));
-}
-
-impl KafkaRequest for FetchSnapshotRequest {
-    const API_KEY: ApiKey = ApiKey::new(59);
-}
-
-impl RequestResponsePair for FetchSnapshotRequest {
-    type Response = FetchSnapshotResponse;
-}
-
-impl KafkaDecode for FetchSnapshotRequest {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        crate::message::ensure_decode_version::<Self>(version)?;
-
-        let replica_id = decoder.read_i32()?;
-        let max_bytes = decoder.read_i32()?;
-        let topics = {
-            let length = decoder.read_compact_array_len()?;
-            decoder.read_vec(length, |decoder| {
-                FetchSnapshotRequestTopicSnapshot::decode(decoder, version)
-            })?
-        };
-        let mut cluster_id: Option<StrBytes> = None;
-        let mut unknown_tagged_fields = TaggedFields::default();
-        if Self::is_flexible(version) {
-            unknown_tagged_fields = decoder.read_tagged_fields_with(|tag, decoder| match tag {
-                0 => {
-                    cluster_id = decoder.read_compact_nullable_string()?;
-                    Ok(TagOutcome::Decoded)
-                }
-                _ => Ok(TagOutcome::Retained),
-            })?;
-        }
-
-        Ok(Self {
-            cluster_id,
-            replica_id,
-            max_bytes,
-            topics,
-            unknown_tagged_fields,
-        })
-    }
-}
-
-impl KafkaEncode for FetchSnapshotRequest {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        crate::message::ensure_encode_version::<Self>(version)?;
-
-        encoder.write_i32(self.replica_id)?;
-        encoder.write_i32(self.max_bytes)?;
-        encoder.write_compact_array_len(self.topics.len())?;
-        for value in &self.topics {
-            value.encode(encoder, version)?;
-        }
-
-        if Self::is_flexible(version) {
-            let mut known = KnownTags::new();
-            if self.cluster_id.is_some() {
-                known.write(0, |encoder| {
-                    encoder.write_compact_nullable_string(self.cluster_id.as_ref())?;
-                    Ok(())
-                })?;
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "TopicSnapshot",
+                    version,
+                });
             }
-            encoder.write_merged_tagged_fields(known, &self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: Self::NAME,
-                version,
-            });
+
+            Ok(())
         }
-
-        Ok(())
     }
-}
 
-/// `TopicSnapshot` as declared by the `FetchSnapshot` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct FetchSnapshotResponseTopicSnapshot {
-    /// The name of the topic to fetch.
-    pub name: StrBytes,
-    /// The partitions to fetch.
-    pub partitions: Vec<FetchSnapshotResponsePartitionSnapshot>,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
-
-impl FetchSnapshotResponseTopicSnapshot {
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 1));
-
-    fn is_flexible(version: ApiVersion) -> bool {
-        Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+    /// `PartitionSnapshot` as declared by the `FetchSnapshot` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    pub struct PartitionSnapshot {
+        /// The partition index.
+        pub partition: i32,
+        /// The current leader epoch of the partition, -1 for unknown leader epoch.
+        pub current_leader_epoch: i32,
+        /// The snapshot `endOffset` and epoch to fetch.
+        pub snapshot_id: SnapshotId,
+        /// The byte position within the snapshot to start fetching from.
+        pub position: i64,
+        /// The directory id of the follower fetching.
+        pub replica_directory_id: Uuid,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
     }
-}
 
-impl KafkaDecode for FetchSnapshotResponseTopicSnapshot {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        let name = decoder.read_compact_string()?;
-        let partitions = {
-            let length = decoder.read_compact_array_len()?;
-            decoder.read_vec(length, |decoder| {
-                FetchSnapshotResponsePartitionSnapshot::decode(decoder, version)
-            })?
-        };
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
+    impl PartitionSnapshot {
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 1));
 
-        Ok(Self {
-            name,
-            partitions,
-            unknown_tagged_fields,
-        })
-    }
-}
-
-impl KafkaEncode for FetchSnapshotResponseTopicSnapshot {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        encoder.write_compact_string(&self.name)?;
-        encoder.write_compact_array_len(self.partitions.len())?;
-        for value in &self.partitions {
-            value.encode(encoder, version)?;
+        fn is_flexible(version: ApiVersion) -> bool {
+            Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
         }
-
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: "FetchSnapshotResponseTopicSnapshot",
-                version,
-            });
-        }
-
-        Ok(())
     }
-}
 
-/// `PartitionSnapshot` as declared by the `FetchSnapshot` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct FetchSnapshotResponsePartitionSnapshot {
-    /// The partition index.
-    pub index: i32,
-    /// The error code, or 0 if there was no fetch error.
-    pub error_code: i16,
-    /// The snapshot `endOffset` and epoch fetched.
-    pub snapshot_id: FetchSnapshotResponseSnapshotId,
-    /// The leader of the partition at the time of the snapshot.
-    pub current_leader: FetchSnapshotResponseLeaderIdAndEpoch,
-    /// The total size of the snapshot.
-    pub size: i64,
-    /// The starting byte position within the snapshot included in the Bytes field.
-    pub position: i64,
-    /// Snapshot data in records format which may not be aligned on an offset boundary.
-    pub unaligned_records: Bytes,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
-
-impl FetchSnapshotResponsePartitionSnapshot {
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 1));
-
-    fn is_flexible(version: ApiVersion) -> bool {
-        Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
-    }
-}
-
-impl KafkaDecode for FetchSnapshotResponsePartitionSnapshot {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        let index = decoder.read_i32()?;
-        let error_code = decoder.read_i16()?;
-        let snapshot_id = FetchSnapshotResponseSnapshotId::decode(decoder, version)?;
-        let size = decoder.read_i64()?;
-        let position = decoder.read_i64()?;
-        let unaligned_records = decoder.read_compact_bytes()?;
-        let mut current_leader: FetchSnapshotResponseLeaderIdAndEpoch =
-            FetchSnapshotResponseLeaderIdAndEpoch::default();
-        let mut unknown_tagged_fields = TaggedFields::default();
-        if Self::is_flexible(version) {
-            unknown_tagged_fields = decoder.read_tagged_fields_with(|tag, decoder| match tag {
-                0 => {
-                    current_leader =
-                        FetchSnapshotResponseLeaderIdAndEpoch::decode(decoder, version)?;
-                    Ok(TagOutcome::Decoded)
-                }
-                _ => Ok(TagOutcome::Retained),
-            })?;
-        }
-
-        Ok(Self {
-            index,
-            error_code,
-            snapshot_id,
-            current_leader,
-            size,
-            position,
-            unaligned_records,
-            unknown_tagged_fields,
-        })
-    }
-}
-
-impl KafkaEncode for FetchSnapshotResponsePartitionSnapshot {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        encoder.write_i32(self.index)?;
-        encoder.write_i16(self.error_code)?;
-        self.snapshot_id.encode(encoder, version)?;
-        encoder.write_i64(self.size)?;
-        encoder.write_i64(self.position)?;
-        encoder.write_compact_bytes(&self.unaligned_records)?;
-
-        if Self::is_flexible(version) {
-            let mut known = KnownTags::new();
-            if self.current_leader != FetchSnapshotResponseLeaderIdAndEpoch::default() {
-                known.write(0, |encoder| {
-                    self.current_leader.encode(encoder, version)?;
-                    Ok(())
-                })?;
+    impl KafkaDecode for PartitionSnapshot {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            let partition = decoder.read_i32()?;
+            let current_leader_epoch = decoder.read_i32()?;
+            let snapshot_id = SnapshotId::decode(decoder, version)?;
+            let position = decoder.read_i64()?;
+            let mut replica_directory_id: Uuid = Uuid::ZERO;
+            let mut unknown_tagged_fields = TaggedFields::default();
+            if Self::is_flexible(version) {
+                unknown_tagged_fields =
+                    decoder.read_tagged_fields_with(|tag, decoder| match tag {
+                        0 if version.value() >= 1 => {
+                            replica_directory_id = decoder.read_uuid()?;
+                            Ok(TagOutcome::Decoded)
+                        }
+                        _ => Ok(TagOutcome::Retained),
+                    })?;
             }
-            encoder.write_merged_tagged_fields(known, &self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: "FetchSnapshotResponsePartitionSnapshot",
-                version,
-            });
+
+            Ok(Self {
+                partition,
+                current_leader_epoch,
+                snapshot_id,
+                position,
+                replica_directory_id,
+                unknown_tagged_fields,
+            })
         }
-
-        Ok(())
     }
-}
 
-/// `SnapshotId` as declared by the `FetchSnapshot` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct FetchSnapshotResponseSnapshotId {
-    /// The snapshot end offset.
-    pub end_offset: i64,
-    /// The snapshot epoch.
-    pub epoch: i32,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
+    impl KafkaEncode for PartitionSnapshot {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            encoder.write_i32(self.partition)?;
+            encoder.write_i32(self.current_leader_epoch)?;
+            self.snapshot_id.encode(encoder, version)?;
+            encoder.write_i64(self.position)?;
 
-impl FetchSnapshotResponseSnapshotId {
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 1));
-
-    fn is_flexible(version: ApiVersion) -> bool {
-        Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
-    }
-}
-
-impl KafkaDecode for FetchSnapshotResponseSnapshotId {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        let end_offset = decoder.read_i64()?;
-        let epoch = decoder.read_i32()?;
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
-
-        Ok(Self {
-            end_offset,
-            epoch,
-            unknown_tagged_fields,
-        })
-    }
-}
-
-impl KafkaEncode for FetchSnapshotResponseSnapshotId {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        encoder.write_i64(self.end_offset)?;
-        encoder.write_i32(self.epoch)?;
-
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: "FetchSnapshotResponseSnapshotId",
-                version,
-            });
-        }
-
-        Ok(())
-    }
-}
-
-/// `LeaderIdAndEpoch` as declared by the `FetchSnapshot` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct FetchSnapshotResponseLeaderIdAndEpoch {
-    /// The ID of the current leader or -1 if the leader is unknown.
-    pub leader_id: i32,
-    /// The latest known leader epoch.
-    pub leader_epoch: i32,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
-
-impl FetchSnapshotResponseLeaderIdAndEpoch {
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 1));
-
-    fn is_flexible(version: ApiVersion) -> bool {
-        Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
-    }
-}
-
-impl KafkaDecode for FetchSnapshotResponseLeaderIdAndEpoch {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        let leader_id = decoder.read_i32()?;
-        let leader_epoch = decoder.read_i32()?;
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
-
-        Ok(Self {
-            leader_id,
-            leader_epoch,
-            unknown_tagged_fields,
-        })
-    }
-}
-
-impl KafkaEncode for FetchSnapshotResponseLeaderIdAndEpoch {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        encoder.write_i32(self.leader_id)?;
-        encoder.write_i32(self.leader_epoch)?;
-
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: "FetchSnapshotResponseLeaderIdAndEpoch",
-                version,
-            });
-        }
-
-        Ok(())
-    }
-}
-
-/// `NodeEndpoint` as declared by the `FetchSnapshot` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct FetchSnapshotResponseNodeEndpoint {
-    /// The ID of the associated node.
-    pub node_id: i32,
-    /// The node's hostname.
-    pub host: StrBytes,
-    /// The node's port.
-    pub port: u16,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
-
-impl FetchSnapshotResponseNodeEndpoint {
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 1));
-
-    fn is_flexible(version: ApiVersion) -> bool {
-        Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
-    }
-}
-
-impl KafkaDecode for FetchSnapshotResponseNodeEndpoint {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        let node_id = if version.value() >= 1 {
-            decoder.read_i32()?
-        } else {
-            0
-        };
-        let host = if version.value() >= 1 {
-            decoder.read_compact_string()?
-        } else {
-            StrBytes::default()
-        };
-        let port = if version.value() >= 1 {
-            decoder.read_u16()?
-        } else {
-            0
-        };
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
-
-        Ok(Self {
-            node_id,
-            host,
-            port,
-            unknown_tagged_fields,
-        })
-    }
-}
-
-impl KafkaEncode for FetchSnapshotResponseNodeEndpoint {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        if version.value() >= 1 {
-            encoder.write_i32(self.node_id)?;
-        }
-        if version.value() >= 1 {
-            encoder.write_compact_string(&self.host)?;
-        }
-        if version.value() >= 1 {
-            encoder.write_u16(self.port)?;
-        }
-
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: "FetchSnapshotResponseNodeEndpoint",
-                version,
-            });
-        }
-
-        Ok(())
-    }
-}
-
-/// Response body for the `FetchSnapshot` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct FetchSnapshotResponse {
-    /// The duration in milliseconds for which the request was throttled due to a quota violation, or zero if the request did not violate any quota.
-    pub throttle_time_ms: i32,
-    /// The top level response error code.
-    pub error_code: i16,
-    /// The topics to fetch.
-    pub topics: Vec<FetchSnapshotResponseTopicSnapshot>,
-    /// Endpoints for all current-leaders enumerated in `PartitionSnapshot`.
-    pub node_endpoints: Vec<FetchSnapshotResponseNodeEndpoint>,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
-
-impl KafkaMessage for FetchSnapshotResponse {
-    const NAME: &'static str = "FetchSnapshotResponse";
-    const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 1);
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 1));
-}
-
-impl KafkaResponse for FetchSnapshotResponse {
-    const API_KEY: ApiKey = ApiKey::new(59);
-}
-
-impl KafkaDecode for FetchSnapshotResponse {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        crate::message::ensure_decode_version::<Self>(version)?;
-
-        let throttle_time_ms = decoder.read_i32()?;
-        let error_code = decoder.read_i16()?;
-        let topics = {
-            let length = decoder.read_compact_array_len()?;
-            decoder.read_vec(length, |decoder| {
-                FetchSnapshotResponseTopicSnapshot::decode(decoder, version)
-            })?
-        };
-        let mut node_endpoints: Vec<FetchSnapshotResponseNodeEndpoint> = Vec::new();
-        let mut unknown_tagged_fields = TaggedFields::default();
-        if Self::is_flexible(version) {
-            unknown_tagged_fields = decoder.read_tagged_fields_with(|tag, decoder| match tag {
-                0 if version.value() >= 1 => {
-                    node_endpoints = {
-                        let length = decoder.read_compact_array_len()?;
-                        decoder.read_vec(length, |decoder| {
-                            FetchSnapshotResponseNodeEndpoint::decode(decoder, version)
-                        })?
-                    };
-                    Ok(TagOutcome::Decoded)
+            if Self::is_flexible(version) {
+                let mut known = KnownTags::new();
+                if version.value() >= 1 && self.replica_directory_id != Uuid::ZERO {
+                    known.write(0, |encoder| {
+                        encoder.write_uuid(self.replica_directory_id)?;
+                        Ok(())
+                    })?;
                 }
-                _ => Ok(TagOutcome::Retained),
-            })?;
-        }
-
-        Ok(Self {
-            throttle_time_ms,
-            error_code,
-            topics,
-            node_endpoints,
-            unknown_tagged_fields,
-        })
-    }
-}
-
-impl KafkaEncode for FetchSnapshotResponse {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        crate::message::ensure_encode_version::<Self>(version)?;
-
-        if version.value() < 1 && !self.node_endpoints.is_empty() {
-            return Err(EncodeError::FieldNotRepresentable {
-                message: Self::NAME,
-                field: "NodeEndpoints",
-                version,
-            });
-        }
-
-        encoder.write_i32(self.throttle_time_ms)?;
-        encoder.write_i16(self.error_code)?;
-        encoder.write_compact_array_len(self.topics.len())?;
-        for value in &self.topics {
-            value.encode(encoder, version)?;
-        }
-
-        if Self::is_flexible(version) {
-            let mut known = KnownTags::new();
-            if version.value() >= 1 && !self.node_endpoints.is_empty() {
-                known.write(0, |encoder| {
-                    encoder.write_compact_array_len(self.node_endpoints.len())?;
-                    for value in &self.node_endpoints {
-                        value.encode(encoder, version)?;
-                    }
-                    Ok(())
-                })?;
+                encoder.write_merged_tagged_fields(known, &self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "PartitionSnapshot",
+                    version,
+                });
             }
-            encoder.write_merged_tagged_fields(known, &self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: Self::NAME,
-                version,
-            });
-        }
 
-        Ok(())
+            Ok(())
+        }
+    }
+
+    /// `SnapshotId` as declared by the `FetchSnapshot` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    pub struct SnapshotId {
+        /// The end offset of the snapshot.
+        pub end_offset: i64,
+        /// The epoch of the snapshot.
+        pub epoch: i32,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl SnapshotId {
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 1));
+
+        fn is_flexible(version: ApiVersion) -> bool {
+            Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+        }
+    }
+
+    impl KafkaDecode for SnapshotId {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            let end_offset = decoder.read_i64()?;
+            let epoch = decoder.read_i32()?;
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
+
+            Ok(Self {
+                end_offset,
+                epoch,
+                unknown_tagged_fields,
+            })
+        }
+    }
+
+    impl KafkaEncode for SnapshotId {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            encoder.write_i64(self.end_offset)?;
+            encoder.write_i32(self.epoch)?;
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "SnapshotId",
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+
+    /// Request body for the `FetchSnapshot` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Eq, PartialEq)]
+    pub struct FetchSnapshotRequest {
+        /// The `clusterId` if known, this is used to validate metadata fetches prior to broker registration.
+        pub cluster_id: Option<StrBytes>,
+        /// The broker ID of the follower.
+        pub replica_id: i32,
+        /// The maximum bytes to fetch from all of the snapshots.
+        pub max_bytes: i32,
+        /// The topics to fetch.
+        pub topics: Vec<TopicSnapshot>,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl Default for FetchSnapshotRequest {
+        fn default() -> Self {
+            Self {
+                cluster_id: None,
+                replica_id: -1,
+                max_bytes: 2_147_483_647,
+                topics: Vec::new(),
+                unknown_tagged_fields: TaggedFields::default(),
+            }
+        }
+    }
+
+    impl KafkaMessage for FetchSnapshotRequest {
+        const NAME: &'static str = "FetchSnapshotRequest";
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 1);
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 1));
+    }
+
+    impl KafkaRequest for FetchSnapshotRequest {
+        const API_KEY: ApiKey = ApiKey::new(59);
+    }
+
+    impl RequestResponsePair for FetchSnapshotRequest {
+        type Response = super::FetchSnapshotResponse;
+    }
+
+    impl KafkaDecode for FetchSnapshotRequest {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            crate::message::ensure_decode_version::<Self>(version)?;
+
+            let replica_id = decoder.read_i32()?;
+            let max_bytes = decoder.read_i32()?;
+            let topics = {
+                let length = decoder.read_compact_array_len()?;
+                decoder.read_vec(length, |decoder| TopicSnapshot::decode(decoder, version))?
+            };
+            let mut cluster_id: Option<StrBytes> = None;
+            let mut unknown_tagged_fields = TaggedFields::default();
+            if Self::is_flexible(version) {
+                unknown_tagged_fields =
+                    decoder.read_tagged_fields_with(|tag, decoder| match tag {
+                        0 => {
+                            cluster_id = decoder.read_compact_nullable_string()?;
+                            Ok(TagOutcome::Decoded)
+                        }
+                        _ => Ok(TagOutcome::Retained),
+                    })?;
+            }
+
+            Ok(Self {
+                cluster_id,
+                replica_id,
+                max_bytes,
+                topics,
+                unknown_tagged_fields,
+            })
+        }
+    }
+
+    impl KafkaEncode for FetchSnapshotRequest {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            crate::message::ensure_encode_version::<Self>(version)?;
+
+            encoder.write_i32(self.replica_id)?;
+            encoder.write_i32(self.max_bytes)?;
+            encoder.write_compact_array_len(self.topics.len())?;
+            for value in &self.topics {
+                value.encode(encoder, version)?;
+            }
+
+            if Self::is_flexible(version) {
+                let mut known = KnownTags::new();
+                if self.cluster_id.is_some() {
+                    known.write(0, |encoder| {
+                        encoder.write_compact_nullable_string(self.cluster_id.as_ref())?;
+                        Ok(())
+                    })?;
+                }
+                encoder.write_merged_tagged_fields(known, &self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: Self::NAME,
+                    version,
+                });
+            }
+
+            Ok(())
+        }
     }
 }
+
+/// `FetchSnapshotResponse` and every struct it declares, under upstream's own names.
+///
+/// [`FetchSnapshotResponse`](crate::FetchSnapshotResponse) is re-exported flat, so this path never has to be
+/// written to name the message itself.
+pub mod fetch_snapshot_response {
+    use kafka_wire_core::{
+        ApiKey, ApiVersion, Bytes, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder,
+        KafkaDecode, KafkaEncode, KnownTags, StrBytes, TagOutcome, TaggedFields, VersionRange,
+    };
+
+    use crate::{KafkaMessage, KafkaResponse};
+
+    /// `TopicSnapshot` as declared by the `FetchSnapshot` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    pub struct TopicSnapshot {
+        /// The name of the topic to fetch.
+        pub name: StrBytes,
+        /// The partitions to fetch.
+        pub partitions: Vec<PartitionSnapshot>,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl TopicSnapshot {
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 1));
+
+        fn is_flexible(version: ApiVersion) -> bool {
+            Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+        }
+    }
+
+    impl KafkaDecode for TopicSnapshot {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            let name = decoder.read_compact_string()?;
+            let partitions = {
+                let length = decoder.read_compact_array_len()?;
+                decoder.read_vec(length, |decoder| {
+                    PartitionSnapshot::decode(decoder, version)
+                })?
+            };
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
+
+            Ok(Self {
+                name,
+                partitions,
+                unknown_tagged_fields,
+            })
+        }
+    }
+
+    impl KafkaEncode for TopicSnapshot {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            encoder.write_compact_string(&self.name)?;
+            encoder.write_compact_array_len(self.partitions.len())?;
+            for value in &self.partitions {
+                value.encode(encoder, version)?;
+            }
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "TopicSnapshot",
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+
+    /// `PartitionSnapshot` as declared by the `FetchSnapshot` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    pub struct PartitionSnapshot {
+        /// The partition index.
+        pub index: i32,
+        /// The error code, or 0 if there was no fetch error.
+        pub error_code: i16,
+        /// The snapshot `endOffset` and epoch fetched.
+        pub snapshot_id: SnapshotId,
+        /// The leader of the partition at the time of the snapshot.
+        pub current_leader: LeaderIdAndEpoch,
+        /// The total size of the snapshot.
+        pub size: i64,
+        /// The starting byte position within the snapshot included in the Bytes field.
+        pub position: i64,
+        /// Snapshot data in records format which may not be aligned on an offset boundary.
+        pub unaligned_records: Bytes,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl PartitionSnapshot {
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 1));
+
+        fn is_flexible(version: ApiVersion) -> bool {
+            Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+        }
+    }
+
+    impl KafkaDecode for PartitionSnapshot {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            let index = decoder.read_i32()?;
+            let error_code = decoder.read_i16()?;
+            let snapshot_id = SnapshotId::decode(decoder, version)?;
+            let size = decoder.read_i64()?;
+            let position = decoder.read_i64()?;
+            let unaligned_records = decoder.read_compact_bytes()?;
+            let mut current_leader: LeaderIdAndEpoch = LeaderIdAndEpoch::default();
+            let mut unknown_tagged_fields = TaggedFields::default();
+            if Self::is_flexible(version) {
+                unknown_tagged_fields =
+                    decoder.read_tagged_fields_with(|tag, decoder| match tag {
+                        0 => {
+                            current_leader = LeaderIdAndEpoch::decode(decoder, version)?;
+                            Ok(TagOutcome::Decoded)
+                        }
+                        _ => Ok(TagOutcome::Retained),
+                    })?;
+            }
+
+            Ok(Self {
+                index,
+                error_code,
+                snapshot_id,
+                current_leader,
+                size,
+                position,
+                unaligned_records,
+                unknown_tagged_fields,
+            })
+        }
+    }
+
+    impl KafkaEncode for PartitionSnapshot {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            encoder.write_i32(self.index)?;
+            encoder.write_i16(self.error_code)?;
+            self.snapshot_id.encode(encoder, version)?;
+            encoder.write_i64(self.size)?;
+            encoder.write_i64(self.position)?;
+            encoder.write_compact_bytes(&self.unaligned_records)?;
+
+            if Self::is_flexible(version) {
+                let mut known = KnownTags::new();
+                if self.current_leader != LeaderIdAndEpoch::default() {
+                    known.write(0, |encoder| {
+                        self.current_leader.encode(encoder, version)?;
+                        Ok(())
+                    })?;
+                }
+                encoder.write_merged_tagged_fields(known, &self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "PartitionSnapshot",
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+
+    /// `SnapshotId` as declared by the `FetchSnapshot` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    pub struct SnapshotId {
+        /// The snapshot end offset.
+        pub end_offset: i64,
+        /// The snapshot epoch.
+        pub epoch: i32,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl SnapshotId {
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 1));
+
+        fn is_flexible(version: ApiVersion) -> bool {
+            Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+        }
+    }
+
+    impl KafkaDecode for SnapshotId {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            let end_offset = decoder.read_i64()?;
+            let epoch = decoder.read_i32()?;
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
+
+            Ok(Self {
+                end_offset,
+                epoch,
+                unknown_tagged_fields,
+            })
+        }
+    }
+
+    impl KafkaEncode for SnapshotId {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            encoder.write_i64(self.end_offset)?;
+            encoder.write_i32(self.epoch)?;
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "SnapshotId",
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+
+    /// `LeaderIdAndEpoch` as declared by the `FetchSnapshot` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    pub struct LeaderIdAndEpoch {
+        /// The ID of the current leader or -1 if the leader is unknown.
+        pub leader_id: i32,
+        /// The latest known leader epoch.
+        pub leader_epoch: i32,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl LeaderIdAndEpoch {
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 1));
+
+        fn is_flexible(version: ApiVersion) -> bool {
+            Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+        }
+    }
+
+    impl KafkaDecode for LeaderIdAndEpoch {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            let leader_id = decoder.read_i32()?;
+            let leader_epoch = decoder.read_i32()?;
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
+
+            Ok(Self {
+                leader_id,
+                leader_epoch,
+                unknown_tagged_fields,
+            })
+        }
+    }
+
+    impl KafkaEncode for LeaderIdAndEpoch {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            encoder.write_i32(self.leader_id)?;
+            encoder.write_i32(self.leader_epoch)?;
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "LeaderIdAndEpoch",
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+
+    /// `NodeEndpoint` as declared by the `FetchSnapshot` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    pub struct NodeEndpoint {
+        /// The ID of the associated node.
+        pub node_id: i32,
+        /// The node's hostname.
+        pub host: StrBytes,
+        /// The node's port.
+        pub port: u16,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl NodeEndpoint {
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 1));
+
+        fn is_flexible(version: ApiVersion) -> bool {
+            Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+        }
+    }
+
+    impl KafkaDecode for NodeEndpoint {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            let node_id = if version.value() >= 1 {
+                decoder.read_i32()?
+            } else {
+                0
+            };
+            let host = if version.value() >= 1 {
+                decoder.read_compact_string()?
+            } else {
+                StrBytes::default()
+            };
+            let port = if version.value() >= 1 {
+                decoder.read_u16()?
+            } else {
+                0
+            };
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
+
+            Ok(Self {
+                node_id,
+                host,
+                port,
+                unknown_tagged_fields,
+            })
+        }
+    }
+
+    impl KafkaEncode for NodeEndpoint {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            if version.value() >= 1 {
+                encoder.write_i32(self.node_id)?;
+            }
+            if version.value() >= 1 {
+                encoder.write_compact_string(&self.host)?;
+            }
+            if version.value() >= 1 {
+                encoder.write_u16(self.port)?;
+            }
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "NodeEndpoint",
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+
+    /// Response body for the `FetchSnapshot` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    pub struct FetchSnapshotResponse {
+        /// The duration in milliseconds for which the request was throttled due to a quota violation, or zero if the request did not violate any quota.
+        pub throttle_time_ms: i32,
+        /// The top level response error code.
+        pub error_code: i16,
+        /// The topics to fetch.
+        pub topics: Vec<TopicSnapshot>,
+        /// Endpoints for all current-leaders enumerated in `PartitionSnapshot`.
+        pub node_endpoints: Vec<NodeEndpoint>,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl KafkaMessage for FetchSnapshotResponse {
+        const NAME: &'static str = "FetchSnapshotResponse";
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 1);
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 1));
+    }
+
+    impl KafkaResponse for FetchSnapshotResponse {
+        const API_KEY: ApiKey = ApiKey::new(59);
+    }
+
+    impl KafkaDecode for FetchSnapshotResponse {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            crate::message::ensure_decode_version::<Self>(version)?;
+
+            let throttle_time_ms = decoder.read_i32()?;
+            let error_code = decoder.read_i16()?;
+            let topics = {
+                let length = decoder.read_compact_array_len()?;
+                decoder.read_vec(length, |decoder| TopicSnapshot::decode(decoder, version))?
+            };
+            let mut node_endpoints: Vec<NodeEndpoint> = Vec::new();
+            let mut unknown_tagged_fields = TaggedFields::default();
+            if Self::is_flexible(version) {
+                unknown_tagged_fields =
+                    decoder.read_tagged_fields_with(|tag, decoder| match tag {
+                        0 if version.value() >= 1 => {
+                            node_endpoints = {
+                                let length = decoder.read_compact_array_len()?;
+                                decoder.read_vec(length, |decoder| {
+                                    NodeEndpoint::decode(decoder, version)
+                                })?
+                            };
+                            Ok(TagOutcome::Decoded)
+                        }
+                        _ => Ok(TagOutcome::Retained),
+                    })?;
+            }
+
+            Ok(Self {
+                throttle_time_ms,
+                error_code,
+                topics,
+                node_endpoints,
+                unknown_tagged_fields,
+            })
+        }
+    }
+
+    impl KafkaEncode for FetchSnapshotResponse {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            crate::message::ensure_encode_version::<Self>(version)?;
+
+            if version.value() < 1 && !self.node_endpoints.is_empty() {
+                return Err(EncodeError::FieldNotRepresentable {
+                    message: Self::NAME,
+                    field: "NodeEndpoints",
+                    version,
+                });
+            }
+
+            encoder.write_i32(self.throttle_time_ms)?;
+            encoder.write_i16(self.error_code)?;
+            encoder.write_compact_array_len(self.topics.len())?;
+            for value in &self.topics {
+                value.encode(encoder, version)?;
+            }
+
+            if Self::is_flexible(version) {
+                let mut known = KnownTags::new();
+                if version.value() >= 1 && !self.node_endpoints.is_empty() {
+                    known.write(0, |encoder| {
+                        encoder.write_compact_array_len(self.node_endpoints.len())?;
+                        for value in &self.node_endpoints {
+                            value.encode(encoder, version)?;
+                        }
+                        Ok(())
+                    })?;
+                }
+                encoder.write_merged_tagged_fields(known, &self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: Self::NAME,
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+}
+
+use kafka_wire_core::VersionRange;
+
+use crate::{MessageDescriptor, MessageDirection};
+
+pub use fetch_snapshot_request::FetchSnapshotRequest;
+pub use fetch_snapshot_response::FetchSnapshotResponse;
 
 /// Static metadata for [`FetchSnapshotRequest`].
 pub const FETCH_SNAPSHOT_REQUEST_DESCRIPTOR: MessageDescriptor = MessageDescriptor::new(

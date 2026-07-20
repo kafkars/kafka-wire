@@ -5,718 +5,735 @@
 //! Request SHA-256: `9f75e74cec5c35bbd5142a31e7116e981942ad194b916fafa775084764bc73d1`.
 //! Response SHA-256: `dbfd4f0fa6c9617a6823af7434167e57d5d748fb3c5d3fd623cad671777d912b`.
 
-use kafka_wire_core::{
-    ApiKey, ApiVersion, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
-    KafkaEncode, StrBytes, TaggedFields, Uuid, VersionRange,
-};
+/// `ShareAcknowledgeRequest` and every struct it declares, under upstream's own names.
+///
+/// [`ShareAcknowledgeRequest`](crate::ShareAcknowledgeRequest) is re-exported flat, so this path never has to be
+/// written to name the message itself.
+pub mod share_acknowledge_request {
+    use kafka_wire_core::{
+        ApiKey, ApiVersion, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
+        KafkaEncode, StrBytes, TaggedFields, Uuid, VersionRange,
+    };
 
-use crate::{
-    KafkaMessage, KafkaRequest, KafkaResponse, MessageDescriptor, MessageDirection,
-    RequestResponsePair,
-};
+    use crate::{KafkaMessage, KafkaRequest, RequestResponsePair};
 
-/// `AcknowledgeTopic` as declared by the `ShareAcknowledge` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct ShareAcknowledgeRequestAcknowledgeTopic {
-    /// The unique topic ID.
-    pub topic_id: Uuid,
-    /// The partitions containing records to acknowledge.
-    pub partitions: Vec<ShareAcknowledgeRequestAcknowledgePartition>,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
-
-impl ShareAcknowledgeRequestAcknowledgeTopic {
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(1, 2));
-
-    fn is_flexible(version: ApiVersion) -> bool {
-        Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+    /// `AcknowledgeTopic` as declared by the `ShareAcknowledge` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    pub struct AcknowledgeTopic {
+        /// The unique topic ID.
+        pub topic_id: Uuid,
+        /// The partitions containing records to acknowledge.
+        pub partitions: Vec<AcknowledgePartition>,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
     }
-}
 
-impl KafkaDecode for ShareAcknowledgeRequestAcknowledgeTopic {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        let topic_id = decoder.read_uuid()?;
-        let partitions = {
-            let length = decoder.read_compact_array_len()?;
-            decoder.read_vec(length, |decoder| {
-                ShareAcknowledgeRequestAcknowledgePartition::decode(decoder, version)
-            })?
-        };
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
+    impl AcknowledgeTopic {
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(1, 2));
 
-        Ok(Self {
-            topic_id,
-            partitions,
-            unknown_tagged_fields,
-        })
-    }
-}
-
-impl KafkaEncode for ShareAcknowledgeRequestAcknowledgeTopic {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        encoder.write_uuid(self.topic_id)?;
-        encoder.write_compact_array_len(self.partitions.len())?;
-        for value in &self.partitions {
-            value.encode(encoder, version)?;
-        }
-
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: "ShareAcknowledgeRequestAcknowledgeTopic",
-                version,
-            });
-        }
-
-        Ok(())
-    }
-}
-
-/// `AcknowledgePartition` as declared by the `ShareAcknowledge` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct ShareAcknowledgeRequestAcknowledgePartition {
-    /// The partition index.
-    pub partition_index: i32,
-    /// Record batches to acknowledge.
-    pub acknowledgement_batches: Vec<ShareAcknowledgeRequestAcknowledgementBatch>,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
-
-impl ShareAcknowledgeRequestAcknowledgePartition {
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(1, 2));
-
-    fn is_flexible(version: ApiVersion) -> bool {
-        Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
-    }
-}
-
-impl KafkaDecode for ShareAcknowledgeRequestAcknowledgePartition {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        let partition_index = decoder.read_i32()?;
-        let acknowledgement_batches = {
-            let length = decoder.read_compact_array_len()?;
-            decoder.read_vec(length, |decoder| {
-                ShareAcknowledgeRequestAcknowledgementBatch::decode(decoder, version)
-            })?
-        };
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
-
-        Ok(Self {
-            partition_index,
-            acknowledgement_batches,
-            unknown_tagged_fields,
-        })
-    }
-}
-
-impl KafkaEncode for ShareAcknowledgeRequestAcknowledgePartition {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        encoder.write_i32(self.partition_index)?;
-        encoder.write_compact_array_len(self.acknowledgement_batches.len())?;
-        for value in &self.acknowledgement_batches {
-            value.encode(encoder, version)?;
-        }
-
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: "ShareAcknowledgeRequestAcknowledgePartition",
-                version,
-            });
-        }
-
-        Ok(())
-    }
-}
-
-/// `AcknowledgementBatch` as declared by the `ShareAcknowledge` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct ShareAcknowledgeRequestAcknowledgementBatch {
-    /// First offset of batch of records to acknowledge.
-    pub first_offset: i64,
-    /// Last offset (inclusive) of batch of records to acknowledge.
-    pub last_offset: i64,
-    /// Array of acknowledge types - 0:Gap,1:Accept,2:Release,3:Reject,4:Renew.
-    pub acknowledge_types: Vec<i8>,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
-
-impl ShareAcknowledgeRequestAcknowledgementBatch {
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(1, 2));
-
-    fn is_flexible(version: ApiVersion) -> bool {
-        Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
-    }
-}
-
-impl KafkaDecode for ShareAcknowledgeRequestAcknowledgementBatch {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        let first_offset = decoder.read_i64()?;
-        let last_offset = decoder.read_i64()?;
-        let acknowledge_types = {
-            let length = decoder.read_compact_array_len()?;
-            decoder.read_vec(length, Decoder::read_i8)?
-        };
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
-
-        Ok(Self {
-            first_offset,
-            last_offset,
-            acknowledge_types,
-            unknown_tagged_fields,
-        })
-    }
-}
-
-impl KafkaEncode for ShareAcknowledgeRequestAcknowledgementBatch {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        encoder.write_i64(self.first_offset)?;
-        encoder.write_i64(self.last_offset)?;
-        encoder.write_compact_array_len(self.acknowledge_types.len())?;
-        for value in &self.acknowledge_types {
-            encoder.write_i8(*value)?;
-        }
-
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: "ShareAcknowledgeRequestAcknowledgementBatch",
-                version,
-            });
-        }
-
-        Ok(())
-    }
-}
-
-/// Request body for the `ShareAcknowledge` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct ShareAcknowledgeRequest {
-    /// The group identifier.
-    pub group_id: Option<StrBytes>,
-    /// The member ID.
-    pub member_id: Option<StrBytes>,
-    /// The current share session epoch: 0 to open a share session; -1 to close it; otherwise increments for consecutive requests.
-    pub share_session_epoch: i32,
-    /// Whether Renew type acknowledgements present in `AcknowledgementBatches`.
-    pub is_renew_ack: bool,
-    /// The topics containing records to acknowledge.
-    pub topics: Vec<ShareAcknowledgeRequestAcknowledgeTopic>,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
-
-impl Default for ShareAcknowledgeRequest {
-    fn default() -> Self {
-        Self {
-            group_id: None,
-            member_id: Some(StrBytes::default()),
-            share_session_epoch: 0,
-            is_renew_ack: false,
-            topics: Vec::new(),
-            unknown_tagged_fields: TaggedFields::default(),
+        fn is_flexible(version: ApiVersion) -> bool {
+            Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
         }
     }
-}
 
-impl KafkaMessage for ShareAcknowledgeRequest {
-    const NAME: &'static str = "ShareAcknowledgeRequest";
-    const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(1, 2);
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(1, 2));
-}
+    impl KafkaDecode for AcknowledgeTopic {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            let topic_id = decoder.read_uuid()?;
+            let partitions = {
+                let length = decoder.read_compact_array_len()?;
+                decoder.read_vec(length, |decoder| {
+                    AcknowledgePartition::decode(decoder, version)
+                })?
+            };
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
 
-impl KafkaRequest for ShareAcknowledgeRequest {
-    const API_KEY: ApiKey = ApiKey::new(79);
-}
-
-impl RequestResponsePair for ShareAcknowledgeRequest {
-    type Response = ShareAcknowledgeResponse;
-}
-
-impl KafkaDecode for ShareAcknowledgeRequest {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        crate::message::ensure_decode_version::<Self>(version)?;
-
-        let group_id = decoder.read_compact_nullable_string()?;
-        let member_id = decoder.read_compact_nullable_string()?;
-        let share_session_epoch = decoder.read_i32()?;
-        let is_renew_ack = if version.value() >= 2 {
-            decoder.read_bool()?
-        } else {
-            false
-        };
-        let topics = {
-            let length = decoder.read_compact_array_len()?;
-            decoder.read_vec(length, |decoder| {
-                ShareAcknowledgeRequestAcknowledgeTopic::decode(decoder, version)
-            })?
-        };
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
-
-        Ok(Self {
-            group_id,
-            member_id,
-            share_session_epoch,
-            is_renew_ack,
-            topics,
-            unknown_tagged_fields,
-        })
-    }
-}
-
-impl KafkaEncode for ShareAcknowledgeRequest {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        crate::message::ensure_encode_version::<Self>(version)?;
-
-        if version.value() < 2 && self.is_renew_ack {
-            return Err(EncodeError::FieldNotRepresentable {
-                message: Self::NAME,
-                field: "IsRenewAck",
-                version,
-            });
+            Ok(Self {
+                topic_id,
+                partitions,
+                unknown_tagged_fields,
+            })
         }
+    }
 
-        encoder.write_compact_nullable_string(self.group_id.as_ref())?;
-        encoder.write_compact_nullable_string(self.member_id.as_ref())?;
-        encoder.write_i32(self.share_session_epoch)?;
-        if version.value() >= 2 {
-            encoder.write_bool(self.is_renew_ack)?;
+    impl KafkaEncode for AcknowledgeTopic {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            encoder.write_uuid(self.topic_id)?;
+            encoder.write_compact_array_len(self.partitions.len())?;
+            for value in &self.partitions {
+                value.encode(encoder, version)?;
+            }
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "AcknowledgeTopic",
+                    version,
+                });
+            }
+
+            Ok(())
         }
-        encoder.write_compact_array_len(self.topics.len())?;
-        for value in &self.topics {
-            value.encode(encoder, version)?;
+    }
+
+    /// `AcknowledgePartition` as declared by the `ShareAcknowledge` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    pub struct AcknowledgePartition {
+        /// The partition index.
+        pub partition_index: i32,
+        /// Record batches to acknowledge.
+        pub acknowledgement_batches: Vec<AcknowledgementBatch>,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl AcknowledgePartition {
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(1, 2));
+
+        fn is_flexible(version: ApiVersion) -> bool {
+            Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
         }
+    }
 
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: Self::NAME,
-                version,
-            });
+    impl KafkaDecode for AcknowledgePartition {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            let partition_index = decoder.read_i32()?;
+            let acknowledgement_batches = {
+                let length = decoder.read_compact_array_len()?;
+                decoder.read_vec(length, |decoder| {
+                    AcknowledgementBatch::decode(decoder, version)
+                })?
+            };
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
+
+            Ok(Self {
+                partition_index,
+                acknowledgement_batches,
+                unknown_tagged_fields,
+            })
         }
-
-        Ok(())
     }
-}
 
-/// `ShareAcknowledgeTopicResponse` as declared by the `ShareAcknowledge` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct ShareAcknowledgeResponseTopicResponse {
-    /// The unique topic ID.
-    pub topic_id: Uuid,
-    /// The topic partitions.
-    pub partitions: Vec<ShareAcknowledgeResponsePartitionData>,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
+    impl KafkaEncode for AcknowledgePartition {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            encoder.write_i32(self.partition_index)?;
+            encoder.write_compact_array_len(self.acknowledgement_batches.len())?;
+            for value in &self.acknowledgement_batches {
+                value.encode(encoder, version)?;
+            }
 
-impl ShareAcknowledgeResponseTopicResponse {
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(1, 2));
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "AcknowledgePartition",
+                    version,
+                });
+            }
 
-    fn is_flexible(version: ApiVersion) -> bool {
-        Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
-    }
-}
-
-impl KafkaDecode for ShareAcknowledgeResponseTopicResponse {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        let topic_id = decoder.read_uuid()?;
-        let partitions = {
-            let length = decoder.read_compact_array_len()?;
-            decoder.read_vec(length, |decoder| {
-                ShareAcknowledgeResponsePartitionData::decode(decoder, version)
-            })?
-        };
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
-
-        Ok(Self {
-            topic_id,
-            partitions,
-            unknown_tagged_fields,
-        })
-    }
-}
-
-impl KafkaEncode for ShareAcknowledgeResponseTopicResponse {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        encoder.write_uuid(self.topic_id)?;
-        encoder.write_compact_array_len(self.partitions.len())?;
-        for value in &self.partitions {
-            value.encode(encoder, version)?;
+            Ok(())
         }
+    }
 
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: "ShareAcknowledgeResponseTopicResponse",
-                version,
-            });
+    /// `AcknowledgementBatch` as declared by the `ShareAcknowledge` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    pub struct AcknowledgementBatch {
+        /// First offset of batch of records to acknowledge.
+        pub first_offset: i64,
+        /// Last offset (inclusive) of batch of records to acknowledge.
+        pub last_offset: i64,
+        /// Array of acknowledge types - 0:Gap,1:Accept,2:Release,3:Reject,4:Renew.
+        pub acknowledge_types: Vec<i8>,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl AcknowledgementBatch {
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(1, 2));
+
+        fn is_flexible(version: ApiVersion) -> bool {
+            Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
         }
-
-        Ok(())
     }
-}
 
-/// `PartitionData` as declared by the `ShareAcknowledge` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct ShareAcknowledgeResponsePartitionData {
-    /// The partition index.
-    pub partition_index: i32,
-    /// The error code, or 0 if there was no error.
-    pub error_code: i16,
-    /// The error message, or null if there was no error.
-    pub error_message: Option<StrBytes>,
-    /// The current leader of the partition.
-    pub current_leader: ShareAcknowledgeResponseLeaderIdAndEpoch,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
+    impl KafkaDecode for AcknowledgementBatch {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            let first_offset = decoder.read_i64()?;
+            let last_offset = decoder.read_i64()?;
+            let acknowledge_types = {
+                let length = decoder.read_compact_array_len()?;
+                decoder.read_vec(length, Decoder::read_i8)?
+            };
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
 
-impl ShareAcknowledgeResponsePartitionData {
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(1, 2));
-
-    fn is_flexible(version: ApiVersion) -> bool {
-        Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
-    }
-}
-
-impl KafkaDecode for ShareAcknowledgeResponsePartitionData {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        let partition_index = decoder.read_i32()?;
-        let error_code = decoder.read_i16()?;
-        let error_message = decoder.read_compact_nullable_string()?;
-        let current_leader = ShareAcknowledgeResponseLeaderIdAndEpoch::decode(decoder, version)?;
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
-
-        Ok(Self {
-            partition_index,
-            error_code,
-            error_message,
-            current_leader,
-            unknown_tagged_fields,
-        })
-    }
-}
-
-impl KafkaEncode for ShareAcknowledgeResponsePartitionData {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        encoder.write_i32(self.partition_index)?;
-        encoder.write_i16(self.error_code)?;
-        encoder.write_compact_nullable_string(self.error_message.as_ref())?;
-        self.current_leader.encode(encoder, version)?;
-
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: "ShareAcknowledgeResponsePartitionData",
-                version,
-            });
+            Ok(Self {
+                first_offset,
+                last_offset,
+                acknowledge_types,
+                unknown_tagged_fields,
+            })
         }
-
-        Ok(())
     }
-}
 
-/// `LeaderIdAndEpoch` as declared by the `ShareAcknowledge` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct ShareAcknowledgeResponseLeaderIdAndEpoch {
-    /// The ID of the current leader or -1 if the leader is unknown.
-    pub leader_id: i32,
-    /// The latest known leader epoch.
-    pub leader_epoch: i32,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
+    impl KafkaEncode for AcknowledgementBatch {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            encoder.write_i64(self.first_offset)?;
+            encoder.write_i64(self.last_offset)?;
+            encoder.write_compact_array_len(self.acknowledge_types.len())?;
+            for value in &self.acknowledge_types {
+                encoder.write_i8(*value)?;
+            }
 
-impl ShareAcknowledgeResponseLeaderIdAndEpoch {
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(1, 2));
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "AcknowledgementBatch",
+                    version,
+                });
+            }
 
-    fn is_flexible(version: ApiVersion) -> bool {
-        Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
-    }
-}
-
-impl KafkaDecode for ShareAcknowledgeResponseLeaderIdAndEpoch {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        let leader_id = decoder.read_i32()?;
-        let leader_epoch = decoder.read_i32()?;
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
-
-        Ok(Self {
-            leader_id,
-            leader_epoch,
-            unknown_tagged_fields,
-        })
-    }
-}
-
-impl KafkaEncode for ShareAcknowledgeResponseLeaderIdAndEpoch {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        encoder.write_i32(self.leader_id)?;
-        encoder.write_i32(self.leader_epoch)?;
-
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: "ShareAcknowledgeResponseLeaderIdAndEpoch",
-                version,
-            });
+            Ok(())
         }
-
-        Ok(())
     }
-}
 
-/// `NodeEndpoint` as declared by the `ShareAcknowledge` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct ShareAcknowledgeResponseNodeEndpoint {
-    /// The ID of the associated node.
-    pub node_id: i32,
-    /// The node's hostname.
-    pub host: StrBytes,
-    /// The node's port.
-    pub port: i32,
-    /// The rack of the node, or null if it has not been assigned to a rack.
-    pub rack: Option<StrBytes>,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
-
-impl ShareAcknowledgeResponseNodeEndpoint {
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(1, 2));
-
-    fn is_flexible(version: ApiVersion) -> bool {
-        Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+    /// Request body for the `ShareAcknowledge` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Eq, PartialEq)]
+    pub struct ShareAcknowledgeRequest {
+        /// The group identifier.
+        pub group_id: Option<StrBytes>,
+        /// The member ID.
+        pub member_id: Option<StrBytes>,
+        /// The current share session epoch: 0 to open a share session; -1 to close it; otherwise increments for consecutive requests.
+        pub share_session_epoch: i32,
+        /// Whether Renew type acknowledgements present in `AcknowledgementBatches`.
+        pub is_renew_ack: bool,
+        /// The topics containing records to acknowledge.
+        pub topics: Vec<AcknowledgeTopic>,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
     }
-}
 
-impl KafkaDecode for ShareAcknowledgeResponseNodeEndpoint {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        let node_id = decoder.read_i32()?;
-        let host = decoder.read_compact_string()?;
-        let port = decoder.read_i32()?;
-        let rack = decoder.read_compact_nullable_string()?;
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
-
-        Ok(Self {
-            node_id,
-            host,
-            port,
-            rack,
-            unknown_tagged_fields,
-        })
-    }
-}
-
-impl KafkaEncode for ShareAcknowledgeResponseNodeEndpoint {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        encoder.write_i32(self.node_id)?;
-        encoder.write_compact_string(&self.host)?;
-        encoder.write_i32(self.port)?;
-        encoder.write_compact_nullable_string(self.rack.as_ref())?;
-
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: "ShareAcknowledgeResponseNodeEndpoint",
-                version,
-            });
+    impl Default for ShareAcknowledgeRequest {
+        fn default() -> Self {
+            Self {
+                group_id: None,
+                member_id: Some(StrBytes::default()),
+                share_session_epoch: 0,
+                is_renew_ack: false,
+                topics: Vec::new(),
+                unknown_tagged_fields: TaggedFields::default(),
+            }
         }
+    }
 
-        Ok(())
+    impl KafkaMessage for ShareAcknowledgeRequest {
+        const NAME: &'static str = "ShareAcknowledgeRequest";
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(1, 2);
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(1, 2));
+    }
+
+    impl KafkaRequest for ShareAcknowledgeRequest {
+        const API_KEY: ApiKey = ApiKey::new(79);
+    }
+
+    impl RequestResponsePair for ShareAcknowledgeRequest {
+        type Response = super::ShareAcknowledgeResponse;
+    }
+
+    impl KafkaDecode for ShareAcknowledgeRequest {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            crate::message::ensure_decode_version::<Self>(version)?;
+
+            let group_id = decoder.read_compact_nullable_string()?;
+            let member_id = decoder.read_compact_nullable_string()?;
+            let share_session_epoch = decoder.read_i32()?;
+            let is_renew_ack = if version.value() >= 2 {
+                decoder.read_bool()?
+            } else {
+                false
+            };
+            let topics = {
+                let length = decoder.read_compact_array_len()?;
+                decoder.read_vec(length, |decoder| AcknowledgeTopic::decode(decoder, version))?
+            };
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
+
+            Ok(Self {
+                group_id,
+                member_id,
+                share_session_epoch,
+                is_renew_ack,
+                topics,
+                unknown_tagged_fields,
+            })
+        }
+    }
+
+    impl KafkaEncode for ShareAcknowledgeRequest {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            crate::message::ensure_encode_version::<Self>(version)?;
+
+            if version.value() < 2 && self.is_renew_ack {
+                return Err(EncodeError::FieldNotRepresentable {
+                    message: Self::NAME,
+                    field: "IsRenewAck",
+                    version,
+                });
+            }
+
+            encoder.write_compact_nullable_string(self.group_id.as_ref())?;
+            encoder.write_compact_nullable_string(self.member_id.as_ref())?;
+            encoder.write_i32(self.share_session_epoch)?;
+            if version.value() >= 2 {
+                encoder.write_bool(self.is_renew_ack)?;
+            }
+            encoder.write_compact_array_len(self.topics.len())?;
+            for value in &self.topics {
+                value.encode(encoder, version)?;
+            }
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: Self::NAME,
+                    version,
+                });
+            }
+
+            Ok(())
+        }
     }
 }
 
-/// Response body for the `ShareAcknowledge` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct ShareAcknowledgeResponse {
-    /// The duration in milliseconds for which the request was throttled due to a quota violation, or zero if the request did not violate any quota.
-    pub throttle_time_ms: i32,
-    /// The top level response error code.
-    pub error_code: i16,
-    /// The top-level error message, or null if there was no error.
-    pub error_message: Option<StrBytes>,
-    /// The time in milliseconds for which the acquired records are locked.
-    pub acquisition_lock_timeout_ms: i32,
-    /// The response topics.
-    pub responses: Vec<ShareAcknowledgeResponseTopicResponse>,
-    /// Endpoints for all current leaders enumerated in `PartitionData` with error `NOT_LEADER_OR_FOLLOWER`.
-    pub node_endpoints: Vec<ShareAcknowledgeResponseNodeEndpoint>,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
+/// `ShareAcknowledgeResponse` and every struct it declares, under upstream's own names.
+///
+/// [`ShareAcknowledgeResponse`](crate::ShareAcknowledgeResponse) is re-exported flat, so this path never has to be
+/// written to name the message itself.
+pub mod share_acknowledge_response {
+    use kafka_wire_core::{
+        ApiKey, ApiVersion, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
+        KafkaEncode, StrBytes, TaggedFields, Uuid, VersionRange,
+    };
 
-impl KafkaMessage for ShareAcknowledgeResponse {
-    const NAME: &'static str = "ShareAcknowledgeResponse";
-    const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(1, 2);
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(1, 2));
-}
+    use crate::{KafkaMessage, KafkaResponse};
 
-impl KafkaResponse for ShareAcknowledgeResponse {
-    const API_KEY: ApiKey = ApiKey::new(79);
-}
+    /// `ShareAcknowledgeTopicResponse` as declared by the `ShareAcknowledge` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    pub struct ShareAcknowledgeTopicResponse {
+        /// The unique topic ID.
+        pub topic_id: Uuid,
+        /// The topic partitions.
+        pub partitions: Vec<PartitionData>,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
+    }
 
-impl KafkaDecode for ShareAcknowledgeResponse {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        crate::message::ensure_decode_version::<Self>(version)?;
+    impl ShareAcknowledgeTopicResponse {
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(1, 2));
 
-        let throttle_time_ms = decoder.read_i32()?;
-        let error_code = decoder.read_i16()?;
-        let error_message = decoder.read_compact_nullable_string()?;
-        let acquisition_lock_timeout_ms = if version.value() >= 2 {
-            decoder.read_i32()?
-        } else {
-            0
-        };
-        let responses = {
-            let length = decoder.read_compact_array_len()?;
-            decoder.read_vec(length, |decoder| {
-                ShareAcknowledgeResponseTopicResponse::decode(decoder, version)
-            })?
-        };
-        let node_endpoints = {
-            let length = decoder.read_compact_array_len()?;
-            decoder.read_vec(length, |decoder| {
-                ShareAcknowledgeResponseNodeEndpoint::decode(decoder, version)
-            })?
-        };
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
+        fn is_flexible(version: ApiVersion) -> bool {
+            Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+        }
+    }
 
-        Ok(Self {
-            throttle_time_ms,
-            error_code,
-            error_message,
-            acquisition_lock_timeout_ms,
-            responses,
-            node_endpoints,
-            unknown_tagged_fields,
-        })
+    impl KafkaDecode for ShareAcknowledgeTopicResponse {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            let topic_id = decoder.read_uuid()?;
+            let partitions = {
+                let length = decoder.read_compact_array_len()?;
+                decoder.read_vec(length, |decoder| PartitionData::decode(decoder, version))?
+            };
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
+
+            Ok(Self {
+                topic_id,
+                partitions,
+                unknown_tagged_fields,
+            })
+        }
+    }
+
+    impl KafkaEncode for ShareAcknowledgeTopicResponse {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            encoder.write_uuid(self.topic_id)?;
+            encoder.write_compact_array_len(self.partitions.len())?;
+            for value in &self.partitions {
+                value.encode(encoder, version)?;
+            }
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "ShareAcknowledgeTopicResponse",
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+
+    /// `PartitionData` as declared by the `ShareAcknowledge` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    pub struct PartitionData {
+        /// The partition index.
+        pub partition_index: i32,
+        /// The error code, or 0 if there was no error.
+        pub error_code: i16,
+        /// The error message, or null if there was no error.
+        pub error_message: Option<StrBytes>,
+        /// The current leader of the partition.
+        pub current_leader: LeaderIdAndEpoch,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl PartitionData {
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(1, 2));
+
+        fn is_flexible(version: ApiVersion) -> bool {
+            Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+        }
+    }
+
+    impl KafkaDecode for PartitionData {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            let partition_index = decoder.read_i32()?;
+            let error_code = decoder.read_i16()?;
+            let error_message = decoder.read_compact_nullable_string()?;
+            let current_leader = LeaderIdAndEpoch::decode(decoder, version)?;
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
+
+            Ok(Self {
+                partition_index,
+                error_code,
+                error_message,
+                current_leader,
+                unknown_tagged_fields,
+            })
+        }
+    }
+
+    impl KafkaEncode for PartitionData {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            encoder.write_i32(self.partition_index)?;
+            encoder.write_i16(self.error_code)?;
+            encoder.write_compact_nullable_string(self.error_message.as_ref())?;
+            self.current_leader.encode(encoder, version)?;
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "PartitionData",
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+
+    /// `LeaderIdAndEpoch` as declared by the `ShareAcknowledge` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    pub struct LeaderIdAndEpoch {
+        /// The ID of the current leader or -1 if the leader is unknown.
+        pub leader_id: i32,
+        /// The latest known leader epoch.
+        pub leader_epoch: i32,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl LeaderIdAndEpoch {
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(1, 2));
+
+        fn is_flexible(version: ApiVersion) -> bool {
+            Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+        }
+    }
+
+    impl KafkaDecode for LeaderIdAndEpoch {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            let leader_id = decoder.read_i32()?;
+            let leader_epoch = decoder.read_i32()?;
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
+
+            Ok(Self {
+                leader_id,
+                leader_epoch,
+                unknown_tagged_fields,
+            })
+        }
+    }
+
+    impl KafkaEncode for LeaderIdAndEpoch {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            encoder.write_i32(self.leader_id)?;
+            encoder.write_i32(self.leader_epoch)?;
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "LeaderIdAndEpoch",
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+
+    /// `NodeEndpoint` as declared by the `ShareAcknowledge` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    pub struct NodeEndpoint {
+        /// The ID of the associated node.
+        pub node_id: i32,
+        /// The node's hostname.
+        pub host: StrBytes,
+        /// The node's port.
+        pub port: i32,
+        /// The rack of the node, or null if it has not been assigned to a rack.
+        pub rack: Option<StrBytes>,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl NodeEndpoint {
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(1, 2));
+
+        fn is_flexible(version: ApiVersion) -> bool {
+            Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+        }
+    }
+
+    impl KafkaDecode for NodeEndpoint {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            let node_id = decoder.read_i32()?;
+            let host = decoder.read_compact_string()?;
+            let port = decoder.read_i32()?;
+            let rack = decoder.read_compact_nullable_string()?;
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
+
+            Ok(Self {
+                node_id,
+                host,
+                port,
+                rack,
+                unknown_tagged_fields,
+            })
+        }
+    }
+
+    impl KafkaEncode for NodeEndpoint {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            encoder.write_i32(self.node_id)?;
+            encoder.write_compact_string(&self.host)?;
+            encoder.write_i32(self.port)?;
+            encoder.write_compact_nullable_string(self.rack.as_ref())?;
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "NodeEndpoint",
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+
+    /// Response body for the `ShareAcknowledge` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    pub struct ShareAcknowledgeResponse {
+        /// The duration in milliseconds for which the request was throttled due to a quota violation, or zero if the request did not violate any quota.
+        pub throttle_time_ms: i32,
+        /// The top level response error code.
+        pub error_code: i16,
+        /// The top-level error message, or null if there was no error.
+        pub error_message: Option<StrBytes>,
+        /// The time in milliseconds for which the acquired records are locked.
+        pub acquisition_lock_timeout_ms: i32,
+        /// The response topics.
+        pub responses: Vec<ShareAcknowledgeTopicResponse>,
+        /// Endpoints for all current leaders enumerated in `PartitionData` with error `NOT_LEADER_OR_FOLLOWER`.
+        pub node_endpoints: Vec<NodeEndpoint>,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl KafkaMessage for ShareAcknowledgeResponse {
+        const NAME: &'static str = "ShareAcknowledgeResponse";
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(1, 2);
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(1, 2));
+    }
+
+    impl KafkaResponse for ShareAcknowledgeResponse {
+        const API_KEY: ApiKey = ApiKey::new(79);
+    }
+
+    impl KafkaDecode for ShareAcknowledgeResponse {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            crate::message::ensure_decode_version::<Self>(version)?;
+
+            let throttle_time_ms = decoder.read_i32()?;
+            let error_code = decoder.read_i16()?;
+            let error_message = decoder.read_compact_nullable_string()?;
+            let acquisition_lock_timeout_ms = if version.value() >= 2 {
+                decoder.read_i32()?
+            } else {
+                0
+            };
+            let responses = {
+                let length = decoder.read_compact_array_len()?;
+                decoder.read_vec(length, |decoder| {
+                    ShareAcknowledgeTopicResponse::decode(decoder, version)
+                })?
+            };
+            let node_endpoints = {
+                let length = decoder.read_compact_array_len()?;
+                decoder.read_vec(length, |decoder| NodeEndpoint::decode(decoder, version))?
+            };
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
+
+            Ok(Self {
+                throttle_time_ms,
+                error_code,
+                error_message,
+                acquisition_lock_timeout_ms,
+                responses,
+                node_endpoints,
+                unknown_tagged_fields,
+            })
+        }
+    }
+
+    impl KafkaEncode for ShareAcknowledgeResponse {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            crate::message::ensure_encode_version::<Self>(version)?;
+
+            encoder.write_i32(self.throttle_time_ms)?;
+            encoder.write_i16(self.error_code)?;
+            encoder.write_compact_nullable_string(self.error_message.as_ref())?;
+            if version.value() >= 2 {
+                encoder.write_i32(self.acquisition_lock_timeout_ms)?;
+            }
+            encoder.write_compact_array_len(self.responses.len())?;
+            for value in &self.responses {
+                value.encode(encoder, version)?;
+            }
+            encoder.write_compact_array_len(self.node_endpoints.len())?;
+            for value in &self.node_endpoints {
+                value.encode(encoder, version)?;
+            }
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: Self::NAME,
+                    version,
+                });
+            }
+
+            Ok(())
+        }
     }
 }
 
-impl KafkaEncode for ShareAcknowledgeResponse {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        crate::message::ensure_encode_version::<Self>(version)?;
+use kafka_wire_core::VersionRange;
 
-        encoder.write_i32(self.throttle_time_ms)?;
-        encoder.write_i16(self.error_code)?;
-        encoder.write_compact_nullable_string(self.error_message.as_ref())?;
-        if version.value() >= 2 {
-            encoder.write_i32(self.acquisition_lock_timeout_ms)?;
-        }
-        encoder.write_compact_array_len(self.responses.len())?;
-        for value in &self.responses {
-            value.encode(encoder, version)?;
-        }
-        encoder.write_compact_array_len(self.node_endpoints.len())?;
-        for value in &self.node_endpoints {
-            value.encode(encoder, version)?;
-        }
+use crate::{MessageDescriptor, MessageDirection};
 
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: Self::NAME,
-                version,
-            });
-        }
-
-        Ok(())
-    }
-}
+pub use share_acknowledge_request::ShareAcknowledgeRequest;
+pub use share_acknowledge_response::ShareAcknowledgeResponse;
 
 /// Static metadata for [`ShareAcknowledgeRequest`].
 pub const SHARE_ACKNOWLEDGE_REQUEST_DESCRIPTOR: MessageDescriptor = MessageDescriptor::new(

@@ -7,6 +7,7 @@ use crate::{
     render::{field, text::RustText},
 };
 
+use super::imports::spell;
 use super::tagged::{is_tagged, render_tagged_decode, render_tagged_encode};
 
 /// How a structure names itself in an encode error.
@@ -37,8 +38,17 @@ impl Owner<'_> {
 }
 
 pub(super) fn render_decode(rust: &mut RustText, message: &Message) -> Result<(), GenerationError> {
-    rust.open(format!("impl KafkaDecode for {}", message.name.rust_type()));
-    rust.open("fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError>");
+    rust.open(format!(
+        "impl {} for {}",
+        spell(message, "KafkaDecode"),
+        message.name.rust_type()
+    ));
+    rust.open(format!(
+        "fn decode(decoder: &mut {}, version: {}) -> Result<Self, {}>",
+        spell(message, "Decoder"),
+        spell(message, "ApiVersion"),
+        spell(message, "DecodeError"),
+    ));
     rust.line("crate::message::ensure_decode_version::<Self>(version)?;");
     rust.blank();
 
@@ -57,12 +67,22 @@ pub(super) fn render_decode(rust: &mut RustText, message: &Message) -> Result<()
 }
 
 pub(super) fn render_encode(rust: &mut RustText, message: &Message) -> Result<(), GenerationError> {
-    rust.open(format!("impl KafkaEncode for {}", message.name.rust_type()));
-    rust.line("fn encode<T: EncodeTarget>(");
+    rust.open(format!(
+        "impl {} for {}",
+        spell(message, "KafkaEncode"),
+        message.name.rust_type()
+    ));
+    rust.line(format!("fn encode<T: {}>(", spell(message, "EncodeTarget")));
     rust.line("    &self,");
-    rust.line("    encoder: &mut Encoder<T>,");
-    rust.line("    version: ApiVersion,");
-    rust.open(") -> Result<(), EncodeError>");
+    rust.line(format!(
+        "    encoder: &mut {}<T>,",
+        spell(message, "Encoder")
+    ));
+    rust.line(format!("    version: {},", spell(message, "ApiVersion")));
+    rust.open(format!(
+        ") -> Result<(), {}>",
+        spell(message, "EncodeError")
+    ));
     rust.line("crate::message::ensure_encode_version::<Self>(version)?;");
     render_representability_checks(rust, message);
 
@@ -135,12 +155,12 @@ pub(super) fn render_reads(
             match field::presence_condition(field, message) {
                 None => {
                     rust.open(format!("let {name} ="));
-                    render_array_body(rust, &length, &read, nullable);
+                    render_array_body(rust, message, &length, &read, nullable);
                     rust.close(";");
                 }
                 Some(condition) => {
                     rust.open(format!("let {name} = if {condition}"));
-                    render_array_body(rust, &length, &read, nullable);
+                    render_array_body(rust, message, &length, &read, nullable);
                     rust.reopen("} else {");
                     rust.line(field::default_expression(field, message));
                     rust.close(";");
@@ -263,7 +283,10 @@ fn render_null_guard(
         "if {} && self.{name}.is_none()",
         field::as_conjunct(&condition)
     ));
-    rust.open("return Err(EncodeError::NullNotAllowed");
+    rust.open(format!(
+        "return Err({}::NullNotAllowed",
+        spell(message, "EncodeError")
+    ));
     rust.line(format!("message: {},", owner.name()));
     rust.line(format!("field: {:?},", field.name.protocol()));
     rust.line("version,");
@@ -293,7 +316,10 @@ fn render_representability_checks(rust: &mut RustText, message: &Message) {
             field::as_conjunct(&condition),
             field::non_default_condition(candidate, message)
         ));
-        rust.open("return Err(EncodeError::FieldNotRepresentable");
+        rust.open(format!(
+            "return Err({}::FieldNotRepresentable",
+            spell(message, "EncodeError")
+        ));
         rust.line("message: Self::NAME,");
         rust.line(format!("field: {:?},", candidate.name.protocol()));
         rust.line("version,");
@@ -309,8 +335,14 @@ fn render_representability_checks(rust: &mut RustText, message: &Message) {
 /// `Decoder::read_vec`, rather than every array restating the same collect loop.
 /// A nullable array keeps absent and empty distinct: the nullable readers return
 /// `Option<usize>`, and only the present arm allocates.
-pub(super) fn render_array_body(rust: &mut RustText, length: &str, element: &str, nullable: bool) {
-    let read = element_closure(element);
+pub(super) fn render_array_body(
+    rust: &mut RustText,
+    message: &Message,
+    length: &str,
+    element: &str,
+    nullable: bool,
+) {
+    let read = element_closure(message, element);
     rust.line(format!("let length = {length};"));
     if nullable {
         rust.line(format!(
@@ -328,7 +360,7 @@ pub(super) fn render_array_body(rust: &mut RustText, length: &str, element: &str
 /// is exactly the closure body — wrapping it instead would emit `Ok(x?)`, which
 /// says nothing and which the lints on checked-in output reject. A gated element
 /// puts its `?` inside each arm rather than at the end, so it keeps the wrapper.
-fn element_closure(element: &str) -> String {
+fn element_closure(message: &Message, element: &str) -> String {
     let Some(fallible) = element.strip_suffix('?') else {
         return format!("|decoder| Ok({element})");
     };
@@ -344,7 +376,7 @@ fn element_closure(element: &str) -> String {
                 .all(|c| c.is_ascii_alphanumeric() || c == '_')
         })
     {
-        return format!("Decoder::{method}");
+        return format!("{}::{method}", spell(message, "Decoder"));
     }
     format!("|decoder| {fallible}")
 }

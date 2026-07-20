@@ -48,12 +48,12 @@ pub enum FieldType {
     Records,
     /// Ordered array.
     Array(Box<Self>),
-    /// Reference to a struct declared by the owning message, already qualified.
+    /// Reference to a struct declared by the owning message, already resolved.
     ///
-    /// Per the earlier flat naming rule the payload carries both the bare upstream spelling and the
-    /// owner-qualified identity it is emitted under, so a renderer never has to
-    /// re-derive a name and a name collision is a schema diagnostic rather than
-    /// unbuildable generated Rust.
+    /// Under module-scoped naming the payload carries the upstream spelling it is emitted
+    /// under together with the owner that selects its module, so a renderer
+    /// never has to re-derive a name and a name collision is a schema
+    /// diagnostic rather than unbuildable generated Rust.
     Struct(StructRef),
 }
 

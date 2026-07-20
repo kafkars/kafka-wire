@@ -1,9 +1,9 @@
-//! the earlier flat naming rule's claim, run against the whole pinned corpus rather than argued.
+//! the module-scoped naming rule's claim, run against the whole pinned corpus rather than argued.
 //!
 //! Scenario: load every vendored message, then check the two properties the
 //! decision rests on. Every struct reference resolves to a declaration in its
-//! own message, and no two emitted struct identities collide — not inside the
-//! module an API key renders into, and not across the flat crate facade.
+//! own message, and no two emitted struct identities collide inside the module
+//! one message renders into.
 //!
 //! The decision was made from a measurement, and a measurement expires. These
 //! tests are the measurement made executable, so an upstream schema that breaks
@@ -29,25 +29,23 @@ use support::{exceptions, schema_files};
 /// declarations are in the 11 data schemas, which the front end also reads.
 const DECLARATIONS: usize = 308;
 
-/// Declarations whose upstream spelling already begins with their message name.
+/// Longest generated struct name this corpus produces.
 ///
-/// This is the stutter-elision arm. If it ever reads zero the rule has
-/// regressed to a pure prefix, which still produces names — just names with the
-/// owner spelled twice, and a worst case one character above the bound below.
-const ELISIONS: usize = 40;
+/// `DescribeShareGroupOffsetsResponsePartition`, which is upstream's own
+/// spelling: forty declarations hand-qualify themselves and this is the longest.
+/// the earlier flat naming rule bounded the same corpus at 74, and the 32 characters between the two
+/// numbers are the scope this decision bought.
+const NAME_LIMIT: usize = 42;
 
-/// Longest generated struct name the earlier flat naming rule permits over this corpus.
+/// Modules that would not compile if the module were the API key, not the
+/// message.
 ///
-/// `StreamsGroupTopologyDescriptionUpdateRequestTopologyDescriptionSubtopology`.
-/// Pure prefixing measures 75 here, so this bound is what the elision arm buys.
-const NAME_LIMIT: usize = 74;
-
-/// Modules that would not compile if nested structs kept their bare names.
-///
-/// the earlier flat naming rule's table lists **8** API keys, counting those whose two directions
-/// declare a same-named struct with a *different shape*. This constant is 11
-/// because rustc does not care about shape: two `struct Cursor` items in one
-/// module are `E0428` whether or not their fields agree.
+/// the module-scoped naming rule rejects a per-API-key module, and this is the measurement behind the
+/// rejection rather than the argument for it. the earlier flat naming rule's table lists **8** API
+/// keys, counting those whose two directions declare a same-named struct with a
+/// *different shape*. This constant is 11 because rustc does not care about
+/// shape: two `struct Cursor` items in one module are `E0428` whether or not
+/// their fields agree.
 ///
 /// The three further keys are exactly the ones the earlier flat naming rule's "trap in structural
 /// deduplication" section names — `ConsumerGroupHeartbeat` (68) on
@@ -55,10 +53,10 @@ const NAME_LIMIT: usize = 74;
 /// `StreamsGroupHeartbeat` (88) on `Endpoint` and `TaskIds`. They collide with
 /// identical shallow signatures, which is why a rule that deduplicated by
 /// comparing shapes would merge them and be wrong.
-const UNQUALIFIED_COLLISION_MODULES: usize = 11;
+const API_KEY_COLLISION_MODULES: usize = 11;
 
 /// Distinct name clashes across those modules, counted per name rather than key.
-const UNQUALIFIED_COLLISION_NAMES: usize = 22;
+const API_KEY_COLLISION_NAMES: usize = 22;
 
 #[test]
 fn every_struct_reference_in_the_corpus_resolves_within_its_message() {
@@ -91,23 +89,23 @@ fn every_struct_reference_in_the_corpus_resolves_within_its_message() {
 
 #[test]
 fn no_two_generated_struct_identities_collide_in_one_module() {
-    // `kafka-wire-codegen` renders one module per API key holding both directions,
-    // so this is the collision that actually stops the build. Upstream declares
-    // a differently-shaped struct of the same name in both directions of eight
-    // API keys, and every one of them lands here.
-    let mut modules: BTreeMap<i16, BTreeMap<String, String>> = BTreeMap::new();
+    // `kafka-wire-codegen` renders one module per *message* holding that message's
+    // type and every struct it declares, so this is the collision that actually
+    // stops the build. The grouping key here has to be the same one the emitter
+    // uses, or this test watches a namespace nothing is emitted into.
+    let mut modules: BTreeMap<String, BTreeMap<String, String>> = BTreeMap::new();
     let mut collisions = Vec::new();
 
     for message in corpus() {
-        let Some(api_key) = message.api_key else {
-            continue;
-        };
-        let module = modules.entry(api_key).or_default();
+        let module = modules
+            .entry(message.name.rust_module().to_owned())
+            .or_default();
 
         for (rust_type, owner) in claims(&message) {
             if let Some(previous) = module.insert(rust_type.clone(), owner.clone()) {
                 collisions.push(format!(
-                    "api key {api_key}: `{rust_type}` claimed by {owner} and {previous}"
+                    "module `{}`: `{rust_type}` claimed by {owner} and {previous}",
+                    message.name.rust_module(),
                 ));
             }
         }
@@ -120,20 +118,24 @@ fn no_two_generated_struct_identities_collide_in_one_module() {
     );
 
     // An emptiness assertion proves nothing on its own: a walk that reached no
-    // struct at all would also report no collision. Replaying the same grouping
-    // over the bare upstream spellings has to reproduce the compile failures
-    // qualification exists to prevent, or this test is not watching anything.
-    let (modules, names) = unqualified_collisions();
+    // struct at all would also report no collision. Replaying the same walk
+    // under the module the module-scoped naming rule rejected has to reproduce the compile failures
+    // the per-message module exists to prevent, or this test is not watching
+    // anything — and it is the same corpus, so the only difference is the scope.
+    let (modules, names) = collisions_when_grouped_by_api_key();
 
     assert_eq!(
         (modules, names),
-        (UNQUALIFIED_COLLISION_MODULES, UNQUALIFIED_COLLISION_NAMES),
-        "the corpus no longer exhibits the collisions qualification exists to fix",
+        (API_KEY_COLLISION_MODULES, API_KEY_COLLISION_NAMES),
+        "the corpus no longer exhibits the collisions a per-message module fixes",
     );
 }
 
-/// Counts the modules and names that bare upstream spellings would clash on.
-fn unqualified_collisions() -> (usize, usize) {
+/// Counts the modules and names a per-API-key module would clash on.
+///
+/// A request and its response share an API key, so this is the scope the module-scoped naming rule
+/// considered and rejected: it keeps exactly the collisions the decision removes.
+fn collisions_when_grouped_by_api_key() -> (usize, usize) {
     let mut modules: BTreeMap<i16, BTreeSet<String>> = BTreeMap::new();
     let mut clashing_modules = BTreeSet::new();
     let mut clashing_names = 0;
@@ -156,9 +158,9 @@ fn unqualified_collisions() -> (usize, usize) {
 }
 
 #[test]
-fn generated_type_names_are_unique_across_the_whole_tree() {
-    // Stronger than the per-module check above, and the property the flat crate
-    // facade needs: every generated type can be re-exported without a rename.
+fn both_scopes_can_carry_the_names_the_corpus_hands_them() {
+    // The guard itself, over the whole corpus: message types unique across the
+    // flat facade, and every module able to hold its own declarations.
     let messages = corpus();
 
     assert_eq!(validate_struct_names(&messages), Ok(()));
@@ -168,7 +170,7 @@ fn generated_type_names_are_unique_across_the_whole_tree() {
 fn the_naming_census_matches_the_decision_it_was_measured_from() {
     let messages = corpus();
     let mut declarations = 0;
-    let mut elisions = 0;
+    let mut module_scoped = 0;
     let mut qualified = BTreeMap::new();
     let mut longest = String::new();
     let mut renamed = Vec::new();
@@ -176,8 +178,8 @@ fn the_naming_census_matches_the_decision_it_was_measured_from() {
     for message in &messages {
         for declaration in message.structs.declarations() {
             declarations += 1;
-            if declaration.name.qualification() == Qualification::AlreadyQualified {
-                elisions += 1;
+            if declaration.name.qualification() == Qualification::ModuleScoped {
+                module_scoped += 1;
             }
             if declaration.name.rust_type() != declaration.name.protocol() {
                 renamed.push(format!(
@@ -197,25 +199,29 @@ fn the_naming_census_matches_the_decision_it_was_measured_from() {
 
     println!("messages:              {}", messages.len());
     println!("struct declarations:   {declarations}");
-    println!("distinct qualified:    {}", qualified.len());
-    println!("stutter-elision arm:   {elisions}");
-    println!("owner-prefixed arm:    {}", declarations - elisions);
+    println!("distinct spellings:    {}", qualified.len());
+    println!("module-scoped arm:     {module_scoped}");
     println!("longest name:          {} {longest}", longest.len());
 
     assert_eq!(declarations, DECLARATIONS);
     assert_eq!(
-        qualified.len(),
-        DECLARATIONS,
-        "every declaration must own a distinct name",
+        module_scoped, DECLARATIONS,
+        "every declaration takes the one arm the rule has left",
     );
-    assert_eq!(
-        elisions, ELISIONS,
-        "the stutter-elision arm covers {ELISIONS} declarations in the earlier flat naming rule; \
-         if the vendored pin moved, re-measure and update the decision",
+    // Deliberately not distinct. the earlier flat naming rule asserted equality here, because a flat
+    // namespace had to carry every name at once; asserting it still would mean
+    // the module scope was bought and never spent. The inequality is the
+    // decision: `PartitionData` is one spelling naming 17 shapes, and each one
+    // lives in its own module.
+    assert!(
+        qualified.len() < DECLARATIONS,
+        "spellings are scoped by module, so the corpus must reuse some; \
+         got {} distinct across {DECLARATIONS} declarations",
+        qualified.len(),
     );
     assert!(
         longest.len() <= NAME_LIMIT,
-        "the earlier flat naming rule bounds generated names at {NAME_LIMIT} characters, \
+        "the module-scoped naming rule bounds generated names at {NAME_LIMIT} characters, \
          but `{longest}` is {}",
         longest.len(),
     );

@@ -5,513 +5,536 @@
 //! Request SHA-256: `3845cb619a6da7b3d9ca8588d3f23e9a7adf6bf8fef3fe64ddc96013e49ac0f9`.
 //! Response SHA-256: `0dc0ffd22775d3f05dc9a588ef8541d8e938651431350b75890d7fccb304af39`.
 
-use kafka_wire_core::{
-    ApiKey, ApiVersion, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
-    KafkaEncode, StrBytes, TaggedFields, VersionRange,
-};
+/// `WriteTxnMarkersRequest` and every struct it declares, under upstream's own names.
+///
+/// [`WriteTxnMarkersRequest`](crate::WriteTxnMarkersRequest) is re-exported flat, so this path never has to be
+/// written to name the message itself.
+pub mod write_txn_markers_request {
+    use kafka_wire_core::{
+        ApiKey, ApiVersion, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
+        KafkaEncode, StrBytes, TaggedFields, VersionRange,
+    };
 
-use crate::{
-    KafkaMessage, KafkaRequest, KafkaResponse, MessageDescriptor, MessageDirection,
-    RequestResponsePair,
-};
+    use crate::{KafkaMessage, KafkaRequest, RequestResponsePair};
 
-/// `WritableTxnMarker` as declared by the `WriteTxnMarkers` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct WriteTxnMarkersRequestWritableTxnMarker {
-    /// The current producer ID.
-    pub producer_id: i64,
-    /// The current epoch associated with the producer ID.
-    pub producer_epoch: i16,
-    /// The result of the transaction to write to the partitions (false = ABORT, true = COMMIT).
-    pub transaction_result: bool,
-    /// Each topic that we want to write transaction marker(s) for.
-    pub topics: Vec<WriteTxnMarkersRequestWritableTxnMarkerTopic>,
-    /// Epoch associated with the transaction state partition hosted by this transaction coordinator.
-    pub coordinator_epoch: i32,
-    /// Transaction version of the marker. Ex: 0/1 = legacy (TV0/TV1), 2 = TV2 etc.
-    pub transaction_version: i8,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
-
-impl WriteTxnMarkersRequestWritableTxnMarker {
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(1, 2));
-
-    fn is_flexible(version: ApiVersion) -> bool {
-        Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+    /// `WritableTxnMarker` as declared by the `WriteTxnMarkers` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    pub struct WritableTxnMarker {
+        /// The current producer ID.
+        pub producer_id: i64,
+        /// The current epoch associated with the producer ID.
+        pub producer_epoch: i16,
+        /// The result of the transaction to write to the partitions (false = ABORT, true = COMMIT).
+        pub transaction_result: bool,
+        /// Each topic that we want to write transaction marker(s) for.
+        pub topics: Vec<WritableTxnMarkerTopic>,
+        /// Epoch associated with the transaction state partition hosted by this transaction coordinator.
+        pub coordinator_epoch: i32,
+        /// Transaction version of the marker. Ex: 0/1 = legacy (TV0/TV1), 2 = TV2 etc.
+        pub transaction_version: i8,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
     }
-}
 
-impl KafkaDecode for WriteTxnMarkersRequestWritableTxnMarker {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        let producer_id = decoder.read_i64()?;
-        let producer_epoch = decoder.read_i16()?;
-        let transaction_result = decoder.read_bool()?;
-        let topics = {
-            let length = decoder.read_compact_array_len()?;
-            decoder.read_vec(length, |decoder| {
-                WriteTxnMarkersRequestWritableTxnMarkerTopic::decode(decoder, version)
-            })?
-        };
-        let coordinator_epoch = decoder.read_i32()?;
-        let transaction_version = if version.value() >= 2 {
-            decoder.read_i8()?
-        } else {
-            0
-        };
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
+    impl WritableTxnMarker {
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(1, 2));
 
-        Ok(Self {
-            producer_id,
-            producer_epoch,
-            transaction_result,
-            topics,
-            coordinator_epoch,
-            transaction_version,
-            unknown_tagged_fields,
-        })
-    }
-}
-
-impl KafkaEncode for WriteTxnMarkersRequestWritableTxnMarker {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        encoder.write_i64(self.producer_id)?;
-        encoder.write_i16(self.producer_epoch)?;
-        encoder.write_bool(self.transaction_result)?;
-        encoder.write_compact_array_len(self.topics.len())?;
-        for value in &self.topics {
-            value.encode(encoder, version)?;
+        fn is_flexible(version: ApiVersion) -> bool {
+            Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
         }
-        encoder.write_i32(self.coordinator_epoch)?;
-        if version.value() >= 2 {
-            encoder.write_i8(self.transaction_version)?;
+    }
+
+    impl KafkaDecode for WritableTxnMarker {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            let producer_id = decoder.read_i64()?;
+            let producer_epoch = decoder.read_i16()?;
+            let transaction_result = decoder.read_bool()?;
+            let topics = {
+                let length = decoder.read_compact_array_len()?;
+                decoder.read_vec(length, |decoder| {
+                    WritableTxnMarkerTopic::decode(decoder, version)
+                })?
+            };
+            let coordinator_epoch = decoder.read_i32()?;
+            let transaction_version = if version.value() >= 2 {
+                decoder.read_i8()?
+            } else {
+                0
+            };
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
+
+            Ok(Self {
+                producer_id,
+                producer_epoch,
+                transaction_result,
+                topics,
+                coordinator_epoch,
+                transaction_version,
+                unknown_tagged_fields,
+            })
         }
+    }
 
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: "WriteTxnMarkersRequestWritableTxnMarker",
-                version,
-            });
+    impl KafkaEncode for WritableTxnMarker {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            encoder.write_i64(self.producer_id)?;
+            encoder.write_i16(self.producer_epoch)?;
+            encoder.write_bool(self.transaction_result)?;
+            encoder.write_compact_array_len(self.topics.len())?;
+            for value in &self.topics {
+                value.encode(encoder, version)?;
+            }
+            encoder.write_i32(self.coordinator_epoch)?;
+            if version.value() >= 2 {
+                encoder.write_i8(self.transaction_version)?;
+            }
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "WritableTxnMarker",
+                    version,
+                });
+            }
+
+            Ok(())
         }
-
-        Ok(())
     }
-}
 
-/// `WritableTxnMarkerTopic` as declared by the `WriteTxnMarkers` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct WriteTxnMarkersRequestWritableTxnMarkerTopic {
-    /// The topic name.
-    pub name: StrBytes,
-    /// The indexes of the partitions to write transaction markers for.
-    pub partition_indexes: Vec<i32>,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
-
-impl WriteTxnMarkersRequestWritableTxnMarkerTopic {
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(1, 2));
-
-    fn is_flexible(version: ApiVersion) -> bool {
-        Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+    /// `WritableTxnMarkerTopic` as declared by the `WriteTxnMarkers` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    pub struct WritableTxnMarkerTopic {
+        /// The topic name.
+        pub name: StrBytes,
+        /// The indexes of the partitions to write transaction markers for.
+        pub partition_indexes: Vec<i32>,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
     }
-}
 
-impl KafkaDecode for WriteTxnMarkersRequestWritableTxnMarkerTopic {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        let name = decoder.read_compact_string()?;
-        let partition_indexes = {
-            let length = decoder.read_compact_array_len()?;
-            decoder.read_vec(length, Decoder::read_i32)?
-        };
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
+    impl WritableTxnMarkerTopic {
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(1, 2));
 
-        Ok(Self {
-            name,
-            partition_indexes,
-            unknown_tagged_fields,
-        })
-    }
-}
-
-impl KafkaEncode for WriteTxnMarkersRequestWritableTxnMarkerTopic {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        encoder.write_compact_string(&self.name)?;
-        encoder.write_compact_array_len(self.partition_indexes.len())?;
-        for value in &self.partition_indexes {
-            encoder.write_i32(*value)?;
+        fn is_flexible(version: ApiVersion) -> bool {
+            Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
         }
+    }
 
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: "WriteTxnMarkersRequestWritableTxnMarkerTopic",
-                version,
-            });
+    impl KafkaDecode for WritableTxnMarkerTopic {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            let name = decoder.read_compact_string()?;
+            let partition_indexes = {
+                let length = decoder.read_compact_array_len()?;
+                decoder.read_vec(length, Decoder::read_i32)?
+            };
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
+
+            Ok(Self {
+                name,
+                partition_indexes,
+                unknown_tagged_fields,
+            })
         }
-
-        Ok(())
     }
-}
 
-/// Request body for the `WriteTxnMarkers` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct WriteTxnMarkersRequest {
-    /// The transaction markers to be written.
-    pub markers: Vec<WriteTxnMarkersRequestWritableTxnMarker>,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
+    impl KafkaEncode for WritableTxnMarkerTopic {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            encoder.write_compact_string(&self.name)?;
+            encoder.write_compact_array_len(self.partition_indexes.len())?;
+            for value in &self.partition_indexes {
+                encoder.write_i32(*value)?;
+            }
 
-impl KafkaMessage for WriteTxnMarkersRequest {
-    const NAME: &'static str = "WriteTxnMarkersRequest";
-    const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(1, 2);
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(1, 2));
-}
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "WritableTxnMarkerTopic",
+                    version,
+                });
+            }
 
-impl KafkaRequest for WriteTxnMarkersRequest {
-    const API_KEY: ApiKey = ApiKey::new(27);
-}
-
-impl RequestResponsePair for WriteTxnMarkersRequest {
-    type Response = WriteTxnMarkersResponse;
-}
-
-impl KafkaDecode for WriteTxnMarkersRequest {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        crate::message::ensure_decode_version::<Self>(version)?;
-
-        let markers = {
-            let length = decoder.read_compact_array_len()?;
-            decoder.read_vec(length, |decoder| {
-                WriteTxnMarkersRequestWritableTxnMarker::decode(decoder, version)
-            })?
-        };
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
-
-        Ok(Self {
-            markers,
-            unknown_tagged_fields,
-        })
-    }
-}
-
-impl KafkaEncode for WriteTxnMarkersRequest {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        crate::message::ensure_encode_version::<Self>(version)?;
-
-        encoder.write_compact_array_len(self.markers.len())?;
-        for value in &self.markers {
-            value.encode(encoder, version)?;
+            Ok(())
         }
+    }
 
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: Self::NAME,
-                version,
-            });
+    /// Request body for the `WriteTxnMarkers` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    pub struct WriteTxnMarkersRequest {
+        /// The transaction markers to be written.
+        pub markers: Vec<WritableTxnMarker>,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl KafkaMessage for WriteTxnMarkersRequest {
+        const NAME: &'static str = "WriteTxnMarkersRequest";
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(1, 2);
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(1, 2));
+    }
+
+    impl KafkaRequest for WriteTxnMarkersRequest {
+        const API_KEY: ApiKey = ApiKey::new(27);
+    }
+
+    impl RequestResponsePair for WriteTxnMarkersRequest {
+        type Response = super::WriteTxnMarkersResponse;
+    }
+
+    impl KafkaDecode for WriteTxnMarkersRequest {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            crate::message::ensure_decode_version::<Self>(version)?;
+
+            let markers = {
+                let length = decoder.read_compact_array_len()?;
+                decoder.read_vec(length, |decoder| {
+                    WritableTxnMarker::decode(decoder, version)
+                })?
+            };
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
+
+            Ok(Self {
+                markers,
+                unknown_tagged_fields,
+            })
         }
-
-        Ok(())
     }
-}
 
-/// `WritableTxnMarkerResult` as declared by the `WriteTxnMarkers` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct WriteTxnMarkersResponseWritableTxnMarkerResult {
-    /// The current producer ID in use by the transactional ID.
-    pub producer_id: i64,
-    /// The results by topic.
-    pub topics: Vec<WriteTxnMarkersResponseWritableTxnMarkerTopicResult>,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
+    impl KafkaEncode for WriteTxnMarkersRequest {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            crate::message::ensure_encode_version::<Self>(version)?;
 
-impl WriteTxnMarkersResponseWritableTxnMarkerResult {
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(1, 2));
+            encoder.write_compact_array_len(self.markers.len())?;
+            for value in &self.markers {
+                value.encode(encoder, version)?;
+            }
 
-    fn is_flexible(version: ApiVersion) -> bool {
-        Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
-    }
-}
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: Self::NAME,
+                    version,
+                });
+            }
 
-impl KafkaDecode for WriteTxnMarkersResponseWritableTxnMarkerResult {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        let producer_id = decoder.read_i64()?;
-        let topics = {
-            let length = decoder.read_compact_array_len()?;
-            decoder.read_vec(length, |decoder| {
-                WriteTxnMarkersResponseWritableTxnMarkerTopicResult::decode(decoder, version)
-            })?
-        };
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
-
-        Ok(Self {
-            producer_id,
-            topics,
-            unknown_tagged_fields,
-        })
-    }
-}
-
-impl KafkaEncode for WriteTxnMarkersResponseWritableTxnMarkerResult {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        encoder.write_i64(self.producer_id)?;
-        encoder.write_compact_array_len(self.topics.len())?;
-        for value in &self.topics {
-            value.encode(encoder, version)?;
+            Ok(())
         }
+    }
+}
 
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: "WriteTxnMarkersResponseWritableTxnMarkerResult",
-                version,
-            });
+/// `WriteTxnMarkersResponse` and every struct it declares, under upstream's own names.
+///
+/// [`WriteTxnMarkersResponse`](crate::WriteTxnMarkersResponse) is re-exported flat, so this path never has to be
+/// written to name the message itself.
+pub mod write_txn_markers_response {
+    use kafka_wire_core::{
+        ApiKey, ApiVersion, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
+        KafkaEncode, StrBytes, TaggedFields, VersionRange,
+    };
+
+    use crate::{KafkaMessage, KafkaResponse};
+
+    /// `WritableTxnMarkerResult` as declared by the `WriteTxnMarkers` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    pub struct WritableTxnMarkerResult {
+        /// The current producer ID in use by the transactional ID.
+        pub producer_id: i64,
+        /// The results by topic.
+        pub topics: Vec<WritableTxnMarkerTopicResult>,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl WritableTxnMarkerResult {
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(1, 2));
+
+        fn is_flexible(version: ApiVersion) -> bool {
+            Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
         }
-
-        Ok(())
     }
-}
 
-/// `WritableTxnMarkerTopicResult` as declared by the `WriteTxnMarkers` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct WriteTxnMarkersResponseWritableTxnMarkerTopicResult {
-    /// The topic name.
-    pub name: StrBytes,
-    /// The results by partition.
-    pub partitions: Vec<WriteTxnMarkersResponseWritableTxnMarkerPartitionResult>,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
+    impl KafkaDecode for WritableTxnMarkerResult {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            let producer_id = decoder.read_i64()?;
+            let topics = {
+                let length = decoder.read_compact_array_len()?;
+                decoder.read_vec(length, |decoder| {
+                    WritableTxnMarkerTopicResult::decode(decoder, version)
+                })?
+            };
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
 
-impl WriteTxnMarkersResponseWritableTxnMarkerTopicResult {
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(1, 2));
-
-    fn is_flexible(version: ApiVersion) -> bool {
-        Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
-    }
-}
-
-impl KafkaDecode for WriteTxnMarkersResponseWritableTxnMarkerTopicResult {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        let name = decoder.read_compact_string()?;
-        let partitions = {
-            let length = decoder.read_compact_array_len()?;
-            decoder.read_vec(length, |decoder| {
-                WriteTxnMarkersResponseWritableTxnMarkerPartitionResult::decode(decoder, version)
-            })?
-        };
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
-
-        Ok(Self {
-            name,
-            partitions,
-            unknown_tagged_fields,
-        })
-    }
-}
-
-impl KafkaEncode for WriteTxnMarkersResponseWritableTxnMarkerTopicResult {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        encoder.write_compact_string(&self.name)?;
-        encoder.write_compact_array_len(self.partitions.len())?;
-        for value in &self.partitions {
-            value.encode(encoder, version)?;
+            Ok(Self {
+                producer_id,
+                topics,
+                unknown_tagged_fields,
+            })
         }
+    }
 
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: "WriteTxnMarkersResponseWritableTxnMarkerTopicResult",
-                version,
-            });
+    impl KafkaEncode for WritableTxnMarkerResult {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            encoder.write_i64(self.producer_id)?;
+            encoder.write_compact_array_len(self.topics.len())?;
+            for value in &self.topics {
+                value.encode(encoder, version)?;
+            }
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "WritableTxnMarkerResult",
+                    version,
+                });
+            }
+
+            Ok(())
         }
-
-        Ok(())
     }
-}
 
-/// `WritableTxnMarkerPartitionResult` as declared by the `WriteTxnMarkers` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct WriteTxnMarkersResponseWritableTxnMarkerPartitionResult {
-    /// The partition index.
-    pub partition_index: i32,
-    /// The error code, or 0 if there was no error.
-    pub error_code: i16,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
-
-impl WriteTxnMarkersResponseWritableTxnMarkerPartitionResult {
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(1, 2));
-
-    fn is_flexible(version: ApiVersion) -> bool {
-        Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+    /// `WritableTxnMarkerTopicResult` as declared by the `WriteTxnMarkers` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    pub struct WritableTxnMarkerTopicResult {
+        /// The topic name.
+        pub name: StrBytes,
+        /// The results by partition.
+        pub partitions: Vec<WritableTxnMarkerPartitionResult>,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
     }
-}
 
-impl KafkaDecode for WriteTxnMarkersResponseWritableTxnMarkerPartitionResult {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        let partition_index = decoder.read_i32()?;
-        let error_code = decoder.read_i16()?;
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
+    impl WritableTxnMarkerTopicResult {
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(1, 2));
 
-        Ok(Self {
-            partition_index,
-            error_code,
-            unknown_tagged_fields,
-        })
-    }
-}
-
-impl KafkaEncode for WriteTxnMarkersResponseWritableTxnMarkerPartitionResult {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        encoder.write_i32(self.partition_index)?;
-        encoder.write_i16(self.error_code)?;
-
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: "WriteTxnMarkersResponseWritableTxnMarkerPartitionResult",
-                version,
-            });
+        fn is_flexible(version: ApiVersion) -> bool {
+            Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
         }
-
-        Ok(())
     }
-}
 
-/// Response body for the `WriteTxnMarkers` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct WriteTxnMarkersResponse {
-    /// The results for writing makers.
-    pub markers: Vec<WriteTxnMarkersResponseWritableTxnMarkerResult>,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
+    impl KafkaDecode for WritableTxnMarkerTopicResult {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            let name = decoder.read_compact_string()?;
+            let partitions = {
+                let length = decoder.read_compact_array_len()?;
+                decoder.read_vec(length, |decoder| {
+                    WritableTxnMarkerPartitionResult::decode(decoder, version)
+                })?
+            };
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
 
-impl KafkaMessage for WriteTxnMarkersResponse {
-    const NAME: &'static str = "WriteTxnMarkersResponse";
-    const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(1, 2);
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(1, 2));
-}
-
-impl KafkaResponse for WriteTxnMarkersResponse {
-    const API_KEY: ApiKey = ApiKey::new(27);
-}
-
-impl KafkaDecode for WriteTxnMarkersResponse {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        crate::message::ensure_decode_version::<Self>(version)?;
-
-        let markers = {
-            let length = decoder.read_compact_array_len()?;
-            decoder.read_vec(length, |decoder| {
-                WriteTxnMarkersResponseWritableTxnMarkerResult::decode(decoder, version)
-            })?
-        };
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
-
-        Ok(Self {
-            markers,
-            unknown_tagged_fields,
-        })
-    }
-}
-
-impl KafkaEncode for WriteTxnMarkersResponse {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        crate::message::ensure_encode_version::<Self>(version)?;
-
-        encoder.write_compact_array_len(self.markers.len())?;
-        for value in &self.markers {
-            value.encode(encoder, version)?;
+            Ok(Self {
+                name,
+                partitions,
+                unknown_tagged_fields,
+            })
         }
+    }
 
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: Self::NAME,
-                version,
-            });
+    impl KafkaEncode for WritableTxnMarkerTopicResult {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            encoder.write_compact_string(&self.name)?;
+            encoder.write_compact_array_len(self.partitions.len())?;
+            for value in &self.partitions {
+                value.encode(encoder, version)?;
+            }
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "WritableTxnMarkerTopicResult",
+                    version,
+                });
+            }
+
+            Ok(())
         }
+    }
 
-        Ok(())
+    /// `WritableTxnMarkerPartitionResult` as declared by the `WriteTxnMarkers` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    pub struct WritableTxnMarkerPartitionResult {
+        /// The partition index.
+        pub partition_index: i32,
+        /// The error code, or 0 if there was no error.
+        pub error_code: i16,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl WritableTxnMarkerPartitionResult {
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(1, 2));
+
+        fn is_flexible(version: ApiVersion) -> bool {
+            Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+        }
+    }
+
+    impl KafkaDecode for WritableTxnMarkerPartitionResult {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            let partition_index = decoder.read_i32()?;
+            let error_code = decoder.read_i16()?;
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
+
+            Ok(Self {
+                partition_index,
+                error_code,
+                unknown_tagged_fields,
+            })
+        }
+    }
+
+    impl KafkaEncode for WritableTxnMarkerPartitionResult {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            encoder.write_i32(self.partition_index)?;
+            encoder.write_i16(self.error_code)?;
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "WritableTxnMarkerPartitionResult",
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+
+    /// Response body for the `WriteTxnMarkers` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    pub struct WriteTxnMarkersResponse {
+        /// The results for writing makers.
+        pub markers: Vec<WritableTxnMarkerResult>,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl KafkaMessage for WriteTxnMarkersResponse {
+        const NAME: &'static str = "WriteTxnMarkersResponse";
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(1, 2);
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(1, 2));
+    }
+
+    impl KafkaResponse for WriteTxnMarkersResponse {
+        const API_KEY: ApiKey = ApiKey::new(27);
+    }
+
+    impl KafkaDecode for WriteTxnMarkersResponse {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            crate::message::ensure_decode_version::<Self>(version)?;
+
+            let markers = {
+                let length = decoder.read_compact_array_len()?;
+                decoder.read_vec(length, |decoder| {
+                    WritableTxnMarkerResult::decode(decoder, version)
+                })?
+            };
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
+
+            Ok(Self {
+                markers,
+                unknown_tagged_fields,
+            })
+        }
+    }
+
+    impl KafkaEncode for WriteTxnMarkersResponse {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            crate::message::ensure_encode_version::<Self>(version)?;
+
+            encoder.write_compact_array_len(self.markers.len())?;
+            for value in &self.markers {
+                value.encode(encoder, version)?;
+            }
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: Self::NAME,
+                    version,
+                });
+            }
+
+            Ok(())
+        }
     }
 }
+
+use kafka_wire_core::VersionRange;
+
+use crate::{MessageDescriptor, MessageDirection};
+
+pub use write_txn_markers_request::WriteTxnMarkersRequest;
+pub use write_txn_markers_response::WriteTxnMarkersResponse;
 
 /// Static metadata for [`WriteTxnMarkersRequest`].
 pub const WRITE_TXN_MARKERS_REQUEST_DESCRIPTOR: MessageDescriptor = MessageDescriptor::new(

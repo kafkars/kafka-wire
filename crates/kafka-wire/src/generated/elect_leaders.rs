@@ -5,489 +5,510 @@
 //! Request SHA-256: `3048a2c953cd8e1a3343269c6eb827070471c18a5e62f4232dbc247768d1b3f5`.
 //! Response SHA-256: `b47545dec74fc336fe46b0ad6d6ad416b8b4ff032d564cd23b2bf83ad093c400`.
 
-use kafka_wire_core::{
-    ApiKey, ApiVersion, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
-    KafkaEncode, StrBytes, TaggedFields, VersionRange,
-};
+/// `ElectLeadersRequest` and every struct it declares, under upstream's own names.
+///
+/// [`ElectLeadersRequest`](crate::ElectLeadersRequest) is re-exported flat, so this path never has to be
+/// written to name the message itself.
+pub mod elect_leaders_request {
+    use kafka_wire_core::{
+        ApiKey, ApiVersion, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
+        KafkaEncode, StrBytes, TaggedFields, VersionRange,
+    };
 
-use crate::{
-    KafkaMessage, KafkaRequest, KafkaResponse, MessageDescriptor, MessageDirection,
-    RequestResponsePair,
-};
+    use crate::{KafkaMessage, KafkaRequest, RequestResponsePair};
 
-/// `TopicPartitions` as declared by the `ElectLeaders` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct ElectLeadersRequestTopicPartitions {
-    /// The name of a topic.
-    pub topic: StrBytes,
-    /// The partitions of this topic whose leader should be elected.
-    pub partitions: Vec<i32>,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
-
-impl ElectLeadersRequestTopicPartitions {
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(2, 2));
-
-    fn is_flexible(version: ApiVersion) -> bool {
-        Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+    /// `TopicPartitions` as declared by the `ElectLeaders` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    pub struct TopicPartitions {
+        /// The name of a topic.
+        pub topic: StrBytes,
+        /// The partitions of this topic whose leader should be elected.
+        pub partitions: Vec<i32>,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
     }
-}
 
-impl KafkaDecode for ElectLeadersRequestTopicPartitions {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        let topic = if Self::is_flexible(version) {
-            decoder.read_compact_string()?
-        } else {
-            decoder.read_string()?
-        };
-        let partitions = {
-            let length = if Self::is_flexible(version) {
-                decoder.read_compact_array_len()?
+    impl TopicPartitions {
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(2, 2));
+
+        fn is_flexible(version: ApiVersion) -> bool {
+            Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+        }
+    }
+
+    impl KafkaDecode for TopicPartitions {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            let topic = if Self::is_flexible(version) {
+                decoder.read_compact_string()?
             } else {
-                decoder.read_array_len()?
+                decoder.read_string()?
             };
-            decoder.read_vec(length, Decoder::read_i32)?
-        };
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
-
-        Ok(Self {
-            topic,
-            partitions,
-            unknown_tagged_fields,
-        })
-    }
-}
-
-impl KafkaEncode for ElectLeadersRequestTopicPartitions {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        if Self::is_flexible(version) {
-            encoder.write_compact_string(&self.topic)?;
-        } else {
-            encoder.write_string(&self.topic)?;
-        }
-        if Self::is_flexible(version) {
-            encoder.write_compact_array_len(self.partitions.len())?;
-        } else {
-            encoder.write_array_len(self.partitions.len())?;
-        }
-        for value in &self.partitions {
-            encoder.write_i32(*value)?;
-        }
-
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: "ElectLeadersRequestTopicPartitions",
-                version,
-            });
-        }
-
-        Ok(())
-    }
-}
-
-/// Request body for the `ElectLeaders` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct ElectLeadersRequest {
-    /// Type of elections to conduct for the partition. A value of '0' elects the preferred replica. A value of '1' elects the first live replica if there are no in-sync replica.
-    pub election_type: i8,
-    /// The topic partitions to elect leaders.
-    pub topic_partitions: Option<Vec<ElectLeadersRequestTopicPartitions>>,
-    /// The time in ms to wait for the election to complete.
-    pub timeout_ms: i32,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
-
-impl Default for ElectLeadersRequest {
-    fn default() -> Self {
-        Self {
-            election_type: 0,
-            topic_partitions: Some(Vec::new()),
-            timeout_ms: 60_000,
-            unknown_tagged_fields: TaggedFields::default(),
-        }
-    }
-}
-
-impl KafkaMessage for ElectLeadersRequest {
-    const NAME: &'static str = "ElectLeadersRequest";
-    const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 2);
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(2, 2));
-}
-
-impl KafkaRequest for ElectLeadersRequest {
-    const API_KEY: ApiKey = ApiKey::new(43);
-}
-
-impl RequestResponsePair for ElectLeadersRequest {
-    type Response = ElectLeadersResponse;
-}
-
-impl KafkaDecode for ElectLeadersRequest {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        crate::message::ensure_decode_version::<Self>(version)?;
-
-        let election_type = if version.value() >= 1 {
-            decoder.read_i8()?
-        } else {
-            0
-        };
-        let topic_partitions = {
-            let length = if Self::is_flexible(version) {
-                decoder.read_compact_nullable_array_len()?
+            let partitions = {
+                let length = if Self::is_flexible(version) {
+                    decoder.read_compact_array_len()?
+                } else {
+                    decoder.read_array_len()?
+                };
+                decoder.read_vec(length, Decoder::read_i32)?
+            };
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
             } else {
-                decoder.read_nullable_array_len()?
+                TaggedFields::default()
             };
-            length
-                .map(|length| {
-                    decoder.read_vec(length, |decoder| {
-                        ElectLeadersRequestTopicPartitions::decode(decoder, version)
-                    })
-                })
-                .transpose()?
-        };
-        let timeout_ms = decoder.read_i32()?;
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
 
-        Ok(Self {
-            election_type,
-            topic_partitions,
-            timeout_ms,
-            unknown_tagged_fields,
-        })
+            Ok(Self {
+                topic,
+                partitions,
+                unknown_tagged_fields,
+            })
+        }
     }
-}
 
-impl KafkaEncode for ElectLeadersRequest {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        crate::message::ensure_encode_version::<Self>(version)?;
+    impl KafkaEncode for TopicPartitions {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            if Self::is_flexible(version) {
+                encoder.write_compact_string(&self.topic)?;
+            } else {
+                encoder.write_string(&self.topic)?;
+            }
+            if Self::is_flexible(version) {
+                encoder.write_compact_array_len(self.partitions.len())?;
+            } else {
+                encoder.write_array_len(self.partitions.len())?;
+            }
+            for value in &self.partitions {
+                encoder.write_i32(*value)?;
+            }
 
-        if version.value() < 1 && self.election_type != 0 {
-            return Err(EncodeError::FieldNotRepresentable {
-                message: Self::NAME,
-                field: "ElectionType",
-                version,
-            });
-        }
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "TopicPartitions",
+                    version,
+                });
+            }
 
-        if version.value() >= 1 {
-            encoder.write_i8(self.election_type)?;
+            Ok(())
         }
-        if Self::is_flexible(version) {
-            encoder
-                .write_compact_nullable_array_len(self.topic_partitions.as_ref().map(Vec::len))?;
-        } else {
-            encoder.write_nullable_array_len(self.topic_partitions.as_ref().map(Vec::len))?;
-        }
-        if let Some(values) = &self.topic_partitions {
-            for value in values {
-                value.encode(encoder, version)?;
+    }
+
+    /// Request body for the `ElectLeaders` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Eq, PartialEq)]
+    pub struct ElectLeadersRequest {
+        /// Type of elections to conduct for the partition. A value of '0' elects the preferred replica. A value of '1' elects the first live replica if there are no in-sync replica.
+        pub election_type: i8,
+        /// The topic partitions to elect leaders.
+        pub topic_partitions: Option<Vec<TopicPartitions>>,
+        /// The time in ms to wait for the election to complete.
+        pub timeout_ms: i32,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl Default for ElectLeadersRequest {
+        fn default() -> Self {
+            Self {
+                election_type: 0,
+                topic_partitions: Some(Vec::new()),
+                timeout_ms: 60_000,
+                unknown_tagged_fields: TaggedFields::default(),
             }
         }
-        encoder.write_i32(self.timeout_ms)?;
-
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: Self::NAME,
-                version,
-            });
-        }
-
-        Ok(())
     }
-}
 
-/// `ReplicaElectionResult` as declared by the `ElectLeaders` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct ElectLeadersResponseReplicaElectionResult {
-    /// The topic name.
-    pub topic: StrBytes,
-    /// The results for each partition.
-    pub partition_result: Vec<ElectLeadersResponsePartitionResult>,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
-
-impl ElectLeadersResponseReplicaElectionResult {
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(2, 2));
-
-    fn is_flexible(version: ApiVersion) -> bool {
-        Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+    impl KafkaMessage for ElectLeadersRequest {
+        const NAME: &'static str = "ElectLeadersRequest";
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 2);
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(2, 2));
     }
-}
 
-impl KafkaDecode for ElectLeadersResponseReplicaElectionResult {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        let topic = if Self::is_flexible(version) {
-            decoder.read_compact_string()?
-        } else {
-            decoder.read_string()?
-        };
-        let partition_result = {
-            let length = if Self::is_flexible(version) {
-                decoder.read_compact_array_len()?
+    impl KafkaRequest for ElectLeadersRequest {
+        const API_KEY: ApiKey = ApiKey::new(43);
+    }
+
+    impl RequestResponsePair for ElectLeadersRequest {
+        type Response = super::ElectLeadersResponse;
+    }
+
+    impl KafkaDecode for ElectLeadersRequest {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            crate::message::ensure_decode_version::<Self>(version)?;
+
+            let election_type = if version.value() >= 1 {
+                decoder.read_i8()?
             } else {
-                decoder.read_array_len()?
+                0
             };
-            decoder.read_vec(length, |decoder| {
-                ElectLeadersResponsePartitionResult::decode(decoder, version)
-            })?
-        };
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
-
-        Ok(Self {
-            topic,
-            partition_result,
-            unknown_tagged_fields,
-        })
-    }
-}
-
-impl KafkaEncode for ElectLeadersResponseReplicaElectionResult {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        if Self::is_flexible(version) {
-            encoder.write_compact_string(&self.topic)?;
-        } else {
-            encoder.write_string(&self.topic)?;
-        }
-        if Self::is_flexible(version) {
-            encoder.write_compact_array_len(self.partition_result.len())?;
-        } else {
-            encoder.write_array_len(self.partition_result.len())?;
-        }
-        for value in &self.partition_result {
-            value.encode(encoder, version)?;
-        }
-
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: "ElectLeadersResponseReplicaElectionResult",
-                version,
-            });
-        }
-
-        Ok(())
-    }
-}
-
-/// `PartitionResult` as declared by the `ElectLeaders` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct ElectLeadersResponsePartitionResult {
-    /// The partition id.
-    pub partition_id: i32,
-    /// The result error, or zero if there was no error.
-    pub error_code: i16,
-    /// The result message, or null if there was no error.
-    pub error_message: Option<StrBytes>,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
-
-impl ElectLeadersResponsePartitionResult {
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(2, 2));
-
-    fn is_flexible(version: ApiVersion) -> bool {
-        Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
-    }
-}
-
-impl Default for ElectLeadersResponsePartitionResult {
-    fn default() -> Self {
-        Self {
-            partition_id: 0,
-            error_code: 0,
-            error_message: Some(StrBytes::default()),
-            unknown_tagged_fields: TaggedFields::default(),
-        }
-    }
-}
-
-impl KafkaDecode for ElectLeadersResponsePartitionResult {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        let partition_id = decoder.read_i32()?;
-        let error_code = decoder.read_i16()?;
-        let error_message = if Self::is_flexible(version) {
-            decoder.read_compact_nullable_string()?
-        } else {
-            decoder.read_nullable_string()?
-        };
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
-
-        Ok(Self {
-            partition_id,
-            error_code,
-            error_message,
-            unknown_tagged_fields,
-        })
-    }
-}
-
-impl KafkaEncode for ElectLeadersResponsePartitionResult {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        encoder.write_i32(self.partition_id)?;
-        encoder.write_i16(self.error_code)?;
-        if Self::is_flexible(version) {
-            encoder.write_compact_nullable_string(self.error_message.as_ref())?;
-        } else {
-            encoder.write_nullable_string(self.error_message.as_ref())?;
-        }
-
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: "ElectLeadersResponsePartitionResult",
-                version,
-            });
-        }
-
-        Ok(())
-    }
-}
-
-/// Response body for the `ElectLeaders` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct ElectLeadersResponse {
-    /// The duration in milliseconds for which the request was throttled due to a quota violation, or zero if the request did not violate any quota.
-    pub throttle_time_ms: i32,
-    /// The top level response error code.
-    pub error_code: i16,
-    /// The election results, or an empty array if the requester did not have permission and the request asks for all partitions.
-    pub replica_election_results: Vec<ElectLeadersResponseReplicaElectionResult>,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
-
-impl KafkaMessage for ElectLeadersResponse {
-    const NAME: &'static str = "ElectLeadersResponse";
-    const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 2);
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(2, 2));
-}
-
-impl KafkaResponse for ElectLeadersResponse {
-    const API_KEY: ApiKey = ApiKey::new(43);
-}
-
-impl KafkaDecode for ElectLeadersResponse {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        crate::message::ensure_decode_version::<Self>(version)?;
-
-        let throttle_time_ms = decoder.read_i32()?;
-        let error_code = if version.value() >= 1 {
-            decoder.read_i16()?
-        } else {
-            0
-        };
-        let replica_election_results = {
-            let length = if Self::is_flexible(version) {
-                decoder.read_compact_array_len()?
+            let topic_partitions = {
+                let length = if Self::is_flexible(version) {
+                    decoder.read_compact_nullable_array_len()?
+                } else {
+                    decoder.read_nullable_array_len()?
+                };
+                length
+                    .map(|length| {
+                        decoder
+                            .read_vec(length, |decoder| TopicPartitions::decode(decoder, version))
+                    })
+                    .transpose()?
+            };
+            let timeout_ms = decoder.read_i32()?;
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
             } else {
-                decoder.read_array_len()?
+                TaggedFields::default()
             };
-            decoder.read_vec(length, |decoder| {
-                ElectLeadersResponseReplicaElectionResult::decode(decoder, version)
-            })?
-        };
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
 
-        Ok(Self {
-            throttle_time_ms,
-            error_code,
-            replica_election_results,
-            unknown_tagged_fields,
-        })
+            Ok(Self {
+                election_type,
+                topic_partitions,
+                timeout_ms,
+                unknown_tagged_fields,
+            })
+        }
+    }
+
+    impl KafkaEncode for ElectLeadersRequest {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            crate::message::ensure_encode_version::<Self>(version)?;
+
+            if version.value() < 1 && self.election_type != 0 {
+                return Err(EncodeError::FieldNotRepresentable {
+                    message: Self::NAME,
+                    field: "ElectionType",
+                    version,
+                });
+            }
+
+            if version.value() >= 1 {
+                encoder.write_i8(self.election_type)?;
+            }
+            if Self::is_flexible(version) {
+                encoder.write_compact_nullable_array_len(
+                    self.topic_partitions.as_ref().map(Vec::len),
+                )?;
+            } else {
+                encoder.write_nullable_array_len(self.topic_partitions.as_ref().map(Vec::len))?;
+            }
+            if let Some(values) = &self.topic_partitions {
+                for value in values {
+                    value.encode(encoder, version)?;
+                }
+            }
+            encoder.write_i32(self.timeout_ms)?;
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: Self::NAME,
+                    version,
+                });
+            }
+
+            Ok(())
+        }
     }
 }
 
-impl KafkaEncode for ElectLeadersResponse {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        crate::message::ensure_encode_version::<Self>(version)?;
+/// `ElectLeadersResponse` and every struct it declares, under upstream's own names.
+///
+/// [`ElectLeadersResponse`](crate::ElectLeadersResponse) is re-exported flat, so this path never has to be
+/// written to name the message itself.
+pub mod elect_leaders_response {
+    use kafka_wire_core::{
+        ApiKey, ApiVersion, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
+        KafkaEncode, StrBytes, TaggedFields, VersionRange,
+    };
 
-        if version.value() < 1 && self.error_code != 0 {
-            return Err(EncodeError::FieldNotRepresentable {
-                message: Self::NAME,
-                field: "ErrorCode",
-                version,
-            });
+    use crate::{KafkaMessage, KafkaResponse};
+
+    /// `ReplicaElectionResult` as declared by the `ElectLeaders` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    pub struct ReplicaElectionResult {
+        /// The topic name.
+        pub topic: StrBytes,
+        /// The results for each partition.
+        pub partition_result: Vec<PartitionResult>,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl ReplicaElectionResult {
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(2, 2));
+
+        fn is_flexible(version: ApiVersion) -> bool {
+            Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
         }
+    }
 
-        encoder.write_i32(self.throttle_time_ms)?;
-        if version.value() >= 1 {
+    impl KafkaDecode for ReplicaElectionResult {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            let topic = if Self::is_flexible(version) {
+                decoder.read_compact_string()?
+            } else {
+                decoder.read_string()?
+            };
+            let partition_result = {
+                let length = if Self::is_flexible(version) {
+                    decoder.read_compact_array_len()?
+                } else {
+                    decoder.read_array_len()?
+                };
+                decoder.read_vec(length, |decoder| PartitionResult::decode(decoder, version))?
+            };
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
+
+            Ok(Self {
+                topic,
+                partition_result,
+                unknown_tagged_fields,
+            })
+        }
+    }
+
+    impl KafkaEncode for ReplicaElectionResult {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            if Self::is_flexible(version) {
+                encoder.write_compact_string(&self.topic)?;
+            } else {
+                encoder.write_string(&self.topic)?;
+            }
+            if Self::is_flexible(version) {
+                encoder.write_compact_array_len(self.partition_result.len())?;
+            } else {
+                encoder.write_array_len(self.partition_result.len())?;
+            }
+            for value in &self.partition_result {
+                value.encode(encoder, version)?;
+            }
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "ReplicaElectionResult",
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+
+    /// `PartitionResult` as declared by the `ElectLeaders` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Eq, PartialEq)]
+    pub struct PartitionResult {
+        /// The partition id.
+        pub partition_id: i32,
+        /// The result error, or zero if there was no error.
+        pub error_code: i16,
+        /// The result message, or null if there was no error.
+        pub error_message: Option<StrBytes>,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl PartitionResult {
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(2, 2));
+
+        fn is_flexible(version: ApiVersion) -> bool {
+            Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+        }
+    }
+
+    impl Default for PartitionResult {
+        fn default() -> Self {
+            Self {
+                partition_id: 0,
+                error_code: 0,
+                error_message: Some(StrBytes::default()),
+                unknown_tagged_fields: TaggedFields::default(),
+            }
+        }
+    }
+
+    impl KafkaDecode for PartitionResult {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            let partition_id = decoder.read_i32()?;
+            let error_code = decoder.read_i16()?;
+            let error_message = if Self::is_flexible(version) {
+                decoder.read_compact_nullable_string()?
+            } else {
+                decoder.read_nullable_string()?
+            };
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
+
+            Ok(Self {
+                partition_id,
+                error_code,
+                error_message,
+                unknown_tagged_fields,
+            })
+        }
+    }
+
+    impl KafkaEncode for PartitionResult {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            encoder.write_i32(self.partition_id)?;
             encoder.write_i16(self.error_code)?;
-        }
-        if Self::is_flexible(version) {
-            encoder.write_compact_array_len(self.replica_election_results.len())?;
-        } else {
-            encoder.write_array_len(self.replica_election_results.len())?;
-        }
-        for value in &self.replica_election_results {
-            value.encode(encoder, version)?;
-        }
+            if Self::is_flexible(version) {
+                encoder.write_compact_nullable_string(self.error_message.as_ref())?;
+            } else {
+                encoder.write_nullable_string(self.error_message.as_ref())?;
+            }
 
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: Self::NAME,
-                version,
-            });
-        }
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "PartitionResult",
+                    version,
+                });
+            }
 
-        Ok(())
+            Ok(())
+        }
+    }
+
+    /// Response body for the `ElectLeaders` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    pub struct ElectLeadersResponse {
+        /// The duration in milliseconds for which the request was throttled due to a quota violation, or zero if the request did not violate any quota.
+        pub throttle_time_ms: i32,
+        /// The top level response error code.
+        pub error_code: i16,
+        /// The election results, or an empty array if the requester did not have permission and the request asks for all partitions.
+        pub replica_election_results: Vec<ReplicaElectionResult>,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl KafkaMessage for ElectLeadersResponse {
+        const NAME: &'static str = "ElectLeadersResponse";
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 2);
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(2, 2));
+    }
+
+    impl KafkaResponse for ElectLeadersResponse {
+        const API_KEY: ApiKey = ApiKey::new(43);
+    }
+
+    impl KafkaDecode for ElectLeadersResponse {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            crate::message::ensure_decode_version::<Self>(version)?;
+
+            let throttle_time_ms = decoder.read_i32()?;
+            let error_code = if version.value() >= 1 {
+                decoder.read_i16()?
+            } else {
+                0
+            };
+            let replica_election_results = {
+                let length = if Self::is_flexible(version) {
+                    decoder.read_compact_array_len()?
+                } else {
+                    decoder.read_array_len()?
+                };
+                decoder.read_vec(length, |decoder| {
+                    ReplicaElectionResult::decode(decoder, version)
+                })?
+            };
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
+
+            Ok(Self {
+                throttle_time_ms,
+                error_code,
+                replica_election_results,
+                unknown_tagged_fields,
+            })
+        }
+    }
+
+    impl KafkaEncode for ElectLeadersResponse {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            crate::message::ensure_encode_version::<Self>(version)?;
+
+            if version.value() < 1 && self.error_code != 0 {
+                return Err(EncodeError::FieldNotRepresentable {
+                    message: Self::NAME,
+                    field: "ErrorCode",
+                    version,
+                });
+            }
+
+            encoder.write_i32(self.throttle_time_ms)?;
+            if version.value() >= 1 {
+                encoder.write_i16(self.error_code)?;
+            }
+            if Self::is_flexible(version) {
+                encoder.write_compact_array_len(self.replica_election_results.len())?;
+            } else {
+                encoder.write_array_len(self.replica_election_results.len())?;
+            }
+            for value in &self.replica_election_results {
+                value.encode(encoder, version)?;
+            }
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: Self::NAME,
+                    version,
+                });
+            }
+
+            Ok(())
+        }
     }
 }
+
+use kafka_wire_core::VersionRange;
+
+use crate::{MessageDescriptor, MessageDirection};
+
+pub use elect_leaders_request::ElectLeadersRequest;
+pub use elect_leaders_response::ElectLeadersResponse;
 
 /// Static metadata for [`ElectLeadersRequest`].
 pub const ELECT_LEADERS_REQUEST_DESCRIPTOR: MessageDescriptor = MessageDescriptor::new(

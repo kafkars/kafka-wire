@@ -42,6 +42,11 @@ pub(crate) fn render_module_file(
     }
     rust.blank();
 
+    // Each message contributes three names: its descriptor, its type, and the
+    // module the module-scoped naming rule scopes its nested structs to. The module has to be
+    // re-exported, not merely emitted — a nested struct is reachable only
+    // through it now, and a `pub mod` nothing re-exports is both unreachable to
+    // a caller and an `unreachable_pub` warning on checked-in output.
     let mut exports = groups
         .iter()
         .map(|group| {
@@ -51,6 +56,7 @@ pub(crate) fn render_module_file(
                     [
                         descriptor_name(&source.message),
                         source.message.name.rust_type().to_owned(),
+                        source.message.name.rust_module().to_owned(),
                     ]
                 })
                 .collect::<Vec<_>>();
@@ -69,11 +75,17 @@ pub(crate) fn render_module_file(
             "response_header_version".to_owned(),
         ],
     ));
-    // A framing schema carries no descriptor, so it exports only its type.
+    // A framing schema carries no descriptor, so it exports its type and the
+    // module its own structs are scoped to, and nothing else.
     if !unkeyed.is_empty() {
         let mut items = unkeyed
             .iter()
-            .map(|source| source.message.name.rust_type().to_owned())
+            .flat_map(|source| {
+                [
+                    source.message.name.rust_type().to_owned(),
+                    source.message.name.rust_module().to_owned(),
+                ]
+            })
             .collect::<Vec<_>>();
         items.sort_unstable();
         exports.push(("framing".to_owned(), items));

@@ -5,512 +5,533 @@
 //! Request SHA-256: `22fe3781b361acbd3951b31a4dd7f7db15f71315eb8b934404b8e76bea5b825b`.
 //! Response SHA-256: `3306725d50bbca00ba4fad6d7e0dc8fff284ac7dcaf231e5d05398a4afa4b0b9`.
 
-use kafka_wire_core::{
-    ApiKey, ApiVersion, Bytes, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder,
-    KafkaDecode, KafkaEncode, StrBytes, TaggedFields, VersionRange,
-};
+/// `DescribeDelegationTokenRequest` and every struct it declares, under upstream's own names.
+///
+/// [`DescribeDelegationTokenRequest`](crate::DescribeDelegationTokenRequest) is re-exported flat, so this path never has to be
+/// written to name the message itself.
+pub mod describe_delegation_token_request {
+    use kafka_wire_core::{
+        ApiKey, ApiVersion, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
+        KafkaEncode, StrBytes, TaggedFields, VersionRange,
+    };
 
-use crate::{
-    KafkaMessage, KafkaRequest, KafkaResponse, MessageDescriptor, MessageDirection,
-    RequestResponsePair,
-};
+    use crate::{KafkaMessage, KafkaRequest, RequestResponsePair};
 
-/// `DescribeDelegationTokenOwner` as declared by the `DescribeDelegationToken` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct DescribeDelegationTokenRequestOwner {
-    /// The owner principal type.
-    pub principal_type: StrBytes,
-    /// The owner principal name.
-    pub principal_name: StrBytes,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
-
-impl DescribeDelegationTokenRequestOwner {
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(2, 3));
-
-    fn is_flexible(version: ApiVersion) -> bool {
-        Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+    /// `DescribeDelegationTokenOwner` as declared by the `DescribeDelegationToken` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    pub struct DescribeDelegationTokenOwner {
+        /// The owner principal type.
+        pub principal_type: StrBytes,
+        /// The owner principal name.
+        pub principal_name: StrBytes,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
     }
-}
 
-impl KafkaDecode for DescribeDelegationTokenRequestOwner {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        let principal_type = if Self::is_flexible(version) {
-            decoder.read_compact_string()?
-        } else {
-            decoder.read_string()?
-        };
-        let principal_name = if Self::is_flexible(version) {
-            decoder.read_compact_string()?
-        } else {
-            decoder.read_string()?
-        };
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
+    impl DescribeDelegationTokenOwner {
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(2, 3));
 
-        Ok(Self {
-            principal_type,
-            principal_name,
-            unknown_tagged_fields,
-        })
-    }
-}
-
-impl KafkaEncode for DescribeDelegationTokenRequestOwner {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        if Self::is_flexible(version) {
-            encoder.write_compact_string(&self.principal_type)?;
-        } else {
-            encoder.write_string(&self.principal_type)?;
-        }
-        if Self::is_flexible(version) {
-            encoder.write_compact_string(&self.principal_name)?;
-        } else {
-            encoder.write_string(&self.principal_name)?;
-        }
-
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: "DescribeDelegationTokenRequestOwner",
-                version,
-            });
-        }
-
-        Ok(())
-    }
-}
-
-/// Request body for the `DescribeDelegationToken` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct DescribeDelegationTokenRequest {
-    /// Each owner that we want to describe delegation tokens for, or null to describe all tokens.
-    pub owners: Option<Vec<DescribeDelegationTokenRequestOwner>>,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
-
-impl Default for DescribeDelegationTokenRequest {
-    fn default() -> Self {
-        Self {
-            owners: Some(Vec::new()),
-            unknown_tagged_fields: TaggedFields::default(),
+        fn is_flexible(version: ApiVersion) -> bool {
+            Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
         }
     }
-}
 
-impl KafkaMessage for DescribeDelegationTokenRequest {
-    const NAME: &'static str = "DescribeDelegationTokenRequest";
-    const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(1, 3);
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(2, 3));
-}
-
-impl KafkaRequest for DescribeDelegationTokenRequest {
-    const API_KEY: ApiKey = ApiKey::new(41);
-}
-
-impl RequestResponsePair for DescribeDelegationTokenRequest {
-    type Response = DescribeDelegationTokenResponse;
-}
-
-impl KafkaDecode for DescribeDelegationTokenRequest {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        crate::message::ensure_decode_version::<Self>(version)?;
-
-        let owners = {
-            let length = if Self::is_flexible(version) {
-                decoder.read_compact_nullable_array_len()?
+    impl KafkaDecode for DescribeDelegationTokenOwner {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            let principal_type = if Self::is_flexible(version) {
+                decoder.read_compact_string()?
             } else {
-                decoder.read_nullable_array_len()?
+                decoder.read_string()?
             };
-            length
-                .map(|length| {
-                    decoder.read_vec(length, |decoder| {
-                        DescribeDelegationTokenRequestOwner::decode(decoder, version)
-                    })
-                })
-                .transpose()?
-        };
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
+            let principal_name = if Self::is_flexible(version) {
+                decoder.read_compact_string()?
+            } else {
+                decoder.read_string()?
+            };
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
 
-        Ok(Self {
-            owners,
-            unknown_tagged_fields,
-        })
-    }
-}
-
-impl KafkaEncode for DescribeDelegationTokenRequest {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        crate::message::ensure_encode_version::<Self>(version)?;
-
-        if Self::is_flexible(version) {
-            encoder.write_compact_nullable_array_len(self.owners.as_ref().map(Vec::len))?;
-        } else {
-            encoder.write_nullable_array_len(self.owners.as_ref().map(Vec::len))?;
+            Ok(Self {
+                principal_type,
+                principal_name,
+                unknown_tagged_fields,
+            })
         }
-        if let Some(values) = &self.owners {
-            for value in values {
-                value.encode(encoder, version)?;
+    }
+
+    impl KafkaEncode for DescribeDelegationTokenOwner {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            if Self::is_flexible(version) {
+                encoder.write_compact_string(&self.principal_type)?;
+            } else {
+                encoder.write_string(&self.principal_type)?;
+            }
+            if Self::is_flexible(version) {
+                encoder.write_compact_string(&self.principal_name)?;
+            } else {
+                encoder.write_string(&self.principal_name)?;
+            }
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "DescribeDelegationTokenOwner",
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+
+    /// Request body for the `DescribeDelegationToken` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Eq, PartialEq)]
+    pub struct DescribeDelegationTokenRequest {
+        /// Each owner that we want to describe delegation tokens for, or null to describe all tokens.
+        pub owners: Option<Vec<DescribeDelegationTokenOwner>>,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl Default for DescribeDelegationTokenRequest {
+        fn default() -> Self {
+            Self {
+                owners: Some(Vec::new()),
+                unknown_tagged_fields: TaggedFields::default(),
             }
         }
-
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: Self::NAME,
-                version,
-            });
-        }
-
-        Ok(())
     }
-}
 
-/// `DescribedDelegationToken` as declared by the `DescribeDelegationToken` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct DescribeDelegationTokenResponseDescribedDelegationToken {
-    /// The token principal type.
-    pub principal_type: StrBytes,
-    /// The token principal name.
-    pub principal_name: StrBytes,
-    /// The principal type of the requester of the token.
-    pub token_requester_principal_type: StrBytes,
-    /// The principal type of the requester of the token.
-    pub token_requester_principal_name: StrBytes,
-    /// The token issue timestamp in milliseconds.
-    pub issue_timestamp: i64,
-    /// The token expiry timestamp in milliseconds.
-    pub expiry_timestamp: i64,
-    /// The token maximum timestamp length in milliseconds.
-    pub max_timestamp: i64,
-    /// The token ID.
-    pub token_id: StrBytes,
-    /// The token HMAC.
-    pub hmac: Bytes,
-    /// Those who are able to renew this token before it expires.
-    pub renewers: Vec<DescribeDelegationTokenResponseDescribedDelegationTokenRenewer>,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
-
-impl DescribeDelegationTokenResponseDescribedDelegationToken {
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(2, 3));
-
-    fn is_flexible(version: ApiVersion) -> bool {
-        Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+    impl KafkaMessage for DescribeDelegationTokenRequest {
+        const NAME: &'static str = "DescribeDelegationTokenRequest";
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(1, 3);
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(2, 3));
     }
-}
 
-impl KafkaDecode for DescribeDelegationTokenResponseDescribedDelegationToken {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        let principal_type = if Self::is_flexible(version) {
-            decoder.read_compact_string()?
-        } else {
-            decoder.read_string()?
-        };
-        let principal_name = if Self::is_flexible(version) {
-            decoder.read_compact_string()?
-        } else {
-            decoder.read_string()?
-        };
-        let token_requester_principal_type = if version.value() >= 3 {
-            decoder.read_compact_string()?
-        } else {
-            StrBytes::default()
-        };
-        let token_requester_principal_name = if version.value() >= 3 {
-            decoder.read_compact_string()?
-        } else {
-            StrBytes::default()
-        };
-        let issue_timestamp = decoder.read_i64()?;
-        let expiry_timestamp = decoder.read_i64()?;
-        let max_timestamp = decoder.read_i64()?;
-        let token_id = if Self::is_flexible(version) {
-            decoder.read_compact_string()?
-        } else {
-            decoder.read_string()?
-        };
-        let hmac = if Self::is_flexible(version) {
-            decoder.read_compact_bytes()?
-        } else {
-            decoder.read_bytes()?
-        };
-        let renewers = {
-            let length = if Self::is_flexible(version) {
-                decoder.read_compact_array_len()?
-            } else {
-                decoder.read_array_len()?
+    impl KafkaRequest for DescribeDelegationTokenRequest {
+        const API_KEY: ApiKey = ApiKey::new(41);
+    }
+
+    impl RequestResponsePair for DescribeDelegationTokenRequest {
+        type Response = super::DescribeDelegationTokenResponse;
+    }
+
+    impl KafkaDecode for DescribeDelegationTokenRequest {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            crate::message::ensure_decode_version::<Self>(version)?;
+
+            let owners = {
+                let length = if Self::is_flexible(version) {
+                    decoder.read_compact_nullable_array_len()?
+                } else {
+                    decoder.read_nullable_array_len()?
+                };
+                length
+                    .map(|length| {
+                        decoder.read_vec(length, |decoder| {
+                            DescribeDelegationTokenOwner::decode(decoder, version)
+                        })
+                    })
+                    .transpose()?
             };
-            decoder.read_vec(length, |decoder| {
-                DescribeDelegationTokenResponseDescribedDelegationTokenRenewer::decode(
-                    decoder, version,
-                )
-            })?
-        };
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
-
-        Ok(Self {
-            principal_type,
-            principal_name,
-            token_requester_principal_type,
-            token_requester_principal_name,
-            issue_timestamp,
-            expiry_timestamp,
-            max_timestamp,
-            token_id,
-            hmac,
-            renewers,
-            unknown_tagged_fields,
-        })
-    }
-}
-
-impl KafkaEncode for DescribeDelegationTokenResponseDescribedDelegationToken {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        if Self::is_flexible(version) {
-            encoder.write_compact_string(&self.principal_type)?;
-        } else {
-            encoder.write_string(&self.principal_type)?;
-        }
-        if Self::is_flexible(version) {
-            encoder.write_compact_string(&self.principal_name)?;
-        } else {
-            encoder.write_string(&self.principal_name)?;
-        }
-        if version.value() >= 3 {
-            encoder.write_compact_string(&self.token_requester_principal_type)?;
-        }
-        if version.value() >= 3 {
-            encoder.write_compact_string(&self.token_requester_principal_name)?;
-        }
-        encoder.write_i64(self.issue_timestamp)?;
-        encoder.write_i64(self.expiry_timestamp)?;
-        encoder.write_i64(self.max_timestamp)?;
-        if Self::is_flexible(version) {
-            encoder.write_compact_string(&self.token_id)?;
-        } else {
-            encoder.write_string(&self.token_id)?;
-        }
-        if Self::is_flexible(version) {
-            encoder.write_compact_bytes(&self.hmac)?;
-        } else {
-            encoder.write_bytes(&self.hmac)?;
-        }
-        if Self::is_flexible(version) {
-            encoder.write_compact_array_len(self.renewers.len())?;
-        } else {
-            encoder.write_array_len(self.renewers.len())?;
-        }
-        for value in &self.renewers {
-            value.encode(encoder, version)?;
-        }
-
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: "DescribeDelegationTokenResponseDescribedDelegationToken",
-                version,
-            });
-        }
-
-        Ok(())
-    }
-}
-
-/// `DescribedDelegationTokenRenewer` as declared by the `DescribeDelegationToken` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct DescribeDelegationTokenResponseDescribedDelegationTokenRenewer {
-    /// The renewer principal type.
-    pub principal_type: StrBytes,
-    /// The renewer principal name.
-    pub principal_name: StrBytes,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
-
-impl DescribeDelegationTokenResponseDescribedDelegationTokenRenewer {
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(2, 3));
-
-    fn is_flexible(version: ApiVersion) -> bool {
-        Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
-    }
-}
-
-impl KafkaDecode for DescribeDelegationTokenResponseDescribedDelegationTokenRenewer {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        let principal_type = if Self::is_flexible(version) {
-            decoder.read_compact_string()?
-        } else {
-            decoder.read_string()?
-        };
-        let principal_name = if Self::is_flexible(version) {
-            decoder.read_compact_string()?
-        } else {
-            decoder.read_string()?
-        };
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
-
-        Ok(Self {
-            principal_type,
-            principal_name,
-            unknown_tagged_fields,
-        })
-    }
-}
-
-impl KafkaEncode for DescribeDelegationTokenResponseDescribedDelegationTokenRenewer {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        if Self::is_flexible(version) {
-            encoder.write_compact_string(&self.principal_type)?;
-        } else {
-            encoder.write_string(&self.principal_type)?;
-        }
-        if Self::is_flexible(version) {
-            encoder.write_compact_string(&self.principal_name)?;
-        } else {
-            encoder.write_string(&self.principal_name)?;
-        }
-
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: "DescribeDelegationTokenResponseDescribedDelegationTokenRenewer",
-                version,
-            });
-        }
-
-        Ok(())
-    }
-}
-
-/// Response body for the `DescribeDelegationToken` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct DescribeDelegationTokenResponse {
-    /// The error code, or 0 if there was no error.
-    pub error_code: i16,
-    /// The tokens.
-    pub tokens: Vec<DescribeDelegationTokenResponseDescribedDelegationToken>,
-    /// The duration in milliseconds for which the request was throttled due to a quota violation, or zero if the request did not violate any quota.
-    pub throttle_time_ms: i32,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
-
-impl KafkaMessage for DescribeDelegationTokenResponse {
-    const NAME: &'static str = "DescribeDelegationTokenResponse";
-    const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(1, 3);
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(2, 3));
-}
-
-impl KafkaResponse for DescribeDelegationTokenResponse {
-    const API_KEY: ApiKey = ApiKey::new(41);
-}
-
-impl KafkaDecode for DescribeDelegationTokenResponse {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        crate::message::ensure_decode_version::<Self>(version)?;
-
-        let error_code = decoder.read_i16()?;
-        let tokens = {
-            let length = if Self::is_flexible(version) {
-                decoder.read_compact_array_len()?
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
             } else {
-                decoder.read_array_len()?
+                TaggedFields::default()
             };
-            decoder.read_vec(length, |decoder| {
-                DescribeDelegationTokenResponseDescribedDelegationToken::decode(decoder, version)
-            })?
-        };
-        let throttle_time_ms = decoder.read_i32()?;
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
 
-        Ok(Self {
-            error_code,
-            tokens,
-            throttle_time_ms,
-            unknown_tagged_fields,
-        })
+            Ok(Self {
+                owners,
+                unknown_tagged_fields,
+            })
+        }
+    }
+
+    impl KafkaEncode for DescribeDelegationTokenRequest {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            crate::message::ensure_encode_version::<Self>(version)?;
+
+            if Self::is_flexible(version) {
+                encoder.write_compact_nullable_array_len(self.owners.as_ref().map(Vec::len))?;
+            } else {
+                encoder.write_nullable_array_len(self.owners.as_ref().map(Vec::len))?;
+            }
+            if let Some(values) = &self.owners {
+                for value in values {
+                    value.encode(encoder, version)?;
+                }
+            }
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: Self::NAME,
+                    version,
+                });
+            }
+
+            Ok(())
+        }
     }
 }
 
-impl KafkaEncode for DescribeDelegationTokenResponse {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        crate::message::ensure_encode_version::<Self>(version)?;
+/// `DescribeDelegationTokenResponse` and every struct it declares, under upstream's own names.
+///
+/// [`DescribeDelegationTokenResponse`](crate::DescribeDelegationTokenResponse) is re-exported flat, so this path never has to be
+/// written to name the message itself.
+pub mod describe_delegation_token_response {
+    use kafka_wire_core::{
+        ApiKey, ApiVersion, Bytes, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder,
+        KafkaDecode, KafkaEncode, StrBytes, TaggedFields, VersionRange,
+    };
 
-        encoder.write_i16(self.error_code)?;
-        if Self::is_flexible(version) {
-            encoder.write_compact_array_len(self.tokens.len())?;
-        } else {
-            encoder.write_array_len(self.tokens.len())?;
-        }
-        for value in &self.tokens {
-            value.encode(encoder, version)?;
-        }
-        encoder.write_i32(self.throttle_time_ms)?;
+    use crate::{KafkaMessage, KafkaResponse};
 
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: Self::NAME,
-                version,
-            });
-        }
+    /// `DescribedDelegationToken` as declared by the `DescribeDelegationToken` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    pub struct DescribedDelegationToken {
+        /// The token principal type.
+        pub principal_type: StrBytes,
+        /// The token principal name.
+        pub principal_name: StrBytes,
+        /// The principal type of the requester of the token.
+        pub token_requester_principal_type: StrBytes,
+        /// The principal type of the requester of the token.
+        pub token_requester_principal_name: StrBytes,
+        /// The token issue timestamp in milliseconds.
+        pub issue_timestamp: i64,
+        /// The token expiry timestamp in milliseconds.
+        pub expiry_timestamp: i64,
+        /// The token maximum timestamp length in milliseconds.
+        pub max_timestamp: i64,
+        /// The token ID.
+        pub token_id: StrBytes,
+        /// The token HMAC.
+        pub hmac: Bytes,
+        /// Those who are able to renew this token before it expires.
+        pub renewers: Vec<DescribedDelegationTokenRenewer>,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
+    }
 
-        Ok(())
+    impl DescribedDelegationToken {
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(2, 3));
+
+        fn is_flexible(version: ApiVersion) -> bool {
+            Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+        }
+    }
+
+    impl KafkaDecode for DescribedDelegationToken {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            let principal_type = if Self::is_flexible(version) {
+                decoder.read_compact_string()?
+            } else {
+                decoder.read_string()?
+            };
+            let principal_name = if Self::is_flexible(version) {
+                decoder.read_compact_string()?
+            } else {
+                decoder.read_string()?
+            };
+            let token_requester_principal_type = if version.value() >= 3 {
+                decoder.read_compact_string()?
+            } else {
+                StrBytes::default()
+            };
+            let token_requester_principal_name = if version.value() >= 3 {
+                decoder.read_compact_string()?
+            } else {
+                StrBytes::default()
+            };
+            let issue_timestamp = decoder.read_i64()?;
+            let expiry_timestamp = decoder.read_i64()?;
+            let max_timestamp = decoder.read_i64()?;
+            let token_id = if Self::is_flexible(version) {
+                decoder.read_compact_string()?
+            } else {
+                decoder.read_string()?
+            };
+            let hmac = if Self::is_flexible(version) {
+                decoder.read_compact_bytes()?
+            } else {
+                decoder.read_bytes()?
+            };
+            let renewers = {
+                let length = if Self::is_flexible(version) {
+                    decoder.read_compact_array_len()?
+                } else {
+                    decoder.read_array_len()?
+                };
+                decoder.read_vec(length, |decoder| {
+                    DescribedDelegationTokenRenewer::decode(decoder, version)
+                })?
+            };
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
+
+            Ok(Self {
+                principal_type,
+                principal_name,
+                token_requester_principal_type,
+                token_requester_principal_name,
+                issue_timestamp,
+                expiry_timestamp,
+                max_timestamp,
+                token_id,
+                hmac,
+                renewers,
+                unknown_tagged_fields,
+            })
+        }
+    }
+
+    impl KafkaEncode for DescribedDelegationToken {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            if Self::is_flexible(version) {
+                encoder.write_compact_string(&self.principal_type)?;
+            } else {
+                encoder.write_string(&self.principal_type)?;
+            }
+            if Self::is_flexible(version) {
+                encoder.write_compact_string(&self.principal_name)?;
+            } else {
+                encoder.write_string(&self.principal_name)?;
+            }
+            if version.value() >= 3 {
+                encoder.write_compact_string(&self.token_requester_principal_type)?;
+            }
+            if version.value() >= 3 {
+                encoder.write_compact_string(&self.token_requester_principal_name)?;
+            }
+            encoder.write_i64(self.issue_timestamp)?;
+            encoder.write_i64(self.expiry_timestamp)?;
+            encoder.write_i64(self.max_timestamp)?;
+            if Self::is_flexible(version) {
+                encoder.write_compact_string(&self.token_id)?;
+            } else {
+                encoder.write_string(&self.token_id)?;
+            }
+            if Self::is_flexible(version) {
+                encoder.write_compact_bytes(&self.hmac)?;
+            } else {
+                encoder.write_bytes(&self.hmac)?;
+            }
+            if Self::is_flexible(version) {
+                encoder.write_compact_array_len(self.renewers.len())?;
+            } else {
+                encoder.write_array_len(self.renewers.len())?;
+            }
+            for value in &self.renewers {
+                value.encode(encoder, version)?;
+            }
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "DescribedDelegationToken",
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+
+    /// `DescribedDelegationTokenRenewer` as declared by the `DescribeDelegationToken` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    pub struct DescribedDelegationTokenRenewer {
+        /// The renewer principal type.
+        pub principal_type: StrBytes,
+        /// The renewer principal name.
+        pub principal_name: StrBytes,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl DescribedDelegationTokenRenewer {
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(2, 3));
+
+        fn is_flexible(version: ApiVersion) -> bool {
+            Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+        }
+    }
+
+    impl KafkaDecode for DescribedDelegationTokenRenewer {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            let principal_type = if Self::is_flexible(version) {
+                decoder.read_compact_string()?
+            } else {
+                decoder.read_string()?
+            };
+            let principal_name = if Self::is_flexible(version) {
+                decoder.read_compact_string()?
+            } else {
+                decoder.read_string()?
+            };
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
+
+            Ok(Self {
+                principal_type,
+                principal_name,
+                unknown_tagged_fields,
+            })
+        }
+    }
+
+    impl KafkaEncode for DescribedDelegationTokenRenewer {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            if Self::is_flexible(version) {
+                encoder.write_compact_string(&self.principal_type)?;
+            } else {
+                encoder.write_string(&self.principal_type)?;
+            }
+            if Self::is_flexible(version) {
+                encoder.write_compact_string(&self.principal_name)?;
+            } else {
+                encoder.write_string(&self.principal_name)?;
+            }
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "DescribedDelegationTokenRenewer",
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+
+    /// Response body for the `DescribeDelegationToken` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    pub struct DescribeDelegationTokenResponse {
+        /// The error code, or 0 if there was no error.
+        pub error_code: i16,
+        /// The tokens.
+        pub tokens: Vec<DescribedDelegationToken>,
+        /// The duration in milliseconds for which the request was throttled due to a quota violation, or zero if the request did not violate any quota.
+        pub throttle_time_ms: i32,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl KafkaMessage for DescribeDelegationTokenResponse {
+        const NAME: &'static str = "DescribeDelegationTokenResponse";
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(1, 3);
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(2, 3));
+    }
+
+    impl KafkaResponse for DescribeDelegationTokenResponse {
+        const API_KEY: ApiKey = ApiKey::new(41);
+    }
+
+    impl KafkaDecode for DescribeDelegationTokenResponse {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            crate::message::ensure_decode_version::<Self>(version)?;
+
+            let error_code = decoder.read_i16()?;
+            let tokens = {
+                let length = if Self::is_flexible(version) {
+                    decoder.read_compact_array_len()?
+                } else {
+                    decoder.read_array_len()?
+                };
+                decoder.read_vec(length, |decoder| {
+                    DescribedDelegationToken::decode(decoder, version)
+                })?
+            };
+            let throttle_time_ms = decoder.read_i32()?;
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
+
+            Ok(Self {
+                error_code,
+                tokens,
+                throttle_time_ms,
+                unknown_tagged_fields,
+            })
+        }
+    }
+
+    impl KafkaEncode for DescribeDelegationTokenResponse {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            crate::message::ensure_encode_version::<Self>(version)?;
+
+            encoder.write_i16(self.error_code)?;
+            if Self::is_flexible(version) {
+                encoder.write_compact_array_len(self.tokens.len())?;
+            } else {
+                encoder.write_array_len(self.tokens.len())?;
+            }
+            for value in &self.tokens {
+                value.encode(encoder, version)?;
+            }
+            encoder.write_i32(self.throttle_time_ms)?;
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: Self::NAME,
+                    version,
+                });
+            }
+
+            Ok(())
+        }
     }
 }
+
+use kafka_wire_core::VersionRange;
+
+use crate::{MessageDescriptor, MessageDirection};
+
+pub use describe_delegation_token_request::DescribeDelegationTokenRequest;
+pub use describe_delegation_token_response::DescribeDelegationTokenResponse;
 
 /// Static metadata for [`DescribeDelegationTokenRequest`].
 pub const DESCRIBE_DELEGATION_TOKEN_REQUEST_DESCRIPTOR: MessageDescriptor = MessageDescriptor::new(

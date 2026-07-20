@@ -12,14 +12,15 @@ use super::{Field, StructRef, VersionSet};
 ///
 /// Upstream hoists a struct here when more than one field in the same message
 /// has its shape — `DescribeQuorumResponse` declares `ReplicaState` once and
-/// both `CurrentVoters` and `Observers` refer to it. Per the earlier flat naming rule the block is
-/// scoped to a single message and direction, so it is not shared between a
-/// request and its response even when the two declare identical shapes, and it
-/// takes the ordinary qualification rule with no special case:
-/// `DescribeQuorumResponse` + `ReplicaState` -> `DescribeQuorumResponseReplicaState`.
+/// both `CurrentVoters` and `Observers` refer to it. The block is scoped to a
+/// single message and direction, so it is not shared between a request and its
+/// response even when the two declare identical shapes, and under module-scoped naming it
+/// lands in the same module an inline declaration lands in, under the same
+/// spelling: `DescribeQuorumResponse` declares `ReplicaState`, and that is the
+/// name emitted.
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct CommonStruct {
-    /// Owner-qualified identity, keyed within the message by its declared name.
+    /// Module-scoped identity, keyed within the message by its declared name.
     pub name: StructRef,
     /// Versions in which this declaration applies.
     pub versions: VersionSet,

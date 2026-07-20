@@ -5,333 +5,352 @@
 //! Request SHA-256: `ab10b1d69f811fcb4f64f7bcdece92442f80d40bf9e111e6bb0fb1ceb872ac29`.
 //! Response SHA-256: `baba8ff246dd1a1cfde6cc18bd3d32b413e5959aefd20fbca9de7335db55f601`.
 
-use kafka_wire_core::{
-    ApiKey, ApiVersion, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
-    KafkaEncode, StrBytes, TaggedFields, Uuid, VersionRange,
-};
+/// `ControllerRegistrationRequest` and every struct it declares, under upstream's own names.
+///
+/// [`ControllerRegistrationRequest`](crate::ControllerRegistrationRequest) is re-exported flat, so this path never has to be
+/// written to name the message itself.
+pub mod controller_registration_request {
+    use kafka_wire_core::{
+        ApiKey, ApiVersion, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
+        KafkaEncode, StrBytes, TaggedFields, Uuid, VersionRange,
+    };
 
-use crate::{
-    KafkaMessage, KafkaRequest, KafkaResponse, MessageDescriptor, MessageDirection,
-    RequestResponsePair,
-};
+    use crate::{KafkaMessage, KafkaRequest, RequestResponsePair};
 
-/// `Listener` as declared by the `ControllerRegistration` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct ControllerRegistrationRequestListener {
-    /// The name of the endpoint.
-    pub name: StrBytes,
-    /// The hostname.
-    pub host: StrBytes,
-    /// The port.
-    pub port: u16,
-    /// The security protocol.
-    pub security_protocol: i16,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
-
-impl ControllerRegistrationRequestListener {
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 0));
-
-    fn is_flexible(version: ApiVersion) -> bool {
-        Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+    /// `Listener` as declared by the `ControllerRegistration` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    pub struct Listener {
+        /// The name of the endpoint.
+        pub name: StrBytes,
+        /// The hostname.
+        pub host: StrBytes,
+        /// The port.
+        pub port: u16,
+        /// The security protocol.
+        pub security_protocol: i16,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
     }
-}
 
-impl KafkaDecode for ControllerRegistrationRequestListener {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        let name = decoder.read_compact_string()?;
-        let host = decoder.read_compact_string()?;
-        let port = decoder.read_u16()?;
-        let security_protocol = decoder.read_i16()?;
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
+    impl Listener {
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 0));
 
-        Ok(Self {
-            name,
-            host,
-            port,
-            security_protocol,
-            unknown_tagged_fields,
-        })
-    }
-}
-
-impl KafkaEncode for ControllerRegistrationRequestListener {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        encoder.write_compact_string(&self.name)?;
-        encoder.write_compact_string(&self.host)?;
-        encoder.write_u16(self.port)?;
-        encoder.write_i16(self.security_protocol)?;
-
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: "ControllerRegistrationRequestListener",
-                version,
-            });
+        fn is_flexible(version: ApiVersion) -> bool {
+            Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
         }
-
-        Ok(())
     }
-}
 
-/// `Feature` as declared by the `ControllerRegistration` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct ControllerRegistrationRequestFeature {
-    /// The feature name.
-    pub name: StrBytes,
-    /// The minimum supported feature level.
-    pub min_supported_version: i16,
-    /// The maximum supported feature level.
-    pub max_supported_version: i16,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
+    impl KafkaDecode for Listener {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            let name = decoder.read_compact_string()?;
+            let host = decoder.read_compact_string()?;
+            let port = decoder.read_u16()?;
+            let security_protocol = decoder.read_i16()?;
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
 
-impl ControllerRegistrationRequestFeature {
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 0));
-
-    fn is_flexible(version: ApiVersion) -> bool {
-        Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
-    }
-}
-
-impl KafkaDecode for ControllerRegistrationRequestFeature {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        let name = decoder.read_compact_string()?;
-        let min_supported_version = decoder.read_i16()?;
-        let max_supported_version = decoder.read_i16()?;
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
-
-        Ok(Self {
-            name,
-            min_supported_version,
-            max_supported_version,
-            unknown_tagged_fields,
-        })
-    }
-}
-
-impl KafkaEncode for ControllerRegistrationRequestFeature {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        encoder.write_compact_string(&self.name)?;
-        encoder.write_i16(self.min_supported_version)?;
-        encoder.write_i16(self.max_supported_version)?;
-
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: "ControllerRegistrationRequestFeature",
-                version,
-            });
+            Ok(Self {
+                name,
+                host,
+                port,
+                security_protocol,
+                unknown_tagged_fields,
+            })
         }
-
-        Ok(())
     }
-}
 
-/// Request body for the `ControllerRegistration` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct ControllerRegistrationRequest {
-    /// The ID of the controller to register.
-    pub controller_id: i32,
-    /// The controller incarnation ID, which is unique to each process run.
-    pub incarnation_id: Uuid,
-    /// Set if the required configurations for ZK migration are present.
-    pub zk_migration_ready: bool,
-    /// The listeners of this controller.
-    pub listeners: Vec<ControllerRegistrationRequestListener>,
-    /// The features on this controller.
-    pub features: Vec<ControllerRegistrationRequestFeature>,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
+    impl KafkaEncode for Listener {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            encoder.write_compact_string(&self.name)?;
+            encoder.write_compact_string(&self.host)?;
+            encoder.write_u16(self.port)?;
+            encoder.write_i16(self.security_protocol)?;
 
-impl KafkaMessage for ControllerRegistrationRequest {
-    const NAME: &'static str = "ControllerRegistrationRequest";
-    const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 0);
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 0));
-}
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "Listener",
+                    version,
+                });
+            }
 
-impl KafkaRequest for ControllerRegistrationRequest {
-    const API_KEY: ApiKey = ApiKey::new(70);
-}
-
-impl RequestResponsePair for ControllerRegistrationRequest {
-    type Response = ControllerRegistrationResponse;
-}
-
-impl KafkaDecode for ControllerRegistrationRequest {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        crate::message::ensure_decode_version::<Self>(version)?;
-
-        let controller_id = decoder.read_i32()?;
-        let incarnation_id = decoder.read_uuid()?;
-        let zk_migration_ready = decoder.read_bool()?;
-        let listeners = {
-            let length = decoder.read_compact_array_len()?;
-            decoder.read_vec(length, |decoder| {
-                ControllerRegistrationRequestListener::decode(decoder, version)
-            })?
-        };
-        let features = {
-            let length = decoder.read_compact_array_len()?;
-            decoder.read_vec(length, |decoder| {
-                ControllerRegistrationRequestFeature::decode(decoder, version)
-            })?
-        };
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
-
-        Ok(Self {
-            controller_id,
-            incarnation_id,
-            zk_migration_ready,
-            listeners,
-            features,
-            unknown_tagged_fields,
-        })
+            Ok(())
+        }
     }
-}
 
-impl KafkaEncode for ControllerRegistrationRequest {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        crate::message::ensure_encode_version::<Self>(version)?;
-
-        encoder.write_i32(self.controller_id)?;
-        encoder.write_uuid(self.incarnation_id)?;
-        encoder.write_bool(self.zk_migration_ready)?;
-        encoder.write_compact_array_len(self.listeners.len())?;
-        for value in &self.listeners {
-            value.encode(encoder, version)?;
-        }
-        encoder.write_compact_array_len(self.features.len())?;
-        for value in &self.features {
-            value.encode(encoder, version)?;
-        }
-
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: Self::NAME,
-                version,
-            });
-        }
-
-        Ok(())
+    /// `Feature` as declared by the `ControllerRegistration` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    pub struct Feature {
+        /// The feature name.
+        pub name: StrBytes,
+        /// The minimum supported feature level.
+        pub min_supported_version: i16,
+        /// The maximum supported feature level.
+        pub max_supported_version: i16,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
     }
-}
 
-/// Response body for the `ControllerRegistration` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct ControllerRegistrationResponse {
-    /// Duration in milliseconds for which the request was throttled due to a quota violation, or zero if the request did not violate any quota.
-    pub throttle_time_ms: i32,
-    /// The response error code.
-    pub error_code: i16,
-    /// The response error message, or null if there was no error.
-    pub error_message: Option<StrBytes>,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
+    impl Feature {
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 0));
 
-impl Default for ControllerRegistrationResponse {
-    fn default() -> Self {
-        Self {
-            throttle_time_ms: 0,
-            error_code: 0,
-            error_message: Some(StrBytes::default()),
-            unknown_tagged_fields: TaggedFields::default(),
+        fn is_flexible(version: ApiVersion) -> bool {
+            Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+        }
+    }
+
+    impl KafkaDecode for Feature {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            let name = decoder.read_compact_string()?;
+            let min_supported_version = decoder.read_i16()?;
+            let max_supported_version = decoder.read_i16()?;
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
+
+            Ok(Self {
+                name,
+                min_supported_version,
+                max_supported_version,
+                unknown_tagged_fields,
+            })
+        }
+    }
+
+    impl KafkaEncode for Feature {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            encoder.write_compact_string(&self.name)?;
+            encoder.write_i16(self.min_supported_version)?;
+            encoder.write_i16(self.max_supported_version)?;
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "Feature",
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+
+    /// Request body for the `ControllerRegistration` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    pub struct ControllerRegistrationRequest {
+        /// The ID of the controller to register.
+        pub controller_id: i32,
+        /// The controller incarnation ID, which is unique to each process run.
+        pub incarnation_id: Uuid,
+        /// Set if the required configurations for ZK migration are present.
+        pub zk_migration_ready: bool,
+        /// The listeners of this controller.
+        pub listeners: Vec<Listener>,
+        /// The features on this controller.
+        pub features: Vec<Feature>,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl KafkaMessage for ControllerRegistrationRequest {
+        const NAME: &'static str = "ControllerRegistrationRequest";
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 0);
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 0));
+    }
+
+    impl KafkaRequest for ControllerRegistrationRequest {
+        const API_KEY: ApiKey = ApiKey::new(70);
+    }
+
+    impl RequestResponsePair for ControllerRegistrationRequest {
+        type Response = super::ControllerRegistrationResponse;
+    }
+
+    impl KafkaDecode for ControllerRegistrationRequest {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            crate::message::ensure_decode_version::<Self>(version)?;
+
+            let controller_id = decoder.read_i32()?;
+            let incarnation_id = decoder.read_uuid()?;
+            let zk_migration_ready = decoder.read_bool()?;
+            let listeners = {
+                let length = decoder.read_compact_array_len()?;
+                decoder.read_vec(length, |decoder| Listener::decode(decoder, version))?
+            };
+            let features = {
+                let length = decoder.read_compact_array_len()?;
+                decoder.read_vec(length, |decoder| Feature::decode(decoder, version))?
+            };
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
+
+            Ok(Self {
+                controller_id,
+                incarnation_id,
+                zk_migration_ready,
+                listeners,
+                features,
+                unknown_tagged_fields,
+            })
+        }
+    }
+
+    impl KafkaEncode for ControllerRegistrationRequest {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            crate::message::ensure_encode_version::<Self>(version)?;
+
+            encoder.write_i32(self.controller_id)?;
+            encoder.write_uuid(self.incarnation_id)?;
+            encoder.write_bool(self.zk_migration_ready)?;
+            encoder.write_compact_array_len(self.listeners.len())?;
+            for value in &self.listeners {
+                value.encode(encoder, version)?;
+            }
+            encoder.write_compact_array_len(self.features.len())?;
+            for value in &self.features {
+                value.encode(encoder, version)?;
+            }
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: Self::NAME,
+                    version,
+                });
+            }
+
+            Ok(())
         }
     }
 }
 
-impl KafkaMessage for ControllerRegistrationResponse {
-    const NAME: &'static str = "ControllerRegistrationResponse";
-    const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 0);
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 0));
-}
+/// `ControllerRegistrationResponse` and every struct it declares, under upstream's own names.
+///
+/// [`ControllerRegistrationResponse`](crate::ControllerRegistrationResponse) is re-exported flat, so this path never has to be
+/// written to name the message itself.
+pub mod controller_registration_response {
+    use kafka_wire_core::{
+        ApiKey, ApiVersion, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
+        KafkaEncode, StrBytes, TaggedFields, VersionRange,
+    };
 
-impl KafkaResponse for ControllerRegistrationResponse {
-    const API_KEY: ApiKey = ApiKey::new(70);
-}
+    use crate::{KafkaMessage, KafkaResponse};
 
-impl KafkaDecode for ControllerRegistrationResponse {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        crate::message::ensure_decode_version::<Self>(version)?;
-
-        let throttle_time_ms = decoder.read_i32()?;
-        let error_code = decoder.read_i16()?;
-        let error_message = decoder.read_compact_nullable_string()?;
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
-
-        Ok(Self {
-            throttle_time_ms,
-            error_code,
-            error_message,
-            unknown_tagged_fields,
-        })
+    /// Response body for the `ControllerRegistration` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Eq, PartialEq)]
+    pub struct ControllerRegistrationResponse {
+        /// Duration in milliseconds for which the request was throttled due to a quota violation, or zero if the request did not violate any quota.
+        pub throttle_time_ms: i32,
+        /// The response error code.
+        pub error_code: i16,
+        /// The response error message, or null if there was no error.
+        pub error_message: Option<StrBytes>,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
     }
-}
 
-impl KafkaEncode for ControllerRegistrationResponse {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        crate::message::ensure_encode_version::<Self>(version)?;
-
-        encoder.write_i32(self.throttle_time_ms)?;
-        encoder.write_i16(self.error_code)?;
-        encoder.write_compact_nullable_string(self.error_message.as_ref())?;
-
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: Self::NAME,
-                version,
-            });
+    impl Default for ControllerRegistrationResponse {
+        fn default() -> Self {
+            Self {
+                throttle_time_ms: 0,
+                error_code: 0,
+                error_message: Some(StrBytes::default()),
+                unknown_tagged_fields: TaggedFields::default(),
+            }
         }
+    }
 
-        Ok(())
+    impl KafkaMessage for ControllerRegistrationResponse {
+        const NAME: &'static str = "ControllerRegistrationResponse";
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 0);
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 0));
+    }
+
+    impl KafkaResponse for ControllerRegistrationResponse {
+        const API_KEY: ApiKey = ApiKey::new(70);
+    }
+
+    impl KafkaDecode for ControllerRegistrationResponse {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            crate::message::ensure_decode_version::<Self>(version)?;
+
+            let throttle_time_ms = decoder.read_i32()?;
+            let error_code = decoder.read_i16()?;
+            let error_message = decoder.read_compact_nullable_string()?;
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
+
+            Ok(Self {
+                throttle_time_ms,
+                error_code,
+                error_message,
+                unknown_tagged_fields,
+            })
+        }
+    }
+
+    impl KafkaEncode for ControllerRegistrationResponse {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            crate::message::ensure_encode_version::<Self>(version)?;
+
+            encoder.write_i32(self.throttle_time_ms)?;
+            encoder.write_i16(self.error_code)?;
+            encoder.write_compact_nullable_string(self.error_message.as_ref())?;
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: Self::NAME,
+                    version,
+                });
+            }
+
+            Ok(())
+        }
     }
 }
+
+use kafka_wire_core::VersionRange;
+
+use crate::{MessageDescriptor, MessageDirection};
+
+pub use controller_registration_request::ControllerRegistrationRequest;
+pub use controller_registration_response::ControllerRegistrationResponse;
 
 /// Static metadata for [`ControllerRegistrationRequest`].
 pub const CONTROLLER_REGISTRATION_REQUEST_DESCRIPTOR: MessageDescriptor = MessageDescriptor::new(

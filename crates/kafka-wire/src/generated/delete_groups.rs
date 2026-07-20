@@ -5,265 +5,288 @@
 //! Request SHA-256: `a0a6939c3be99a93825870e22a2513e0ccd533f9283eacc1edeee9e44ee0770a`.
 //! Response SHA-256: `ef48fe4b4d03a886cd2de420b194bcf2c6822ffd456076771f0071e720187d35`.
 
-use kafka_wire_core::{
-    ApiKey, ApiVersion, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
-    KafkaEncode, StrBytes, TaggedFields, VersionRange,
-};
+/// `DeleteGroupsRequest` and every struct it declares, under upstream's own names.
+///
+/// [`DeleteGroupsRequest`](crate::DeleteGroupsRequest) is re-exported flat, so this path never has to be
+/// written to name the message itself.
+pub mod delete_groups_request {
+    use kafka_wire_core::{
+        ApiKey, ApiVersion, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
+        KafkaEncode, StrBytes, TaggedFields, VersionRange,
+    };
 
-use crate::{
-    KafkaMessage, KafkaRequest, KafkaResponse, MessageDescriptor, MessageDirection,
-    RequestResponsePair,
-};
+    use crate::{KafkaMessage, KafkaRequest, RequestResponsePair};
 
-/// Request body for the `DeleteGroups` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct DeleteGroupsRequest {
-    /// The group names to delete.
-    pub groups_names: Vec<StrBytes>,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
+    /// Request body for the `DeleteGroups` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    pub struct DeleteGroupsRequest {
+        /// The group names to delete.
+        pub groups_names: Vec<StrBytes>,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
+    }
 
-impl KafkaMessage for DeleteGroupsRequest {
-    const NAME: &'static str = "DeleteGroupsRequest";
-    const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 3);
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(2, 3));
-}
+    impl KafkaMessage for DeleteGroupsRequest {
+        const NAME: &'static str = "DeleteGroupsRequest";
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 3);
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(2, 3));
+    }
 
-impl KafkaRequest for DeleteGroupsRequest {
-    const API_KEY: ApiKey = ApiKey::new(42);
-}
+    impl KafkaRequest for DeleteGroupsRequest {
+        const API_KEY: ApiKey = ApiKey::new(42);
+    }
 
-impl RequestResponsePair for DeleteGroupsRequest {
-    type Response = DeleteGroupsResponse;
-}
+    impl RequestResponsePair for DeleteGroupsRequest {
+        type Response = super::DeleteGroupsResponse;
+    }
 
-impl KafkaDecode for DeleteGroupsRequest {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        crate::message::ensure_decode_version::<Self>(version)?;
+    impl KafkaDecode for DeleteGroupsRequest {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            crate::message::ensure_decode_version::<Self>(version)?;
 
-        let groups_names = {
-            let length = if Self::is_flexible(version) {
-                decoder.read_compact_array_len()?
-            } else {
-                decoder.read_array_len()?
-            };
-            decoder.read_vec(length, |decoder| {
-                Ok(if Self::is_flexible(version) {
-                    decoder.read_compact_string()?
+            let groups_names = {
+                let length = if Self::is_flexible(version) {
+                    decoder.read_compact_array_len()?
                 } else {
-                    decoder.read_string()?
-                })
-            })?
-        };
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
-
-        Ok(Self {
-            groups_names,
-            unknown_tagged_fields,
-        })
-    }
-}
-
-impl KafkaEncode for DeleteGroupsRequest {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        crate::message::ensure_encode_version::<Self>(version)?;
-
-        if Self::is_flexible(version) {
-            encoder.write_compact_array_len(self.groups_names.len())?;
-        } else {
-            encoder.write_array_len(self.groups_names.len())?;
-        }
-        for value in &self.groups_names {
-            if Self::is_flexible(version) {
-                encoder.write_compact_string(value)?;
-            } else {
-                encoder.write_string(value)?;
-            }
-        }
-
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: Self::NAME,
-                version,
-            });
-        }
-
-        Ok(())
-    }
-}
-
-/// `DeletableGroupResult` as declared by the `DeleteGroups` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct DeleteGroupsResponseDeletableGroupResult {
-    /// The group id.
-    pub group_id: StrBytes,
-    /// The deletion error, or 0 if the deletion succeeded.
-    pub error_code: i16,
-    /// The error message, or null if there was no error.
-    pub error_message: Option<StrBytes>,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
-
-impl DeleteGroupsResponseDeletableGroupResult {
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(2, 3));
-
-    fn is_flexible(version: ApiVersion) -> bool {
-        Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
-    }
-}
-
-impl KafkaDecode for DeleteGroupsResponseDeletableGroupResult {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        let group_id = if Self::is_flexible(version) {
-            decoder.read_compact_string()?
-        } else {
-            decoder.read_string()?
-        };
-        let error_code = decoder.read_i16()?;
-        let error_message = if version.value() >= 3 {
-            decoder.read_compact_nullable_string()?
-        } else {
-            None
-        };
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
-
-        Ok(Self {
-            group_id,
-            error_code,
-            error_message,
-            unknown_tagged_fields,
-        })
-    }
-}
-
-impl KafkaEncode for DeleteGroupsResponseDeletableGroupResult {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        if Self::is_flexible(version) {
-            encoder.write_compact_string(&self.group_id)?;
-        } else {
-            encoder.write_string(&self.group_id)?;
-        }
-        encoder.write_i16(self.error_code)?;
-        if version.value() >= 3 {
-            encoder.write_compact_nullable_string(self.error_message.as_ref())?;
-        }
-
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: "DeleteGroupsResponseDeletableGroupResult",
-                version,
-            });
-        }
-
-        Ok(())
-    }
-}
-
-/// Response body for the `DeleteGroups` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct DeleteGroupsResponse {
-    /// The duration in milliseconds for which the request was throttled due to a quota violation, or zero if the request did not violate any quota.
-    pub throttle_time_ms: i32,
-    /// The deletion results.
-    pub results: Vec<DeleteGroupsResponseDeletableGroupResult>,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
-
-impl KafkaMessage for DeleteGroupsResponse {
-    const NAME: &'static str = "DeleteGroupsResponse";
-    const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 3);
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(2, 3));
-}
-
-impl KafkaResponse for DeleteGroupsResponse {
-    const API_KEY: ApiKey = ApiKey::new(42);
-}
-
-impl KafkaDecode for DeleteGroupsResponse {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        crate::message::ensure_decode_version::<Self>(version)?;
-
-        let throttle_time_ms = decoder.read_i32()?;
-        let results = {
-            let length = if Self::is_flexible(version) {
-                decoder.read_compact_array_len()?
-            } else {
-                decoder.read_array_len()?
+                    decoder.read_array_len()?
+                };
+                decoder.read_vec(length, |decoder| {
+                    Ok(if Self::is_flexible(version) {
+                        decoder.read_compact_string()?
+                    } else {
+                        decoder.read_string()?
+                    })
+                })?
             };
-            decoder.read_vec(length, |decoder| {
-                DeleteGroupsResponseDeletableGroupResult::decode(decoder, version)
-            })?
-        };
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
 
-        Ok(Self {
-            throttle_time_ms,
-            results,
-            unknown_tagged_fields,
-        })
+            Ok(Self {
+                groups_names,
+                unknown_tagged_fields,
+            })
+        }
+    }
+
+    impl KafkaEncode for DeleteGroupsRequest {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            crate::message::ensure_encode_version::<Self>(version)?;
+
+            if Self::is_flexible(version) {
+                encoder.write_compact_array_len(self.groups_names.len())?;
+            } else {
+                encoder.write_array_len(self.groups_names.len())?;
+            }
+            for value in &self.groups_names {
+                if Self::is_flexible(version) {
+                    encoder.write_compact_string(value)?;
+                } else {
+                    encoder.write_string(value)?;
+                }
+            }
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: Self::NAME,
+                    version,
+                });
+            }
+
+            Ok(())
+        }
     }
 }
 
-impl KafkaEncode for DeleteGroupsResponse {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        crate::message::ensure_encode_version::<Self>(version)?;
+/// `DeleteGroupsResponse` and every struct it declares, under upstream's own names.
+///
+/// [`DeleteGroupsResponse`](crate::DeleteGroupsResponse) is re-exported flat, so this path never has to be
+/// written to name the message itself.
+pub mod delete_groups_response {
+    use kafka_wire_core::{
+        ApiKey, ApiVersion, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
+        KafkaEncode, StrBytes, TaggedFields, VersionRange,
+    };
 
-        encoder.write_i32(self.throttle_time_ms)?;
-        if Self::is_flexible(version) {
-            encoder.write_compact_array_len(self.results.len())?;
-        } else {
-            encoder.write_array_len(self.results.len())?;
-        }
-        for value in &self.results {
-            value.encode(encoder, version)?;
-        }
+    use crate::{KafkaMessage, KafkaResponse};
 
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: Self::NAME,
-                version,
-            });
-        }
+    /// `DeletableGroupResult` as declared by the `DeleteGroups` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    pub struct DeletableGroupResult {
+        /// The group id.
+        pub group_id: StrBytes,
+        /// The deletion error, or 0 if the deletion succeeded.
+        pub error_code: i16,
+        /// The error message, or null if there was no error.
+        pub error_message: Option<StrBytes>,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
+    }
 
-        Ok(())
+    impl DeletableGroupResult {
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(2, 3));
+
+        fn is_flexible(version: ApiVersion) -> bool {
+            Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+        }
+    }
+
+    impl KafkaDecode for DeletableGroupResult {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            let group_id = if Self::is_flexible(version) {
+                decoder.read_compact_string()?
+            } else {
+                decoder.read_string()?
+            };
+            let error_code = decoder.read_i16()?;
+            let error_message = if version.value() >= 3 {
+                decoder.read_compact_nullable_string()?
+            } else {
+                None
+            };
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
+
+            Ok(Self {
+                group_id,
+                error_code,
+                error_message,
+                unknown_tagged_fields,
+            })
+        }
+    }
+
+    impl KafkaEncode for DeletableGroupResult {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            if Self::is_flexible(version) {
+                encoder.write_compact_string(&self.group_id)?;
+            } else {
+                encoder.write_string(&self.group_id)?;
+            }
+            encoder.write_i16(self.error_code)?;
+            if version.value() >= 3 {
+                encoder.write_compact_nullable_string(self.error_message.as_ref())?;
+            }
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "DeletableGroupResult",
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+
+    /// Response body for the `DeleteGroups` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    pub struct DeleteGroupsResponse {
+        /// The duration in milliseconds for which the request was throttled due to a quota violation, or zero if the request did not violate any quota.
+        pub throttle_time_ms: i32,
+        /// The deletion results.
+        pub results: Vec<DeletableGroupResult>,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl KafkaMessage for DeleteGroupsResponse {
+        const NAME: &'static str = "DeleteGroupsResponse";
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 3);
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(2, 3));
+    }
+
+    impl KafkaResponse for DeleteGroupsResponse {
+        const API_KEY: ApiKey = ApiKey::new(42);
+    }
+
+    impl KafkaDecode for DeleteGroupsResponse {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            crate::message::ensure_decode_version::<Self>(version)?;
+
+            let throttle_time_ms = decoder.read_i32()?;
+            let results = {
+                let length = if Self::is_flexible(version) {
+                    decoder.read_compact_array_len()?
+                } else {
+                    decoder.read_array_len()?
+                };
+                decoder.read_vec(length, |decoder| {
+                    DeletableGroupResult::decode(decoder, version)
+                })?
+            };
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
+
+            Ok(Self {
+                throttle_time_ms,
+                results,
+                unknown_tagged_fields,
+            })
+        }
+    }
+
+    impl KafkaEncode for DeleteGroupsResponse {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            crate::message::ensure_encode_version::<Self>(version)?;
+
+            encoder.write_i32(self.throttle_time_ms)?;
+            if Self::is_flexible(version) {
+                encoder.write_compact_array_len(self.results.len())?;
+            } else {
+                encoder.write_array_len(self.results.len())?;
+            }
+            for value in &self.results {
+                value.encode(encoder, version)?;
+            }
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: Self::NAME,
+                    version,
+                });
+            }
+
+            Ok(())
+        }
     }
 }
+
+use kafka_wire_core::VersionRange;
+
+use crate::{MessageDescriptor, MessageDirection};
+
+pub use delete_groups_request::DeleteGroupsRequest;
+pub use delete_groups_response::DeleteGroupsResponse;
 
 /// Static metadata for [`DeleteGroupsRequest`].
 pub const DELETE_GROUPS_REQUEST_DESCRIPTOR: MessageDescriptor = MessageDescriptor::new(

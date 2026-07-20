@@ -5,544 +5,578 @@
 //! Request SHA-256: `22d9d577e79f6088f3cc3a23f88bf7536021473f7ebbc1ccfe7ddd14035df18d`.
 //! Response SHA-256: `ddd7e266763919dd68dbd900b6f8521bc5316cf2ea3ffefeeee99d3f91d68428`.
 
-use kafka_wire_core::{
-    ApiKey, ApiVersion, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
-    KafkaEncode, KnownTags, StrBytes, TagOutcome, TaggedFields, VersionRange,
-};
+/// `ApiVersionsRequest` and every struct it declares, under upstream's own names.
+///
+/// [`ApiVersionsRequest`](crate::ApiVersionsRequest) is re-exported flat, so this path never has to be
+/// written to name the message itself.
+pub mod api_versions_request {
+    use kafka_wire_core::{
+        ApiKey, ApiVersion, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
+        KafkaEncode, StrBytes, TaggedFields, VersionRange,
+    };
 
-use crate::{
-    KafkaMessage, KafkaRequest, KafkaResponse, MessageDescriptor, MessageDirection,
-    RequestResponsePair,
-};
+    use crate::{KafkaMessage, KafkaRequest, RequestResponsePair};
 
-/// Request body for the `ApiVersions` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct ApiVersionsRequest {
-    /// The name of the client.
-    pub client_software_name: StrBytes,
-    /// The version of the client.
-    pub client_software_version: StrBytes,
-    /// The cluster ID the client intends to connect to. Provide both `ClusterId` and `NodeId`, if known.
-    pub cluster_id: Option<StrBytes>,
-    /// The node ID the client intends to connect to. Provide both `ClusterId` and `NodeId`, if known.
-    pub node_id: i32,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
+    /// Request body for the `ApiVersions` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Eq, PartialEq)]
+    pub struct ApiVersionsRequest {
+        /// The name of the client.
+        pub client_software_name: StrBytes,
+        /// The version of the client.
+        pub client_software_version: StrBytes,
+        /// The cluster ID the client intends to connect to. Provide both `ClusterId` and `NodeId`, if known.
+        pub cluster_id: Option<StrBytes>,
+        /// The node ID the client intends to connect to. Provide both `ClusterId` and `NodeId`, if known.
+        pub node_id: i32,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
+    }
 
-impl Default for ApiVersionsRequest {
-    fn default() -> Self {
-        Self {
-            client_software_name: StrBytes::default(),
-            client_software_version: StrBytes::default(),
-            cluster_id: None,
-            node_id: -1,
-            unknown_tagged_fields: TaggedFields::default(),
+    impl Default for ApiVersionsRequest {
+        fn default() -> Self {
+            Self {
+                client_software_name: StrBytes::default(),
+                client_software_version: StrBytes::default(),
+                cluster_id: None,
+                node_id: -1,
+                unknown_tagged_fields: TaggedFields::default(),
+            }
         }
     }
-}
 
-impl KafkaMessage for ApiVersionsRequest {
-    const NAME: &'static str = "ApiVersionsRequest";
-    const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 5);
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(3, 5));
-}
-
-impl KafkaRequest for ApiVersionsRequest {
-    const API_KEY: ApiKey = ApiKey::new(18);
-}
-
-impl RequestResponsePair for ApiVersionsRequest {
-    type Response = ApiVersionsResponse;
-}
-
-impl KafkaDecode for ApiVersionsRequest {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        crate::message::ensure_decode_version::<Self>(version)?;
-
-        let client_software_name = if version.value() >= 3 {
-            decoder.read_compact_string()?
-        } else {
-            StrBytes::default()
-        };
-        let client_software_version = if version.value() >= 3 {
-            decoder.read_compact_string()?
-        } else {
-            StrBytes::default()
-        };
-        let cluster_id = if version.value() >= 5 {
-            decoder.read_compact_nullable_string()?
-        } else {
-            None
-        };
-        let node_id = if version.value() >= 5 {
-            decoder.read_i32()?
-        } else {
-            -1
-        };
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
-
-        Ok(Self {
-            client_software_name,
-            client_software_version,
-            cluster_id,
-            node_id,
-            unknown_tagged_fields,
-        })
+    impl KafkaMessage for ApiVersionsRequest {
+        const NAME: &'static str = "ApiVersionsRequest";
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 5);
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(3, 5));
     }
-}
 
-impl KafkaEncode for ApiVersionsRequest {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        crate::message::ensure_encode_version::<Self>(version)?;
-
-        if version.value() >= 3 {
-            encoder.write_compact_string(&self.client_software_name)?;
-        }
-        if version.value() >= 3 {
-            encoder.write_compact_string(&self.client_software_version)?;
-        }
-        if version.value() >= 5 {
-            encoder.write_compact_nullable_string(self.cluster_id.as_ref())?;
-        }
-        if version.value() >= 5 {
-            encoder.write_i32(self.node_id)?;
-        }
-
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: Self::NAME,
-                version,
-            });
-        }
-
-        Ok(())
+    impl KafkaRequest for ApiVersionsRequest {
+        const API_KEY: ApiKey = ApiKey::new(18);
     }
-}
 
-/// `ApiVersion` as declared by the `ApiVersions` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct ApiVersionsResponseApiVersion {
-    /// The API index.
-    pub api_key: i16,
-    /// The minimum supported version, inclusive.
-    pub min_version: i16,
-    /// The maximum supported version, inclusive.
-    pub max_version: i16,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
-
-impl ApiVersionsResponseApiVersion {
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(3, 5));
-
-    fn is_flexible(version: ApiVersion) -> bool {
-        Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+    impl RequestResponsePair for ApiVersionsRequest {
+        type Response = super::ApiVersionsResponse;
     }
-}
 
-impl KafkaDecode for ApiVersionsResponseApiVersion {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        let api_key = decoder.read_i16()?;
-        let min_version = decoder.read_i16()?;
-        let max_version = decoder.read_i16()?;
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
+    impl KafkaDecode for ApiVersionsRequest {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            crate::message::ensure_decode_version::<Self>(version)?;
 
-        Ok(Self {
-            api_key,
-            min_version,
-            max_version,
-            unknown_tagged_fields,
-        })
-    }
-}
-
-impl KafkaEncode for ApiVersionsResponseApiVersion {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        encoder.write_i16(self.api_key)?;
-        encoder.write_i16(self.min_version)?;
-        encoder.write_i16(self.max_version)?;
-
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: "ApiVersionsResponseApiVersion",
-                version,
-            });
-        }
-
-        Ok(())
-    }
-}
-
-/// `SupportedFeatureKey` as declared by the `ApiVersions` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct ApiVersionsResponseSupportedFeatureKey {
-    /// The name of the feature.
-    pub name: StrBytes,
-    /// The minimum supported version for the feature.
-    pub min_version: i16,
-    /// The maximum supported version for the feature.
-    pub max_version: i16,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
-
-impl ApiVersionsResponseSupportedFeatureKey {
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(3, 5));
-
-    fn is_flexible(version: ApiVersion) -> bool {
-        Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
-    }
-}
-
-impl KafkaDecode for ApiVersionsResponseSupportedFeatureKey {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        let name = if version.value() >= 3 {
-            decoder.read_compact_string()?
-        } else {
-            StrBytes::default()
-        };
-        let min_version = if version.value() >= 3 {
-            decoder.read_i16()?
-        } else {
-            0
-        };
-        let max_version = if version.value() >= 3 {
-            decoder.read_i16()?
-        } else {
-            0
-        };
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
-
-        Ok(Self {
-            name,
-            min_version,
-            max_version,
-            unknown_tagged_fields,
-        })
-    }
-}
-
-impl KafkaEncode for ApiVersionsResponseSupportedFeatureKey {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        if version.value() >= 3 {
-            encoder.write_compact_string(&self.name)?;
-        }
-        if version.value() >= 3 {
-            encoder.write_i16(self.min_version)?;
-        }
-        if version.value() >= 3 {
-            encoder.write_i16(self.max_version)?;
-        }
-
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: "ApiVersionsResponseSupportedFeatureKey",
-                version,
-            });
-        }
-
-        Ok(())
-    }
-}
-
-/// `FinalizedFeatureKey` as declared by the `ApiVersions` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct ApiVersionsResponseFinalizedFeatureKey {
-    /// The name of the feature.
-    pub name: StrBytes,
-    /// The cluster-wide finalized max version level for the feature.
-    pub max_version_level: i16,
-    /// The cluster-wide finalized min version level for the feature.
-    pub min_version_level: i16,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
-
-impl ApiVersionsResponseFinalizedFeatureKey {
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(3, 5));
-
-    fn is_flexible(version: ApiVersion) -> bool {
-        Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
-    }
-}
-
-impl KafkaDecode for ApiVersionsResponseFinalizedFeatureKey {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        let name = if version.value() >= 3 {
-            decoder.read_compact_string()?
-        } else {
-            StrBytes::default()
-        };
-        let max_version_level = if version.value() >= 3 {
-            decoder.read_i16()?
-        } else {
-            0
-        };
-        let min_version_level = if version.value() >= 3 {
-            decoder.read_i16()?
-        } else {
-            0
-        };
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
-
-        Ok(Self {
-            name,
-            max_version_level,
-            min_version_level,
-            unknown_tagged_fields,
-        })
-    }
-}
-
-impl KafkaEncode for ApiVersionsResponseFinalizedFeatureKey {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        if version.value() >= 3 {
-            encoder.write_compact_string(&self.name)?;
-        }
-        if version.value() >= 3 {
-            encoder.write_i16(self.max_version_level)?;
-        }
-        if version.value() >= 3 {
-            encoder.write_i16(self.min_version_level)?;
-        }
-
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: "ApiVersionsResponseFinalizedFeatureKey",
-                version,
-            });
-        }
-
-        Ok(())
-    }
-}
-
-/// Response body for the `ApiVersions` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct ApiVersionsResponse {
-    /// The top-level error code.
-    pub error_code: i16,
-    /// The `APIs` supported by the broker.
-    pub api_keys: Vec<ApiVersionsResponseApiVersion>,
-    /// The duration in milliseconds for which the request was throttled due to a quota violation, or zero if the request did not violate any quota.
-    pub throttle_time_ms: i32,
-    /// Features supported by the broker. Note: in v0-v3, features with `MinSupportedVersion` = 0 are omitted.
-    pub supported_features: Vec<ApiVersionsResponseSupportedFeatureKey>,
-    /// The monotonically increasing epoch for the finalized features information. Valid values are >= 0. A value of -1 is special and represents unknown epoch.
-    pub finalized_features_epoch: i64,
-    /// List of cluster-wide finalized features. The information is valid only if `FinalizedFeaturesEpoch` >= 0.
-    pub finalized_features: Vec<ApiVersionsResponseFinalizedFeatureKey>,
-    /// Set by a `KRaft` controller if the required configurations for ZK migration are present.
-    pub zk_migration_ready: bool,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
-
-impl Default for ApiVersionsResponse {
-    fn default() -> Self {
-        Self {
-            error_code: 0,
-            api_keys: Vec::new(),
-            throttle_time_ms: 0,
-            supported_features: Vec::new(),
-            finalized_features_epoch: -1,
-            finalized_features: Vec::new(),
-            zk_migration_ready: false,
-            unknown_tagged_fields: TaggedFields::default(),
-        }
-    }
-}
-
-impl KafkaMessage for ApiVersionsResponse {
-    const NAME: &'static str = "ApiVersionsResponse";
-    const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 5);
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(3, 5));
-}
-
-impl KafkaResponse for ApiVersionsResponse {
-    const API_KEY: ApiKey = ApiKey::new(18);
-}
-
-impl KafkaDecode for ApiVersionsResponse {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        crate::message::ensure_decode_version::<Self>(version)?;
-
-        let error_code = decoder.read_i16()?;
-        let api_keys = {
-            let length = if Self::is_flexible(version) {
-                decoder.read_compact_array_len()?
+            let client_software_name = if version.value() >= 3 {
+                decoder.read_compact_string()?
             } else {
-                decoder.read_array_len()?
+                StrBytes::default()
             };
-            decoder.read_vec(length, |decoder| {
-                ApiVersionsResponseApiVersion::decode(decoder, version)
-            })?
-        };
-        let throttle_time_ms = if version.value() >= 1 {
-            decoder.read_i32()?
-        } else {
-            0
-        };
-        let mut supported_features: Vec<ApiVersionsResponseSupportedFeatureKey> = Vec::new();
-        let mut finalized_features_epoch: i64 = -1;
-        let mut finalized_features: Vec<ApiVersionsResponseFinalizedFeatureKey> = Vec::new();
-        let mut zk_migration_ready: bool = false;
-        let mut unknown_tagged_fields = TaggedFields::default();
-        if Self::is_flexible(version) {
-            unknown_tagged_fields = decoder.read_tagged_fields_with(|tag, decoder| match tag {
-                0 => {
-                    supported_features = {
-                        let length = decoder.read_compact_array_len()?;
-                        decoder.read_vec(length, |decoder| {
-                            ApiVersionsResponseSupportedFeatureKey::decode(decoder, version)
-                        })?
-                    };
-                    Ok(TagOutcome::Decoded)
-                }
-                1 => {
-                    finalized_features_epoch = decoder.read_i64()?;
-                    Ok(TagOutcome::Decoded)
-                }
-                2 => {
-                    finalized_features = {
-                        let length = decoder.read_compact_array_len()?;
-                        decoder.read_vec(length, |decoder| {
-                            ApiVersionsResponseFinalizedFeatureKey::decode(decoder, version)
-                        })?
-                    };
-                    Ok(TagOutcome::Decoded)
-                }
-                3 => {
-                    zk_migration_ready = decoder.read_bool()?;
-                    Ok(TagOutcome::Decoded)
-                }
-                _ => Ok(TagOutcome::Retained),
-            })?;
-        }
+            let client_software_version = if version.value() >= 3 {
+                decoder.read_compact_string()?
+            } else {
+                StrBytes::default()
+            };
+            let cluster_id = if version.value() >= 5 {
+                decoder.read_compact_nullable_string()?
+            } else {
+                None
+            };
+            let node_id = if version.value() >= 5 {
+                decoder.read_i32()?
+            } else {
+                -1
+            };
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
 
-        Ok(Self {
-            error_code,
-            api_keys,
-            throttle_time_ms,
-            supported_features,
-            finalized_features_epoch,
-            finalized_features,
-            zk_migration_ready,
-            unknown_tagged_fields,
-        })
+            Ok(Self {
+                client_software_name,
+                client_software_version,
+                cluster_id,
+                node_id,
+                unknown_tagged_fields,
+            })
+        }
+    }
+
+    impl KafkaEncode for ApiVersionsRequest {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            crate::message::ensure_encode_version::<Self>(version)?;
+
+            if version.value() >= 3 {
+                encoder.write_compact_string(&self.client_software_name)?;
+            }
+            if version.value() >= 3 {
+                encoder.write_compact_string(&self.client_software_version)?;
+            }
+            if version.value() >= 5 {
+                encoder.write_compact_nullable_string(self.cluster_id.as_ref())?;
+            }
+            if version.value() >= 5 {
+                encoder.write_i32(self.node_id)?;
+            }
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: Self::NAME,
+                    version,
+                });
+            }
+
+            Ok(())
+        }
     }
 }
 
-impl KafkaEncode for ApiVersionsResponse {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        crate::message::ensure_encode_version::<Self>(version)?;
+/// `ApiVersionsResponse` and every struct it declares, under upstream's own names.
+///
+/// [`ApiVersionsResponse`](crate::ApiVersionsResponse) is re-exported flat, so this path never has to be
+/// written to name the message itself.
+pub mod api_versions_response {
+    use kafka_wire_core::{
+        ApiKey, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode, KafkaEncode,
+        KnownTags, StrBytes, TagOutcome, TaggedFields, VersionRange,
+    };
 
-        encoder.write_i16(self.error_code)?;
-        if Self::is_flexible(version) {
-            encoder.write_compact_array_len(self.api_keys.len())?;
-        } else {
-            encoder.write_array_len(self.api_keys.len())?;
-        }
-        for value in &self.api_keys {
-            value.encode(encoder, version)?;
-        }
-        if version.value() >= 1 {
-            encoder.write_i32(self.throttle_time_ms)?;
-        }
+    use crate::{KafkaMessage, KafkaResponse};
 
-        if Self::is_flexible(version) {
-            let mut known = KnownTags::new();
-            if !self.supported_features.is_empty() {
-                known.write(0, |encoder| {
-                    encoder.write_compact_array_len(self.supported_features.len())?;
-                    for value in &self.supported_features {
-                        value.encode(encoder, version)?;
-                    }
-                    Ok(())
-                })?;
-            }
-            if self.finalized_features_epoch != -1 {
-                known.write(1, |encoder| {
-                    encoder.write_i64(self.finalized_features_epoch)?;
-                    Ok(())
-                })?;
-            }
-            if !self.finalized_features.is_empty() {
-                known.write(2, |encoder| {
-                    encoder.write_compact_array_len(self.finalized_features.len())?;
-                    for value in &self.finalized_features {
-                        value.encode(encoder, version)?;
-                    }
-                    Ok(())
-                })?;
-            }
-            if self.zk_migration_ready {
-                known.write(3, |encoder| {
-                    encoder.write_bool(self.zk_migration_ready)?;
-                    Ok(())
-                })?;
-            }
-            encoder.write_merged_tagged_fields(known, &self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: Self::NAME,
-                version,
-            });
-        }
+    /// `ApiVersion` as declared by the `ApiVersions` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    pub struct ApiVersion {
+        /// The API index.
+        pub api_key: i16,
+        /// The minimum supported version, inclusive.
+        pub min_version: i16,
+        /// The maximum supported version, inclusive.
+        pub max_version: i16,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
+    }
 
-        Ok(())
+    impl ApiVersion {
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(3, 5));
+
+        fn is_flexible(version: kafka_wire_core::ApiVersion) -> bool {
+            Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+        }
+    }
+
+    impl KafkaDecode for ApiVersion {
+        fn decode(
+            decoder: &mut Decoder,
+            version: kafka_wire_core::ApiVersion,
+        ) -> Result<Self, DecodeError> {
+            let api_key = decoder.read_i16()?;
+            let min_version = decoder.read_i16()?;
+            let max_version = decoder.read_i16()?;
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
+
+            Ok(Self {
+                api_key,
+                min_version,
+                max_version,
+                unknown_tagged_fields,
+            })
+        }
+    }
+
+    impl KafkaEncode for ApiVersion {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: kafka_wire_core::ApiVersion,
+        ) -> Result<(), EncodeError> {
+            encoder.write_i16(self.api_key)?;
+            encoder.write_i16(self.min_version)?;
+            encoder.write_i16(self.max_version)?;
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "ApiVersion",
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+
+    /// `SupportedFeatureKey` as declared by the `ApiVersions` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    pub struct SupportedFeatureKey {
+        /// The name of the feature.
+        pub name: StrBytes,
+        /// The minimum supported version for the feature.
+        pub min_version: i16,
+        /// The maximum supported version for the feature.
+        pub max_version: i16,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl SupportedFeatureKey {
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(3, 5));
+
+        fn is_flexible(version: kafka_wire_core::ApiVersion) -> bool {
+            Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+        }
+    }
+
+    impl KafkaDecode for SupportedFeatureKey {
+        fn decode(
+            decoder: &mut Decoder,
+            version: kafka_wire_core::ApiVersion,
+        ) -> Result<Self, DecodeError> {
+            let name = if version.value() >= 3 {
+                decoder.read_compact_string()?
+            } else {
+                StrBytes::default()
+            };
+            let min_version = if version.value() >= 3 {
+                decoder.read_i16()?
+            } else {
+                0
+            };
+            let max_version = if version.value() >= 3 {
+                decoder.read_i16()?
+            } else {
+                0
+            };
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
+
+            Ok(Self {
+                name,
+                min_version,
+                max_version,
+                unknown_tagged_fields,
+            })
+        }
+    }
+
+    impl KafkaEncode for SupportedFeatureKey {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: kafka_wire_core::ApiVersion,
+        ) -> Result<(), EncodeError> {
+            if version.value() >= 3 {
+                encoder.write_compact_string(&self.name)?;
+            }
+            if version.value() >= 3 {
+                encoder.write_i16(self.min_version)?;
+            }
+            if version.value() >= 3 {
+                encoder.write_i16(self.max_version)?;
+            }
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "SupportedFeatureKey",
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+
+    /// `FinalizedFeatureKey` as declared by the `ApiVersions` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    pub struct FinalizedFeatureKey {
+        /// The name of the feature.
+        pub name: StrBytes,
+        /// The cluster-wide finalized max version level for the feature.
+        pub max_version_level: i16,
+        /// The cluster-wide finalized min version level for the feature.
+        pub min_version_level: i16,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl FinalizedFeatureKey {
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(3, 5));
+
+        fn is_flexible(version: kafka_wire_core::ApiVersion) -> bool {
+            Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+        }
+    }
+
+    impl KafkaDecode for FinalizedFeatureKey {
+        fn decode(
+            decoder: &mut Decoder,
+            version: kafka_wire_core::ApiVersion,
+        ) -> Result<Self, DecodeError> {
+            let name = if version.value() >= 3 {
+                decoder.read_compact_string()?
+            } else {
+                StrBytes::default()
+            };
+            let max_version_level = if version.value() >= 3 {
+                decoder.read_i16()?
+            } else {
+                0
+            };
+            let min_version_level = if version.value() >= 3 {
+                decoder.read_i16()?
+            } else {
+                0
+            };
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
+
+            Ok(Self {
+                name,
+                max_version_level,
+                min_version_level,
+                unknown_tagged_fields,
+            })
+        }
+    }
+
+    impl KafkaEncode for FinalizedFeatureKey {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: kafka_wire_core::ApiVersion,
+        ) -> Result<(), EncodeError> {
+            if version.value() >= 3 {
+                encoder.write_compact_string(&self.name)?;
+            }
+            if version.value() >= 3 {
+                encoder.write_i16(self.max_version_level)?;
+            }
+            if version.value() >= 3 {
+                encoder.write_i16(self.min_version_level)?;
+            }
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "FinalizedFeatureKey",
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+
+    /// Response body for the `ApiVersions` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Eq, PartialEq)]
+    pub struct ApiVersionsResponse {
+        /// The top-level error code.
+        pub error_code: i16,
+        /// The `APIs` supported by the broker.
+        pub api_keys: Vec<ApiVersion>,
+        /// The duration in milliseconds for which the request was throttled due to a quota violation, or zero if the request did not violate any quota.
+        pub throttle_time_ms: i32,
+        /// Features supported by the broker. Note: in v0-v3, features with `MinSupportedVersion` = 0 are omitted.
+        pub supported_features: Vec<SupportedFeatureKey>,
+        /// The monotonically increasing epoch for the finalized features information. Valid values are >= 0. A value of -1 is special and represents unknown epoch.
+        pub finalized_features_epoch: i64,
+        /// List of cluster-wide finalized features. The information is valid only if `FinalizedFeaturesEpoch` >= 0.
+        pub finalized_features: Vec<FinalizedFeatureKey>,
+        /// Set by a `KRaft` controller if the required configurations for ZK migration are present.
+        pub zk_migration_ready: bool,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl Default for ApiVersionsResponse {
+        fn default() -> Self {
+            Self {
+                error_code: 0,
+                api_keys: Vec::new(),
+                throttle_time_ms: 0,
+                supported_features: Vec::new(),
+                finalized_features_epoch: -1,
+                finalized_features: Vec::new(),
+                zk_migration_ready: false,
+                unknown_tagged_fields: TaggedFields::default(),
+            }
+        }
+    }
+
+    impl KafkaMessage for ApiVersionsResponse {
+        const NAME: &'static str = "ApiVersionsResponse";
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 5);
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(3, 5));
+    }
+
+    impl KafkaResponse for ApiVersionsResponse {
+        const API_KEY: ApiKey = ApiKey::new(18);
+    }
+
+    impl KafkaDecode for ApiVersionsResponse {
+        fn decode(
+            decoder: &mut Decoder,
+            version: kafka_wire_core::ApiVersion,
+        ) -> Result<Self, DecodeError> {
+            crate::message::ensure_decode_version::<Self>(version)?;
+
+            let error_code = decoder.read_i16()?;
+            let api_keys = {
+                let length = if Self::is_flexible(version) {
+                    decoder.read_compact_array_len()?
+                } else {
+                    decoder.read_array_len()?
+                };
+                decoder.read_vec(length, |decoder| ApiVersion::decode(decoder, version))?
+            };
+            let throttle_time_ms = if version.value() >= 1 {
+                decoder.read_i32()?
+            } else {
+                0
+            };
+            let mut supported_features: Vec<SupportedFeatureKey> = Vec::new();
+            let mut finalized_features_epoch: i64 = -1;
+            let mut finalized_features: Vec<FinalizedFeatureKey> = Vec::new();
+            let mut zk_migration_ready: bool = false;
+            let mut unknown_tagged_fields = TaggedFields::default();
+            if Self::is_flexible(version) {
+                unknown_tagged_fields =
+                    decoder.read_tagged_fields_with(|tag, decoder| match tag {
+                        0 => {
+                            supported_features = {
+                                let length = decoder.read_compact_array_len()?;
+                                decoder.read_vec(length, |decoder| {
+                                    SupportedFeatureKey::decode(decoder, version)
+                                })?
+                            };
+                            Ok(TagOutcome::Decoded)
+                        }
+                        1 => {
+                            finalized_features_epoch = decoder.read_i64()?;
+                            Ok(TagOutcome::Decoded)
+                        }
+                        2 => {
+                            finalized_features = {
+                                let length = decoder.read_compact_array_len()?;
+                                decoder.read_vec(length, |decoder| {
+                                    FinalizedFeatureKey::decode(decoder, version)
+                                })?
+                            };
+                            Ok(TagOutcome::Decoded)
+                        }
+                        3 => {
+                            zk_migration_ready = decoder.read_bool()?;
+                            Ok(TagOutcome::Decoded)
+                        }
+                        _ => Ok(TagOutcome::Retained),
+                    })?;
+            }
+
+            Ok(Self {
+                error_code,
+                api_keys,
+                throttle_time_ms,
+                supported_features,
+                finalized_features_epoch,
+                finalized_features,
+                zk_migration_ready,
+                unknown_tagged_fields,
+            })
+        }
+    }
+
+    impl KafkaEncode for ApiVersionsResponse {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: kafka_wire_core::ApiVersion,
+        ) -> Result<(), EncodeError> {
+            crate::message::ensure_encode_version::<Self>(version)?;
+
+            encoder.write_i16(self.error_code)?;
+            if Self::is_flexible(version) {
+                encoder.write_compact_array_len(self.api_keys.len())?;
+            } else {
+                encoder.write_array_len(self.api_keys.len())?;
+            }
+            for value in &self.api_keys {
+                value.encode(encoder, version)?;
+            }
+            if version.value() >= 1 {
+                encoder.write_i32(self.throttle_time_ms)?;
+            }
+
+            if Self::is_flexible(version) {
+                let mut known = KnownTags::new();
+                if !self.supported_features.is_empty() {
+                    known.write(0, |encoder| {
+                        encoder.write_compact_array_len(self.supported_features.len())?;
+                        for value in &self.supported_features {
+                            value.encode(encoder, version)?;
+                        }
+                        Ok(())
+                    })?;
+                }
+                if self.finalized_features_epoch != -1 {
+                    known.write(1, |encoder| {
+                        encoder.write_i64(self.finalized_features_epoch)?;
+                        Ok(())
+                    })?;
+                }
+                if !self.finalized_features.is_empty() {
+                    known.write(2, |encoder| {
+                        encoder.write_compact_array_len(self.finalized_features.len())?;
+                        for value in &self.finalized_features {
+                            value.encode(encoder, version)?;
+                        }
+                        Ok(())
+                    })?;
+                }
+                if self.zk_migration_ready {
+                    known.write(3, |encoder| {
+                        encoder.write_bool(self.zk_migration_ready)?;
+                        Ok(())
+                    })?;
+                }
+                encoder.write_merged_tagged_fields(known, &self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: Self::NAME,
+                    version,
+                });
+            }
+
+            Ok(())
+        }
     }
 }
+
+use kafka_wire_core::VersionRange;
+
+use crate::{MessageDescriptor, MessageDirection};
+
+pub use api_versions_request::ApiVersionsRequest;
+pub use api_versions_response::ApiVersionsResponse;
 
 /// Static metadata for [`ApiVersionsRequest`].
 pub const API_VERSIONS_REQUEST_DESCRIPTOR: MessageDescriptor = MessageDescriptor::new(

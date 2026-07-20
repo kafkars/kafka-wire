@@ -5,253 +5,274 @@
 //! Request SHA-256: `3b8a841835ddd392cabb39c4e930f5fc3b7f0c74d8353311f729bee52e9b4f21`.
 //! Response SHA-256: `e41bf574f16f52df3b8b5de1013ad3cb93378c4d9d3f77c62fc26f6a7511ceed`.
 
-use kafka_wire_core::{
-    ApiKey, ApiVersion, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
-    KafkaEncode, StrBytes, TaggedFields, VersionRange,
-};
+/// `ListConfigResourcesRequest` and every struct it declares, under upstream's own names.
+///
+/// [`ListConfigResourcesRequest`](crate::ListConfigResourcesRequest) is re-exported flat, so this path never has to be
+/// written to name the message itself.
+pub mod list_config_resources_request {
+    use kafka_wire_core::{
+        ApiKey, ApiVersion, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
+        KafkaEncode, TaggedFields, VersionRange,
+    };
 
-use crate::{
-    KafkaMessage, KafkaRequest, KafkaResponse, MessageDescriptor, MessageDirection,
-    RequestResponsePair,
-};
+    use crate::{KafkaMessage, KafkaRequest, RequestResponsePair};
 
-/// Request body for the `ListConfigResources` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct ListConfigResourcesRequest {
-    /// The list of resource type. If the list is empty, it uses default supported config resource types.
-    pub resource_types: Vec<i8>,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
+    /// Request body for the `ListConfigResources` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    pub struct ListConfigResourcesRequest {
+        /// The list of resource type. If the list is empty, it uses default supported config resource types.
+        pub resource_types: Vec<i8>,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
+    }
 
-impl KafkaMessage for ListConfigResourcesRequest {
-    const NAME: &'static str = "ListConfigResourcesRequest";
-    const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 1);
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 1));
-}
+    impl KafkaMessage for ListConfigResourcesRequest {
+        const NAME: &'static str = "ListConfigResourcesRequest";
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 1);
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 1));
+    }
 
-impl KafkaRequest for ListConfigResourcesRequest {
-    const API_KEY: ApiKey = ApiKey::new(74);
-}
+    impl KafkaRequest for ListConfigResourcesRequest {
+        const API_KEY: ApiKey = ApiKey::new(74);
+    }
 
-impl RequestResponsePair for ListConfigResourcesRequest {
-    type Response = ListConfigResourcesResponse;
-}
+    impl RequestResponsePair for ListConfigResourcesRequest {
+        type Response = super::ListConfigResourcesResponse;
+    }
 
-impl KafkaDecode for ListConfigResourcesRequest {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        crate::message::ensure_decode_version::<Self>(version)?;
+    impl KafkaDecode for ListConfigResourcesRequest {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            crate::message::ensure_decode_version::<Self>(version)?;
 
-        let resource_types = if version.value() >= 1 {
-            let length = decoder.read_compact_array_len()?;
-            decoder.read_vec(length, Decoder::read_i8)?
-        } else {
-            Vec::new()
-        };
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
+            let resource_types = if version.value() >= 1 {
+                let length = decoder.read_compact_array_len()?;
+                decoder.read_vec(length, Decoder::read_i8)?
+            } else {
+                Vec::new()
+            };
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
 
-        Ok(Self {
-            resource_types,
-            unknown_tagged_fields,
-        })
+            Ok(Self {
+                resource_types,
+                unknown_tagged_fields,
+            })
+        }
+    }
+
+    impl KafkaEncode for ListConfigResourcesRequest {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            crate::message::ensure_encode_version::<Self>(version)?;
+
+            if version.value() < 1 && !self.resource_types.is_empty() {
+                return Err(EncodeError::FieldNotRepresentable {
+                    message: Self::NAME,
+                    field: "ResourceTypes",
+                    version,
+                });
+            }
+
+            if version.value() >= 1 {
+                encoder.write_compact_array_len(self.resource_types.len())?;
+                for value in &self.resource_types {
+                    encoder.write_i8(*value)?;
+                }
+            }
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: Self::NAME,
+                    version,
+                });
+            }
+
+            Ok(())
+        }
     }
 }
 
-impl KafkaEncode for ListConfigResourcesRequest {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        crate::message::ensure_encode_version::<Self>(version)?;
+/// `ListConfigResourcesResponse` and every struct it declares, under upstream's own names.
+///
+/// [`ListConfigResourcesResponse`](crate::ListConfigResourcesResponse) is re-exported flat, so this path never has to be
+/// written to name the message itself.
+pub mod list_config_resources_response {
+    use kafka_wire_core::{
+        ApiKey, ApiVersion, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
+        KafkaEncode, StrBytes, TaggedFields, VersionRange,
+    };
 
-        if version.value() < 1 && !self.resource_types.is_empty() {
-            return Err(EncodeError::FieldNotRepresentable {
-                message: Self::NAME,
-                field: "ResourceTypes",
-                version,
-            });
+    use crate::{KafkaMessage, KafkaResponse};
+
+    /// `ConfigResource` as declared by the `ListConfigResources` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Eq, PartialEq)]
+    pub struct ConfigResource {
+        /// The resource name.
+        pub resource_name: StrBytes,
+        /// The resource type.
+        pub resource_type: i8,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl ConfigResource {
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 1));
+
+        fn is_flexible(version: ApiVersion) -> bool {
+            Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
         }
+    }
 
-        if version.value() >= 1 {
-            encoder.write_compact_array_len(self.resource_types.len())?;
-            for value in &self.resource_types {
-                encoder.write_i8(*value)?;
+    impl Default for ConfigResource {
+        fn default() -> Self {
+            Self {
+                resource_name: StrBytes::default(),
+                resource_type: 16,
+                unknown_tagged_fields: TaggedFields::default(),
             }
         }
-
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: Self::NAME,
-                version,
-            });
-        }
-
-        Ok(())
     }
-}
 
-/// `ConfigResource` as declared by the `ListConfigResources` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct ListConfigResourcesResponseConfigResource {
-    /// The resource name.
-    pub resource_name: StrBytes,
-    /// The resource type.
-    pub resource_type: i8,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
+    impl KafkaDecode for ConfigResource {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            let resource_name = decoder.read_compact_string()?;
+            let resource_type = if version.value() >= 1 {
+                decoder.read_i8()?
+            } else {
+                16
+            };
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
 
-impl ListConfigResourcesResponseConfigResource {
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 1));
-
-    fn is_flexible(version: ApiVersion) -> bool {
-        Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
-    }
-}
-
-impl Default for ListConfigResourcesResponseConfigResource {
-    fn default() -> Self {
-        Self {
-            resource_name: StrBytes::default(),
-            resource_type: 16,
-            unknown_tagged_fields: TaggedFields::default(),
+            Ok(Self {
+                resource_name,
+                resource_type,
+                unknown_tagged_fields,
+            })
         }
     }
-}
 
-impl KafkaDecode for ListConfigResourcesResponseConfigResource {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        let resource_name = decoder.read_compact_string()?;
-        let resource_type = if version.value() >= 1 {
-            decoder.read_i8()?
-        } else {
-            16
-        };
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
+    impl KafkaEncode for ConfigResource {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            encoder.write_compact_string(&self.resource_name)?;
+            if version.value() >= 1 {
+                encoder.write_i8(self.resource_type)?;
+            }
 
-        Ok(Self {
-            resource_name,
-            resource_type,
-            unknown_tagged_fields,
-        })
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "ConfigResource",
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+
+    /// Response body for the `ListConfigResources` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    pub struct ListConfigResourcesResponse {
+        /// The duration in milliseconds for which the request was throttled due to a quota violation, or zero if the request did not violate any quota.
+        pub throttle_time_ms: i32,
+        /// The error code, or 0 if there was no error.
+        pub error_code: i16,
+        /// Each config resource in the response.
+        pub config_resources: Vec<ConfigResource>,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl KafkaMessage for ListConfigResourcesResponse {
+        const NAME: &'static str = "ListConfigResourcesResponse";
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 1);
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 1));
+    }
+
+    impl KafkaResponse for ListConfigResourcesResponse {
+        const API_KEY: ApiKey = ApiKey::new(74);
+    }
+
+    impl KafkaDecode for ListConfigResourcesResponse {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            crate::message::ensure_decode_version::<Self>(version)?;
+
+            let throttle_time_ms = decoder.read_i32()?;
+            let error_code = decoder.read_i16()?;
+            let config_resources = {
+                let length = decoder.read_compact_array_len()?;
+                decoder.read_vec(length, |decoder| ConfigResource::decode(decoder, version))?
+            };
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
+
+            Ok(Self {
+                throttle_time_ms,
+                error_code,
+                config_resources,
+                unknown_tagged_fields,
+            })
+        }
+    }
+
+    impl KafkaEncode for ListConfigResourcesResponse {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            crate::message::ensure_encode_version::<Self>(version)?;
+
+            encoder.write_i32(self.throttle_time_ms)?;
+            encoder.write_i16(self.error_code)?;
+            encoder.write_compact_array_len(self.config_resources.len())?;
+            for value in &self.config_resources {
+                value.encode(encoder, version)?;
+            }
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: Self::NAME,
+                    version,
+                });
+            }
+
+            Ok(())
+        }
     }
 }
 
-impl KafkaEncode for ListConfigResourcesResponseConfigResource {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        encoder.write_compact_string(&self.resource_name)?;
-        if version.value() >= 1 {
-            encoder.write_i8(self.resource_type)?;
-        }
+use kafka_wire_core::VersionRange;
 
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: "ListConfigResourcesResponseConfigResource",
-                version,
-            });
-        }
+use crate::{MessageDescriptor, MessageDirection};
 
-        Ok(())
-    }
-}
-
-/// Response body for the `ListConfigResources` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct ListConfigResourcesResponse {
-    /// The duration in milliseconds for which the request was throttled due to a quota violation, or zero if the request did not violate any quota.
-    pub throttle_time_ms: i32,
-    /// The error code, or 0 if there was no error.
-    pub error_code: i16,
-    /// Each config resource in the response.
-    pub config_resources: Vec<ListConfigResourcesResponseConfigResource>,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
-
-impl KafkaMessage for ListConfigResourcesResponse {
-    const NAME: &'static str = "ListConfigResourcesResponse";
-    const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 1);
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 1));
-}
-
-impl KafkaResponse for ListConfigResourcesResponse {
-    const API_KEY: ApiKey = ApiKey::new(74);
-}
-
-impl KafkaDecode for ListConfigResourcesResponse {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        crate::message::ensure_decode_version::<Self>(version)?;
-
-        let throttle_time_ms = decoder.read_i32()?;
-        let error_code = decoder.read_i16()?;
-        let config_resources = {
-            let length = decoder.read_compact_array_len()?;
-            decoder.read_vec(length, |decoder| {
-                ListConfigResourcesResponseConfigResource::decode(decoder, version)
-            })?
-        };
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
-
-        Ok(Self {
-            throttle_time_ms,
-            error_code,
-            config_resources,
-            unknown_tagged_fields,
-        })
-    }
-}
-
-impl KafkaEncode for ListConfigResourcesResponse {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        crate::message::ensure_encode_version::<Self>(version)?;
-
-        encoder.write_i32(self.throttle_time_ms)?;
-        encoder.write_i16(self.error_code)?;
-        encoder.write_compact_array_len(self.config_resources.len())?;
-        for value in &self.config_resources {
-            value.encode(encoder, version)?;
-        }
-
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: Self::NAME,
-                version,
-            });
-        }
-
-        Ok(())
-    }
-}
+pub use list_config_resources_request::ListConfigResourcesRequest;
+pub use list_config_resources_response::ListConfigResourcesResponse;
 
 /// Static metadata for [`ListConfigResourcesRequest`].
 pub const LIST_CONFIG_RESOURCES_REQUEST_DESCRIPTOR: MessageDescriptor = MessageDescriptor::new(

@@ -5,631 +5,644 @@
 //! Request SHA-256: `195bd3af15a5d91037d3394db88d433c9c62985e04a896310fe4074638cc3526`.
 //! Response SHA-256: `db655393cbc6485bf10575f0dc4d29b3c47883a16a4162d190c74f4000cb6b6a`.
 
-use kafka_wire_core::{
-    ApiKey, ApiVersion, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
-    KafkaEncode, StrBytes, TaggedFields, VersionRange,
-};
+/// `AlterClientQuotasRequest` and every struct it declares, under upstream's own names.
+///
+/// [`AlterClientQuotasRequest`](crate::AlterClientQuotasRequest) is re-exported flat, so this path never has to be
+/// written to name the message itself.
+pub mod alter_client_quotas_request {
+    use kafka_wire_core::{
+        ApiKey, ApiVersion, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
+        KafkaEncode, StrBytes, TaggedFields, VersionRange,
+    };
 
-use crate::{
-    KafkaMessage, KafkaRequest, KafkaResponse, MessageDescriptor, MessageDirection,
-    RequestResponsePair,
-};
+    use crate::{KafkaMessage, KafkaRequest, RequestResponsePair};
 
-/// `EntryData` as declared by the `AlterClientQuotas` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Default, PartialEq)]
-pub struct AlterClientQuotasRequestEntryData {
-    /// The quota entity to alter.
-    pub entity: Vec<AlterClientQuotasRequestEntityData>,
-    /// An individual quota configuration entry to alter.
-    pub ops: Vec<AlterClientQuotasRequestOpData>,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
-
-impl AlterClientQuotasRequestEntryData {
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(1, 1));
-
-    fn is_flexible(version: ApiVersion) -> bool {
-        Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+    /// `EntryData` as declared by the `AlterClientQuotas` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Default, PartialEq)]
+    pub struct EntryData {
+        /// The quota entity to alter.
+        pub entity: Vec<EntityData>,
+        /// An individual quota configuration entry to alter.
+        pub ops: Vec<OpData>,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
     }
-}
 
-impl KafkaDecode for AlterClientQuotasRequestEntryData {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        let entity = {
-            let length = if Self::is_flexible(version) {
-                decoder.read_compact_array_len()?
-            } else {
-                decoder.read_array_len()?
+    impl EntryData {
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(1, 1));
+
+        fn is_flexible(version: ApiVersion) -> bool {
+            Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+        }
+    }
+
+    impl KafkaDecode for EntryData {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            let entity = {
+                let length = if Self::is_flexible(version) {
+                    decoder.read_compact_array_len()?
+                } else {
+                    decoder.read_array_len()?
+                };
+                decoder.read_vec(length, |decoder| EntityData::decode(decoder, version))?
             };
-            decoder.read_vec(length, |decoder| {
-                AlterClientQuotasRequestEntityData::decode(decoder, version)
-            })?
-        };
-        let ops = {
-            let length = if Self::is_flexible(version) {
-                decoder.read_compact_array_len()?
-            } else {
-                decoder.read_array_len()?
+            let ops = {
+                let length = if Self::is_flexible(version) {
+                    decoder.read_compact_array_len()?
+                } else {
+                    decoder.read_array_len()?
+                };
+                decoder.read_vec(length, |decoder| OpData::decode(decoder, version))?
             };
-            decoder.read_vec(length, |decoder| {
-                AlterClientQuotasRequestOpData::decode(decoder, version)
-            })?
-        };
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
-
-        Ok(Self {
-            entity,
-            ops,
-            unknown_tagged_fields,
-        })
-    }
-}
-
-impl KafkaEncode for AlterClientQuotasRequestEntryData {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        if Self::is_flexible(version) {
-            encoder.write_compact_array_len(self.entity.len())?;
-        } else {
-            encoder.write_array_len(self.entity.len())?;
-        }
-        for value in &self.entity {
-            value.encode(encoder, version)?;
-        }
-        if Self::is_flexible(version) {
-            encoder.write_compact_array_len(self.ops.len())?;
-        } else {
-            encoder.write_array_len(self.ops.len())?;
-        }
-        for value in &self.ops {
-            value.encode(encoder, version)?;
-        }
-
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: "AlterClientQuotasRequestEntryData",
-                version,
-            });
-        }
-
-        Ok(())
-    }
-}
-
-/// `EntityData` as declared by the `AlterClientQuotas` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, PartialEq)]
-pub struct AlterClientQuotasRequestEntityData {
-    /// The entity type.
-    pub entity_type: StrBytes,
-    /// The name of the entity, or null if the default.
-    pub entity_name: Option<StrBytes>,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
-
-impl AlterClientQuotasRequestEntityData {
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(1, 1));
-
-    fn is_flexible(version: ApiVersion) -> bool {
-        Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
-    }
-}
-
-impl Default for AlterClientQuotasRequestEntityData {
-    fn default() -> Self {
-        Self {
-            entity_type: StrBytes::default(),
-            entity_name: Some(StrBytes::default()),
-            unknown_tagged_fields: TaggedFields::default(),
-        }
-    }
-}
-
-impl KafkaDecode for AlterClientQuotasRequestEntityData {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        let entity_type = if Self::is_flexible(version) {
-            decoder.read_compact_string()?
-        } else {
-            decoder.read_string()?
-        };
-        let entity_name = if Self::is_flexible(version) {
-            decoder.read_compact_nullable_string()?
-        } else {
-            decoder.read_nullable_string()?
-        };
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
-
-        Ok(Self {
-            entity_type,
-            entity_name,
-            unknown_tagged_fields,
-        })
-    }
-}
-
-impl KafkaEncode for AlterClientQuotasRequestEntityData {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        if Self::is_flexible(version) {
-            encoder.write_compact_string(&self.entity_type)?;
-        } else {
-            encoder.write_string(&self.entity_type)?;
-        }
-        if Self::is_flexible(version) {
-            encoder.write_compact_nullable_string(self.entity_name.as_ref())?;
-        } else {
-            encoder.write_nullable_string(self.entity_name.as_ref())?;
-        }
-
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: "AlterClientQuotasRequestEntityData",
-                version,
-            });
-        }
-
-        Ok(())
-    }
-}
-
-/// `OpData` as declared by the `AlterClientQuotas` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, PartialEq)]
-pub struct AlterClientQuotasRequestOpData {
-    /// The quota configuration key.
-    pub key: StrBytes,
-    /// The value to set, otherwise ignored if the value is to be removed.
-    pub value: f64,
-    /// Whether the quota configuration value should be removed, otherwise set.
-    pub remove: bool,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
-
-impl AlterClientQuotasRequestOpData {
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(1, 1));
-
-    fn is_flexible(version: ApiVersion) -> bool {
-        Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
-    }
-}
-
-impl Default for AlterClientQuotasRequestOpData {
-    fn default() -> Self {
-        Self {
-            key: StrBytes::default(),
-            value: 0.0,
-            remove: false,
-            unknown_tagged_fields: TaggedFields::default(),
-        }
-    }
-}
-
-impl KafkaDecode for AlterClientQuotasRequestOpData {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        let key = if Self::is_flexible(version) {
-            decoder.read_compact_string()?
-        } else {
-            decoder.read_string()?
-        };
-        let value = decoder.read_float64()?;
-        let remove = decoder.read_bool()?;
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
-
-        Ok(Self {
-            key,
-            value,
-            remove,
-            unknown_tagged_fields,
-        })
-    }
-}
-
-impl KafkaEncode for AlterClientQuotasRequestOpData {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        if Self::is_flexible(version) {
-            encoder.write_compact_string(&self.key)?;
-        } else {
-            encoder.write_string(&self.key)?;
-        }
-        encoder.write_float64(self.value)?;
-        encoder.write_bool(self.remove)?;
-
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: "AlterClientQuotasRequestOpData",
-                version,
-            });
-        }
-
-        Ok(())
-    }
-}
-
-/// Request body for the `AlterClientQuotas` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Default, PartialEq)]
-pub struct AlterClientQuotasRequest {
-    /// The quota configuration entries to alter.
-    pub entries: Vec<AlterClientQuotasRequestEntryData>,
-    /// Whether the alteration should be validated, but not performed.
-    pub validate_only: bool,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
-
-impl KafkaMessage for AlterClientQuotasRequest {
-    const NAME: &'static str = "AlterClientQuotasRequest";
-    const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 1);
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(1, 1));
-}
-
-impl KafkaRequest for AlterClientQuotasRequest {
-    const API_KEY: ApiKey = ApiKey::new(49);
-}
-
-impl RequestResponsePair for AlterClientQuotasRequest {
-    type Response = AlterClientQuotasResponse;
-}
-
-impl KafkaDecode for AlterClientQuotasRequest {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        crate::message::ensure_decode_version::<Self>(version)?;
-
-        let entries = {
-            let length = if Self::is_flexible(version) {
-                decoder.read_compact_array_len()?
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
             } else {
-                decoder.read_array_len()?
+                TaggedFields::default()
             };
-            decoder.read_vec(length, |decoder| {
-                AlterClientQuotasRequestEntryData::decode(decoder, version)
-            })?
-        };
-        let validate_only = decoder.read_bool()?;
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
 
-        Ok(Self {
-            entries,
-            validate_only,
-            unknown_tagged_fields,
-        })
-    }
-}
-
-impl KafkaEncode for AlterClientQuotasRequest {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        crate::message::ensure_encode_version::<Self>(version)?;
-
-        if Self::is_flexible(version) {
-            encoder.write_compact_array_len(self.entries.len())?;
-        } else {
-            encoder.write_array_len(self.entries.len())?;
-        }
-        for value in &self.entries {
-            value.encode(encoder, version)?;
-        }
-        encoder.write_bool(self.validate_only)?;
-
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: Self::NAME,
-                version,
-            });
-        }
-
-        Ok(())
-    }
-}
-
-/// `EntryData` as declared by the `AlterClientQuotas` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct AlterClientQuotasResponseEntryData {
-    /// The error code, or `0` if the quota alteration succeeded.
-    pub error_code: i16,
-    /// The error message, or `null` if the quota alteration succeeded.
-    pub error_message: Option<StrBytes>,
-    /// The quota entity to alter.
-    pub entity: Vec<AlterClientQuotasResponseEntityData>,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
-
-impl AlterClientQuotasResponseEntryData {
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(1, 1));
-
-    fn is_flexible(version: ApiVersion) -> bool {
-        Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
-    }
-}
-
-impl Default for AlterClientQuotasResponseEntryData {
-    fn default() -> Self {
-        Self {
-            error_code: 0,
-            error_message: Some(StrBytes::default()),
-            entity: Vec::new(),
-            unknown_tagged_fields: TaggedFields::default(),
+            Ok(Self {
+                entity,
+                ops,
+                unknown_tagged_fields,
+            })
         }
     }
-}
 
-impl KafkaDecode for AlterClientQuotasResponseEntryData {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        let error_code = decoder.read_i16()?;
-        let error_message = if Self::is_flexible(version) {
-            decoder.read_compact_nullable_string()?
-        } else {
-            decoder.read_nullable_string()?
-        };
-        let entity = {
-            let length = if Self::is_flexible(version) {
-                decoder.read_compact_array_len()?
+    impl KafkaEncode for EntryData {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            if Self::is_flexible(version) {
+                encoder.write_compact_array_len(self.entity.len())?;
             } else {
-                decoder.read_array_len()?
-            };
-            decoder.read_vec(length, |decoder| {
-                AlterClientQuotasResponseEntityData::decode(decoder, version)
-            })?
-        };
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
-
-        Ok(Self {
-            error_code,
-            error_message,
-            entity,
-            unknown_tagged_fields,
-        })
-    }
-}
-
-impl KafkaEncode for AlterClientQuotasResponseEntryData {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        encoder.write_i16(self.error_code)?;
-        if Self::is_flexible(version) {
-            encoder.write_compact_nullable_string(self.error_message.as_ref())?;
-        } else {
-            encoder.write_nullable_string(self.error_message.as_ref())?;
-        }
-        if Self::is_flexible(version) {
-            encoder.write_compact_array_len(self.entity.len())?;
-        } else {
-            encoder.write_array_len(self.entity.len())?;
-        }
-        for value in &self.entity {
-            value.encode(encoder, version)?;
-        }
-
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: "AlterClientQuotasResponseEntryData",
-                version,
-            });
-        }
-
-        Ok(())
-    }
-}
-
-/// `EntityData` as declared by the `AlterClientQuotas` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct AlterClientQuotasResponseEntityData {
-    /// The entity type.
-    pub entity_type: StrBytes,
-    /// The name of the entity, or null if the default.
-    pub entity_name: Option<StrBytes>,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
-
-impl AlterClientQuotasResponseEntityData {
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(1, 1));
-
-    fn is_flexible(version: ApiVersion) -> bool {
-        Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
-    }
-}
-
-impl Default for AlterClientQuotasResponseEntityData {
-    fn default() -> Self {
-        Self {
-            entity_type: StrBytes::default(),
-            entity_name: Some(StrBytes::default()),
-            unknown_tagged_fields: TaggedFields::default(),
-        }
-    }
-}
-
-impl KafkaDecode for AlterClientQuotasResponseEntityData {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        let entity_type = if Self::is_flexible(version) {
-            decoder.read_compact_string()?
-        } else {
-            decoder.read_string()?
-        };
-        let entity_name = if Self::is_flexible(version) {
-            decoder.read_compact_nullable_string()?
-        } else {
-            decoder.read_nullable_string()?
-        };
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
-
-        Ok(Self {
-            entity_type,
-            entity_name,
-            unknown_tagged_fields,
-        })
-    }
-}
-
-impl KafkaEncode for AlterClientQuotasResponseEntityData {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        if Self::is_flexible(version) {
-            encoder.write_compact_string(&self.entity_type)?;
-        } else {
-            encoder.write_string(&self.entity_type)?;
-        }
-        if Self::is_flexible(version) {
-            encoder.write_compact_nullable_string(self.entity_name.as_ref())?;
-        } else {
-            encoder.write_nullable_string(self.entity_name.as_ref())?;
-        }
-
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: "AlterClientQuotasResponseEntityData",
-                version,
-            });
-        }
-
-        Ok(())
-    }
-}
-
-/// Response body for the `AlterClientQuotas` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct AlterClientQuotasResponse {
-    /// The duration in milliseconds for which the request was throttled due to a quota violation, or zero if the request did not violate any quota.
-    pub throttle_time_ms: i32,
-    /// The quota configuration entries to alter.
-    pub entries: Vec<AlterClientQuotasResponseEntryData>,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
-
-impl KafkaMessage for AlterClientQuotasResponse {
-    const NAME: &'static str = "AlterClientQuotasResponse";
-    const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 1);
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(1, 1));
-}
-
-impl KafkaResponse for AlterClientQuotasResponse {
-    const API_KEY: ApiKey = ApiKey::new(49);
-}
-
-impl KafkaDecode for AlterClientQuotasResponse {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        crate::message::ensure_decode_version::<Self>(version)?;
-
-        let throttle_time_ms = decoder.read_i32()?;
-        let entries = {
-            let length = if Self::is_flexible(version) {
-                decoder.read_compact_array_len()?
+                encoder.write_array_len(self.entity.len())?;
+            }
+            for value in &self.entity {
+                value.encode(encoder, version)?;
+            }
+            if Self::is_flexible(version) {
+                encoder.write_compact_array_len(self.ops.len())?;
             } else {
-                decoder.read_array_len()?
+                encoder.write_array_len(self.ops.len())?;
+            }
+            for value in &self.ops {
+                value.encode(encoder, version)?;
+            }
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "EntryData",
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+
+    /// `EntityData` as declared by the `AlterClientQuotas` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, PartialEq)]
+    pub struct EntityData {
+        /// The entity type.
+        pub entity_type: StrBytes,
+        /// The name of the entity, or null if the default.
+        pub entity_name: Option<StrBytes>,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl EntityData {
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(1, 1));
+
+        fn is_flexible(version: ApiVersion) -> bool {
+            Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+        }
+    }
+
+    impl Default for EntityData {
+        fn default() -> Self {
+            Self {
+                entity_type: StrBytes::default(),
+                entity_name: Some(StrBytes::default()),
+                unknown_tagged_fields: TaggedFields::default(),
+            }
+        }
+    }
+
+    impl KafkaDecode for EntityData {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            let entity_type = if Self::is_flexible(version) {
+                decoder.read_compact_string()?
+            } else {
+                decoder.read_string()?
             };
-            decoder.read_vec(length, |decoder| {
-                AlterClientQuotasResponseEntryData::decode(decoder, version)
-            })?
-        };
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
+            let entity_name = if Self::is_flexible(version) {
+                decoder.read_compact_nullable_string()?
+            } else {
+                decoder.read_nullable_string()?
+            };
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
 
-        Ok(Self {
-            throttle_time_ms,
-            entries,
-            unknown_tagged_fields,
-        })
+            Ok(Self {
+                entity_type,
+                entity_name,
+                unknown_tagged_fields,
+            })
+        }
+    }
+
+    impl KafkaEncode for EntityData {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            if Self::is_flexible(version) {
+                encoder.write_compact_string(&self.entity_type)?;
+            } else {
+                encoder.write_string(&self.entity_type)?;
+            }
+            if Self::is_flexible(version) {
+                encoder.write_compact_nullable_string(self.entity_name.as_ref())?;
+            } else {
+                encoder.write_nullable_string(self.entity_name.as_ref())?;
+            }
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "EntityData",
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+
+    /// `OpData` as declared by the `AlterClientQuotas` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, PartialEq)]
+    pub struct OpData {
+        /// The quota configuration key.
+        pub key: StrBytes,
+        /// The value to set, otherwise ignored if the value is to be removed.
+        pub value: f64,
+        /// Whether the quota configuration value should be removed, otherwise set.
+        pub remove: bool,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl OpData {
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(1, 1));
+
+        fn is_flexible(version: ApiVersion) -> bool {
+            Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+        }
+    }
+
+    impl Default for OpData {
+        fn default() -> Self {
+            Self {
+                key: StrBytes::default(),
+                value: 0.0,
+                remove: false,
+                unknown_tagged_fields: TaggedFields::default(),
+            }
+        }
+    }
+
+    impl KafkaDecode for OpData {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            let key = if Self::is_flexible(version) {
+                decoder.read_compact_string()?
+            } else {
+                decoder.read_string()?
+            };
+            let value = decoder.read_float64()?;
+            let remove = decoder.read_bool()?;
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
+
+            Ok(Self {
+                key,
+                value,
+                remove,
+                unknown_tagged_fields,
+            })
+        }
+    }
+
+    impl KafkaEncode for OpData {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            if Self::is_flexible(version) {
+                encoder.write_compact_string(&self.key)?;
+            } else {
+                encoder.write_string(&self.key)?;
+            }
+            encoder.write_float64(self.value)?;
+            encoder.write_bool(self.remove)?;
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "OpData",
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+
+    /// Request body for the `AlterClientQuotas` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Default, PartialEq)]
+    pub struct AlterClientQuotasRequest {
+        /// The quota configuration entries to alter.
+        pub entries: Vec<EntryData>,
+        /// Whether the alteration should be validated, but not performed.
+        pub validate_only: bool,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl KafkaMessage for AlterClientQuotasRequest {
+        const NAME: &'static str = "AlterClientQuotasRequest";
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 1);
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(1, 1));
+    }
+
+    impl KafkaRequest for AlterClientQuotasRequest {
+        const API_KEY: ApiKey = ApiKey::new(49);
+    }
+
+    impl RequestResponsePair for AlterClientQuotasRequest {
+        type Response = super::AlterClientQuotasResponse;
+    }
+
+    impl KafkaDecode for AlterClientQuotasRequest {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            crate::message::ensure_decode_version::<Self>(version)?;
+
+            let entries = {
+                let length = if Self::is_flexible(version) {
+                    decoder.read_compact_array_len()?
+                } else {
+                    decoder.read_array_len()?
+                };
+                decoder.read_vec(length, |decoder| EntryData::decode(decoder, version))?
+            };
+            let validate_only = decoder.read_bool()?;
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
+
+            Ok(Self {
+                entries,
+                validate_only,
+                unknown_tagged_fields,
+            })
+        }
+    }
+
+    impl KafkaEncode for AlterClientQuotasRequest {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            crate::message::ensure_encode_version::<Self>(version)?;
+
+            if Self::is_flexible(version) {
+                encoder.write_compact_array_len(self.entries.len())?;
+            } else {
+                encoder.write_array_len(self.entries.len())?;
+            }
+            for value in &self.entries {
+                value.encode(encoder, version)?;
+            }
+            encoder.write_bool(self.validate_only)?;
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: Self::NAME,
+                    version,
+                });
+            }
+
+            Ok(())
+        }
     }
 }
 
-impl KafkaEncode for AlterClientQuotasResponse {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        crate::message::ensure_encode_version::<Self>(version)?;
+/// `AlterClientQuotasResponse` and every struct it declares, under upstream's own names.
+///
+/// [`AlterClientQuotasResponse`](crate::AlterClientQuotasResponse) is re-exported flat, so this path never has to be
+/// written to name the message itself.
+pub mod alter_client_quotas_response {
+    use kafka_wire_core::{
+        ApiKey, ApiVersion, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
+        KafkaEncode, StrBytes, TaggedFields, VersionRange,
+    };
 
-        encoder.write_i32(self.throttle_time_ms)?;
-        if Self::is_flexible(version) {
-            encoder.write_compact_array_len(self.entries.len())?;
-        } else {
-            encoder.write_array_len(self.entries.len())?;
-        }
-        for value in &self.entries {
-            value.encode(encoder, version)?;
-        }
+    use crate::{KafkaMessage, KafkaResponse};
 
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: Self::NAME,
-                version,
-            });
-        }
+    /// `EntryData` as declared by the `AlterClientQuotas` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Eq, PartialEq)]
+    pub struct EntryData {
+        /// The error code, or `0` if the quota alteration succeeded.
+        pub error_code: i16,
+        /// The error message, or `null` if the quota alteration succeeded.
+        pub error_message: Option<StrBytes>,
+        /// The quota entity to alter.
+        pub entity: Vec<EntityData>,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
+    }
 
-        Ok(())
+    impl EntryData {
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(1, 1));
+
+        fn is_flexible(version: ApiVersion) -> bool {
+            Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+        }
+    }
+
+    impl Default for EntryData {
+        fn default() -> Self {
+            Self {
+                error_code: 0,
+                error_message: Some(StrBytes::default()),
+                entity: Vec::new(),
+                unknown_tagged_fields: TaggedFields::default(),
+            }
+        }
+    }
+
+    impl KafkaDecode for EntryData {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            let error_code = decoder.read_i16()?;
+            let error_message = if Self::is_flexible(version) {
+                decoder.read_compact_nullable_string()?
+            } else {
+                decoder.read_nullable_string()?
+            };
+            let entity = {
+                let length = if Self::is_flexible(version) {
+                    decoder.read_compact_array_len()?
+                } else {
+                    decoder.read_array_len()?
+                };
+                decoder.read_vec(length, |decoder| EntityData::decode(decoder, version))?
+            };
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
+
+            Ok(Self {
+                error_code,
+                error_message,
+                entity,
+                unknown_tagged_fields,
+            })
+        }
+    }
+
+    impl KafkaEncode for EntryData {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            encoder.write_i16(self.error_code)?;
+            if Self::is_flexible(version) {
+                encoder.write_compact_nullable_string(self.error_message.as_ref())?;
+            } else {
+                encoder.write_nullable_string(self.error_message.as_ref())?;
+            }
+            if Self::is_flexible(version) {
+                encoder.write_compact_array_len(self.entity.len())?;
+            } else {
+                encoder.write_array_len(self.entity.len())?;
+            }
+            for value in &self.entity {
+                value.encode(encoder, version)?;
+            }
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "EntryData",
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+
+    /// `EntityData` as declared by the `AlterClientQuotas` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Eq, PartialEq)]
+    pub struct EntityData {
+        /// The entity type.
+        pub entity_type: StrBytes,
+        /// The name of the entity, or null if the default.
+        pub entity_name: Option<StrBytes>,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl EntityData {
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(1, 1));
+
+        fn is_flexible(version: ApiVersion) -> bool {
+            Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+        }
+    }
+
+    impl Default for EntityData {
+        fn default() -> Self {
+            Self {
+                entity_type: StrBytes::default(),
+                entity_name: Some(StrBytes::default()),
+                unknown_tagged_fields: TaggedFields::default(),
+            }
+        }
+    }
+
+    impl KafkaDecode for EntityData {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            let entity_type = if Self::is_flexible(version) {
+                decoder.read_compact_string()?
+            } else {
+                decoder.read_string()?
+            };
+            let entity_name = if Self::is_flexible(version) {
+                decoder.read_compact_nullable_string()?
+            } else {
+                decoder.read_nullable_string()?
+            };
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
+
+            Ok(Self {
+                entity_type,
+                entity_name,
+                unknown_tagged_fields,
+            })
+        }
+    }
+
+    impl KafkaEncode for EntityData {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            if Self::is_flexible(version) {
+                encoder.write_compact_string(&self.entity_type)?;
+            } else {
+                encoder.write_string(&self.entity_type)?;
+            }
+            if Self::is_flexible(version) {
+                encoder.write_compact_nullable_string(self.entity_name.as_ref())?;
+            } else {
+                encoder.write_nullable_string(self.entity_name.as_ref())?;
+            }
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "EntityData",
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+
+    /// Response body for the `AlterClientQuotas` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    pub struct AlterClientQuotasResponse {
+        /// The duration in milliseconds for which the request was throttled due to a quota violation, or zero if the request did not violate any quota.
+        pub throttle_time_ms: i32,
+        /// The quota configuration entries to alter.
+        pub entries: Vec<EntryData>,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl KafkaMessage for AlterClientQuotasResponse {
+        const NAME: &'static str = "AlterClientQuotasResponse";
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 1);
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(1, 1));
+    }
+
+    impl KafkaResponse for AlterClientQuotasResponse {
+        const API_KEY: ApiKey = ApiKey::new(49);
+    }
+
+    impl KafkaDecode for AlterClientQuotasResponse {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            crate::message::ensure_decode_version::<Self>(version)?;
+
+            let throttle_time_ms = decoder.read_i32()?;
+            let entries = {
+                let length = if Self::is_flexible(version) {
+                    decoder.read_compact_array_len()?
+                } else {
+                    decoder.read_array_len()?
+                };
+                decoder.read_vec(length, |decoder| EntryData::decode(decoder, version))?
+            };
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
+
+            Ok(Self {
+                throttle_time_ms,
+                entries,
+                unknown_tagged_fields,
+            })
+        }
+    }
+
+    impl KafkaEncode for AlterClientQuotasResponse {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            crate::message::ensure_encode_version::<Self>(version)?;
+
+            encoder.write_i32(self.throttle_time_ms)?;
+            if Self::is_flexible(version) {
+                encoder.write_compact_array_len(self.entries.len())?;
+            } else {
+                encoder.write_array_len(self.entries.len())?;
+            }
+            for value in &self.entries {
+                value.encode(encoder, version)?;
+            }
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: Self::NAME,
+                    version,
+                });
+            }
+
+            Ok(())
+        }
     }
 }
+
+use kafka_wire_core::VersionRange;
+
+use crate::{MessageDescriptor, MessageDirection};
+
+pub use alter_client_quotas_request::AlterClientQuotasRequest;
+pub use alter_client_quotas_response::AlterClientQuotasResponse;
 
 /// Static metadata for [`AlterClientQuotasRequest`].
 pub const ALTER_CLIENT_QUOTAS_REQUEST_DESCRIPTOR: MessageDescriptor = MessageDescriptor::new(

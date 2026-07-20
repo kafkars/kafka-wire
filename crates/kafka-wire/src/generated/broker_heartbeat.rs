@@ -5,272 +5,296 @@
 //! Request SHA-256: `6392fa540247ce58a1f271c713e3bf45819cd539a6c57e151415716e16b6baec`.
 //! Response SHA-256: `fdb42868f8fbb4202633f49bf5664f8ec232955e16cc103db5d34a009428ae16`.
 
-use kafka_wire_core::{
-    ApiKey, ApiVersion, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
-    KafkaEncode, KnownTags, TagOutcome, TaggedFields, Uuid, VersionRange,
-};
+/// `BrokerHeartbeatRequest` and every struct it declares, under upstream's own names.
+///
+/// [`BrokerHeartbeatRequest`](crate::BrokerHeartbeatRequest) is re-exported flat, so this path never has to be
+/// written to name the message itself.
+pub mod broker_heartbeat_request {
+    use kafka_wire_core::{
+        ApiKey, ApiVersion, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
+        KafkaEncode, KnownTags, TagOutcome, TaggedFields, Uuid, VersionRange,
+    };
 
-use crate::{
-    KafkaMessage, KafkaRequest, KafkaResponse, MessageDescriptor, MessageDirection,
-    RequestResponsePair,
-};
+    use crate::{KafkaMessage, KafkaRequest, RequestResponsePair};
 
-/// Request body for the `BrokerHeartbeat` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct BrokerHeartbeatRequest {
-    /// The broker ID.
-    pub broker_id: i32,
-    /// The broker epoch.
-    pub broker_epoch: i64,
-    /// The highest metadata offset which the broker has reached.
-    pub current_metadata_offset: i64,
-    /// True if the broker wants to be fenced, false otherwise.
-    pub want_fence: bool,
-    /// True if the broker wants to be shut down, false otherwise.
-    pub want_shut_down: bool,
-    /// Log directories that failed and went offline.
-    pub offline_log_dirs: Vec<Uuid>,
-    /// List of log directories that are cordoned. This is null before the broker reaches the RECOVERY state.
-    pub cordoned_log_dirs: Option<Vec<Uuid>>,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
-
-impl Default for BrokerHeartbeatRequest {
-    fn default() -> Self {
-        Self {
-            broker_id: 0,
-            broker_epoch: -1,
-            current_metadata_offset: 0,
-            want_fence: false,
-            want_shut_down: false,
-            offline_log_dirs: Vec::new(),
-            cordoned_log_dirs: None,
-            unknown_tagged_fields: TaggedFields::default(),
-        }
+    /// Request body for the `BrokerHeartbeat` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Eq, PartialEq)]
+    pub struct BrokerHeartbeatRequest {
+        /// The broker ID.
+        pub broker_id: i32,
+        /// The broker epoch.
+        pub broker_epoch: i64,
+        /// The highest metadata offset which the broker has reached.
+        pub current_metadata_offset: i64,
+        /// True if the broker wants to be fenced, false otherwise.
+        pub want_fence: bool,
+        /// True if the broker wants to be shut down, false otherwise.
+        pub want_shut_down: bool,
+        /// Log directories that failed and went offline.
+        pub offline_log_dirs: Vec<Uuid>,
+        /// List of log directories that are cordoned. This is null before the broker reaches the RECOVERY state.
+        pub cordoned_log_dirs: Option<Vec<Uuid>>,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
     }
-}
 
-impl KafkaMessage for BrokerHeartbeatRequest {
-    const NAME: &'static str = "BrokerHeartbeatRequest";
-    const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 2);
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 2));
-}
-
-impl KafkaRequest for BrokerHeartbeatRequest {
-    const API_KEY: ApiKey = ApiKey::new(63);
-}
-
-impl RequestResponsePair for BrokerHeartbeatRequest {
-    type Response = BrokerHeartbeatResponse;
-}
-
-impl KafkaDecode for BrokerHeartbeatRequest {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        crate::message::ensure_decode_version::<Self>(version)?;
-
-        let broker_id = decoder.read_i32()?;
-        let broker_epoch = decoder.read_i64()?;
-        let current_metadata_offset = decoder.read_i64()?;
-        let want_fence = decoder.read_bool()?;
-        let want_shut_down = decoder.read_bool()?;
-        let mut offline_log_dirs: Vec<Uuid> = Vec::new();
-        let mut cordoned_log_dirs: Option<Vec<Uuid>> = None;
-        let mut unknown_tagged_fields = TaggedFields::default();
-        if Self::is_flexible(version) {
-            unknown_tagged_fields = decoder.read_tagged_fields_with(|tag, decoder| match tag {
-                0 if version.value() >= 1 => {
-                    offline_log_dirs = {
-                        let length = decoder.read_compact_array_len()?;
-                        decoder.read_vec(length, Decoder::read_uuid)?
-                    };
-                    Ok(TagOutcome::Decoded)
-                }
-                1 if version.value() >= 2 => {
-                    cordoned_log_dirs = {
-                        let length = decoder.read_compact_nullable_array_len()?;
-                        length
-                            .map(|length| decoder.read_vec(length, Decoder::read_uuid))
-                            .transpose()?
-                    };
-                    Ok(TagOutcome::Decoded)
-                }
-                _ => Ok(TagOutcome::Retained),
-            })?;
-        }
-
-        Ok(Self {
-            broker_id,
-            broker_epoch,
-            current_metadata_offset,
-            want_fence,
-            want_shut_down,
-            offline_log_dirs,
-            cordoned_log_dirs,
-            unknown_tagged_fields,
-        })
-    }
-}
-
-impl KafkaEncode for BrokerHeartbeatRequest {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        crate::message::ensure_encode_version::<Self>(version)?;
-
-        if version.value() < 1 && !self.offline_log_dirs.is_empty() {
-            return Err(EncodeError::FieldNotRepresentable {
-                message: Self::NAME,
-                field: "OfflineLogDirs",
-                version,
-            });
-        }
-        if version.value() < 2 && self.cordoned_log_dirs.is_some() {
-            return Err(EncodeError::FieldNotRepresentable {
-                message: Self::NAME,
-                field: "CordonedLogDirs",
-                version,
-            });
-        }
-
-        encoder.write_i32(self.broker_id)?;
-        encoder.write_i64(self.broker_epoch)?;
-        encoder.write_i64(self.current_metadata_offset)?;
-        encoder.write_bool(self.want_fence)?;
-        encoder.write_bool(self.want_shut_down)?;
-
-        if Self::is_flexible(version) {
-            let mut known = KnownTags::new();
-            if version.value() >= 1 && !self.offline_log_dirs.is_empty() {
-                known.write(0, |encoder| {
-                    encoder.write_compact_array_len(self.offline_log_dirs.len())?;
-                    for value in &self.offline_log_dirs {
-                        encoder.write_uuid(*value)?;
-                    }
-                    Ok(())
-                })?;
+    impl Default for BrokerHeartbeatRequest {
+        fn default() -> Self {
+            Self {
+                broker_id: 0,
+                broker_epoch: -1,
+                current_metadata_offset: 0,
+                want_fence: false,
+                want_shut_down: false,
+                offline_log_dirs: Vec::new(),
+                cordoned_log_dirs: None,
+                unknown_tagged_fields: TaggedFields::default(),
             }
-            if version.value() >= 2 && self.cordoned_log_dirs.is_some() {
-                known.write(1, |encoder| {
-                    encoder.write_compact_nullable_array_len(
-                        self.cordoned_log_dirs.as_ref().map(Vec::len),
-                    )?;
-                    if let Some(values) = &self.cordoned_log_dirs {
-                        for value in values {
+        }
+    }
+
+    impl KafkaMessage for BrokerHeartbeatRequest {
+        const NAME: &'static str = "BrokerHeartbeatRequest";
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 2);
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 2));
+    }
+
+    impl KafkaRequest for BrokerHeartbeatRequest {
+        const API_KEY: ApiKey = ApiKey::new(63);
+    }
+
+    impl RequestResponsePair for BrokerHeartbeatRequest {
+        type Response = super::BrokerHeartbeatResponse;
+    }
+
+    impl KafkaDecode for BrokerHeartbeatRequest {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            crate::message::ensure_decode_version::<Self>(version)?;
+
+            let broker_id = decoder.read_i32()?;
+            let broker_epoch = decoder.read_i64()?;
+            let current_metadata_offset = decoder.read_i64()?;
+            let want_fence = decoder.read_bool()?;
+            let want_shut_down = decoder.read_bool()?;
+            let mut offline_log_dirs: Vec<Uuid> = Vec::new();
+            let mut cordoned_log_dirs: Option<Vec<Uuid>> = None;
+            let mut unknown_tagged_fields = TaggedFields::default();
+            if Self::is_flexible(version) {
+                unknown_tagged_fields =
+                    decoder.read_tagged_fields_with(|tag, decoder| match tag {
+                        0 if version.value() >= 1 => {
+                            offline_log_dirs = {
+                                let length = decoder.read_compact_array_len()?;
+                                decoder.read_vec(length, Decoder::read_uuid)?
+                            };
+                            Ok(TagOutcome::Decoded)
+                        }
+                        1 if version.value() >= 2 => {
+                            cordoned_log_dirs = {
+                                let length = decoder.read_compact_nullable_array_len()?;
+                                length
+                                    .map(|length| decoder.read_vec(length, Decoder::read_uuid))
+                                    .transpose()?
+                            };
+                            Ok(TagOutcome::Decoded)
+                        }
+                        _ => Ok(TagOutcome::Retained),
+                    })?;
+            }
+
+            Ok(Self {
+                broker_id,
+                broker_epoch,
+                current_metadata_offset,
+                want_fence,
+                want_shut_down,
+                offline_log_dirs,
+                cordoned_log_dirs,
+                unknown_tagged_fields,
+            })
+        }
+    }
+
+    impl KafkaEncode for BrokerHeartbeatRequest {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            crate::message::ensure_encode_version::<Self>(version)?;
+
+            if version.value() < 1 && !self.offline_log_dirs.is_empty() {
+                return Err(EncodeError::FieldNotRepresentable {
+                    message: Self::NAME,
+                    field: "OfflineLogDirs",
+                    version,
+                });
+            }
+            if version.value() < 2 && self.cordoned_log_dirs.is_some() {
+                return Err(EncodeError::FieldNotRepresentable {
+                    message: Self::NAME,
+                    field: "CordonedLogDirs",
+                    version,
+                });
+            }
+
+            encoder.write_i32(self.broker_id)?;
+            encoder.write_i64(self.broker_epoch)?;
+            encoder.write_i64(self.current_metadata_offset)?;
+            encoder.write_bool(self.want_fence)?;
+            encoder.write_bool(self.want_shut_down)?;
+
+            if Self::is_flexible(version) {
+                let mut known = KnownTags::new();
+                if version.value() >= 1 && !self.offline_log_dirs.is_empty() {
+                    known.write(0, |encoder| {
+                        encoder.write_compact_array_len(self.offline_log_dirs.len())?;
+                        for value in &self.offline_log_dirs {
                             encoder.write_uuid(*value)?;
                         }
-                    }
-                    Ok(())
-                })?;
+                        Ok(())
+                    })?;
+                }
+                if version.value() >= 2 && self.cordoned_log_dirs.is_some() {
+                    known.write(1, |encoder| {
+                        encoder.write_compact_nullable_array_len(
+                            self.cordoned_log_dirs.as_ref().map(Vec::len),
+                        )?;
+                        if let Some(values) = &self.cordoned_log_dirs {
+                            for value in values {
+                                encoder.write_uuid(*value)?;
+                            }
+                        }
+                        Ok(())
+                    })?;
+                }
+                encoder.write_merged_tagged_fields(known, &self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: Self::NAME,
+                    version,
+                });
             }
-            encoder.write_merged_tagged_fields(known, &self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: Self::NAME,
-                version,
-            });
-        }
 
-        Ok(())
-    }
-}
-
-/// Response body for the `BrokerHeartbeat` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct BrokerHeartbeatResponse {
-    /// Duration in milliseconds for which the request was throttled due to a quota violation, or zero if the request did not violate any quota.
-    pub throttle_time_ms: i32,
-    /// The error code, or 0 if there was no error.
-    pub error_code: i16,
-    /// True if the broker has approximately caught up with the latest metadata.
-    pub is_caught_up: bool,
-    /// True if the broker is fenced.
-    pub is_fenced: bool,
-    /// True if the broker should proceed with its shutdown.
-    pub should_shut_down: bool,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
-
-impl Default for BrokerHeartbeatResponse {
-    fn default() -> Self {
-        Self {
-            throttle_time_ms: 0,
-            error_code: 0,
-            is_caught_up: false,
-            is_fenced: true,
-            should_shut_down: false,
-            unknown_tagged_fields: TaggedFields::default(),
+            Ok(())
         }
     }
 }
 
-impl KafkaMessage for BrokerHeartbeatResponse {
-    const NAME: &'static str = "BrokerHeartbeatResponse";
-    const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 2);
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 2));
-}
+/// `BrokerHeartbeatResponse` and every struct it declares, under upstream's own names.
+///
+/// [`BrokerHeartbeatResponse`](crate::BrokerHeartbeatResponse) is re-exported flat, so this path never has to be
+/// written to name the message itself.
+pub mod broker_heartbeat_response {
+    use kafka_wire_core::{
+        ApiKey, ApiVersion, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
+        KafkaEncode, TaggedFields, VersionRange,
+    };
 
-impl KafkaResponse for BrokerHeartbeatResponse {
-    const API_KEY: ApiKey = ApiKey::new(63);
-}
+    use crate::{KafkaMessage, KafkaResponse};
 
-impl KafkaDecode for BrokerHeartbeatResponse {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        crate::message::ensure_decode_version::<Self>(version)?;
-
-        let throttle_time_ms = decoder.read_i32()?;
-        let error_code = decoder.read_i16()?;
-        let is_caught_up = decoder.read_bool()?;
-        let is_fenced = decoder.read_bool()?;
-        let should_shut_down = decoder.read_bool()?;
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
-
-        Ok(Self {
-            throttle_time_ms,
-            error_code,
-            is_caught_up,
-            is_fenced,
-            should_shut_down,
-            unknown_tagged_fields,
-        })
+    /// Response body for the `BrokerHeartbeat` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Eq, PartialEq)]
+    pub struct BrokerHeartbeatResponse {
+        /// Duration in milliseconds for which the request was throttled due to a quota violation, or zero if the request did not violate any quota.
+        pub throttle_time_ms: i32,
+        /// The error code, or 0 if there was no error.
+        pub error_code: i16,
+        /// True if the broker has approximately caught up with the latest metadata.
+        pub is_caught_up: bool,
+        /// True if the broker is fenced.
+        pub is_fenced: bool,
+        /// True if the broker should proceed with its shutdown.
+        pub should_shut_down: bool,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
     }
-}
 
-impl KafkaEncode for BrokerHeartbeatResponse {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        crate::message::ensure_encode_version::<Self>(version)?;
-
-        encoder.write_i32(self.throttle_time_ms)?;
-        encoder.write_i16(self.error_code)?;
-        encoder.write_bool(self.is_caught_up)?;
-        encoder.write_bool(self.is_fenced)?;
-        encoder.write_bool(self.should_shut_down)?;
-
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: Self::NAME,
-                version,
-            });
+    impl Default for BrokerHeartbeatResponse {
+        fn default() -> Self {
+            Self {
+                throttle_time_ms: 0,
+                error_code: 0,
+                is_caught_up: false,
+                is_fenced: true,
+                should_shut_down: false,
+                unknown_tagged_fields: TaggedFields::default(),
+            }
         }
+    }
 
-        Ok(())
+    impl KafkaMessage for BrokerHeartbeatResponse {
+        const NAME: &'static str = "BrokerHeartbeatResponse";
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 2);
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 2));
+    }
+
+    impl KafkaResponse for BrokerHeartbeatResponse {
+        const API_KEY: ApiKey = ApiKey::new(63);
+    }
+
+    impl KafkaDecode for BrokerHeartbeatResponse {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            crate::message::ensure_decode_version::<Self>(version)?;
+
+            let throttle_time_ms = decoder.read_i32()?;
+            let error_code = decoder.read_i16()?;
+            let is_caught_up = decoder.read_bool()?;
+            let is_fenced = decoder.read_bool()?;
+            let should_shut_down = decoder.read_bool()?;
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
+
+            Ok(Self {
+                throttle_time_ms,
+                error_code,
+                is_caught_up,
+                is_fenced,
+                should_shut_down,
+                unknown_tagged_fields,
+            })
+        }
+    }
+
+    impl KafkaEncode for BrokerHeartbeatResponse {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            crate::message::ensure_encode_version::<Self>(version)?;
+
+            encoder.write_i32(self.throttle_time_ms)?;
+            encoder.write_i16(self.error_code)?;
+            encoder.write_bool(self.is_caught_up)?;
+            encoder.write_bool(self.is_fenced)?;
+            encoder.write_bool(self.should_shut_down)?;
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: Self::NAME,
+                    version,
+                });
+            }
+
+            Ok(())
+        }
     }
 }
+
+use kafka_wire_core::VersionRange;
+
+use crate::{MessageDescriptor, MessageDirection};
+
+pub use broker_heartbeat_request::BrokerHeartbeatRequest;
+pub use broker_heartbeat_response::BrokerHeartbeatResponse;
 
 /// Static metadata for [`BrokerHeartbeatRequest`].
 pub const BROKER_HEARTBEAT_REQUEST_DESCRIPTOR: MessageDescriptor = MessageDescriptor::new(

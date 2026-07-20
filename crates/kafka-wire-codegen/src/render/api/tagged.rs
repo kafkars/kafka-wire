@@ -20,6 +20,7 @@ use crate::{
 use super::codec::{
     Owner, local, render_array_body, render_array_encode, render_nullable_array_encode,
 };
+use super::imports::spell;
 
 /// Whether this field travels in the tagged-field section rather than inline.
 pub(super) fn is_tagged(field: &Field) -> bool {
@@ -29,8 +30,9 @@ pub(super) fn is_tagged(field: &Field) -> bool {
 /// Whether anything this message emits declares a known tag.
 ///
 /// Asked of the whole message, structs included, because the import list is
-/// per file: a tag on one nested struct is enough to make the module name the
-/// dispatch types, and a message with none must not name them at all.
+/// per message module and every struct a message declares lands in it: a tag on
+/// one nested struct is enough to make the module name the dispatch types, and a
+/// message with none must not name them at all.
 pub(super) fn declares_a_tag(message: &Message) -> bool {
     fn any(fields: &[Field]) -> bool {
         fields
@@ -73,7 +75,7 @@ pub(super) fn render_tagged_decode(
         rust.open("let unknown_tagged_fields = if Self::is_flexible(version)");
         rust.line("decoder.read_tagged_fields()?");
         rust.reopen("} else {");
-        rust.line("TaggedFields::default()");
+        rust.line(format!("{}::default()", spell(message, "TaggedFields")));
         rust.close(";");
         return Ok(());
     }
@@ -88,7 +90,10 @@ pub(super) fn render_tagged_decode(
             field::default_expression(field, message)
         ));
     }
-    rust.line("let mut unknown_tagged_fields = TaggedFields::default();");
+    rust.line(format!(
+        "let mut unknown_tagged_fields = {}::default();",
+        spell(message, "TaggedFields")
+    ));
     rust.open("if Self::is_flexible(version)");
     rust.open("unknown_tagged_fields = decoder.read_tagged_fields_with(|tag, decoder| match tag");
     for (tag, field) in &tagged {
@@ -98,7 +103,10 @@ pub(super) fn render_tagged_decode(
     // field does not exist — is kept verbatim rather than refused. That is
     // exactly what the section is for: an entry it cannot interpret survives
     // the round trip untouched, and "cannot interpret" includes "not here yet".
-    rust.line("_ => Ok(TagOutcome::Retained),");
+    rust.line(format!(
+        "_ => Ok({}::Retained),",
+        spell(message, "TagOutcome")
+    ));
     rust.close(")?;");
     rust.close("");
     Ok(())
@@ -121,7 +129,13 @@ fn render_tag_arm(
         let (read, _) = field::element_codec(element, field, message)?;
         let (length, _) = field::array_length_codec(field, message);
         rust.open(format!("{name} ="));
-        render_array_body(rust, &length, &read, field::is_nullable(field, message));
+        render_array_body(
+            rust,
+            message,
+            &length,
+            &read,
+            field::is_nullable(field, message),
+        );
         rust.close(";");
     } else {
         rust.line(format!(
@@ -129,7 +143,7 @@ fn render_tag_arm(
             field::read_expression(field, message)?
         ));
     }
-    rust.line("Ok(TagOutcome::Decoded)");
+    rust.line(format!("Ok({}::Decoded)", spell(message, "TagOutcome")));
     rust.close("");
     Ok(())
 }
@@ -147,14 +161,20 @@ pub(super) fn render_tagged_encode(
     if tagged.is_empty() {
         rust.line("encoder.write_tagged_fields(&self.unknown_tagged_fields)?;");
     } else {
-        rust.line("let mut known = KnownTags::new();");
+        rust.line(format!(
+            "let mut known = {}::new();",
+            spell(message, "KnownTags")
+        ));
         for (tag, field) in &tagged {
             render_tag_write(rust, *tag, field, message)?;
         }
         rust.line("encoder.write_merged_tagged_fields(known, &self.unknown_tagged_fields)?;");
     }
     rust.reopen("} else if !self.unknown_tagged_fields.is_empty() {");
-    rust.open("return Err(EncodeError::TaggedFieldsNotRepresentable");
+    rust.open(format!(
+        "return Err({}::TaggedFieldsNotRepresentable",
+        spell(message, "EncodeError")
+    ));
     rust.line(format!("message: {},", owner.name()));
     rust.line("version,");
     rust.close(");");

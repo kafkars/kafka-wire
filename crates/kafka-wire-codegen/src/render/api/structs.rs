@@ -13,6 +13,7 @@ use crate::{
 };
 
 use super::codec::{Owner, render_construction, render_reads, render_writes};
+use super::imports::spell;
 use super::prose::sentence;
 use super::tagged::{render_tagged_decode, render_tagged_encode};
 
@@ -168,49 +169,15 @@ fn render_struct_with(
     let flexible = !message.effective_flexible_versions().is_empty();
     if flexible {
         rust.line("/// Unknown flexible-version tagged fields retained for forwarding.");
-        rust.line("pub unknown_tagged_fields: TaggedFields,");
+        rust.line(format!(
+            "pub unknown_tagged_fields: {},",
+            spell(message, "TaggedFields")
+        ));
     }
     rust.close("");
     rust.blank();
 
-    let range = message
-        .effective_flexible_versions()
-        .single_bounded()
-        .map_or_else(
-            || "None".to_owned(),
-            |(start, end)| format!("Some(VersionRange::new({start}, {end}))"),
-        );
-    match identity {
-        Identity::Message => {
-            let (start, end) = message.valid_versions.single_bounded().unwrap_or((0, 0));
-            rust.open(format!("impl KafkaMessage for {rust_type}"));
-            rust.line(format!(
-                "const NAME: &'static str = {:?};",
-                message.name.protocol()
-            ));
-            rust.line(format!(
-                "const SUPPORTED_VERSIONS: VersionRange = VersionRange::new({start}, {end});"
-            ));
-            rust.line(format!(
-                "const FLEXIBLE_VERSIONS: Option<VersionRange> = {range};"
-            ));
-            rust.close("");
-            rust.blank();
-        }
-        Identity::Nested if flexible => {
-            rust.open(format!("impl {rust_type}"));
-            rust.line(format!(
-                "const FLEXIBLE_VERSIONS: Option<VersionRange> = {range};"
-            ));
-            rust.blank();
-            rust.open("fn is_flexible(version: ApiVersion) -> bool");
-            rust.line("Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))");
-            rust.close("");
-            rust.close("");
-            rust.blank();
-        }
-        Identity::Nested => {}
-    }
+    render_identity(rust, rust_type, message, identity, flexible);
 
     if !derive_default {
         rust.open(format!("impl Default for {rust_type}"));
@@ -224,7 +191,10 @@ fn render_struct_with(
             ));
         }
         if flexible {
-            rust.line("unknown_tagged_fields: TaggedFields::default(),");
+            rust.line(format!(
+                "unknown_tagged_fields: {}::default(),",
+                spell(message, "TaggedFields")
+            ));
         }
         rust.close("");
         rust.close("");
@@ -235,6 +205,69 @@ fn render_struct_with(
     render_struct_decode(rust, rust_type, fields, message)?;
     render_struct_encode(rust, rust_type, fields, message)?;
     Ok(())
+}
+
+/// States the flexible window the rendered codecs read, as its identity spells
+/// it.
+///
+/// Split out because this is the one place the two identities differ: a
+/// standalone schema states the window through `KafkaMessage`, beside a protocol
+/// name and supported range a nested struct does not have, while a nested struct
+/// states it as an inherent constant. Everything around it is identical for
+/// both, so the seam is the distinction rather than a line count.
+fn render_identity(
+    rust: &mut RustText,
+    rust_type: &str,
+    message: &Message,
+    identity: Identity,
+    flexible: bool,
+) {
+    let version_range = spell(message, "VersionRange");
+    let range = message
+        .effective_flexible_versions()
+        .single_bounded()
+        .map_or_else(
+            || "None".to_owned(),
+            |(start, end)| format!("Some({version_range}::new({start}, {end}))"),
+        );
+    match identity {
+        Identity::Message => {
+            let (start, end) = message.valid_versions.single_bounded().unwrap_or((0, 0));
+            rust.open(format!(
+                "impl {} for {rust_type}",
+                spell(message, "KafkaMessage")
+            ));
+            rust.line(format!(
+                "const NAME: &'static str = {:?};",
+                message.name.protocol()
+            ));
+            rust.line(format!(
+                "const SUPPORTED_VERSIONS: {version_range} = \
+                 {version_range}::new({start}, {end});"
+            ));
+            rust.line(format!(
+                "const FLEXIBLE_VERSIONS: Option<{version_range}> = {range};"
+            ));
+            rust.close("");
+            rust.blank();
+        }
+        Identity::Nested if flexible => {
+            rust.open(format!("impl {rust_type}"));
+            rust.line(format!(
+                "const FLEXIBLE_VERSIONS: Option<{version_range}> = {range};"
+            ));
+            rust.blank();
+            rust.open(format!(
+                "fn is_flexible(version: {}) -> bool",
+                spell(message, "ApiVersion")
+            ));
+            rust.line("Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))");
+            rust.close("");
+            rust.close("");
+            rust.blank();
+        }
+        Identity::Nested => {}
+    }
 }
 
 /// Whether a struct body mentions the version it was handed.
@@ -287,9 +320,15 @@ pub(super) fn render_struct_decode(
     } else {
         "_version"
     };
-    rust.open(format!("impl KafkaDecode for {rust_type}"));
     rust.open(format!(
-        "fn decode(decoder: &mut Decoder, {version}: ApiVersion) -> Result<Self, DecodeError>"
+        "impl {} for {rust_type}",
+        spell(message, "KafkaDecode")
+    ));
+    rust.open(format!(
+        "fn decode(decoder: &mut {}, {version}: {}) -> Result<Self, {}>",
+        spell(message, "Decoder"),
+        spell(message, "ApiVersion"),
+        spell(message, "DecodeError"),
     ));
     render_reads(rust, fields, message)?;
     let flexible = !message.effective_flexible_versions().is_empty();
@@ -316,12 +355,21 @@ pub(super) fn render_struct_encode(
     } else {
         "_version"
     };
-    rust.open(format!("impl KafkaEncode for {rust_type}"));
-    rust.line("fn encode<T: EncodeTarget>(");
+    rust.open(format!(
+        "impl {} for {rust_type}",
+        spell(message, "KafkaEncode")
+    ));
+    rust.line(format!("fn encode<T: {}>(", spell(message, "EncodeTarget")));
     rust.line("    &self,");
-    rust.line("    encoder: &mut Encoder<T>,");
-    rust.line(format!("    {version}: ApiVersion,"));
-    rust.open(") -> Result<(), EncodeError>");
+    rust.line(format!(
+        "    encoder: &mut {}<T>,",
+        spell(message, "Encoder")
+    ));
+    rust.line(format!("    {version}: {},", spell(message, "ApiVersion")));
+    rust.open(format!(
+        ") -> Result<(), {}>",
+        spell(message, "EncodeError")
+    ));
     render_writes(rust, fields, message, Owner::Struct(rust_type))?;
     if !message.effective_flexible_versions().is_empty() {
         render_tagged_encode(rust, fields, message, Owner::Struct(rust_type))?;

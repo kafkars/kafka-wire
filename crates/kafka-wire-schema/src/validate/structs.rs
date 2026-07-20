@@ -24,9 +24,9 @@ pub(super) fn validate_structs(message: &Message, errors: &mut Vec<ValidationErr
 
 /// Reports a struct name this message declares more than once.
 ///
-/// the earlier flat naming rule qualifies nested structs by their owning message, which is exactly
-/// sufficient only because no message declares one name with two shapes. That
-/// is a measured property of today's corpus, so it is checked on every run
+/// the module-scoped naming rule scopes nested structs to their owning message's module, which is
+/// exactly sufficient only because no message declares one name with two shapes.
+/// That is a measured property of today's corpus, so it is checked on every run
 /// rather than trusted: an upstream schema that breaks it must fail here with
 /// both declaration sites named, never silently merge two shapes into one Rust
 /// type or emit the same type twice.
@@ -102,9 +102,9 @@ fn collect_references<'a>(
                     "KAFKA_SCHEMA_UNRESOLVED_STRUCT",
                     &format!(
                         "struct `{}` is referred to but never declared, inline or in \
-                         commonStructs; nothing would define the `{}` it resolves to",
+                         commonStructs; nothing in `{}` would define it",
                         reference.declared(),
-                        reference.rust_type(),
+                        reference.owner(),
                     ),
                 ));
             }

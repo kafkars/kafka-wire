@@ -5,444 +5,468 @@
 //! Request SHA-256: `e9b75b435d55eae3589a14330210e33fbcc9ea03af0d901a95db50ec3c1e5e26`.
 //! Response SHA-256: `e48d7a78708f10c899670f556ee76f375d81f75b647b6131b7e333113f929f86`.
 
-use kafka_wire_core::{
-    ApiKey, ApiVersion, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
-    KafkaEncode, StrBytes, TaggedFields, VersionRange,
-};
+/// `CreatePartitionsRequest` and every struct it declares, under upstream's own names.
+///
+/// [`CreatePartitionsRequest`](crate::CreatePartitionsRequest) is re-exported flat, so this path never has to be
+/// written to name the message itself.
+pub mod create_partitions_request {
+    use kafka_wire_core::{
+        ApiKey, ApiVersion, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
+        KafkaEncode, StrBytes, TaggedFields, VersionRange,
+    };
 
-use crate::{
-    KafkaMessage, KafkaRequest, KafkaResponse, MessageDescriptor, MessageDirection,
-    RequestResponsePair,
-};
+    use crate::{KafkaMessage, KafkaRequest, RequestResponsePair};
 
-/// `CreatePartitionsTopic` as declared by the `CreatePartitions` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct CreatePartitionsRequestTopic {
-    /// The topic name.
-    pub name: StrBytes,
-    /// The new partition count.
-    pub count: i32,
-    /// The new partition assignments.
-    pub assignments: Option<Vec<CreatePartitionsRequestAssignment>>,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
-
-impl CreatePartitionsRequestTopic {
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(2, 3));
-
-    fn is_flexible(version: ApiVersion) -> bool {
-        Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+    /// `CreatePartitionsTopic` as declared by the `CreatePartitions` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Eq, PartialEq)]
+    pub struct CreatePartitionsTopic {
+        /// The topic name.
+        pub name: StrBytes,
+        /// The new partition count.
+        pub count: i32,
+        /// The new partition assignments.
+        pub assignments: Option<Vec<CreatePartitionsAssignment>>,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
     }
-}
 
-impl Default for CreatePartitionsRequestTopic {
-    fn default() -> Self {
-        Self {
-            name: StrBytes::default(),
-            count: 0,
-            assignments: Some(Vec::new()),
-            unknown_tagged_fields: TaggedFields::default(),
+    impl CreatePartitionsTopic {
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(2, 3));
+
+        fn is_flexible(version: ApiVersion) -> bool {
+            Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
         }
     }
-}
 
-impl KafkaDecode for CreatePartitionsRequestTopic {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        let name = if Self::is_flexible(version) {
-            decoder.read_compact_string()?
-        } else {
-            decoder.read_string()?
-        };
-        let count = decoder.read_i32()?;
-        let assignments = {
-            let length = if Self::is_flexible(version) {
-                decoder.read_compact_nullable_array_len()?
-            } else {
-                decoder.read_nullable_array_len()?
-            };
-            length
-                .map(|length| {
-                    decoder.read_vec(length, |decoder| {
-                        CreatePartitionsRequestAssignment::decode(decoder, version)
-                    })
-                })
-                .transpose()?
-        };
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
-
-        Ok(Self {
-            name,
-            count,
-            assignments,
-            unknown_tagged_fields,
-        })
-    }
-}
-
-impl KafkaEncode for CreatePartitionsRequestTopic {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        if Self::is_flexible(version) {
-            encoder.write_compact_string(&self.name)?;
-        } else {
-            encoder.write_string(&self.name)?;
-        }
-        encoder.write_i32(self.count)?;
-        if Self::is_flexible(version) {
-            encoder.write_compact_nullable_array_len(self.assignments.as_ref().map(Vec::len))?;
-        } else {
-            encoder.write_nullable_array_len(self.assignments.as_ref().map(Vec::len))?;
-        }
-        if let Some(values) = &self.assignments {
-            for value in values {
-                value.encode(encoder, version)?;
+    impl Default for CreatePartitionsTopic {
+        fn default() -> Self {
+            Self {
+                name: StrBytes::default(),
+                count: 0,
+                assignments: Some(Vec::new()),
+                unknown_tagged_fields: TaggedFields::default(),
             }
         }
-
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: "CreatePartitionsRequestTopic",
-                version,
-            });
-        }
-
-        Ok(())
     }
-}
 
-/// `CreatePartitionsAssignment` as declared by the `CreatePartitions` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct CreatePartitionsRequestAssignment {
-    /// The assigned broker `IDs`.
-    pub broker_ids: Vec<i32>,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
-
-impl CreatePartitionsRequestAssignment {
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(2, 3));
-
-    fn is_flexible(version: ApiVersion) -> bool {
-        Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
-    }
-}
-
-impl KafkaDecode for CreatePartitionsRequestAssignment {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        let broker_ids = {
-            let length = if Self::is_flexible(version) {
-                decoder.read_compact_array_len()?
+    impl KafkaDecode for CreatePartitionsTopic {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            let name = if Self::is_flexible(version) {
+                decoder.read_compact_string()?
             } else {
-                decoder.read_array_len()?
+                decoder.read_string()?
             };
-            decoder.read_vec(length, Decoder::read_i32)?
-        };
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
-
-        Ok(Self {
-            broker_ids,
-            unknown_tagged_fields,
-        })
-    }
-}
-
-impl KafkaEncode for CreatePartitionsRequestAssignment {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        if Self::is_flexible(version) {
-            encoder.write_compact_array_len(self.broker_ids.len())?;
-        } else {
-            encoder.write_array_len(self.broker_ids.len())?;
-        }
-        for value in &self.broker_ids {
-            encoder.write_i32(*value)?;
-        }
-
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: "CreatePartitionsRequestAssignment",
-                version,
-            });
-        }
-
-        Ok(())
-    }
-}
-
-/// Request body for the `CreatePartitions` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct CreatePartitionsRequest {
-    /// Each topic that we want to create new partitions inside.
-    pub topics: Vec<CreatePartitionsRequestTopic>,
-    /// The time in ms to wait for the partitions to be created.
-    pub timeout_ms: i32,
-    /// If true, then validate the request, but don't actually increase the number of partitions.
-    pub validate_only: bool,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
-
-impl KafkaMessage for CreatePartitionsRequest {
-    const NAME: &'static str = "CreatePartitionsRequest";
-    const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 3);
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(2, 3));
-}
-
-impl KafkaRequest for CreatePartitionsRequest {
-    const API_KEY: ApiKey = ApiKey::new(37);
-}
-
-impl RequestResponsePair for CreatePartitionsRequest {
-    type Response = CreatePartitionsResponse;
-}
-
-impl KafkaDecode for CreatePartitionsRequest {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        crate::message::ensure_decode_version::<Self>(version)?;
-
-        let topics = {
-            let length = if Self::is_flexible(version) {
-                decoder.read_compact_array_len()?
+            let count = decoder.read_i32()?;
+            let assignments = {
+                let length = if Self::is_flexible(version) {
+                    decoder.read_compact_nullable_array_len()?
+                } else {
+                    decoder.read_nullable_array_len()?
+                };
+                length
+                    .map(|length| {
+                        decoder.read_vec(length, |decoder| {
+                            CreatePartitionsAssignment::decode(decoder, version)
+                        })
+                    })
+                    .transpose()?
+            };
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
             } else {
-                decoder.read_array_len()?
+                TaggedFields::default()
             };
-            decoder.read_vec(length, |decoder| {
-                CreatePartitionsRequestTopic::decode(decoder, version)
-            })?
-        };
-        let timeout_ms = decoder.read_i32()?;
-        let validate_only = decoder.read_bool()?;
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
 
-        Ok(Self {
-            topics,
-            timeout_ms,
-            validate_only,
-            unknown_tagged_fields,
-        })
+            Ok(Self {
+                name,
+                count,
+                assignments,
+                unknown_tagged_fields,
+            })
+        }
     }
-}
 
-impl KafkaEncode for CreatePartitionsRequest {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        crate::message::ensure_encode_version::<Self>(version)?;
-
-        if Self::is_flexible(version) {
-            encoder.write_compact_array_len(self.topics.len())?;
-        } else {
-            encoder.write_array_len(self.topics.len())?;
-        }
-        for value in &self.topics {
-            value.encode(encoder, version)?;
-        }
-        encoder.write_i32(self.timeout_ms)?;
-        encoder.write_bool(self.validate_only)?;
-
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: Self::NAME,
-                version,
-            });
-        }
-
-        Ok(())
-    }
-}
-
-/// `CreatePartitionsTopicResult` as declared by the `CreatePartitions` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct CreatePartitionsResponseTopicResult {
-    /// The topic name.
-    pub name: StrBytes,
-    /// The result error, or zero if there was no error.
-    pub error_code: i16,
-    /// The result message, or null if there was no error.
-    pub error_message: Option<StrBytes>,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
-
-impl CreatePartitionsResponseTopicResult {
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(2, 3));
-
-    fn is_flexible(version: ApiVersion) -> bool {
-        Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
-    }
-}
-
-impl KafkaDecode for CreatePartitionsResponseTopicResult {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        let name = if Self::is_flexible(version) {
-            decoder.read_compact_string()?
-        } else {
-            decoder.read_string()?
-        };
-        let error_code = decoder.read_i16()?;
-        let error_message = if Self::is_flexible(version) {
-            decoder.read_compact_nullable_string()?
-        } else {
-            decoder.read_nullable_string()?
-        };
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
-
-        Ok(Self {
-            name,
-            error_code,
-            error_message,
-            unknown_tagged_fields,
-        })
-    }
-}
-
-impl KafkaEncode for CreatePartitionsResponseTopicResult {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        if Self::is_flexible(version) {
-            encoder.write_compact_string(&self.name)?;
-        } else {
-            encoder.write_string(&self.name)?;
-        }
-        encoder.write_i16(self.error_code)?;
-        if Self::is_flexible(version) {
-            encoder.write_compact_nullable_string(self.error_message.as_ref())?;
-        } else {
-            encoder.write_nullable_string(self.error_message.as_ref())?;
-        }
-
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: "CreatePartitionsResponseTopicResult",
-                version,
-            });
-        }
-
-        Ok(())
-    }
-}
-
-/// Response body for the `CreatePartitions` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct CreatePartitionsResponse {
-    /// The duration in milliseconds for which the request was throttled due to a quota violation, or zero if the request did not violate any quota.
-    pub throttle_time_ms: i32,
-    /// The partition creation results for each topic.
-    pub results: Vec<CreatePartitionsResponseTopicResult>,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
-
-impl KafkaMessage for CreatePartitionsResponse {
-    const NAME: &'static str = "CreatePartitionsResponse";
-    const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 3);
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(2, 3));
-}
-
-impl KafkaResponse for CreatePartitionsResponse {
-    const API_KEY: ApiKey = ApiKey::new(37);
-}
-
-impl KafkaDecode for CreatePartitionsResponse {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        crate::message::ensure_decode_version::<Self>(version)?;
-
-        let throttle_time_ms = decoder.read_i32()?;
-        let results = {
-            let length = if Self::is_flexible(version) {
-                decoder.read_compact_array_len()?
+    impl KafkaEncode for CreatePartitionsTopic {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            if Self::is_flexible(version) {
+                encoder.write_compact_string(&self.name)?;
             } else {
-                decoder.read_array_len()?
+                encoder.write_string(&self.name)?;
+            }
+            encoder.write_i32(self.count)?;
+            if Self::is_flexible(version) {
+                encoder
+                    .write_compact_nullable_array_len(self.assignments.as_ref().map(Vec::len))?;
+            } else {
+                encoder.write_nullable_array_len(self.assignments.as_ref().map(Vec::len))?;
+            }
+            if let Some(values) = &self.assignments {
+                for value in values {
+                    value.encode(encoder, version)?;
+                }
+            }
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "CreatePartitionsTopic",
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+
+    /// `CreatePartitionsAssignment` as declared by the `CreatePartitions` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    pub struct CreatePartitionsAssignment {
+        /// The assigned broker `IDs`.
+        pub broker_ids: Vec<i32>,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl CreatePartitionsAssignment {
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(2, 3));
+
+        fn is_flexible(version: ApiVersion) -> bool {
+            Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+        }
+    }
+
+    impl KafkaDecode for CreatePartitionsAssignment {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            let broker_ids = {
+                let length = if Self::is_flexible(version) {
+                    decoder.read_compact_array_len()?
+                } else {
+                    decoder.read_array_len()?
+                };
+                decoder.read_vec(length, Decoder::read_i32)?
             };
-            decoder.read_vec(length, |decoder| {
-                CreatePartitionsResponseTopicResult::decode(decoder, version)
-            })?
-        };
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
 
-        Ok(Self {
-            throttle_time_ms,
-            results,
-            unknown_tagged_fields,
-        })
+            Ok(Self {
+                broker_ids,
+                unknown_tagged_fields,
+            })
+        }
+    }
+
+    impl KafkaEncode for CreatePartitionsAssignment {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            if Self::is_flexible(version) {
+                encoder.write_compact_array_len(self.broker_ids.len())?;
+            } else {
+                encoder.write_array_len(self.broker_ids.len())?;
+            }
+            for value in &self.broker_ids {
+                encoder.write_i32(*value)?;
+            }
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "CreatePartitionsAssignment",
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+
+    /// Request body for the `CreatePartitions` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    pub struct CreatePartitionsRequest {
+        /// Each topic that we want to create new partitions inside.
+        pub topics: Vec<CreatePartitionsTopic>,
+        /// The time in ms to wait for the partitions to be created.
+        pub timeout_ms: i32,
+        /// If true, then validate the request, but don't actually increase the number of partitions.
+        pub validate_only: bool,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl KafkaMessage for CreatePartitionsRequest {
+        const NAME: &'static str = "CreatePartitionsRequest";
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 3);
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(2, 3));
+    }
+
+    impl KafkaRequest for CreatePartitionsRequest {
+        const API_KEY: ApiKey = ApiKey::new(37);
+    }
+
+    impl RequestResponsePair for CreatePartitionsRequest {
+        type Response = super::CreatePartitionsResponse;
+    }
+
+    impl KafkaDecode for CreatePartitionsRequest {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            crate::message::ensure_decode_version::<Self>(version)?;
+
+            let topics = {
+                let length = if Self::is_flexible(version) {
+                    decoder.read_compact_array_len()?
+                } else {
+                    decoder.read_array_len()?
+                };
+                decoder.read_vec(length, |decoder| {
+                    CreatePartitionsTopic::decode(decoder, version)
+                })?
+            };
+            let timeout_ms = decoder.read_i32()?;
+            let validate_only = decoder.read_bool()?;
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
+
+            Ok(Self {
+                topics,
+                timeout_ms,
+                validate_only,
+                unknown_tagged_fields,
+            })
+        }
+    }
+
+    impl KafkaEncode for CreatePartitionsRequest {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            crate::message::ensure_encode_version::<Self>(version)?;
+
+            if Self::is_flexible(version) {
+                encoder.write_compact_array_len(self.topics.len())?;
+            } else {
+                encoder.write_array_len(self.topics.len())?;
+            }
+            for value in &self.topics {
+                value.encode(encoder, version)?;
+            }
+            encoder.write_i32(self.timeout_ms)?;
+            encoder.write_bool(self.validate_only)?;
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: Self::NAME,
+                    version,
+                });
+            }
+
+            Ok(())
+        }
     }
 }
 
-impl KafkaEncode for CreatePartitionsResponse {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        crate::message::ensure_encode_version::<Self>(version)?;
+/// `CreatePartitionsResponse` and every struct it declares, under upstream's own names.
+///
+/// [`CreatePartitionsResponse`](crate::CreatePartitionsResponse) is re-exported flat, so this path never has to be
+/// written to name the message itself.
+pub mod create_partitions_response {
+    use kafka_wire_core::{
+        ApiKey, ApiVersion, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
+        KafkaEncode, StrBytes, TaggedFields, VersionRange,
+    };
 
-        encoder.write_i32(self.throttle_time_ms)?;
-        if Self::is_flexible(version) {
-            encoder.write_compact_array_len(self.results.len())?;
-        } else {
-            encoder.write_array_len(self.results.len())?;
-        }
-        for value in &self.results {
-            value.encode(encoder, version)?;
-        }
+    use crate::{KafkaMessage, KafkaResponse};
 
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: Self::NAME,
-                version,
-            });
-        }
+    /// `CreatePartitionsTopicResult` as declared by the `CreatePartitions` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    pub struct CreatePartitionsTopicResult {
+        /// The topic name.
+        pub name: StrBytes,
+        /// The result error, or zero if there was no error.
+        pub error_code: i16,
+        /// The result message, or null if there was no error.
+        pub error_message: Option<StrBytes>,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
+    }
 
-        Ok(())
+    impl CreatePartitionsTopicResult {
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(2, 3));
+
+        fn is_flexible(version: ApiVersion) -> bool {
+            Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+        }
+    }
+
+    impl KafkaDecode for CreatePartitionsTopicResult {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            let name = if Self::is_flexible(version) {
+                decoder.read_compact_string()?
+            } else {
+                decoder.read_string()?
+            };
+            let error_code = decoder.read_i16()?;
+            let error_message = if Self::is_flexible(version) {
+                decoder.read_compact_nullable_string()?
+            } else {
+                decoder.read_nullable_string()?
+            };
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
+
+            Ok(Self {
+                name,
+                error_code,
+                error_message,
+                unknown_tagged_fields,
+            })
+        }
+    }
+
+    impl KafkaEncode for CreatePartitionsTopicResult {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            if Self::is_flexible(version) {
+                encoder.write_compact_string(&self.name)?;
+            } else {
+                encoder.write_string(&self.name)?;
+            }
+            encoder.write_i16(self.error_code)?;
+            if Self::is_flexible(version) {
+                encoder.write_compact_nullable_string(self.error_message.as_ref())?;
+            } else {
+                encoder.write_nullable_string(self.error_message.as_ref())?;
+            }
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "CreatePartitionsTopicResult",
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+
+    /// Response body for the `CreatePartitions` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    pub struct CreatePartitionsResponse {
+        /// The duration in milliseconds for which the request was throttled due to a quota violation, or zero if the request did not violate any quota.
+        pub throttle_time_ms: i32,
+        /// The partition creation results for each topic.
+        pub results: Vec<CreatePartitionsTopicResult>,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl KafkaMessage for CreatePartitionsResponse {
+        const NAME: &'static str = "CreatePartitionsResponse";
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 3);
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(2, 3));
+    }
+
+    impl KafkaResponse for CreatePartitionsResponse {
+        const API_KEY: ApiKey = ApiKey::new(37);
+    }
+
+    impl KafkaDecode for CreatePartitionsResponse {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            crate::message::ensure_decode_version::<Self>(version)?;
+
+            let throttle_time_ms = decoder.read_i32()?;
+            let results = {
+                let length = if Self::is_flexible(version) {
+                    decoder.read_compact_array_len()?
+                } else {
+                    decoder.read_array_len()?
+                };
+                decoder.read_vec(length, |decoder| {
+                    CreatePartitionsTopicResult::decode(decoder, version)
+                })?
+            };
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
+
+            Ok(Self {
+                throttle_time_ms,
+                results,
+                unknown_tagged_fields,
+            })
+        }
+    }
+
+    impl KafkaEncode for CreatePartitionsResponse {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            crate::message::ensure_encode_version::<Self>(version)?;
+
+            encoder.write_i32(self.throttle_time_ms)?;
+            if Self::is_flexible(version) {
+                encoder.write_compact_array_len(self.results.len())?;
+            } else {
+                encoder.write_array_len(self.results.len())?;
+            }
+            for value in &self.results {
+                value.encode(encoder, version)?;
+            }
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: Self::NAME,
+                    version,
+                });
+            }
+
+            Ok(())
+        }
     }
 }
+
+use kafka_wire_core::VersionRange;
+
+use crate::{MessageDescriptor, MessageDirection};
+
+pub use create_partitions_request::CreatePartitionsRequest;
+pub use create_partitions_response::CreatePartitionsResponse;
 
 /// Static metadata for [`CreatePartitionsRequest`].
 pub const CREATE_PARTITIONS_REQUEST_DESCRIPTOR: MessageDescriptor = MessageDescriptor::new(

@@ -5,927 +5,938 @@
 //! Request SHA-256: `0290657f8faa79a24a9a53dab0ab949ae75095fd6cf414f2920e72c5da1723b2`.
 //! Response SHA-256: `fa90ee102ad98ce88b14f0d38a775d0e4b32c8e53e11577a3d93923089a69f5e`.
 
-use kafka_wire_core::{
-    ApiKey, ApiVersion, Bytes, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder,
-    KafkaDecode, KafkaEncode, StrBytes, TaggedFields, Uuid, VersionRange,
-};
+/// `ShareFetchRequest` and every struct it declares, under upstream's own names.
+///
+/// [`ShareFetchRequest`](crate::ShareFetchRequest) is re-exported flat, so this path never has to be
+/// written to name the message itself.
+pub mod share_fetch_request {
+    use kafka_wire_core::{
+        ApiKey, ApiVersion, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
+        KafkaEncode, StrBytes, TaggedFields, Uuid, VersionRange,
+    };
 
-use crate::{
-    KafkaMessage, KafkaRequest, KafkaResponse, MessageDescriptor, MessageDirection,
-    RequestResponsePair,
-};
+    use crate::{KafkaMessage, KafkaRequest, RequestResponsePair};
 
-/// `FetchTopic` as declared by the `ShareFetch` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct ShareFetchRequestFetchTopic {
-    /// The unique topic ID.
-    pub topic_id: Uuid,
-    /// The partitions to fetch.
-    pub partitions: Vec<ShareFetchRequestFetchPartition>,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
-
-impl ShareFetchRequestFetchTopic {
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(1, 2));
-
-    fn is_flexible(version: ApiVersion) -> bool {
-        Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+    /// `FetchTopic` as declared by the `ShareFetch` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    pub struct FetchTopic {
+        /// The unique topic ID.
+        pub topic_id: Uuid,
+        /// The partitions to fetch.
+        pub partitions: Vec<FetchPartition>,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
     }
-}
 
-impl KafkaDecode for ShareFetchRequestFetchTopic {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        let topic_id = decoder.read_uuid()?;
-        let partitions = {
-            let length = decoder.read_compact_array_len()?;
-            decoder.read_vec(length, |decoder| {
-                ShareFetchRequestFetchPartition::decode(decoder, version)
-            })?
-        };
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
+    impl FetchTopic {
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(1, 2));
 
-        Ok(Self {
-            topic_id,
-            partitions,
-            unknown_tagged_fields,
-        })
-    }
-}
-
-impl KafkaEncode for ShareFetchRequestFetchTopic {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        encoder.write_uuid(self.topic_id)?;
-        encoder.write_compact_array_len(self.partitions.len())?;
-        for value in &self.partitions {
-            value.encode(encoder, version)?;
-        }
-
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: "ShareFetchRequestFetchTopic",
-                version,
-            });
-        }
-
-        Ok(())
-    }
-}
-
-/// `FetchPartition` as declared by the `ShareFetch` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct ShareFetchRequestFetchPartition {
-    /// The partition index.
-    pub partition_index: i32,
-    /// Record batches to acknowledge.
-    pub acknowledgement_batches: Vec<ShareFetchRequestAcknowledgementBatch>,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
-
-impl ShareFetchRequestFetchPartition {
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(1, 2));
-
-    fn is_flexible(version: ApiVersion) -> bool {
-        Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
-    }
-}
-
-impl KafkaDecode for ShareFetchRequestFetchPartition {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        let partition_index = decoder.read_i32()?;
-        let acknowledgement_batches = {
-            let length = decoder.read_compact_array_len()?;
-            decoder.read_vec(length, |decoder| {
-                ShareFetchRequestAcknowledgementBatch::decode(decoder, version)
-            })?
-        };
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
-
-        Ok(Self {
-            partition_index,
-            acknowledgement_batches,
-            unknown_tagged_fields,
-        })
-    }
-}
-
-impl KafkaEncode for ShareFetchRequestFetchPartition {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        encoder.write_i32(self.partition_index)?;
-        encoder.write_compact_array_len(self.acknowledgement_batches.len())?;
-        for value in &self.acknowledgement_batches {
-            value.encode(encoder, version)?;
-        }
-
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: "ShareFetchRequestFetchPartition",
-                version,
-            });
-        }
-
-        Ok(())
-    }
-}
-
-/// `AcknowledgementBatch` as declared by the `ShareFetch` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct ShareFetchRequestAcknowledgementBatch {
-    /// First offset of batch of records to acknowledge.
-    pub first_offset: i64,
-    /// Last offset (inclusive) of batch of records to acknowledge.
-    pub last_offset: i64,
-    /// Array of acknowledge types - 0:Gap,1:Accept,2:Release,3:Reject,4:Renew.
-    pub acknowledge_types: Vec<i8>,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
-
-impl ShareFetchRequestAcknowledgementBatch {
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(1, 2));
-
-    fn is_flexible(version: ApiVersion) -> bool {
-        Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
-    }
-}
-
-impl KafkaDecode for ShareFetchRequestAcknowledgementBatch {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        let first_offset = decoder.read_i64()?;
-        let last_offset = decoder.read_i64()?;
-        let acknowledge_types = {
-            let length = decoder.read_compact_array_len()?;
-            decoder.read_vec(length, Decoder::read_i8)?
-        };
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
-
-        Ok(Self {
-            first_offset,
-            last_offset,
-            acknowledge_types,
-            unknown_tagged_fields,
-        })
-    }
-}
-
-impl KafkaEncode for ShareFetchRequestAcknowledgementBatch {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        encoder.write_i64(self.first_offset)?;
-        encoder.write_i64(self.last_offset)?;
-        encoder.write_compact_array_len(self.acknowledge_types.len())?;
-        for value in &self.acknowledge_types {
-            encoder.write_i8(*value)?;
-        }
-
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: "ShareFetchRequestAcknowledgementBatch",
-                version,
-            });
-        }
-
-        Ok(())
-    }
-}
-
-/// `ForgottenTopic` as declared by the `ShareFetch` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct ShareFetchRequestForgottenTopic {
-    /// The unique topic ID.
-    pub topic_id: Uuid,
-    /// The partitions indexes to forget.
-    pub partitions: Vec<i32>,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
-
-impl ShareFetchRequestForgottenTopic {
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(1, 2));
-
-    fn is_flexible(version: ApiVersion) -> bool {
-        Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
-    }
-}
-
-impl KafkaDecode for ShareFetchRequestForgottenTopic {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        let topic_id = decoder.read_uuid()?;
-        let partitions = {
-            let length = decoder.read_compact_array_len()?;
-            decoder.read_vec(length, Decoder::read_i32)?
-        };
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
-
-        Ok(Self {
-            topic_id,
-            partitions,
-            unknown_tagged_fields,
-        })
-    }
-}
-
-impl KafkaEncode for ShareFetchRequestForgottenTopic {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        encoder.write_uuid(self.topic_id)?;
-        encoder.write_compact_array_len(self.partitions.len())?;
-        for value in &self.partitions {
-            encoder.write_i32(*value)?;
-        }
-
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: "ShareFetchRequestForgottenTopic",
-                version,
-            });
-        }
-
-        Ok(())
-    }
-}
-
-/// Request body for the `ShareFetch` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct ShareFetchRequest {
-    /// The group identifier.
-    pub group_id: Option<StrBytes>,
-    /// The member ID.
-    pub member_id: Option<StrBytes>,
-    /// The current share session epoch: 0 to open a share session; -1 to close it; otherwise increments for consecutive requests.
-    pub share_session_epoch: i32,
-    /// The maximum time in milliseconds to wait for the response.
-    pub max_wait_ms: i32,
-    /// The minimum bytes to accumulate in the response.
-    pub min_bytes: i32,
-    /// The maximum bytes to fetch. See KIP-74 for cases where this limit may not be honored.
-    pub max_bytes: i32,
-    /// The maximum number of records to fetch. This limit can be exceeded for alignment of batch boundaries.
-    pub max_records: i32,
-    /// The optimal number of records for batches of acquired records and acknowledgements.
-    pub batch_size: i32,
-    /// The acquire mode to control the fetch behavior - 0:batch-optimized,1:record-limit.
-    pub share_acquire_mode: i8,
-    /// Whether Renew type acknowledgements present in `AcknowledgementBatches`.
-    pub is_renew_ack: bool,
-    /// The topics to fetch.
-    pub topics: Vec<ShareFetchRequestFetchTopic>,
-    /// The partitions to remove from this share session.
-    pub forgotten_topics_data: Vec<ShareFetchRequestForgottenTopic>,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
-
-impl Default for ShareFetchRequest {
-    fn default() -> Self {
-        Self {
-            group_id: None,
-            member_id: Some(StrBytes::default()),
-            share_session_epoch: 0,
-            max_wait_ms: 0,
-            min_bytes: 0,
-            max_bytes: 2_147_483_647,
-            max_records: 0,
-            batch_size: 0,
-            share_acquire_mode: 0,
-            is_renew_ack: false,
-            topics: Vec::new(),
-            forgotten_topics_data: Vec::new(),
-            unknown_tagged_fields: TaggedFields::default(),
+        fn is_flexible(version: ApiVersion) -> bool {
+            Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
         }
     }
-}
 
-impl KafkaMessage for ShareFetchRequest {
-    const NAME: &'static str = "ShareFetchRequest";
-    const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(1, 2);
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(1, 2));
-}
+    impl KafkaDecode for FetchTopic {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            let topic_id = decoder.read_uuid()?;
+            let partitions = {
+                let length = decoder.read_compact_array_len()?;
+                decoder.read_vec(length, |decoder| FetchPartition::decode(decoder, version))?
+            };
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
 
-impl KafkaRequest for ShareFetchRequest {
-    const API_KEY: ApiKey = ApiKey::new(78);
-}
-
-impl RequestResponsePair for ShareFetchRequest {
-    type Response = ShareFetchResponse;
-}
-
-impl KafkaDecode for ShareFetchRequest {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        crate::message::ensure_decode_version::<Self>(version)?;
-
-        let group_id = decoder.read_compact_nullable_string()?;
-        let member_id = decoder.read_compact_nullable_string()?;
-        let share_session_epoch = decoder.read_i32()?;
-        let max_wait_ms = decoder.read_i32()?;
-        let min_bytes = decoder.read_i32()?;
-        let max_bytes = decoder.read_i32()?;
-        let max_records = decoder.read_i32()?;
-        let batch_size = decoder.read_i32()?;
-        let share_acquire_mode = if version.value() >= 2 {
-            decoder.read_i8()?
-        } else {
-            0
-        };
-        let is_renew_ack = if version.value() >= 2 {
-            decoder.read_bool()?
-        } else {
-            false
-        };
-        let topics = {
-            let length = decoder.read_compact_array_len()?;
-            decoder.read_vec(length, |decoder| {
-                ShareFetchRequestFetchTopic::decode(decoder, version)
-            })?
-        };
-        let forgotten_topics_data = {
-            let length = decoder.read_compact_array_len()?;
-            decoder.read_vec(length, |decoder| {
-                ShareFetchRequestForgottenTopic::decode(decoder, version)
-            })?
-        };
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
-
-        Ok(Self {
-            group_id,
-            member_id,
-            share_session_epoch,
-            max_wait_ms,
-            min_bytes,
-            max_bytes,
-            max_records,
-            batch_size,
-            share_acquire_mode,
-            is_renew_ack,
-            topics,
-            forgotten_topics_data,
-            unknown_tagged_fields,
-        })
-    }
-}
-
-impl KafkaEncode for ShareFetchRequest {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        crate::message::ensure_encode_version::<Self>(version)?;
-
-        if version.value() < 2 && self.is_renew_ack {
-            return Err(EncodeError::FieldNotRepresentable {
-                message: Self::NAME,
-                field: "IsRenewAck",
-                version,
-            });
+            Ok(Self {
+                topic_id,
+                partitions,
+                unknown_tagged_fields,
+            })
         }
+    }
 
-        encoder.write_compact_nullable_string(self.group_id.as_ref())?;
-        encoder.write_compact_nullable_string(self.member_id.as_ref())?;
-        encoder.write_i32(self.share_session_epoch)?;
-        encoder.write_i32(self.max_wait_ms)?;
-        encoder.write_i32(self.min_bytes)?;
-        encoder.write_i32(self.max_bytes)?;
-        encoder.write_i32(self.max_records)?;
-        encoder.write_i32(self.batch_size)?;
-        if version.value() >= 2 {
-            encoder.write_i8(self.share_acquire_mode)?;
+    impl KafkaEncode for FetchTopic {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            encoder.write_uuid(self.topic_id)?;
+            encoder.write_compact_array_len(self.partitions.len())?;
+            for value in &self.partitions {
+                value.encode(encoder, version)?;
+            }
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "FetchTopic",
+                    version,
+                });
+            }
+
+            Ok(())
         }
-        if version.value() >= 2 {
-            encoder.write_bool(self.is_renew_ack)?;
+    }
+
+    /// `FetchPartition` as declared by the `ShareFetch` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    pub struct FetchPartition {
+        /// The partition index.
+        pub partition_index: i32,
+        /// Record batches to acknowledge.
+        pub acknowledgement_batches: Vec<AcknowledgementBatch>,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl FetchPartition {
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(1, 2));
+
+        fn is_flexible(version: ApiVersion) -> bool {
+            Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
         }
-        encoder.write_compact_array_len(self.topics.len())?;
-        for value in &self.topics {
-            value.encode(encoder, version)?;
+    }
+
+    impl KafkaDecode for FetchPartition {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            let partition_index = decoder.read_i32()?;
+            let acknowledgement_batches = {
+                let length = decoder.read_compact_array_len()?;
+                decoder.read_vec(length, |decoder| {
+                    AcknowledgementBatch::decode(decoder, version)
+                })?
+            };
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
+
+            Ok(Self {
+                partition_index,
+                acknowledgement_batches,
+                unknown_tagged_fields,
+            })
         }
-        encoder.write_compact_array_len(self.forgotten_topics_data.len())?;
-        for value in &self.forgotten_topics_data {
-            value.encode(encoder, version)?;
+    }
+
+    impl KafkaEncode for FetchPartition {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            encoder.write_i32(self.partition_index)?;
+            encoder.write_compact_array_len(self.acknowledgement_batches.len())?;
+            for value in &self.acknowledgement_batches {
+                value.encode(encoder, version)?;
+            }
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "FetchPartition",
+                    version,
+                });
+            }
+
+            Ok(())
         }
+    }
 
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: Self::NAME,
-                version,
-            });
+    /// `AcknowledgementBatch` as declared by the `ShareFetch` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    pub struct AcknowledgementBatch {
+        /// First offset of batch of records to acknowledge.
+        pub first_offset: i64,
+        /// Last offset (inclusive) of batch of records to acknowledge.
+        pub last_offset: i64,
+        /// Array of acknowledge types - 0:Gap,1:Accept,2:Release,3:Reject,4:Renew.
+        pub acknowledge_types: Vec<i8>,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl AcknowledgementBatch {
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(1, 2));
+
+        fn is_flexible(version: ApiVersion) -> bool {
+            Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
         }
-
-        Ok(())
     }
-}
 
-/// `ShareFetchableTopicResponse` as declared by the `ShareFetch` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct ShareFetchResponseShareFetchableTopicResponse {
-    /// The unique topic ID.
-    pub topic_id: Uuid,
-    /// The topic partitions.
-    pub partitions: Vec<ShareFetchResponsePartitionData>,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
+    impl KafkaDecode for AcknowledgementBatch {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            let first_offset = decoder.read_i64()?;
+            let last_offset = decoder.read_i64()?;
+            let acknowledge_types = {
+                let length = decoder.read_compact_array_len()?;
+                decoder.read_vec(length, Decoder::read_i8)?
+            };
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
 
-impl ShareFetchResponseShareFetchableTopicResponse {
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(1, 2));
-
-    fn is_flexible(version: ApiVersion) -> bool {
-        Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
-    }
-}
-
-impl KafkaDecode for ShareFetchResponseShareFetchableTopicResponse {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        let topic_id = decoder.read_uuid()?;
-        let partitions = {
-            let length = decoder.read_compact_array_len()?;
-            decoder.read_vec(length, |decoder| {
-                ShareFetchResponsePartitionData::decode(decoder, version)
-            })?
-        };
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
-
-        Ok(Self {
-            topic_id,
-            partitions,
-            unknown_tagged_fields,
-        })
-    }
-}
-
-impl KafkaEncode for ShareFetchResponseShareFetchableTopicResponse {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        encoder.write_uuid(self.topic_id)?;
-        encoder.write_compact_array_len(self.partitions.len())?;
-        for value in &self.partitions {
-            value.encode(encoder, version)?;
+            Ok(Self {
+                first_offset,
+                last_offset,
+                acknowledge_types,
+                unknown_tagged_fields,
+            })
         }
+    }
 
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: "ShareFetchResponseShareFetchableTopicResponse",
-                version,
-            });
+    impl KafkaEncode for AcknowledgementBatch {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            encoder.write_i64(self.first_offset)?;
+            encoder.write_i64(self.last_offset)?;
+            encoder.write_compact_array_len(self.acknowledge_types.len())?;
+            for value in &self.acknowledge_types {
+                encoder.write_i8(*value)?;
+            }
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "AcknowledgementBatch",
+                    version,
+                });
+            }
+
+            Ok(())
         }
-
-        Ok(())
     }
-}
 
-/// `PartitionData` as declared by the `ShareFetch` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct ShareFetchResponsePartitionData {
-    /// The partition index.
-    pub partition_index: i32,
-    /// The fetch error code, or 0 if there was no fetch error.
-    pub error_code: i16,
-    /// The fetch error message, or null if there was no fetch error.
-    pub error_message: Option<StrBytes>,
-    /// The acknowledge error code, or 0 if there was no acknowledge error.
-    pub acknowledge_error_code: i16,
-    /// The acknowledge error message, or null if there was no acknowledge error.
-    pub acknowledge_error_message: Option<StrBytes>,
-    /// The current leader of the partition.
-    pub current_leader: ShareFetchResponseLeaderIdAndEpoch,
-    /// The record data.
-    pub records: Bytes,
-    /// The acquired records.
-    pub acquired_records: Vec<ShareFetchResponseAcquiredRecords>,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
-
-impl ShareFetchResponsePartitionData {
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(1, 2));
-
-    fn is_flexible(version: ApiVersion) -> bool {
-        Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+    /// `ForgottenTopic` as declared by the `ShareFetch` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    pub struct ForgottenTopic {
+        /// The unique topic ID.
+        pub topic_id: Uuid,
+        /// The partitions indexes to forget.
+        pub partitions: Vec<i32>,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
     }
-}
 
-impl KafkaDecode for ShareFetchResponsePartitionData {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        let partition_index = decoder.read_i32()?;
-        let error_code = decoder.read_i16()?;
-        let error_message = decoder.read_compact_nullable_string()?;
-        let acknowledge_error_code = decoder.read_i16()?;
-        let acknowledge_error_message = decoder.read_compact_nullable_string()?;
-        let current_leader = ShareFetchResponseLeaderIdAndEpoch::decode(decoder, version)?;
-        let records = decoder.read_compact_bytes()?;
-        let acquired_records = {
-            let length = decoder.read_compact_array_len()?;
-            decoder.read_vec(length, |decoder| {
-                ShareFetchResponseAcquiredRecords::decode(decoder, version)
-            })?
-        };
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
+    impl ForgottenTopic {
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(1, 2));
 
-        Ok(Self {
-            partition_index,
-            error_code,
-            error_message,
-            acknowledge_error_code,
-            acknowledge_error_message,
-            current_leader,
-            records,
-            acquired_records,
-            unknown_tagged_fields,
-        })
-    }
-}
-
-impl KafkaEncode for ShareFetchResponsePartitionData {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        encoder.write_i32(self.partition_index)?;
-        encoder.write_i16(self.error_code)?;
-        encoder.write_compact_nullable_string(self.error_message.as_ref())?;
-        encoder.write_i16(self.acknowledge_error_code)?;
-        encoder.write_compact_nullable_string(self.acknowledge_error_message.as_ref())?;
-        self.current_leader.encode(encoder, version)?;
-        encoder.write_compact_bytes(&self.records)?;
-        encoder.write_compact_array_len(self.acquired_records.len())?;
-        for value in &self.acquired_records {
-            value.encode(encoder, version)?;
+        fn is_flexible(version: ApiVersion) -> bool {
+            Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
         }
+    }
 
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: "ShareFetchResponsePartitionData",
-                version,
-            });
+    impl KafkaDecode for ForgottenTopic {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            let topic_id = decoder.read_uuid()?;
+            let partitions = {
+                let length = decoder.read_compact_array_len()?;
+                decoder.read_vec(length, Decoder::read_i32)?
+            };
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
+
+            Ok(Self {
+                topic_id,
+                partitions,
+                unknown_tagged_fields,
+            })
         }
-
-        Ok(())
     }
-}
 
-/// `LeaderIdAndEpoch` as declared by the `ShareFetch` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct ShareFetchResponseLeaderIdAndEpoch {
-    /// The ID of the current leader or -1 if the leader is unknown.
-    pub leader_id: i32,
-    /// The latest known leader epoch.
-    pub leader_epoch: i32,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
+    impl KafkaEncode for ForgottenTopic {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            encoder.write_uuid(self.topic_id)?;
+            encoder.write_compact_array_len(self.partitions.len())?;
+            for value in &self.partitions {
+                encoder.write_i32(*value)?;
+            }
 
-impl ShareFetchResponseLeaderIdAndEpoch {
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(1, 2));
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "ForgottenTopic",
+                    version,
+                });
+            }
 
-    fn is_flexible(version: ApiVersion) -> bool {
-        Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
-    }
-}
-
-impl KafkaDecode for ShareFetchResponseLeaderIdAndEpoch {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        let leader_id = decoder.read_i32()?;
-        let leader_epoch = decoder.read_i32()?;
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
-
-        Ok(Self {
-            leader_id,
-            leader_epoch,
-            unknown_tagged_fields,
-        })
-    }
-}
-
-impl KafkaEncode for ShareFetchResponseLeaderIdAndEpoch {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        encoder.write_i32(self.leader_id)?;
-        encoder.write_i32(self.leader_epoch)?;
-
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: "ShareFetchResponseLeaderIdAndEpoch",
-                version,
-            });
+            Ok(())
         }
-
-        Ok(())
     }
-}
 
-/// `AcquiredRecords` as declared by the `ShareFetch` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct ShareFetchResponseAcquiredRecords {
-    /// The earliest offset in this batch of acquired records.
-    pub first_offset: i64,
-    /// The last offset of this batch of acquired records.
-    pub last_offset: i64,
-    /// The delivery count of this batch of acquired records.
-    pub delivery_count: i16,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
-
-impl ShareFetchResponseAcquiredRecords {
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(1, 2));
-
-    fn is_flexible(version: ApiVersion) -> bool {
-        Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+    /// Request body for the `ShareFetch` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Eq, PartialEq)]
+    pub struct ShareFetchRequest {
+        /// The group identifier.
+        pub group_id: Option<StrBytes>,
+        /// The member ID.
+        pub member_id: Option<StrBytes>,
+        /// The current share session epoch: 0 to open a share session; -1 to close it; otherwise increments for consecutive requests.
+        pub share_session_epoch: i32,
+        /// The maximum time in milliseconds to wait for the response.
+        pub max_wait_ms: i32,
+        /// The minimum bytes to accumulate in the response.
+        pub min_bytes: i32,
+        /// The maximum bytes to fetch. See KIP-74 for cases where this limit may not be honored.
+        pub max_bytes: i32,
+        /// The maximum number of records to fetch. This limit can be exceeded for alignment of batch boundaries.
+        pub max_records: i32,
+        /// The optimal number of records for batches of acquired records and acknowledgements.
+        pub batch_size: i32,
+        /// The acquire mode to control the fetch behavior - 0:batch-optimized,1:record-limit.
+        pub share_acquire_mode: i8,
+        /// Whether Renew type acknowledgements present in `AcknowledgementBatches`.
+        pub is_renew_ack: bool,
+        /// The topics to fetch.
+        pub topics: Vec<FetchTopic>,
+        /// The partitions to remove from this share session.
+        pub forgotten_topics_data: Vec<ForgottenTopic>,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
     }
-}
 
-impl KafkaDecode for ShareFetchResponseAcquiredRecords {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        let first_offset = decoder.read_i64()?;
-        let last_offset = decoder.read_i64()?;
-        let delivery_count = decoder.read_i16()?;
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
-
-        Ok(Self {
-            first_offset,
-            last_offset,
-            delivery_count,
-            unknown_tagged_fields,
-        })
-    }
-}
-
-impl KafkaEncode for ShareFetchResponseAcquiredRecords {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        encoder.write_i64(self.first_offset)?;
-        encoder.write_i64(self.last_offset)?;
-        encoder.write_i16(self.delivery_count)?;
-
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: "ShareFetchResponseAcquiredRecords",
-                version,
-            });
+    impl Default for ShareFetchRequest {
+        fn default() -> Self {
+            Self {
+                group_id: None,
+                member_id: Some(StrBytes::default()),
+                share_session_epoch: 0,
+                max_wait_ms: 0,
+                min_bytes: 0,
+                max_bytes: 2_147_483_647,
+                max_records: 0,
+                batch_size: 0,
+                share_acquire_mode: 0,
+                is_renew_ack: false,
+                topics: Vec::new(),
+                forgotten_topics_data: Vec::new(),
+                unknown_tagged_fields: TaggedFields::default(),
+            }
         }
-
-        Ok(())
     }
-}
 
-/// `NodeEndpoint` as declared by the `ShareFetch` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct ShareFetchResponseNodeEndpoint {
-    /// The ID of the associated node.
-    pub node_id: i32,
-    /// The node's hostname.
-    pub host: StrBytes,
-    /// The node's port.
-    pub port: i32,
-    /// The rack of the node, or null if it has not been assigned to a rack.
-    pub rack: Option<StrBytes>,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
-
-impl ShareFetchResponseNodeEndpoint {
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(1, 2));
-
-    fn is_flexible(version: ApiVersion) -> bool {
-        Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+    impl KafkaMessage for ShareFetchRequest {
+        const NAME: &'static str = "ShareFetchRequest";
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(1, 2);
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(1, 2));
     }
-}
 
-impl KafkaDecode for ShareFetchResponseNodeEndpoint {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        let node_id = decoder.read_i32()?;
-        let host = decoder.read_compact_string()?;
-        let port = decoder.read_i32()?;
-        let rack = decoder.read_compact_nullable_string()?;
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
-
-        Ok(Self {
-            node_id,
-            host,
-            port,
-            rack,
-            unknown_tagged_fields,
-        })
+    impl KafkaRequest for ShareFetchRequest {
+        const API_KEY: ApiKey = ApiKey::new(78);
     }
-}
 
-impl KafkaEncode for ShareFetchResponseNodeEndpoint {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        encoder.write_i32(self.node_id)?;
-        encoder.write_compact_string(&self.host)?;
-        encoder.write_i32(self.port)?;
-        encoder.write_compact_nullable_string(self.rack.as_ref())?;
+    impl RequestResponsePair for ShareFetchRequest {
+        type Response = super::ShareFetchResponse;
+    }
 
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: "ShareFetchResponseNodeEndpoint",
-                version,
-            });
+    impl KafkaDecode for ShareFetchRequest {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            crate::message::ensure_decode_version::<Self>(version)?;
+
+            let group_id = decoder.read_compact_nullable_string()?;
+            let member_id = decoder.read_compact_nullable_string()?;
+            let share_session_epoch = decoder.read_i32()?;
+            let max_wait_ms = decoder.read_i32()?;
+            let min_bytes = decoder.read_i32()?;
+            let max_bytes = decoder.read_i32()?;
+            let max_records = decoder.read_i32()?;
+            let batch_size = decoder.read_i32()?;
+            let share_acquire_mode = if version.value() >= 2 {
+                decoder.read_i8()?
+            } else {
+                0
+            };
+            let is_renew_ack = if version.value() >= 2 {
+                decoder.read_bool()?
+            } else {
+                false
+            };
+            let topics = {
+                let length = decoder.read_compact_array_len()?;
+                decoder.read_vec(length, |decoder| FetchTopic::decode(decoder, version))?
+            };
+            let forgotten_topics_data = {
+                let length = decoder.read_compact_array_len()?;
+                decoder.read_vec(length, |decoder| ForgottenTopic::decode(decoder, version))?
+            };
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
+
+            Ok(Self {
+                group_id,
+                member_id,
+                share_session_epoch,
+                max_wait_ms,
+                min_bytes,
+                max_bytes,
+                max_records,
+                batch_size,
+                share_acquire_mode,
+                is_renew_ack,
+                topics,
+                forgotten_topics_data,
+                unknown_tagged_fields,
+            })
         }
+    }
 
-        Ok(())
+    impl KafkaEncode for ShareFetchRequest {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            crate::message::ensure_encode_version::<Self>(version)?;
+
+            if version.value() < 2 && self.is_renew_ack {
+                return Err(EncodeError::FieldNotRepresentable {
+                    message: Self::NAME,
+                    field: "IsRenewAck",
+                    version,
+                });
+            }
+
+            encoder.write_compact_nullable_string(self.group_id.as_ref())?;
+            encoder.write_compact_nullable_string(self.member_id.as_ref())?;
+            encoder.write_i32(self.share_session_epoch)?;
+            encoder.write_i32(self.max_wait_ms)?;
+            encoder.write_i32(self.min_bytes)?;
+            encoder.write_i32(self.max_bytes)?;
+            encoder.write_i32(self.max_records)?;
+            encoder.write_i32(self.batch_size)?;
+            if version.value() >= 2 {
+                encoder.write_i8(self.share_acquire_mode)?;
+            }
+            if version.value() >= 2 {
+                encoder.write_bool(self.is_renew_ack)?;
+            }
+            encoder.write_compact_array_len(self.topics.len())?;
+            for value in &self.topics {
+                value.encode(encoder, version)?;
+            }
+            encoder.write_compact_array_len(self.forgotten_topics_data.len())?;
+            for value in &self.forgotten_topics_data {
+                value.encode(encoder, version)?;
+            }
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: Self::NAME,
+                    version,
+                });
+            }
+
+            Ok(())
+        }
     }
 }
 
-/// Response body for the `ShareFetch` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct ShareFetchResponse {
-    /// The duration in milliseconds for which the request was throttled due to a quota violation, or zero if the request did not violate any quota.
-    pub throttle_time_ms: i32,
-    /// The top-level response error code.
-    pub error_code: i16,
-    /// The top-level error message, or null if there was no error.
-    pub error_message: Option<StrBytes>,
-    /// The time in milliseconds for which the acquired records are locked.
-    pub acquisition_lock_timeout_ms: i32,
-    /// The response topics.
-    pub responses: Vec<ShareFetchResponseShareFetchableTopicResponse>,
-    /// Endpoints for all current leaders enumerated in `PartitionData` with error `NOT_LEADER_OR_FOLLOWER`.
-    pub node_endpoints: Vec<ShareFetchResponseNodeEndpoint>,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
+/// `ShareFetchResponse` and every struct it declares, under upstream's own names.
+///
+/// [`ShareFetchResponse`](crate::ShareFetchResponse) is re-exported flat, so this path never has to be
+/// written to name the message itself.
+pub mod share_fetch_response {
+    use kafka_wire_core::{
+        ApiKey, ApiVersion, Bytes, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder,
+        KafkaDecode, KafkaEncode, StrBytes, TaggedFields, Uuid, VersionRange,
+    };
 
-impl KafkaMessage for ShareFetchResponse {
-    const NAME: &'static str = "ShareFetchResponse";
-    const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(1, 2);
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(1, 2));
-}
+    use crate::{KafkaMessage, KafkaResponse};
 
-impl KafkaResponse for ShareFetchResponse {
-    const API_KEY: ApiKey = ApiKey::new(78);
-}
+    /// `ShareFetchableTopicResponse` as declared by the `ShareFetch` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    pub struct ShareFetchableTopicResponse {
+        /// The unique topic ID.
+        pub topic_id: Uuid,
+        /// The topic partitions.
+        pub partitions: Vec<PartitionData>,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
+    }
 
-impl KafkaDecode for ShareFetchResponse {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        crate::message::ensure_decode_version::<Self>(version)?;
+    impl ShareFetchableTopicResponse {
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(1, 2));
 
-        let throttle_time_ms = decoder.read_i32()?;
-        let error_code = decoder.read_i16()?;
-        let error_message = decoder.read_compact_nullable_string()?;
-        let acquisition_lock_timeout_ms = decoder.read_i32()?;
-        let responses = {
-            let length = decoder.read_compact_array_len()?;
-            decoder.read_vec(length, |decoder| {
-                ShareFetchResponseShareFetchableTopicResponse::decode(decoder, version)
-            })?
-        };
-        let node_endpoints = {
-            let length = decoder.read_compact_array_len()?;
-            decoder.read_vec(length, |decoder| {
-                ShareFetchResponseNodeEndpoint::decode(decoder, version)
-            })?
-        };
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
+        fn is_flexible(version: ApiVersion) -> bool {
+            Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+        }
+    }
 
-        Ok(Self {
-            throttle_time_ms,
-            error_code,
-            error_message,
-            acquisition_lock_timeout_ms,
-            responses,
-            node_endpoints,
-            unknown_tagged_fields,
-        })
+    impl KafkaDecode for ShareFetchableTopicResponse {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            let topic_id = decoder.read_uuid()?;
+            let partitions = {
+                let length = decoder.read_compact_array_len()?;
+                decoder.read_vec(length, |decoder| PartitionData::decode(decoder, version))?
+            };
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
+
+            Ok(Self {
+                topic_id,
+                partitions,
+                unknown_tagged_fields,
+            })
+        }
+    }
+
+    impl KafkaEncode for ShareFetchableTopicResponse {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            encoder.write_uuid(self.topic_id)?;
+            encoder.write_compact_array_len(self.partitions.len())?;
+            for value in &self.partitions {
+                value.encode(encoder, version)?;
+            }
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "ShareFetchableTopicResponse",
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+
+    /// `PartitionData` as declared by the `ShareFetch` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    pub struct PartitionData {
+        /// The partition index.
+        pub partition_index: i32,
+        /// The fetch error code, or 0 if there was no fetch error.
+        pub error_code: i16,
+        /// The fetch error message, or null if there was no fetch error.
+        pub error_message: Option<StrBytes>,
+        /// The acknowledge error code, or 0 if there was no acknowledge error.
+        pub acknowledge_error_code: i16,
+        /// The acknowledge error message, or null if there was no acknowledge error.
+        pub acknowledge_error_message: Option<StrBytes>,
+        /// The current leader of the partition.
+        pub current_leader: LeaderIdAndEpoch,
+        /// The record data.
+        pub records: Bytes,
+        /// The acquired records.
+        pub acquired_records: Vec<AcquiredRecords>,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl PartitionData {
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(1, 2));
+
+        fn is_flexible(version: ApiVersion) -> bool {
+            Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+        }
+    }
+
+    impl KafkaDecode for PartitionData {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            let partition_index = decoder.read_i32()?;
+            let error_code = decoder.read_i16()?;
+            let error_message = decoder.read_compact_nullable_string()?;
+            let acknowledge_error_code = decoder.read_i16()?;
+            let acknowledge_error_message = decoder.read_compact_nullable_string()?;
+            let current_leader = LeaderIdAndEpoch::decode(decoder, version)?;
+            let records = decoder.read_compact_bytes()?;
+            let acquired_records = {
+                let length = decoder.read_compact_array_len()?;
+                decoder.read_vec(length, |decoder| AcquiredRecords::decode(decoder, version))?
+            };
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
+
+            Ok(Self {
+                partition_index,
+                error_code,
+                error_message,
+                acknowledge_error_code,
+                acknowledge_error_message,
+                current_leader,
+                records,
+                acquired_records,
+                unknown_tagged_fields,
+            })
+        }
+    }
+
+    impl KafkaEncode for PartitionData {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            encoder.write_i32(self.partition_index)?;
+            encoder.write_i16(self.error_code)?;
+            encoder.write_compact_nullable_string(self.error_message.as_ref())?;
+            encoder.write_i16(self.acknowledge_error_code)?;
+            encoder.write_compact_nullable_string(self.acknowledge_error_message.as_ref())?;
+            self.current_leader.encode(encoder, version)?;
+            encoder.write_compact_bytes(&self.records)?;
+            encoder.write_compact_array_len(self.acquired_records.len())?;
+            for value in &self.acquired_records {
+                value.encode(encoder, version)?;
+            }
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "PartitionData",
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+
+    /// `LeaderIdAndEpoch` as declared by the `ShareFetch` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    pub struct LeaderIdAndEpoch {
+        /// The ID of the current leader or -1 if the leader is unknown.
+        pub leader_id: i32,
+        /// The latest known leader epoch.
+        pub leader_epoch: i32,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl LeaderIdAndEpoch {
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(1, 2));
+
+        fn is_flexible(version: ApiVersion) -> bool {
+            Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+        }
+    }
+
+    impl KafkaDecode for LeaderIdAndEpoch {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            let leader_id = decoder.read_i32()?;
+            let leader_epoch = decoder.read_i32()?;
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
+
+            Ok(Self {
+                leader_id,
+                leader_epoch,
+                unknown_tagged_fields,
+            })
+        }
+    }
+
+    impl KafkaEncode for LeaderIdAndEpoch {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            encoder.write_i32(self.leader_id)?;
+            encoder.write_i32(self.leader_epoch)?;
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "LeaderIdAndEpoch",
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+
+    /// `AcquiredRecords` as declared by the `ShareFetch` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    pub struct AcquiredRecords {
+        /// The earliest offset in this batch of acquired records.
+        pub first_offset: i64,
+        /// The last offset of this batch of acquired records.
+        pub last_offset: i64,
+        /// The delivery count of this batch of acquired records.
+        pub delivery_count: i16,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl AcquiredRecords {
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(1, 2));
+
+        fn is_flexible(version: ApiVersion) -> bool {
+            Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+        }
+    }
+
+    impl KafkaDecode for AcquiredRecords {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            let first_offset = decoder.read_i64()?;
+            let last_offset = decoder.read_i64()?;
+            let delivery_count = decoder.read_i16()?;
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
+
+            Ok(Self {
+                first_offset,
+                last_offset,
+                delivery_count,
+                unknown_tagged_fields,
+            })
+        }
+    }
+
+    impl KafkaEncode for AcquiredRecords {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            encoder.write_i64(self.first_offset)?;
+            encoder.write_i64(self.last_offset)?;
+            encoder.write_i16(self.delivery_count)?;
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "AcquiredRecords",
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+
+    /// `NodeEndpoint` as declared by the `ShareFetch` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    pub struct NodeEndpoint {
+        /// The ID of the associated node.
+        pub node_id: i32,
+        /// The node's hostname.
+        pub host: StrBytes,
+        /// The node's port.
+        pub port: i32,
+        /// The rack of the node, or null if it has not been assigned to a rack.
+        pub rack: Option<StrBytes>,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl NodeEndpoint {
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(1, 2));
+
+        fn is_flexible(version: ApiVersion) -> bool {
+            Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+        }
+    }
+
+    impl KafkaDecode for NodeEndpoint {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            let node_id = decoder.read_i32()?;
+            let host = decoder.read_compact_string()?;
+            let port = decoder.read_i32()?;
+            let rack = decoder.read_compact_nullable_string()?;
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
+
+            Ok(Self {
+                node_id,
+                host,
+                port,
+                rack,
+                unknown_tagged_fields,
+            })
+        }
+    }
+
+    impl KafkaEncode for NodeEndpoint {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            encoder.write_i32(self.node_id)?;
+            encoder.write_compact_string(&self.host)?;
+            encoder.write_i32(self.port)?;
+            encoder.write_compact_nullable_string(self.rack.as_ref())?;
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "NodeEndpoint",
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+
+    /// Response body for the `ShareFetch` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    pub struct ShareFetchResponse {
+        /// The duration in milliseconds for which the request was throttled due to a quota violation, or zero if the request did not violate any quota.
+        pub throttle_time_ms: i32,
+        /// The top-level response error code.
+        pub error_code: i16,
+        /// The top-level error message, or null if there was no error.
+        pub error_message: Option<StrBytes>,
+        /// The time in milliseconds for which the acquired records are locked.
+        pub acquisition_lock_timeout_ms: i32,
+        /// The response topics.
+        pub responses: Vec<ShareFetchableTopicResponse>,
+        /// Endpoints for all current leaders enumerated in `PartitionData` with error `NOT_LEADER_OR_FOLLOWER`.
+        pub node_endpoints: Vec<NodeEndpoint>,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl KafkaMessage for ShareFetchResponse {
+        const NAME: &'static str = "ShareFetchResponse";
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(1, 2);
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(1, 2));
+    }
+
+    impl KafkaResponse for ShareFetchResponse {
+        const API_KEY: ApiKey = ApiKey::new(78);
+    }
+
+    impl KafkaDecode for ShareFetchResponse {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            crate::message::ensure_decode_version::<Self>(version)?;
+
+            let throttle_time_ms = decoder.read_i32()?;
+            let error_code = decoder.read_i16()?;
+            let error_message = decoder.read_compact_nullable_string()?;
+            let acquisition_lock_timeout_ms = decoder.read_i32()?;
+            let responses = {
+                let length = decoder.read_compact_array_len()?;
+                decoder.read_vec(length, |decoder| {
+                    ShareFetchableTopicResponse::decode(decoder, version)
+                })?
+            };
+            let node_endpoints = {
+                let length = decoder.read_compact_array_len()?;
+                decoder.read_vec(length, |decoder| NodeEndpoint::decode(decoder, version))?
+            };
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
+
+            Ok(Self {
+                throttle_time_ms,
+                error_code,
+                error_message,
+                acquisition_lock_timeout_ms,
+                responses,
+                node_endpoints,
+                unknown_tagged_fields,
+            })
+        }
+    }
+
+    impl KafkaEncode for ShareFetchResponse {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            crate::message::ensure_encode_version::<Self>(version)?;
+
+            encoder.write_i32(self.throttle_time_ms)?;
+            encoder.write_i16(self.error_code)?;
+            encoder.write_compact_nullable_string(self.error_message.as_ref())?;
+            encoder.write_i32(self.acquisition_lock_timeout_ms)?;
+            encoder.write_compact_array_len(self.responses.len())?;
+            for value in &self.responses {
+                value.encode(encoder, version)?;
+            }
+            encoder.write_compact_array_len(self.node_endpoints.len())?;
+            for value in &self.node_endpoints {
+                value.encode(encoder, version)?;
+            }
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: Self::NAME,
+                    version,
+                });
+            }
+
+            Ok(())
+        }
     }
 }
 
-impl KafkaEncode for ShareFetchResponse {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        crate::message::ensure_encode_version::<Self>(version)?;
+use kafka_wire_core::VersionRange;
 
-        encoder.write_i32(self.throttle_time_ms)?;
-        encoder.write_i16(self.error_code)?;
-        encoder.write_compact_nullable_string(self.error_message.as_ref())?;
-        encoder.write_i32(self.acquisition_lock_timeout_ms)?;
-        encoder.write_compact_array_len(self.responses.len())?;
-        for value in &self.responses {
-            value.encode(encoder, version)?;
-        }
-        encoder.write_compact_array_len(self.node_endpoints.len())?;
-        for value in &self.node_endpoints {
-            value.encode(encoder, version)?;
-        }
+use crate::{MessageDescriptor, MessageDirection};
 
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: Self::NAME,
-                version,
-            });
-        }
-
-        Ok(())
-    }
-}
+pub use share_fetch_request::ShareFetchRequest;
+pub use share_fetch_response::ShareFetchResponse;
 
 /// Static metadata for [`ShareFetchRequest`].
 pub const SHARE_FETCH_REQUEST_DESCRIPTOR: MessageDescriptor = MessageDescriptor::new(

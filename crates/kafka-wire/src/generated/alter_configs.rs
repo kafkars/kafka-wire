@@ -5,456 +5,477 @@
 //! Request SHA-256: `c5d0cd20bb6be791f1cd17a740b9e66a201ef35ea7ba9ab0f0a1c2e387cd2d84`.
 //! Response SHA-256: `fee278e79937d341e4b99e5929450e2bce638355af50acf616325a8c8207324a`.
 
-use kafka_wire_core::{
-    ApiKey, ApiVersion, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
-    KafkaEncode, StrBytes, TaggedFields, VersionRange,
-};
+/// `AlterConfigsRequest` and every struct it declares, under upstream's own names.
+///
+/// [`AlterConfigsRequest`](crate::AlterConfigsRequest) is re-exported flat, so this path never has to be
+/// written to name the message itself.
+pub mod alter_configs_request {
+    use kafka_wire_core::{
+        ApiKey, ApiVersion, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
+        KafkaEncode, StrBytes, TaggedFields, VersionRange,
+    };
 
-use crate::{
-    KafkaMessage, KafkaRequest, KafkaResponse, MessageDescriptor, MessageDirection,
-    RequestResponsePair,
-};
+    use crate::{KafkaMessage, KafkaRequest, RequestResponsePair};
 
-/// `AlterConfigsResource` as declared by the `AlterConfigs` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct AlterConfigsRequestResource {
-    /// The resource type.
-    pub resource_type: i8,
-    /// The resource name.
-    pub resource_name: StrBytes,
-    /// The configurations.
-    pub configs: Vec<AlterConfigsRequestAlterableConfig>,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
-
-impl AlterConfigsRequestResource {
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(2, 2));
-
-    fn is_flexible(version: ApiVersion) -> bool {
-        Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+    /// `AlterConfigsResource` as declared by the `AlterConfigs` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    pub struct AlterConfigsResource {
+        /// The resource type.
+        pub resource_type: i8,
+        /// The resource name.
+        pub resource_name: StrBytes,
+        /// The configurations.
+        pub configs: Vec<AlterableConfig>,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
     }
-}
 
-impl KafkaDecode for AlterConfigsRequestResource {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        let resource_type = decoder.read_i8()?;
-        let resource_name = if Self::is_flexible(version) {
-            decoder.read_compact_string()?
-        } else {
-            decoder.read_string()?
-        };
-        let configs = {
-            let length = if Self::is_flexible(version) {
-                decoder.read_compact_array_len()?
+    impl AlterConfigsResource {
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(2, 2));
+
+        fn is_flexible(version: ApiVersion) -> bool {
+            Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+        }
+    }
+
+    impl KafkaDecode for AlterConfigsResource {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            let resource_type = decoder.read_i8()?;
+            let resource_name = if Self::is_flexible(version) {
+                decoder.read_compact_string()?
             } else {
-                decoder.read_array_len()?
+                decoder.read_string()?
             };
-            decoder.read_vec(length, |decoder| {
-                AlterConfigsRequestAlterableConfig::decode(decoder, version)
-            })?
-        };
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
-
-        Ok(Self {
-            resource_type,
-            resource_name,
-            configs,
-            unknown_tagged_fields,
-        })
-    }
-}
-
-impl KafkaEncode for AlterConfigsRequestResource {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        encoder.write_i8(self.resource_type)?;
-        if Self::is_flexible(version) {
-            encoder.write_compact_string(&self.resource_name)?;
-        } else {
-            encoder.write_string(&self.resource_name)?;
-        }
-        if Self::is_flexible(version) {
-            encoder.write_compact_array_len(self.configs.len())?;
-        } else {
-            encoder.write_array_len(self.configs.len())?;
-        }
-        for value in &self.configs {
-            value.encode(encoder, version)?;
-        }
-
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: "AlterConfigsRequestResource",
-                version,
-            });
-        }
-
-        Ok(())
-    }
-}
-
-/// `AlterableConfig` as declared by the `AlterConfigs` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct AlterConfigsRequestAlterableConfig {
-    /// The configuration key name.
-    pub name: StrBytes,
-    /// The value to set for the configuration key.
-    pub value: Option<StrBytes>,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
-
-impl AlterConfigsRequestAlterableConfig {
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(2, 2));
-
-    fn is_flexible(version: ApiVersion) -> bool {
-        Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
-    }
-}
-
-impl Default for AlterConfigsRequestAlterableConfig {
-    fn default() -> Self {
-        Self {
-            name: StrBytes::default(),
-            value: Some(StrBytes::default()),
-            unknown_tagged_fields: TaggedFields::default(),
-        }
-    }
-}
-
-impl KafkaDecode for AlterConfigsRequestAlterableConfig {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        let name = if Self::is_flexible(version) {
-            decoder.read_compact_string()?
-        } else {
-            decoder.read_string()?
-        };
-        let value = if Self::is_flexible(version) {
-            decoder.read_compact_nullable_string()?
-        } else {
-            decoder.read_nullable_string()?
-        };
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
-
-        Ok(Self {
-            name,
-            value,
-            unknown_tagged_fields,
-        })
-    }
-}
-
-impl KafkaEncode for AlterConfigsRequestAlterableConfig {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        if Self::is_flexible(version) {
-            encoder.write_compact_string(&self.name)?;
-        } else {
-            encoder.write_string(&self.name)?;
-        }
-        if Self::is_flexible(version) {
-            encoder.write_compact_nullable_string(self.value.as_ref())?;
-        } else {
-            encoder.write_nullable_string(self.value.as_ref())?;
-        }
-
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: "AlterConfigsRequestAlterableConfig",
-                version,
-            });
-        }
-
-        Ok(())
-    }
-}
-
-/// Request body for the `AlterConfigs` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct AlterConfigsRequest {
-    /// The updates for each resource.
-    pub resources: Vec<AlterConfigsRequestResource>,
-    /// True if we should validate the request, but not change the configurations.
-    pub validate_only: bool,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
-
-impl KafkaMessage for AlterConfigsRequest {
-    const NAME: &'static str = "AlterConfigsRequest";
-    const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 2);
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(2, 2));
-}
-
-impl KafkaRequest for AlterConfigsRequest {
-    const API_KEY: ApiKey = ApiKey::new(33);
-}
-
-impl RequestResponsePair for AlterConfigsRequest {
-    type Response = AlterConfigsResponse;
-}
-
-impl KafkaDecode for AlterConfigsRequest {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        crate::message::ensure_decode_version::<Self>(version)?;
-
-        let resources = {
-            let length = if Self::is_flexible(version) {
-                decoder.read_compact_array_len()?
+            let configs = {
+                let length = if Self::is_flexible(version) {
+                    decoder.read_compact_array_len()?
+                } else {
+                    decoder.read_array_len()?
+                };
+                decoder.read_vec(length, |decoder| AlterableConfig::decode(decoder, version))?
+            };
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
             } else {
-                decoder.read_array_len()?
+                TaggedFields::default()
             };
-            decoder.read_vec(length, |decoder| {
-                AlterConfigsRequestResource::decode(decoder, version)
-            })?
-        };
-        let validate_only = decoder.read_bool()?;
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
 
-        Ok(Self {
-            resources,
-            validate_only,
-            unknown_tagged_fields,
-        })
-    }
-}
-
-impl KafkaEncode for AlterConfigsRequest {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        crate::message::ensure_encode_version::<Self>(version)?;
-
-        if Self::is_flexible(version) {
-            encoder.write_compact_array_len(self.resources.len())?;
-        } else {
-            encoder.write_array_len(self.resources.len())?;
-        }
-        for value in &self.resources {
-            value.encode(encoder, version)?;
-        }
-        encoder.write_bool(self.validate_only)?;
-
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: Self::NAME,
-                version,
-            });
-        }
-
-        Ok(())
-    }
-}
-
-/// `AlterConfigsResourceResponse` as declared by the `AlterConfigs` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct AlterConfigsResponseResourceResponse {
-    /// The resource error code.
-    pub error_code: i16,
-    /// The resource error message, or null if there was no error.
-    pub error_message: Option<StrBytes>,
-    /// The resource type.
-    pub resource_type: i8,
-    /// The resource name.
-    pub resource_name: StrBytes,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
-
-impl AlterConfigsResponseResourceResponse {
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(2, 2));
-
-    fn is_flexible(version: ApiVersion) -> bool {
-        Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
-    }
-}
-
-impl Default for AlterConfigsResponseResourceResponse {
-    fn default() -> Self {
-        Self {
-            error_code: 0,
-            error_message: Some(StrBytes::default()),
-            resource_type: 0,
-            resource_name: StrBytes::default(),
-            unknown_tagged_fields: TaggedFields::default(),
+            Ok(Self {
+                resource_type,
+                resource_name,
+                configs,
+                unknown_tagged_fields,
+            })
         }
     }
-}
 
-impl KafkaDecode for AlterConfigsResponseResourceResponse {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        let error_code = decoder.read_i16()?;
-        let error_message = if Self::is_flexible(version) {
-            decoder.read_compact_nullable_string()?
-        } else {
-            decoder.read_nullable_string()?
-        };
-        let resource_type = decoder.read_i8()?;
-        let resource_name = if Self::is_flexible(version) {
-            decoder.read_compact_string()?
-        } else {
-            decoder.read_string()?
-        };
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
-
-        Ok(Self {
-            error_code,
-            error_message,
-            resource_type,
-            resource_name,
-            unknown_tagged_fields,
-        })
-    }
-}
-
-impl KafkaEncode for AlterConfigsResponseResourceResponse {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        encoder.write_i16(self.error_code)?;
-        if Self::is_flexible(version) {
-            encoder.write_compact_nullable_string(self.error_message.as_ref())?;
-        } else {
-            encoder.write_nullable_string(self.error_message.as_ref())?;
-        }
-        encoder.write_i8(self.resource_type)?;
-        if Self::is_flexible(version) {
-            encoder.write_compact_string(&self.resource_name)?;
-        } else {
-            encoder.write_string(&self.resource_name)?;
-        }
-
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: "AlterConfigsResponseResourceResponse",
-                version,
-            });
-        }
-
-        Ok(())
-    }
-}
-
-/// Response body for the `AlterConfigs` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct AlterConfigsResponse {
-    /// Duration in milliseconds for which the request was throttled due to a quota violation, or zero if the request did not violate any quota.
-    pub throttle_time_ms: i32,
-    /// The responses for each resource.
-    pub responses: Vec<AlterConfigsResponseResourceResponse>,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
-
-impl KafkaMessage for AlterConfigsResponse {
-    const NAME: &'static str = "AlterConfigsResponse";
-    const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 2);
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(2, 2));
-}
-
-impl KafkaResponse for AlterConfigsResponse {
-    const API_KEY: ApiKey = ApiKey::new(33);
-}
-
-impl KafkaDecode for AlterConfigsResponse {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        crate::message::ensure_decode_version::<Self>(version)?;
-
-        let throttle_time_ms = decoder.read_i32()?;
-        let responses = {
-            let length = if Self::is_flexible(version) {
-                decoder.read_compact_array_len()?
+    impl KafkaEncode for AlterConfigsResource {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            encoder.write_i8(self.resource_type)?;
+            if Self::is_flexible(version) {
+                encoder.write_compact_string(&self.resource_name)?;
             } else {
-                decoder.read_array_len()?
+                encoder.write_string(&self.resource_name)?;
+            }
+            if Self::is_flexible(version) {
+                encoder.write_compact_array_len(self.configs.len())?;
+            } else {
+                encoder.write_array_len(self.configs.len())?;
+            }
+            for value in &self.configs {
+                value.encode(encoder, version)?;
+            }
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "AlterConfigsResource",
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+
+    /// `AlterableConfig` as declared by the `AlterConfigs` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Eq, PartialEq)]
+    pub struct AlterableConfig {
+        /// The configuration key name.
+        pub name: StrBytes,
+        /// The value to set for the configuration key.
+        pub value: Option<StrBytes>,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl AlterableConfig {
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(2, 2));
+
+        fn is_flexible(version: ApiVersion) -> bool {
+            Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+        }
+    }
+
+    impl Default for AlterableConfig {
+        fn default() -> Self {
+            Self {
+                name: StrBytes::default(),
+                value: Some(StrBytes::default()),
+                unknown_tagged_fields: TaggedFields::default(),
+            }
+        }
+    }
+
+    impl KafkaDecode for AlterableConfig {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            let name = if Self::is_flexible(version) {
+                decoder.read_compact_string()?
+            } else {
+                decoder.read_string()?
             };
-            decoder.read_vec(length, |decoder| {
-                AlterConfigsResponseResourceResponse::decode(decoder, version)
-            })?
-        };
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
+            let value = if Self::is_flexible(version) {
+                decoder.read_compact_nullable_string()?
+            } else {
+                decoder.read_nullable_string()?
+            };
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
 
-        Ok(Self {
-            throttle_time_ms,
-            responses,
-            unknown_tagged_fields,
-        })
+            Ok(Self {
+                name,
+                value,
+                unknown_tagged_fields,
+            })
+        }
+    }
+
+    impl KafkaEncode for AlterableConfig {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            if Self::is_flexible(version) {
+                encoder.write_compact_string(&self.name)?;
+            } else {
+                encoder.write_string(&self.name)?;
+            }
+            if Self::is_flexible(version) {
+                encoder.write_compact_nullable_string(self.value.as_ref())?;
+            } else {
+                encoder.write_nullable_string(self.value.as_ref())?;
+            }
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "AlterableConfig",
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+
+    /// Request body for the `AlterConfigs` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    pub struct AlterConfigsRequest {
+        /// The updates for each resource.
+        pub resources: Vec<AlterConfigsResource>,
+        /// True if we should validate the request, but not change the configurations.
+        pub validate_only: bool,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl KafkaMessage for AlterConfigsRequest {
+        const NAME: &'static str = "AlterConfigsRequest";
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 2);
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(2, 2));
+    }
+
+    impl KafkaRequest for AlterConfigsRequest {
+        const API_KEY: ApiKey = ApiKey::new(33);
+    }
+
+    impl RequestResponsePair for AlterConfigsRequest {
+        type Response = super::AlterConfigsResponse;
+    }
+
+    impl KafkaDecode for AlterConfigsRequest {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            crate::message::ensure_decode_version::<Self>(version)?;
+
+            let resources = {
+                let length = if Self::is_flexible(version) {
+                    decoder.read_compact_array_len()?
+                } else {
+                    decoder.read_array_len()?
+                };
+                decoder.read_vec(length, |decoder| {
+                    AlterConfigsResource::decode(decoder, version)
+                })?
+            };
+            let validate_only = decoder.read_bool()?;
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
+
+            Ok(Self {
+                resources,
+                validate_only,
+                unknown_tagged_fields,
+            })
+        }
+    }
+
+    impl KafkaEncode for AlterConfigsRequest {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            crate::message::ensure_encode_version::<Self>(version)?;
+
+            if Self::is_flexible(version) {
+                encoder.write_compact_array_len(self.resources.len())?;
+            } else {
+                encoder.write_array_len(self.resources.len())?;
+            }
+            for value in &self.resources {
+                value.encode(encoder, version)?;
+            }
+            encoder.write_bool(self.validate_only)?;
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: Self::NAME,
+                    version,
+                });
+            }
+
+            Ok(())
+        }
     }
 }
 
-impl KafkaEncode for AlterConfigsResponse {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        crate::message::ensure_encode_version::<Self>(version)?;
+/// `AlterConfigsResponse` and every struct it declares, under upstream's own names.
+///
+/// [`AlterConfigsResponse`](crate::AlterConfigsResponse) is re-exported flat, so this path never has to be
+/// written to name the message itself.
+pub mod alter_configs_response {
+    use kafka_wire_core::{
+        ApiKey, ApiVersion, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
+        KafkaEncode, StrBytes, TaggedFields, VersionRange,
+    };
 
-        encoder.write_i32(self.throttle_time_ms)?;
-        if Self::is_flexible(version) {
-            encoder.write_compact_array_len(self.responses.len())?;
-        } else {
-            encoder.write_array_len(self.responses.len())?;
-        }
-        for value in &self.responses {
-            value.encode(encoder, version)?;
-        }
+    use crate::{KafkaMessage, KafkaResponse};
 
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: Self::NAME,
-                version,
-            });
-        }
+    /// `AlterConfigsResourceResponse` as declared by the `AlterConfigs` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Eq, PartialEq)]
+    pub struct AlterConfigsResourceResponse {
+        /// The resource error code.
+        pub error_code: i16,
+        /// The resource error message, or null if there was no error.
+        pub error_message: Option<StrBytes>,
+        /// The resource type.
+        pub resource_type: i8,
+        /// The resource name.
+        pub resource_name: StrBytes,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
+    }
 
-        Ok(())
+    impl AlterConfigsResourceResponse {
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(2, 2));
+
+        fn is_flexible(version: ApiVersion) -> bool {
+            Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+        }
+    }
+
+    impl Default for AlterConfigsResourceResponse {
+        fn default() -> Self {
+            Self {
+                error_code: 0,
+                error_message: Some(StrBytes::default()),
+                resource_type: 0,
+                resource_name: StrBytes::default(),
+                unknown_tagged_fields: TaggedFields::default(),
+            }
+        }
+    }
+
+    impl KafkaDecode for AlterConfigsResourceResponse {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            let error_code = decoder.read_i16()?;
+            let error_message = if Self::is_flexible(version) {
+                decoder.read_compact_nullable_string()?
+            } else {
+                decoder.read_nullable_string()?
+            };
+            let resource_type = decoder.read_i8()?;
+            let resource_name = if Self::is_flexible(version) {
+                decoder.read_compact_string()?
+            } else {
+                decoder.read_string()?
+            };
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
+
+            Ok(Self {
+                error_code,
+                error_message,
+                resource_type,
+                resource_name,
+                unknown_tagged_fields,
+            })
+        }
+    }
+
+    impl KafkaEncode for AlterConfigsResourceResponse {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            encoder.write_i16(self.error_code)?;
+            if Self::is_flexible(version) {
+                encoder.write_compact_nullable_string(self.error_message.as_ref())?;
+            } else {
+                encoder.write_nullable_string(self.error_message.as_ref())?;
+            }
+            encoder.write_i8(self.resource_type)?;
+            if Self::is_flexible(version) {
+                encoder.write_compact_string(&self.resource_name)?;
+            } else {
+                encoder.write_string(&self.resource_name)?;
+            }
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "AlterConfigsResourceResponse",
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+
+    /// Response body for the `AlterConfigs` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    pub struct AlterConfigsResponse {
+        /// Duration in milliseconds for which the request was throttled due to a quota violation, or zero if the request did not violate any quota.
+        pub throttle_time_ms: i32,
+        /// The responses for each resource.
+        pub responses: Vec<AlterConfigsResourceResponse>,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl KafkaMessage for AlterConfigsResponse {
+        const NAME: &'static str = "AlterConfigsResponse";
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 2);
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(2, 2));
+    }
+
+    impl KafkaResponse for AlterConfigsResponse {
+        const API_KEY: ApiKey = ApiKey::new(33);
+    }
+
+    impl KafkaDecode for AlterConfigsResponse {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            crate::message::ensure_decode_version::<Self>(version)?;
+
+            let throttle_time_ms = decoder.read_i32()?;
+            let responses = {
+                let length = if Self::is_flexible(version) {
+                    decoder.read_compact_array_len()?
+                } else {
+                    decoder.read_array_len()?
+                };
+                decoder.read_vec(length, |decoder| {
+                    AlterConfigsResourceResponse::decode(decoder, version)
+                })?
+            };
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
+
+            Ok(Self {
+                throttle_time_ms,
+                responses,
+                unknown_tagged_fields,
+            })
+        }
+    }
+
+    impl KafkaEncode for AlterConfigsResponse {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            crate::message::ensure_encode_version::<Self>(version)?;
+
+            encoder.write_i32(self.throttle_time_ms)?;
+            if Self::is_flexible(version) {
+                encoder.write_compact_array_len(self.responses.len())?;
+            } else {
+                encoder.write_array_len(self.responses.len())?;
+            }
+            for value in &self.responses {
+                value.encode(encoder, version)?;
+            }
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: Self::NAME,
+                    version,
+                });
+            }
+
+            Ok(())
+        }
     }
 }
+
+use kafka_wire_core::VersionRange;
+
+use crate::{MessageDescriptor, MessageDirection};
+
+pub use alter_configs_request::AlterConfigsRequest;
+pub use alter_configs_response::AlterConfigsResponse;
 
 /// Static metadata for [`AlterConfigsRequest`].
 pub const ALTER_CONFIGS_REQUEST_DESCRIPTOR: MessageDescriptor = MessageDescriptor::new(

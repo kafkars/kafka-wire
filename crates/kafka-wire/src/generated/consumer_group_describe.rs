@@ -5,555 +5,572 @@
 //! Request SHA-256: `1dc71c7c3d2241d26a76edc107732764e878945a9b1d392cbb3b7280252993c6`.
 //! Response SHA-256: `7844fa9094a7d7e023697f15a777cf1be2be391e52674c3af56c8e3b7ab0105e`.
 
-use kafka_wire_core::{
-    ApiKey, ApiVersion, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
-    KafkaEncode, StrBytes, TaggedFields, Uuid, VersionRange,
-};
+/// `ConsumerGroupDescribeRequest` and every struct it declares, under upstream's own names.
+///
+/// [`ConsumerGroupDescribeRequest`](crate::ConsumerGroupDescribeRequest) is re-exported flat, so this path never has to be
+/// written to name the message itself.
+pub mod consumer_group_describe_request {
+    use kafka_wire_core::{
+        ApiKey, ApiVersion, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
+        KafkaEncode, StrBytes, TaggedFields, VersionRange,
+    };
 
-use crate::{
-    KafkaMessage, KafkaRequest, KafkaResponse, MessageDescriptor, MessageDirection,
-    RequestResponsePair,
-};
+    use crate::{KafkaMessage, KafkaRequest, RequestResponsePair};
 
-/// Request body for the `ConsumerGroupDescribe` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct ConsumerGroupDescribeRequest {
-    /// The ids of the groups to describe.
-    pub group_ids: Vec<StrBytes>,
-    /// Whether to include authorized operations.
-    pub include_authorized_operations: bool,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
-
-impl KafkaMessage for ConsumerGroupDescribeRequest {
-    const NAME: &'static str = "ConsumerGroupDescribeRequest";
-    const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 1);
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 1));
-}
-
-impl KafkaRequest for ConsumerGroupDescribeRequest {
-    const API_KEY: ApiKey = ApiKey::new(69);
-}
-
-impl RequestResponsePair for ConsumerGroupDescribeRequest {
-    type Response = ConsumerGroupDescribeResponse;
-}
-
-impl KafkaDecode for ConsumerGroupDescribeRequest {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        crate::message::ensure_decode_version::<Self>(version)?;
-
-        let group_ids = {
-            let length = decoder.read_compact_array_len()?;
-            decoder.read_vec(length, Decoder::read_compact_string)?
-        };
-        let include_authorized_operations = decoder.read_bool()?;
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
-
-        Ok(Self {
-            group_ids,
-            include_authorized_operations,
-            unknown_tagged_fields,
-        })
+    /// Request body for the `ConsumerGroupDescribe` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    pub struct ConsumerGroupDescribeRequest {
+        /// The ids of the groups to describe.
+        pub group_ids: Vec<StrBytes>,
+        /// Whether to include authorized operations.
+        pub include_authorized_operations: bool,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
     }
-}
 
-impl KafkaEncode for ConsumerGroupDescribeRequest {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        crate::message::ensure_encode_version::<Self>(version)?;
+    impl KafkaMessage for ConsumerGroupDescribeRequest {
+        const NAME: &'static str = "ConsumerGroupDescribeRequest";
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 1);
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 1));
+    }
 
-        encoder.write_compact_array_len(self.group_ids.len())?;
-        for value in &self.group_ids {
-            encoder.write_compact_string(value)?;
+    impl KafkaRequest for ConsumerGroupDescribeRequest {
+        const API_KEY: ApiKey = ApiKey::new(69);
+    }
+
+    impl RequestResponsePair for ConsumerGroupDescribeRequest {
+        type Response = super::ConsumerGroupDescribeResponse;
+    }
+
+    impl KafkaDecode for ConsumerGroupDescribeRequest {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            crate::message::ensure_decode_version::<Self>(version)?;
+
+            let group_ids = {
+                let length = decoder.read_compact_array_len()?;
+                decoder.read_vec(length, Decoder::read_compact_string)?
+            };
+            let include_authorized_operations = decoder.read_bool()?;
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
+
+            Ok(Self {
+                group_ids,
+                include_authorized_operations,
+                unknown_tagged_fields,
+            })
         }
-        encoder.write_bool(self.include_authorized_operations)?;
-
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: Self::NAME,
-                version,
-            });
-        }
-
-        Ok(())
     }
-}
 
-/// `TopicPartitions` as declared by the `ConsumerGroupDescribe` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct ConsumerGroupDescribeResponseTopicPartitions {
-    /// The topic ID.
-    pub topic_id: Uuid,
-    /// The topic name.
-    pub topic_name: StrBytes,
-    /// The partitions.
-    pub partitions: Vec<i32>,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
+    impl KafkaEncode for ConsumerGroupDescribeRequest {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            crate::message::ensure_encode_version::<Self>(version)?;
 
-impl ConsumerGroupDescribeResponseTopicPartitions {
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 1));
+            encoder.write_compact_array_len(self.group_ids.len())?;
+            for value in &self.group_ids {
+                encoder.write_compact_string(value)?;
+            }
+            encoder.write_bool(self.include_authorized_operations)?;
 
-    fn is_flexible(version: ApiVersion) -> bool {
-        Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
-    }
-}
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: Self::NAME,
+                    version,
+                });
+            }
 
-impl KafkaDecode for ConsumerGroupDescribeResponseTopicPartitions {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        let topic_id = decoder.read_uuid()?;
-        let topic_name = decoder.read_compact_string()?;
-        let partitions = {
-            let length = decoder.read_compact_array_len()?;
-            decoder.read_vec(length, Decoder::read_i32)?
-        };
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
-
-        Ok(Self {
-            topic_id,
-            topic_name,
-            partitions,
-            unknown_tagged_fields,
-        })
-    }
-}
-
-impl KafkaEncode for ConsumerGroupDescribeResponseTopicPartitions {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        encoder.write_uuid(self.topic_id)?;
-        encoder.write_compact_string(&self.topic_name)?;
-        encoder.write_compact_array_len(self.partitions.len())?;
-        for value in &self.partitions {
-            encoder.write_i32(*value)?;
-        }
-
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: "ConsumerGroupDescribeResponseTopicPartitions",
-                version,
-            });
-        }
-
-        Ok(())
-    }
-}
-
-/// `Assignment` as declared by the `ConsumerGroupDescribe` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct ConsumerGroupDescribeResponseAssignment {
-    /// The assigned topic-partitions to the member.
-    pub topic_partitions: Vec<ConsumerGroupDescribeResponseTopicPartitions>,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
-
-impl ConsumerGroupDescribeResponseAssignment {
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 1));
-
-    fn is_flexible(version: ApiVersion) -> bool {
-        Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
-    }
-}
-
-impl KafkaDecode for ConsumerGroupDescribeResponseAssignment {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        let topic_partitions = {
-            let length = decoder.read_compact_array_len()?;
-            decoder.read_vec(length, |decoder| {
-                ConsumerGroupDescribeResponseTopicPartitions::decode(decoder, version)
-            })?
-        };
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
-
-        Ok(Self {
-            topic_partitions,
-            unknown_tagged_fields,
-        })
-    }
-}
-
-impl KafkaEncode for ConsumerGroupDescribeResponseAssignment {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        encoder.write_compact_array_len(self.topic_partitions.len())?;
-        for value in &self.topic_partitions {
-            value.encode(encoder, version)?;
-        }
-
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: "ConsumerGroupDescribeResponseAssignment",
-                version,
-            });
-        }
-
-        Ok(())
-    }
-}
-
-/// `DescribedGroup` as declared by the `ConsumerGroupDescribe` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct ConsumerGroupDescribeResponseDescribedGroup {
-    /// The describe error, or 0 if there was no error.
-    pub error_code: i16,
-    /// The top-level error message, or null if there was no error.
-    pub error_message: Option<StrBytes>,
-    /// The group ID string.
-    pub group_id: StrBytes,
-    /// The group state string, or the empty string.
-    pub group_state: StrBytes,
-    /// The group epoch.
-    pub group_epoch: i32,
-    /// The assignment epoch.
-    pub assignment_epoch: i32,
-    /// The selected assignor.
-    pub assignor_name: StrBytes,
-    /// The members.
-    pub members: Vec<ConsumerGroupDescribeResponseMember>,
-    /// 32-bit bitfield to represent authorized operations for this group.
-    pub authorized_operations: i32,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
-
-impl ConsumerGroupDescribeResponseDescribedGroup {
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 1));
-
-    fn is_flexible(version: ApiVersion) -> bool {
-        Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
-    }
-}
-
-impl Default for ConsumerGroupDescribeResponseDescribedGroup {
-    fn default() -> Self {
-        Self {
-            error_code: 0,
-            error_message: None,
-            group_id: StrBytes::default(),
-            group_state: StrBytes::default(),
-            group_epoch: 0,
-            assignment_epoch: 0,
-            assignor_name: StrBytes::default(),
-            members: Vec::new(),
-            authorized_operations: -2_147_483_648,
-            unknown_tagged_fields: TaggedFields::default(),
+            Ok(())
         }
     }
 }
 
-impl KafkaDecode for ConsumerGroupDescribeResponseDescribedGroup {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        let error_code = decoder.read_i16()?;
-        let error_message = decoder.read_compact_nullable_string()?;
-        let group_id = decoder.read_compact_string()?;
-        let group_state = decoder.read_compact_string()?;
-        let group_epoch = decoder.read_i32()?;
-        let assignment_epoch = decoder.read_i32()?;
-        let assignor_name = decoder.read_compact_string()?;
-        let members = {
-            let length = decoder.read_compact_array_len()?;
-            decoder.read_vec(length, |decoder| {
-                ConsumerGroupDescribeResponseMember::decode(decoder, version)
-            })?
-        };
-        let authorized_operations = decoder.read_i32()?;
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
+/// `ConsumerGroupDescribeResponse` and every struct it declares, under upstream's own names.
+///
+/// [`ConsumerGroupDescribeResponse`](crate::ConsumerGroupDescribeResponse) is re-exported flat, so this path never has to be
+/// written to name the message itself.
+pub mod consumer_group_describe_response {
+    use kafka_wire_core::{
+        ApiKey, ApiVersion, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
+        KafkaEncode, StrBytes, TaggedFields, Uuid, VersionRange,
+    };
 
-        Ok(Self {
-            error_code,
-            error_message,
-            group_id,
-            group_state,
-            group_epoch,
-            assignment_epoch,
-            assignor_name,
-            members,
-            authorized_operations,
-            unknown_tagged_fields,
-        })
+    use crate::{KafkaMessage, KafkaResponse};
+
+    /// `TopicPartitions` as declared by the `ConsumerGroupDescribe` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    pub struct TopicPartitions {
+        /// The topic ID.
+        pub topic_id: Uuid,
+        /// The topic name.
+        pub topic_name: StrBytes,
+        /// The partitions.
+        pub partitions: Vec<i32>,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl TopicPartitions {
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 1));
+
+        fn is_flexible(version: ApiVersion) -> bool {
+            Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+        }
+    }
+
+    impl KafkaDecode for TopicPartitions {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            let topic_id = decoder.read_uuid()?;
+            let topic_name = decoder.read_compact_string()?;
+            let partitions = {
+                let length = decoder.read_compact_array_len()?;
+                decoder.read_vec(length, Decoder::read_i32)?
+            };
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
+
+            Ok(Self {
+                topic_id,
+                topic_name,
+                partitions,
+                unknown_tagged_fields,
+            })
+        }
+    }
+
+    impl KafkaEncode for TopicPartitions {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            encoder.write_uuid(self.topic_id)?;
+            encoder.write_compact_string(&self.topic_name)?;
+            encoder.write_compact_array_len(self.partitions.len())?;
+            for value in &self.partitions {
+                encoder.write_i32(*value)?;
+            }
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "TopicPartitions",
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+
+    /// `Assignment` as declared by the `ConsumerGroupDescribe` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    pub struct Assignment {
+        /// The assigned topic-partitions to the member.
+        pub topic_partitions: Vec<TopicPartitions>,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl Assignment {
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 1));
+
+        fn is_flexible(version: ApiVersion) -> bool {
+            Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+        }
+    }
+
+    impl KafkaDecode for Assignment {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            let topic_partitions = {
+                let length = decoder.read_compact_array_len()?;
+                decoder.read_vec(length, |decoder| TopicPartitions::decode(decoder, version))?
+            };
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
+
+            Ok(Self {
+                topic_partitions,
+                unknown_tagged_fields,
+            })
+        }
+    }
+
+    impl KafkaEncode for Assignment {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            encoder.write_compact_array_len(self.topic_partitions.len())?;
+            for value in &self.topic_partitions {
+                value.encode(encoder, version)?;
+            }
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "Assignment",
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+
+    /// `DescribedGroup` as declared by the `ConsumerGroupDescribe` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Eq, PartialEq)]
+    pub struct DescribedGroup {
+        /// The describe error, or 0 if there was no error.
+        pub error_code: i16,
+        /// The top-level error message, or null if there was no error.
+        pub error_message: Option<StrBytes>,
+        /// The group ID string.
+        pub group_id: StrBytes,
+        /// The group state string, or the empty string.
+        pub group_state: StrBytes,
+        /// The group epoch.
+        pub group_epoch: i32,
+        /// The assignment epoch.
+        pub assignment_epoch: i32,
+        /// The selected assignor.
+        pub assignor_name: StrBytes,
+        /// The members.
+        pub members: Vec<Member>,
+        /// 32-bit bitfield to represent authorized operations for this group.
+        pub authorized_operations: i32,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl DescribedGroup {
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 1));
+
+        fn is_flexible(version: ApiVersion) -> bool {
+            Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+        }
+    }
+
+    impl Default for DescribedGroup {
+        fn default() -> Self {
+            Self {
+                error_code: 0,
+                error_message: None,
+                group_id: StrBytes::default(),
+                group_state: StrBytes::default(),
+                group_epoch: 0,
+                assignment_epoch: 0,
+                assignor_name: StrBytes::default(),
+                members: Vec::new(),
+                authorized_operations: -2_147_483_648,
+                unknown_tagged_fields: TaggedFields::default(),
+            }
+        }
+    }
+
+    impl KafkaDecode for DescribedGroup {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            let error_code = decoder.read_i16()?;
+            let error_message = decoder.read_compact_nullable_string()?;
+            let group_id = decoder.read_compact_string()?;
+            let group_state = decoder.read_compact_string()?;
+            let group_epoch = decoder.read_i32()?;
+            let assignment_epoch = decoder.read_i32()?;
+            let assignor_name = decoder.read_compact_string()?;
+            let members = {
+                let length = decoder.read_compact_array_len()?;
+                decoder.read_vec(length, |decoder| Member::decode(decoder, version))?
+            };
+            let authorized_operations = decoder.read_i32()?;
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
+
+            Ok(Self {
+                error_code,
+                error_message,
+                group_id,
+                group_state,
+                group_epoch,
+                assignment_epoch,
+                assignor_name,
+                members,
+                authorized_operations,
+                unknown_tagged_fields,
+            })
+        }
+    }
+
+    impl KafkaEncode for DescribedGroup {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            encoder.write_i16(self.error_code)?;
+            encoder.write_compact_nullable_string(self.error_message.as_ref())?;
+            encoder.write_compact_string(&self.group_id)?;
+            encoder.write_compact_string(&self.group_state)?;
+            encoder.write_i32(self.group_epoch)?;
+            encoder.write_i32(self.assignment_epoch)?;
+            encoder.write_compact_string(&self.assignor_name)?;
+            encoder.write_compact_array_len(self.members.len())?;
+            for value in &self.members {
+                value.encode(encoder, version)?;
+            }
+            encoder.write_i32(self.authorized_operations)?;
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "DescribedGroup",
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+
+    /// `Member` as declared by the `ConsumerGroupDescribe` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Eq, PartialEq)]
+    pub struct Member {
+        /// The member ID.
+        pub member_id: StrBytes,
+        /// The member instance ID.
+        pub instance_id: Option<StrBytes>,
+        /// The member rack ID.
+        pub rack_id: Option<StrBytes>,
+        /// The current member epoch.
+        pub member_epoch: i32,
+        /// The client ID.
+        pub client_id: StrBytes,
+        /// The client host.
+        pub client_host: StrBytes,
+        /// The subscribed topic names.
+        pub subscribed_topic_names: Vec<StrBytes>,
+        /// the subscribed topic regex otherwise or null of not provided.
+        pub subscribed_topic_regex: Option<StrBytes>,
+        /// The current assignment.
+        pub assignment: Assignment,
+        /// The target assignment.
+        pub target_assignment: Assignment,
+        /// -1 for unknown. 0 for classic member. +1 for consumer member.
+        pub member_type: i8,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl Member {
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 1));
+
+        fn is_flexible(version: ApiVersion) -> bool {
+            Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+        }
+    }
+
+    impl Default for Member {
+        fn default() -> Self {
+            Self {
+                member_id: StrBytes::default(),
+                instance_id: None,
+                rack_id: None,
+                member_epoch: 0,
+                client_id: StrBytes::default(),
+                client_host: StrBytes::default(),
+                subscribed_topic_names: Vec::new(),
+                subscribed_topic_regex: None,
+                assignment: Assignment::default(),
+                target_assignment: Assignment::default(),
+                member_type: -1,
+                unknown_tagged_fields: TaggedFields::default(),
+            }
+        }
+    }
+
+    impl KafkaDecode for Member {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            let member_id = decoder.read_compact_string()?;
+            let instance_id = decoder.read_compact_nullable_string()?;
+            let rack_id = decoder.read_compact_nullable_string()?;
+            let member_epoch = decoder.read_i32()?;
+            let client_id = decoder.read_compact_string()?;
+            let client_host = decoder.read_compact_string()?;
+            let subscribed_topic_names = {
+                let length = decoder.read_compact_array_len()?;
+                decoder.read_vec(length, Decoder::read_compact_string)?
+            };
+            let subscribed_topic_regex = decoder.read_compact_nullable_string()?;
+            let assignment = Assignment::decode(decoder, version)?;
+            let target_assignment = Assignment::decode(decoder, version)?;
+            let member_type = if version.value() >= 1 {
+                decoder.read_i8()?
+            } else {
+                -1
+            };
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
+
+            Ok(Self {
+                member_id,
+                instance_id,
+                rack_id,
+                member_epoch,
+                client_id,
+                client_host,
+                subscribed_topic_names,
+                subscribed_topic_regex,
+                assignment,
+                target_assignment,
+                member_type,
+                unknown_tagged_fields,
+            })
+        }
+    }
+
+    impl KafkaEncode for Member {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            encoder.write_compact_string(&self.member_id)?;
+            encoder.write_compact_nullable_string(self.instance_id.as_ref())?;
+            encoder.write_compact_nullable_string(self.rack_id.as_ref())?;
+            encoder.write_i32(self.member_epoch)?;
+            encoder.write_compact_string(&self.client_id)?;
+            encoder.write_compact_string(&self.client_host)?;
+            encoder.write_compact_array_len(self.subscribed_topic_names.len())?;
+            for value in &self.subscribed_topic_names {
+                encoder.write_compact_string(value)?;
+            }
+            encoder.write_compact_nullable_string(self.subscribed_topic_regex.as_ref())?;
+            self.assignment.encode(encoder, version)?;
+            self.target_assignment.encode(encoder, version)?;
+            if version.value() >= 1 {
+                encoder.write_i8(self.member_type)?;
+            }
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "Member",
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+
+    /// Response body for the `ConsumerGroupDescribe` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    pub struct ConsumerGroupDescribeResponse {
+        /// The duration in milliseconds for which the request was throttled due to a quota violation, or zero if the request did not violate any quota.
+        pub throttle_time_ms: i32,
+        /// Each described group.
+        pub groups: Vec<DescribedGroup>,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl KafkaMessage for ConsumerGroupDescribeResponse {
+        const NAME: &'static str = "ConsumerGroupDescribeResponse";
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 1);
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 1));
+    }
+
+    impl KafkaResponse for ConsumerGroupDescribeResponse {
+        const API_KEY: ApiKey = ApiKey::new(69);
+    }
+
+    impl KafkaDecode for ConsumerGroupDescribeResponse {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            crate::message::ensure_decode_version::<Self>(version)?;
+
+            let throttle_time_ms = decoder.read_i32()?;
+            let groups = {
+                let length = decoder.read_compact_array_len()?;
+                decoder.read_vec(length, |decoder| DescribedGroup::decode(decoder, version))?
+            };
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
+
+            Ok(Self {
+                throttle_time_ms,
+                groups,
+                unknown_tagged_fields,
+            })
+        }
+    }
+
+    impl KafkaEncode for ConsumerGroupDescribeResponse {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            crate::message::ensure_encode_version::<Self>(version)?;
+
+            encoder.write_i32(self.throttle_time_ms)?;
+            encoder.write_compact_array_len(self.groups.len())?;
+            for value in &self.groups {
+                value.encode(encoder, version)?;
+            }
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: Self::NAME,
+                    version,
+                });
+            }
+
+            Ok(())
+        }
     }
 }
 
-impl KafkaEncode for ConsumerGroupDescribeResponseDescribedGroup {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        encoder.write_i16(self.error_code)?;
-        encoder.write_compact_nullable_string(self.error_message.as_ref())?;
-        encoder.write_compact_string(&self.group_id)?;
-        encoder.write_compact_string(&self.group_state)?;
-        encoder.write_i32(self.group_epoch)?;
-        encoder.write_i32(self.assignment_epoch)?;
-        encoder.write_compact_string(&self.assignor_name)?;
-        encoder.write_compact_array_len(self.members.len())?;
-        for value in &self.members {
-            value.encode(encoder, version)?;
-        }
-        encoder.write_i32(self.authorized_operations)?;
+use kafka_wire_core::VersionRange;
 
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: "ConsumerGroupDescribeResponseDescribedGroup",
-                version,
-            });
-        }
+use crate::{MessageDescriptor, MessageDirection};
 
-        Ok(())
-    }
-}
-
-/// `Member` as declared by the `ConsumerGroupDescribe` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct ConsumerGroupDescribeResponseMember {
-    /// The member ID.
-    pub member_id: StrBytes,
-    /// The member instance ID.
-    pub instance_id: Option<StrBytes>,
-    /// The member rack ID.
-    pub rack_id: Option<StrBytes>,
-    /// The current member epoch.
-    pub member_epoch: i32,
-    /// The client ID.
-    pub client_id: StrBytes,
-    /// The client host.
-    pub client_host: StrBytes,
-    /// The subscribed topic names.
-    pub subscribed_topic_names: Vec<StrBytes>,
-    /// the subscribed topic regex otherwise or null of not provided.
-    pub subscribed_topic_regex: Option<StrBytes>,
-    /// The current assignment.
-    pub assignment: ConsumerGroupDescribeResponseAssignment,
-    /// The target assignment.
-    pub target_assignment: ConsumerGroupDescribeResponseAssignment,
-    /// -1 for unknown. 0 for classic member. +1 for consumer member.
-    pub member_type: i8,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
-
-impl ConsumerGroupDescribeResponseMember {
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 1));
-
-    fn is_flexible(version: ApiVersion) -> bool {
-        Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
-    }
-}
-
-impl Default for ConsumerGroupDescribeResponseMember {
-    fn default() -> Self {
-        Self {
-            member_id: StrBytes::default(),
-            instance_id: None,
-            rack_id: None,
-            member_epoch: 0,
-            client_id: StrBytes::default(),
-            client_host: StrBytes::default(),
-            subscribed_topic_names: Vec::new(),
-            subscribed_topic_regex: None,
-            assignment: ConsumerGroupDescribeResponseAssignment::default(),
-            target_assignment: ConsumerGroupDescribeResponseAssignment::default(),
-            member_type: -1,
-            unknown_tagged_fields: TaggedFields::default(),
-        }
-    }
-}
-
-impl KafkaDecode for ConsumerGroupDescribeResponseMember {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        let member_id = decoder.read_compact_string()?;
-        let instance_id = decoder.read_compact_nullable_string()?;
-        let rack_id = decoder.read_compact_nullable_string()?;
-        let member_epoch = decoder.read_i32()?;
-        let client_id = decoder.read_compact_string()?;
-        let client_host = decoder.read_compact_string()?;
-        let subscribed_topic_names = {
-            let length = decoder.read_compact_array_len()?;
-            decoder.read_vec(length, Decoder::read_compact_string)?
-        };
-        let subscribed_topic_regex = decoder.read_compact_nullable_string()?;
-        let assignment = ConsumerGroupDescribeResponseAssignment::decode(decoder, version)?;
-        let target_assignment = ConsumerGroupDescribeResponseAssignment::decode(decoder, version)?;
-        let member_type = if version.value() >= 1 {
-            decoder.read_i8()?
-        } else {
-            -1
-        };
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
-
-        Ok(Self {
-            member_id,
-            instance_id,
-            rack_id,
-            member_epoch,
-            client_id,
-            client_host,
-            subscribed_topic_names,
-            subscribed_topic_regex,
-            assignment,
-            target_assignment,
-            member_type,
-            unknown_tagged_fields,
-        })
-    }
-}
-
-impl KafkaEncode for ConsumerGroupDescribeResponseMember {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        encoder.write_compact_string(&self.member_id)?;
-        encoder.write_compact_nullable_string(self.instance_id.as_ref())?;
-        encoder.write_compact_nullable_string(self.rack_id.as_ref())?;
-        encoder.write_i32(self.member_epoch)?;
-        encoder.write_compact_string(&self.client_id)?;
-        encoder.write_compact_string(&self.client_host)?;
-        encoder.write_compact_array_len(self.subscribed_topic_names.len())?;
-        for value in &self.subscribed_topic_names {
-            encoder.write_compact_string(value)?;
-        }
-        encoder.write_compact_nullable_string(self.subscribed_topic_regex.as_ref())?;
-        self.assignment.encode(encoder, version)?;
-        self.target_assignment.encode(encoder, version)?;
-        if version.value() >= 1 {
-            encoder.write_i8(self.member_type)?;
-        }
-
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: "ConsumerGroupDescribeResponseMember",
-                version,
-            });
-        }
-
-        Ok(())
-    }
-}
-
-/// Response body for the `ConsumerGroupDescribe` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct ConsumerGroupDescribeResponse {
-    /// The duration in milliseconds for which the request was throttled due to a quota violation, or zero if the request did not violate any quota.
-    pub throttle_time_ms: i32,
-    /// Each described group.
-    pub groups: Vec<ConsumerGroupDescribeResponseDescribedGroup>,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
-
-impl KafkaMessage for ConsumerGroupDescribeResponse {
-    const NAME: &'static str = "ConsumerGroupDescribeResponse";
-    const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 1);
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 1));
-}
-
-impl KafkaResponse for ConsumerGroupDescribeResponse {
-    const API_KEY: ApiKey = ApiKey::new(69);
-}
-
-impl KafkaDecode for ConsumerGroupDescribeResponse {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        crate::message::ensure_decode_version::<Self>(version)?;
-
-        let throttle_time_ms = decoder.read_i32()?;
-        let groups = {
-            let length = decoder.read_compact_array_len()?;
-            decoder.read_vec(length, |decoder| {
-                ConsumerGroupDescribeResponseDescribedGroup::decode(decoder, version)
-            })?
-        };
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
-
-        Ok(Self {
-            throttle_time_ms,
-            groups,
-            unknown_tagged_fields,
-        })
-    }
-}
-
-impl KafkaEncode for ConsumerGroupDescribeResponse {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        crate::message::ensure_encode_version::<Self>(version)?;
-
-        encoder.write_i32(self.throttle_time_ms)?;
-        encoder.write_compact_array_len(self.groups.len())?;
-        for value in &self.groups {
-            value.encode(encoder, version)?;
-        }
-
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: Self::NAME,
-                version,
-            });
-        }
-
-        Ok(())
-    }
-}
+pub use consumer_group_describe_request::ConsumerGroupDescribeRequest;
+pub use consumer_group_describe_response::ConsumerGroupDescribeResponse;
 
 /// Static metadata for [`ConsumerGroupDescribeRequest`].
 pub const CONSUMER_GROUP_DESCRIBE_REQUEST_DESCRIPTOR: MessageDescriptor = MessageDescriptor::new(

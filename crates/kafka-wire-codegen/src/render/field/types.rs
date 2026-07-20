@@ -12,6 +12,8 @@
 
 use kafka_wire_schema::{DefaultValue, Field, FieldType, Message};
 
+use crate::render::api::spell;
+
 /// Renders a double so the emitted literal round-trips as `f64`.
 fn float_literal(value: f64) -> String {
     let rendered = format!("{value}");
@@ -57,7 +59,7 @@ fn is_nullable(field: &Field, message: &Message) -> bool {
 
 pub(crate) fn rust_type(field: &Field, message: &Message) -> String {
     let nullable = is_nullable(field, message);
-    let base = type_name(&field.ty);
+    let base = type_name(&field.ty, message);
     if nullable {
         format!("Option<{base}>")
     } else {
@@ -71,11 +73,16 @@ pub(crate) fn rust_type(field: &Field, message: &Message) -> String {
 /// What a type is called and whether the backend can *encode* it are different
 /// questions, and the second belongs to `validate`.
 ///
-/// A struct reference is emitted under the owner-qualified name the earlier flat naming rule
-/// resolved during lowering, never a name this file re-derives.
-fn type_name(ty: &FieldType) -> String {
+/// A struct reference is emitted under the spelling lowering resolved, never a
+/// name this file re-derives. Under the module-scoped naming rule that is upstream's own spelling and
+/// the reference is a sibling in the same module, so it needs no path.
+///
+/// A wire type does need one, in the rare module that declares a struct of the
+/// same name; `spell` is what decides, and it is asked here rather than by the
+/// caller so no type-position spelling can escape the check.
+fn type_name(ty: &FieldType, message: &Message) -> String {
     match ty {
-        FieldType::String => "StrBytes".to_owned(),
+        FieldType::String => spell(message, "StrBytes"),
         FieldType::Bool => "bool".to_owned(),
         FieldType::Int8 => "i8".to_owned(),
         FieldType::Int16 => "i16".to_owned(),
@@ -83,15 +90,15 @@ fn type_name(ty: &FieldType) -> String {
         FieldType::Uint32 => "u32".to_owned(),
         FieldType::Int32 => "i32".to_owned(),
         FieldType::Int64 => "i64".to_owned(),
-        FieldType::Uuid => "Uuid".to_owned(),
+        FieldType::Uuid => spell(message, "Uuid"),
         FieldType::Float64 => "f64".to_owned(),
         // A `records` field is a byte blob on the wire: the length prefix is the
         // same, and what sits inside it is a RecordBatch this crate does not yet
         // parse. Carrying it as the bytes it is keeps the message honest and
         // leaves the batch to a layer above.
-        FieldType::Bytes | FieldType::Records => "Bytes".to_owned(),
+        FieldType::Bytes | FieldType::Records => spell(message, "Bytes"),
         FieldType::Struct(reference) => reference.rust_type().to_owned(),
-        FieldType::Array(element) => format!("Vec<{}>", type_name(element)),
+        FieldType::Array(element) => format!("Vec<{}>", type_name(element, message)),
     }
 }
 
@@ -99,7 +106,7 @@ pub(crate) fn default_expression(field: &Field, message: &Message) -> String {
     if matches!(field.default, DefaultValue::Null) {
         return "None".to_owned();
     }
-    let value = default_value(field);
+    let value = default_value(field, message);
     if is_nullable(field, message) {
         // A nullable field declaring a real default is `Option<T>` holding that
         // value, not `None`: upstream writes both, and collapsing them would
@@ -110,24 +117,34 @@ pub(crate) fn default_expression(field: &Field, message: &Message) -> String {
 }
 
 /// The default as the underlying type spells it, before nullability wraps it.
-fn default_value(field: &Field) -> String {
+fn default_value(field: &Field, message: &Message) -> String {
     match &field.default {
         DefaultValue::Null => "None".to_owned(),
         DefaultValue::Bool(value) => value.to_string(),
         DefaultValue::Integer(value) => separated(*value),
-        DefaultValue::String(value) if value.is_empty() => "StrBytes::default()".to_owned(),
-        DefaultValue::String(value) => format!("StrBytes::from({value:?})"),
-        DefaultValue::Uuid(bytes) if *bytes == [0_u8; 16] => "Uuid::ZERO".to_owned(),
-        DefaultValue::Uuid(bytes) => format!("Uuid::from_bytes({bytes:?})"),
+        DefaultValue::String(value) if value.is_empty() => {
+            format!("{}::default()", spell(message, "StrBytes"))
+        }
+        DefaultValue::String(value) => {
+            format!("{}::from({value:?})", spell(message, "StrBytes"))
+        }
+        DefaultValue::Uuid(bytes) if *bytes == [0_u8; 16] => {
+            format!("{}::ZERO", spell(message, "Uuid"))
+        }
+        DefaultValue::Uuid(bytes) => {
+            format!("{}::from_bytes({bytes:?})", spell(message, "Uuid"))
+        }
         // A non-nullable struct field is absent from a version as every member
         // at its own default, which is what the generated struct derives.
-        DefaultValue::StructDefaults => format!("{}::default()", type_name(&field.ty)),
+        DefaultValue::StructDefaults => format!("{}::default()", type_name(&field.ty, message)),
         // Named by type rather than inferred: `Default::default()` in an
         // initializer position is correct but says less than the type does.
         DefaultValue::Empty => match &field.ty {
             FieldType::Array(_) => "Vec::new()".to_owned(),
-            FieldType::Bytes | FieldType::Records => "Bytes::default()".to_owned(),
-            FieldType::String => "StrBytes::default()".to_owned(),
+            FieldType::Bytes | FieldType::Records => {
+                format!("{}::default()", spell(message, "Bytes"))
+            }
+            FieldType::String => format!("{}::default()", spell(message, "StrBytes")),
             _ => "Default::default()".to_owned(),
         },
         // Rendered so the literal always carries a decimal point and parses
@@ -139,7 +156,7 @@ fn default_value(field: &Field) -> String {
 pub(crate) fn non_default_condition(field: &Field, message: &Message) -> String {
     let name = field.name.rust_field();
     if !matches!(field.default, DefaultValue::Null) && is_nullable(field, message) {
-        let value = default_value(field);
+        let value = default_value(field, message);
         return format!("self.{name} != Some({value})");
     }
     match &field.default {
@@ -152,11 +169,17 @@ pub(crate) fn non_default_condition(field: &Field, message: &Message) -> String 
         DefaultValue::String(value) if value.is_empty() => format!("!self.{name}.is_empty()"),
         DefaultValue::String(value) => format!("self.{name}.as_str() != {value:?}"),
         DefaultValue::Uuid(bytes) if *bytes == [0_u8; 16] => {
-            format!("self.{name} != Uuid::ZERO")
+            format!("self.{name} != {}::ZERO", spell(message, "Uuid"))
         }
-        DefaultValue::Uuid(bytes) => format!("self.{name} != Uuid::from_bytes({bytes:?})"),
+        DefaultValue::Uuid(bytes) => format!(
+            "self.{name} != {}::from_bytes({bytes:?})",
+            spell(message, "Uuid")
+        ),
         DefaultValue::StructDefaults => {
-            format!("self.{name} != {}::default()", type_name(&field.ty))
+            format!(
+                "self.{name} != {}::default()",
+                type_name(&field.ty, message)
+            )
         }
         DefaultValue::Empty => format!("!self.{name}.is_empty()"),
         // A float default compares by bits rather than by `==`: the protocol

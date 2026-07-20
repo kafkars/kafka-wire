@@ -5,511 +5,532 @@
 //! Request SHA-256: `c53932307d18e072b0802283b4537d732c2192bd2b1f43de80cdd9d26b7a0d00`.
 //! Response SHA-256: `8daf78a7c5b86b1174aac26e1ea065ea54f67c9a0009a0b5e5f7637d05e87352`.
 
-use kafka_wire_core::{
-    ApiKey, ApiVersion, Bytes, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder,
-    KafkaDecode, KafkaEncode, StrBytes, TaggedFields, VersionRange,
-};
+/// `DescribeGroupsRequest` and every struct it declares, under upstream's own names.
+///
+/// [`DescribeGroupsRequest`](crate::DescribeGroupsRequest) is re-exported flat, so this path never has to be
+/// written to name the message itself.
+pub mod describe_groups_request {
+    use kafka_wire_core::{
+        ApiKey, ApiVersion, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
+        KafkaEncode, StrBytes, TaggedFields, VersionRange,
+    };
 
-use crate::{
-    KafkaMessage, KafkaRequest, KafkaResponse, MessageDescriptor, MessageDirection,
-    RequestResponsePair,
-};
+    use crate::{KafkaMessage, KafkaRequest, RequestResponsePair};
 
-/// Request body for the `DescribeGroups` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct DescribeGroupsRequest {
-    /// The names of the groups to describe.
-    pub groups: Vec<StrBytes>,
-    /// Whether to include authorized operations.
-    pub include_authorized_operations: bool,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
+    /// Request body for the `DescribeGroups` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    pub struct DescribeGroupsRequest {
+        /// The names of the groups to describe.
+        pub groups: Vec<StrBytes>,
+        /// Whether to include authorized operations.
+        pub include_authorized_operations: bool,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
+    }
 
-impl KafkaMessage for DescribeGroupsRequest {
-    const NAME: &'static str = "DescribeGroupsRequest";
-    const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 6);
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(5, 6));
-}
+    impl KafkaMessage for DescribeGroupsRequest {
+        const NAME: &'static str = "DescribeGroupsRequest";
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 6);
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(5, 6));
+    }
 
-impl KafkaRequest for DescribeGroupsRequest {
-    const API_KEY: ApiKey = ApiKey::new(15);
-}
+    impl KafkaRequest for DescribeGroupsRequest {
+        const API_KEY: ApiKey = ApiKey::new(15);
+    }
 
-impl RequestResponsePair for DescribeGroupsRequest {
-    type Response = DescribeGroupsResponse;
-}
+    impl RequestResponsePair for DescribeGroupsRequest {
+        type Response = super::DescribeGroupsResponse;
+    }
 
-impl KafkaDecode for DescribeGroupsRequest {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        crate::message::ensure_decode_version::<Self>(version)?;
+    impl KafkaDecode for DescribeGroupsRequest {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            crate::message::ensure_decode_version::<Self>(version)?;
 
-        let groups = {
-            let length = if Self::is_flexible(version) {
-                decoder.read_compact_array_len()?
-            } else {
-                decoder.read_array_len()?
-            };
-            decoder.read_vec(length, |decoder| {
-                Ok(if Self::is_flexible(version) {
-                    decoder.read_compact_string()?
+            let groups = {
+                let length = if Self::is_flexible(version) {
+                    decoder.read_compact_array_len()?
                 } else {
-                    decoder.read_string()?
-                })
-            })?
-        };
-        let include_authorized_operations = if version.value() >= 3 {
-            decoder.read_bool()?
-        } else {
-            false
-        };
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
+                    decoder.read_array_len()?
+                };
+                decoder.read_vec(length, |decoder| {
+                    Ok(if Self::is_flexible(version) {
+                        decoder.read_compact_string()?
+                    } else {
+                        decoder.read_string()?
+                    })
+                })?
+            };
+            let include_authorized_operations = if version.value() >= 3 {
+                decoder.read_bool()?
+            } else {
+                false
+            };
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
 
-        Ok(Self {
-            groups,
-            include_authorized_operations,
-            unknown_tagged_fields,
-        })
+            Ok(Self {
+                groups,
+                include_authorized_operations,
+                unknown_tagged_fields,
+            })
+        }
+    }
+
+    impl KafkaEncode for DescribeGroupsRequest {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            crate::message::ensure_encode_version::<Self>(version)?;
+
+            if version.value() < 3 && self.include_authorized_operations {
+                return Err(EncodeError::FieldNotRepresentable {
+                    message: Self::NAME,
+                    field: "IncludeAuthorizedOperations",
+                    version,
+                });
+            }
+
+            if Self::is_flexible(version) {
+                encoder.write_compact_array_len(self.groups.len())?;
+            } else {
+                encoder.write_array_len(self.groups.len())?;
+            }
+            for value in &self.groups {
+                if Self::is_flexible(version) {
+                    encoder.write_compact_string(value)?;
+                } else {
+                    encoder.write_string(value)?;
+                }
+            }
+            if version.value() >= 3 {
+                encoder.write_bool(self.include_authorized_operations)?;
+            }
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: Self::NAME,
+                    version,
+                });
+            }
+
+            Ok(())
+        }
     }
 }
 
-impl KafkaEncode for DescribeGroupsRequest {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        crate::message::ensure_encode_version::<Self>(version)?;
+/// `DescribeGroupsResponse` and every struct it declares, under upstream's own names.
+///
+/// [`DescribeGroupsResponse`](crate::DescribeGroupsResponse) is re-exported flat, so this path never has to be
+/// written to name the message itself.
+pub mod describe_groups_response {
+    use kafka_wire_core::{
+        ApiKey, ApiVersion, Bytes, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder,
+        KafkaDecode, KafkaEncode, StrBytes, TaggedFields, VersionRange,
+    };
 
-        if version.value() < 3 && self.include_authorized_operations {
-            return Err(EncodeError::FieldNotRepresentable {
-                message: Self::NAME,
-                field: "IncludeAuthorizedOperations",
-                version,
-            });
-        }
+    use crate::{KafkaMessage, KafkaResponse};
 
-        if Self::is_flexible(version) {
-            encoder.write_compact_array_len(self.groups.len())?;
-        } else {
-            encoder.write_array_len(self.groups.len())?;
+    /// `DescribedGroup` as declared by the `DescribeGroups` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Eq, PartialEq)]
+    pub struct DescribedGroup {
+        /// The describe error, or 0 if there was no error.
+        pub error_code: i16,
+        /// The describe error message, or null if there was no error.
+        pub error_message: Option<StrBytes>,
+        /// The group ID string.
+        pub group_id: StrBytes,
+        /// The group state string, or the empty string.
+        pub group_state: StrBytes,
+        /// The group protocol type, or the empty string.
+        pub protocol_type: StrBytes,
+        /// The group protocol data, or the empty string.
+        pub protocol_data: StrBytes,
+        /// The group members.
+        pub members: Vec<DescribedGroupMember>,
+        /// 32-bit bitfield to represent authorized operations for this group.
+        pub authorized_operations: i32,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl DescribedGroup {
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(5, 6));
+
+        fn is_flexible(version: ApiVersion) -> bool {
+            Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
         }
-        for value in &self.groups {
-            if Self::is_flexible(version) {
-                encoder.write_compact_string(value)?;
-            } else {
-                encoder.write_string(value)?;
+    }
+
+    impl Default for DescribedGroup {
+        fn default() -> Self {
+            Self {
+                error_code: 0,
+                error_message: None,
+                group_id: StrBytes::default(),
+                group_state: StrBytes::default(),
+                protocol_type: StrBytes::default(),
+                protocol_data: StrBytes::default(),
+                members: Vec::new(),
+                authorized_operations: -2_147_483_648,
+                unknown_tagged_fields: TaggedFields::default(),
             }
         }
-        if version.value() >= 3 {
-            encoder.write_bool(self.include_authorized_operations)?;
-        }
-
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: Self::NAME,
-                version,
-            });
-        }
-
-        Ok(())
     }
-}
 
-/// `DescribedGroup` as declared by the `DescribeGroups` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct DescribeGroupsResponseDescribedGroup {
-    /// The describe error, or 0 if there was no error.
-    pub error_code: i16,
-    /// The describe error message, or null if there was no error.
-    pub error_message: Option<StrBytes>,
-    /// The group ID string.
-    pub group_id: StrBytes,
-    /// The group state string, or the empty string.
-    pub group_state: StrBytes,
-    /// The group protocol type, or the empty string.
-    pub protocol_type: StrBytes,
-    /// The group protocol data, or the empty string.
-    pub protocol_data: StrBytes,
-    /// The group members.
-    pub members: Vec<DescribeGroupsResponseDescribedGroupMember>,
-    /// 32-bit bitfield to represent authorized operations for this group.
-    pub authorized_operations: i32,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
-
-impl DescribeGroupsResponseDescribedGroup {
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(5, 6));
-
-    fn is_flexible(version: ApiVersion) -> bool {
-        Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
-    }
-}
-
-impl Default for DescribeGroupsResponseDescribedGroup {
-    fn default() -> Self {
-        Self {
-            error_code: 0,
-            error_message: None,
-            group_id: StrBytes::default(),
-            group_state: StrBytes::default(),
-            protocol_type: StrBytes::default(),
-            protocol_data: StrBytes::default(),
-            members: Vec::new(),
-            authorized_operations: -2_147_483_648,
-            unknown_tagged_fields: TaggedFields::default(),
-        }
-    }
-}
-
-impl KafkaDecode for DescribeGroupsResponseDescribedGroup {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        let error_code = decoder.read_i16()?;
-        let error_message = if version.value() >= 6 {
-            decoder.read_compact_nullable_string()?
-        } else {
-            None
-        };
-        let group_id = if Self::is_flexible(version) {
-            decoder.read_compact_string()?
-        } else {
-            decoder.read_string()?
-        };
-        let group_state = if Self::is_flexible(version) {
-            decoder.read_compact_string()?
-        } else {
-            decoder.read_string()?
-        };
-        let protocol_type = if Self::is_flexible(version) {
-            decoder.read_compact_string()?
-        } else {
-            decoder.read_string()?
-        };
-        let protocol_data = if Self::is_flexible(version) {
-            decoder.read_compact_string()?
-        } else {
-            decoder.read_string()?
-        };
-        let members = {
-            let length = if Self::is_flexible(version) {
-                decoder.read_compact_array_len()?
-            } else {
-                decoder.read_array_len()?
-            };
-            decoder.read_vec(length, |decoder| {
-                DescribeGroupsResponseDescribedGroupMember::decode(decoder, version)
-            })?
-        };
-        let authorized_operations = if version.value() >= 3 {
-            decoder.read_i32()?
-        } else {
-            -2_147_483_648
-        };
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
-
-        Ok(Self {
-            error_code,
-            error_message,
-            group_id,
-            group_state,
-            protocol_type,
-            protocol_data,
-            members,
-            authorized_operations,
-            unknown_tagged_fields,
-        })
-    }
-}
-
-impl KafkaEncode for DescribeGroupsResponseDescribedGroup {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        encoder.write_i16(self.error_code)?;
-        if version.value() >= 6 {
-            encoder.write_compact_nullable_string(self.error_message.as_ref())?;
-        }
-        if Self::is_flexible(version) {
-            encoder.write_compact_string(&self.group_id)?;
-        } else {
-            encoder.write_string(&self.group_id)?;
-        }
-        if Self::is_flexible(version) {
-            encoder.write_compact_string(&self.group_state)?;
-        } else {
-            encoder.write_string(&self.group_state)?;
-        }
-        if Self::is_flexible(version) {
-            encoder.write_compact_string(&self.protocol_type)?;
-        } else {
-            encoder.write_string(&self.protocol_type)?;
-        }
-        if Self::is_flexible(version) {
-            encoder.write_compact_string(&self.protocol_data)?;
-        } else {
-            encoder.write_string(&self.protocol_data)?;
-        }
-        if Self::is_flexible(version) {
-            encoder.write_compact_array_len(self.members.len())?;
-        } else {
-            encoder.write_array_len(self.members.len())?;
-        }
-        for value in &self.members {
-            value.encode(encoder, version)?;
-        }
-        if version.value() >= 3 {
-            encoder.write_i32(self.authorized_operations)?;
-        }
-
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: "DescribeGroupsResponseDescribedGroup",
-                version,
-            });
-        }
-
-        Ok(())
-    }
-}
-
-/// `DescribedGroupMember` as declared by the `DescribeGroups` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct DescribeGroupsResponseDescribedGroupMember {
-    /// The member id.
-    pub member_id: StrBytes,
-    /// The unique identifier of the consumer instance provided by end user.
-    pub group_instance_id: Option<StrBytes>,
-    /// The client ID used in the member's latest join group request.
-    pub client_id: StrBytes,
-    /// The client host.
-    pub client_host: StrBytes,
-    /// The metadata corresponding to the current group protocol in use.
-    pub member_metadata: Bytes,
-    /// The current assignment provided by the group leader.
-    pub member_assignment: Bytes,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
-
-impl DescribeGroupsResponseDescribedGroupMember {
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(5, 6));
-
-    fn is_flexible(version: ApiVersion) -> bool {
-        Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
-    }
-}
-
-impl KafkaDecode for DescribeGroupsResponseDescribedGroupMember {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        let member_id = if Self::is_flexible(version) {
-            decoder.read_compact_string()?
-        } else {
-            decoder.read_string()?
-        };
-        let group_instance_id = if version.value() >= 4 {
-            if Self::is_flexible(version) {
+    impl KafkaDecode for DescribedGroup {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            let error_code = decoder.read_i16()?;
+            let error_message = if version.value() >= 6 {
                 decoder.read_compact_nullable_string()?
             } else {
-                decoder.read_nullable_string()?
-            }
-        } else {
-            None
-        };
-        let client_id = if Self::is_flexible(version) {
-            decoder.read_compact_string()?
-        } else {
-            decoder.read_string()?
-        };
-        let client_host = if Self::is_flexible(version) {
-            decoder.read_compact_string()?
-        } else {
-            decoder.read_string()?
-        };
-        let member_metadata = if Self::is_flexible(version) {
-            decoder.read_compact_bytes()?
-        } else {
-            decoder.read_bytes()?
-        };
-        let member_assignment = if Self::is_flexible(version) {
-            decoder.read_compact_bytes()?
-        } else {
-            decoder.read_bytes()?
-        };
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
-
-        Ok(Self {
-            member_id,
-            group_instance_id,
-            client_id,
-            client_host,
-            member_metadata,
-            member_assignment,
-            unknown_tagged_fields,
-        })
-    }
-}
-
-impl KafkaEncode for DescribeGroupsResponseDescribedGroupMember {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        if Self::is_flexible(version) {
-            encoder.write_compact_string(&self.member_id)?;
-        } else {
-            encoder.write_string(&self.member_id)?;
-        }
-        if version.value() >= 4 {
-            if Self::is_flexible(version) {
-                encoder.write_compact_nullable_string(self.group_instance_id.as_ref())?;
-            } else {
-                encoder.write_nullable_string(self.group_instance_id.as_ref())?;
-            }
-        }
-        if Self::is_flexible(version) {
-            encoder.write_compact_string(&self.client_id)?;
-        } else {
-            encoder.write_string(&self.client_id)?;
-        }
-        if Self::is_flexible(version) {
-            encoder.write_compact_string(&self.client_host)?;
-        } else {
-            encoder.write_string(&self.client_host)?;
-        }
-        if Self::is_flexible(version) {
-            encoder.write_compact_bytes(&self.member_metadata)?;
-        } else {
-            encoder.write_bytes(&self.member_metadata)?;
-        }
-        if Self::is_flexible(version) {
-            encoder.write_compact_bytes(&self.member_assignment)?;
-        } else {
-            encoder.write_bytes(&self.member_assignment)?;
-        }
-
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: "DescribeGroupsResponseDescribedGroupMember",
-                version,
-            });
-        }
-
-        Ok(())
-    }
-}
-
-/// Response body for the `DescribeGroups` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct DescribeGroupsResponse {
-    /// The duration in milliseconds for which the request was throttled due to a quota violation, or zero if the request did not violate any quota.
-    pub throttle_time_ms: i32,
-    /// Each described group.
-    pub groups: Vec<DescribeGroupsResponseDescribedGroup>,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
-
-impl KafkaMessage for DescribeGroupsResponse {
-    const NAME: &'static str = "DescribeGroupsResponse";
-    const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 6);
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(5, 6));
-}
-
-impl KafkaResponse for DescribeGroupsResponse {
-    const API_KEY: ApiKey = ApiKey::new(15);
-}
-
-impl KafkaDecode for DescribeGroupsResponse {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        crate::message::ensure_decode_version::<Self>(version)?;
-
-        let throttle_time_ms = if version.value() >= 1 {
-            decoder.read_i32()?
-        } else {
-            0
-        };
-        let groups = {
-            let length = if Self::is_flexible(version) {
-                decoder.read_compact_array_len()?
-            } else {
-                decoder.read_array_len()?
+                None
             };
-            decoder.read_vec(length, |decoder| {
-                DescribeGroupsResponseDescribedGroup::decode(decoder, version)
-            })?
-        };
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
+            let group_id = if Self::is_flexible(version) {
+                decoder.read_compact_string()?
+            } else {
+                decoder.read_string()?
+            };
+            let group_state = if Self::is_flexible(version) {
+                decoder.read_compact_string()?
+            } else {
+                decoder.read_string()?
+            };
+            let protocol_type = if Self::is_flexible(version) {
+                decoder.read_compact_string()?
+            } else {
+                decoder.read_string()?
+            };
+            let protocol_data = if Self::is_flexible(version) {
+                decoder.read_compact_string()?
+            } else {
+                decoder.read_string()?
+            };
+            let members = {
+                let length = if Self::is_flexible(version) {
+                    decoder.read_compact_array_len()?
+                } else {
+                    decoder.read_array_len()?
+                };
+                decoder.read_vec(length, |decoder| {
+                    DescribedGroupMember::decode(decoder, version)
+                })?
+            };
+            let authorized_operations = if version.value() >= 3 {
+                decoder.read_i32()?
+            } else {
+                -2_147_483_648
+            };
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
 
-        Ok(Self {
-            throttle_time_ms,
-            groups,
-            unknown_tagged_fields,
-        })
+            Ok(Self {
+                error_code,
+                error_message,
+                group_id,
+                group_state,
+                protocol_type,
+                protocol_data,
+                members,
+                authorized_operations,
+                unknown_tagged_fields,
+            })
+        }
+    }
+
+    impl KafkaEncode for DescribedGroup {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            encoder.write_i16(self.error_code)?;
+            if version.value() >= 6 {
+                encoder.write_compact_nullable_string(self.error_message.as_ref())?;
+            }
+            if Self::is_flexible(version) {
+                encoder.write_compact_string(&self.group_id)?;
+            } else {
+                encoder.write_string(&self.group_id)?;
+            }
+            if Self::is_flexible(version) {
+                encoder.write_compact_string(&self.group_state)?;
+            } else {
+                encoder.write_string(&self.group_state)?;
+            }
+            if Self::is_flexible(version) {
+                encoder.write_compact_string(&self.protocol_type)?;
+            } else {
+                encoder.write_string(&self.protocol_type)?;
+            }
+            if Self::is_flexible(version) {
+                encoder.write_compact_string(&self.protocol_data)?;
+            } else {
+                encoder.write_string(&self.protocol_data)?;
+            }
+            if Self::is_flexible(version) {
+                encoder.write_compact_array_len(self.members.len())?;
+            } else {
+                encoder.write_array_len(self.members.len())?;
+            }
+            for value in &self.members {
+                value.encode(encoder, version)?;
+            }
+            if version.value() >= 3 {
+                encoder.write_i32(self.authorized_operations)?;
+            }
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "DescribedGroup",
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+
+    /// `DescribedGroupMember` as declared by the `DescribeGroups` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    pub struct DescribedGroupMember {
+        /// The member id.
+        pub member_id: StrBytes,
+        /// The unique identifier of the consumer instance provided by end user.
+        pub group_instance_id: Option<StrBytes>,
+        /// The client ID used in the member's latest join group request.
+        pub client_id: StrBytes,
+        /// The client host.
+        pub client_host: StrBytes,
+        /// The metadata corresponding to the current group protocol in use.
+        pub member_metadata: Bytes,
+        /// The current assignment provided by the group leader.
+        pub member_assignment: Bytes,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl DescribedGroupMember {
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(5, 6));
+
+        fn is_flexible(version: ApiVersion) -> bool {
+            Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+        }
+    }
+
+    impl KafkaDecode for DescribedGroupMember {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            let member_id = if Self::is_flexible(version) {
+                decoder.read_compact_string()?
+            } else {
+                decoder.read_string()?
+            };
+            let group_instance_id = if version.value() >= 4 {
+                if Self::is_flexible(version) {
+                    decoder.read_compact_nullable_string()?
+                } else {
+                    decoder.read_nullable_string()?
+                }
+            } else {
+                None
+            };
+            let client_id = if Self::is_flexible(version) {
+                decoder.read_compact_string()?
+            } else {
+                decoder.read_string()?
+            };
+            let client_host = if Self::is_flexible(version) {
+                decoder.read_compact_string()?
+            } else {
+                decoder.read_string()?
+            };
+            let member_metadata = if Self::is_flexible(version) {
+                decoder.read_compact_bytes()?
+            } else {
+                decoder.read_bytes()?
+            };
+            let member_assignment = if Self::is_flexible(version) {
+                decoder.read_compact_bytes()?
+            } else {
+                decoder.read_bytes()?
+            };
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
+
+            Ok(Self {
+                member_id,
+                group_instance_id,
+                client_id,
+                client_host,
+                member_metadata,
+                member_assignment,
+                unknown_tagged_fields,
+            })
+        }
+    }
+
+    impl KafkaEncode for DescribedGroupMember {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            if Self::is_flexible(version) {
+                encoder.write_compact_string(&self.member_id)?;
+            } else {
+                encoder.write_string(&self.member_id)?;
+            }
+            if version.value() >= 4 {
+                if Self::is_flexible(version) {
+                    encoder.write_compact_nullable_string(self.group_instance_id.as_ref())?;
+                } else {
+                    encoder.write_nullable_string(self.group_instance_id.as_ref())?;
+                }
+            }
+            if Self::is_flexible(version) {
+                encoder.write_compact_string(&self.client_id)?;
+            } else {
+                encoder.write_string(&self.client_id)?;
+            }
+            if Self::is_flexible(version) {
+                encoder.write_compact_string(&self.client_host)?;
+            } else {
+                encoder.write_string(&self.client_host)?;
+            }
+            if Self::is_flexible(version) {
+                encoder.write_compact_bytes(&self.member_metadata)?;
+            } else {
+                encoder.write_bytes(&self.member_metadata)?;
+            }
+            if Self::is_flexible(version) {
+                encoder.write_compact_bytes(&self.member_assignment)?;
+            } else {
+                encoder.write_bytes(&self.member_assignment)?;
+            }
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "DescribedGroupMember",
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+
+    /// Response body for the `DescribeGroups` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    pub struct DescribeGroupsResponse {
+        /// The duration in milliseconds for which the request was throttled due to a quota violation, or zero if the request did not violate any quota.
+        pub throttle_time_ms: i32,
+        /// Each described group.
+        pub groups: Vec<DescribedGroup>,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl KafkaMessage for DescribeGroupsResponse {
+        const NAME: &'static str = "DescribeGroupsResponse";
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 6);
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(5, 6));
+    }
+
+    impl KafkaResponse for DescribeGroupsResponse {
+        const API_KEY: ApiKey = ApiKey::new(15);
+    }
+
+    impl KafkaDecode for DescribeGroupsResponse {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            crate::message::ensure_decode_version::<Self>(version)?;
+
+            let throttle_time_ms = if version.value() >= 1 {
+                decoder.read_i32()?
+            } else {
+                0
+            };
+            let groups = {
+                let length = if Self::is_flexible(version) {
+                    decoder.read_compact_array_len()?
+                } else {
+                    decoder.read_array_len()?
+                };
+                decoder.read_vec(length, |decoder| DescribedGroup::decode(decoder, version))?
+            };
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
+
+            Ok(Self {
+                throttle_time_ms,
+                groups,
+                unknown_tagged_fields,
+            })
+        }
+    }
+
+    impl KafkaEncode for DescribeGroupsResponse {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            crate::message::ensure_encode_version::<Self>(version)?;
+
+            if version.value() >= 1 {
+                encoder.write_i32(self.throttle_time_ms)?;
+            }
+            if Self::is_flexible(version) {
+                encoder.write_compact_array_len(self.groups.len())?;
+            } else {
+                encoder.write_array_len(self.groups.len())?;
+            }
+            for value in &self.groups {
+                value.encode(encoder, version)?;
+            }
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: Self::NAME,
+                    version,
+                });
+            }
+
+            Ok(())
+        }
     }
 }
 
-impl KafkaEncode for DescribeGroupsResponse {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        crate::message::ensure_encode_version::<Self>(version)?;
+use kafka_wire_core::VersionRange;
 
-        if version.value() >= 1 {
-            encoder.write_i32(self.throttle_time_ms)?;
-        }
-        if Self::is_flexible(version) {
-            encoder.write_compact_array_len(self.groups.len())?;
-        } else {
-            encoder.write_array_len(self.groups.len())?;
-        }
-        for value in &self.groups {
-            value.encode(encoder, version)?;
-        }
+use crate::{MessageDescriptor, MessageDirection};
 
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: Self::NAME,
-                version,
-            });
-        }
-
-        Ok(())
-    }
-}
+pub use describe_groups_request::DescribeGroupsRequest;
+pub use describe_groups_response::DescribeGroupsResponse;
 
 /// Static metadata for [`DescribeGroupsRequest`].
 pub const DESCRIBE_GROUPS_REQUEST_DESCRIPTOR: MessageDescriptor = MessageDescriptor::new(

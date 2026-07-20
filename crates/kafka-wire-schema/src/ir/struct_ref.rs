@@ -1,57 +1,48 @@
-//! Owner-qualified identity for one nested struct.
+//! Module-scoped identity for one nested struct.
 //!
-//! This file owns the earlier flat naming rule's naming rule: the qualified protocol and Rust
-//! spellings a nested struct takes from the message that declares it, and which
-//! of the rule's two arms produced them. It deliberately does not own whether a
-//! reference binds to a declaration (`validate/structs.rs`), the per-message
-//! declaration table (`struct_table.rs`), or uniqueness across messages
+//! This file owns the module-scoped naming rule's naming rule: a nested struct keeps upstream's own
+//! spelling, and the scope that disambiguates it is the module its owning
+//! message is emitted into. It deliberately does not own whether a reference
+//! binds to a declaration (`validate/structs.rs`), the per-message declaration
+//! table (`struct_table.rs`), or uniqueness within a module
 //! (`validate/uniqueness.rs`).
 
 use heck::ToUpperCamelCase;
 
 use super::MessageName;
 
-/// Which arm of the earlier flat naming rule's qualification rule produced a name.
+/// Which scope disambiguates a struct name.
 ///
-/// The rule has two arms and both are exercised by the pinned corpus, so this
-/// records which one applied rather than leaving the distinction implicit. A
-/// regression that collapsed the rule to a pure prefix would still produce
-/// names, just wrong ones; it is visible here.
+/// the earlier flat naming rule had three arms here, all of which built a flat, globally unique
+/// identifier out of the owner and the declared name. the module-scoped naming rule replaced the
+/// whole construction with a Rust module, so one arm is left. The enum stays
+/// rather than being deleted because the owner is still *recorded* — it decides
+/// which module the struct lands in — and a regression that reintroduced
+/// qualification into the name would otherwise be invisible at this layer.
 #[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
 pub enum Qualification {
-    /// The upstream spelling already begins with its owning message's name.
+    /// Upstream's own spelling, scoped by the owning message's module.
     ///
-    /// Forty of the pinned corpus's struct declarations hand-qualify
-    /// themselves. Re-prefixing those yields names such as
-    /// `DescribeShareGroupOffsetsResponseDescribeShareGroupOffsetsResponsePartition`;
-    /// eliding the repeat bounds the corpus at 74 characters rather than 75.
-    AlreadyQualified,
-    /// The owning message's protocol name was prefixed to the upstream spelling.
-    OwnerPrefixed,
-    /// The declared name repeated the API's stem, which the owner already
-    /// carries, so the stem is spelled once.
-    ///
-    /// Upstream writes `DescribeUserScramCredentialsResult` inside
-    /// `DescribeUserScramCredentialsResponse`. Prefixing the whole owner would
-    /// say `DescribeUserScramCredentials` twice and produce a seventy-character
-    /// type, which is a name no one reads — the qualification would be doing its
-    /// job and defeating the purpose of having a name at all.
-    StemDeduplicated,
+    /// Two messages may declare one name; they land in different modules and do
+    /// not collide. What may not happen is one message declaring a name twice,
+    /// counting its own message type — that is the invariant
+    /// `validate/uniqueness.rs` asserts, on exactly this scope.
+    ModuleScoped,
 }
 
 /// A struct reference bound to the message that owns its declaration.
 ///
-/// Kafka scopes a struct name to the message that declares it; Rust has no such
-/// scope, and `kafka-wire-codegen` renders both directions of an API key into one
-/// module. A bare upstream spelling is therefore ambiguous by construction —
-/// `PartitionData` names 17 distinct shapes across 14 API keys, and 8 API keys
-/// declare a differently-shaped struct of one name in each direction. Lowering
-/// replaces the bare spelling with this, so that no renderer ever re-derives a
-/// name and the collision check can be a schema diagnostic.
+/// Kafka scopes a struct name to the message that declares it, and the module-scoped naming rule
+/// gives Rust the same scope: one module per message, holding the message type
+/// and every struct it declares. A bare upstream spelling is unambiguous there
+/// — `PartitionData` names 17 distinct shapes across 14 API keys, and each lands
+/// in its own module. Lowering still binds the owner, because the owner is what
+/// names that module and what the collision check groups by.
 ///
-/// Both the declared and the qualified spelling are kept. The declared one is
-/// what upstream wrote and the only key a reference inside the same message can
-/// be resolved by; the qualified one is what gets emitted.
+/// Both the declared and the emitted spelling are kept. They agree today, and
+/// the pair is kept because they are answers to different questions: `declared`
+/// is the key a reference inside the same message resolves by, `rust_type` is
+/// what gets emitted.
 #[derive(Clone, Debug, Eq, Hash, PartialEq)]
 pub struct StructRef {
     declared: String,
@@ -62,29 +53,23 @@ pub struct StructRef {
 }
 
 impl StructRef {
-    /// Qualifies one upstream struct spelling by the message that declares it.
+    /// Binds one upstream struct spelling to the message that declares it.
     ///
-    /// Qualification is unconditional: it does not depend on whether a collision
-    /// was detected anywhere, and it never compares field shapes. Two same-named
-    /// structs can have identical shallow field lists and still denote different
-    /// types once their children resolve, so a rule that never compares shapes
-    /// cannot get that wrong.
+    /// The name is upstream's, unconditionally: it does not depend on whether a
+    /// collision was detected anywhere, and it never compares field shapes. Two
+    /// same-named structs can have identical shallow field lists and still
+    /// denote different types once their children resolve, so a rule that never
+    /// compares shapes cannot get that wrong.
     ///
-    /// Depth does not participate. A struct three levels down is qualified by
-    /// its message and nothing else, which bounds every generated name at
-    /// `len(message) + len(struct)` however deep upstream nests.
+    /// Neither depth nor the owner reaches the name. The owner is recorded
+    /// because it selects the module, and the module is the scope; a struct
+    /// three levels down is spelled exactly as upstream spelled it, which bounds
+    /// every generated name at `len(struct)` however deep upstream nests.
     pub fn qualify(owner: &MessageName, declared: impl Into<String>) -> Self {
         let declared = declared.into();
-        let stem = owner.api_stem().to_owned();
         let owner = owner.protocol().to_owned();
 
-        let (protocol, qualification) = if begins_with_owner(&declared, &owner) {
-            (declared.clone(), Qualification::AlreadyQualified)
-        } else if let Some(rest) = trailing_after_stem(&declared, &stem) {
-            (format!("{owner}{rest}"), Qualification::StemDeduplicated)
-        } else {
-            (format!("{owner}{declared}"), Qualification::OwnerPrefixed)
-        };
+        let (protocol, qualification) = (declared.clone(), Qualification::ModuleScoped);
         let rust_type = protocol.to_upper_camel_case();
 
         Self {
@@ -109,7 +94,7 @@ impl StructRef {
         &self.owner
     }
 
-    /// Returns the qualified protocol name.
+    /// Returns the protocol name this struct is emitted under.
     pub fn protocol(&self) -> &str {
         &self.protocol
     }
@@ -119,44 +104,8 @@ impl StructRef {
         &self.rust_type
     }
 
-    /// Returns which arm of the qualification rule produced this name.
+    /// Returns which scope disambiguates this name.
     pub const fn qualification(&self) -> Qualification {
         self.qualification
     }
-}
-
-/// Reports whether `declared` already carries `owner` as a leading name segment.
-///
-/// The test is a camel-case boundary rather than a raw text prefix. A struct
-/// spelled `FooRequestly` starts with `FooRequest` as bytes while naming
-/// something unrelated, and eliding there would hand two different structs the
-/// same qualified name — the exact failure this rule exists to prevent. An
-/// exact match is not a segment either: a struct named like its own message
-/// must still be prefixed, or it would collide with the message type in the
-/// module the two share.
-///
-/// Measured over the pinned corpus, no declaration distinguishes this reading
-/// from a raw prefix: all 40 elisions clear the boundary. The stricter test is
-/// kept because the corpus changes upstream and the failure mode is silent.
-/// The part of `declared` that follows the API stem it already repeats.
-///
-/// `None` unless the declared name opens with the stem and continues with a new
-/// word, so this never fires on a coincidental prefix or splits an identifier
-/// mid-word. The result stays unique for the same reason full qualification
-/// does: the emitted name is still `owner` followed by something derived only
-/// from `declared`, and two different declarations under one owner cannot
-/// reduce to the same remainder.
-fn trailing_after_stem<'a>(declared: &'a str, stem: &str) -> Option<&'a str> {
-    if stem.is_empty() {
-        return None;
-    }
-    declared
-        .strip_prefix(stem)
-        .filter(|rest| rest.starts_with(|first: char| first.is_ascii_uppercase()))
-}
-
-fn begins_with_owner(declared: &str, owner: &str) -> bool {
-    declared
-        .strip_prefix(owner)
-        .is_some_and(|rest| rest.starts_with(|first: char| first.is_ascii_uppercase()))
 }

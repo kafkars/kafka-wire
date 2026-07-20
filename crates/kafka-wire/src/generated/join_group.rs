@@ -5,571 +5,594 @@
 //! Request SHA-256: `d61f9667c79f4ec088a3b8edc19ecc92d125332318c42e82cb94a2d9138e5d33`.
 //! Response SHA-256: `ef1a27d537c2460b00a9bc2331dc7655bf28826a872011ef247fcdda904f1687`.
 
-use kafka_wire_core::{
-    ApiKey, ApiVersion, Bytes, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder,
-    KafkaDecode, KafkaEncode, StrBytes, TaggedFields, VersionRange,
-};
+/// `JoinGroupRequest` and every struct it declares, under upstream's own names.
+///
+/// [`JoinGroupRequest`](crate::JoinGroupRequest) is re-exported flat, so this path never has to be
+/// written to name the message itself.
+pub mod join_group_request {
+    use kafka_wire_core::{
+        ApiKey, ApiVersion, Bytes, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder,
+        KafkaDecode, KafkaEncode, StrBytes, TaggedFields, VersionRange,
+    };
 
-use crate::{
-    KafkaMessage, KafkaRequest, KafkaResponse, MessageDescriptor, MessageDirection,
-    RequestResponsePair,
-};
+    use crate::{KafkaMessage, KafkaRequest, RequestResponsePair};
 
-/// `JoinGroupRequestProtocol` as declared by the `JoinGroup` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct JoinGroupRequestProtocol {
-    /// The protocol name.
-    pub name: StrBytes,
-    /// The protocol metadata.
-    pub metadata: Bytes,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
-
-impl JoinGroupRequestProtocol {
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(6, 9));
-
-    fn is_flexible(version: ApiVersion) -> bool {
-        Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+    /// `JoinGroupRequestProtocol` as declared by the `JoinGroup` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    pub struct JoinGroupRequestProtocol {
+        /// The protocol name.
+        pub name: StrBytes,
+        /// The protocol metadata.
+        pub metadata: Bytes,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
     }
-}
 
-impl KafkaDecode for JoinGroupRequestProtocol {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        let name = if Self::is_flexible(version) {
-            decoder.read_compact_string()?
-        } else {
-            decoder.read_string()?
-        };
-        let metadata = if Self::is_flexible(version) {
-            decoder.read_compact_bytes()?
-        } else {
-            decoder.read_bytes()?
-        };
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
+    impl JoinGroupRequestProtocol {
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(6, 9));
 
-        Ok(Self {
-            name,
-            metadata,
-            unknown_tagged_fields,
-        })
-    }
-}
-
-impl KafkaEncode for JoinGroupRequestProtocol {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        if Self::is_flexible(version) {
-            encoder.write_compact_string(&self.name)?;
-        } else {
-            encoder.write_string(&self.name)?;
-        }
-        if Self::is_flexible(version) {
-            encoder.write_compact_bytes(&self.metadata)?;
-        } else {
-            encoder.write_bytes(&self.metadata)?;
-        }
-
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: "JoinGroupRequestProtocol",
-                version,
-            });
-        }
-
-        Ok(())
-    }
-}
-
-/// Request body for the `JoinGroup` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct JoinGroupRequest {
-    /// The group identifier.
-    pub group_id: StrBytes,
-    /// The coordinator considers the consumer dead if it receives no heartbeat after this timeout in milliseconds.
-    pub session_timeout_ms: i32,
-    /// The maximum time in milliseconds that the coordinator will wait for each member to rejoin when rebalancing the group.
-    pub rebalance_timeout_ms: i32,
-    /// The member id assigned by the group coordinator.
-    pub member_id: StrBytes,
-    /// The unique identifier of the consumer instance provided by end user.
-    pub group_instance_id: Option<StrBytes>,
-    /// The unique name the for class of protocols implemented by the group we want to join.
-    pub protocol_type: StrBytes,
-    /// The list of protocols that the member supports.
-    pub protocols: Vec<JoinGroupRequestProtocol>,
-    /// The reason why the member (re-)joins the group.
-    pub reason: Option<StrBytes>,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
-
-impl Default for JoinGroupRequest {
-    fn default() -> Self {
-        Self {
-            group_id: StrBytes::default(),
-            session_timeout_ms: 0,
-            rebalance_timeout_ms: -1,
-            member_id: StrBytes::default(),
-            group_instance_id: None,
-            protocol_type: StrBytes::default(),
-            protocols: Vec::new(),
-            reason: None,
-            unknown_tagged_fields: TaggedFields::default(),
+        fn is_flexible(version: ApiVersion) -> bool {
+            Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
         }
     }
-}
 
-impl KafkaMessage for JoinGroupRequest {
-    const NAME: &'static str = "JoinGroupRequest";
-    const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 9);
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(6, 9));
-}
-
-impl KafkaRequest for JoinGroupRequest {
-    const API_KEY: ApiKey = ApiKey::new(11);
-}
-
-impl RequestResponsePair for JoinGroupRequest {
-    type Response = JoinGroupResponse;
-}
-
-impl KafkaDecode for JoinGroupRequest {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        crate::message::ensure_decode_version::<Self>(version)?;
-
-        let group_id = if Self::is_flexible(version) {
-            decoder.read_compact_string()?
-        } else {
-            decoder.read_string()?
-        };
-        let session_timeout_ms = decoder.read_i32()?;
-        let rebalance_timeout_ms = if version.value() >= 1 {
-            decoder.read_i32()?
-        } else {
-            -1
-        };
-        let member_id = if Self::is_flexible(version) {
-            decoder.read_compact_string()?
-        } else {
-            decoder.read_string()?
-        };
-        let group_instance_id = if version.value() >= 5 {
-            if Self::is_flexible(version) {
-                decoder.read_compact_nullable_string()?
-            } else {
-                decoder.read_nullable_string()?
-            }
-        } else {
-            None
-        };
-        let protocol_type = if Self::is_flexible(version) {
-            decoder.read_compact_string()?
-        } else {
-            decoder.read_string()?
-        };
-        let protocols = {
-            let length = if Self::is_flexible(version) {
-                decoder.read_compact_array_len()?
-            } else {
-                decoder.read_array_len()?
-            };
-            decoder.read_vec(length, |decoder| {
-                JoinGroupRequestProtocol::decode(decoder, version)
-            })?
-        };
-        let reason = if version.value() >= 8 {
-            decoder.read_compact_nullable_string()?
-        } else {
-            None
-        };
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
-
-        Ok(Self {
-            group_id,
-            session_timeout_ms,
-            rebalance_timeout_ms,
-            member_id,
-            group_instance_id,
-            protocol_type,
-            protocols,
-            reason,
-            unknown_tagged_fields,
-        })
-    }
-}
-
-impl KafkaEncode for JoinGroupRequest {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        crate::message::ensure_encode_version::<Self>(version)?;
-
-        if version.value() < 5 && self.group_instance_id.is_some() {
-            return Err(EncodeError::FieldNotRepresentable {
-                message: Self::NAME,
-                field: "GroupInstanceId",
-                version,
-            });
-        }
-
-        if Self::is_flexible(version) {
-            encoder.write_compact_string(&self.group_id)?;
-        } else {
-            encoder.write_string(&self.group_id)?;
-        }
-        encoder.write_i32(self.session_timeout_ms)?;
-        if version.value() >= 1 {
-            encoder.write_i32(self.rebalance_timeout_ms)?;
-        }
-        if Self::is_flexible(version) {
-            encoder.write_compact_string(&self.member_id)?;
-        } else {
-            encoder.write_string(&self.member_id)?;
-        }
-        if version.value() >= 5 {
-            if Self::is_flexible(version) {
-                encoder.write_compact_nullable_string(self.group_instance_id.as_ref())?;
-            } else {
-                encoder.write_nullable_string(self.group_instance_id.as_ref())?;
-            }
-        }
-        if Self::is_flexible(version) {
-            encoder.write_compact_string(&self.protocol_type)?;
-        } else {
-            encoder.write_string(&self.protocol_type)?;
-        }
-        if Self::is_flexible(version) {
-            encoder.write_compact_array_len(self.protocols.len())?;
-        } else {
-            encoder.write_array_len(self.protocols.len())?;
-        }
-        for value in &self.protocols {
-            value.encode(encoder, version)?;
-        }
-        if version.value() >= 8 {
-            encoder.write_compact_nullable_string(self.reason.as_ref())?;
-        }
-
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: Self::NAME,
-                version,
-            });
-        }
-
-        Ok(())
-    }
-}
-
-/// `JoinGroupResponseMember` as declared by the `JoinGroup` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct JoinGroupResponseMember {
-    /// The group member ID.
-    pub member_id: StrBytes,
-    /// The unique identifier of the consumer instance provided by end user.
-    pub group_instance_id: Option<StrBytes>,
-    /// The group member metadata.
-    pub metadata: Bytes,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
-
-impl JoinGroupResponseMember {
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(6, 9));
-
-    fn is_flexible(version: ApiVersion) -> bool {
-        Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
-    }
-}
-
-impl KafkaDecode for JoinGroupResponseMember {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        let member_id = if Self::is_flexible(version) {
-            decoder.read_compact_string()?
-        } else {
-            decoder.read_string()?
-        };
-        let group_instance_id = if version.value() >= 5 {
-            if Self::is_flexible(version) {
-                decoder.read_compact_nullable_string()?
-            } else {
-                decoder.read_nullable_string()?
-            }
-        } else {
-            None
-        };
-        let metadata = if Self::is_flexible(version) {
-            decoder.read_compact_bytes()?
-        } else {
-            decoder.read_bytes()?
-        };
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
-
-        Ok(Self {
-            member_id,
-            group_instance_id,
-            metadata,
-            unknown_tagged_fields,
-        })
-    }
-}
-
-impl KafkaEncode for JoinGroupResponseMember {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        if Self::is_flexible(version) {
-            encoder.write_compact_string(&self.member_id)?;
-        } else {
-            encoder.write_string(&self.member_id)?;
-        }
-        if version.value() >= 5 {
-            if Self::is_flexible(version) {
-                encoder.write_compact_nullable_string(self.group_instance_id.as_ref())?;
-            } else {
-                encoder.write_nullable_string(self.group_instance_id.as_ref())?;
-            }
-        }
-        if Self::is_flexible(version) {
-            encoder.write_compact_bytes(&self.metadata)?;
-        } else {
-            encoder.write_bytes(&self.metadata)?;
-        }
-
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: "JoinGroupResponseMember",
-                version,
-            });
-        }
-
-        Ok(())
-    }
-}
-
-/// Response body for the `JoinGroup` API.
-#[non_exhaustive]
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct JoinGroupResponse {
-    /// The duration in milliseconds for which the request was throttled due to a quota violation, or zero if the request did not violate any quota.
-    pub throttle_time_ms: i32,
-    /// The error code, or 0 if there was no error.
-    pub error_code: i16,
-    /// The generation ID of the group.
-    pub generation_id: i32,
-    /// The group protocol name.
-    pub protocol_type: Option<StrBytes>,
-    /// The group protocol selected by the coordinator.
-    pub protocol_name: Option<StrBytes>,
-    /// The leader of the group.
-    pub leader: StrBytes,
-    /// True if the leader must skip running the assignment.
-    pub skip_assignment: bool,
-    /// The member ID assigned by the group coordinator.
-    pub member_id: StrBytes,
-    /// The group members.
-    pub members: Vec<JoinGroupResponseMember>,
-    /// Unknown flexible-version tagged fields retained for forwarding.
-    pub unknown_tagged_fields: TaggedFields,
-}
-
-impl Default for JoinGroupResponse {
-    fn default() -> Self {
-        Self {
-            throttle_time_ms: 0,
-            error_code: 0,
-            generation_id: -1,
-            protocol_type: None,
-            protocol_name: Some(StrBytes::default()),
-            leader: StrBytes::default(),
-            skip_assignment: false,
-            member_id: StrBytes::default(),
-            members: Vec::new(),
-            unknown_tagged_fields: TaggedFields::default(),
-        }
-    }
-}
-
-impl KafkaMessage for JoinGroupResponse {
-    const NAME: &'static str = "JoinGroupResponse";
-    const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 9);
-    const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(6, 9));
-}
-
-impl KafkaResponse for JoinGroupResponse {
-    const API_KEY: ApiKey = ApiKey::new(11);
-}
-
-impl KafkaDecode for JoinGroupResponse {
-    fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
-        crate::message::ensure_decode_version::<Self>(version)?;
-
-        let throttle_time_ms = if version.value() >= 2 {
-            decoder.read_i32()?
-        } else {
-            0
-        };
-        let error_code = decoder.read_i16()?;
-        let generation_id = decoder.read_i32()?;
-        let protocol_type = if version.value() >= 7 {
-            decoder.read_compact_nullable_string()?
-        } else {
-            None
-        };
-        let protocol_name = if version.value() >= 7 {
-            decoder.read_compact_nullable_string()?
-        } else {
-            Some(if Self::is_flexible(version) {
+    impl KafkaDecode for JoinGroupRequestProtocol {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            let name = if Self::is_flexible(version) {
                 decoder.read_compact_string()?
             } else {
                 decoder.read_string()?
-            })
-        };
-        let leader = if Self::is_flexible(version) {
-            decoder.read_compact_string()?
-        } else {
-            decoder.read_string()?
-        };
-        let skip_assignment = if version.value() >= 9 {
-            decoder.read_bool()?
-        } else {
-            false
-        };
-        let member_id = if Self::is_flexible(version) {
-            decoder.read_compact_string()?
-        } else {
-            decoder.read_string()?
-        };
-        let members = {
-            let length = if Self::is_flexible(version) {
-                decoder.read_compact_array_len()?
-            } else {
-                decoder.read_array_len()?
             };
-            decoder.read_vec(length, |decoder| {
-                JoinGroupResponseMember::decode(decoder, version)
-            })?
-        };
-        let unknown_tagged_fields = if Self::is_flexible(version) {
-            decoder.read_tagged_fields()?
-        } else {
-            TaggedFields::default()
-        };
+            let metadata = if Self::is_flexible(version) {
+                decoder.read_compact_bytes()?
+            } else {
+                decoder.read_bytes()?
+            };
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
 
-        Ok(Self {
-            throttle_time_ms,
-            error_code,
-            generation_id,
-            protocol_type,
-            protocol_name,
-            leader,
-            skip_assignment,
-            member_id,
-            members,
-            unknown_tagged_fields,
-        })
+            Ok(Self {
+                name,
+                metadata,
+                unknown_tagged_fields,
+            })
+        }
+    }
+
+    impl KafkaEncode for JoinGroupRequestProtocol {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            if Self::is_flexible(version) {
+                encoder.write_compact_string(&self.name)?;
+            } else {
+                encoder.write_string(&self.name)?;
+            }
+            if Self::is_flexible(version) {
+                encoder.write_compact_bytes(&self.metadata)?;
+            } else {
+                encoder.write_bytes(&self.metadata)?;
+            }
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "JoinGroupRequestProtocol",
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+
+    /// Request body for the `JoinGroup` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Eq, PartialEq)]
+    pub struct JoinGroupRequest {
+        /// The group identifier.
+        pub group_id: StrBytes,
+        /// The coordinator considers the consumer dead if it receives no heartbeat after this timeout in milliseconds.
+        pub session_timeout_ms: i32,
+        /// The maximum time in milliseconds that the coordinator will wait for each member to rejoin when rebalancing the group.
+        pub rebalance_timeout_ms: i32,
+        /// The member id assigned by the group coordinator.
+        pub member_id: StrBytes,
+        /// The unique identifier of the consumer instance provided by end user.
+        pub group_instance_id: Option<StrBytes>,
+        /// The unique name the for class of protocols implemented by the group we want to join.
+        pub protocol_type: StrBytes,
+        /// The list of protocols that the member supports.
+        pub protocols: Vec<JoinGroupRequestProtocol>,
+        /// The reason why the member (re-)joins the group.
+        pub reason: Option<StrBytes>,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl Default for JoinGroupRequest {
+        fn default() -> Self {
+            Self {
+                group_id: StrBytes::default(),
+                session_timeout_ms: 0,
+                rebalance_timeout_ms: -1,
+                member_id: StrBytes::default(),
+                group_instance_id: None,
+                protocol_type: StrBytes::default(),
+                protocols: Vec::new(),
+                reason: None,
+                unknown_tagged_fields: TaggedFields::default(),
+            }
+        }
+    }
+
+    impl KafkaMessage for JoinGroupRequest {
+        const NAME: &'static str = "JoinGroupRequest";
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 9);
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(6, 9));
+    }
+
+    impl KafkaRequest for JoinGroupRequest {
+        const API_KEY: ApiKey = ApiKey::new(11);
+    }
+
+    impl RequestResponsePair for JoinGroupRequest {
+        type Response = super::JoinGroupResponse;
+    }
+
+    impl KafkaDecode for JoinGroupRequest {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            crate::message::ensure_decode_version::<Self>(version)?;
+
+            let group_id = if Self::is_flexible(version) {
+                decoder.read_compact_string()?
+            } else {
+                decoder.read_string()?
+            };
+            let session_timeout_ms = decoder.read_i32()?;
+            let rebalance_timeout_ms = if version.value() >= 1 {
+                decoder.read_i32()?
+            } else {
+                -1
+            };
+            let member_id = if Self::is_flexible(version) {
+                decoder.read_compact_string()?
+            } else {
+                decoder.read_string()?
+            };
+            let group_instance_id = if version.value() >= 5 {
+                if Self::is_flexible(version) {
+                    decoder.read_compact_nullable_string()?
+                } else {
+                    decoder.read_nullable_string()?
+                }
+            } else {
+                None
+            };
+            let protocol_type = if Self::is_flexible(version) {
+                decoder.read_compact_string()?
+            } else {
+                decoder.read_string()?
+            };
+            let protocols = {
+                let length = if Self::is_flexible(version) {
+                    decoder.read_compact_array_len()?
+                } else {
+                    decoder.read_array_len()?
+                };
+                decoder.read_vec(length, |decoder| {
+                    JoinGroupRequestProtocol::decode(decoder, version)
+                })?
+            };
+            let reason = if version.value() >= 8 {
+                decoder.read_compact_nullable_string()?
+            } else {
+                None
+            };
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
+
+            Ok(Self {
+                group_id,
+                session_timeout_ms,
+                rebalance_timeout_ms,
+                member_id,
+                group_instance_id,
+                protocol_type,
+                protocols,
+                reason,
+                unknown_tagged_fields,
+            })
+        }
+    }
+
+    impl KafkaEncode for JoinGroupRequest {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            crate::message::ensure_encode_version::<Self>(version)?;
+
+            if version.value() < 5 && self.group_instance_id.is_some() {
+                return Err(EncodeError::FieldNotRepresentable {
+                    message: Self::NAME,
+                    field: "GroupInstanceId",
+                    version,
+                });
+            }
+
+            if Self::is_flexible(version) {
+                encoder.write_compact_string(&self.group_id)?;
+            } else {
+                encoder.write_string(&self.group_id)?;
+            }
+            encoder.write_i32(self.session_timeout_ms)?;
+            if version.value() >= 1 {
+                encoder.write_i32(self.rebalance_timeout_ms)?;
+            }
+            if Self::is_flexible(version) {
+                encoder.write_compact_string(&self.member_id)?;
+            } else {
+                encoder.write_string(&self.member_id)?;
+            }
+            if version.value() >= 5 {
+                if Self::is_flexible(version) {
+                    encoder.write_compact_nullable_string(self.group_instance_id.as_ref())?;
+                } else {
+                    encoder.write_nullable_string(self.group_instance_id.as_ref())?;
+                }
+            }
+            if Self::is_flexible(version) {
+                encoder.write_compact_string(&self.protocol_type)?;
+            } else {
+                encoder.write_string(&self.protocol_type)?;
+            }
+            if Self::is_flexible(version) {
+                encoder.write_compact_array_len(self.protocols.len())?;
+            } else {
+                encoder.write_array_len(self.protocols.len())?;
+            }
+            for value in &self.protocols {
+                value.encode(encoder, version)?;
+            }
+            if version.value() >= 8 {
+                encoder.write_compact_nullable_string(self.reason.as_ref())?;
+            }
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: Self::NAME,
+                    version,
+                });
+            }
+
+            Ok(())
+        }
     }
 }
 
-impl KafkaEncode for JoinGroupResponse {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        crate::message::ensure_encode_version::<Self>(version)?;
+/// `JoinGroupResponse` and every struct it declares, under upstream's own names.
+///
+/// [`JoinGroupResponse`](crate::JoinGroupResponse) is re-exported flat, so this path never has to be
+/// written to name the message itself.
+pub mod join_group_response {
+    use kafka_wire_core::{
+        ApiKey, ApiVersion, Bytes, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder,
+        KafkaDecode, KafkaEncode, StrBytes, TaggedFields, VersionRange,
+    };
 
-        if version.value() < 9 && self.skip_assignment {
-            return Err(EncodeError::FieldNotRepresentable {
-                message: Self::NAME,
-                field: "SkipAssignment",
-                version,
-            });
-        }
+    use crate::{KafkaMessage, KafkaResponse};
 
-        if version.value() >= 2 {
-            encoder.write_i32(self.throttle_time_ms)?;
-        }
-        encoder.write_i16(self.error_code)?;
-        encoder.write_i32(self.generation_id)?;
-        if version.value() >= 7 {
-            encoder.write_compact_nullable_string(self.protocol_type.as_ref())?;
-        }
-        if version.value() <= 6 && self.protocol_name.is_none() {
-            return Err(EncodeError::NullNotAllowed {
-                message: Self::NAME,
-                field: "ProtocolName",
-                version,
-            });
-        }
-        if Self::is_flexible(version) {
-            encoder.write_compact_nullable_string(self.protocol_name.as_ref())?;
-        } else {
-            encoder.write_nullable_string(self.protocol_name.as_ref())?;
-        }
-        if Self::is_flexible(version) {
-            encoder.write_compact_string(&self.leader)?;
-        } else {
-            encoder.write_string(&self.leader)?;
-        }
-        if version.value() >= 9 {
-            encoder.write_bool(self.skip_assignment)?;
-        }
-        if Self::is_flexible(version) {
-            encoder.write_compact_string(&self.member_id)?;
-        } else {
-            encoder.write_string(&self.member_id)?;
-        }
-        if Self::is_flexible(version) {
-            encoder.write_compact_array_len(self.members.len())?;
-        } else {
-            encoder.write_array_len(self.members.len())?;
-        }
-        for value in &self.members {
-            value.encode(encoder, version)?;
-        }
+    /// `JoinGroupResponseMember` as declared by the `JoinGroup` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    pub struct JoinGroupResponseMember {
+        /// The group member ID.
+        pub member_id: StrBytes,
+        /// The unique identifier of the consumer instance provided by end user.
+        pub group_instance_id: Option<StrBytes>,
+        /// The group member metadata.
+        pub metadata: Bytes,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
+    }
 
-        if Self::is_flexible(version) {
-            encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-        } else if !self.unknown_tagged_fields.is_empty() {
-            return Err(EncodeError::TaggedFieldsNotRepresentable {
-                message: Self::NAME,
-                version,
-            });
-        }
+    impl JoinGroupResponseMember {
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(6, 9));
 
-        Ok(())
+        fn is_flexible(version: ApiVersion) -> bool {
+            Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+        }
+    }
+
+    impl KafkaDecode for JoinGroupResponseMember {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            let member_id = if Self::is_flexible(version) {
+                decoder.read_compact_string()?
+            } else {
+                decoder.read_string()?
+            };
+            let group_instance_id = if version.value() >= 5 {
+                if Self::is_flexible(version) {
+                    decoder.read_compact_nullable_string()?
+                } else {
+                    decoder.read_nullable_string()?
+                }
+            } else {
+                None
+            };
+            let metadata = if Self::is_flexible(version) {
+                decoder.read_compact_bytes()?
+            } else {
+                decoder.read_bytes()?
+            };
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
+
+            Ok(Self {
+                member_id,
+                group_instance_id,
+                metadata,
+                unknown_tagged_fields,
+            })
+        }
+    }
+
+    impl KafkaEncode for JoinGroupResponseMember {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            if Self::is_flexible(version) {
+                encoder.write_compact_string(&self.member_id)?;
+            } else {
+                encoder.write_string(&self.member_id)?;
+            }
+            if version.value() >= 5 {
+                if Self::is_flexible(version) {
+                    encoder.write_compact_nullable_string(self.group_instance_id.as_ref())?;
+                } else {
+                    encoder.write_nullable_string(self.group_instance_id.as_ref())?;
+                }
+            }
+            if Self::is_flexible(version) {
+                encoder.write_compact_bytes(&self.metadata)?;
+            } else {
+                encoder.write_bytes(&self.metadata)?;
+            }
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "JoinGroupResponseMember",
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+
+    /// Response body for the `JoinGroup` API.
+    #[non_exhaustive]
+    #[derive(Clone, Debug, Eq, PartialEq)]
+    pub struct JoinGroupResponse {
+        /// The duration in milliseconds for which the request was throttled due to a quota violation, or zero if the request did not violate any quota.
+        pub throttle_time_ms: i32,
+        /// The error code, or 0 if there was no error.
+        pub error_code: i16,
+        /// The generation ID of the group.
+        pub generation_id: i32,
+        /// The group protocol name.
+        pub protocol_type: Option<StrBytes>,
+        /// The group protocol selected by the coordinator.
+        pub protocol_name: Option<StrBytes>,
+        /// The leader of the group.
+        pub leader: StrBytes,
+        /// True if the leader must skip running the assignment.
+        pub skip_assignment: bool,
+        /// The member ID assigned by the group coordinator.
+        pub member_id: StrBytes,
+        /// The group members.
+        pub members: Vec<JoinGroupResponseMember>,
+        /// Unknown flexible-version tagged fields retained for forwarding.
+        pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl Default for JoinGroupResponse {
+        fn default() -> Self {
+            Self {
+                throttle_time_ms: 0,
+                error_code: 0,
+                generation_id: -1,
+                protocol_type: None,
+                protocol_name: Some(StrBytes::default()),
+                leader: StrBytes::default(),
+                skip_assignment: false,
+                member_id: StrBytes::default(),
+                members: Vec::new(),
+                unknown_tagged_fields: TaggedFields::default(),
+            }
+        }
+    }
+
+    impl KafkaMessage for JoinGroupResponse {
+        const NAME: &'static str = "JoinGroupResponse";
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 9);
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(6, 9));
+    }
+
+    impl KafkaResponse for JoinGroupResponse {
+        const API_KEY: ApiKey = ApiKey::new(11);
+    }
+
+    impl KafkaDecode for JoinGroupResponse {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            crate::message::ensure_decode_version::<Self>(version)?;
+
+            let throttle_time_ms = if version.value() >= 2 {
+                decoder.read_i32()?
+            } else {
+                0
+            };
+            let error_code = decoder.read_i16()?;
+            let generation_id = decoder.read_i32()?;
+            let protocol_type = if version.value() >= 7 {
+                decoder.read_compact_nullable_string()?
+            } else {
+                None
+            };
+            let protocol_name = if version.value() >= 7 {
+                decoder.read_compact_nullable_string()?
+            } else {
+                Some(if Self::is_flexible(version) {
+                    decoder.read_compact_string()?
+                } else {
+                    decoder.read_string()?
+                })
+            };
+            let leader = if Self::is_flexible(version) {
+                decoder.read_compact_string()?
+            } else {
+                decoder.read_string()?
+            };
+            let skip_assignment = if version.value() >= 9 {
+                decoder.read_bool()?
+            } else {
+                false
+            };
+            let member_id = if Self::is_flexible(version) {
+                decoder.read_compact_string()?
+            } else {
+                decoder.read_string()?
+            };
+            let members = {
+                let length = if Self::is_flexible(version) {
+                    decoder.read_compact_array_len()?
+                } else {
+                    decoder.read_array_len()?
+                };
+                decoder.read_vec(length, |decoder| {
+                    JoinGroupResponseMember::decode(decoder, version)
+                })?
+            };
+            let unknown_tagged_fields = if Self::is_flexible(version) {
+                decoder.read_tagged_fields()?
+            } else {
+                TaggedFields::default()
+            };
+
+            Ok(Self {
+                throttle_time_ms,
+                error_code,
+                generation_id,
+                protocol_type,
+                protocol_name,
+                leader,
+                skip_assignment,
+                member_id,
+                members,
+                unknown_tagged_fields,
+            })
+        }
+    }
+
+    impl KafkaEncode for JoinGroupResponse {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            crate::message::ensure_encode_version::<Self>(version)?;
+
+            if version.value() < 9 && self.skip_assignment {
+                return Err(EncodeError::FieldNotRepresentable {
+                    message: Self::NAME,
+                    field: "SkipAssignment",
+                    version,
+                });
+            }
+
+            if version.value() >= 2 {
+                encoder.write_i32(self.throttle_time_ms)?;
+            }
+            encoder.write_i16(self.error_code)?;
+            encoder.write_i32(self.generation_id)?;
+            if version.value() >= 7 {
+                encoder.write_compact_nullable_string(self.protocol_type.as_ref())?;
+            }
+            if version.value() <= 6 && self.protocol_name.is_none() {
+                return Err(EncodeError::NullNotAllowed {
+                    message: Self::NAME,
+                    field: "ProtocolName",
+                    version,
+                });
+            }
+            if Self::is_flexible(version) {
+                encoder.write_compact_nullable_string(self.protocol_name.as_ref())?;
+            } else {
+                encoder.write_nullable_string(self.protocol_name.as_ref())?;
+            }
+            if Self::is_flexible(version) {
+                encoder.write_compact_string(&self.leader)?;
+            } else {
+                encoder.write_string(&self.leader)?;
+            }
+            if version.value() >= 9 {
+                encoder.write_bool(self.skip_assignment)?;
+            }
+            if Self::is_flexible(version) {
+                encoder.write_compact_string(&self.member_id)?;
+            } else {
+                encoder.write_string(&self.member_id)?;
+            }
+            if Self::is_flexible(version) {
+                encoder.write_compact_array_len(self.members.len())?;
+            } else {
+                encoder.write_array_len(self.members.len())?;
+            }
+            for value in &self.members {
+                value.encode(encoder, version)?;
+            }
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            } else if !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: Self::NAME,
+                    version,
+                });
+            }
+
+            Ok(())
+        }
     }
 }
+
+use kafka_wire_core::VersionRange;
+
+use crate::{MessageDescriptor, MessageDirection};
+
+pub use join_group_request::JoinGroupRequest;
+pub use join_group_response::JoinGroupResponse;
 
 /// Static metadata for [`JoinGroupRequest`].
 pub const JOIN_GROUP_REQUEST_DESCRIPTOR: MessageDescriptor = MessageDescriptor::new(

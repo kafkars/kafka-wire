@@ -6,15 +6,23 @@
 //! own, which makes each one exactly the standalone struct `structs` already
 //! knows how to emit — so this file owns the module around them and nothing
 //! about how a field becomes Rust.
+//!
+//! Each schema gets a module of its own, for the reason the module-scoped naming rule gives every
+//! message one. These were rendered flat into a single `framing.rs`, and the
+//! moment struct names went bare `TopicPartition` and `Voter` each collided
+//! there — `LeaderChangeMessage` and `VotersRecord` both declare `Voter`, with
+//! different fields. Measured by attempting it, not predicted.
 
-use kafka_wire_schema::FieldType;
+use kafka_wire_schema::{FieldType, Message};
 
 use crate::{GenerationError, provenance::generated_banner, source::MessageSource};
 
+use super::file::render_braced_use;
+use super::imports;
 use super::structs::{render_declared_structs, render_standalone};
 use crate::render::text::RustText;
 
-/// Renders every unkeyed schema into one module.
+/// Renders every unkeyed schema into one file, one module each.
 pub(crate) fn render_unkeyed(
     sources: &[MessageSource],
     commit: &str,
@@ -28,18 +36,29 @@ pub(crate) fn render_unkeyed(
     rust.line("//! These answer to no API key: a header frames a message rather than being");
     rust.line("//! one, so nothing here carries a descriptor or a request/response pair.");
     rust.blank();
-    render_imports(&mut rust, sources);
+
     for source in sources {
+        super::file::render_module_doc(&mut rust, &source.message);
+        rust.open(format!("pub mod {}", source.message.name.rust_module()));
+        render_imports(&mut rust, &source.message);
         render_declared_structs(&mut rust, &source.message)?;
         render_standalone(&mut rust, &source.message)?;
+        rust.close("");
+        rust.blank();
+    }
+
+    for source in sources {
+        rust.line(format!(
+            "pub use {}::{};",
+            source.message.name.rust_module(),
+            source.message.name.rust_type()
+        ));
     }
     Ok(rust.finish())
 }
 
-fn render_imports(rust: &mut RustText, sources: &[MessageSource]) {
-    let flexible = sources
-        .iter()
-        .any(|source| !source.message.effective_flexible_versions().is_empty());
+fn render_imports(rust: &mut RustText, message: &Message) {
+    let flexible = !message.effective_flexible_versions().is_empty();
     let mut wire = vec![
         "ApiVersion",
         "DecodeError",
@@ -50,15 +69,8 @@ fn render_imports(rust: &mut RustText, sources: &[MessageSource]) {
         "KafkaDecode",
         "KafkaEncode",
     ];
-    let uses = |ty: &FieldType| {
-        sources
-            .iter()
-            .any(|source| crate::render::field::uses_type(&source.message, ty))
-    };
-    if sources
-        .iter()
-        .any(|source| crate::render::field::uses_bytes(&source.message))
-    {
+    let uses = |ty: &FieldType| crate::render::field::uses_type(message, ty);
+    if crate::render::field::uses_bytes(message) {
         wire.push("Bytes");
     }
     if uses(&FieldType::String) {
@@ -67,10 +79,7 @@ fn render_imports(rust: &mut RustText, sources: &[MessageSource]) {
     if flexible {
         wire.push("TaggedFields");
     }
-    if sources
-        .iter()
-        .any(|source| super::tagged::declares_a_tag(&source.message))
-    {
+    if super::tagged::declares_a_tag(message) {
         wire.push("KnownTags");
         wire.push("TagOutcome");
     }
@@ -78,8 +87,16 @@ fn render_imports(rust: &mut RustText, sources: &[MessageSource]) {
         wire.push("Uuid");
     }
     wire.push("VersionRange");
-    rust.line(format!("use kafka_wire_core::{{{}}};", wire.join(", ")));
+    render_braced_use(
+        rust,
+        "kafka_wire_core",
+        &imports::importable(message, &wire),
+    );
     rust.blank();
-    rust.line("use crate::KafkaMessage;");
+    render_braced_use(
+        rust,
+        "crate",
+        &imports::importable(message, &["KafkaMessage"]),
+    );
     rust.blank();
 }
