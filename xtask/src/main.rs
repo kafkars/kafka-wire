@@ -2,6 +2,7 @@
 
 mod cli;
 mod commands;
+mod defaults;
 mod fetch;
 mod probe;
 mod protocol_lock;

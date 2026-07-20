@@ -198,8 +198,10 @@ dependencies = [
  "kafka-wire",
  "kafka-wire-core",
  "kafka-wire-records",
+ "kafka-wire-schema",
  "serde",
  "serde_json",
+ "toml",
 ]
 
 [[package]]

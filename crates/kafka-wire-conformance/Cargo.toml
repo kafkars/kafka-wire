@@ -19,5 +19,13 @@ kafka-wire-core = { path = "../kafka-wire-core" }
 serde.workspace = true
 serde_json.workspace = true
 
+# The defaults comparison reads this repository's own lowering — the semantic
+# schema front end — so it can hold Kafka's reported defaults against the IR the
+# generator renders from. It is a test-only edge: the corpus judges the protocol
+# crate, and reaching the front end that fed it is judging, not building on it.
+[dev-dependencies]
+kafka-wire-schema = { path = "../kafka-wire-schema" }
+toml.workspace = true
+
 [lints]
 workspace = true

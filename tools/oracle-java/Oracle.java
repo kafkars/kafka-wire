@@ -27,17 +27,27 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
+import org.apache.kafka.common.Uuid;
 import org.apache.kafka.common.protocol.ApiMessage;
 import org.apache.kafka.common.protocol.Message;
 import org.apache.kafka.common.protocol.MessageUtil;
 import org.apache.kafka.common.protocol.types.RawTaggedField;
+import org.apache.kafka.common.utils.internals.ImplicitLinkedHashCollection;
 
 import java.io.PrintStream;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.nio.ByteBuffer;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Deque;
+import java.util.HashSet;
 import java.util.HexFormat;
 import java.util.List;
+import java.util.Set;
 
 public final class Oracle {
     /** Package holding every generated `<Message>Data` and its JSON converter. */
@@ -54,8 +64,13 @@ public final class Oracle {
                 selfTest(System.out);
                 return;
             }
+            if (args.length == 1 && args[0].equals("--defaults")) {
+                reportDefaults();
+                return;
+            }
             if (args.length != 0) {
-                throw new OracleException("usage: Oracle [--self-test] < plan.json > result.json");
+                throw new OracleException(
+                        "usage: Oracle [--self-test | --defaults] < plan.json > result.json");
             }
             encodeAll();
         } catch (Throwable failure) {
@@ -137,6 +152,216 @@ public final class Oracle {
                             + "a confidently wrong vector.",
                     message, version, lowest, highest));
         }
+    }
+
+    /**
+     * Report the default every field of every named message carries.
+     *
+     * This is the second question this program answers, and it exists because the
+     * byte corpus structurally cannot reach it. A vector proves that decoding
+     * Kafka's bytes and re-encoding them reproduces those bytes; when a field is
+     * absent from a version, the decoder substitutes a default and the encoder
+     * then compares against that same default and writes nothing. A wrong default
+     * agrees with itself perfectly and the round trip stays green.
+     *
+     * Kafka's generated `<Message>Data` initializes every field to the default its
+     * schema declares, so a freshly constructed instance *is* upstream's default
+     * table. Reading it here compares this repository's lowering against Kafka's
+     * own generator — two independent readings of one schema — rather than against
+     * itself. The implicit defaults matter most: where upstream declares no
+     * `"default"`, both sides invent one from the field's type, and nothing in the
+     * schema says they have to agree.
+     */
+    private static void reportDefaults() throws Exception {
+        JsonNode input = MAPPER.readTree(System.in);
+        JsonNode messages = required(input, "messages");
+        if (!messages.isArray()) {
+            throw new OracleException("`messages` must be an array");
+        }
+
+        ArrayNode reported = MAPPER.createArrayNode();
+        for (JsonNode name : messages) {
+            String message = name.asText();
+            ObjectNode entry = MAPPER.createObjectNode();
+            entry.put("message", message);
+            entry.set("structs", structsOf(message));
+            reported.add(entry);
+        }
+
+        ObjectNode output = MAPPER.createObjectNode();
+        output.set("messages", reported);
+        System.out.println(MAPPER.writeValueAsString(output));
+    }
+
+    /**
+     * Every struct one message declares, keyed the way this repository names them.
+     *
+     * Kafka emits a message's structs as nested classes of its `Data` class, so
+     * the walk is over declared classes rather than over field values: a struct
+     * reached through an array would otherwise be unreachable, because a
+     * default-constructed message holds that array empty and there is no element
+     * to inspect.
+     *
+     * The top-level entry is keyed by the message name rather than by the Java
+     * class name, because `Data` is Kafka's suffix and not part of the protocol.
+     * Nested structs keep upstream's own spelling, which is exactly the scope
+     * the module-scoped naming rule gives them here: unique within their message, and not beyond it.
+     */
+    private static ArrayNode structsOf(String message) throws Exception {
+        ArrayNode structs = MAPPER.createArrayNode();
+        Class<?> root = generated(message, "");
+
+        Deque<Class<?>> pending = new ArrayDeque<>();
+        Set<Class<?>> seen = new HashSet<>();
+        pending.add(root);
+        while (!pending.isEmpty()) {
+            Class<?> current = pending.poll();
+            if (!seen.add(current)) {
+                continue;
+            }
+            for (Class<?> nested : current.getDeclaredClasses()) {
+                pending.add(nested);
+            }
+            // A `*Collection` is Kafka's own list container, not a protocol
+            // struct; it carries no declared field and must not become one.
+            if (!Message.class.isAssignableFrom(current)
+                    || Collection.class.isAssignableFrom(current)) {
+                continue;
+            }
+
+            ObjectNode struct = MAPPER.createObjectNode();
+            struct.put("struct", current == root ? message : current.getSimpleName());
+            struct.set("fields", fieldsOf(current));
+            structs.add(struct);
+        }
+        return structs;
+    }
+
+    /** One struct's declared fields and the value Kafka initializes each to. */
+    private static ArrayNode fieldsOf(Class<?> struct) throws Exception {
+        Constructor<?> constructor = struct.getDeclaredConstructor();
+        constructor.setAccessible(true);
+        Object instance = constructor.newInstance();
+
+        ArrayNode fields = MAPPER.createArrayNode();
+        for (Field field : struct.getDeclaredFields()) {
+            if (Modifier.isStatic(field.getModifiers()) || field.isSynthetic()) {
+                continue;
+            }
+            String name = field.getName();
+            if (name.equals("_unknownTaggedFields")) {
+                continue;
+            }
+            if (isCollectionBookkeeping(struct, field)) {
+                continue;
+            }
+
+            field.setAccessible(true);
+            ObjectNode reported = MAPPER.createObjectNode();
+            reported.put("field", name);
+            reported.put("java_type", field.getType().getSimpleName());
+            reported.set("default", describe(struct, name, field.get(instance)));
+            fields.add(reported);
+        }
+        return fields;
+    }
+
+    /**
+     * Whether a field is `ImplicitLinkedHashCollection`'s intrusive list, not protocol.
+     *
+     * A struct held in one of Kafka's own collections carries two `int` fields
+     * named `next` and `prev`, initialized to -2. They are bookkeeping for the
+     * container and appear in no schema. Reporting them would invent a field on
+     * every collection-held struct in the corpus.
+     *
+     * The test is the interface that owns them rather than the names alone, and a
+     * `next` or `prev` found anywhere else is refused rather than skipped: this
+     * program may not decide that something upstream declared is uninteresting,
+     * and today no schema declares either name.
+     */
+    private static boolean isCollectionBookkeeping(Class<?> struct, Field field) {
+        String name = field.getName();
+        if (!name.equals("next") && !name.equals("prev")) {
+            return false;
+        }
+        boolean intrusive = ImplicitLinkedHashCollection.Element.class.isAssignableFrom(struct)
+                && field.getType() == int.class;
+        if (!intrusive) {
+            throw new OracleException(struct.getSimpleName() + "." + name
+                    + " is named like collection bookkeeping but is not an int on an "
+                    + "ImplicitLinkedHashCollection.Element. Skipping it would drop a real "
+                    + "protocol field; this rule was written when no schema declared either name");
+        }
+        return true;
+    }
+
+    /**
+     * Render one default as a kind-tagged value the Rust side can compare against.
+     *
+     * Tagged by kind rather than emitted as a bare JSON value because the
+     * distinctions that matter here are exactly the ones bare JSON erases: an
+     * absent bytes field and an empty one are both plausible, and `null` for a
+     * string is a different claim than `""`.
+     */
+    private static JsonNode describe(Class<?> struct, String field, Object value) {
+        ObjectNode described = MAPPER.createObjectNode();
+        if (value == null) {
+            described.put("kind", "null");
+            return described;
+        }
+        switch (value) {
+            case Boolean literal -> {
+                described.put("kind", "bool");
+                described.put("value", literal);
+            }
+            case Byte literal -> integer(described, literal.longValue());
+            case Short literal -> integer(described, literal.longValue());
+            case Integer literal -> integer(described, literal.longValue());
+            case Long literal -> integer(described, literal);
+            case Double literal -> {
+                described.put("kind", "float");
+                described.put("value", literal);
+            }
+            case String literal -> {
+                described.put("kind", "string");
+                described.put("value", literal);
+            }
+            case Uuid literal -> {
+                described.put("kind", "uuid");
+                // Kafka spells a uuid base64url without padding, in the schemas
+                // and here alike; `toString` is that spelling.
+                described.put("value", literal.toString());
+            }
+            case byte[] literal -> emptyOrRefuse(described, struct, field, literal.length);
+            case ByteBuffer literal -> emptyOrRefuse(described, struct, field, literal.remaining());
+            case Collection<?> literal -> emptyOrRefuse(described, struct, field, literal.size());
+            case Message ignored -> described.put("kind", "struct");
+            default -> throw new OracleException(struct.getSimpleName() + "." + field
+                    + " defaults to a " + value.getClass().getName()
+                    + ", which this program has no rule for");
+        }
+        return described;
+    }
+
+    private static void integer(ObjectNode described, long value) {
+        described.put("kind", "int");
+        described.put("value", value);
+    }
+
+    /**
+     * Record an empty container, refusing a populated one.
+     *
+     * Kafka's generator permits only empty or null as the default of an array,
+     * bytes, or records field, so a populated container here means the rule this
+     * program reads by no longer holds.
+     */
+    private static void emptyOrRefuse(ObjectNode described, Class<?> struct, String field, int size) {
+        if (size != 0) {
+            throw new OracleException(struct.getSimpleName() + "." + field
+                    + " defaults to a container holding " + size + " element(s); Kafka's own "
+                    + "generator admits only an empty or null default here");
+        }
+        described.put("kind", "empty");
     }
 
     /**

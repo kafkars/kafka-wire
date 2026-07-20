@@ -29,6 +29,7 @@ fn every_command_is_reachable_from_the_command_line() {
         (vec!["generate"], Command::Generate),
         (vec!["generated-check"], Command::GeneratedCheck),
         (vec!["verify"], Command::Verify),
+        (vec!["defaults"], Command::Defaults),
         (vec!["doctor"], Command::Doctor),
         (
             vec!["generate-all", "--check-only"],
@@ -63,6 +64,7 @@ fn no_arguments_prints_the_command_map() {
         "generate-all --check-only",
         "verify",
         "vectors --check",
+        "defaults",
         "doctor",
     ] {
         assert!(
@@ -109,6 +111,7 @@ fn a_flagless_command_rejects_a_flag_rather_than_ignoring_it() {
         vec!["generated-check", "--write"],
         vec!["doctor", "--verbose"],
         vec!["vendor", "--offline"],
+        vec!["defaults", "--refresh"],
     ] {
         let error = rejection(&arguments);
         assert!(

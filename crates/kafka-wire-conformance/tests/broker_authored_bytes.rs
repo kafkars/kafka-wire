@@ -113,229 +113,51 @@ fn every_vector_encodes_from_its_canonical_json_value() {
     );
 }
 
-/// Messages whose DEFAULTS the canonical-JSON direction does not yet prove.
+/// Messages with a hand-written canonical-JSON builder, and the whole of what
+/// that buys.
 ///
-/// The name has always invited a stronger reading than it deserves. These
-/// messages are not unverified: every one is held to Apache Kafka's bytes by the
-/// round trip above, their field names are checked by the oracle accepting a
-/// JSON keyed by this repository's own names, and their field order is pinned by
-/// `kafka-wire-schema`'s `field_order` test against upstream's declaration array.
+/// These three are the only messages `Subject::from_vector` can construct from a
+/// vector's canonical JSON rather than by decoding Kafka's bytes, so they are the
+/// only ones `every_vector_encodes_from_its_canonical_json_value` reaches. That
+/// test proves this repository reaches Kafka's bytes from a semantic value it had
+/// to build itself, not only by round-tripping bytes it was handed.
 ///
-/// What is missing is narrower — whether a field absent from a version decodes
-/// to the value Kafka would have used. See the JSON-shape census, which measures each of
-/// those claims and decides that the builders which close the last one are
-/// generated rather than written.
-const WITHOUT_JSON_BUILDERS: &[&str] = &[
-    "AbortedTxn",
-    "AddOffsetsToTxnRequest",
-    "AddOffsetsToTxnResponse",
-    "AddPartitionsToTxnRequest",
-    "AddPartitionsToTxnResponse",
-    "AddRaftVoterRequest",
-    "AddRaftVoterResponse",
-    "AllocateProducerIdsRequest",
-    "AllocateProducerIdsResponse",
-    "AlterClientQuotasRequest",
-    "AlterClientQuotasResponse",
-    "AlterConfigsRequest",
-    "AlterConfigsResponse",
-    "AlterPartitionReassignmentsRequest",
-    "AlterPartitionReassignmentsResponse",
-    "AlterPartitionRequest",
-    "AlterPartitionResponse",
-    "AlterReplicaLogDirsRequest",
-    "AlterReplicaLogDirsResponse",
-    "AlterShareGroupOffsetsRequest",
-    "AlterShareGroupOffsetsResponse",
-    "AlterUserScramCredentialsRequest",
-    "AlterUserScramCredentialsResponse",
-    "ApiVersionsResponse",
-    "AssignReplicasToDirsRequest",
-    "AssignReplicasToDirsResponse",
-    "BeginQuorumEpochRequest",
-    "BeginQuorumEpochResponse",
-    "BrokerHeartbeatRequest",
-    "BrokerHeartbeatResponse",
-    "BrokerRegistrationRequest",
-    "BrokerRegistrationResponse",
-    "ConsumerGroupDescribeRequest",
-    "ConsumerGroupDescribeResponse",
-    "ConsumerGroupHeartbeatRequest",
-    "ConsumerGroupHeartbeatResponse",
-    "ConsumerProtocolAssignment",
-    "ConsumerProtocolSubscription",
-    "ControlRecordTypeSchema",
-    "ControllerRegistrationRequest",
-    "ControllerRegistrationResponse",
-    "CreateAclsRequest",
-    "CreateAclsResponse",
-    "CreateDelegationTokenRequest",
-    "CreateDelegationTokenResponse",
-    "CreatePartitionsRequest",
-    "CreatePartitionsResponse",
-    "CreateTopicsRequest",
-    "CreateTopicsResponse",
-    "DefaultPrincipalData",
-    "DeleteAclsRequest",
-    "DeleteAclsResponse",
-    "DeleteGroupsRequest",
-    "DeleteGroupsResponse",
-    "DeleteRecordsRequest",
-    "DeleteRecordsResponse",
-    "DeleteShareGroupOffsetsRequest",
-    "DeleteShareGroupOffsetsResponse",
-    "DeleteShareGroupStateRequest",
-    "DeleteShareGroupStateResponse",
-    "DeleteTopicsRequest",
-    "DeleteTopicsResponse",
-    "DescribeAclsRequest",
-    "DescribeAclsResponse",
-    "DescribeClientQuotasRequest",
-    "DescribeClientQuotasResponse",
-    "DescribeClusterRequest",
-    "DescribeClusterResponse",
-    "DescribeConfigsRequest",
-    "DescribeConfigsResponse",
-    "DescribeDelegationTokenRequest",
-    "DescribeDelegationTokenResponse",
-    "DescribeGroupsRequest",
-    "DescribeGroupsResponse",
-    "DescribeLogDirsRequest",
-    "DescribeLogDirsResponse",
-    "DescribeProducersRequest",
-    "DescribeProducersResponse",
-    "DescribeQuorumRequest",
-    "DescribeQuorumResponse",
-    "DescribeShareGroupOffsetsRequest",
-    "DescribeShareGroupOffsetsResponse",
-    "DescribeTopicPartitionsRequest",
-    "DescribeTopicPartitionsResponse",
-    "DescribeTransactionsRequest",
-    "DescribeTransactionsResponse",
-    "DescribeUserScramCredentialsRequest",
-    "DescribeUserScramCredentialsResponse",
-    "ElectLeadersRequest",
-    "ElectLeadersResponse",
-    "EndQuorumEpochRequest",
-    "EndQuorumEpochResponse",
-    "EndTxnMarker",
-    "EndTxnRequest",
-    "EndTxnResponse",
-    "EnvelopeRequest",
-    "EnvelopeResponse",
-    "ExpireDelegationTokenRequest",
-    "ExpireDelegationTokenResponse",
-    "FetchRequest",
-    "FetchResponse",
-    "FetchSnapshotRequest",
-    "FetchSnapshotResponse",
-    "FindCoordinatorRequest",
-    "FindCoordinatorResponse",
-    "GetTelemetrySubscriptionsRequest",
-    "GetTelemetrySubscriptionsResponse",
-    "HeartbeatRequest",
-    "HeartbeatResponse",
-    "IncrementalAlterConfigsRequest",
-    "IncrementalAlterConfigsResponse",
-    "InitProducerIdRequest",
-    "InitProducerIdResponse",
-    "InitializeShareGroupStateRequest",
-    "InitializeShareGroupStateResponse",
-    "JoinGroupRequest",
-    "JoinGroupResponse",
-    "KRaftVersionRecord",
-    "LeaderChangeMessage",
-    "LeaveGroupRequest",
-    "LeaveGroupResponse",
-    "ListConfigResourcesRequest",
-    "ListConfigResourcesResponse",
-    "ListGroupsRequest",
-    "ListGroupsResponse",
-    "ListOffsetsRequest",
-    "ListOffsetsResponse",
-    "ListPartitionReassignmentsRequest",
-    "ListPartitionReassignmentsResponse",
-    "ListTransactionsRequest",
-    "ListTransactionsResponse",
-    "MetadataRequest",
-    "MetadataResponse",
-    "OffsetCommitRequest",
-    "OffsetCommitResponse",
-    "OffsetDeleteRequest",
-    "OffsetDeleteResponse",
-    "OffsetFetchRequest",
-    "OffsetFetchResponse",
-    "OffsetForLeaderEpochRequest",
-    "OffsetForLeaderEpochResponse",
-    "ProduceRequest",
-    "ProduceResponse",
-    "PushTelemetryRequest",
-    "PushTelemetryResponse",
-    "ReadShareGroupStateRequest",
-    "ReadShareGroupStateResponse",
-    "ReadShareGroupStateSummaryRequest",
-    "ReadShareGroupStateSummaryResponse",
-    "RemoveRaftVoterRequest",
-    "RemoveRaftVoterResponse",
-    "RenewDelegationTokenRequest",
-    "RenewDelegationTokenResponse",
-    "RequestHeader",
-    "ResponseHeader",
-    "SaslAuthenticateRequest",
-    "SaslAuthenticateResponse",
-    "ShareAcknowledgeRequest",
-    "ShareAcknowledgeResponse",
-    "ShareFetchRequest",
-    "ShareFetchResponse",
-    "ShareGroupDescribeRequest",
-    "ShareGroupDescribeResponse",
-    "ShareGroupHeartbeatRequest",
-    "ShareGroupHeartbeatResponse",
-    "SnapshotFooterRecord",
-    "SnapshotHeaderRecord",
-    "StreamsGroupDescribeRequest",
-    "StreamsGroupDescribeResponse",
-    "StreamsGroupHeartbeatRequest",
-    "StreamsGroupHeartbeatResponse",
-    "StreamsGroupTopologyDescriptionUpdateRequest",
-    "StreamsGroupTopologyDescriptionUpdateResponse",
-    "SyncGroupRequest",
-    "SyncGroupResponse",
-    "TxnOffsetCommitRequest",
-    "TxnOffsetCommitResponse",
-    "UnregisterBrokerRequest",
-    "UnregisterBrokerResponse",
-    "UpdateFeaturesRequest",
-    "UpdateFeaturesResponse",
-    "UpdateRaftVoterRequest",
-    "UpdateRaftVoterResponse",
-    "VoteRequest",
-    "VoteResponse",
-    "VotersRecord",
-    "WriteShareGroupStateRequest",
-    "WriteShareGroupStateResponse",
-    "WriteTxnMarkersRequest",
-    "WriteTxnMarkersResponse",
+/// The other enabled messages have no builder and need none. What the second
+/// construction path was once read as owing them was DEFAULTS — whether a field
+/// absent from a version decodes to the value Kafka would have used — and that is
+/// now proven directly by `broker_authored_defaults`, which compares every field
+/// of every message against Kafka's own generated classes. Their names are
+/// checked at mint time by the oracle refusing an unrecognised key, and their
+/// field order by `kafka-wire-schema`'s `field_order` test. So this list is not a debt
+/// meant to grow toward the whole corpus — the reading the JSON-shape census gave the old
+/// `WITHOUT_JSON_BUILDERS`, which named 190 messages as if unverified and was
+/// superseded by the broker-authored default proof. It is three messages carrying one extra, independent
+/// check, and it stays small on purpose.
+const WITH_JSON_BUILDERS: &[&str] = &[
+    "ApiVersionsRequest",
+    "SaslHandshakeRequest",
+    "SaslHandshakeResponse",
 ];
 
 fn has_json_builder(message: &str) -> bool {
-    !WITHOUT_JSON_BUILDERS.contains(&message)
+    WITH_JSON_BUILDERS.contains(&message)
 }
 
 #[test]
-fn the_json_builder_gap_is_exactly_what_is_recorded() {
-    // A message that gains a builder must leave the list, and one that is
-    // enabled without a builder must join it, or this fails.
+fn the_hand_written_builders_are_exactly_what_is_recorded() {
+    // A message that gains a builder must join the list, and one that loses it
+    // must leave, or this fails. `from_vector` succeeds only for a message it has
+    // a builder for, so the set that builds is exactly the recorded three.
     let vectors = load().unwrap();
     let mut observed: Vec<String> = Vec::new();
     for vector in &vectors {
-        if Subject::from_vector(vector).is_err() && !observed.contains(&vector.message) {
+        if Subject::from_vector(vector).is_ok() && !observed.contains(&vector.message) {
             observed.push(vector.message.clone());
         }
     }
     observed.sort();
 
-    let mut recorded: Vec<String> = WITHOUT_JSON_BUILDERS
+    let mut recorded: Vec<String> = WITH_JSON_BUILDERS
         .iter()
         .map(|name| (*name).to_owned())
         .collect();
@@ -343,8 +165,8 @@ fn the_json_builder_gap_is_exactly_what_is_recorded() {
 
     assert_eq!(
         observed, recorded,
-        "the set of messages without a canonical-JSON builder has drifted from \
-         WITHOUT_JSON_BUILDERS; update the list deliberately"
+        "the set of messages with a canonical-JSON builder has drifted from \
+         WITH_JSON_BUILDERS; update the list deliberately"
     );
 }
 

@@ -23,7 +23,7 @@ source_repository = "https://github.com/apache/kafka"
 source_commit = "678c0e07e4733c5a592e52046dc2c4e1625587f1"
 gradle_task = ":clients:jar"
 jar_name = "kafka-clients-4.4.0-SNAPSHOT.jar"
-jar_sha256 = "f1e150c318d21d4362bf1311aa7181a213d186a4d77f8c0543ef636cd93cee31"
+jar_sha256 = "82a80dfc1e57e6e9b822955be5ddfb65a0a49c166fcc2e5b4babcea5af9bcaa5"
 jdk_version = "21.0.5"
 jdk_build = "Oracle GraalVM 21.0.5+9.1 (build 21.0.5+9-LTS-jvmci-23.1-b48)"
 
@@ -41,4 +41,13 @@ emits clients/build/libs/kafka-clients-4.4.0-SNAPSHOT.jar and skips the plain \
 `jar` task. Jackson is a compileOnly dependency of `clients` and is not bundled, \
 so KAFKA_ORACLE_CLASSPATH must supply jackson-databind, jackson-core, and \
 jackson-annotations from the same resolved compile classpath.
+
+`jar_sha256` was re-recorded once, from f1e150c3 to 82a80dfc, after a rebuild of \
+this same commit produced a differing digest — the timestamp case above. The \
+digest was not re-recorded on the strength of the source tree being clean at \
+678c0e07. It was re-recorded after `cargo xtask vectors --refresh` was run \
+against the rebuilt jar and all 1392 vectors across 638 files came back byte for \
+byte identical, leaving the working tree unchanged. That is a behavioral proof \
+over the whole corpus rather than a claim about provenance, and it is the \
+standard the next re-recording should meet.
 """

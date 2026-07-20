@@ -20,6 +20,13 @@ pub(crate) enum Command {
     Vectors(VectorsMode),
     /// Author or verify the broker-authored record-batch corpus.
     Records(RecordsMode),
+    /// Author the default-value transcript from the pinned Kafka jar.
+    ///
+    /// One direction, like `vendor`: it reaches a Java toolchain and the pinned
+    /// jar and is run by a human. There is no `--check` half here — verifying
+    /// the transcript is a pure-Rust comparison that lives in `kafka-wire-conformance`
+    /// and runs under `cargo test`.
+    Defaults,
     /// Print the pinned source and command map.
     Doctor,
 }
@@ -109,6 +116,7 @@ impl Command {
             "generate" => Ok(Self::Generate),
             "generated-check" => Ok(Self::GeneratedCheck),
             "verify" => Ok(Self::Verify),
+            "defaults" => Ok(Self::Defaults),
             "doctor" => Ok(Self::Doctor),
             _ => Err(format!("unknown command `{command}`\n\n{}", usage())),
         }
@@ -130,6 +138,7 @@ fn usage() -> String {
         "  vectors --refresh  re-author it from the pinned Kafka jar (needs Java)",
         "  records --check    verify the checked-in record-batch corpus (offline)",
         "  records --refresh  re-author it from the pinned Kafka jar (needs Java)",
+        "  defaults           re-author spec/defaults.json from the pinned Kafka jar (needs Java)",
         "  doctor             print pinned inputs and common commands",
     ]
     .join("\n")

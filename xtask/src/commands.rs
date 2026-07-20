@@ -21,6 +21,7 @@ pub(crate) fn run(command: Command) -> Result<(), String> {
         }
         Command::Vectors(mode) => vectors::run(mode),
         Command::Records(mode) => crate::records::run(mode),
+        Command::Defaults => crate::defaults::run(),
         Command::Doctor => doctor(),
     }
 }
