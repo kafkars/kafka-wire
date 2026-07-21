@@ -121,7 +121,14 @@ fn validate_kind_name(message: &Message, errors: &mut Vec<super::ValidationError
     let Some(suffix) = message.kind.name_suffix() else {
         return;
     };
-    if !message.name.protocol().ends_with(suffix) {
+    if message.name.protocol() == suffix {
+        errors.push(diagnostic(
+            message,
+            None,
+            "KAFKA_SCHEMA_EMPTY_API_STEM",
+            &format!("message name must include an API name before `{suffix}`"),
+        ));
+    } else if !message.name.protocol().ends_with(suffix) {
         errors.push(diagnostic(
             message,
             None,
