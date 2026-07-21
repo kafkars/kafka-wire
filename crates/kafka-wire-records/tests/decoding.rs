@@ -67,6 +67,42 @@ fn decoding_one_batch_leaves_the_next_batch_on_the_cursor() {
 }
 
 #[test]
+fn concatenated_batches_do_not_share_one_wire_frame_budget() {
+    let first = batch(Compression::None, 10).encode_to_bytes().unwrap();
+    let second = batch(Compression::None, 20).encode_to_bytes().unwrap();
+    let mut joined = BytesMut::new();
+    joined.extend_from_slice(&first);
+    joined.extend_from_slice(&second);
+    let mut cursor = joined.freeze();
+    let mut limits = RecordDecodeLimits::default();
+    limits.wire.max_frame_bytes = first.len();
+
+    assert!(cursor.len() > limits.wire.max_frame_bytes);
+    assert_eq!(
+        RecordBatch::decode(&mut cursor, limits)
+            .unwrap()
+            .base_offset,
+        10
+    );
+    assert_eq!(cursor, second);
+}
+
+#[test]
+fn the_record_layer_outer_budgets_supersede_the_wire_frame_budget() {
+    let mut cursor = batch(Compression::None, 10).encode_to_bytes().unwrap();
+    let mut limits = RecordDecodeLimits::default();
+    limits.wire.max_frame_bytes = 1;
+
+    assert_eq!(
+        RecordBatch::decode(&mut cursor, limits)
+            .unwrap()
+            .base_offset,
+        10
+    );
+    assert!(cursor.is_empty());
+}
+
+#[test]
 fn a_failed_decode_does_not_advance_the_cursor() {
     let mut cursor = batch(Compression::None, 10).encode_to_bytes().unwrap();
     let original = cursor.clone();
