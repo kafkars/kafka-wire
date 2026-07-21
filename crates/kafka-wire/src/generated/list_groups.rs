@@ -43,6 +43,35 @@ pub mod list_groups_request {
         type Response = super::ListGroupsResponse;
     }
 
+    impl ListGroupsRequest {
+        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            crate::message::ensure_encode_version::<Self>(version)?;
+
+            if version.value() < 4 && !self.states_filter.is_empty() {
+                return Err(EncodeError::FieldNotRepresentable {
+                    message: Self::NAME,
+                    field: "StatesFilter",
+                    version,
+                });
+            }
+            if version.value() < 5 && !self.types_filter.is_empty() {
+                return Err(EncodeError::FieldNotRepresentable {
+                    message: Self::NAME,
+                    field: "TypesFilter",
+                    version,
+                });
+            }
+            if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: Self::NAME,
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+
     impl KafkaDecode for ListGroupsRequest {
         fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
             crate::message::ensure_decode_version::<Self>(version)?;
@@ -79,22 +108,7 @@ pub mod list_groups_request {
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            crate::message::ensure_encode_version::<Self>(version)?;
-
-            if version.value() < 4 && !self.states_filter.is_empty() {
-                return Err(EncodeError::FieldNotRepresentable {
-                    message: Self::NAME,
-                    field: "StatesFilter",
-                    version,
-                });
-            }
-            if version.value() < 5 && !self.types_filter.is_empty() {
-                return Err(EncodeError::FieldNotRepresentable {
-                    message: Self::NAME,
-                    field: "TypesFilter",
-                    version,
-                });
-            }
+            self.validate_for_version(version)?;
 
             if version.value() >= 4 {
                 encoder.write_compact_array_len(self.states_filter.len())?;
@@ -111,11 +125,6 @@ pub mod list_groups_request {
 
             if Self::is_flexible(version) {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-            } else if !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
-                    message: Self::NAME,
-                    version,
-                });
             }
 
             Ok(())
@@ -152,6 +161,7 @@ pub mod list_groups_response {
     }
 
     impl ListedGroup {
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 5);
         const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(3, 5));
 
         fn is_flexible(version: ApiVersion) -> bool {
@@ -159,8 +169,37 @@ pub mod list_groups_response {
         }
     }
 
+    impl ListedGroup {
+        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            if !Self::SUPPORTED_VERSIONS.contains(version) {
+                return Err(EncodeError::UnsupportedVersion {
+                    message: "ListedGroup",
+                    version,
+                    supported: Self::SUPPORTED_VERSIONS,
+                });
+            }
+
+            if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "ListedGroup",
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+
     impl KafkaDecode for ListedGroup {
         fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            if !Self::SUPPORTED_VERSIONS.contains(version) {
+                return Err(DecodeError::UnsupportedVersion {
+                    message: "ListedGroup",
+                    version,
+                    supported: Self::SUPPORTED_VERSIONS,
+                });
+            }
+
             let group_id = if Self::is_flexible(version) {
                 decoder.read_compact_string()?
             } else {
@@ -203,6 +242,8 @@ pub mod list_groups_response {
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+
             if Self::is_flexible(version) {
                 encoder.write_compact_string(&self.group_id)?;
             } else {
@@ -222,11 +263,6 @@ pub mod list_groups_response {
 
             if Self::is_flexible(version) {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-            } else if !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
-                    message: "ListedGroup",
-                    version,
-                });
             }
 
             Ok(())
@@ -255,6 +291,24 @@ pub mod list_groups_response {
 
     impl KafkaResponse for ListGroupsResponse {
         const API_KEY: ApiKey = ApiKey::new(16);
+    }
+
+    impl ListGroupsResponse {
+        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            crate::message::ensure_encode_version::<Self>(version)?;
+
+            for value in &self.groups {
+                value.validate_for_version(version)?;
+            }
+            if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: Self::NAME,
+                    version,
+                });
+            }
+
+            Ok(())
+        }
     }
 
     impl KafkaDecode for ListGroupsResponse {
@@ -296,7 +350,7 @@ pub mod list_groups_response {
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            crate::message::ensure_encode_version::<Self>(version)?;
+            self.validate_for_version(version)?;
 
             if version.value() >= 1 {
                 encoder.write_i32(self.throttle_time_ms)?;
@@ -313,11 +367,6 @@ pub mod list_groups_response {
 
             if Self::is_flexible(version) {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-            } else if !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
-                    message: Self::NAME,
-                    version,
-                });
             }
 
             Ok(())

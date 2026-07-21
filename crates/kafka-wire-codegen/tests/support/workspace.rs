@@ -129,15 +129,12 @@ impl Workspace {
             entries.join("\n\n")
         );
         write(&root.join("spec/protocol.lock"), &lock);
-        // The reviewed quirk data is an input the pipeline reads, so a synthetic
-        // workspace has to carry it too. Copied from the real one rather than
-        // invented, so a probe cannot pass against exceptions the repository
-        // does not actually declare.
+        // Override documents are strict inputs tied to the corpus they govern.
+        // This tiny lock contains no API or schema needing an exception, so its
+        // matching policy is the versioned empty set rather than production
+        // entries for sources the fixture deliberately did not pin.
         for overrides in ["headers.toml", "schema_exceptions.toml"] {
-            write(
-                &root.join("spec/overrides").join(overrides),
-                &read(&repository_root().join("spec/overrides").join(overrides)),
-            );
+            write(&root.join("spec/overrides").join(overrides), "schema = 1\n");
         }
 
         Self { root }

@@ -30,6 +30,7 @@ pub mod create_delegation_token_request {
     }
 
     impl CreatableRenewers {
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(1, 3);
         const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(2, 3));
 
         fn is_flexible(version: ApiVersion) -> bool {
@@ -37,8 +38,37 @@ pub mod create_delegation_token_request {
         }
     }
 
+    impl CreatableRenewers {
+        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            if !Self::SUPPORTED_VERSIONS.contains(version) {
+                return Err(EncodeError::UnsupportedVersion {
+                    message: "CreatableRenewers",
+                    version,
+                    supported: Self::SUPPORTED_VERSIONS,
+                });
+            }
+
+            if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "CreatableRenewers",
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+
     impl KafkaDecode for CreatableRenewers {
         fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            if !Self::SUPPORTED_VERSIONS.contains(version) {
+                return Err(DecodeError::UnsupportedVersion {
+                    message: "CreatableRenewers",
+                    version,
+                    supported: Self::SUPPORTED_VERSIONS,
+                });
+            }
+
             let principal_type = if Self::is_flexible(version) {
                 decoder.read_compact_string()?
             } else {
@@ -69,6 +99,8 @@ pub mod create_delegation_token_request {
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+
             if Self::is_flexible(version) {
                 encoder.write_compact_string(&self.principal_type)?;
             } else {
@@ -82,11 +114,6 @@ pub mod create_delegation_token_request {
 
             if Self::is_flexible(version) {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-            } else if !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
-                    message: "CreatableRenewers",
-                    version,
-                });
             }
 
             Ok(())
@@ -133,6 +160,38 @@ pub mod create_delegation_token_request {
 
     impl RequestResponsePair for CreateDelegationTokenRequest {
         type Response = super::CreateDelegationTokenResponse;
+    }
+
+    impl CreateDelegationTokenRequest {
+        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            crate::message::ensure_encode_version::<Self>(version)?;
+
+            if version.value() < 3 && self.owner_principal_type != Some(StrBytes::default()) {
+                return Err(EncodeError::FieldNotRepresentable {
+                    message: Self::NAME,
+                    field: "OwnerPrincipalType",
+                    version,
+                });
+            }
+            if version.value() < 3 && self.owner_principal_name != Some(StrBytes::default()) {
+                return Err(EncodeError::FieldNotRepresentable {
+                    message: Self::NAME,
+                    field: "OwnerPrincipalName",
+                    version,
+                });
+            }
+            for value in &self.renewers {
+                value.validate_for_version(version)?;
+            }
+            if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: Self::NAME,
+                    version,
+                });
+            }
+
+            Ok(())
+        }
     }
 
     impl KafkaDecode for CreateDelegationTokenRequest {
@@ -182,22 +241,7 @@ pub mod create_delegation_token_request {
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            crate::message::ensure_encode_version::<Self>(version)?;
-
-            if version.value() < 3 && self.owner_principal_type != Some(StrBytes::default()) {
-                return Err(EncodeError::FieldNotRepresentable {
-                    message: Self::NAME,
-                    field: "OwnerPrincipalType",
-                    version,
-                });
-            }
-            if version.value() < 3 && self.owner_principal_name != Some(StrBytes::default()) {
-                return Err(EncodeError::FieldNotRepresentable {
-                    message: Self::NAME,
-                    field: "OwnerPrincipalName",
-                    version,
-                });
-            }
+            self.validate_for_version(version)?;
 
             if version.value() >= 3 {
                 encoder.write_compact_nullable_string(self.owner_principal_type.as_ref())?;
@@ -217,11 +261,6 @@ pub mod create_delegation_token_request {
 
             if Self::is_flexible(version) {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-            } else if !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
-                    message: Self::NAME,
-                    version,
-                });
             }
 
             Ok(())
@@ -279,6 +318,35 @@ pub mod create_delegation_token_response {
 
     impl KafkaResponse for CreateDelegationTokenResponse {
         const API_KEY: ApiKey = ApiKey::new(38);
+    }
+
+    impl CreateDelegationTokenResponse {
+        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            crate::message::ensure_encode_version::<Self>(version)?;
+
+            if version.value() < 3 && !self.token_requester_principal_type.is_empty() {
+                return Err(EncodeError::FieldNotRepresentable {
+                    message: Self::NAME,
+                    field: "TokenRequesterPrincipalType",
+                    version,
+                });
+            }
+            if version.value() < 3 && !self.token_requester_principal_name.is_empty() {
+                return Err(EncodeError::FieldNotRepresentable {
+                    message: Self::NAME,
+                    field: "TokenRequesterPrincipalName",
+                    version,
+                });
+            }
+            if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: Self::NAME,
+                    version,
+                });
+            }
+
+            Ok(())
+        }
     }
 
     impl KafkaDecode for CreateDelegationTokenResponse {
@@ -349,22 +417,7 @@ pub mod create_delegation_token_response {
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            crate::message::ensure_encode_version::<Self>(version)?;
-
-            if version.value() < 3 && !self.token_requester_principal_type.is_empty() {
-                return Err(EncodeError::FieldNotRepresentable {
-                    message: Self::NAME,
-                    field: "TokenRequesterPrincipalType",
-                    version,
-                });
-            }
-            if version.value() < 3 && !self.token_requester_principal_name.is_empty() {
-                return Err(EncodeError::FieldNotRepresentable {
-                    message: Self::NAME,
-                    field: "TokenRequesterPrincipalName",
-                    version,
-                });
-            }
+            self.validate_for_version(version)?;
 
             encoder.write_i16(self.error_code)?;
             if Self::is_flexible(version) {
@@ -400,11 +453,6 @@ pub mod create_delegation_token_response {
 
             if Self::is_flexible(version) {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-            } else if !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
-                    message: Self::NAME,
-                    version,
-                });
             }
 
             Ok(())

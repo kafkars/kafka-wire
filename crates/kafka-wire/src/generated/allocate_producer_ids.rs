@@ -53,6 +53,21 @@ pub mod allocate_producer_ids_request {
         type Response = super::AllocateProducerIdsResponse;
     }
 
+    impl AllocateProducerIdsRequest {
+        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            crate::message::ensure_encode_version::<Self>(version)?;
+
+            if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: Self::NAME,
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+
     impl KafkaDecode for AllocateProducerIdsRequest {
         fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
             crate::message::ensure_decode_version::<Self>(version)?;
@@ -79,18 +94,13 @@ pub mod allocate_producer_ids_request {
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            crate::message::ensure_encode_version::<Self>(version)?;
+            self.validate_for_version(version)?;
 
             encoder.write_i32(self.broker_id)?;
             encoder.write_i64(self.broker_epoch)?;
 
             if Self::is_flexible(version) {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-            } else if !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
-                    message: Self::NAME,
-                    version,
-                });
             }
 
             Ok(())
@@ -136,6 +146,21 @@ pub mod allocate_producer_ids_response {
         const API_KEY: ApiKey = ApiKey::new(67);
     }
 
+    impl AllocateProducerIdsResponse {
+        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            crate::message::ensure_encode_version::<Self>(version)?;
+
+            if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: Self::NAME,
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+
     impl KafkaDecode for AllocateProducerIdsResponse {
         fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
             crate::message::ensure_decode_version::<Self>(version)?;
@@ -166,7 +191,7 @@ pub mod allocate_producer_ids_response {
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            crate::message::ensure_encode_version::<Self>(version)?;
+            self.validate_for_version(version)?;
 
             encoder.write_i32(self.throttle_time_ms)?;
             encoder.write_i16(self.error_code)?;
@@ -175,11 +200,6 @@ pub mod allocate_producer_ids_response {
 
             if Self::is_flexible(version) {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-            } else if !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
-                    message: Self::NAME,
-                    version,
-                });
             }
 
             Ok(())

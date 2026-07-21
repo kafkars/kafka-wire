@@ -30,6 +30,7 @@ pub mod add_partitions_to_txn_request {
     }
 
     impl AddPartitionsToTxnTopic {
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 5);
         const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(3, 5));
 
         fn is_flexible(version: ApiVersion) -> bool {
@@ -37,8 +38,37 @@ pub mod add_partitions_to_txn_request {
         }
     }
 
+    impl AddPartitionsToTxnTopic {
+        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            if !Self::SUPPORTED_VERSIONS.contains(version) {
+                return Err(EncodeError::UnsupportedVersion {
+                    message: "AddPartitionsToTxnTopic",
+                    version,
+                    supported: Self::SUPPORTED_VERSIONS,
+                });
+            }
+
+            if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "AddPartitionsToTxnTopic",
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+
     impl KafkaDecode for AddPartitionsToTxnTopic {
         fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            if !Self::SUPPORTED_VERSIONS.contains(version) {
+                return Err(DecodeError::UnsupportedVersion {
+                    message: "AddPartitionsToTxnTopic",
+                    version,
+                    supported: Self::SUPPORTED_VERSIONS,
+                });
+            }
+
             let name = if Self::is_flexible(version) {
                 decoder.read_compact_string()?
             } else {
@@ -72,6 +102,8 @@ pub mod add_partitions_to_txn_request {
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+
             if Self::is_flexible(version) {
                 encoder.write_compact_string(&self.name)?;
             } else {
@@ -88,11 +120,6 @@ pub mod add_partitions_to_txn_request {
 
             if Self::is_flexible(version) {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-            } else if !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
-                    message: "AddPartitionsToTxnTopic",
-                    version,
-                });
             }
 
             Ok(())
@@ -118,6 +145,7 @@ pub mod add_partitions_to_txn_request {
     }
 
     impl AddPartitionsToTxnTransaction {
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 5);
         const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(3, 5));
 
         fn is_flexible(version: ApiVersion) -> bool {
@@ -125,8 +153,77 @@ pub mod add_partitions_to_txn_request {
         }
     }
 
+    impl AddPartitionsToTxnTransaction {
+        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            if !Self::SUPPORTED_VERSIONS.contains(version) {
+                return Err(EncodeError::UnsupportedVersion {
+                    message: "AddPartitionsToTxnTransaction",
+                    version,
+                    supported: Self::SUPPORTED_VERSIONS,
+                });
+            }
+
+            if version.value() < 4 && !self.transactional_id.is_empty() {
+                return Err(EncodeError::FieldNotRepresentable {
+                    message: "AddPartitionsToTxnTransaction",
+                    field: "TransactionalId",
+                    version,
+                });
+            }
+            if version.value() < 4 && self.producer_id != 0 {
+                return Err(EncodeError::FieldNotRepresentable {
+                    message: "AddPartitionsToTxnTransaction",
+                    field: "ProducerId",
+                    version,
+                });
+            }
+            if version.value() < 4 && self.producer_epoch != 0 {
+                return Err(EncodeError::FieldNotRepresentable {
+                    message: "AddPartitionsToTxnTransaction",
+                    field: "ProducerEpoch",
+                    version,
+                });
+            }
+            if version.value() < 4 && self.verify_only {
+                return Err(EncodeError::FieldNotRepresentable {
+                    message: "AddPartitionsToTxnTransaction",
+                    field: "VerifyOnly",
+                    version,
+                });
+            }
+            if version.value() < 4 && !self.topics.is_empty() {
+                return Err(EncodeError::FieldNotRepresentable {
+                    message: "AddPartitionsToTxnTransaction",
+                    field: "Topics",
+                    version,
+                });
+            }
+            if version.value() >= 4 {
+                for value in &self.topics {
+                    value.validate_for_version(version)?;
+                }
+            }
+            if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "AddPartitionsToTxnTransaction",
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+
     impl KafkaDecode for AddPartitionsToTxnTransaction {
         fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            if !Self::SUPPORTED_VERSIONS.contains(version) {
+                return Err(DecodeError::UnsupportedVersion {
+                    message: "AddPartitionsToTxnTransaction",
+                    version,
+                    supported: Self::SUPPORTED_VERSIONS,
+                });
+            }
+
             let transactional_id = if version.value() >= 4 {
                 decoder.read_compact_string()?
             } else {
@@ -178,6 +275,8 @@ pub mod add_partitions_to_txn_request {
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+
             if version.value() >= 4 {
                 encoder.write_compact_string(&self.transactional_id)?;
             }
@@ -199,11 +298,6 @@ pub mod add_partitions_to_txn_request {
 
             if Self::is_flexible(version) {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-            } else if !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
-                    message: "AddPartitionsToTxnTransaction",
-                    version,
-                });
             }
 
             Ok(())
@@ -240,6 +334,66 @@ pub mod add_partitions_to_txn_request {
 
     impl RequestResponsePair for AddPartitionsToTxnRequest {
         type Response = super::AddPartitionsToTxnResponse;
+    }
+
+    impl AddPartitionsToTxnRequest {
+        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            crate::message::ensure_encode_version::<Self>(version)?;
+
+            if version.value() < 4 && !self.transactions.is_empty() {
+                return Err(EncodeError::FieldNotRepresentable {
+                    message: Self::NAME,
+                    field: "Transactions",
+                    version,
+                });
+            }
+            if version.value() > 3 && !self.v3_and_below_transactional_id.is_empty() {
+                return Err(EncodeError::FieldNotRepresentable {
+                    message: Self::NAME,
+                    field: "V3AndBelowTransactionalId",
+                    version,
+                });
+            }
+            if version.value() > 3 && self.v3_and_below_producer_id != 0 {
+                return Err(EncodeError::FieldNotRepresentable {
+                    message: Self::NAME,
+                    field: "V3AndBelowProducerId",
+                    version,
+                });
+            }
+            if version.value() > 3 && self.v3_and_below_producer_epoch != 0 {
+                return Err(EncodeError::FieldNotRepresentable {
+                    message: Self::NAME,
+                    field: "V3AndBelowProducerEpoch",
+                    version,
+                });
+            }
+            if version.value() > 3 && !self.v3_and_below_topics.is_empty() {
+                return Err(EncodeError::FieldNotRepresentable {
+                    message: Self::NAME,
+                    field: "V3AndBelowTopics",
+                    version,
+                });
+            }
+            if version.value() >= 4 {
+                for value in &self.transactions {
+                    value.validate_for_version(version)?;
+                }
+            }
+            if version.value() <= 3 {
+                for value in &self.v3_and_below_topics {
+                    value.validate_for_version(version)?;
+                }
+            }
+            if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: Self::NAME,
+                    version,
+                });
+            }
+
+            Ok(())
+        }
     }
 
     impl KafkaDecode for AddPartitionsToTxnRequest {
@@ -308,43 +462,7 @@ pub mod add_partitions_to_txn_request {
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            crate::message::ensure_encode_version::<Self>(version)?;
-
-            if version.value() < 4 && !self.transactions.is_empty() {
-                return Err(EncodeError::FieldNotRepresentable {
-                    message: Self::NAME,
-                    field: "Transactions",
-                    version,
-                });
-            }
-            if version.value() > 3 && !self.v3_and_below_transactional_id.is_empty() {
-                return Err(EncodeError::FieldNotRepresentable {
-                    message: Self::NAME,
-                    field: "V3AndBelowTransactionalId",
-                    version,
-                });
-            }
-            if version.value() > 3 && self.v3_and_below_producer_id != 0 {
-                return Err(EncodeError::FieldNotRepresentable {
-                    message: Self::NAME,
-                    field: "V3AndBelowProducerId",
-                    version,
-                });
-            }
-            if version.value() > 3 && self.v3_and_below_producer_epoch != 0 {
-                return Err(EncodeError::FieldNotRepresentable {
-                    message: Self::NAME,
-                    field: "V3AndBelowProducerEpoch",
-                    version,
-                });
-            }
-            if version.value() > 3 && !self.v3_and_below_topics.is_empty() {
-                return Err(EncodeError::FieldNotRepresentable {
-                    message: Self::NAME,
-                    field: "V3AndBelowTopics",
-                    version,
-                });
-            }
+            self.validate_for_version(version)?;
 
             if version.value() >= 4 {
                 encoder.write_compact_array_len(self.transactions.len())?;
@@ -378,11 +496,6 @@ pub mod add_partitions_to_txn_request {
 
             if Self::is_flexible(version) {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-            } else if !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
-                    message: Self::NAME,
-                    version,
-                });
             }
 
             Ok(())
@@ -415,6 +528,7 @@ pub mod add_partitions_to_txn_response {
     }
 
     impl AddPartitionsToTxnTopicResult {
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 5);
         const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(3, 5));
 
         fn is_flexible(version: ApiVersion) -> bool {
@@ -422,8 +536,40 @@ pub mod add_partitions_to_txn_response {
         }
     }
 
+    impl AddPartitionsToTxnTopicResult {
+        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            if !Self::SUPPORTED_VERSIONS.contains(version) {
+                return Err(EncodeError::UnsupportedVersion {
+                    message: "AddPartitionsToTxnTopicResult",
+                    version,
+                    supported: Self::SUPPORTED_VERSIONS,
+                });
+            }
+
+            for value in &self.results_by_partition {
+                value.validate_for_version(version)?;
+            }
+            if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "AddPartitionsToTxnTopicResult",
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+
     impl KafkaDecode for AddPartitionsToTxnTopicResult {
         fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            if !Self::SUPPORTED_VERSIONS.contains(version) {
+                return Err(DecodeError::UnsupportedVersion {
+                    message: "AddPartitionsToTxnTopicResult",
+                    version,
+                    supported: Self::SUPPORTED_VERSIONS,
+                });
+            }
+
             let name = if Self::is_flexible(version) {
                 decoder.read_compact_string()?
             } else {
@@ -459,6 +605,8 @@ pub mod add_partitions_to_txn_response {
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+
             if Self::is_flexible(version) {
                 encoder.write_compact_string(&self.name)?;
             } else {
@@ -475,11 +623,6 @@ pub mod add_partitions_to_txn_response {
 
             if Self::is_flexible(version) {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-            } else if !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
-                    message: "AddPartitionsToTxnTopicResult",
-                    version,
-                });
             }
 
             Ok(())
@@ -499,6 +642,7 @@ pub mod add_partitions_to_txn_response {
     }
 
     impl AddPartitionsToTxnPartitionResult {
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 5);
         const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(3, 5));
 
         fn is_flexible(version: ApiVersion) -> bool {
@@ -506,8 +650,37 @@ pub mod add_partitions_to_txn_response {
         }
     }
 
+    impl AddPartitionsToTxnPartitionResult {
+        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            if !Self::SUPPORTED_VERSIONS.contains(version) {
+                return Err(EncodeError::UnsupportedVersion {
+                    message: "AddPartitionsToTxnPartitionResult",
+                    version,
+                    supported: Self::SUPPORTED_VERSIONS,
+                });
+            }
+
+            if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "AddPartitionsToTxnPartitionResult",
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+
     impl KafkaDecode for AddPartitionsToTxnPartitionResult {
         fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            if !Self::SUPPORTED_VERSIONS.contains(version) {
+                return Err(DecodeError::UnsupportedVersion {
+                    message: "AddPartitionsToTxnPartitionResult",
+                    version,
+                    supported: Self::SUPPORTED_VERSIONS,
+                });
+            }
+
             let partition_index = decoder.read_i32()?;
             let partition_error_code = decoder.read_i16()?;
             let unknown_tagged_fields = if Self::is_flexible(version) {
@@ -530,16 +703,13 @@ pub mod add_partitions_to_txn_response {
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+
             encoder.write_i32(self.partition_index)?;
             encoder.write_i16(self.partition_error_code)?;
 
             if Self::is_flexible(version) {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-            } else if !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
-                    message: "AddPartitionsToTxnPartitionResult",
-                    version,
-                });
             }
 
             Ok(())
@@ -559,6 +729,7 @@ pub mod add_partitions_to_txn_response {
     }
 
     impl AddPartitionsToTxnResult {
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 5);
         const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(3, 5));
 
         fn is_flexible(version: ApiVersion) -> bool {
@@ -566,8 +737,56 @@ pub mod add_partitions_to_txn_response {
         }
     }
 
+    impl AddPartitionsToTxnResult {
+        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            if !Self::SUPPORTED_VERSIONS.contains(version) {
+                return Err(EncodeError::UnsupportedVersion {
+                    message: "AddPartitionsToTxnResult",
+                    version,
+                    supported: Self::SUPPORTED_VERSIONS,
+                });
+            }
+
+            if version.value() < 4 && !self.transactional_id.is_empty() {
+                return Err(EncodeError::FieldNotRepresentable {
+                    message: "AddPartitionsToTxnResult",
+                    field: "TransactionalId",
+                    version,
+                });
+            }
+            if version.value() < 4 && !self.topic_results.is_empty() {
+                return Err(EncodeError::FieldNotRepresentable {
+                    message: "AddPartitionsToTxnResult",
+                    field: "TopicResults",
+                    version,
+                });
+            }
+            if version.value() >= 4 {
+                for value in &self.topic_results {
+                    value.validate_for_version(version)?;
+                }
+            }
+            if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "AddPartitionsToTxnResult",
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+
     impl KafkaDecode for AddPartitionsToTxnResult {
         fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            if !Self::SUPPORTED_VERSIONS.contains(version) {
+                return Err(DecodeError::UnsupportedVersion {
+                    message: "AddPartitionsToTxnResult",
+                    version,
+                    supported: Self::SUPPORTED_VERSIONS,
+                });
+            }
+
             let transactional_id = if version.value() >= 4 {
                 decoder.read_compact_string()?
             } else {
@@ -601,6 +820,8 @@ pub mod add_partitions_to_txn_response {
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+
             if version.value() >= 4 {
                 encoder.write_compact_string(&self.transactional_id)?;
             }
@@ -613,11 +834,6 @@ pub mod add_partitions_to_txn_response {
 
             if Self::is_flexible(version) {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-            } else if !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
-                    message: "AddPartitionsToTxnResult",
-                    version,
-                });
             }
 
             Ok(())
@@ -648,6 +864,45 @@ pub mod add_partitions_to_txn_response {
 
     impl KafkaResponse for AddPartitionsToTxnResponse {
         const API_KEY: ApiKey = ApiKey::new(24);
+    }
+
+    impl AddPartitionsToTxnResponse {
+        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            crate::message::ensure_encode_version::<Self>(version)?;
+
+            if version.value() < 4 && !self.results_by_transaction.is_empty() {
+                return Err(EncodeError::FieldNotRepresentable {
+                    message: Self::NAME,
+                    field: "ResultsByTransaction",
+                    version,
+                });
+            }
+            if version.value() > 3 && !self.results_by_topic_v3_and_below.is_empty() {
+                return Err(EncodeError::FieldNotRepresentable {
+                    message: Self::NAME,
+                    field: "ResultsByTopicV3AndBelow",
+                    version,
+                });
+            }
+            if version.value() >= 4 {
+                for value in &self.results_by_transaction {
+                    value.validate_for_version(version)?;
+                }
+            }
+            if version.value() <= 3 {
+                for value in &self.results_by_topic_v3_and_below {
+                    value.validate_for_version(version)?;
+                }
+            }
+            if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: Self::NAME,
+                    version,
+                });
+            }
+
+            Ok(())
+        }
     }
 
     impl KafkaDecode for AddPartitionsToTxnResponse {
@@ -702,22 +957,7 @@ pub mod add_partitions_to_txn_response {
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            crate::message::ensure_encode_version::<Self>(version)?;
-
-            if version.value() < 4 && !self.results_by_transaction.is_empty() {
-                return Err(EncodeError::FieldNotRepresentable {
-                    message: Self::NAME,
-                    field: "ResultsByTransaction",
-                    version,
-                });
-            }
-            if version.value() > 3 && !self.results_by_topic_v3_and_below.is_empty() {
-                return Err(EncodeError::FieldNotRepresentable {
-                    message: Self::NAME,
-                    field: "ResultsByTopicV3AndBelow",
-                    version,
-                });
-            }
+            self.validate_for_version(version)?;
 
             encoder.write_i32(self.throttle_time_ms)?;
             if version.value() >= 4 {
@@ -742,11 +982,6 @@ pub mod add_partitions_to_txn_response {
 
             if Self::is_flexible(version) {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-            } else if !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
-                    message: Self::NAME,
-                    version,
-                });
             }
 
             Ok(())

@@ -56,6 +56,35 @@ pub mod describe_cluster_request {
         type Response = super::DescribeClusterResponse;
     }
 
+    impl DescribeClusterRequest {
+        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            crate::message::ensure_encode_version::<Self>(version)?;
+
+            if version.value() < 1 && self.endpoint_type != 1 {
+                return Err(EncodeError::FieldNotRepresentable {
+                    message: Self::NAME,
+                    field: "EndpointType",
+                    version,
+                });
+            }
+            if version.value() < 2 && self.include_fenced_brokers {
+                return Err(EncodeError::FieldNotRepresentable {
+                    message: Self::NAME,
+                    field: "IncludeFencedBrokers",
+                    version,
+                });
+            }
+            if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: Self::NAME,
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+
     impl KafkaDecode for DescribeClusterRequest {
         fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
             crate::message::ensure_decode_version::<Self>(version)?;
@@ -92,22 +121,7 @@ pub mod describe_cluster_request {
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            crate::message::ensure_encode_version::<Self>(version)?;
-
-            if version.value() < 1 && self.endpoint_type != 1 {
-                return Err(EncodeError::FieldNotRepresentable {
-                    message: Self::NAME,
-                    field: "EndpointType",
-                    version,
-                });
-            }
-            if version.value() < 2 && self.include_fenced_brokers {
-                return Err(EncodeError::FieldNotRepresentable {
-                    message: Self::NAME,
-                    field: "IncludeFencedBrokers",
-                    version,
-                });
-            }
+            self.validate_for_version(version)?;
 
             encoder.write_bool(self.include_cluster_authorized_operations)?;
             if version.value() >= 1 {
@@ -119,11 +133,6 @@ pub mod describe_cluster_request {
 
             if Self::is_flexible(version) {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-            } else if !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
-                    message: Self::NAME,
-                    version,
-                });
             }
 
             Ok(())
@@ -162,6 +171,7 @@ pub mod describe_cluster_response {
     }
 
     impl DescribeClusterBroker {
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 2);
         const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 2));
 
         fn is_flexible(version: ApiVersion) -> bool {
@@ -169,8 +179,44 @@ pub mod describe_cluster_response {
         }
     }
 
+    impl DescribeClusterBroker {
+        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            if !Self::SUPPORTED_VERSIONS.contains(version) {
+                return Err(EncodeError::UnsupportedVersion {
+                    message: "DescribeClusterBroker",
+                    version,
+                    supported: Self::SUPPORTED_VERSIONS,
+                });
+            }
+
+            if version.value() < 2 && self.is_fenced {
+                return Err(EncodeError::FieldNotRepresentable {
+                    message: "DescribeClusterBroker",
+                    field: "IsFenced",
+                    version,
+                });
+            }
+            if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "DescribeClusterBroker",
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+
     impl KafkaDecode for DescribeClusterBroker {
         fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            if !Self::SUPPORTED_VERSIONS.contains(version) {
+                return Err(DecodeError::UnsupportedVersion {
+                    message: "DescribeClusterBroker",
+                    version,
+                    supported: Self::SUPPORTED_VERSIONS,
+                });
+            }
+
             let broker_id = decoder.read_i32()?;
             let host = decoder.read_compact_string()?;
             let port = decoder.read_i32()?;
@@ -203,6 +249,8 @@ pub mod describe_cluster_response {
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+
             encoder.write_i32(self.broker_id)?;
             encoder.write_compact_string(&self.host)?;
             encoder.write_i32(self.port)?;
@@ -213,11 +261,6 @@ pub mod describe_cluster_response {
 
             if Self::is_flexible(version) {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-            } else if !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
-                    message: "DescribeClusterBroker",
-                    version,
-                });
             }
 
             Ok(())
@@ -274,6 +317,31 @@ pub mod describe_cluster_response {
         const API_KEY: ApiKey = ApiKey::new(60);
     }
 
+    impl DescribeClusterResponse {
+        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            crate::message::ensure_encode_version::<Self>(version)?;
+
+            if version.value() < 1 && self.endpoint_type != 1 {
+                return Err(EncodeError::FieldNotRepresentable {
+                    message: Self::NAME,
+                    field: "EndpointType",
+                    version,
+                });
+            }
+            for value in &self.brokers {
+                value.validate_for_version(version)?;
+            }
+            if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: Self::NAME,
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+
     impl KafkaDecode for DescribeClusterResponse {
         fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
             crate::message::ensure_decode_version::<Self>(version)?;
@@ -321,15 +389,7 @@ pub mod describe_cluster_response {
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            crate::message::ensure_encode_version::<Self>(version)?;
-
-            if version.value() < 1 && self.endpoint_type != 1 {
-                return Err(EncodeError::FieldNotRepresentable {
-                    message: Self::NAME,
-                    field: "EndpointType",
-                    version,
-                });
-            }
+            self.validate_for_version(version)?;
 
             encoder.write_i32(self.throttle_time_ms)?;
             encoder.write_i16(self.error_code)?;
@@ -347,11 +407,6 @@ pub mod describe_cluster_response {
 
             if Self::is_flexible(version) {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-            } else if !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
-                    message: Self::NAME,
-                    version,
-                });
             }
 
             Ok(())

@@ -97,11 +97,12 @@ impl Decoder {
                 length_offset,
             )?;
 
+            let payload_offset = self.offset();
             let payload = self.take(length)?;
             // The entry gets a decoder of its own so a known tag's value cannot
             // read past the size the peer declared for it, whatever the schema
             // this build holds says the value should look like.
-            let mut entry = Self::new(payload.clone(), self.limits);
+            let mut entry = Self::child(payload.clone(), self.limits, payload_offset);
             match dispatch(tag, &mut entry)? {
                 TagOutcome::Decoded => {
                     let remaining = entry.remaining();

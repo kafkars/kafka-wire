@@ -12,11 +12,11 @@ mod validate;
 
 pub use ir::{
     CommonStruct, DefaultValue, EntityType, EntityTypeParseError, Field, FieldName, FieldType,
-    FloatDefault, Message, MessageKind, MessageName, Qualification, StructDeclaration,
-    StructOrigin, StructRef, StructTable, TypeParseError, VersionParseError, VersionRange,
-    VersionSet,
+    FloatDefault, Message, MessageKind, MessageName, Qualification, RustIdent, RustIdentError,
+    StructDeclaration, StructOrigin, StructRef, StructTable, TypeParseError, VersionParseError,
+    VersionRange, VersionSet,
 };
-pub use load::{SchemaError, load_message, load_message_with};
+pub use load::{SchemaError, load_message, load_message_with, load_source, load_source_with};
 pub use lower::{LowerError, lower_message};
 pub use raw::{RawCommonStruct, RawField, RawMessage, RawMessageKind};
 pub use source::{SourceError, SourceFile, parse_jsonc};

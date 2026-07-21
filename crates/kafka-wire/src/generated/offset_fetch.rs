@@ -30,6 +30,7 @@ pub mod offset_fetch_request {
     }
 
     impl OffsetFetchRequestTopic {
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(1, 10);
         const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(6, 10));
 
         fn is_flexible(version: ApiVersion) -> bool {
@@ -37,8 +38,51 @@ pub mod offset_fetch_request {
         }
     }
 
+    impl OffsetFetchRequestTopic {
+        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            if !Self::SUPPORTED_VERSIONS.contains(version) {
+                return Err(EncodeError::UnsupportedVersion {
+                    message: "OffsetFetchRequestTopic",
+                    version,
+                    supported: Self::SUPPORTED_VERSIONS,
+                });
+            }
+
+            if version.value() > 7 && !self.name.is_empty() {
+                return Err(EncodeError::FieldNotRepresentable {
+                    message: "OffsetFetchRequestTopic",
+                    field: "Name",
+                    version,
+                });
+            }
+            if version.value() > 7 && !self.partition_indexes.is_empty() {
+                return Err(EncodeError::FieldNotRepresentable {
+                    message: "OffsetFetchRequestTopic",
+                    field: "PartitionIndexes",
+                    version,
+                });
+            }
+            if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "OffsetFetchRequestTopic",
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+
     impl KafkaDecode for OffsetFetchRequestTopic {
         fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            if !Self::SUPPORTED_VERSIONS.contains(version) {
+                return Err(DecodeError::UnsupportedVersion {
+                    message: "OffsetFetchRequestTopic",
+                    version,
+                    supported: Self::SUPPORTED_VERSIONS,
+                });
+            }
+
             let name = if version.value() <= 7 {
                 if Self::is_flexible(version) {
                     decoder.read_compact_string()?
@@ -78,6 +122,8 @@ pub mod offset_fetch_request {
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+
             if version.value() <= 7 {
                 if Self::is_flexible(version) {
                     encoder.write_compact_string(&self.name)?;
@@ -98,11 +144,6 @@ pub mod offset_fetch_request {
 
             if Self::is_flexible(version) {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-            } else if !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
-                    message: "OffsetFetchRequestTopic",
-                    version,
-                });
             }
 
             Ok(())
@@ -126,10 +167,53 @@ pub mod offset_fetch_request {
     }
 
     impl OffsetFetchRequestGroup {
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(1, 10);
         const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(6, 10));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+        }
+    }
+
+    impl OffsetFetchRequestGroup {
+        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            if !Self::SUPPORTED_VERSIONS.contains(version) {
+                return Err(EncodeError::UnsupportedVersion {
+                    message: "OffsetFetchRequestGroup",
+                    version,
+                    supported: Self::SUPPORTED_VERSIONS,
+                });
+            }
+
+            if version.value() < 8 && !self.group_id.is_empty() {
+                return Err(EncodeError::FieldNotRepresentable {
+                    message: "OffsetFetchRequestGroup",
+                    field: "GroupId",
+                    version,
+                });
+            }
+            if version.value() < 8 && self.topics != Some(Vec::new()) {
+                return Err(EncodeError::FieldNotRepresentable {
+                    message: "OffsetFetchRequestGroup",
+                    field: "Topics",
+                    version,
+                });
+            }
+            if version.value() >= 8 {
+                if let Some(values) = &self.topics {
+                    for value in values {
+                        value.validate_for_version(version)?;
+                    }
+                }
+            }
+            if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "OffsetFetchRequestGroup",
+                    version,
+                });
+            }
+
+            Ok(())
         }
     }
 
@@ -147,6 +231,14 @@ pub mod offset_fetch_request {
 
     impl KafkaDecode for OffsetFetchRequestGroup {
         fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            if !Self::SUPPORTED_VERSIONS.contains(version) {
+                return Err(DecodeError::UnsupportedVersion {
+                    message: "OffsetFetchRequestGroup",
+                    version,
+                    supported: Self::SUPPORTED_VERSIONS,
+                });
+            }
+
             let group_id = if version.value() >= 8 {
                 decoder.read_compact_string()?
             } else {
@@ -196,6 +288,8 @@ pub mod offset_fetch_request {
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+
             if version.value() >= 8 {
                 encoder.write_compact_string(&self.group_id)?;
             }
@@ -216,11 +310,6 @@ pub mod offset_fetch_request {
 
             if Self::is_flexible(version) {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-            } else if !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
-                    message: "OffsetFetchRequestGroup",
-                    version,
-                });
             }
 
             Ok(())
@@ -242,6 +331,7 @@ pub mod offset_fetch_request {
     }
 
     impl OffsetFetchRequestTopics {
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(1, 10);
         const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(6, 10));
 
         fn is_flexible(version: ApiVersion) -> bool {
@@ -249,8 +339,44 @@ pub mod offset_fetch_request {
         }
     }
 
+    impl OffsetFetchRequestTopics {
+        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            if !Self::SUPPORTED_VERSIONS.contains(version) {
+                return Err(EncodeError::UnsupportedVersion {
+                    message: "OffsetFetchRequestTopics",
+                    version,
+                    supported: Self::SUPPORTED_VERSIONS,
+                });
+            }
+
+            if version.value() < 8 && !self.partition_indexes.is_empty() {
+                return Err(EncodeError::FieldNotRepresentable {
+                    message: "OffsetFetchRequestTopics",
+                    field: "PartitionIndexes",
+                    version,
+                });
+            }
+            if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "OffsetFetchRequestTopics",
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+
     impl KafkaDecode for OffsetFetchRequestTopics {
         fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            if !Self::SUPPORTED_VERSIONS.contains(version) {
+                return Err(DecodeError::UnsupportedVersion {
+                    message: "OffsetFetchRequestTopics",
+                    version,
+                    supported: Self::SUPPORTED_VERSIONS,
+                });
+            }
+
             let name = if version.value() >= 8 && version.value() <= 9 {
                 decoder.read_compact_string()?
             } else {
@@ -288,6 +414,8 @@ pub mod offset_fetch_request {
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+
             if version.value() >= 8 && version.value() <= 9 {
                 encoder.write_compact_string(&self.name)?;
             }
@@ -303,11 +431,6 @@ pub mod offset_fetch_request {
 
             if Self::is_flexible(version) {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-            } else if !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
-                    message: "OffsetFetchRequestTopics",
-                    version,
-                });
             }
 
             Ok(())
@@ -354,6 +477,68 @@ pub mod offset_fetch_request {
 
     impl RequestResponsePair for OffsetFetchRequest {
         type Response = super::OffsetFetchResponse;
+    }
+
+    impl OffsetFetchRequest {
+        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            crate::message::ensure_encode_version::<Self>(version)?;
+
+            if version.value() > 7 && !self.group_id.is_empty() {
+                return Err(EncodeError::FieldNotRepresentable {
+                    message: Self::NAME,
+                    field: "GroupId",
+                    version,
+                });
+            }
+            if version.value() > 7 && self.topics != Some(Vec::new()) {
+                return Err(EncodeError::FieldNotRepresentable {
+                    message: Self::NAME,
+                    field: "Topics",
+                    version,
+                });
+            }
+            if version.value() < 8 && !self.groups.is_empty() {
+                return Err(EncodeError::FieldNotRepresentable {
+                    message: Self::NAME,
+                    field: "Groups",
+                    version,
+                });
+            }
+            if version.value() < 7 && self.require_stable {
+                return Err(EncodeError::FieldNotRepresentable {
+                    message: Self::NAME,
+                    field: "RequireStable",
+                    version,
+                });
+            }
+            if version.value() <= 1 && self.topics.is_none() {
+                return Err(EncodeError::NullNotAllowed {
+                    message: Self::NAME,
+                    field: "Topics",
+                    version,
+                });
+            }
+            if version.value() <= 7 {
+                if let Some(values) = &self.topics {
+                    for value in values {
+                        value.validate_for_version(version)?;
+                    }
+                }
+            }
+            if version.value() >= 8 {
+                for value in &self.groups {
+                    value.validate_for_version(version)?;
+                }
+            }
+            if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: Self::NAME,
+                    version,
+                });
+            }
+
+            Ok(())
+        }
     }
 
     impl KafkaDecode for OffsetFetchRequest {
@@ -424,36 +609,7 @@ pub mod offset_fetch_request {
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            crate::message::ensure_encode_version::<Self>(version)?;
-
-            if version.value() > 7 && !self.group_id.is_empty() {
-                return Err(EncodeError::FieldNotRepresentable {
-                    message: Self::NAME,
-                    field: "GroupId",
-                    version,
-                });
-            }
-            if version.value() > 7 && self.topics != Some(Vec::new()) {
-                return Err(EncodeError::FieldNotRepresentable {
-                    message: Self::NAME,
-                    field: "Topics",
-                    version,
-                });
-            }
-            if version.value() < 8 && !self.groups.is_empty() {
-                return Err(EncodeError::FieldNotRepresentable {
-                    message: Self::NAME,
-                    field: "Groups",
-                    version,
-                });
-            }
-            if version.value() < 7 && self.require_stable {
-                return Err(EncodeError::FieldNotRepresentable {
-                    message: Self::NAME,
-                    field: "RequireStable",
-                    version,
-                });
-            }
+            self.validate_for_version(version)?;
 
             if version.value() <= 7 {
                 if Self::is_flexible(version) {
@@ -461,13 +617,6 @@ pub mod offset_fetch_request {
                 } else {
                     encoder.write_string(&self.group_id)?;
                 }
-            }
-            if version.value() <= 1 && self.topics.is_none() {
-                return Err(EncodeError::NullNotAllowed {
-                    message: Self::NAME,
-                    field: "Topics",
-                    version,
-                });
             }
             if version.value() <= 7 {
                 if Self::is_flexible(version) {
@@ -493,11 +642,6 @@ pub mod offset_fetch_request {
 
             if Self::is_flexible(version) {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-            } else if !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
-                    message: Self::NAME,
-                    version,
-                });
             }
 
             Ok(())
@@ -530,6 +674,7 @@ pub mod offset_fetch_response {
     }
 
     impl OffsetFetchResponseTopic {
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(1, 10);
         const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(6, 10));
 
         fn is_flexible(version: ApiVersion) -> bool {
@@ -537,8 +682,56 @@ pub mod offset_fetch_response {
         }
     }
 
+    impl OffsetFetchResponseTopic {
+        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            if !Self::SUPPORTED_VERSIONS.contains(version) {
+                return Err(EncodeError::UnsupportedVersion {
+                    message: "OffsetFetchResponseTopic",
+                    version,
+                    supported: Self::SUPPORTED_VERSIONS,
+                });
+            }
+
+            if version.value() > 7 && !self.name.is_empty() {
+                return Err(EncodeError::FieldNotRepresentable {
+                    message: "OffsetFetchResponseTopic",
+                    field: "Name",
+                    version,
+                });
+            }
+            if version.value() > 7 && !self.partitions.is_empty() {
+                return Err(EncodeError::FieldNotRepresentable {
+                    message: "OffsetFetchResponseTopic",
+                    field: "Partitions",
+                    version,
+                });
+            }
+            if version.value() <= 7 {
+                for value in &self.partitions {
+                    value.validate_for_version(version)?;
+                }
+            }
+            if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "OffsetFetchResponseTopic",
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+
     impl KafkaDecode for OffsetFetchResponseTopic {
         fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            if !Self::SUPPORTED_VERSIONS.contains(version) {
+                return Err(DecodeError::UnsupportedVersion {
+                    message: "OffsetFetchResponseTopic",
+                    version,
+                    supported: Self::SUPPORTED_VERSIONS,
+                });
+            }
+
             let name = if version.value() <= 7 {
                 if Self::is_flexible(version) {
                     decoder.read_compact_string()?
@@ -580,6 +773,8 @@ pub mod offset_fetch_response {
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+
             if version.value() <= 7 {
                 if Self::is_flexible(version) {
                     encoder.write_compact_string(&self.name)?;
@@ -600,11 +795,6 @@ pub mod offset_fetch_response {
 
             if Self::is_flexible(version) {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-            } else if !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
-                    message: "OffsetFetchResponseTopic",
-                    version,
-                });
             }
 
             Ok(())
@@ -630,10 +820,60 @@ pub mod offset_fetch_response {
     }
 
     impl OffsetFetchResponsePartition {
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(1, 10);
         const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(6, 10));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+        }
+    }
+
+    impl OffsetFetchResponsePartition {
+        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            if !Self::SUPPORTED_VERSIONS.contains(version) {
+                return Err(EncodeError::UnsupportedVersion {
+                    message: "OffsetFetchResponsePartition",
+                    version,
+                    supported: Self::SUPPORTED_VERSIONS,
+                });
+            }
+
+            if version.value() > 7 && self.partition_index != 0 {
+                return Err(EncodeError::FieldNotRepresentable {
+                    message: "OffsetFetchResponsePartition",
+                    field: "PartitionIndex",
+                    version,
+                });
+            }
+            if version.value() > 7 && self.committed_offset != 0 {
+                return Err(EncodeError::FieldNotRepresentable {
+                    message: "OffsetFetchResponsePartition",
+                    field: "CommittedOffset",
+                    version,
+                });
+            }
+            if version.value() > 7 && self.metadata != Some(StrBytes::default()) {
+                return Err(EncodeError::FieldNotRepresentable {
+                    message: "OffsetFetchResponsePartition",
+                    field: "Metadata",
+                    version,
+                });
+            }
+            if version.value() > 7 && self.error_code != 0 {
+                return Err(EncodeError::FieldNotRepresentable {
+                    message: "OffsetFetchResponsePartition",
+                    field: "ErrorCode",
+                    version,
+                });
+            }
+            if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "OffsetFetchResponsePartition",
+                    version,
+                });
+            }
+
+            Ok(())
         }
     }
 
@@ -652,6 +892,14 @@ pub mod offset_fetch_response {
 
     impl KafkaDecode for OffsetFetchResponsePartition {
         fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            if !Self::SUPPORTED_VERSIONS.contains(version) {
+                return Err(DecodeError::UnsupportedVersion {
+                    message: "OffsetFetchResponsePartition",
+                    version,
+                    supported: Self::SUPPORTED_VERSIONS,
+                });
+            }
+
             let partition_index = if version.value() <= 7 {
                 decoder.read_i32()?
             } else {
@@ -704,6 +952,8 @@ pub mod offset_fetch_response {
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+
             if version.value() <= 7 {
                 encoder.write_i32(self.partition_index)?;
             }
@@ -726,11 +976,6 @@ pub mod offset_fetch_response {
 
             if Self::is_flexible(version) {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-            } else if !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
-                    message: "OffsetFetchResponsePartition",
-                    version,
-                });
             }
 
             Ok(())
@@ -752,6 +997,7 @@ pub mod offset_fetch_response {
     }
 
     impl OffsetFetchResponseGroup {
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(1, 10);
         const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(6, 10));
 
         fn is_flexible(version: ApiVersion) -> bool {
@@ -759,8 +1005,63 @@ pub mod offset_fetch_response {
         }
     }
 
+    impl OffsetFetchResponseGroup {
+        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            if !Self::SUPPORTED_VERSIONS.contains(version) {
+                return Err(EncodeError::UnsupportedVersion {
+                    message: "OffsetFetchResponseGroup",
+                    version,
+                    supported: Self::SUPPORTED_VERSIONS,
+                });
+            }
+
+            if version.value() < 8 && !self.group_id.is_empty() {
+                return Err(EncodeError::FieldNotRepresentable {
+                    message: "OffsetFetchResponseGroup",
+                    field: "GroupId",
+                    version,
+                });
+            }
+            if version.value() < 8 && !self.topics.is_empty() {
+                return Err(EncodeError::FieldNotRepresentable {
+                    message: "OffsetFetchResponseGroup",
+                    field: "Topics",
+                    version,
+                });
+            }
+            if version.value() < 8 && self.error_code != 0 {
+                return Err(EncodeError::FieldNotRepresentable {
+                    message: "OffsetFetchResponseGroup",
+                    field: "ErrorCode",
+                    version,
+                });
+            }
+            if version.value() >= 8 {
+                for value in &self.topics {
+                    value.validate_for_version(version)?;
+                }
+            }
+            if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "OffsetFetchResponseGroup",
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+
     impl KafkaDecode for OffsetFetchResponseGroup {
         fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            if !Self::SUPPORTED_VERSIONS.contains(version) {
+                return Err(DecodeError::UnsupportedVersion {
+                    message: "OffsetFetchResponseGroup",
+                    version,
+                    supported: Self::SUPPORTED_VERSIONS,
+                });
+            }
+
             let group_id = if version.value() >= 8 {
                 decoder.read_compact_string()?
             } else {
@@ -800,6 +1101,8 @@ pub mod offset_fetch_response {
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+
             if version.value() >= 8 {
                 encoder.write_compact_string(&self.group_id)?;
             }
@@ -815,11 +1118,6 @@ pub mod offset_fetch_response {
 
             if Self::is_flexible(version) {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-            } else if !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
-                    message: "OffsetFetchResponseGroup",
-                    version,
-                });
             }
 
             Ok(())
@@ -841,6 +1139,7 @@ pub mod offset_fetch_response {
     }
 
     impl OffsetFetchResponseTopics {
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(1, 10);
         const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(6, 10));
 
         fn is_flexible(version: ApiVersion) -> bool {
@@ -848,8 +1147,49 @@ pub mod offset_fetch_response {
         }
     }
 
+    impl OffsetFetchResponseTopics {
+        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            if !Self::SUPPORTED_VERSIONS.contains(version) {
+                return Err(EncodeError::UnsupportedVersion {
+                    message: "OffsetFetchResponseTopics",
+                    version,
+                    supported: Self::SUPPORTED_VERSIONS,
+                });
+            }
+
+            if version.value() < 8 && !self.partitions.is_empty() {
+                return Err(EncodeError::FieldNotRepresentable {
+                    message: "OffsetFetchResponseTopics",
+                    field: "Partitions",
+                    version,
+                });
+            }
+            if version.value() >= 8 {
+                for value in &self.partitions {
+                    value.validate_for_version(version)?;
+                }
+            }
+            if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "OffsetFetchResponseTopics",
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+
     impl KafkaDecode for OffsetFetchResponseTopics {
         fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            if !Self::SUPPORTED_VERSIONS.contains(version) {
+                return Err(DecodeError::UnsupportedVersion {
+                    message: "OffsetFetchResponseTopics",
+                    version,
+                    supported: Self::SUPPORTED_VERSIONS,
+                });
+            }
+
             let name = if version.value() >= 8 && version.value() <= 9 {
                 decoder.read_compact_string()?
             } else {
@@ -889,6 +1229,8 @@ pub mod offset_fetch_response {
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+
             if version.value() >= 8 && version.value() <= 9 {
                 encoder.write_compact_string(&self.name)?;
             }
@@ -904,11 +1246,6 @@ pub mod offset_fetch_response {
 
             if Self::is_flexible(version) {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-            } else if !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
-                    message: "OffsetFetchResponseTopics",
-                    version,
-                });
             }
 
             Ok(())
@@ -934,10 +1271,60 @@ pub mod offset_fetch_response {
     }
 
     impl OffsetFetchResponsePartitions {
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(1, 10);
         const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(6, 10));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+        }
+    }
+
+    impl OffsetFetchResponsePartitions {
+        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            if !Self::SUPPORTED_VERSIONS.contains(version) {
+                return Err(EncodeError::UnsupportedVersion {
+                    message: "OffsetFetchResponsePartitions",
+                    version,
+                    supported: Self::SUPPORTED_VERSIONS,
+                });
+            }
+
+            if version.value() < 8 && self.partition_index != 0 {
+                return Err(EncodeError::FieldNotRepresentable {
+                    message: "OffsetFetchResponsePartitions",
+                    field: "PartitionIndex",
+                    version,
+                });
+            }
+            if version.value() < 8 && self.committed_offset != 0 {
+                return Err(EncodeError::FieldNotRepresentable {
+                    message: "OffsetFetchResponsePartitions",
+                    field: "CommittedOffset",
+                    version,
+                });
+            }
+            if version.value() < 8 && self.metadata != Some(StrBytes::default()) {
+                return Err(EncodeError::FieldNotRepresentable {
+                    message: "OffsetFetchResponsePartitions",
+                    field: "Metadata",
+                    version,
+                });
+            }
+            if version.value() < 8 && self.error_code != 0 {
+                return Err(EncodeError::FieldNotRepresentable {
+                    message: "OffsetFetchResponsePartitions",
+                    field: "ErrorCode",
+                    version,
+                });
+            }
+            if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "OffsetFetchResponsePartitions",
+                    version,
+                });
+            }
+
+            Ok(())
         }
     }
 
@@ -956,6 +1343,14 @@ pub mod offset_fetch_response {
 
     impl KafkaDecode for OffsetFetchResponsePartitions {
         fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            if !Self::SUPPORTED_VERSIONS.contains(version) {
+                return Err(DecodeError::UnsupportedVersion {
+                    message: "OffsetFetchResponsePartitions",
+                    version,
+                    supported: Self::SUPPORTED_VERSIONS,
+                });
+            }
+
             let partition_index = if version.value() >= 8 {
                 decoder.read_i32()?
             } else {
@@ -1004,6 +1399,8 @@ pub mod offset_fetch_response {
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+
             if version.value() >= 8 {
                 encoder.write_i32(self.partition_index)?;
             }
@@ -1022,11 +1419,6 @@ pub mod offset_fetch_response {
 
             if Self::is_flexible(version) {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-            } else if !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
-                    message: "OffsetFetchResponsePartitions",
-                    version,
-                });
             }
 
             Ok(())
@@ -1057,6 +1449,45 @@ pub mod offset_fetch_response {
 
     impl KafkaResponse for OffsetFetchResponse {
         const API_KEY: ApiKey = ApiKey::new(9);
+    }
+
+    impl OffsetFetchResponse {
+        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            crate::message::ensure_encode_version::<Self>(version)?;
+
+            if version.value() > 7 && !self.topics.is_empty() {
+                return Err(EncodeError::FieldNotRepresentable {
+                    message: Self::NAME,
+                    field: "Topics",
+                    version,
+                });
+            }
+            if version.value() < 8 && !self.groups.is_empty() {
+                return Err(EncodeError::FieldNotRepresentable {
+                    message: Self::NAME,
+                    field: "Groups",
+                    version,
+                });
+            }
+            if version.value() <= 7 {
+                for value in &self.topics {
+                    value.validate_for_version(version)?;
+                }
+            }
+            if version.value() >= 8 {
+                for value in &self.groups {
+                    value.validate_for_version(version)?;
+                }
+            }
+            if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: Self::NAME,
+                    version,
+                });
+            }
+
+            Ok(())
+        }
     }
 
     impl KafkaDecode for OffsetFetchResponse {
@@ -1115,22 +1546,7 @@ pub mod offset_fetch_response {
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            crate::message::ensure_encode_version::<Self>(version)?;
-
-            if version.value() > 7 && !self.topics.is_empty() {
-                return Err(EncodeError::FieldNotRepresentable {
-                    message: Self::NAME,
-                    field: "Topics",
-                    version,
-                });
-            }
-            if version.value() < 8 && !self.groups.is_empty() {
-                return Err(EncodeError::FieldNotRepresentable {
-                    message: Self::NAME,
-                    field: "Groups",
-                    version,
-                });
-            }
+            self.validate_for_version(version)?;
 
             if version.value() >= 3 {
                 encoder.write_i32(self.throttle_time_ms)?;
@@ -1157,11 +1573,6 @@ pub mod offset_fetch_response {
 
             if Self::is_flexible(version) {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-            } else if !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
-                    message: Self::NAME,
-                    version,
-                });
             }
 
             Ok(())

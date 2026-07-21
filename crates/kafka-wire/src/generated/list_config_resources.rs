@@ -41,6 +41,28 @@ pub mod list_config_resources_request {
         type Response = super::ListConfigResourcesResponse;
     }
 
+    impl ListConfigResourcesRequest {
+        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            crate::message::ensure_encode_version::<Self>(version)?;
+
+            if version.value() < 1 && !self.resource_types.is_empty() {
+                return Err(EncodeError::FieldNotRepresentable {
+                    message: Self::NAME,
+                    field: "ResourceTypes",
+                    version,
+                });
+            }
+            if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: Self::NAME,
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+
     impl KafkaDecode for ListConfigResourcesRequest {
         fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
             crate::message::ensure_decode_version::<Self>(version)?;
@@ -70,15 +92,7 @@ pub mod list_config_resources_request {
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            crate::message::ensure_encode_version::<Self>(version)?;
-
-            if version.value() < 1 && !self.resource_types.is_empty() {
-                return Err(EncodeError::FieldNotRepresentable {
-                    message: Self::NAME,
-                    field: "ResourceTypes",
-                    version,
-                });
-            }
+            self.validate_for_version(version)?;
 
             if version.value() >= 1 {
                 encoder.write_compact_array_len(self.resource_types.len())?;
@@ -89,11 +103,6 @@ pub mod list_config_resources_request {
 
             if Self::is_flexible(version) {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-            } else if !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
-                    message: Self::NAME,
-                    version,
-                });
             }
 
             Ok(())
@@ -126,10 +135,32 @@ pub mod list_config_resources_response {
     }
 
     impl ConfigResource {
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 1);
         const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 1));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+        }
+    }
+
+    impl ConfigResource {
+        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            if !Self::SUPPORTED_VERSIONS.contains(version) {
+                return Err(EncodeError::UnsupportedVersion {
+                    message: "ConfigResource",
+                    version,
+                    supported: Self::SUPPORTED_VERSIONS,
+                });
+            }
+
+            if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "ConfigResource",
+                    version,
+                });
+            }
+
+            Ok(())
         }
     }
 
@@ -145,6 +176,14 @@ pub mod list_config_resources_response {
 
     impl KafkaDecode for ConfigResource {
         fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            if !Self::SUPPORTED_VERSIONS.contains(version) {
+                return Err(DecodeError::UnsupportedVersion {
+                    message: "ConfigResource",
+                    version,
+                    supported: Self::SUPPORTED_VERSIONS,
+                });
+            }
+
             let resource_name = decoder.read_compact_string()?;
             let resource_type = if version.value() >= 1 {
                 decoder.read_i8()?
@@ -171,6 +210,8 @@ pub mod list_config_resources_response {
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+
             encoder.write_compact_string(&self.resource_name)?;
             if version.value() >= 1 {
                 encoder.write_i8(self.resource_type)?;
@@ -178,11 +219,6 @@ pub mod list_config_resources_response {
 
             if Self::is_flexible(version) {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-            } else if !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
-                    message: "ConfigResource",
-                    version,
-                });
             }
 
             Ok(())
@@ -211,6 +247,24 @@ pub mod list_config_resources_response {
 
     impl KafkaResponse for ListConfigResourcesResponse {
         const API_KEY: ApiKey = ApiKey::new(74);
+    }
+
+    impl ListConfigResourcesResponse {
+        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            crate::message::ensure_encode_version::<Self>(version)?;
+
+            for value in &self.config_resources {
+                value.validate_for_version(version)?;
+            }
+            if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: Self::NAME,
+                    version,
+                });
+            }
+
+            Ok(())
+        }
     }
 
     impl KafkaDecode for ListConfigResourcesResponse {
@@ -244,7 +298,7 @@ pub mod list_config_resources_response {
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            crate::message::ensure_encode_version::<Self>(version)?;
+            self.validate_for_version(version)?;
 
             encoder.write_i32(self.throttle_time_ms)?;
             encoder.write_i16(self.error_code)?;
@@ -255,11 +309,6 @@ pub mod list_config_resources_response {
 
             if Self::is_flexible(version) {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-            } else if !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
-                    message: Self::NAME,
-                    version,
-                });
             }
 
             Ok(())

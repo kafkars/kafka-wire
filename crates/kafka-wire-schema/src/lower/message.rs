@@ -22,7 +22,12 @@ pub fn lower_message(raw: RawMessage, source: PathBuf) -> Result<Message, LowerE
         });
     }
 
-    let name = MessageName::new(raw.name);
+    let name = MessageName::try_new(raw.name).map_err(|error| LowerError::Identifier {
+        path: source.clone(),
+        kind: "message",
+        name: error.input.clone(),
+        reason: error.to_string(),
+    })?;
 
     let valid_versions = parse_versions(&source, "valid", name.protocol(), &raw.valid_versions)?;
     // A schema that omits `flexibleVersions` predates the tagged-field
@@ -88,8 +93,15 @@ fn lower_common_struct(
         .map(|field| lower_field(field, owner, valid_versions, source))
         .collect::<Result<Vec<_>, _>>()?;
 
+    let name = StructRef::try_qualify(owner, raw.name).map_err(|error| LowerError::Identifier {
+        path: source.to_path_buf(),
+        kind: "common struct",
+        name: error.input.clone(),
+        reason: error.to_string(),
+    })?;
+
     Ok(CommonStruct {
-        name: StructRef::qualify(owner, raw.name),
+        name,
         versions,
         fields,
     })

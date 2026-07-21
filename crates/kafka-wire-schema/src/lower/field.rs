@@ -99,8 +99,15 @@ fn lower_nested_field(
         .map(|field| lower_nested_field(field, owner, valid_versions, path, depth + 1))
         .collect::<Result<Vec<_>, _>>()?;
 
+    let name = FieldName::try_new(raw.name).map_err(|error| LowerError::Identifier {
+        path: path.to_path_buf(),
+        kind: "field",
+        name: error.input.clone(),
+        reason: error.to_string(),
+    })?;
+
     Ok(Field {
-        name: FieldName::new(raw.name),
+        name,
         ty,
         versions,
         nullable_versions,

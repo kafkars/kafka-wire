@@ -32,10 +32,37 @@ pub mod create_partitions_request {
     }
 
     impl CreatePartitionsTopic {
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 3);
         const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(2, 3));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+        }
+    }
+
+    impl CreatePartitionsTopic {
+        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            if !Self::SUPPORTED_VERSIONS.contains(version) {
+                return Err(EncodeError::UnsupportedVersion {
+                    message: "CreatePartitionsTopic",
+                    version,
+                    supported: Self::SUPPORTED_VERSIONS,
+                });
+            }
+
+            if let Some(values) = &self.assignments {
+                for value in values {
+                    value.validate_for_version(version)?;
+                }
+            }
+            if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "CreatePartitionsTopic",
+                    version,
+                });
+            }
+
+            Ok(())
         }
     }
 
@@ -52,6 +79,14 @@ pub mod create_partitions_request {
 
     impl KafkaDecode for CreatePartitionsTopic {
         fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            if !Self::SUPPORTED_VERSIONS.contains(version) {
+                return Err(DecodeError::UnsupportedVersion {
+                    message: "CreatePartitionsTopic",
+                    version,
+                    supported: Self::SUPPORTED_VERSIONS,
+                });
+            }
+
             let name = if Self::is_flexible(version) {
                 decoder.read_compact_string()?
             } else {
@@ -93,6 +128,8 @@ pub mod create_partitions_request {
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+
             if Self::is_flexible(version) {
                 encoder.write_compact_string(&self.name)?;
             } else {
@@ -113,11 +150,6 @@ pub mod create_partitions_request {
 
             if Self::is_flexible(version) {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-            } else if !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
-                    message: "CreatePartitionsTopic",
-                    version,
-                });
             }
 
             Ok(())
@@ -135,6 +167,7 @@ pub mod create_partitions_request {
     }
 
     impl CreatePartitionsAssignment {
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 3);
         const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(2, 3));
 
         fn is_flexible(version: ApiVersion) -> bool {
@@ -142,8 +175,37 @@ pub mod create_partitions_request {
         }
     }
 
+    impl CreatePartitionsAssignment {
+        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            if !Self::SUPPORTED_VERSIONS.contains(version) {
+                return Err(EncodeError::UnsupportedVersion {
+                    message: "CreatePartitionsAssignment",
+                    version,
+                    supported: Self::SUPPORTED_VERSIONS,
+                });
+            }
+
+            if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "CreatePartitionsAssignment",
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+
     impl KafkaDecode for CreatePartitionsAssignment {
         fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            if !Self::SUPPORTED_VERSIONS.contains(version) {
+                return Err(DecodeError::UnsupportedVersion {
+                    message: "CreatePartitionsAssignment",
+                    version,
+                    supported: Self::SUPPORTED_VERSIONS,
+                });
+            }
+
             let broker_ids = {
                 let length = if Self::is_flexible(version) {
                     decoder.read_compact_array_len()?
@@ -171,6 +233,8 @@ pub mod create_partitions_request {
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+
             if Self::is_flexible(version) {
                 encoder.write_compact_array_len(self.broker_ids.len())?;
             } else {
@@ -182,11 +246,6 @@ pub mod create_partitions_request {
 
             if Self::is_flexible(version) {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-            } else if !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
-                    message: "CreatePartitionsAssignment",
-                    version,
-                });
             }
 
             Ok(())
@@ -219,6 +278,24 @@ pub mod create_partitions_request {
 
     impl RequestResponsePair for CreatePartitionsRequest {
         type Response = super::CreatePartitionsResponse;
+    }
+
+    impl CreatePartitionsRequest {
+        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            crate::message::ensure_encode_version::<Self>(version)?;
+
+            for value in &self.topics {
+                value.validate_for_version(version)?;
+            }
+            if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: Self::NAME,
+                    version,
+                });
+            }
+
+            Ok(())
+        }
     }
 
     impl KafkaDecode for CreatePartitionsRequest {
@@ -258,7 +335,7 @@ pub mod create_partitions_request {
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            crate::message::ensure_encode_version::<Self>(version)?;
+            self.validate_for_version(version)?;
 
             if Self::is_flexible(version) {
                 encoder.write_compact_array_len(self.topics.len())?;
@@ -273,11 +350,6 @@ pub mod create_partitions_request {
 
             if Self::is_flexible(version) {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-            } else if !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
-                    message: Self::NAME,
-                    version,
-                });
             }
 
             Ok(())
@@ -312,6 +384,7 @@ pub mod create_partitions_response {
     }
 
     impl CreatePartitionsTopicResult {
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 3);
         const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(2, 3));
 
         fn is_flexible(version: ApiVersion) -> bool {
@@ -319,8 +392,37 @@ pub mod create_partitions_response {
         }
     }
 
+    impl CreatePartitionsTopicResult {
+        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            if !Self::SUPPORTED_VERSIONS.contains(version) {
+                return Err(EncodeError::UnsupportedVersion {
+                    message: "CreatePartitionsTopicResult",
+                    version,
+                    supported: Self::SUPPORTED_VERSIONS,
+                });
+            }
+
+            if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "CreatePartitionsTopicResult",
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+
     impl KafkaDecode for CreatePartitionsTopicResult {
         fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            if !Self::SUPPORTED_VERSIONS.contains(version) {
+                return Err(DecodeError::UnsupportedVersion {
+                    message: "CreatePartitionsTopicResult",
+                    version,
+                    supported: Self::SUPPORTED_VERSIONS,
+                });
+            }
+
             let name = if Self::is_flexible(version) {
                 decoder.read_compact_string()?
             } else {
@@ -353,6 +455,8 @@ pub mod create_partitions_response {
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+
             if Self::is_flexible(version) {
                 encoder.write_compact_string(&self.name)?;
             } else {
@@ -367,11 +471,6 @@ pub mod create_partitions_response {
 
             if Self::is_flexible(version) {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-            } else if !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
-                    message: "CreatePartitionsTopicResult",
-                    version,
-                });
             }
 
             Ok(())
@@ -398,6 +497,24 @@ pub mod create_partitions_response {
 
     impl KafkaResponse for CreatePartitionsResponse {
         const API_KEY: ApiKey = ApiKey::new(37);
+    }
+
+    impl CreatePartitionsResponse {
+        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            crate::message::ensure_encode_version::<Self>(version)?;
+
+            for value in &self.results {
+                value.validate_for_version(version)?;
+            }
+            if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: Self::NAME,
+                    version,
+                });
+            }
+
+            Ok(())
+        }
     }
 
     impl KafkaDecode for CreatePartitionsResponse {
@@ -435,7 +552,7 @@ pub mod create_partitions_response {
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            crate::message::ensure_encode_version::<Self>(version)?;
+            self.validate_for_version(version)?;
 
             encoder.write_i32(self.throttle_time_ms)?;
             if Self::is_flexible(version) {
@@ -449,11 +566,6 @@ pub mod create_partitions_response {
 
             if Self::is_flexible(version) {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-            } else if !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
-                    message: Self::NAME,
-                    version,
-                });
             }
 
             Ok(())

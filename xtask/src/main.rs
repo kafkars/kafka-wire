@@ -10,6 +10,8 @@ mod records;
 mod upstream_name;
 mod vectors;
 mod vendor;
+mod vendor_transaction;
+mod vendor_verification;
 mod workspace;
 
 #[cfg(test)]
@@ -22,6 +24,8 @@ mod protocol_lock_test;
 mod upstream_name_test;
 #[cfg(test)]
 mod vendor_test;
+#[cfg(test)]
+mod vendor_transaction_test;
 
 use std::process::ExitCode;
 

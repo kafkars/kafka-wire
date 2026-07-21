@@ -30,6 +30,7 @@ pub mod read_share_group_state_summary_request {
     }
 
     impl ReadStateSummaryData {
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 1);
         const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 1));
 
         fn is_flexible(version: ApiVersion) -> bool {
@@ -37,8 +38,40 @@ pub mod read_share_group_state_summary_request {
         }
     }
 
+    impl ReadStateSummaryData {
+        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            if !Self::SUPPORTED_VERSIONS.contains(version) {
+                return Err(EncodeError::UnsupportedVersion {
+                    message: "ReadStateSummaryData",
+                    version,
+                    supported: Self::SUPPORTED_VERSIONS,
+                });
+            }
+
+            for value in &self.partitions {
+                value.validate_for_version(version)?;
+            }
+            if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "ReadStateSummaryData",
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+
     impl KafkaDecode for ReadStateSummaryData {
         fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            if !Self::SUPPORTED_VERSIONS.contains(version) {
+                return Err(DecodeError::UnsupportedVersion {
+                    message: "ReadStateSummaryData",
+                    version,
+                    supported: Self::SUPPORTED_VERSIONS,
+                });
+            }
+
             let topic_id = decoder.read_uuid()?;
             let partitions = {
                 let length = decoder.read_compact_array_len()?;
@@ -64,6 +97,8 @@ pub mod read_share_group_state_summary_request {
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+
             encoder.write_uuid(self.topic_id)?;
             encoder.write_compact_array_len(self.partitions.len())?;
             for value in &self.partitions {
@@ -72,11 +107,6 @@ pub mod read_share_group_state_summary_request {
 
             if Self::is_flexible(version) {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-            } else if !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
-                    message: "ReadStateSummaryData",
-                    version,
-                });
             }
 
             Ok(())
@@ -96,6 +126,7 @@ pub mod read_share_group_state_summary_request {
     }
 
     impl PartitionData {
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 1);
         const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 1));
 
         fn is_flexible(version: ApiVersion) -> bool {
@@ -103,8 +134,37 @@ pub mod read_share_group_state_summary_request {
         }
     }
 
+    impl PartitionData {
+        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            if !Self::SUPPORTED_VERSIONS.contains(version) {
+                return Err(EncodeError::UnsupportedVersion {
+                    message: "PartitionData",
+                    version,
+                    supported: Self::SUPPORTED_VERSIONS,
+                });
+            }
+
+            if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "PartitionData",
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+
     impl KafkaDecode for PartitionData {
         fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            if !Self::SUPPORTED_VERSIONS.contains(version) {
+                return Err(DecodeError::UnsupportedVersion {
+                    message: "PartitionData",
+                    version,
+                    supported: Self::SUPPORTED_VERSIONS,
+                });
+            }
+
             let partition = decoder.read_i32()?;
             let leader_epoch = decoder.read_i32()?;
             let unknown_tagged_fields = if Self::is_flexible(version) {
@@ -127,16 +187,13 @@ pub mod read_share_group_state_summary_request {
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+
             encoder.write_i32(self.partition)?;
             encoder.write_i32(self.leader_epoch)?;
 
             if Self::is_flexible(version) {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-            } else if !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
-                    message: "PartitionData",
-                    version,
-                });
             }
 
             Ok(())
@@ -167,6 +224,24 @@ pub mod read_share_group_state_summary_request {
 
     impl RequestResponsePair for ReadShareGroupStateSummaryRequest {
         type Response = super::ReadShareGroupStateSummaryResponse;
+    }
+
+    impl ReadShareGroupStateSummaryRequest {
+        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            crate::message::ensure_encode_version::<Self>(version)?;
+
+            for value in &self.topics {
+                value.validate_for_version(version)?;
+            }
+            if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: Self::NAME,
+                    version,
+                });
+            }
+
+            Ok(())
+        }
     }
 
     impl KafkaDecode for ReadShareGroupStateSummaryRequest {
@@ -200,7 +275,7 @@ pub mod read_share_group_state_summary_request {
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            crate::message::ensure_encode_version::<Self>(version)?;
+            self.validate_for_version(version)?;
 
             encoder.write_compact_string(&self.group_id)?;
             encoder.write_compact_array_len(self.topics.len())?;
@@ -210,11 +285,6 @@ pub mod read_share_group_state_summary_request {
 
             if Self::is_flexible(version) {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-            } else if !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
-                    message: Self::NAME,
-                    version,
-                });
             }
 
             Ok(())
@@ -247,6 +317,7 @@ pub mod read_share_group_state_summary_response {
     }
 
     impl ReadStateSummaryResult {
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 1);
         const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 1));
 
         fn is_flexible(version: ApiVersion) -> bool {
@@ -254,8 +325,40 @@ pub mod read_share_group_state_summary_response {
         }
     }
 
+    impl ReadStateSummaryResult {
+        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            if !Self::SUPPORTED_VERSIONS.contains(version) {
+                return Err(EncodeError::UnsupportedVersion {
+                    message: "ReadStateSummaryResult",
+                    version,
+                    supported: Self::SUPPORTED_VERSIONS,
+                });
+            }
+
+            for value in &self.partitions {
+                value.validate_for_version(version)?;
+            }
+            if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "ReadStateSummaryResult",
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+
     impl KafkaDecode for ReadStateSummaryResult {
         fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            if !Self::SUPPORTED_VERSIONS.contains(version) {
+                return Err(DecodeError::UnsupportedVersion {
+                    message: "ReadStateSummaryResult",
+                    version,
+                    supported: Self::SUPPORTED_VERSIONS,
+                });
+            }
+
             let topic_id = decoder.read_uuid()?;
             let partitions = {
                 let length = decoder.read_compact_array_len()?;
@@ -281,6 +384,8 @@ pub mod read_share_group_state_summary_response {
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+
             encoder.write_uuid(self.topic_id)?;
             encoder.write_compact_array_len(self.partitions.len())?;
             for value in &self.partitions {
@@ -289,11 +394,6 @@ pub mod read_share_group_state_summary_response {
 
             if Self::is_flexible(version) {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-            } else if !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
-                    message: "ReadStateSummaryResult",
-                    version,
-                });
             }
 
             Ok(())
@@ -323,10 +423,32 @@ pub mod read_share_group_state_summary_response {
     }
 
     impl PartitionResult {
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 1);
         const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 1));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+        }
+    }
+
+    impl PartitionResult {
+        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            if !Self::SUPPORTED_VERSIONS.contains(version) {
+                return Err(EncodeError::UnsupportedVersion {
+                    message: "PartitionResult",
+                    version,
+                    supported: Self::SUPPORTED_VERSIONS,
+                });
+            }
+
+            if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "PartitionResult",
+                    version,
+                });
+            }
+
+            Ok(())
         }
     }
 
@@ -347,6 +469,14 @@ pub mod read_share_group_state_summary_response {
 
     impl KafkaDecode for PartitionResult {
         fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            if !Self::SUPPORTED_VERSIONS.contains(version) {
+                return Err(DecodeError::UnsupportedVersion {
+                    message: "PartitionResult",
+                    version,
+                    supported: Self::SUPPORTED_VERSIONS,
+                });
+            }
+
             let partition = decoder.read_i32()?;
             let error_code = decoder.read_i16()?;
             let error_message = decoder.read_compact_nullable_string()?;
@@ -383,6 +513,8 @@ pub mod read_share_group_state_summary_response {
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+
             encoder.write_i32(self.partition)?;
             encoder.write_i16(self.error_code)?;
             encoder.write_compact_nullable_string(self.error_message.as_ref())?;
@@ -395,11 +527,6 @@ pub mod read_share_group_state_summary_response {
 
             if Self::is_flexible(version) {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-            } else if !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
-                    message: "PartitionResult",
-                    version,
-                });
             }
 
             Ok(())
@@ -424,6 +551,24 @@ pub mod read_share_group_state_summary_response {
 
     impl KafkaResponse for ReadShareGroupStateSummaryResponse {
         const API_KEY: ApiKey = ApiKey::new(87);
+    }
+
+    impl ReadShareGroupStateSummaryResponse {
+        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            crate::message::ensure_encode_version::<Self>(version)?;
+
+            for value in &self.results {
+                value.validate_for_version(version)?;
+            }
+            if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: Self::NAME,
+                    version,
+                });
+            }
+
+            Ok(())
+        }
     }
 
     impl KafkaDecode for ReadShareGroupStateSummaryResponse {
@@ -455,7 +600,7 @@ pub mod read_share_group_state_summary_response {
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            crate::message::ensure_encode_version::<Self>(version)?;
+            self.validate_for_version(version)?;
 
             encoder.write_compact_array_len(self.results.len())?;
             for value in &self.results {
@@ -464,11 +609,6 @@ pub mod read_share_group_state_summary_response {
 
             if Self::is_flexible(version) {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-            } else if !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
-                    message: Self::NAME,
-                    version,
-                });
             }
 
             Ok(())

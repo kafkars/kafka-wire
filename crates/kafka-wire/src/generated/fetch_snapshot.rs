@@ -30,6 +30,7 @@ pub mod fetch_snapshot_request {
     }
 
     impl TopicSnapshot {
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 1);
         const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 1));
 
         fn is_flexible(version: ApiVersion) -> bool {
@@ -37,8 +38,40 @@ pub mod fetch_snapshot_request {
         }
     }
 
+    impl TopicSnapshot {
+        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            if !Self::SUPPORTED_VERSIONS.contains(version) {
+                return Err(EncodeError::UnsupportedVersion {
+                    message: "TopicSnapshot",
+                    version,
+                    supported: Self::SUPPORTED_VERSIONS,
+                });
+            }
+
+            for value in &self.partitions {
+                value.validate_for_version(version)?;
+            }
+            if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "TopicSnapshot",
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+
     impl KafkaDecode for TopicSnapshot {
         fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            if !Self::SUPPORTED_VERSIONS.contains(version) {
+                return Err(DecodeError::UnsupportedVersion {
+                    message: "TopicSnapshot",
+                    version,
+                    supported: Self::SUPPORTED_VERSIONS,
+                });
+            }
+
             let name = decoder.read_compact_string()?;
             let partitions = {
                 let length = decoder.read_compact_array_len()?;
@@ -66,6 +99,8 @@ pub mod fetch_snapshot_request {
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+
             encoder.write_compact_string(&self.name)?;
             encoder.write_compact_array_len(self.partitions.len())?;
             for value in &self.partitions {
@@ -74,11 +109,6 @@ pub mod fetch_snapshot_request {
 
             if Self::is_flexible(version) {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-            } else if !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
-                    message: "TopicSnapshot",
-                    version,
-                });
             }
 
             Ok(())
@@ -104,6 +134,7 @@ pub mod fetch_snapshot_request {
     }
 
     impl PartitionSnapshot {
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 1);
         const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 1));
 
         fn is_flexible(version: ApiVersion) -> bool {
@@ -111,8 +142,38 @@ pub mod fetch_snapshot_request {
         }
     }
 
+    impl PartitionSnapshot {
+        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            if !Self::SUPPORTED_VERSIONS.contains(version) {
+                return Err(EncodeError::UnsupportedVersion {
+                    message: "PartitionSnapshot",
+                    version,
+                    supported: Self::SUPPORTED_VERSIONS,
+                });
+            }
+
+            self.snapshot_id.validate_for_version(version)?;
+            if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "PartitionSnapshot",
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+
     impl KafkaDecode for PartitionSnapshot {
         fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            if !Self::SUPPORTED_VERSIONS.contains(version) {
+                return Err(DecodeError::UnsupportedVersion {
+                    message: "PartitionSnapshot",
+                    version,
+                    supported: Self::SUPPORTED_VERSIONS,
+                });
+            }
+
             let partition = decoder.read_i32()?;
             let current_leader_epoch = decoder.read_i32()?;
             let snapshot_id = SnapshotId::decode(decoder, version)?;
@@ -147,6 +208,8 @@ pub mod fetch_snapshot_request {
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+
             encoder.write_i32(self.partition)?;
             encoder.write_i32(self.current_leader_epoch)?;
             self.snapshot_id.encode(encoder, version)?;
@@ -161,11 +224,6 @@ pub mod fetch_snapshot_request {
                     })?;
                 }
                 encoder.write_merged_tagged_fields(known, &self.unknown_tagged_fields)?;
-            } else if !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
-                    message: "PartitionSnapshot",
-                    version,
-                });
             }
 
             Ok(())
@@ -185,6 +243,7 @@ pub mod fetch_snapshot_request {
     }
 
     impl SnapshotId {
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 1);
         const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 1));
 
         fn is_flexible(version: ApiVersion) -> bool {
@@ -192,8 +251,37 @@ pub mod fetch_snapshot_request {
         }
     }
 
+    impl SnapshotId {
+        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            if !Self::SUPPORTED_VERSIONS.contains(version) {
+                return Err(EncodeError::UnsupportedVersion {
+                    message: "SnapshotId",
+                    version,
+                    supported: Self::SUPPORTED_VERSIONS,
+                });
+            }
+
+            if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "SnapshotId",
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+
     impl KafkaDecode for SnapshotId {
         fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            if !Self::SUPPORTED_VERSIONS.contains(version) {
+                return Err(DecodeError::UnsupportedVersion {
+                    message: "SnapshotId",
+                    version,
+                    supported: Self::SUPPORTED_VERSIONS,
+                });
+            }
+
             let end_offset = decoder.read_i64()?;
             let epoch = decoder.read_i32()?;
             let unknown_tagged_fields = if Self::is_flexible(version) {
@@ -216,16 +304,13 @@ pub mod fetch_snapshot_request {
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+
             encoder.write_i64(self.end_offset)?;
             encoder.write_i32(self.epoch)?;
 
             if Self::is_flexible(version) {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-            } else if !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
-                    message: "SnapshotId",
-                    version,
-                });
             }
 
             Ok(())
@@ -274,6 +359,24 @@ pub mod fetch_snapshot_request {
         type Response = super::FetchSnapshotResponse;
     }
 
+    impl FetchSnapshotRequest {
+        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            crate::message::ensure_encode_version::<Self>(version)?;
+
+            for value in &self.topics {
+                value.validate_for_version(version)?;
+            }
+            if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: Self::NAME,
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+
     impl KafkaDecode for FetchSnapshotRequest {
         fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
             crate::message::ensure_decode_version::<Self>(version)?;
@@ -313,7 +416,7 @@ pub mod fetch_snapshot_request {
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            crate::message::ensure_encode_version::<Self>(version)?;
+            self.validate_for_version(version)?;
 
             encoder.write_i32(self.replica_id)?;
             encoder.write_i32(self.max_bytes)?;
@@ -331,11 +434,6 @@ pub mod fetch_snapshot_request {
                     })?;
                 }
                 encoder.write_merged_tagged_fields(known, &self.unknown_tagged_fields)?;
-            } else if !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
-                    message: Self::NAME,
-                    version,
-                });
             }
 
             Ok(())
@@ -368,6 +466,7 @@ pub mod fetch_snapshot_response {
     }
 
     impl TopicSnapshot {
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 1);
         const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 1));
 
         fn is_flexible(version: ApiVersion) -> bool {
@@ -375,8 +474,40 @@ pub mod fetch_snapshot_response {
         }
     }
 
+    impl TopicSnapshot {
+        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            if !Self::SUPPORTED_VERSIONS.contains(version) {
+                return Err(EncodeError::UnsupportedVersion {
+                    message: "TopicSnapshot",
+                    version,
+                    supported: Self::SUPPORTED_VERSIONS,
+                });
+            }
+
+            for value in &self.partitions {
+                value.validate_for_version(version)?;
+            }
+            if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "TopicSnapshot",
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+
     impl KafkaDecode for TopicSnapshot {
         fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            if !Self::SUPPORTED_VERSIONS.contains(version) {
+                return Err(DecodeError::UnsupportedVersion {
+                    message: "TopicSnapshot",
+                    version,
+                    supported: Self::SUPPORTED_VERSIONS,
+                });
+            }
+
             let name = decoder.read_compact_string()?;
             let partitions = {
                 let length = decoder.read_compact_array_len()?;
@@ -404,6 +535,8 @@ pub mod fetch_snapshot_response {
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+
             encoder.write_compact_string(&self.name)?;
             encoder.write_compact_array_len(self.partitions.len())?;
             for value in &self.partitions {
@@ -412,11 +545,6 @@ pub mod fetch_snapshot_response {
 
             if Self::is_flexible(version) {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-            } else if !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
-                    message: "TopicSnapshot",
-                    version,
-                });
             }
 
             Ok(())
@@ -446,6 +574,7 @@ pub mod fetch_snapshot_response {
     }
 
     impl PartitionSnapshot {
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 1);
         const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 1));
 
         fn is_flexible(version: ApiVersion) -> bool {
@@ -453,8 +582,39 @@ pub mod fetch_snapshot_response {
         }
     }
 
+    impl PartitionSnapshot {
+        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            if !Self::SUPPORTED_VERSIONS.contains(version) {
+                return Err(EncodeError::UnsupportedVersion {
+                    message: "PartitionSnapshot",
+                    version,
+                    supported: Self::SUPPORTED_VERSIONS,
+                });
+            }
+
+            self.snapshot_id.validate_for_version(version)?;
+            self.current_leader.validate_for_version(version)?;
+            if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "PartitionSnapshot",
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+
     impl KafkaDecode for PartitionSnapshot {
         fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            if !Self::SUPPORTED_VERSIONS.contains(version) {
+                return Err(DecodeError::UnsupportedVersion {
+                    message: "PartitionSnapshot",
+                    version,
+                    supported: Self::SUPPORTED_VERSIONS,
+                });
+            }
+
             let index = decoder.read_i32()?;
             let error_code = decoder.read_i16()?;
             let snapshot_id = SnapshotId::decode(decoder, version)?;
@@ -493,6 +653,8 @@ pub mod fetch_snapshot_response {
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+
             encoder.write_i32(self.index)?;
             encoder.write_i16(self.error_code)?;
             self.snapshot_id.encode(encoder, version)?;
@@ -509,11 +671,6 @@ pub mod fetch_snapshot_response {
                     })?;
                 }
                 encoder.write_merged_tagged_fields(known, &self.unknown_tagged_fields)?;
-            } else if !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
-                    message: "PartitionSnapshot",
-                    version,
-                });
             }
 
             Ok(())
@@ -533,6 +690,7 @@ pub mod fetch_snapshot_response {
     }
 
     impl SnapshotId {
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 1);
         const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 1));
 
         fn is_flexible(version: ApiVersion) -> bool {
@@ -540,8 +698,37 @@ pub mod fetch_snapshot_response {
         }
     }
 
+    impl SnapshotId {
+        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            if !Self::SUPPORTED_VERSIONS.contains(version) {
+                return Err(EncodeError::UnsupportedVersion {
+                    message: "SnapshotId",
+                    version,
+                    supported: Self::SUPPORTED_VERSIONS,
+                });
+            }
+
+            if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "SnapshotId",
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+
     impl KafkaDecode for SnapshotId {
         fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            if !Self::SUPPORTED_VERSIONS.contains(version) {
+                return Err(DecodeError::UnsupportedVersion {
+                    message: "SnapshotId",
+                    version,
+                    supported: Self::SUPPORTED_VERSIONS,
+                });
+            }
+
             let end_offset = decoder.read_i64()?;
             let epoch = decoder.read_i32()?;
             let unknown_tagged_fields = if Self::is_flexible(version) {
@@ -564,16 +751,13 @@ pub mod fetch_snapshot_response {
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+
             encoder.write_i64(self.end_offset)?;
             encoder.write_i32(self.epoch)?;
 
             if Self::is_flexible(version) {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-            } else if !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
-                    message: "SnapshotId",
-                    version,
-                });
             }
 
             Ok(())
@@ -593,6 +777,7 @@ pub mod fetch_snapshot_response {
     }
 
     impl LeaderIdAndEpoch {
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 1);
         const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 1));
 
         fn is_flexible(version: ApiVersion) -> bool {
@@ -600,8 +785,37 @@ pub mod fetch_snapshot_response {
         }
     }
 
+    impl LeaderIdAndEpoch {
+        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            if !Self::SUPPORTED_VERSIONS.contains(version) {
+                return Err(EncodeError::UnsupportedVersion {
+                    message: "LeaderIdAndEpoch",
+                    version,
+                    supported: Self::SUPPORTED_VERSIONS,
+                });
+            }
+
+            if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "LeaderIdAndEpoch",
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+
     impl KafkaDecode for LeaderIdAndEpoch {
         fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            if !Self::SUPPORTED_VERSIONS.contains(version) {
+                return Err(DecodeError::UnsupportedVersion {
+                    message: "LeaderIdAndEpoch",
+                    version,
+                    supported: Self::SUPPORTED_VERSIONS,
+                });
+            }
+
             let leader_id = decoder.read_i32()?;
             let leader_epoch = decoder.read_i32()?;
             let unknown_tagged_fields = if Self::is_flexible(version) {
@@ -624,16 +838,13 @@ pub mod fetch_snapshot_response {
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+
             encoder.write_i32(self.leader_id)?;
             encoder.write_i32(self.leader_epoch)?;
 
             if Self::is_flexible(version) {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-            } else if !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
-                    message: "LeaderIdAndEpoch",
-                    version,
-                });
             }
 
             Ok(())
@@ -655,6 +866,7 @@ pub mod fetch_snapshot_response {
     }
 
     impl NodeEndpoint {
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 1);
         const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 1));
 
         fn is_flexible(version: ApiVersion) -> bool {
@@ -662,8 +874,58 @@ pub mod fetch_snapshot_response {
         }
     }
 
+    impl NodeEndpoint {
+        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            if !Self::SUPPORTED_VERSIONS.contains(version) {
+                return Err(EncodeError::UnsupportedVersion {
+                    message: "NodeEndpoint",
+                    version,
+                    supported: Self::SUPPORTED_VERSIONS,
+                });
+            }
+
+            if version.value() < 1 && self.node_id != 0 {
+                return Err(EncodeError::FieldNotRepresentable {
+                    message: "NodeEndpoint",
+                    field: "NodeId",
+                    version,
+                });
+            }
+            if version.value() < 1 && !self.host.is_empty() {
+                return Err(EncodeError::FieldNotRepresentable {
+                    message: "NodeEndpoint",
+                    field: "Host",
+                    version,
+                });
+            }
+            if version.value() < 1 && self.port != 0 {
+                return Err(EncodeError::FieldNotRepresentable {
+                    message: "NodeEndpoint",
+                    field: "Port",
+                    version,
+                });
+            }
+            if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "NodeEndpoint",
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+
     impl KafkaDecode for NodeEndpoint {
         fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            if !Self::SUPPORTED_VERSIONS.contains(version) {
+                return Err(DecodeError::UnsupportedVersion {
+                    message: "NodeEndpoint",
+                    version,
+                    supported: Self::SUPPORTED_VERSIONS,
+                });
+            }
+
             let node_id = if version.value() >= 1 {
                 decoder.read_i32()?
             } else {
@@ -700,6 +962,8 @@ pub mod fetch_snapshot_response {
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+
             if version.value() >= 1 {
                 encoder.write_i32(self.node_id)?;
             }
@@ -712,11 +976,6 @@ pub mod fetch_snapshot_response {
 
             if Self::is_flexible(version) {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-            } else if !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
-                    message: "NodeEndpoint",
-                    version,
-                });
             }
 
             Ok(())
@@ -747,6 +1006,36 @@ pub mod fetch_snapshot_response {
 
     impl KafkaResponse for FetchSnapshotResponse {
         const API_KEY: ApiKey = ApiKey::new(59);
+    }
+
+    impl FetchSnapshotResponse {
+        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            crate::message::ensure_encode_version::<Self>(version)?;
+
+            if version.value() < 1 && !self.node_endpoints.is_empty() {
+                return Err(EncodeError::FieldNotRepresentable {
+                    message: Self::NAME,
+                    field: "NodeEndpoints",
+                    version,
+                });
+            }
+            for value in &self.topics {
+                value.validate_for_version(version)?;
+            }
+            if version.value() >= 1 {
+                for value in &self.node_endpoints {
+                    value.validate_for_version(version)?;
+                }
+            }
+            if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: Self::NAME,
+                    version,
+                });
+            }
+
+            Ok(())
+        }
     }
 
     impl KafkaDecode for FetchSnapshotResponse {
@@ -793,15 +1082,7 @@ pub mod fetch_snapshot_response {
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            crate::message::ensure_encode_version::<Self>(version)?;
-
-            if version.value() < 1 && !self.node_endpoints.is_empty() {
-                return Err(EncodeError::FieldNotRepresentable {
-                    message: Self::NAME,
-                    field: "NodeEndpoints",
-                    version,
-                });
-            }
+            self.validate_for_version(version)?;
 
             encoder.write_i32(self.throttle_time_ms)?;
             encoder.write_i16(self.error_code)?;
@@ -822,11 +1103,6 @@ pub mod fetch_snapshot_response {
                     })?;
                 }
                 encoder.write_merged_tagged_fields(known, &self.unknown_tagged_fields)?;
-            } else if !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
-                    message: Self::NAME,
-                    version,
-                });
             }
 
             Ok(())

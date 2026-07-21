@@ -23,13 +23,40 @@ pub enum GenerationError {
         path: PathBuf,
         /// TOML decoder error.
         #[source]
-        source: toml::de::Error,
+        source: Box<toml::de::Error>,
+    },
+    /// A reviewed override document could not be decoded.
+    #[error("invalid override file {path}: {source}")]
+    Override {
+        /// Override file path.
+        path: PathBuf,
+        /// TOML decoder error.
+        #[source]
+        source: Box<toml::de::Error>,
+    },
+    /// A decoded override violated its semantic contract.
+    #[error("invalid override file {path}: {reason}")]
+    InvalidOverride {
+        /// Override file path.
+        path: PathBuf,
+        /// Rejected relationship or identity.
+        reason: String,
     },
     /// The lockfile schema is unsupported.
     #[error("unsupported protocol lockfile schema {found}; expected 1")]
     LockfileSchema {
         /// Encountered schema version.
         found: u32,
+    },
+    /// A decoded lockfile value violated its field contract.
+    #[error("invalid {field} in protocol.lock: {reason}; found `{value}`")]
+    InvalidLockfileValue {
+        /// Fully qualified lockfile field.
+        field: String,
+        /// Rejected value.
+        value: String,
+        /// Required shape or identity.
+        reason: &'static str,
     },
     /// A lockfile source path was not one plain filename.
     #[error("unsafe source path in protocol.lock: {path}")]
@@ -80,6 +107,18 @@ pub enum GenerationError {
         /// Response name.
         response: String,
     },
+    /// Two compiler outputs claimed one generated-tree path.
+    #[error(
+        "generated path collision for {path}: first producer `{first}`, second producer `{second}`"
+    )]
+    GeneratedPathCollision {
+        /// Colliding repository-relative output path.
+        path: String,
+        /// First phase or API that claimed the path.
+        first: String,
+        /// Later phase or API that attempted the same path.
+        second: String,
+    },
     /// The initial backend does not yet implement one normalized construct.
     #[error("cannot render {message}.{field}: {reason}")]
     UnsupportedSchema {
@@ -89,6 +128,14 @@ pub enum GenerationError {
         field: String,
         /// Unsupported construct.
         reason: String,
+    },
+    /// Rendering observed an IR state its validated phase contract forbids.
+    #[error("internal generator invariant failed for {message}: {invariant}")]
+    InternalInvariant {
+        /// Protocol message whose renderable proof was incomplete.
+        message: String,
+        /// Missing or malformed proven fact.
+        invariant: String,
     },
     /// The formatter that owns generated layout could not be launched.
     #[error(
@@ -119,6 +166,23 @@ pub enum GenerationError {
     Stale {
         /// Sorted changed, missing, or unexpected files.
         details: String,
+    },
+    /// A fully staged generated tree did not reproduce the expected bytes.
+    #[error("staged generated tree failed self-verification:\n{details}")]
+    StagedTreeMismatch {
+        /// Sorted staged-tree differences.
+        details: String,
+    },
+    /// Replacing the generated directory failed, with rollback status retained.
+    #[error("could not replace generated tree {root}: {source}; rollback: {rollback}")]
+    TreeSwap {
+        /// Generated tree destination.
+        root: PathBuf,
+        /// Failed rename operation.
+        #[source]
+        source: io::Error,
+        /// Whether restoration succeeded, failed, or was unnecessary.
+        rollback: String,
     },
 }
 

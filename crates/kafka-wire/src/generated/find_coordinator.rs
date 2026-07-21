@@ -45,6 +45,42 @@ pub mod find_coordinator_request {
         type Response = super::FindCoordinatorResponse;
     }
 
+    impl FindCoordinatorRequest {
+        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            crate::message::ensure_encode_version::<Self>(version)?;
+
+            if version.value() > 3 && !self.key.is_empty() {
+                return Err(EncodeError::FieldNotRepresentable {
+                    message: Self::NAME,
+                    field: "Key",
+                    version,
+                });
+            }
+            if version.value() < 1 && self.key_type != 0 {
+                return Err(EncodeError::FieldNotRepresentable {
+                    message: Self::NAME,
+                    field: "KeyType",
+                    version,
+                });
+            }
+            if version.value() < 4 && !self.coordinator_keys.is_empty() {
+                return Err(EncodeError::FieldNotRepresentable {
+                    message: Self::NAME,
+                    field: "CoordinatorKeys",
+                    version,
+                });
+            }
+            if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: Self::NAME,
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+
     impl KafkaDecode for FindCoordinatorRequest {
         fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
             crate::message::ensure_decode_version::<Self>(version)?;
@@ -90,29 +126,7 @@ pub mod find_coordinator_request {
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            crate::message::ensure_encode_version::<Self>(version)?;
-
-            if version.value() > 3 && !self.key.is_empty() {
-                return Err(EncodeError::FieldNotRepresentable {
-                    message: Self::NAME,
-                    field: "Key",
-                    version,
-                });
-            }
-            if version.value() < 1 && self.key_type != 0 {
-                return Err(EncodeError::FieldNotRepresentable {
-                    message: Self::NAME,
-                    field: "KeyType",
-                    version,
-                });
-            }
-            if version.value() < 4 && !self.coordinator_keys.is_empty() {
-                return Err(EncodeError::FieldNotRepresentable {
-                    message: Self::NAME,
-                    field: "CoordinatorKeys",
-                    version,
-                });
-            }
+            self.validate_for_version(version)?;
 
             if version.value() <= 3 {
                 if Self::is_flexible(version) {
@@ -133,11 +147,6 @@ pub mod find_coordinator_request {
 
             if Self::is_flexible(version) {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-            } else if !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
-                    message: Self::NAME,
-                    version,
-                });
             }
 
             Ok(())
@@ -178,10 +187,67 @@ pub mod find_coordinator_response {
     }
 
     impl Coordinator {
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 6);
         const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(3, 6));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+        }
+    }
+
+    impl Coordinator {
+        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            if !Self::SUPPORTED_VERSIONS.contains(version) {
+                return Err(EncodeError::UnsupportedVersion {
+                    message: "Coordinator",
+                    version,
+                    supported: Self::SUPPORTED_VERSIONS,
+                });
+            }
+
+            if version.value() < 4 && !self.key.is_empty() {
+                return Err(EncodeError::FieldNotRepresentable {
+                    message: "Coordinator",
+                    field: "Key",
+                    version,
+                });
+            }
+            if version.value() < 4 && self.node_id != 0 {
+                return Err(EncodeError::FieldNotRepresentable {
+                    message: "Coordinator",
+                    field: "NodeId",
+                    version,
+                });
+            }
+            if version.value() < 4 && !self.host.is_empty() {
+                return Err(EncodeError::FieldNotRepresentable {
+                    message: "Coordinator",
+                    field: "Host",
+                    version,
+                });
+            }
+            if version.value() < 4 && self.port != 0 {
+                return Err(EncodeError::FieldNotRepresentable {
+                    message: "Coordinator",
+                    field: "Port",
+                    version,
+                });
+            }
+            if version.value() < 4 && self.error_code != 0 {
+                return Err(EncodeError::FieldNotRepresentable {
+                    message: "Coordinator",
+                    field: "ErrorCode",
+                    version,
+                });
+            }
+            if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "Coordinator",
+                    version,
+                });
+            }
+
+            Ok(())
         }
     }
 
@@ -201,6 +267,14 @@ pub mod find_coordinator_response {
 
     impl KafkaDecode for Coordinator {
         fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            if !Self::SUPPORTED_VERSIONS.contains(version) {
+                return Err(DecodeError::UnsupportedVersion {
+                    message: "Coordinator",
+                    version,
+                    supported: Self::SUPPORTED_VERSIONS,
+                });
+            }
+
             let key = if version.value() >= 4 {
                 decoder.read_compact_string()?
             } else {
@@ -255,6 +329,8 @@ pub mod find_coordinator_response {
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+
             if version.value() >= 4 {
                 encoder.write_compact_string(&self.key)?;
             }
@@ -276,11 +352,6 @@ pub mod find_coordinator_response {
 
             if Self::is_flexible(version) {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-            } else if !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
-                    message: "Coordinator",
-                    version,
-                });
             }
 
             Ok(())
@@ -332,6 +403,61 @@ pub mod find_coordinator_response {
 
     impl KafkaResponse for FindCoordinatorResponse {
         const API_KEY: ApiKey = ApiKey::new(10);
+    }
+
+    impl FindCoordinatorResponse {
+        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            crate::message::ensure_encode_version::<Self>(version)?;
+
+            if version.value() > 3 && self.error_code != 0 {
+                return Err(EncodeError::FieldNotRepresentable {
+                    message: Self::NAME,
+                    field: "ErrorCode",
+                    version,
+                });
+            }
+            if version.value() > 3 && self.node_id != 0 {
+                return Err(EncodeError::FieldNotRepresentable {
+                    message: Self::NAME,
+                    field: "NodeId",
+                    version,
+                });
+            }
+            if version.value() > 3 && !self.host.is_empty() {
+                return Err(EncodeError::FieldNotRepresentable {
+                    message: Self::NAME,
+                    field: "Host",
+                    version,
+                });
+            }
+            if version.value() > 3 && self.port != 0 {
+                return Err(EncodeError::FieldNotRepresentable {
+                    message: Self::NAME,
+                    field: "Port",
+                    version,
+                });
+            }
+            if version.value() < 4 && !self.coordinators.is_empty() {
+                return Err(EncodeError::FieldNotRepresentable {
+                    message: Self::NAME,
+                    field: "Coordinators",
+                    version,
+                });
+            }
+            if version.value() >= 4 {
+                for value in &self.coordinators {
+                    value.validate_for_version(version)?;
+                }
+            }
+            if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: Self::NAME,
+                    version,
+                });
+            }
+
+            Ok(())
+        }
     }
 
     impl KafkaDecode for FindCoordinatorResponse {
@@ -407,43 +533,7 @@ pub mod find_coordinator_response {
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            crate::message::ensure_encode_version::<Self>(version)?;
-
-            if version.value() > 3 && self.error_code != 0 {
-                return Err(EncodeError::FieldNotRepresentable {
-                    message: Self::NAME,
-                    field: "ErrorCode",
-                    version,
-                });
-            }
-            if version.value() > 3 && self.node_id != 0 {
-                return Err(EncodeError::FieldNotRepresentable {
-                    message: Self::NAME,
-                    field: "NodeId",
-                    version,
-                });
-            }
-            if version.value() > 3 && !self.host.is_empty() {
-                return Err(EncodeError::FieldNotRepresentable {
-                    message: Self::NAME,
-                    field: "Host",
-                    version,
-                });
-            }
-            if version.value() > 3 && self.port != 0 {
-                return Err(EncodeError::FieldNotRepresentable {
-                    message: Self::NAME,
-                    field: "Port",
-                    version,
-                });
-            }
-            if version.value() < 4 && !self.coordinators.is_empty() {
-                return Err(EncodeError::FieldNotRepresentable {
-                    message: Self::NAME,
-                    field: "Coordinators",
-                    version,
-                });
-            }
+            self.validate_for_version(version)?;
 
             if version.value() >= 1 {
                 encoder.write_i32(self.throttle_time_ms)?;
@@ -480,11 +570,6 @@ pub mod find_coordinator_response {
 
             if Self::is_flexible(version) {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-            } else if !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
-                    message: Self::NAME,
-                    version,
-                });
             }
 
             Ok(())

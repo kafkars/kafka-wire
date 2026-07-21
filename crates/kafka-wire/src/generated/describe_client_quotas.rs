@@ -32,10 +32,32 @@ pub mod describe_client_quotas_request {
     }
 
     impl ComponentData {
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 1);
         const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(1, 1));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+        }
+    }
+
+    impl ComponentData {
+        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            if !Self::SUPPORTED_VERSIONS.contains(version) {
+                return Err(EncodeError::UnsupportedVersion {
+                    message: "ComponentData",
+                    version,
+                    supported: Self::SUPPORTED_VERSIONS,
+                });
+            }
+
+            if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "ComponentData",
+                    version,
+                });
+            }
+
+            Ok(())
         }
     }
 
@@ -52,6 +74,14 @@ pub mod describe_client_quotas_request {
 
     impl KafkaDecode for ComponentData {
         fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            if !Self::SUPPORTED_VERSIONS.contains(version) {
+                return Err(DecodeError::UnsupportedVersion {
+                    message: "ComponentData",
+                    version,
+                    supported: Self::SUPPORTED_VERSIONS,
+                });
+            }
+
             let entity_type = if Self::is_flexible(version) {
                 decoder.read_compact_string()?
             } else {
@@ -84,6 +114,8 @@ pub mod describe_client_quotas_request {
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+
             if Self::is_flexible(version) {
                 encoder.write_compact_string(&self.entity_type)?;
             } else {
@@ -98,11 +130,6 @@ pub mod describe_client_quotas_request {
 
             if Self::is_flexible(version) {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-            } else if !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
-                    message: "ComponentData",
-                    version,
-                });
             }
 
             Ok(())
@@ -133,6 +160,24 @@ pub mod describe_client_quotas_request {
 
     impl RequestResponsePair for DescribeClientQuotasRequest {
         type Response = super::DescribeClientQuotasResponse;
+    }
+
+    impl DescribeClientQuotasRequest {
+        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            crate::message::ensure_encode_version::<Self>(version)?;
+
+            for value in &self.components {
+                value.validate_for_version(version)?;
+            }
+            if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: Self::NAME,
+                    version,
+                });
+            }
+
+            Ok(())
+        }
     }
 
     impl KafkaDecode for DescribeClientQuotasRequest {
@@ -168,7 +213,7 @@ pub mod describe_client_quotas_request {
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            crate::message::ensure_encode_version::<Self>(version)?;
+            self.validate_for_version(version)?;
 
             if Self::is_flexible(version) {
                 encoder.write_compact_array_len(self.components.len())?;
@@ -182,11 +227,6 @@ pub mod describe_client_quotas_request {
 
             if Self::is_flexible(version) {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-            } else if !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
-                    message: Self::NAME,
-                    version,
-                });
             }
 
             Ok(())
@@ -219,6 +259,7 @@ pub mod describe_client_quotas_response {
     }
 
     impl EntryData {
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 1);
         const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(1, 1));
 
         fn is_flexible(version: ApiVersion) -> bool {
@@ -226,8 +267,43 @@ pub mod describe_client_quotas_response {
         }
     }
 
+    impl EntryData {
+        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            if !Self::SUPPORTED_VERSIONS.contains(version) {
+                return Err(EncodeError::UnsupportedVersion {
+                    message: "EntryData",
+                    version,
+                    supported: Self::SUPPORTED_VERSIONS,
+                });
+            }
+
+            for value in &self.entity {
+                value.validate_for_version(version)?;
+            }
+            for value in &self.values {
+                value.validate_for_version(version)?;
+            }
+            if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "EntryData",
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+
     impl KafkaDecode for EntryData {
         fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            if !Self::SUPPORTED_VERSIONS.contains(version) {
+                return Err(DecodeError::UnsupportedVersion {
+                    message: "EntryData",
+                    version,
+                    supported: Self::SUPPORTED_VERSIONS,
+                });
+            }
+
             let entity = {
                 let length = if Self::is_flexible(version) {
                     decoder.read_compact_array_len()?
@@ -264,6 +340,8 @@ pub mod describe_client_quotas_response {
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+
             if Self::is_flexible(version) {
                 encoder.write_compact_array_len(self.entity.len())?;
             } else {
@@ -283,11 +361,6 @@ pub mod describe_client_quotas_response {
 
             if Self::is_flexible(version) {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-            } else if !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
-                    message: "EntryData",
-                    version,
-                });
             }
 
             Ok(())
@@ -307,10 +380,32 @@ pub mod describe_client_quotas_response {
     }
 
     impl EntityData {
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 1);
         const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(1, 1));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+        }
+    }
+
+    impl EntityData {
+        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            if !Self::SUPPORTED_VERSIONS.contains(version) {
+                return Err(EncodeError::UnsupportedVersion {
+                    message: "EntityData",
+                    version,
+                    supported: Self::SUPPORTED_VERSIONS,
+                });
+            }
+
+            if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "EntityData",
+                    version,
+                });
+            }
+
+            Ok(())
         }
     }
 
@@ -326,6 +421,14 @@ pub mod describe_client_quotas_response {
 
     impl KafkaDecode for EntityData {
         fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            if !Self::SUPPORTED_VERSIONS.contains(version) {
+                return Err(DecodeError::UnsupportedVersion {
+                    message: "EntityData",
+                    version,
+                    supported: Self::SUPPORTED_VERSIONS,
+                });
+            }
+
             let entity_type = if Self::is_flexible(version) {
                 decoder.read_compact_string()?
             } else {
@@ -356,6 +459,8 @@ pub mod describe_client_quotas_response {
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+
             if Self::is_flexible(version) {
                 encoder.write_compact_string(&self.entity_type)?;
             } else {
@@ -369,11 +474,6 @@ pub mod describe_client_quotas_response {
 
             if Self::is_flexible(version) {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-            } else if !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
-                    message: "EntityData",
-                    version,
-                });
             }
 
             Ok(())
@@ -393,10 +493,32 @@ pub mod describe_client_quotas_response {
     }
 
     impl ValueData {
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 1);
         const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(1, 1));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+        }
+    }
+
+    impl ValueData {
+        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            if !Self::SUPPORTED_VERSIONS.contains(version) {
+                return Err(EncodeError::UnsupportedVersion {
+                    message: "ValueData",
+                    version,
+                    supported: Self::SUPPORTED_VERSIONS,
+                });
+            }
+
+            if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "ValueData",
+                    version,
+                });
+            }
+
+            Ok(())
         }
     }
 
@@ -412,6 +534,14 @@ pub mod describe_client_quotas_response {
 
     impl KafkaDecode for ValueData {
         fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            if !Self::SUPPORTED_VERSIONS.contains(version) {
+                return Err(DecodeError::UnsupportedVersion {
+                    message: "ValueData",
+                    version,
+                    supported: Self::SUPPORTED_VERSIONS,
+                });
+            }
+
             let key = if Self::is_flexible(version) {
                 decoder.read_compact_string()?
             } else {
@@ -438,6 +568,8 @@ pub mod describe_client_quotas_response {
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+
             if Self::is_flexible(version) {
                 encoder.write_compact_string(&self.key)?;
             } else {
@@ -447,11 +579,6 @@ pub mod describe_client_quotas_response {
 
             if Self::is_flexible(version) {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-            } else if !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
-                    message: "ValueData",
-                    version,
-                });
             }
 
             Ok(())
@@ -494,6 +621,26 @@ pub mod describe_client_quotas_response {
 
     impl KafkaResponse for DescribeClientQuotasResponse {
         const API_KEY: ApiKey = ApiKey::new(48);
+    }
+
+    impl DescribeClientQuotasResponse {
+        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            crate::message::ensure_encode_version::<Self>(version)?;
+
+            if let Some(values) = &self.entries {
+                for value in values {
+                    value.validate_for_version(version)?;
+                }
+            }
+            if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: Self::NAME,
+                    version,
+                });
+            }
+
+            Ok(())
+        }
     }
 
     impl KafkaDecode for DescribeClientQuotasResponse {
@@ -541,7 +688,7 @@ pub mod describe_client_quotas_response {
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            crate::message::ensure_encode_version::<Self>(version)?;
+            self.validate_for_version(version)?;
 
             encoder.write_i32(self.throttle_time_ms)?;
             encoder.write_i16(self.error_code)?;
@@ -563,11 +710,6 @@ pub mod describe_client_quotas_response {
 
             if Self::is_flexible(version) {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-            } else if !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
-                    message: Self::NAME,
-                    version,
-                });
             }
 
             Ok(())

@@ -16,7 +16,7 @@ pub use entity::{EntityType, EntityTypeParseError};
 pub use field::Field;
 pub use field_type::{FieldType, TypeParseError};
 pub use message::{Message, MessageKind};
-pub use name::{FieldName, MessageName};
+pub use name::{FieldName, MessageName, RustIdent, RustIdentError};
 pub use struct_ref::{Qualification, StructRef};
 pub use struct_table::{StructDeclaration, StructOrigin, StructTable};
 pub use value::{DefaultValue, FloatDefault};

@@ -27,8 +27,38 @@ pub mod offset_delete_request {
         pub partitions: Vec<OffsetDeleteRequestPartition>,
     }
 
+    impl OffsetDeleteRequestTopic {
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 0);
+    }
+
+    impl OffsetDeleteRequestTopic {
+        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            if !Self::SUPPORTED_VERSIONS.contains(version) {
+                return Err(EncodeError::UnsupportedVersion {
+                    message: "OffsetDeleteRequestTopic",
+                    version,
+                    supported: Self::SUPPORTED_VERSIONS,
+                });
+            }
+
+            for value in &self.partitions {
+                value.validate_for_version(version)?;
+            }
+
+            Ok(())
+        }
+    }
+
     impl KafkaDecode for OffsetDeleteRequestTopic {
         fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            if !Self::SUPPORTED_VERSIONS.contains(version) {
+                return Err(DecodeError::UnsupportedVersion {
+                    message: "OffsetDeleteRequestTopic",
+                    version,
+                    supported: Self::SUPPORTED_VERSIONS,
+                });
+            }
+
             let name = decoder.read_string()?;
             let partitions = {
                 let length = decoder.read_array_len()?;
@@ -47,6 +77,8 @@ pub mod offset_delete_request {
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+
             encoder.write_string(&self.name)?;
             encoder.write_array_len(self.partitions.len())?;
             for value in &self.partitions {
@@ -65,8 +97,35 @@ pub mod offset_delete_request {
         pub partition_index: i32,
     }
 
+    impl OffsetDeleteRequestPartition {
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 0);
+    }
+
+    impl OffsetDeleteRequestPartition {
+        #[allow(clippy::unused_self)]
+        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            if !Self::SUPPORTED_VERSIONS.contains(version) {
+                return Err(EncodeError::UnsupportedVersion {
+                    message: "OffsetDeleteRequestPartition",
+                    version,
+                    supported: Self::SUPPORTED_VERSIONS,
+                });
+            }
+
+            Ok(())
+        }
+    }
+
     impl KafkaDecode for OffsetDeleteRequestPartition {
-        fn decode(decoder: &mut Decoder, _version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            if !Self::SUPPORTED_VERSIONS.contains(version) {
+                return Err(DecodeError::UnsupportedVersion {
+                    message: "OffsetDeleteRequestPartition",
+                    version,
+                    supported: Self::SUPPORTED_VERSIONS,
+                });
+            }
+
             let partition_index = decoder.read_i32()?;
 
             Ok(Self { partition_index })
@@ -77,8 +136,10 @@ pub mod offset_delete_request {
         fn encode<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
-            _version: ApiVersion,
+            version: ApiVersion,
         ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+
             encoder.write_i32(self.partition_index)?;
 
             Ok(())
@@ -109,6 +170,18 @@ pub mod offset_delete_request {
         type Response = super::OffsetDeleteResponse;
     }
 
+    impl OffsetDeleteRequest {
+        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            crate::message::ensure_encode_version::<Self>(version)?;
+
+            for value in &self.topics {
+                value.validate_for_version(version)?;
+            }
+
+            Ok(())
+        }
+    }
+
     impl KafkaDecode for OffsetDeleteRequest {
         fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
             crate::message::ensure_decode_version::<Self>(version)?;
@@ -131,7 +204,7 @@ pub mod offset_delete_request {
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            crate::message::ensure_encode_version::<Self>(version)?;
+            self.validate_for_version(version)?;
 
             encoder.write_string(&self.group_id)?;
             encoder.write_array_len(self.topics.len())?;
@@ -166,8 +239,38 @@ pub mod offset_delete_response {
         pub partitions: Vec<OffsetDeleteResponsePartition>,
     }
 
+    impl OffsetDeleteResponseTopic {
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 0);
+    }
+
+    impl OffsetDeleteResponseTopic {
+        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            if !Self::SUPPORTED_VERSIONS.contains(version) {
+                return Err(EncodeError::UnsupportedVersion {
+                    message: "OffsetDeleteResponseTopic",
+                    version,
+                    supported: Self::SUPPORTED_VERSIONS,
+                });
+            }
+
+            for value in &self.partitions {
+                value.validate_for_version(version)?;
+            }
+
+            Ok(())
+        }
+    }
+
     impl KafkaDecode for OffsetDeleteResponseTopic {
         fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            if !Self::SUPPORTED_VERSIONS.contains(version) {
+                return Err(DecodeError::UnsupportedVersion {
+                    message: "OffsetDeleteResponseTopic",
+                    version,
+                    supported: Self::SUPPORTED_VERSIONS,
+                });
+            }
+
             let name = decoder.read_string()?;
             let partitions = {
                 let length = decoder.read_array_len()?;
@@ -186,6 +289,8 @@ pub mod offset_delete_response {
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+
             encoder.write_string(&self.name)?;
             encoder.write_array_len(self.partitions.len())?;
             for value in &self.partitions {
@@ -206,8 +311,35 @@ pub mod offset_delete_response {
         pub error_code: i16,
     }
 
+    impl OffsetDeleteResponsePartition {
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 0);
+    }
+
+    impl OffsetDeleteResponsePartition {
+        #[allow(clippy::unused_self)]
+        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            if !Self::SUPPORTED_VERSIONS.contains(version) {
+                return Err(EncodeError::UnsupportedVersion {
+                    message: "OffsetDeleteResponsePartition",
+                    version,
+                    supported: Self::SUPPORTED_VERSIONS,
+                });
+            }
+
+            Ok(())
+        }
+    }
+
     impl KafkaDecode for OffsetDeleteResponsePartition {
-        fn decode(decoder: &mut Decoder, _version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            if !Self::SUPPORTED_VERSIONS.contains(version) {
+                return Err(DecodeError::UnsupportedVersion {
+                    message: "OffsetDeleteResponsePartition",
+                    version,
+                    supported: Self::SUPPORTED_VERSIONS,
+                });
+            }
+
             let partition_index = decoder.read_i32()?;
             let error_code = decoder.read_i16()?;
 
@@ -222,8 +354,10 @@ pub mod offset_delete_response {
         fn encode<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
-            _version: ApiVersion,
+            version: ApiVersion,
         ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+
             encoder.write_i32(self.partition_index)?;
             encoder.write_i16(self.error_code)?;
 
@@ -253,6 +387,18 @@ pub mod offset_delete_response {
         const API_KEY: ApiKey = ApiKey::new(47);
     }
 
+    impl OffsetDeleteResponse {
+        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            crate::message::ensure_encode_version::<Self>(version)?;
+
+            for value in &self.topics {
+                value.validate_for_version(version)?;
+            }
+
+            Ok(())
+        }
+    }
+
     impl KafkaDecode for OffsetDeleteResponse {
         fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
             crate::message::ensure_decode_version::<Self>(version)?;
@@ -280,7 +426,7 @@ pub mod offset_delete_response {
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            crate::message::ensure_encode_version::<Self>(version)?;
+            self.validate_for_version(version)?;
 
             encoder.write_i16(self.error_code)?;
             encoder.write_i32(self.throttle_time_ms)?;

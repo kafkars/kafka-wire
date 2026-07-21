@@ -5,7 +5,7 @@ use kafka_wire_schema::{FieldType, Message, MessageKind};
 use crate::{
     GenerationError,
     group::ApiGroup,
-    render::{field, text::RustText},
+    render::{field, invariant, text::RustText},
 };
 
 use super::{
@@ -13,6 +13,7 @@ use super::{
     imports::spell,
     prose::sentence,
     structs::render_declared_structs,
+    validation::{Owner, render_validation},
 };
 
 pub(super) fn render_message(
@@ -75,7 +76,14 @@ pub(super) fn render_message(
     if !derive_default {
         render_default(rust, message);
     }
-    render_metadata_impls(rust, message, group);
+    render_metadata_impls(rust, message, group)?;
+    render_validation(
+        rust,
+        message.name.rust_type(),
+        &message.fields,
+        message,
+        Owner::Message,
+    );
     render_decode(rust, message)?;
     render_encode(rust, message)?;
     Ok(())
@@ -104,10 +112,14 @@ fn render_default(rust: &mut RustText, message: &Message) {
     rust.blank();
 }
 
-fn render_metadata_impls(rust: &mut RustText, message: &Message, group: &ApiGroup) {
-    let (start, end) = message.valid_versions.single_bounded().unwrap_or((0, 0));
+fn render_metadata_impls(
+    rust: &mut RustText,
+    message: &Message,
+    group: &ApiGroup,
+) -> Result<(), GenerationError> {
+    let (start, end) = invariant::bounded(message, &message.valid_versions, "valid versions")?;
     let range = spell(message, "VersionRange");
-    let flexible = option_range(&message.effective_flexible_versions(), &range);
+    let flexible = option_range(message, &message.effective_flexible_versions(), &range)?;
     rust.open(format!(
         "impl {} for {}",
         spell(message, "KafkaMessage"),
@@ -145,6 +157,7 @@ fn render_metadata_impls(rust: &mut RustText, message: &Message, group: &ApiGrou
         // Rejected during grouping; the arm keeps the match total.
         MessageKind::Header | MessageKind::Data => {}
     }
+    Ok(())
 }
 
 fn render_request_metadata(rust: &mut RustText, message: &Message, group: &ApiGroup) {
@@ -180,9 +193,15 @@ fn render_request_metadata(rust: &mut RustText, message: &Message, group: &ApiGr
     }
 }
 
-fn option_range(versions: &kafka_wire_schema::VersionSet, range: &str) -> String {
-    versions.single_bounded().map_or_else(
-        || "None".to_owned(),
-        |(start, end)| format!("Some({range}::new({start}, {end}))"),
+fn option_range(
+    message: &Message,
+    versions: &kafka_wire_schema::VersionSet,
+    range: &str,
+) -> Result<String, GenerationError> {
+    Ok(
+        invariant::optional_bounded(message, versions, "effective flexible versions")?.map_or_else(
+            || "None".to_owned(),
+            |(start, end)| format!("Some({range}::new({start}, {end}))"),
+        ),
     )
 }

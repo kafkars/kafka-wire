@@ -3,6 +3,20 @@
 use super::super::DecodeError;
 use super::Decoder;
 
+/// Array count already checked against the decoder's configured budget.
+///
+/// Only array-prefix readers can construct this token, so `read_vec` cannot be
+/// called with an arbitrary peer-controlled `usize`.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub struct BoundedCount(usize);
+
+impl BoundedCount {
+    /// Returns the validated element count.
+    pub const fn get(self) -> usize {
+        self.0
+    }
+}
+
 impl Decoder {
     /// Reads exactly `length` elements, each through `element`.
     ///
@@ -13,22 +27,28 @@ impl Decoder {
     /// then says what it is reading, rather than restating the same four lines
     /// per array — which, measured over the corpus, was 381 repetitions.
     ///
-    /// `length` is already bounded by the reader that produced it: both length
-    /// readers reject a count the remaining bytes cannot back, so the reservation
-    /// here cannot be driven past the frame a peer actually sent.
-    pub fn read_vec<T, F>(&mut self, length: usize, mut element: F) -> Result<Vec<T>, DecodeError>
+    /// `length` is already bounded by the reader that produced it. This method
+    /// deliberately does not reserve that peer-controlled count up front.
+    pub fn read_vec<T, F>(
+        &mut self,
+        length: BoundedCount,
+        mut element: F,
+    ) -> Result<Vec<T>, DecodeError>
     where
         F: FnMut(&mut Self) -> Result<T, DecodeError>,
     {
-        let mut values = Vec::with_capacity(length);
-        for _ in 0..length {
+        // Do not reserve directly from a peer count. Capacity grows only as
+        // elements successfully decode, while the opaque count remains bounded
+        // by `max_array_elements`.
+        let mut values = Vec::new();
+        for _ in 0..length.get() {
             values.push(element(self)?);
         }
         Ok(values)
     }
 
     /// Reads and validates a legacy non-null array length.
-    pub fn read_array_len(&mut self) -> Result<usize, DecodeError> {
+    pub fn read_array_len(&mut self) -> Result<BoundedCount, DecodeError> {
         let offset = self.offset();
         let length = self.read_i32()?;
         if length < 0 {
@@ -44,12 +64,11 @@ impl Decoder {
             offset,
         })?;
         self.check_collection_limit("array", length, offset)?;
-        self.check_element_count("array", length, offset)?;
-        Ok(length)
+        Ok(BoundedCount(length))
     }
 
     /// Reads and validates a compact non-null array length.
-    pub fn read_compact_array_len(&mut self) -> Result<usize, DecodeError> {
+    pub fn read_compact_array_len(&mut self) -> Result<BoundedCount, DecodeError> {
         let offset = self.offset();
         let encoded = self.read_unsigned_varint()?;
         if encoded == 0 {
@@ -64,8 +83,7 @@ impl Decoder {
             offset,
         })?;
         self.check_collection_limit("compact array", length, offset)?;
-        self.check_element_count("compact array", length, offset)?;
-        Ok(length)
+        Ok(BoundedCount(length))
     }
 
     /// Reads and validates a legacy nullable array length.
@@ -73,7 +91,7 @@ impl Decoder {
     /// The `int32` `-1` sentinel decodes to `None`; any other negative length is
     /// malformed. A present length is bounded by the element budget and by the
     /// bytes that remain before it can back a reservation.
-    pub fn read_nullable_array_len(&mut self) -> Result<Option<usize>, DecodeError> {
+    pub fn read_nullable_array_len(&mut self) -> Result<Option<BoundedCount>, DecodeError> {
         let offset = self.offset();
         let length = self.read_i32()?;
         if length == -1 {
@@ -92,15 +110,14 @@ impl Decoder {
             offset,
         })?;
         self.check_collection_limit("nullable array", length, offset)?;
-        self.check_element_count("nullable array", length, offset)?;
-        Ok(Some(length))
+        Ok(Some(BoundedCount(length)))
     }
 
     /// Reads and validates a compact nullable array length.
     ///
     /// The varint `0` sentinel decodes to `None`; otherwise the stored count is
     /// `varint - 1`, bounded by the element budget and by the bytes that remain.
-    pub fn read_compact_nullable_array_len(&mut self) -> Result<Option<usize>, DecodeError> {
+    pub fn read_compact_nullable_array_len(&mut self) -> Result<Option<BoundedCount>, DecodeError> {
         let offset = self.offset();
         let encoded = self.read_unsigned_varint()?;
         if encoded == 0 {
@@ -112,7 +129,6 @@ impl Decoder {
             offset,
         })?;
         self.check_collection_limit("compact nullable array", length, offset)?;
-        self.check_element_count("compact nullable array", length, offset)?;
-        Ok(Some(length))
+        Ok(Some(BoundedCount(length)))
     }
 }

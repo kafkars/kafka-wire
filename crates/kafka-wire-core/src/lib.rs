@@ -12,7 +12,7 @@ mod tagged;
 mod uuid;
 
 pub use api::{ApiKey, ApiVersion, VersionRange};
-pub use decode::{DecodeError, DecodeLimits, Decoder, KafkaDecode, TagOutcome};
+pub use decode::{BoundedCount, DecodeError, DecodeLimits, Decoder, KafkaDecode, TagOutcome};
 pub use encode::{
     BufferTarget, EncodeError, EncodeTarget, Encoder, KafkaEncode, KnownTags, SizeTarget,
 };

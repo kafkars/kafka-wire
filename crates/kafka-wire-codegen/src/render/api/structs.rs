@@ -9,13 +9,14 @@ use kafka_wire_schema::{Field, FieldType, Message, StructRef};
 
 use crate::{
     GenerationError,
-    render::{field, text::RustText},
+    render::{field, invariant, text::RustText},
 };
 
-use super::codec::{Owner, render_construction, render_reads, render_writes};
+use super::codec::{render_construction, render_reads, render_writes};
 use super::imports::spell;
 use super::prose::sentence;
 use super::tagged::{render_tagged_decode, render_tagged_encode};
+use super::validation::{Owner, render_validation};
 
 /// Renders one whole schema as a standalone struct.
 ///
@@ -177,7 +178,12 @@ fn render_struct_with(
     rust.close("");
     rust.blank();
 
-    render_identity(rust, rust_type, message, identity, flexible);
+    render_identity(rust, rust_type, message, identity, flexible)?;
+    let owner = match identity {
+        Identity::Message => Owner::Message,
+        Identity::Nested => Owner::Struct(rust_type),
+    };
+    render_validation(rust, rust_type, fields, message, owner);
 
     if !derive_default {
         rust.open(format!("impl Default for {rust_type}"));
@@ -202,7 +208,7 @@ fn render_struct_with(
         rust.blank();
     }
 
-    render_struct_decode(rust, rust_type, fields, message)?;
+    render_struct_decode(rust, rust_type, fields, message, identity)?;
     render_struct_encode(rust, rust_type, fields, message)?;
     Ok(())
 }
@@ -221,18 +227,21 @@ fn render_identity(
     message: &Message,
     identity: Identity,
     flexible: bool,
-) {
+) -> Result<(), GenerationError> {
     let version_range = spell(message, "VersionRange");
-    let range = message
-        .effective_flexible_versions()
-        .single_bounded()
-        .map_or_else(
-            || "None".to_owned(),
-            |(start, end)| format!("Some({version_range}::new({start}, {end}))"),
-        );
+    let range = invariant::optional_bounded(
+        message,
+        &message.effective_flexible_versions(),
+        "effective flexible versions",
+    )?
+    .map_or_else(
+        || "None".to_owned(),
+        |(start, end)| format!("Some({version_range}::new({start}, {end}))"),
+    );
     match identity {
         Identity::Message => {
-            let (start, end) = message.valid_versions.single_bounded().unwrap_or((0, 0));
+            let (start, end) =
+                invariant::bounded(message, &message.valid_versions, "valid versions")?;
             rust.open(format!(
                 "impl {} for {rust_type}",
                 spell(message, "KafkaMessage")
@@ -251,57 +260,31 @@ fn render_identity(
             rust.close("");
             rust.blank();
         }
-        Identity::Nested if flexible => {
+        Identity::Nested => {
+            let (start, end) =
+                invariant::bounded(message, &message.valid_versions, "valid versions")?;
             rust.open(format!("impl {rust_type}"));
             rust.line(format!(
-                "const FLEXIBLE_VERSIONS: Option<{version_range}> = {range};"
+                "const SUPPORTED_VERSIONS: {version_range} = \
+                 {version_range}::new({start}, {end});"
             ));
-            rust.blank();
-            rust.open(format!(
-                "fn is_flexible(version: {}) -> bool",
-                spell(message, "ApiVersion")
-            ));
-            rust.line("Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))");
+            if flexible {
+                rust.line(format!(
+                    "const FLEXIBLE_VERSIONS: Option<{version_range}> = {range};"
+                ));
+                rust.blank();
+                rust.open(format!(
+                    "fn is_flexible(version: {}) -> bool",
+                    spell(message, "ApiVersion")
+                ));
+                rust.line("Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))");
+                rust.close("");
+            }
             rust.close("");
-            rust.close("");
             rust.blank();
         }
-        Identity::Nested => {}
     }
-}
-
-/// Whether a struct body mentions the version it was handed.
-///
-/// A struct with no gated member, no flexible split, and no nested struct never
-/// reads its version. Binding it as `version` there would emit an unused
-/// variable into checked-in source, which the workspace lints deny, so the
-/// binding is named for what the body actually does with it.
-fn body_uses_version(
-    fields: &[kafka_wire_schema::Field],
-    message: &Message,
-) -> Result<bool, GenerationError> {
-    // A flexible struct gates its tagged-field section on the version, so the
-    // binding is read whatever its members turn out to be.
-    if !message.effective_flexible_versions().is_empty() {
-        return Ok(true);
-    }
-    for field in fields {
-        if field::presence_condition(field, message).is_some() {
-            return Ok(true);
-        }
-        let (read, write) = if let FieldType::Array(element) = &field.ty {
-            field::element_codec(element, field, message)?
-        } else {
-            (
-                field::read_expression(field, message)?,
-                field::write_statement(field, message)?,
-            )
-        };
-        if read.contains("version") || write.contains("version") {
-            return Ok(true);
-        }
-    }
-    Ok(false)
+    Ok(())
 }
 
 /// Decode body for one struct a message declares.
@@ -309,27 +292,39 @@ fn body_uses_version(
 /// A struct carries no version check of its own: the message validated the
 /// version before any member was read, and re-checking here would claim the
 /// struct has a supported range independent of its owner, which it does not.
-pub(super) fn render_struct_decode(
+fn render_struct_decode(
     rust: &mut RustText,
     rust_type: &str,
     fields: &[kafka_wire_schema::Field],
     message: &Message,
+    identity: Identity,
 ) -> Result<(), GenerationError> {
-    let version = if body_uses_version(fields, message)? {
-        "version"
-    } else {
-        "_version"
-    };
     rust.open(format!(
         "impl {} for {rust_type}",
         spell(message, "KafkaDecode")
     ));
     rust.open(format!(
-        "fn decode(decoder: &mut {}, {version}: {}) -> Result<Self, {}>",
+        "fn decode(decoder: &mut {}, version: {}) -> Result<Self, {}>",
         spell(message, "Decoder"),
         spell(message, "ApiVersion"),
         spell(message, "DecodeError"),
     ));
+    match identity {
+        Identity::Message => rust.line("crate::message::ensure_decode_version::<Self>(version)?;"),
+        Identity::Nested => {
+            rust.open("if !Self::SUPPORTED_VERSIONS.contains(version)");
+            rust.open(format!(
+                "return Err({}::UnsupportedVersion",
+                spell(message, "DecodeError")
+            ));
+            rust.line(format!("message: {rust_type:?},"));
+            rust.line("version,");
+            rust.line("supported: Self::SUPPORTED_VERSIONS,");
+            rust.close(");");
+            rust.close("");
+        }
+    }
+    rust.blank();
     render_reads(rust, fields, message)?;
     let flexible = !message.effective_flexible_versions().is_empty();
     if flexible {
@@ -344,17 +339,12 @@ pub(super) fn render_struct_decode(
 }
 
 /// Encode body for one struct a message declares.
-pub(super) fn render_struct_encode(
+fn render_struct_encode(
     rust: &mut RustText,
     rust_type: &str,
     fields: &[kafka_wire_schema::Field],
     message: &Message,
 ) -> Result<(), GenerationError> {
-    let version = if body_uses_version(fields, message)? {
-        "version"
-    } else {
-        "_version"
-    };
     rust.open(format!(
         "impl {} for {rust_type}",
         spell(message, "KafkaEncode")
@@ -365,14 +355,16 @@ pub(super) fn render_struct_encode(
         "    encoder: &mut {}<T>,",
         spell(message, "Encoder")
     ));
-    rust.line(format!("    {version}: {},", spell(message, "ApiVersion")));
+    rust.line(format!("    version: {},", spell(message, "ApiVersion")));
     rust.open(format!(
         ") -> Result<(), {}>",
         spell(message, "EncodeError")
     ));
-    render_writes(rust, fields, message, Owner::Struct(rust_type))?;
+    rust.line("self.validate_for_version(version)?;");
+    rust.blank();
+    render_writes(rust, fields, message)?;
     if !message.effective_flexible_versions().is_empty() {
-        render_tagged_encode(rust, fields, message, Owner::Struct(rust_type))?;
+        render_tagged_encode(rust, fields, message)?;
     }
     rust.blank();
     rust.line("Ok(())");

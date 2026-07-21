@@ -20,10 +20,17 @@ mod source;
 
 #[cfg(test)]
 mod format_test;
+#[cfg(test)]
+mod output_test;
+#[cfg(test)]
+mod overrides_test;
+#[cfg(test)]
+mod pipeline_test;
 
 pub use config::{GenerationMode, GeneratorConfig};
 pub use corpus::{CorpusOutcome, CorpusRender, render_corpus};
 pub use error::GenerationError;
 pub use identity::{ProtocolIdentity, protocol_identity};
+pub use lockfile::{GeneratorLock, KafkaLock, LockedFile, ProtocolLock, SourceStatus};
 pub use output::GenerationReport;
 pub use pipeline::generate;

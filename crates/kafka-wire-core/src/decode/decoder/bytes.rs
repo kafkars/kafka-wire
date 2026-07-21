@@ -4,9 +4,9 @@
 //! `COMPACT_BYTES`, each with a nullable form). Each returns a zero-copy
 //! `Bytes` slice of the input cursor, so no payload is heap-copied. The claimed
 //! length is bounded by the bytes that remain (via `take`) before slicing, so a
-//! peer cannot name more bytes than the frame carried; because the read borrows
-//! from the already-allocated frame rather than reserving, it needs no separate
-//! element budget the way the array and string paths do.
+//! peer cannot name more bytes than the frame carried. A distinct byte-field
+//! budget also prevents a peer from retaining an unexpectedly large slice of a
+//! permitted outer frame.
 
 use bytes::Bytes;
 
@@ -30,6 +30,7 @@ impl Decoder {
             kind: "bytes",
             offset,
         })?;
+        Self::check_limit("bytes", length, self.limits.max_bytes_bytes, offset)?;
         self.take(length)
     }
 
@@ -52,6 +53,12 @@ impl Decoder {
             kind: "nullable bytes",
             offset,
         })?;
+        Self::check_limit(
+            "nullable bytes",
+            length,
+            self.limits.max_bytes_bytes,
+            offset,
+        )?;
         self.take(length).map(Some)
     }
 
@@ -71,6 +78,7 @@ impl Decoder {
             kind: "compact bytes",
             offset,
         })?;
+        Self::check_limit("compact bytes", length, self.limits.max_bytes_bytes, offset)?;
         self.take(length)
     }
 
@@ -86,6 +94,12 @@ impl Decoder {
             kind: "compact nullable bytes",
             offset,
         })?;
+        Self::check_limit(
+            "compact nullable bytes",
+            length,
+            self.limits.max_bytes_bytes,
+            offset,
+        )?;
         self.take(length).map(Some)
     }
 }

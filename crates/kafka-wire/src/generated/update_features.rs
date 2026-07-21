@@ -34,10 +34,46 @@ pub mod update_features_request {
     }
 
     impl FeatureUpdateKey {
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 2);
         const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 2));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+        }
+    }
+
+    impl FeatureUpdateKey {
+        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            if !Self::SUPPORTED_VERSIONS.contains(version) {
+                return Err(EncodeError::UnsupportedVersion {
+                    message: "FeatureUpdateKey",
+                    version,
+                    supported: Self::SUPPORTED_VERSIONS,
+                });
+            }
+
+            if version.value() > 0 && self.allow_downgrade {
+                return Err(EncodeError::FieldNotRepresentable {
+                    message: "FeatureUpdateKey",
+                    field: "AllowDowngrade",
+                    version,
+                });
+            }
+            if version.value() < 1 && self.upgrade_type != 1 {
+                return Err(EncodeError::FieldNotRepresentable {
+                    message: "FeatureUpdateKey",
+                    field: "UpgradeType",
+                    version,
+                });
+            }
+            if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "FeatureUpdateKey",
+                    version,
+                });
+            }
+
+            Ok(())
         }
     }
 
@@ -55,6 +91,14 @@ pub mod update_features_request {
 
     impl KafkaDecode for FeatureUpdateKey {
         fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            if !Self::SUPPORTED_VERSIONS.contains(version) {
+                return Err(DecodeError::UnsupportedVersion {
+                    message: "FeatureUpdateKey",
+                    version,
+                    supported: Self::SUPPORTED_VERSIONS,
+                });
+            }
+
             let feature = decoder.read_compact_string()?;
             let max_version_level = decoder.read_i16()?;
             let allow_downgrade = if version.value() <= 0 {
@@ -89,6 +133,8 @@ pub mod update_features_request {
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+
             encoder.write_compact_string(&self.feature)?;
             encoder.write_i16(self.max_version_level)?;
             if version.value() <= 0 {
@@ -100,11 +146,6 @@ pub mod update_features_request {
 
             if Self::is_flexible(version) {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-            } else if !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
-                    message: "FeatureUpdateKey",
-                    version,
-                });
             }
 
             Ok(())
@@ -150,6 +191,31 @@ pub mod update_features_request {
         type Response = super::UpdateFeaturesResponse;
     }
 
+    impl UpdateFeaturesRequest {
+        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            crate::message::ensure_encode_version::<Self>(version)?;
+
+            if version.value() < 1 && self.validate_only {
+                return Err(EncodeError::FieldNotRepresentable {
+                    message: Self::NAME,
+                    field: "ValidateOnly",
+                    version,
+                });
+            }
+            for value in &self.feature_updates {
+                value.validate_for_version(version)?;
+            }
+            if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: Self::NAME,
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+
     impl KafkaDecode for UpdateFeaturesRequest {
         fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
             crate::message::ensure_decode_version::<Self>(version)?;
@@ -185,15 +251,7 @@ pub mod update_features_request {
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            crate::message::ensure_encode_version::<Self>(version)?;
-
-            if version.value() < 1 && self.validate_only {
-                return Err(EncodeError::FieldNotRepresentable {
-                    message: Self::NAME,
-                    field: "ValidateOnly",
-                    version,
-                });
-            }
+            self.validate_for_version(version)?;
 
             encoder.write_i32(self.timeout_ms)?;
             encoder.write_compact_array_len(self.feature_updates.len())?;
@@ -206,11 +264,6 @@ pub mod update_features_request {
 
             if Self::is_flexible(version) {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-            } else if !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
-                    message: Self::NAME,
-                    version,
-                });
             }
 
             Ok(())
@@ -245,10 +298,32 @@ pub mod update_features_response {
     }
 
     impl UpdatableFeatureResult {
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 2);
         const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 2));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+        }
+    }
+
+    impl UpdatableFeatureResult {
+        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            if !Self::SUPPORTED_VERSIONS.contains(version) {
+                return Err(EncodeError::UnsupportedVersion {
+                    message: "UpdatableFeatureResult",
+                    version,
+                    supported: Self::SUPPORTED_VERSIONS,
+                });
+            }
+
+            if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "UpdatableFeatureResult",
+                    version,
+                });
+            }
+
+            Ok(())
         }
     }
 
@@ -265,6 +340,14 @@ pub mod update_features_response {
 
     impl KafkaDecode for UpdatableFeatureResult {
         fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            if !Self::SUPPORTED_VERSIONS.contains(version) {
+                return Err(DecodeError::UnsupportedVersion {
+                    message: "UpdatableFeatureResult",
+                    version,
+                    supported: Self::SUPPORTED_VERSIONS,
+                });
+            }
+
             let feature = decoder.read_compact_string()?;
             let error_code = decoder.read_i16()?;
             let error_message = decoder.read_compact_nullable_string()?;
@@ -289,17 +372,14 @@ pub mod update_features_response {
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+
             encoder.write_compact_string(&self.feature)?;
             encoder.write_i16(self.error_code)?;
             encoder.write_compact_nullable_string(self.error_message.as_ref())?;
 
             if Self::is_flexible(version) {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-            } else if !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
-                    message: "UpdatableFeatureResult",
-                    version,
-                });
             }
 
             Ok(())
@@ -344,6 +424,26 @@ pub mod update_features_response {
         const API_KEY: ApiKey = ApiKey::new(57);
     }
 
+    impl UpdateFeaturesResponse {
+        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            crate::message::ensure_encode_version::<Self>(version)?;
+
+            if version.value() <= 1 {
+                for value in &self.results {
+                    value.validate_for_version(version)?;
+                }
+            }
+            if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: Self::NAME,
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+
     impl KafkaDecode for UpdateFeaturesResponse {
         fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
             crate::message::ensure_decode_version::<Self>(version)?;
@@ -381,7 +481,7 @@ pub mod update_features_response {
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            crate::message::ensure_encode_version::<Self>(version)?;
+            self.validate_for_version(version)?;
 
             encoder.write_i32(self.throttle_time_ms)?;
             encoder.write_i16(self.error_code)?;
@@ -395,11 +495,6 @@ pub mod update_features_response {
 
             if Self::is_flexible(version) {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-            } else if !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
-                    message: Self::NAME,
-                    version,
-                });
             }
 
             Ok(())

@@ -30,6 +30,7 @@ pub mod alter_share_group_offsets_request {
     }
 
     impl AlterShareGroupOffsetsRequestTopic {
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 0);
         const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 0));
 
         fn is_flexible(version: ApiVersion) -> bool {
@@ -37,8 +38,40 @@ pub mod alter_share_group_offsets_request {
         }
     }
 
+    impl AlterShareGroupOffsetsRequestTopic {
+        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            if !Self::SUPPORTED_VERSIONS.contains(version) {
+                return Err(EncodeError::UnsupportedVersion {
+                    message: "AlterShareGroupOffsetsRequestTopic",
+                    version,
+                    supported: Self::SUPPORTED_VERSIONS,
+                });
+            }
+
+            for value in &self.partitions {
+                value.validate_for_version(version)?;
+            }
+            if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "AlterShareGroupOffsetsRequestTopic",
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+
     impl KafkaDecode for AlterShareGroupOffsetsRequestTopic {
         fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            if !Self::SUPPORTED_VERSIONS.contains(version) {
+                return Err(DecodeError::UnsupportedVersion {
+                    message: "AlterShareGroupOffsetsRequestTopic",
+                    version,
+                    supported: Self::SUPPORTED_VERSIONS,
+                });
+            }
+
             let topic_name = decoder.read_compact_string()?;
             let partitions = {
                 let length = decoder.read_compact_array_len()?;
@@ -66,6 +99,8 @@ pub mod alter_share_group_offsets_request {
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+
             encoder.write_compact_string(&self.topic_name)?;
             encoder.write_compact_array_len(self.partitions.len())?;
             for value in &self.partitions {
@@ -74,11 +109,6 @@ pub mod alter_share_group_offsets_request {
 
             if Self::is_flexible(version) {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-            } else if !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
-                    message: "AlterShareGroupOffsetsRequestTopic",
-                    version,
-                });
             }
 
             Ok(())
@@ -98,6 +128,7 @@ pub mod alter_share_group_offsets_request {
     }
 
     impl AlterShareGroupOffsetsRequestPartition {
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 0);
         const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 0));
 
         fn is_flexible(version: ApiVersion) -> bool {
@@ -105,8 +136,37 @@ pub mod alter_share_group_offsets_request {
         }
     }
 
+    impl AlterShareGroupOffsetsRequestPartition {
+        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            if !Self::SUPPORTED_VERSIONS.contains(version) {
+                return Err(EncodeError::UnsupportedVersion {
+                    message: "AlterShareGroupOffsetsRequestPartition",
+                    version,
+                    supported: Self::SUPPORTED_VERSIONS,
+                });
+            }
+
+            if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "AlterShareGroupOffsetsRequestPartition",
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+
     impl KafkaDecode for AlterShareGroupOffsetsRequestPartition {
         fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            if !Self::SUPPORTED_VERSIONS.contains(version) {
+                return Err(DecodeError::UnsupportedVersion {
+                    message: "AlterShareGroupOffsetsRequestPartition",
+                    version,
+                    supported: Self::SUPPORTED_VERSIONS,
+                });
+            }
+
             let partition_index = decoder.read_i32()?;
             let start_offset = decoder.read_i64()?;
             let unknown_tagged_fields = if Self::is_flexible(version) {
@@ -129,16 +189,13 @@ pub mod alter_share_group_offsets_request {
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+
             encoder.write_i32(self.partition_index)?;
             encoder.write_i64(self.start_offset)?;
 
             if Self::is_flexible(version) {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-            } else if !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
-                    message: "AlterShareGroupOffsetsRequestPartition",
-                    version,
-                });
             }
 
             Ok(())
@@ -169,6 +226,24 @@ pub mod alter_share_group_offsets_request {
 
     impl RequestResponsePair for AlterShareGroupOffsetsRequest {
         type Response = super::AlterShareGroupOffsetsResponse;
+    }
+
+    impl AlterShareGroupOffsetsRequest {
+        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            crate::message::ensure_encode_version::<Self>(version)?;
+
+            for value in &self.topics {
+                value.validate_for_version(version)?;
+            }
+            if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: Self::NAME,
+                    version,
+                });
+            }
+
+            Ok(())
+        }
     }
 
     impl KafkaDecode for AlterShareGroupOffsetsRequest {
@@ -202,7 +277,7 @@ pub mod alter_share_group_offsets_request {
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            crate::message::ensure_encode_version::<Self>(version)?;
+            self.validate_for_version(version)?;
 
             encoder.write_compact_string(&self.group_id)?;
             encoder.write_compact_array_len(self.topics.len())?;
@@ -212,11 +287,6 @@ pub mod alter_share_group_offsets_request {
 
             if Self::is_flexible(version) {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-            } else if !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
-                    message: Self::NAME,
-                    version,
-                });
             }
 
             Ok(())
@@ -251,6 +321,7 @@ pub mod alter_share_group_offsets_response {
     }
 
     impl AlterShareGroupOffsetsResponseTopic {
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 0);
         const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 0));
 
         fn is_flexible(version: ApiVersion) -> bool {
@@ -258,8 +329,40 @@ pub mod alter_share_group_offsets_response {
         }
     }
 
+    impl AlterShareGroupOffsetsResponseTopic {
+        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            if !Self::SUPPORTED_VERSIONS.contains(version) {
+                return Err(EncodeError::UnsupportedVersion {
+                    message: "AlterShareGroupOffsetsResponseTopic",
+                    version,
+                    supported: Self::SUPPORTED_VERSIONS,
+                });
+            }
+
+            for value in &self.partitions {
+                value.validate_for_version(version)?;
+            }
+            if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "AlterShareGroupOffsetsResponseTopic",
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+
     impl KafkaDecode for AlterShareGroupOffsetsResponseTopic {
         fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            if !Self::SUPPORTED_VERSIONS.contains(version) {
+                return Err(DecodeError::UnsupportedVersion {
+                    message: "AlterShareGroupOffsetsResponseTopic",
+                    version,
+                    supported: Self::SUPPORTED_VERSIONS,
+                });
+            }
+
             let topic_name = decoder.read_compact_string()?;
             let topic_id = decoder.read_uuid()?;
             let partitions = {
@@ -289,6 +392,8 @@ pub mod alter_share_group_offsets_response {
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+
             encoder.write_compact_string(&self.topic_name)?;
             encoder.write_uuid(self.topic_id)?;
             encoder.write_compact_array_len(self.partitions.len())?;
@@ -298,11 +403,6 @@ pub mod alter_share_group_offsets_response {
 
             if Self::is_flexible(version) {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-            } else if !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
-                    message: "AlterShareGroupOffsetsResponseTopic",
-                    version,
-                });
             }
 
             Ok(())
@@ -324,6 +424,7 @@ pub mod alter_share_group_offsets_response {
     }
 
     impl AlterShareGroupOffsetsResponsePartition {
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 0);
         const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 0));
 
         fn is_flexible(version: ApiVersion) -> bool {
@@ -331,8 +432,37 @@ pub mod alter_share_group_offsets_response {
         }
     }
 
+    impl AlterShareGroupOffsetsResponsePartition {
+        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            if !Self::SUPPORTED_VERSIONS.contains(version) {
+                return Err(EncodeError::UnsupportedVersion {
+                    message: "AlterShareGroupOffsetsResponsePartition",
+                    version,
+                    supported: Self::SUPPORTED_VERSIONS,
+                });
+            }
+
+            if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "AlterShareGroupOffsetsResponsePartition",
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+
     impl KafkaDecode for AlterShareGroupOffsetsResponsePartition {
         fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            if !Self::SUPPORTED_VERSIONS.contains(version) {
+                return Err(DecodeError::UnsupportedVersion {
+                    message: "AlterShareGroupOffsetsResponsePartition",
+                    version,
+                    supported: Self::SUPPORTED_VERSIONS,
+                });
+            }
+
             let partition_index = decoder.read_i32()?;
             let error_code = decoder.read_i16()?;
             let error_message = decoder.read_compact_nullable_string()?;
@@ -357,17 +487,14 @@ pub mod alter_share_group_offsets_response {
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+
             encoder.write_i32(self.partition_index)?;
             encoder.write_i16(self.error_code)?;
             encoder.write_compact_nullable_string(self.error_message.as_ref())?;
 
             if Self::is_flexible(version) {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-            } else if !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
-                    message: "AlterShareGroupOffsetsResponsePartition",
-                    version,
-                });
             }
 
             Ok(())
@@ -398,6 +525,24 @@ pub mod alter_share_group_offsets_response {
 
     impl KafkaResponse for AlterShareGroupOffsetsResponse {
         const API_KEY: ApiKey = ApiKey::new(91);
+    }
+
+    impl AlterShareGroupOffsetsResponse {
+        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            crate::message::ensure_encode_version::<Self>(version)?;
+
+            for value in &self.responses {
+                value.validate_for_version(version)?;
+            }
+            if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: Self::NAME,
+                    version,
+                });
+            }
+
+            Ok(())
+        }
     }
 
     impl KafkaDecode for AlterShareGroupOffsetsResponse {
@@ -435,7 +580,7 @@ pub mod alter_share_group_offsets_response {
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            crate::message::ensure_encode_version::<Self>(version)?;
+            self.validate_for_version(version)?;
 
             encoder.write_i32(self.throttle_time_ms)?;
             encoder.write_i16(self.error_code)?;
@@ -447,11 +592,6 @@ pub mod alter_share_group_offsets_response {
 
             if Self::is_flexible(version) {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-            } else if !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
-                    message: Self::NAME,
-                    version,
-                });
             }
 
             Ok(())

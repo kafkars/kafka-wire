@@ -55,7 +55,7 @@ pub(crate) fn render_api(group: &ApiGroup, commit: &str) -> Result<String, Gener
     rust.blank();
 
     for source in group.messages() {
-        render_descriptor(&mut rust, &source.message, group.api_key);
+        render_descriptor(&mut rust, &source.message, group.api_key)?;
     }
     Ok(rust.finish())
 }

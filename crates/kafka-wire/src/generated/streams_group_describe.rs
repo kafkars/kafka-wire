@@ -45,6 +45,28 @@ pub mod streams_group_describe_request {
         type Response = super::StreamsGroupDescribeResponse;
     }
 
+    impl StreamsGroupDescribeRequest {
+        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            crate::message::ensure_encode_version::<Self>(version)?;
+
+            if version.value() < 1 && self.include_topology_description {
+                return Err(EncodeError::FieldNotRepresentable {
+                    message: Self::NAME,
+                    field: "IncludeTopologyDescription",
+                    version,
+                });
+            }
+            if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: Self::NAME,
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+
     impl KafkaDecode for StreamsGroupDescribeRequest {
         fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
             crate::message::ensure_decode_version::<Self>(version)?;
@@ -80,15 +102,7 @@ pub mod streams_group_describe_request {
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            crate::message::ensure_encode_version::<Self>(version)?;
-
-            if version.value() < 1 && self.include_topology_description {
-                return Err(EncodeError::FieldNotRepresentable {
-                    message: Self::NAME,
-                    field: "IncludeTopologyDescription",
-                    version,
-                });
-            }
+            self.validate_for_version(version)?;
 
             encoder.write_compact_array_len(self.group_ids.len())?;
             for value in &self.group_ids {
@@ -101,11 +115,6 @@ pub mod streams_group_describe_request {
 
             if Self::is_flexible(version) {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-            } else if !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
-                    message: Self::NAME,
-                    version,
-                });
             }
 
             Ok(())
@@ -138,6 +147,7 @@ pub mod streams_group_describe_response {
     }
 
     impl Endpoint {
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 1);
         const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 1));
 
         fn is_flexible(version: ApiVersion) -> bool {
@@ -145,8 +155,37 @@ pub mod streams_group_describe_response {
         }
     }
 
+    impl Endpoint {
+        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            if !Self::SUPPORTED_VERSIONS.contains(version) {
+                return Err(EncodeError::UnsupportedVersion {
+                    message: "Endpoint",
+                    version,
+                    supported: Self::SUPPORTED_VERSIONS,
+                });
+            }
+
+            if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "Endpoint",
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+
     impl KafkaDecode for Endpoint {
         fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            if !Self::SUPPORTED_VERSIONS.contains(version) {
+                return Err(DecodeError::UnsupportedVersion {
+                    message: "Endpoint",
+                    version,
+                    supported: Self::SUPPORTED_VERSIONS,
+                });
+            }
+
             let host = decoder.read_compact_string()?;
             let port = decoder.read_u16()?;
             let unknown_tagged_fields = if Self::is_flexible(version) {
@@ -169,16 +208,13 @@ pub mod streams_group_describe_response {
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+
             encoder.write_compact_string(&self.host)?;
             encoder.write_u16(self.port)?;
 
             if Self::is_flexible(version) {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-            } else if !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
-                    message: "Endpoint",
-                    version,
-                });
             }
 
             Ok(())
@@ -200,6 +236,7 @@ pub mod streams_group_describe_response {
     }
 
     impl TaskOffset {
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 1);
         const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 1));
 
         fn is_flexible(version: ApiVersion) -> bool {
@@ -207,8 +244,37 @@ pub mod streams_group_describe_response {
         }
     }
 
+    impl TaskOffset {
+        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            if !Self::SUPPORTED_VERSIONS.contains(version) {
+                return Err(EncodeError::UnsupportedVersion {
+                    message: "TaskOffset",
+                    version,
+                    supported: Self::SUPPORTED_VERSIONS,
+                });
+            }
+
+            if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "TaskOffset",
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+
     impl KafkaDecode for TaskOffset {
         fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            if !Self::SUPPORTED_VERSIONS.contains(version) {
+                return Err(DecodeError::UnsupportedVersion {
+                    message: "TaskOffset",
+                    version,
+                    supported: Self::SUPPORTED_VERSIONS,
+                });
+            }
+
             let subtopology_id = decoder.read_compact_string()?;
             let partition = decoder.read_i32()?;
             let offset = decoder.read_i64()?;
@@ -233,17 +299,14 @@ pub mod streams_group_describe_response {
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+
             encoder.write_compact_string(&self.subtopology_id)?;
             encoder.write_i32(self.partition)?;
             encoder.write_i64(self.offset)?;
 
             if Self::is_flexible(version) {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-            } else if !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
-                    message: "TaskOffset",
-                    version,
-                });
             }
 
             Ok(())
@@ -265,6 +328,7 @@ pub mod streams_group_describe_response {
     }
 
     impl Assignment {
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 1);
         const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 1));
 
         fn is_flexible(version: ApiVersion) -> bool {
@@ -272,8 +336,46 @@ pub mod streams_group_describe_response {
         }
     }
 
+    impl Assignment {
+        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            if !Self::SUPPORTED_VERSIONS.contains(version) {
+                return Err(EncodeError::UnsupportedVersion {
+                    message: "Assignment",
+                    version,
+                    supported: Self::SUPPORTED_VERSIONS,
+                });
+            }
+
+            for value in &self.active_tasks {
+                value.validate_for_version(version)?;
+            }
+            for value in &self.standby_tasks {
+                value.validate_for_version(version)?;
+            }
+            for value in &self.warmup_tasks {
+                value.validate_for_version(version)?;
+            }
+            if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "Assignment",
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+
     impl KafkaDecode for Assignment {
         fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            if !Self::SUPPORTED_VERSIONS.contains(version) {
+                return Err(DecodeError::UnsupportedVersion {
+                    message: "Assignment",
+                    version,
+                    supported: Self::SUPPORTED_VERSIONS,
+                });
+            }
+
             let active_tasks = {
                 let length = decoder.read_compact_array_len()?;
                 decoder.read_vec(length, |decoder| TaskIds::decode(decoder, version))?
@@ -307,6 +409,8 @@ pub mod streams_group_describe_response {
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+
             encoder.write_compact_array_len(self.active_tasks.len())?;
             for value in &self.active_tasks {
                 value.encode(encoder, version)?;
@@ -322,11 +426,6 @@ pub mod streams_group_describe_response {
 
             if Self::is_flexible(version) {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-            } else if !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
-                    message: "Assignment",
-                    version,
-                });
             }
 
             Ok(())
@@ -346,6 +445,7 @@ pub mod streams_group_describe_response {
     }
 
     impl TaskIds {
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 1);
         const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 1));
 
         fn is_flexible(version: ApiVersion) -> bool {
@@ -353,8 +453,37 @@ pub mod streams_group_describe_response {
         }
     }
 
+    impl TaskIds {
+        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            if !Self::SUPPORTED_VERSIONS.contains(version) {
+                return Err(EncodeError::UnsupportedVersion {
+                    message: "TaskIds",
+                    version,
+                    supported: Self::SUPPORTED_VERSIONS,
+                });
+            }
+
+            if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "TaskIds",
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+
     impl KafkaDecode for TaskIds {
         fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            if !Self::SUPPORTED_VERSIONS.contains(version) {
+                return Err(DecodeError::UnsupportedVersion {
+                    message: "TaskIds",
+                    version,
+                    supported: Self::SUPPORTED_VERSIONS,
+                });
+            }
+
             let subtopology_id = decoder.read_compact_string()?;
             let partitions = {
                 let length = decoder.read_compact_array_len()?;
@@ -380,6 +509,8 @@ pub mod streams_group_describe_response {
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+
             encoder.write_compact_string(&self.subtopology_id)?;
             encoder.write_compact_array_len(self.partitions.len())?;
             for value in &self.partitions {
@@ -388,11 +519,6 @@ pub mod streams_group_describe_response {
 
             if Self::is_flexible(version) {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-            } else if !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
-                    message: "TaskIds",
-                    version,
-                });
             }
 
             Ok(())
@@ -412,6 +538,7 @@ pub mod streams_group_describe_response {
     }
 
     impl KeyValue {
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 1);
         const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 1));
 
         fn is_flexible(version: ApiVersion) -> bool {
@@ -419,8 +546,37 @@ pub mod streams_group_describe_response {
         }
     }
 
+    impl KeyValue {
+        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            if !Self::SUPPORTED_VERSIONS.contains(version) {
+                return Err(EncodeError::UnsupportedVersion {
+                    message: "KeyValue",
+                    version,
+                    supported: Self::SUPPORTED_VERSIONS,
+                });
+            }
+
+            if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "KeyValue",
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+
     impl KafkaDecode for KeyValue {
         fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            if !Self::SUPPORTED_VERSIONS.contains(version) {
+                return Err(DecodeError::UnsupportedVersion {
+                    message: "KeyValue",
+                    version,
+                    supported: Self::SUPPORTED_VERSIONS,
+                });
+            }
+
             let key = decoder.read_compact_string()?;
             let value = decoder.read_compact_string()?;
             let unknown_tagged_fields = if Self::is_flexible(version) {
@@ -443,16 +599,13 @@ pub mod streams_group_describe_response {
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+
             encoder.write_compact_string(&self.key)?;
             encoder.write_compact_string(&self.value)?;
 
             if Self::is_flexible(version) {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-            } else if !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
-                    message: "KeyValue",
-                    version,
-                });
             }
 
             Ok(())
@@ -476,6 +629,7 @@ pub mod streams_group_describe_response {
     }
 
     impl TopicInfo {
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 1);
         const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 1));
 
         fn is_flexible(version: ApiVersion) -> bool {
@@ -483,8 +637,40 @@ pub mod streams_group_describe_response {
         }
     }
 
+    impl TopicInfo {
+        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            if !Self::SUPPORTED_VERSIONS.contains(version) {
+                return Err(EncodeError::UnsupportedVersion {
+                    message: "TopicInfo",
+                    version,
+                    supported: Self::SUPPORTED_VERSIONS,
+                });
+            }
+
+            for value in &self.topic_configs {
+                value.validate_for_version(version)?;
+            }
+            if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "TopicInfo",
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+
     impl KafkaDecode for TopicInfo {
         fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            if !Self::SUPPORTED_VERSIONS.contains(version) {
+                return Err(DecodeError::UnsupportedVersion {
+                    message: "TopicInfo",
+                    version,
+                    supported: Self::SUPPORTED_VERSIONS,
+                });
+            }
+
             let name = decoder.read_compact_string()?;
             let partitions = decoder.read_i32()?;
             let replication_factor = decoder.read_i16()?;
@@ -514,6 +700,8 @@ pub mod streams_group_describe_response {
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+
             encoder.write_compact_string(&self.name)?;
             encoder.write_i32(self.partitions)?;
             encoder.write_i16(self.replication_factor)?;
@@ -524,11 +712,6 @@ pub mod streams_group_describe_response {
 
             if Self::is_flexible(version) {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-            } else if !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
-                    message: "TopicInfo",
-                    version,
-                });
             }
 
             Ok(())
@@ -548,6 +731,7 @@ pub mod streams_group_describe_response {
     }
 
     impl TopologyDescription {
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 1);
         const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 1));
 
         fn is_flexible(version: ApiVersion) -> bool {
@@ -555,8 +739,61 @@ pub mod streams_group_describe_response {
         }
     }
 
+    impl TopologyDescription {
+        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            if !Self::SUPPORTED_VERSIONS.contains(version) {
+                return Err(EncodeError::UnsupportedVersion {
+                    message: "TopologyDescription",
+                    version,
+                    supported: Self::SUPPORTED_VERSIONS,
+                });
+            }
+
+            if version.value() < 1 && !self.subtopologies.is_empty() {
+                return Err(EncodeError::FieldNotRepresentable {
+                    message: "TopologyDescription",
+                    field: "Subtopologies",
+                    version,
+                });
+            }
+            if version.value() < 1 && !self.global_stores.is_empty() {
+                return Err(EncodeError::FieldNotRepresentable {
+                    message: "TopologyDescription",
+                    field: "GlobalStores",
+                    version,
+                });
+            }
+            if version.value() >= 1 {
+                for value in &self.subtopologies {
+                    value.validate_for_version(version)?;
+                }
+            }
+            if version.value() >= 1 {
+                for value in &self.global_stores {
+                    value.validate_for_version(version)?;
+                }
+            }
+            if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "TopologyDescription",
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+
     impl KafkaDecode for TopologyDescription {
         fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            if !Self::SUPPORTED_VERSIONS.contains(version) {
+                return Err(DecodeError::UnsupportedVersion {
+                    message: "TopologyDescription",
+                    version,
+                    supported: Self::SUPPORTED_VERSIONS,
+                });
+            }
+
             let subtopologies = if version.value() >= 1 {
                 let length = decoder.read_compact_array_len()?;
                 decoder.read_vec(length, |decoder| {
@@ -593,6 +830,8 @@ pub mod streams_group_describe_response {
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+
             if version.value() >= 1 {
                 encoder.write_compact_array_len(self.subtopologies.len())?;
                 for value in &self.subtopologies {
@@ -608,11 +847,6 @@ pub mod streams_group_describe_response {
 
             if Self::is_flexible(version) {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-            } else if !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
-                    message: "TopologyDescription",
-                    version,
-                });
             }
 
             Ok(())
@@ -632,6 +866,7 @@ pub mod streams_group_describe_response {
     }
 
     impl TopologyDescriptionSubtopology {
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 1);
         const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 1));
 
         fn is_flexible(version: ApiVersion) -> bool {
@@ -639,8 +874,56 @@ pub mod streams_group_describe_response {
         }
     }
 
+    impl TopologyDescriptionSubtopology {
+        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            if !Self::SUPPORTED_VERSIONS.contains(version) {
+                return Err(EncodeError::UnsupportedVersion {
+                    message: "TopologyDescriptionSubtopology",
+                    version,
+                    supported: Self::SUPPORTED_VERSIONS,
+                });
+            }
+
+            if version.value() < 1 && !self.subtopology_id.is_empty() {
+                return Err(EncodeError::FieldNotRepresentable {
+                    message: "TopologyDescriptionSubtopology",
+                    field: "SubtopologyId",
+                    version,
+                });
+            }
+            if version.value() < 1 && !self.nodes.is_empty() {
+                return Err(EncodeError::FieldNotRepresentable {
+                    message: "TopologyDescriptionSubtopology",
+                    field: "Nodes",
+                    version,
+                });
+            }
+            if version.value() >= 1 {
+                for value in &self.nodes {
+                    value.validate_for_version(version)?;
+                }
+            }
+            if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "TopologyDescriptionSubtopology",
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+
     impl KafkaDecode for TopologyDescriptionSubtopology {
         fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            if !Self::SUPPORTED_VERSIONS.contains(version) {
+                return Err(DecodeError::UnsupportedVersion {
+                    message: "TopologyDescriptionSubtopology",
+                    version,
+                    supported: Self::SUPPORTED_VERSIONS,
+                });
+            }
+
             let subtopology_id = if version.value() >= 1 {
                 decoder.read_compact_string()?
             } else {
@@ -674,6 +957,8 @@ pub mod streams_group_describe_response {
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+
             if version.value() >= 1 {
                 encoder.write_compact_string(&self.subtopology_id)?;
             }
@@ -686,11 +971,6 @@ pub mod streams_group_describe_response {
 
             if Self::is_flexible(version) {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-            } else if !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
-                    message: "TopologyDescriptionSubtopology",
-                    version,
-                });
             }
 
             Ok(())
@@ -718,6 +998,7 @@ pub mod streams_group_describe_response {
     }
 
     impl TopologyDescriptionNode {
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 1);
         const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 1));
 
         fn is_flexible(version: ApiVersion) -> bool {
@@ -725,8 +1006,79 @@ pub mod streams_group_describe_response {
         }
     }
 
+    impl TopologyDescriptionNode {
+        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            if !Self::SUPPORTED_VERSIONS.contains(version) {
+                return Err(EncodeError::UnsupportedVersion {
+                    message: "TopologyDescriptionNode",
+                    version,
+                    supported: Self::SUPPORTED_VERSIONS,
+                });
+            }
+
+            if version.value() < 1 && !self.name.is_empty() {
+                return Err(EncodeError::FieldNotRepresentable {
+                    message: "TopologyDescriptionNode",
+                    field: "Name",
+                    version,
+                });
+            }
+            if version.value() < 1 && self.node_type != 0 {
+                return Err(EncodeError::FieldNotRepresentable {
+                    message: "TopologyDescriptionNode",
+                    field: "NodeType",
+                    version,
+                });
+            }
+            if version.value() < 1 && !self.source_topics.is_empty() {
+                return Err(EncodeError::FieldNotRepresentable {
+                    message: "TopologyDescriptionNode",
+                    field: "SourceTopics",
+                    version,
+                });
+            }
+            if version.value() < 1 && self.sink_topic.is_some() {
+                return Err(EncodeError::FieldNotRepresentable {
+                    message: "TopologyDescriptionNode",
+                    field: "SinkTopic",
+                    version,
+                });
+            }
+            if version.value() < 1 && !self.stores.is_empty() {
+                return Err(EncodeError::FieldNotRepresentable {
+                    message: "TopologyDescriptionNode",
+                    field: "Stores",
+                    version,
+                });
+            }
+            if version.value() < 1 && !self.successors.is_empty() {
+                return Err(EncodeError::FieldNotRepresentable {
+                    message: "TopologyDescriptionNode",
+                    field: "Successors",
+                    version,
+                });
+            }
+            if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "TopologyDescriptionNode",
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+
     impl KafkaDecode for TopologyDescriptionNode {
         fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            if !Self::SUPPORTED_VERSIONS.contains(version) {
+                return Err(DecodeError::UnsupportedVersion {
+                    message: "TopologyDescriptionNode",
+                    version,
+                    supported: Self::SUPPORTED_VERSIONS,
+                });
+            }
+
             let name = if version.value() >= 1 {
                 decoder.read_compact_string()?
             } else {
@@ -784,6 +1136,8 @@ pub mod streams_group_describe_response {
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+
             if version.value() >= 1 {
                 encoder.write_compact_string(&self.name)?;
             }
@@ -814,11 +1168,6 @@ pub mod streams_group_describe_response {
 
             if Self::is_flexible(version) {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-            } else if !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
-                    message: "TopologyDescriptionNode",
-                    version,
-                });
             }
 
             Ok(())
@@ -838,6 +1187,7 @@ pub mod streams_group_describe_response {
     }
 
     impl TopologyDescriptionGlobalStore {
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 1);
         const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 1));
 
         fn is_flexible(version: ApiVersion) -> bool {
@@ -845,8 +1195,57 @@ pub mod streams_group_describe_response {
         }
     }
 
+    impl TopologyDescriptionGlobalStore {
+        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            if !Self::SUPPORTED_VERSIONS.contains(version) {
+                return Err(EncodeError::UnsupportedVersion {
+                    message: "TopologyDescriptionGlobalStore",
+                    version,
+                    supported: Self::SUPPORTED_VERSIONS,
+                });
+            }
+
+            if version.value() < 1 && self.source != TopologyDescriptionNode::default() {
+                return Err(EncodeError::FieldNotRepresentable {
+                    message: "TopologyDescriptionGlobalStore",
+                    field: "Source",
+                    version,
+                });
+            }
+            if version.value() < 1 && self.processor != TopologyDescriptionNode::default() {
+                return Err(EncodeError::FieldNotRepresentable {
+                    message: "TopologyDescriptionGlobalStore",
+                    field: "Processor",
+                    version,
+                });
+            }
+            if version.value() >= 1 {
+                self.source.validate_for_version(version)?;
+            }
+            if version.value() >= 1 {
+                self.processor.validate_for_version(version)?;
+            }
+            if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "TopologyDescriptionGlobalStore",
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+
     impl KafkaDecode for TopologyDescriptionGlobalStore {
         fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            if !Self::SUPPORTED_VERSIONS.contains(version) {
+                return Err(DecodeError::UnsupportedVersion {
+                    message: "TopologyDescriptionGlobalStore",
+                    version,
+                    supported: Self::SUPPORTED_VERSIONS,
+                });
+            }
+
             let source = if version.value() >= 1 {
                 TopologyDescriptionNode::decode(decoder, version)?
             } else {
@@ -877,6 +1276,8 @@ pub mod streams_group_describe_response {
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+
             if version.value() >= 1 {
                 self.source.encode(encoder, version)?;
             }
@@ -886,11 +1287,6 @@ pub mod streams_group_describe_response {
 
             if Self::is_flexible(version) {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-            } else if !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
-                    message: "TopologyDescriptionGlobalStore",
-                    version,
-                });
             }
 
             Ok(())
@@ -928,10 +1324,57 @@ pub mod streams_group_describe_response {
     }
 
     impl DescribedGroup {
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 1);
         const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 1));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+        }
+    }
+
+    impl DescribedGroup {
+        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            if !Self::SUPPORTED_VERSIONS.contains(version) {
+                return Err(EncodeError::UnsupportedVersion {
+                    message: "DescribedGroup",
+                    version,
+                    supported: Self::SUPPORTED_VERSIONS,
+                });
+            }
+
+            if version.value() < 1 && self.topology_description.is_some() {
+                return Err(EncodeError::FieldNotRepresentable {
+                    message: "DescribedGroup",
+                    field: "TopologyDescription",
+                    version,
+                });
+            }
+            if version.value() < 1 && self.topology_description_status != 0 {
+                return Err(EncodeError::FieldNotRepresentable {
+                    message: "DescribedGroup",
+                    field: "TopologyDescriptionStatus",
+                    version,
+                });
+            }
+            if let Some(value) = &self.topology {
+                value.validate_for_version(version)?;
+            }
+            for value in &self.members {
+                value.validate_for_version(version)?;
+            }
+            if version.value() >= 1 {
+                if let Some(value) = &self.topology_description {
+                    value.validate_for_version(version)?;
+                }
+            }
+            if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "DescribedGroup",
+                    version,
+                });
+            }
+
+            Ok(())
         }
     }
 
@@ -956,6 +1399,14 @@ pub mod streams_group_describe_response {
 
     impl KafkaDecode for DescribedGroup {
         fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            if !Self::SUPPORTED_VERSIONS.contains(version) {
+                return Err(DecodeError::UnsupportedVersion {
+                    message: "DescribedGroup",
+                    version,
+                    supported: Self::SUPPORTED_VERSIONS,
+                });
+            }
+
             let error_code = decoder.read_i16()?;
             let error_message = decoder.read_compact_nullable_string()?;
             let group_id = decoder.read_compact_string()?;
@@ -1015,6 +1466,8 @@ pub mod streams_group_describe_response {
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+
             encoder.write_i16(self.error_code)?;
             encoder.write_compact_nullable_string(self.error_message.as_ref())?;
             encoder.write_compact_string(&self.group_id)?;
@@ -1046,11 +1499,6 @@ pub mod streams_group_describe_response {
 
             if Self::is_flexible(version) {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-            } else if !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
-                    message: "DescribedGroup",
-                    version,
-                });
             }
 
             Ok(())
@@ -1070,6 +1518,7 @@ pub mod streams_group_describe_response {
     }
 
     impl Topology {
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 1);
         const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 1));
 
         fn is_flexible(version: ApiVersion) -> bool {
@@ -1077,8 +1526,42 @@ pub mod streams_group_describe_response {
         }
     }
 
+    impl Topology {
+        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            if !Self::SUPPORTED_VERSIONS.contains(version) {
+                return Err(EncodeError::UnsupportedVersion {
+                    message: "Topology",
+                    version,
+                    supported: Self::SUPPORTED_VERSIONS,
+                });
+            }
+
+            if let Some(values) = &self.subtopologies {
+                for value in values {
+                    value.validate_for_version(version)?;
+                }
+            }
+            if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "Topology",
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+
     impl KafkaDecode for Topology {
         fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            if !Self::SUPPORTED_VERSIONS.contains(version) {
+                return Err(DecodeError::UnsupportedVersion {
+                    message: "Topology",
+                    version,
+                    supported: Self::SUPPORTED_VERSIONS,
+                });
+            }
+
             let epoch = decoder.read_i32()?;
             let subtopologies = {
                 let length = decoder.read_compact_nullable_array_len()?;
@@ -1108,6 +1591,8 @@ pub mod streams_group_describe_response {
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+
             encoder.write_i32(self.epoch)?;
             encoder.write_compact_nullable_array_len(self.subtopologies.as_ref().map(Vec::len))?;
             if let Some(values) = &self.subtopologies {
@@ -1118,11 +1603,6 @@ pub mod streams_group_describe_response {
 
             if Self::is_flexible(version) {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-            } else if !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
-                    message: "Topology",
-                    version,
-                });
             }
 
             Ok(())
@@ -1148,6 +1628,7 @@ pub mod streams_group_describe_response {
     }
 
     impl Subtopology {
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 1);
         const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 1));
 
         fn is_flexible(version: ApiVersion) -> bool {
@@ -1155,8 +1636,43 @@ pub mod streams_group_describe_response {
         }
     }
 
+    impl Subtopology {
+        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            if !Self::SUPPORTED_VERSIONS.contains(version) {
+                return Err(EncodeError::UnsupportedVersion {
+                    message: "Subtopology",
+                    version,
+                    supported: Self::SUPPORTED_VERSIONS,
+                });
+            }
+
+            for value in &self.state_changelog_topics {
+                value.validate_for_version(version)?;
+            }
+            for value in &self.repartition_source_topics {
+                value.validate_for_version(version)?;
+            }
+            if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "Subtopology",
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+
     impl KafkaDecode for Subtopology {
         fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            if !Self::SUPPORTED_VERSIONS.contains(version) {
+                return Err(DecodeError::UnsupportedVersion {
+                    message: "Subtopology",
+                    version,
+                    supported: Self::SUPPORTED_VERSIONS,
+                });
+            }
+
             let subtopology_id = decoder.read_compact_string()?;
             let source_topics = {
                 let length = decoder.read_compact_array_len()?;
@@ -1197,6 +1713,8 @@ pub mod streams_group_describe_response {
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+
             encoder.write_compact_string(&self.subtopology_id)?;
             encoder.write_compact_array_len(self.source_topics.len())?;
             for value in &self.source_topics {
@@ -1217,11 +1735,6 @@ pub mod streams_group_describe_response {
 
             if Self::is_flexible(version) {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-            } else if !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
-                    message: "Subtopology",
-                    version,
-                });
             }
 
             Ok(())
@@ -1267,6 +1780,7 @@ pub mod streams_group_describe_response {
     }
 
     impl Member {
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 1);
         const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 1));
 
         fn is_flexible(version: ApiVersion) -> bool {
@@ -1274,8 +1788,51 @@ pub mod streams_group_describe_response {
         }
     }
 
+    impl Member {
+        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            if !Self::SUPPORTED_VERSIONS.contains(version) {
+                return Err(EncodeError::UnsupportedVersion {
+                    message: "Member",
+                    version,
+                    supported: Self::SUPPORTED_VERSIONS,
+                });
+            }
+
+            if let Some(value) = &self.user_endpoint {
+                value.validate_for_version(version)?;
+            }
+            for value in &self.client_tags {
+                value.validate_for_version(version)?;
+            }
+            for value in &self.task_offsets {
+                value.validate_for_version(version)?;
+            }
+            for value in &self.task_end_offsets {
+                value.validate_for_version(version)?;
+            }
+            self.assignment.validate_for_version(version)?;
+            self.target_assignment.validate_for_version(version)?;
+            if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "Member",
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+
     impl KafkaDecode for Member {
         fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            if !Self::SUPPORTED_VERSIONS.contains(version) {
+                return Err(DecodeError::UnsupportedVersion {
+                    message: "Member",
+                    version,
+                    supported: Self::SUPPORTED_VERSIONS,
+                });
+            }
+
             let member_id = decoder.read_compact_string()?;
             let member_epoch = decoder.read_i32()?;
             let instance_id = decoder.read_compact_nullable_string()?;
@@ -1337,6 +1894,8 @@ pub mod streams_group_describe_response {
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+
             encoder.write_compact_string(&self.member_id)?;
             encoder.write_i32(self.member_epoch)?;
             encoder.write_compact_nullable_string(self.instance_id.as_ref())?;
@@ -1369,11 +1928,6 @@ pub mod streams_group_describe_response {
 
             if Self::is_flexible(version) {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-            } else if !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
-                    message: "Member",
-                    version,
-                });
             }
 
             Ok(())
@@ -1400,6 +1954,24 @@ pub mod streams_group_describe_response {
 
     impl KafkaResponse for StreamsGroupDescribeResponse {
         const API_KEY: ApiKey = ApiKey::new(89);
+    }
+
+    impl StreamsGroupDescribeResponse {
+        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            crate::message::ensure_encode_version::<Self>(version)?;
+
+            for value in &self.groups {
+                value.validate_for_version(version)?;
+            }
+            if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: Self::NAME,
+                    version,
+                });
+            }
+
+            Ok(())
+        }
     }
 
     impl KafkaDecode for StreamsGroupDescribeResponse {
@@ -1431,7 +2003,7 @@ pub mod streams_group_describe_response {
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            crate::message::ensure_encode_version::<Self>(version)?;
+            self.validate_for_version(version)?;
 
             encoder.write_i32(self.throttle_time_ms)?;
             encoder.write_compact_array_len(self.groups.len())?;
@@ -1441,11 +2013,6 @@ pub mod streams_group_describe_response {
 
             if Self::is_flexible(version) {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-            } else if !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
-                    message: Self::NAME,
-                    version,
-                });
             }
 
             Ok(())

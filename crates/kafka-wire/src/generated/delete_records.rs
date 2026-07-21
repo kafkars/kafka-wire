@@ -30,6 +30,7 @@ pub mod delete_records_request {
     }
 
     impl DeleteRecordsTopic {
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 2);
         const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(2, 2));
 
         fn is_flexible(version: ApiVersion) -> bool {
@@ -37,8 +38,40 @@ pub mod delete_records_request {
         }
     }
 
+    impl DeleteRecordsTopic {
+        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            if !Self::SUPPORTED_VERSIONS.contains(version) {
+                return Err(EncodeError::UnsupportedVersion {
+                    message: "DeleteRecordsTopic",
+                    version,
+                    supported: Self::SUPPORTED_VERSIONS,
+                });
+            }
+
+            for value in &self.partitions {
+                value.validate_for_version(version)?;
+            }
+            if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "DeleteRecordsTopic",
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+
     impl KafkaDecode for DeleteRecordsTopic {
         fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            if !Self::SUPPORTED_VERSIONS.contains(version) {
+                return Err(DecodeError::UnsupportedVersion {
+                    message: "DeleteRecordsTopic",
+                    version,
+                    supported: Self::SUPPORTED_VERSIONS,
+                });
+            }
+
             let name = if Self::is_flexible(version) {
                 decoder.read_compact_string()?
             } else {
@@ -74,6 +107,8 @@ pub mod delete_records_request {
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+
             if Self::is_flexible(version) {
                 encoder.write_compact_string(&self.name)?;
             } else {
@@ -90,11 +125,6 @@ pub mod delete_records_request {
 
             if Self::is_flexible(version) {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-            } else if !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
-                    message: "DeleteRecordsTopic",
-                    version,
-                });
             }
 
             Ok(())
@@ -114,6 +144,7 @@ pub mod delete_records_request {
     }
 
     impl DeleteRecordsPartition {
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 2);
         const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(2, 2));
 
         fn is_flexible(version: ApiVersion) -> bool {
@@ -121,8 +152,37 @@ pub mod delete_records_request {
         }
     }
 
+    impl DeleteRecordsPartition {
+        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            if !Self::SUPPORTED_VERSIONS.contains(version) {
+                return Err(EncodeError::UnsupportedVersion {
+                    message: "DeleteRecordsPartition",
+                    version,
+                    supported: Self::SUPPORTED_VERSIONS,
+                });
+            }
+
+            if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "DeleteRecordsPartition",
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+
     impl KafkaDecode for DeleteRecordsPartition {
         fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            if !Self::SUPPORTED_VERSIONS.contains(version) {
+                return Err(DecodeError::UnsupportedVersion {
+                    message: "DeleteRecordsPartition",
+                    version,
+                    supported: Self::SUPPORTED_VERSIONS,
+                });
+            }
+
             let partition_index = decoder.read_i32()?;
             let offset = decoder.read_i64()?;
             let unknown_tagged_fields = if Self::is_flexible(version) {
@@ -145,16 +205,13 @@ pub mod delete_records_request {
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+
             encoder.write_i32(self.partition_index)?;
             encoder.write_i64(self.offset)?;
 
             if Self::is_flexible(version) {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-            } else if !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
-                    message: "DeleteRecordsPartition",
-                    version,
-                });
             }
 
             Ok(())
@@ -185,6 +242,24 @@ pub mod delete_records_request {
 
     impl RequestResponsePair for DeleteRecordsRequest {
         type Response = super::DeleteRecordsResponse;
+    }
+
+    impl DeleteRecordsRequest {
+        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            crate::message::ensure_encode_version::<Self>(version)?;
+
+            for value in &self.topics {
+                value.validate_for_version(version)?;
+            }
+            if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: Self::NAME,
+                    version,
+                });
+            }
+
+            Ok(())
+        }
     }
 
     impl KafkaDecode for DeleteRecordsRequest {
@@ -222,7 +297,7 @@ pub mod delete_records_request {
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            crate::message::ensure_encode_version::<Self>(version)?;
+            self.validate_for_version(version)?;
 
             if Self::is_flexible(version) {
                 encoder.write_compact_array_len(self.topics.len())?;
@@ -236,11 +311,6 @@ pub mod delete_records_request {
 
             if Self::is_flexible(version) {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-            } else if !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
-                    message: Self::NAME,
-                    version,
-                });
             }
 
             Ok(())
@@ -273,6 +343,7 @@ pub mod delete_records_response {
     }
 
     impl DeleteRecordsTopicResult {
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 2);
         const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(2, 2));
 
         fn is_flexible(version: ApiVersion) -> bool {
@@ -280,8 +351,40 @@ pub mod delete_records_response {
         }
     }
 
+    impl DeleteRecordsTopicResult {
+        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            if !Self::SUPPORTED_VERSIONS.contains(version) {
+                return Err(EncodeError::UnsupportedVersion {
+                    message: "DeleteRecordsTopicResult",
+                    version,
+                    supported: Self::SUPPORTED_VERSIONS,
+                });
+            }
+
+            for value in &self.partitions {
+                value.validate_for_version(version)?;
+            }
+            if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "DeleteRecordsTopicResult",
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+
     impl KafkaDecode for DeleteRecordsTopicResult {
         fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            if !Self::SUPPORTED_VERSIONS.contains(version) {
+                return Err(DecodeError::UnsupportedVersion {
+                    message: "DeleteRecordsTopicResult",
+                    version,
+                    supported: Self::SUPPORTED_VERSIONS,
+                });
+            }
+
             let name = if Self::is_flexible(version) {
                 decoder.read_compact_string()?
             } else {
@@ -317,6 +420,8 @@ pub mod delete_records_response {
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+
             if Self::is_flexible(version) {
                 encoder.write_compact_string(&self.name)?;
             } else {
@@ -333,11 +438,6 @@ pub mod delete_records_response {
 
             if Self::is_flexible(version) {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-            } else if !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
-                    message: "DeleteRecordsTopicResult",
-                    version,
-                });
             }
 
             Ok(())
@@ -359,6 +459,7 @@ pub mod delete_records_response {
     }
 
     impl DeleteRecordsPartitionResult {
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 2);
         const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(2, 2));
 
         fn is_flexible(version: ApiVersion) -> bool {
@@ -366,8 +467,37 @@ pub mod delete_records_response {
         }
     }
 
+    impl DeleteRecordsPartitionResult {
+        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            if !Self::SUPPORTED_VERSIONS.contains(version) {
+                return Err(EncodeError::UnsupportedVersion {
+                    message: "DeleteRecordsPartitionResult",
+                    version,
+                    supported: Self::SUPPORTED_VERSIONS,
+                });
+            }
+
+            if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "DeleteRecordsPartitionResult",
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+
     impl KafkaDecode for DeleteRecordsPartitionResult {
         fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            if !Self::SUPPORTED_VERSIONS.contains(version) {
+                return Err(DecodeError::UnsupportedVersion {
+                    message: "DeleteRecordsPartitionResult",
+                    version,
+                    supported: Self::SUPPORTED_VERSIONS,
+                });
+            }
+
             let partition_index = decoder.read_i32()?;
             let low_watermark = decoder.read_i64()?;
             let error_code = decoder.read_i16()?;
@@ -392,17 +522,14 @@ pub mod delete_records_response {
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+
             encoder.write_i32(self.partition_index)?;
             encoder.write_i64(self.low_watermark)?;
             encoder.write_i16(self.error_code)?;
 
             if Self::is_flexible(version) {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-            } else if !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
-                    message: "DeleteRecordsPartitionResult",
-                    version,
-                });
             }
 
             Ok(())
@@ -429,6 +556,24 @@ pub mod delete_records_response {
 
     impl KafkaResponse for DeleteRecordsResponse {
         const API_KEY: ApiKey = ApiKey::new(21);
+    }
+
+    impl DeleteRecordsResponse {
+        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            crate::message::ensure_encode_version::<Self>(version)?;
+
+            for value in &self.topics {
+                value.validate_for_version(version)?;
+            }
+            if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: Self::NAME,
+                    version,
+                });
+            }
+
+            Ok(())
+        }
     }
 
     impl KafkaDecode for DeleteRecordsResponse {
@@ -466,7 +611,7 @@ pub mod delete_records_response {
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            crate::message::ensure_encode_version::<Self>(version)?;
+            self.validate_for_version(version)?;
 
             encoder.write_i32(self.throttle_time_ms)?;
             if Self::is_flexible(version) {
@@ -480,11 +625,6 @@ pub mod delete_records_response {
 
             if Self::is_flexible(version) {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-            } else if !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
-                    message: Self::NAME,
-                    version,
-                });
             }
 
             Ok(())

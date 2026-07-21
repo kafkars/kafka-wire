@@ -30,10 +30,39 @@ pub mod metadata_request {
     }
 
     impl MetadataRequestTopic {
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 13);
         const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(9, 13));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+        }
+    }
+
+    impl MetadataRequestTopic {
+        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            if !Self::SUPPORTED_VERSIONS.contains(version) {
+                return Err(EncodeError::UnsupportedVersion {
+                    message: "MetadataRequestTopic",
+                    version,
+                    supported: Self::SUPPORTED_VERSIONS,
+                });
+            }
+
+            if version.value() <= 9 && self.name.is_none() {
+                return Err(EncodeError::NullNotAllowed {
+                    message: "MetadataRequestTopic",
+                    field: "Name",
+                    version,
+                });
+            }
+            if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "MetadataRequestTopic",
+                    version,
+                });
+            }
+
+            Ok(())
         }
     }
 
@@ -49,6 +78,14 @@ pub mod metadata_request {
 
     impl KafkaDecode for MetadataRequestTopic {
         fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            if !Self::SUPPORTED_VERSIONS.contains(version) {
+                return Err(DecodeError::UnsupportedVersion {
+                    message: "MetadataRequestTopic",
+                    version,
+                    supported: Self::SUPPORTED_VERSIONS,
+                });
+            }
+
             let topic_id = if version.value() >= 10 {
                 decoder.read_uuid()?
             } else {
@@ -83,15 +120,10 @@ pub mod metadata_request {
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+
             if version.value() >= 10 {
                 encoder.write_uuid(self.topic_id)?;
-            }
-            if version.value() <= 9 && self.name.is_none() {
-                return Err(EncodeError::NullNotAllowed {
-                    message: "MetadataRequestTopic",
-                    field: "Name",
-                    version,
-                });
             }
             if Self::is_flexible(version) {
                 encoder.write_compact_nullable_string(self.name.as_ref())?;
@@ -101,11 +133,6 @@ pub mod metadata_request {
 
             if Self::is_flexible(version) {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-            } else if !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
-                    message: "MetadataRequestTopic",
-                    version,
-                });
             }
 
             Ok(())
@@ -152,6 +179,56 @@ pub mod metadata_request {
 
     impl RequestResponsePair for MetadataRequest {
         type Response = super::MetadataResponse;
+    }
+
+    impl MetadataRequest {
+        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            crate::message::ensure_encode_version::<Self>(version)?;
+
+            if version.value() < 4 && !self.allow_auto_topic_creation {
+                return Err(EncodeError::FieldNotRepresentable {
+                    message: Self::NAME,
+                    field: "AllowAutoTopicCreation",
+                    version,
+                });
+            }
+            if (version.value() < 8 || version.value() > 10)
+                && self.include_cluster_authorized_operations
+            {
+                return Err(EncodeError::FieldNotRepresentable {
+                    message: Self::NAME,
+                    field: "IncludeClusterAuthorizedOperations",
+                    version,
+                });
+            }
+            if version.value() < 8 && self.include_topic_authorized_operations {
+                return Err(EncodeError::FieldNotRepresentable {
+                    message: Self::NAME,
+                    field: "IncludeTopicAuthorizedOperations",
+                    version,
+                });
+            }
+            if version.value() <= 0 && self.topics.is_none() {
+                return Err(EncodeError::NullNotAllowed {
+                    message: Self::NAME,
+                    field: "Topics",
+                    version,
+                });
+            }
+            if let Some(values) = &self.topics {
+                for value in values {
+                    value.validate_for_version(version)?;
+                }
+            }
+            if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: Self::NAME,
+                    version,
+                });
+            }
+
+            Ok(())
+        }
     }
 
     impl KafkaDecode for MetadataRequest {
@@ -214,39 +291,8 @@ pub mod metadata_request {
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            crate::message::ensure_encode_version::<Self>(version)?;
+            self.validate_for_version(version)?;
 
-            if version.value() < 4 && !self.allow_auto_topic_creation {
-                return Err(EncodeError::FieldNotRepresentable {
-                    message: Self::NAME,
-                    field: "AllowAutoTopicCreation",
-                    version,
-                });
-            }
-            if (version.value() < 8 || version.value() > 10)
-                && self.include_cluster_authorized_operations
-            {
-                return Err(EncodeError::FieldNotRepresentable {
-                    message: Self::NAME,
-                    field: "IncludeClusterAuthorizedOperations",
-                    version,
-                });
-            }
-            if version.value() < 8 && self.include_topic_authorized_operations {
-                return Err(EncodeError::FieldNotRepresentable {
-                    message: Self::NAME,
-                    field: "IncludeTopicAuthorizedOperations",
-                    version,
-                });
-            }
-
-            if version.value() <= 0 && self.topics.is_none() {
-                return Err(EncodeError::NullNotAllowed {
-                    message: Self::NAME,
-                    field: "Topics",
-                    version,
-                });
-            }
             if Self::is_flexible(version) {
                 encoder.write_compact_nullable_array_len(self.topics.as_ref().map(Vec::len))?;
             } else {
@@ -269,11 +315,6 @@ pub mod metadata_request {
 
             if Self::is_flexible(version) {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-            } else if !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
-                    message: Self::NAME,
-                    version,
-                });
             }
 
             Ok(())
@@ -310,6 +351,7 @@ pub mod metadata_response {
     }
 
     impl MetadataResponseBroker {
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 13);
         const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(9, 13));
 
         fn is_flexible(version: ApiVersion) -> bool {
@@ -317,8 +359,37 @@ pub mod metadata_response {
         }
     }
 
+    impl MetadataResponseBroker {
+        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            if !Self::SUPPORTED_VERSIONS.contains(version) {
+                return Err(EncodeError::UnsupportedVersion {
+                    message: "MetadataResponseBroker",
+                    version,
+                    supported: Self::SUPPORTED_VERSIONS,
+                });
+            }
+
+            if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "MetadataResponseBroker",
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+
     impl KafkaDecode for MetadataResponseBroker {
         fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            if !Self::SUPPORTED_VERSIONS.contains(version) {
+                return Err(DecodeError::UnsupportedVersion {
+                    message: "MetadataResponseBroker",
+                    version,
+                    supported: Self::SUPPORTED_VERSIONS,
+                });
+            }
+
             let node_id = decoder.read_i32()?;
             let host = if Self::is_flexible(version) {
                 decoder.read_compact_string()?
@@ -357,6 +428,8 @@ pub mod metadata_response {
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+
             encoder.write_i32(self.node_id)?;
             if Self::is_flexible(version) {
                 encoder.write_compact_string(&self.host)?;
@@ -374,11 +447,6 @@ pub mod metadata_response {
 
             if Self::is_flexible(version) {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-            } else if !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
-                    message: "MetadataResponseBroker",
-                    version,
-                });
             }
 
             Ok(())
@@ -406,10 +474,49 @@ pub mod metadata_response {
     }
 
     impl MetadataResponseTopic {
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 13);
         const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(9, 13));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+        }
+    }
+
+    impl MetadataResponseTopic {
+        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            if !Self::SUPPORTED_VERSIONS.contains(version) {
+                return Err(EncodeError::UnsupportedVersion {
+                    message: "MetadataResponseTopic",
+                    version,
+                    supported: Self::SUPPORTED_VERSIONS,
+                });
+            }
+
+            if version.value() < 8 && self.topic_authorized_operations != -2_147_483_648 {
+                return Err(EncodeError::FieldNotRepresentable {
+                    message: "MetadataResponseTopic",
+                    field: "TopicAuthorizedOperations",
+                    version,
+                });
+            }
+            if version.value() <= 11 && self.name.is_none() {
+                return Err(EncodeError::NullNotAllowed {
+                    message: "MetadataResponseTopic",
+                    field: "Name",
+                    version,
+                });
+            }
+            for value in &self.partitions {
+                value.validate_for_version(version)?;
+            }
+            if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "MetadataResponseTopic",
+                    version,
+                });
+            }
+
+            Ok(())
         }
     }
 
@@ -429,6 +536,14 @@ pub mod metadata_response {
 
     impl KafkaDecode for MetadataResponseTopic {
         fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            if !Self::SUPPORTED_VERSIONS.contains(version) {
+                return Err(DecodeError::UnsupportedVersion {
+                    message: "MetadataResponseTopic",
+                    version,
+                    supported: Self::SUPPORTED_VERSIONS,
+                });
+            }
+
             let error_code = decoder.read_i16()?;
             let name = if version.value() >= 12 {
                 decoder.read_compact_nullable_string()?
@@ -488,14 +603,9 @@ pub mod metadata_response {
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+
             encoder.write_i16(self.error_code)?;
-            if version.value() <= 11 && self.name.is_none() {
-                return Err(EncodeError::NullNotAllowed {
-                    message: "MetadataResponseTopic",
-                    field: "Name",
-                    version,
-                });
-            }
             if Self::is_flexible(version) {
                 encoder.write_compact_nullable_string(self.name.as_ref())?;
             } else {
@@ -521,11 +631,6 @@ pub mod metadata_response {
 
             if Self::is_flexible(version) {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-            } else if !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
-                    message: "MetadataResponseTopic",
-                    version,
-                });
             }
 
             Ok(())
@@ -555,10 +660,32 @@ pub mod metadata_response {
     }
 
     impl MetadataResponsePartition {
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 13);
         const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(9, 13));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+        }
+    }
+
+    impl MetadataResponsePartition {
+        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            if !Self::SUPPORTED_VERSIONS.contains(version) {
+                return Err(EncodeError::UnsupportedVersion {
+                    message: "MetadataResponsePartition",
+                    version,
+                    supported: Self::SUPPORTED_VERSIONS,
+                });
+            }
+
+            if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "MetadataResponsePartition",
+                    version,
+                });
+            }
+
+            Ok(())
         }
     }
 
@@ -579,6 +706,14 @@ pub mod metadata_response {
 
     impl KafkaDecode for MetadataResponsePartition {
         fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            if !Self::SUPPORTED_VERSIONS.contains(version) {
+                return Err(DecodeError::UnsupportedVersion {
+                    message: "MetadataResponsePartition",
+                    version,
+                    supported: Self::SUPPORTED_VERSIONS,
+                });
+            }
+
             let error_code = decoder.read_i16()?;
             let partition_index = decoder.read_i32()?;
             let leader_id = decoder.read_i32()?;
@@ -638,6 +773,8 @@ pub mod metadata_response {
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+
             encoder.write_i16(self.error_code)?;
             encoder.write_i32(self.partition_index)?;
             encoder.write_i32(self.leader_id)?;
@@ -673,11 +810,6 @@ pub mod metadata_response {
 
             if Self::is_flexible(version) {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-            } else if !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
-                    message: "MetadataResponsePartition",
-                    version,
-                });
             }
 
             Ok(())
@@ -729,6 +861,36 @@ pub mod metadata_response {
 
     impl KafkaResponse for MetadataResponse {
         const API_KEY: ApiKey = ApiKey::new(3);
+    }
+
+    impl MetadataResponse {
+        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            crate::message::ensure_encode_version::<Self>(version)?;
+
+            if (version.value() < 8 || version.value() > 10)
+                && self.cluster_authorized_operations != -2_147_483_648
+            {
+                return Err(EncodeError::FieldNotRepresentable {
+                    message: Self::NAME,
+                    field: "ClusterAuthorizedOperations",
+                    version,
+                });
+            }
+            for value in &self.brokers {
+                value.validate_for_version(version)?;
+            }
+            for value in &self.topics {
+                value.validate_for_version(version)?;
+            }
+            if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: Self::NAME,
+                    version,
+                });
+            }
+
+            Ok(())
+        }
     }
 
     impl KafkaDecode for MetadataResponse {
@@ -809,17 +971,7 @@ pub mod metadata_response {
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            crate::message::ensure_encode_version::<Self>(version)?;
-
-            if (version.value() < 8 || version.value() > 10)
-                && self.cluster_authorized_operations != -2_147_483_648
-            {
-                return Err(EncodeError::FieldNotRepresentable {
-                    message: Self::NAME,
-                    field: "ClusterAuthorizedOperations",
-                    version,
-                });
-            }
+            self.validate_for_version(version)?;
 
             if version.value() >= 3 {
                 encoder.write_i32(self.throttle_time_ms)?;
@@ -859,11 +1011,6 @@ pub mod metadata_response {
 
             if Self::is_flexible(version) {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-            } else if !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
-                    message: Self::NAME,
-                    version,
-                });
             }
 
             Ok(())

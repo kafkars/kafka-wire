@@ -39,6 +39,15 @@ pub mod sasl_handshake_request {
         type Response = super::SaslHandshakeResponse;
     }
 
+    impl SaslHandshakeRequest {
+        #[allow(clippy::unused_self)]
+        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            crate::message::ensure_encode_version::<Self>(version)?;
+
+            Ok(())
+        }
+    }
+
     impl KafkaDecode for SaslHandshakeRequest {
         fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
             crate::message::ensure_decode_version::<Self>(version)?;
@@ -55,7 +64,7 @@ pub mod sasl_handshake_request {
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            crate::message::ensure_encode_version::<Self>(version)?;
+            self.validate_for_version(version)?;
 
             encoder.write_string(&self.mechanism)?;
 
@@ -96,6 +105,15 @@ pub mod sasl_handshake_response {
         const API_KEY: ApiKey = ApiKey::new(17);
     }
 
+    impl SaslHandshakeResponse {
+        #[allow(clippy::unused_self)]
+        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            crate::message::ensure_encode_version::<Self>(version)?;
+
+            Ok(())
+        }
+    }
+
     impl KafkaDecode for SaslHandshakeResponse {
         fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
             crate::message::ensure_decode_version::<Self>(version)?;
@@ -119,7 +137,7 @@ pub mod sasl_handshake_response {
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            crate::message::ensure_encode_version::<Self>(version)?;
+            self.validate_for_version(version)?;
 
             encoder.write_i16(self.error_code)?;
             encoder.write_array_len(self.mechanisms.len())?;

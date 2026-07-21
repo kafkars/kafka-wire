@@ -1,0 +1,54 @@
+[package]
+name = "kafka-wire-fuzz"
+version = "0.0.0"
+edition = "2024"
+publish = false
+
+[package.metadata]
+cargo-fuzz = true
+
+[dependencies]
+bytes = "1.10"
+kafka-wire = { path = "../crates/kafka-wire" }
+kafka-wire-core = { path = "../crates/kafka-wire-core" }
+kafka-wire-records = { path = "../crates/kafka-wire-records" }
+kafka-wire-schema = { path = "../crates/kafka-wire-schema" }
+libfuzzer-sys = "=0.4.13"
+
+[workspace]
+members = ["."]
+
+[[bin]]
+name = "jsonc"
+path = "fuzz_targets/jsonc.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "schema_values"
+path = "fuzz_targets/schema_values.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "wire_decode"
+path = "fuzz_targets/wire_decode.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "record_batch"
+path = "fuzz_targets/record_batch.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "generated_roundtrip"
+path = "fuzz_targets/generated_roundtrip.rs"
+test = false
+doc = false
+bench = false

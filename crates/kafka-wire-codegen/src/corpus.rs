@@ -100,6 +100,7 @@ pub fn render_corpus(workspace_root: impl AsRef<Path>) -> Result<CorpusRender, G
     }
 
     let grouped = group_sources(corpus.sources)?;
+    let overrides = HeaderOverrides::read(workspace, &lock, &grouped.api)?;
 
     // Headers and data schemas answer to no API key and render into one module
     // of their own rather than joining a pair.
@@ -144,7 +145,6 @@ pub fn render_corpus(workspace_root: impl AsRef<Path>) -> Result<CorpusRender, G
     // and so cannot answer the one question it exists to ask. `header_version`
     // is not keyed by a schema and has no outcome to record, but it is a module
     // the facade names, which is enough.
-    let overrides = HeaderOverrides::read(workspace)?;
     let facades = format_rendered_rust(
         BTreeMap::from([
             (

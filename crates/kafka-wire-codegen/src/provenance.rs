@@ -1,15 +1,66 @@
-//! Compiler identity stamped into every generated artifact.
+//! Compiler identity and content-addressed semantic-input provenance.
 //!
-//! This module owns the single answer to "which generator produced this tree",
-//! and the `@generated` banner that carries it into Rust source. The version is
-//! read from the generator's own package metadata so a release cannot leave a
-//! stale number behind in the manifest or the banner.
-//!
-//! It deliberately does not own upstream protocol provenance — repository,
-//! commit, and source digests come from the lockfile.
+//! This module owns the single generator identity, generated banner, and the
+//! canonical digest joining every reviewed input that can change emitted Rust.
+
+use std::path::Path;
+
+use crate::{
+    GenerationError,
+    source::{append_component, compiler_source_bytes, hex_digest, rustfmt_source_bytes},
+};
 
 /// Name and version of the compiler that produced the generated tree.
 pub(crate) const GENERATOR: &str = concat!("kafka-wire-codegen ", env!("CARGO_PKG_VERSION"));
+
+/// Digests of every semantic input represented in the generated manifest.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub(crate) struct SemanticInputDigests {
+    pub(crate) aggregate_sha256: String,
+    pub(crate) protocol_lock_sha256: String,
+    pub(crate) headers_override_sha256: String,
+    pub(crate) schema_exceptions_sha256: String,
+    pub(crate) compiler_source_sha256: String,
+    pub(crate) rustfmt_sha256: String,
+    pub(crate) rustfmt_identity: String,
+}
+
+/// Hashes exact parsed documents plus compiler and formatter behavior inputs.
+pub(crate) fn semantic_inputs(
+    workspace_root: &Path,
+    protocol_lock: &[u8],
+    headers_override: &[u8],
+    schema_exceptions: &[u8],
+    ir_version: u32,
+    rustfmt_identity: String,
+) -> Result<SemanticInputDigests, GenerationError> {
+    let compiler_source = compiler_source_bytes()?;
+    let rustfmt = rustfmt_source_bytes(workspace_root, &rustfmt_identity)?;
+
+    let protocol_lock_sha256 = hex_digest(protocol_lock);
+    let headers_override_sha256 = hex_digest(headers_override);
+    let schema_exceptions_sha256 = hex_digest(schema_exceptions);
+    let compiler_source_sha256 = hex_digest(&compiler_source);
+    let rustfmt_sha256 = hex_digest(&rustfmt);
+
+    let mut aggregate = Vec::new();
+    append_component(&mut aggregate, "protocol.lock", protocol_lock);
+    append_component(&mut aggregate, "headers.toml", headers_override);
+    append_component(&mut aggregate, "schema_exceptions.toml", schema_exceptions);
+    append_component(&mut aggregate, "compiler-source", &compiler_source);
+    append_component(&mut aggregate, "rustfmt", &rustfmt);
+    append_component(&mut aggregate, "ir-version", &ir_version.to_be_bytes());
+
+    Ok(SemanticInputDigests {
+        aggregate_sha256: hex_digest(&aggregate),
+        protocol_lock_sha256,
+        headers_override_sha256,
+        schema_exceptions_sha256,
+        compiler_source_sha256,
+        rustfmt_sha256,
+        rustfmt_identity,
+    })
+}
 
 /// Returns the provenance banner that opens every generated Rust file.
 pub(crate) fn generated_banner() -> String {

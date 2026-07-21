@@ -59,14 +59,27 @@ pub struct VersionRange {
 }
 
 impl VersionRange {
-    /// Creates an inclusive range.
+    /// Creates an inclusive range, panicking if `min > max`.
     ///
-    /// Callers should provide `min <= max`; generated constants are validated
-    /// before emission.
+    /// Generated constants are compiler-validated, while dynamic callers can
+    /// use [`Self::try_new`] when invalid input is expected.
     pub const fn new(min: i16, max: i16) -> Self {
+        assert!(min <= max, "version range minimum exceeds maximum");
         Self {
             min: ApiVersion::new(min),
             max: ApiVersion::new(max),
+        }
+    }
+
+    /// Creates an inclusive range when its bounds are ordered.
+    pub const fn try_new(min: i16, max: i16) -> Option<Self> {
+        if min <= max {
+            Some(Self {
+                min: ApiVersion::new(min),
+                max: ApiVersion::new(max),
+            })
+        } else {
+            None
         }
     }
 

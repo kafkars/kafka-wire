@@ -17,9 +17,7 @@ use crate::{
     render::{field, text::RustText},
 };
 
-use super::codec::{
-    Owner, local, render_array_body, render_array_encode, render_nullable_array_encode,
-};
+use super::codec::{local, render_array_body, render_array_encode, render_nullable_array_encode};
 use super::imports::spell;
 
 /// Whether this field travels in the tagged-field section rather than inline.
@@ -153,7 +151,6 @@ pub(super) fn render_tagged_encode(
     rust: &mut RustText,
     fields: &[Field],
     message: &Message,
-    owner: Owner<'_>,
 ) -> Result<(), GenerationError> {
     let tagged = known_tags(fields);
     rust.blank();
@@ -170,14 +167,6 @@ pub(super) fn render_tagged_encode(
         }
         rust.line("encoder.write_merged_tagged_fields(known, &self.unknown_tagged_fields)?;");
     }
-    rust.reopen("} else if !self.unknown_tagged_fields.is_empty() {");
-    rust.open(format!(
-        "return Err({}::TaggedFieldsNotRepresentable",
-        spell(message, "EncodeError")
-    ));
-    rust.line(format!("message: {},", owner.name()));
-    rust.line("version,");
-    rust.close(");");
     rust.close("");
     Ok(())
 }

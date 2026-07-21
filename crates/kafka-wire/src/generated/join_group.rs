@@ -30,6 +30,7 @@ pub mod join_group_request {
     }
 
     impl JoinGroupRequestProtocol {
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 9);
         const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(6, 9));
 
         fn is_flexible(version: ApiVersion) -> bool {
@@ -37,8 +38,37 @@ pub mod join_group_request {
         }
     }
 
+    impl JoinGroupRequestProtocol {
+        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            if !Self::SUPPORTED_VERSIONS.contains(version) {
+                return Err(EncodeError::UnsupportedVersion {
+                    message: "JoinGroupRequestProtocol",
+                    version,
+                    supported: Self::SUPPORTED_VERSIONS,
+                });
+            }
+
+            if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "JoinGroupRequestProtocol",
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+
     impl KafkaDecode for JoinGroupRequestProtocol {
         fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            if !Self::SUPPORTED_VERSIONS.contains(version) {
+                return Err(DecodeError::UnsupportedVersion {
+                    message: "JoinGroupRequestProtocol",
+                    version,
+                    supported: Self::SUPPORTED_VERSIONS,
+                });
+            }
+
             let name = if Self::is_flexible(version) {
                 decoder.read_compact_string()?
             } else {
@@ -69,6 +99,8 @@ pub mod join_group_request {
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+
             if Self::is_flexible(version) {
                 encoder.write_compact_string(&self.name)?;
             } else {
@@ -82,11 +114,6 @@ pub mod join_group_request {
 
             if Self::is_flexible(version) {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-            } else if !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
-                    message: "JoinGroupRequestProtocol",
-                    version,
-                });
             }
 
             Ok(())
@@ -145,6 +172,31 @@ pub mod join_group_request {
 
     impl RequestResponsePair for JoinGroupRequest {
         type Response = super::JoinGroupResponse;
+    }
+
+    impl JoinGroupRequest {
+        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            crate::message::ensure_encode_version::<Self>(version)?;
+
+            if version.value() < 5 && self.group_instance_id.is_some() {
+                return Err(EncodeError::FieldNotRepresentable {
+                    message: Self::NAME,
+                    field: "GroupInstanceId",
+                    version,
+                });
+            }
+            for value in &self.protocols {
+                value.validate_for_version(version)?;
+            }
+            if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: Self::NAME,
+                    version,
+                });
+            }
+
+            Ok(())
+        }
     }
 
     impl KafkaDecode for JoinGroupRequest {
@@ -222,15 +274,7 @@ pub mod join_group_request {
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            crate::message::ensure_encode_version::<Self>(version)?;
-
-            if version.value() < 5 && self.group_instance_id.is_some() {
-                return Err(EncodeError::FieldNotRepresentable {
-                    message: Self::NAME,
-                    field: "GroupInstanceId",
-                    version,
-                });
-            }
+            self.validate_for_version(version)?;
 
             if Self::is_flexible(version) {
                 encoder.write_compact_string(&self.group_id)?;
@@ -272,11 +316,6 @@ pub mod join_group_request {
 
             if Self::is_flexible(version) {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-            } else if !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
-                    message: Self::NAME,
-                    version,
-                });
             }
 
             Ok(())
@@ -311,6 +350,7 @@ pub mod join_group_response {
     }
 
     impl JoinGroupResponseMember {
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 9);
         const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(6, 9));
 
         fn is_flexible(version: ApiVersion) -> bool {
@@ -318,8 +358,37 @@ pub mod join_group_response {
         }
     }
 
+    impl JoinGroupResponseMember {
+        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            if !Self::SUPPORTED_VERSIONS.contains(version) {
+                return Err(EncodeError::UnsupportedVersion {
+                    message: "JoinGroupResponseMember",
+                    version,
+                    supported: Self::SUPPORTED_VERSIONS,
+                });
+            }
+
+            if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "JoinGroupResponseMember",
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+
     impl KafkaDecode for JoinGroupResponseMember {
         fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            if !Self::SUPPORTED_VERSIONS.contains(version) {
+                return Err(DecodeError::UnsupportedVersion {
+                    message: "JoinGroupResponseMember",
+                    version,
+                    supported: Self::SUPPORTED_VERSIONS,
+                });
+            }
+
             let member_id = if Self::is_flexible(version) {
                 decoder.read_compact_string()?
             } else {
@@ -360,6 +429,8 @@ pub mod join_group_response {
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+
             if Self::is_flexible(version) {
                 encoder.write_compact_string(&self.member_id)?;
             } else {
@@ -380,11 +451,6 @@ pub mod join_group_response {
 
             if Self::is_flexible(version) {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-            } else if !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
-                    message: "JoinGroupResponseMember",
-                    version,
-                });
             }
 
             Ok(())
@@ -442,6 +508,38 @@ pub mod join_group_response {
 
     impl KafkaResponse for JoinGroupResponse {
         const API_KEY: ApiKey = ApiKey::new(11);
+    }
+
+    impl JoinGroupResponse {
+        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            crate::message::ensure_encode_version::<Self>(version)?;
+
+            if version.value() < 9 && self.skip_assignment {
+                return Err(EncodeError::FieldNotRepresentable {
+                    message: Self::NAME,
+                    field: "SkipAssignment",
+                    version,
+                });
+            }
+            if version.value() <= 6 && self.protocol_name.is_none() {
+                return Err(EncodeError::NullNotAllowed {
+                    message: Self::NAME,
+                    field: "ProtocolName",
+                    version,
+                });
+            }
+            for value in &self.members {
+                value.validate_for_version(version)?;
+            }
+            if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: Self::NAME,
+                    version,
+                });
+            }
+
+            Ok(())
+        }
     }
 
     impl KafkaDecode for JoinGroupResponse {
@@ -521,15 +619,7 @@ pub mod join_group_response {
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            crate::message::ensure_encode_version::<Self>(version)?;
-
-            if version.value() < 9 && self.skip_assignment {
-                return Err(EncodeError::FieldNotRepresentable {
-                    message: Self::NAME,
-                    field: "SkipAssignment",
-                    version,
-                });
-            }
+            self.validate_for_version(version)?;
 
             if version.value() >= 2 {
                 encoder.write_i32(self.throttle_time_ms)?;
@@ -538,13 +628,6 @@ pub mod join_group_response {
             encoder.write_i32(self.generation_id)?;
             if version.value() >= 7 {
                 encoder.write_compact_nullable_string(self.protocol_type.as_ref())?;
-            }
-            if version.value() <= 6 && self.protocol_name.is_none() {
-                return Err(EncodeError::NullNotAllowed {
-                    message: Self::NAME,
-                    field: "ProtocolName",
-                    version,
-                });
             }
             if Self::is_flexible(version) {
                 encoder.write_compact_nullable_string(self.protocol_name.as_ref())?;
@@ -575,11 +658,6 @@ pub mod join_group_response {
 
             if Self::is_flexible(version) {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-            } else if !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
-                    message: Self::NAME,
-                    version,
-                });
             }
 
             Ok(())

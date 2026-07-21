@@ -1,21 +1,28 @@
-//! Generated-tree comparison, atomic file replacement, and stale cleanup.
+//! Generated-tree comparison and transactional directory replacement.
+//!
+//! It stages a complete sibling before moving the tree and owns no rendering.
 
-use std::{collections::BTreeMap, fs, path::Path};
+use std::{
+    collections::BTreeMap,
+    fs, io,
+    path::{Path, PathBuf},
+    sync::atomic::{AtomicU64, Ordering},
+};
 
 use walkdir::WalkDir;
 
 use crate::{GenerationError, GenerationMode};
 
-const MANIFEST_FILENAME: &str = "MANIFEST.json";
+static TEMP_SEQUENCE: AtomicU64 = AtomicU64::new(0);
 
 /// Summary of one generation or verification run.
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct GenerationReport {
-    /// Files written with new contents.
+    /// Files whose expected contents differ from the prior tree.
     pub written: usize,
     /// Files already equal to expected output.
     pub unchanged: usize,
-    /// Stale generated files removed.
+    /// Stale generated files removed by replacing the prior tree.
     pub removed: usize,
 }
 
@@ -35,22 +42,7 @@ fn check_tree(
     expected: &BTreeMap<String, String>,
 ) -> Result<GenerationReport, GenerationError> {
     let actual = existing_files(root)?;
-    let mut drift = Vec::new();
-    let mut report = GenerationReport::default();
-    for (path, source) in expected {
-        match actual.get(path) {
-            None => drift.push(format!("missing {path}")),
-            Some(actual_source) if actual_source != source => {
-                drift.push(format!("changed {path}"));
-            }
-            Some(_) => report.unchanged += 1,
-        }
-    }
-    for path in actual.keys() {
-        if !expected.contains_key(path) {
-            drift.push(format!("unexpected {path}"));
-        }
-    }
+    let (report, drift) = compare_trees(&actual, expected);
     if drift.is_empty() {
         Ok(report)
     } else {
@@ -64,46 +56,108 @@ fn write_tree(
     root: &Path,
     expected: &BTreeMap<String, String>,
 ) -> Result<GenerationReport, GenerationError> {
-    fs::create_dir_all(root).map_err(|error| GenerationError::io(root, error))?;
     let actual = existing_files(root)?;
-    let mut report = GenerationReport::default();
-    for (relative, source) in expected
-        .iter()
-        .filter(|(relative, _)| relative.as_str() != MANIFEST_FILENAME)
-    {
-        write_expected(root, &actual, relative, source, &mut report)?;
+    let (report, drift) = compare_trees(&actual, expected);
+    if drift.is_empty() {
+        return Ok(report);
     }
-    for relative in actual.keys() {
-        if expected.contains_key(relative) {
-            continue;
-        }
-        let path = root.join(relative);
-        fs::remove_file(&path).map_err(|error| GenerationError::io(&path, error))?;
-        report.removed += 1;
+
+    let parent = root.parent().unwrap_or_else(|| Path::new("."));
+    fs::create_dir_all(parent).map_err(|error| GenerationError::io(parent, error))?;
+    let staging = create_unique_sibling(root, "staging")?;
+    let mut staging_guard = DirectoryGuard::new(staging.clone());
+    write_complete_tree(&staging, expected)?;
+
+    let staged = existing_files(&staging)?;
+    let (_, staged_drift) = compare_trees(&staged, expected);
+    if !staged_drift.is_empty() {
+        return Err(GenerationError::StagedTreeMismatch {
+            details: staged_drift.join("\n"),
+        });
     }
-    if let Some(source) = expected.get(MANIFEST_FILENAME) {
-        write_expected(root, &actual, MANIFEST_FILENAME, source, &mut report)?;
-    }
+
+    replace_directory(root, &staging)?;
+    staging_guard.disarm();
     Ok(report)
 }
 
-fn write_expected(
+fn write_complete_tree(
     root: &Path,
-    actual: &BTreeMap<String, String>,
-    relative: &str,
-    source: &str,
-    report: &mut GenerationReport,
+    expected: &BTreeMap<String, String>,
 ) -> Result<(), GenerationError> {
-    if actual
-        .get(relative)
-        .is_some_and(|current| current == source)
-    {
-        report.unchanged += 1;
-        return Ok(());
+    for (relative, source) in expected {
+        let path = root.join(relative);
+        let parent = path.parent().unwrap_or(root);
+        fs::create_dir_all(parent).map_err(|error| GenerationError::io(parent, error))?;
+        fs::write(&path, source).map_err(|error| GenerationError::io(&path, error))?;
     }
-    write_atomic(&root.join(relative), source)?;
-    report.written += 1;
     Ok(())
+}
+
+/// Swaps a complete sibling directory into place without rename-over-existing.
+///
+/// Moving the old tree aside first is portable across Windows and Unix; a
+/// failed staged install restores it before returning.
+pub(crate) fn replace_directory(root: &Path, staging: &Path) -> Result<(), GenerationError> {
+    if !root.exists() {
+        return fs::rename(staging, root).map_err(|source| GenerationError::TreeSwap {
+            root: root.to_path_buf(),
+            source,
+            rollback: "not needed; no prior tree was moved".to_owned(),
+        });
+    }
+
+    // Exclusive staging makes its derived backup name process-safe.
+    let mut backup_name = staging.as_os_str().to_os_string();
+    backup_name.push(".backup");
+    let backup = PathBuf::from(backup_name);
+    fs::rename(root, &backup).map_err(|source| GenerationError::TreeSwap {
+        root: root.to_path_buf(),
+        source,
+        rollback: "not needed; the prior tree was not moved".to_owned(),
+    })?;
+
+    if let Err(source) = fs::rename(staging, root) {
+        let rollback = match fs::rename(&backup, root) {
+            Ok(()) => "succeeded".to_owned(),
+            Err(error) => format!("failed: {error}"),
+        };
+        return Err(GenerationError::TreeSwap {
+            root: root.to_path_buf(),
+            source,
+            rollback,
+        });
+    }
+
+    fs::remove_dir_all(&backup).map_err(|error| GenerationError::io(&backup, error))
+}
+
+fn compare_trees(
+    actual: &BTreeMap<String, String>,
+    expected: &BTreeMap<String, String>,
+) -> (GenerationReport, Vec<String>) {
+    let mut report = GenerationReport::default();
+    let mut drift = Vec::new();
+    for (path, source) in expected {
+        match actual.get(path) {
+            None => {
+                report.written += 1;
+                drift.push(format!("missing {path}"));
+            }
+            Some(actual_source) if actual_source != source => {
+                report.written += 1;
+                drift.push(format!("changed {path}"));
+            }
+            Some(_) => report.unchanged += 1,
+        }
+    }
+    for path in actual.keys() {
+        if !expected.contains_key(path) {
+            report.removed += 1;
+            drift.push(format!("unexpected {path}"));
+        }
+    }
+    (report, drift)
 }
 
 fn existing_files(root: &Path) -> Result<BTreeMap<String, String>, GenerationError> {
@@ -116,7 +170,7 @@ fn existing_files(root: &Path) -> Result<BTreeMap<String, String>, GenerationErr
             let path = error
                 .path()
                 .map_or_else(|| root.to_path_buf(), Path::to_path_buf);
-            GenerationError::io(path, std::io::Error::other(error))
+            GenerationError::io(path, io::Error::other(error))
         })?;
         if !entry.file_type().is_file() {
             continue;
@@ -133,10 +187,54 @@ fn existing_files(root: &Path) -> Result<BTreeMap<String, String>, GenerationErr
     Ok(files)
 }
 
-fn write_atomic(path: &Path, source: &str) -> Result<(), GenerationError> {
-    let parent = path.parent().unwrap_or_else(|| Path::new("."));
-    fs::create_dir_all(parent).map_err(|error| GenerationError::io(parent, error))?;
-    let temporary = path.with_extension("generated.tmp");
-    fs::write(&temporary, source).map_err(|error| GenerationError::io(&temporary, error))?;
-    fs::rename(&temporary, path).map_err(|error| GenerationError::io(path, error))
+fn create_unique_sibling(root: &Path, role: &str) -> Result<PathBuf, GenerationError> {
+    for _ in 0..1_000 {
+        let candidate = unique_sibling_path(root, role);
+        match fs::create_dir(&candidate) {
+            Ok(()) => return Ok(candidate),
+            Err(error) if error.kind() == io::ErrorKind::AlreadyExists => {}
+            Err(error) => return Err(GenerationError::io(&candidate, error)),
+        }
+    }
+    let candidate = unique_sibling_path(root, role);
+    Err(GenerationError::io(
+        &candidate,
+        io::Error::new(
+            io::ErrorKind::AlreadyExists,
+            "could not allocate a unique generated-tree sibling",
+        ),
+    ))
+}
+
+fn unique_sibling_path(root: &Path, role: &str) -> PathBuf {
+    let parent = root.parent().unwrap_or_else(|| Path::new("."));
+    let name = root
+        .file_name()
+        .and_then(|name| name.to_str())
+        .unwrap_or("generated");
+    let sequence = TEMP_SEQUENCE.fetch_add(1, Ordering::Relaxed);
+    parent.join(format!(".{name}.{role}.{sequence}"))
+}
+
+struct DirectoryGuard {
+    path: PathBuf,
+    armed: bool,
+}
+
+impl DirectoryGuard {
+    fn new(path: PathBuf) -> Self {
+        Self { path, armed: true }
+    }
+
+    fn disarm(&mut self) {
+        self.armed = false;
+    }
+}
+
+impl Drop for DirectoryGuard {
+    fn drop(&mut self) {
+        if self.armed {
+            let _ = fs::remove_dir_all(&self.path);
+        }
+    }
 }

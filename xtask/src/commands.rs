@@ -81,7 +81,7 @@ fn generate_all() -> Result<(), String> {
         "compiling the probe crate at {}",
         probe.crate_root.display()
     );
-    cargo_in(&probe.crate_root, &["check", "--quiet"])
+    cargo_in(&probe.crate_root, &["check", "--quiet", "--offline"])
 }
 
 fn cargo(arguments: &[&str]) -> Result<(), String> {

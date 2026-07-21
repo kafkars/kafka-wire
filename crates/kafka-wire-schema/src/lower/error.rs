@@ -8,6 +8,18 @@ use thiserror::Error;
 #[derive(Clone, Debug, Error, Eq, PartialEq)]
 #[non_exhaustive]
 pub enum LowerError {
+    /// A source name cannot become a valid Rust identifier.
+    #[error("{path}: {kind} {name} cannot be emitted as Rust: {reason}")]
+    Identifier {
+        /// Source path.
+        path: PathBuf,
+        /// Kind of named source item.
+        kind: &'static str,
+        /// Upstream spelling.
+        name: String,
+        /// Identifier diagnostic.
+        reason: String,
+    },
     /// The adapter encountered new message-level source properties.
     #[error("{path}: unmodeled message properties: {properties}")]
     MessageProperties {

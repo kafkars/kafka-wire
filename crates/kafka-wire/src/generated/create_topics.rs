@@ -36,6 +36,7 @@ pub mod create_topics_request {
     }
 
     impl CreatableTopic {
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(2, 7);
         const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(5, 7));
 
         fn is_flexible(version: ApiVersion) -> bool {
@@ -43,8 +44,43 @@ pub mod create_topics_request {
         }
     }
 
+    impl CreatableTopic {
+        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            if !Self::SUPPORTED_VERSIONS.contains(version) {
+                return Err(EncodeError::UnsupportedVersion {
+                    message: "CreatableTopic",
+                    version,
+                    supported: Self::SUPPORTED_VERSIONS,
+                });
+            }
+
+            for value in &self.assignments {
+                value.validate_for_version(version)?;
+            }
+            for value in &self.configs {
+                value.validate_for_version(version)?;
+            }
+            if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "CreatableTopic",
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+
     impl KafkaDecode for CreatableTopic {
         fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            if !Self::SUPPORTED_VERSIONS.contains(version) {
+                return Err(DecodeError::UnsupportedVersion {
+                    message: "CreatableTopic",
+                    version,
+                    supported: Self::SUPPORTED_VERSIONS,
+                });
+            }
+
             let name = if Self::is_flexible(version) {
                 decoder.read_compact_string()?
             } else {
@@ -95,6 +131,8 @@ pub mod create_topics_request {
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+
             if Self::is_flexible(version) {
                 encoder.write_compact_string(&self.name)?;
             } else {
@@ -121,11 +159,6 @@ pub mod create_topics_request {
 
             if Self::is_flexible(version) {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-            } else if !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
-                    message: "CreatableTopic",
-                    version,
-                });
             }
 
             Ok(())
@@ -145,6 +178,7 @@ pub mod create_topics_request {
     }
 
     impl CreatableReplicaAssignment {
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(2, 7);
         const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(5, 7));
 
         fn is_flexible(version: ApiVersion) -> bool {
@@ -152,8 +186,37 @@ pub mod create_topics_request {
         }
     }
 
+    impl CreatableReplicaAssignment {
+        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            if !Self::SUPPORTED_VERSIONS.contains(version) {
+                return Err(EncodeError::UnsupportedVersion {
+                    message: "CreatableReplicaAssignment",
+                    version,
+                    supported: Self::SUPPORTED_VERSIONS,
+                });
+            }
+
+            if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "CreatableReplicaAssignment",
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+
     impl KafkaDecode for CreatableReplicaAssignment {
         fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            if !Self::SUPPORTED_VERSIONS.contains(version) {
+                return Err(DecodeError::UnsupportedVersion {
+                    message: "CreatableReplicaAssignment",
+                    version,
+                    supported: Self::SUPPORTED_VERSIONS,
+                });
+            }
+
             let partition_index = decoder.read_i32()?;
             let broker_ids = {
                 let length = if Self::is_flexible(version) {
@@ -183,6 +246,8 @@ pub mod create_topics_request {
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+
             encoder.write_i32(self.partition_index)?;
             if Self::is_flexible(version) {
                 encoder.write_compact_array_len(self.broker_ids.len())?;
@@ -195,11 +260,6 @@ pub mod create_topics_request {
 
             if Self::is_flexible(version) {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-            } else if !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
-                    message: "CreatableReplicaAssignment",
-                    version,
-                });
             }
 
             Ok(())
@@ -219,10 +279,32 @@ pub mod create_topics_request {
     }
 
     impl CreatableTopicConfig {
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(2, 7);
         const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(5, 7));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+        }
+    }
+
+    impl CreatableTopicConfig {
+        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            if !Self::SUPPORTED_VERSIONS.contains(version) {
+                return Err(EncodeError::UnsupportedVersion {
+                    message: "CreatableTopicConfig",
+                    version,
+                    supported: Self::SUPPORTED_VERSIONS,
+                });
+            }
+
+            if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "CreatableTopicConfig",
+                    version,
+                });
+            }
+
+            Ok(())
         }
     }
 
@@ -238,6 +320,14 @@ pub mod create_topics_request {
 
     impl KafkaDecode for CreatableTopicConfig {
         fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            if !Self::SUPPORTED_VERSIONS.contains(version) {
+                return Err(DecodeError::UnsupportedVersion {
+                    message: "CreatableTopicConfig",
+                    version,
+                    supported: Self::SUPPORTED_VERSIONS,
+                });
+            }
+
             let name = if Self::is_flexible(version) {
                 decoder.read_compact_string()?
             } else {
@@ -268,6 +358,8 @@ pub mod create_topics_request {
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+
             if Self::is_flexible(version) {
                 encoder.write_compact_string(&self.name)?;
             } else {
@@ -281,11 +373,6 @@ pub mod create_topics_request {
 
             if Self::is_flexible(version) {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-            } else if !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
-                    message: "CreatableTopicConfig",
-                    version,
-                });
             }
 
             Ok(())
@@ -331,6 +418,24 @@ pub mod create_topics_request {
         type Response = super::CreateTopicsResponse;
     }
 
+    impl CreateTopicsRequest {
+        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            crate::message::ensure_encode_version::<Self>(version)?;
+
+            for value in &self.topics {
+                value.validate_for_version(version)?;
+            }
+            if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: Self::NAME,
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+
     impl KafkaDecode for CreateTopicsRequest {
         fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
             crate::message::ensure_decode_version::<Self>(version)?;
@@ -366,7 +471,7 @@ pub mod create_topics_request {
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            crate::message::ensure_encode_version::<Self>(version)?;
+            self.validate_for_version(version)?;
 
             if Self::is_flexible(version) {
                 encoder.write_compact_array_len(self.topics.len())?;
@@ -381,11 +486,6 @@ pub mod create_topics_request {
 
             if Self::is_flexible(version) {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-            } else if !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
-                    message: Self::NAME,
-                    version,
-                });
             }
 
             Ok(())
@@ -430,10 +530,39 @@ pub mod create_topics_response {
     }
 
     impl CreatableTopicResult {
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(2, 7);
         const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(5, 7));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+        }
+    }
+
+    impl CreatableTopicResult {
+        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            if !Self::SUPPORTED_VERSIONS.contains(version) {
+                return Err(EncodeError::UnsupportedVersion {
+                    message: "CreatableTopicResult",
+                    version,
+                    supported: Self::SUPPORTED_VERSIONS,
+                });
+            }
+
+            if version.value() >= 5 {
+                if let Some(values) = &self.configs {
+                    for value in values {
+                        value.validate_for_version(version)?;
+                    }
+                }
+            }
+            if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "CreatableTopicResult",
+                    version,
+                });
+            }
+
+            Ok(())
         }
     }
 
@@ -455,6 +584,14 @@ pub mod create_topics_response {
 
     impl KafkaDecode for CreatableTopicResult {
         fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            if !Self::SUPPORTED_VERSIONS.contains(version) {
+                return Err(DecodeError::UnsupportedVersion {
+                    message: "CreatableTopicResult",
+                    version,
+                    supported: Self::SUPPORTED_VERSIONS,
+                });
+            }
+
             let name = if Self::is_flexible(version) {
                 decoder.read_compact_string()?
             } else {
@@ -526,6 +663,8 @@ pub mod create_topics_response {
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+
             if Self::is_flexible(version) {
                 encoder.write_compact_string(&self.name)?;
             } else {
@@ -564,11 +703,6 @@ pub mod create_topics_response {
                     })?;
                 }
                 encoder.write_merged_tagged_fields(known, &self.unknown_tagged_fields)?;
-            } else if !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
-                    message: "CreatableTopicResult",
-                    version,
-                });
             }
 
             Ok(())
@@ -594,10 +728,60 @@ pub mod create_topics_response {
     }
 
     impl CreatableTopicConfigs {
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(2, 7);
         const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(5, 7));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+        }
+    }
+
+    impl CreatableTopicConfigs {
+        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            if !Self::SUPPORTED_VERSIONS.contains(version) {
+                return Err(EncodeError::UnsupportedVersion {
+                    message: "CreatableTopicConfigs",
+                    version,
+                    supported: Self::SUPPORTED_VERSIONS,
+                });
+            }
+
+            if version.value() < 5 && !self.name.is_empty() {
+                return Err(EncodeError::FieldNotRepresentable {
+                    message: "CreatableTopicConfigs",
+                    field: "Name",
+                    version,
+                });
+            }
+            if version.value() < 5 && self.value != Some(StrBytes::default()) {
+                return Err(EncodeError::FieldNotRepresentable {
+                    message: "CreatableTopicConfigs",
+                    field: "Value",
+                    version,
+                });
+            }
+            if version.value() < 5 && self.read_only {
+                return Err(EncodeError::FieldNotRepresentable {
+                    message: "CreatableTopicConfigs",
+                    field: "ReadOnly",
+                    version,
+                });
+            }
+            if version.value() < 5 && self.is_sensitive {
+                return Err(EncodeError::FieldNotRepresentable {
+                    message: "CreatableTopicConfigs",
+                    field: "IsSensitive",
+                    version,
+                });
+            }
+            if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "CreatableTopicConfigs",
+                    version,
+                });
+            }
+
+            Ok(())
         }
     }
 
@@ -616,6 +800,14 @@ pub mod create_topics_response {
 
     impl KafkaDecode for CreatableTopicConfigs {
         fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            if !Self::SUPPORTED_VERSIONS.contains(version) {
+                return Err(DecodeError::UnsupportedVersion {
+                    message: "CreatableTopicConfigs",
+                    version,
+                    supported: Self::SUPPORTED_VERSIONS,
+                });
+            }
+
             let name = if version.value() >= 5 {
                 decoder.read_compact_string()?
             } else {
@@ -664,6 +856,8 @@ pub mod create_topics_response {
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+
             if version.value() >= 5 {
                 encoder.write_compact_string(&self.name)?;
             }
@@ -682,11 +876,6 @@ pub mod create_topics_response {
 
             if Self::is_flexible(version) {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-            } else if !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
-                    message: "CreatableTopicConfigs",
-                    version,
-                });
             }
 
             Ok(())
@@ -713,6 +902,24 @@ pub mod create_topics_response {
 
     impl KafkaResponse for CreateTopicsResponse {
         const API_KEY: ApiKey = ApiKey::new(19);
+    }
+
+    impl CreateTopicsResponse {
+        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            crate::message::ensure_encode_version::<Self>(version)?;
+
+            for value in &self.topics {
+                value.validate_for_version(version)?;
+            }
+            if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: Self::NAME,
+                    version,
+                });
+            }
+
+            Ok(())
+        }
     }
 
     impl KafkaDecode for CreateTopicsResponse {
@@ -750,7 +957,7 @@ pub mod create_topics_response {
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            crate::message::ensure_encode_version::<Self>(version)?;
+            self.validate_for_version(version)?;
 
             encoder.write_i32(self.throttle_time_ms)?;
             if Self::is_flexible(version) {
@@ -764,11 +971,6 @@ pub mod create_topics_response {
 
             if Self::is_flexible(version) {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-            } else if !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
-                    message: Self::NAME,
-                    version,
-                });
             }
 
             Ok(())

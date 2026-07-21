@@ -9,16 +9,29 @@ use super::super::{DecodeError, DecodeLimits};
 pub struct Decoder {
     pub(super) input: Bytes,
     pub(super) initial_len: usize,
+    pub(super) base_offset: usize,
     pub(super) limits: DecodeLimits,
 }
 
 impl Decoder {
     /// Creates a decoder with explicit resource limits.
-    pub fn new(input: Bytes, limits: DecodeLimits) -> Self {
+    ///
+    /// The complete frame is rejected before any field parser observes it.
+    pub fn new(input: Bytes, limits: DecodeLimits) -> Result<Self, DecodeError> {
+        Self::check_limit("frame", input.len(), limits.max_frame_bytes, 0)?;
+        Ok(Self::with_base(input, limits, 0))
+    }
+
+    pub(super) fn child(input: Bytes, limits: DecodeLimits, base_offset: usize) -> Self {
+        Self::with_base(input, limits, base_offset)
+    }
+
+    fn with_base(input: Bytes, limits: DecodeLimits, base_offset: usize) -> Self {
         let initial_len = input.len();
         Self {
             input,
             initial_len,
+            base_offset,
             limits,
         }
     }
@@ -26,7 +39,7 @@ impl Decoder {
     /// Returns the current byte offset.
     #[inline]
     pub fn offset(&self) -> usize {
-        self.initial_len - self.input.len()
+        self.base_offset + self.initial_len - self.input.len()
     }
 
     /// Returns the unread byte count.
@@ -81,11 +94,10 @@ impl Decoder {
 
     /// Rejects a claimed element count that the unread bytes cannot back.
     ///
-    /// Every array element and every tagged field occupies at least one wire
-    /// byte, so a count larger than the remainder of the frame is malformed
-    /// input no matter how `DecodeLimits` is configured. Rejecting it at the
-    /// prefix keeps a peer from driving a caller's `Vec::with_capacity` with a
-    /// length that no frame of this size could ever deliver.
+    /// Every tagged-field entry occupies at least its tag and length varints,
+    /// so a count larger than the remainder of the frame is malformed input.
+    /// Arrays deliberately do not use this heuristic: a future validated
+    /// structure may have zero wire width in a legacy version.
     pub(super) fn check_element_count(
         &self,
         kind: &'static str,

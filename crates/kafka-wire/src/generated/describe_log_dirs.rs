@@ -30,6 +30,7 @@ pub mod describe_log_dirs_request {
     }
 
     impl DescribableLogDirTopic {
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(1, 5);
         const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(2, 5));
 
         fn is_flexible(version: ApiVersion) -> bool {
@@ -37,8 +38,37 @@ pub mod describe_log_dirs_request {
         }
     }
 
+    impl DescribableLogDirTopic {
+        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            if !Self::SUPPORTED_VERSIONS.contains(version) {
+                return Err(EncodeError::UnsupportedVersion {
+                    message: "DescribableLogDirTopic",
+                    version,
+                    supported: Self::SUPPORTED_VERSIONS,
+                });
+            }
+
+            if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "DescribableLogDirTopic",
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+
     impl KafkaDecode for DescribableLogDirTopic {
         fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            if !Self::SUPPORTED_VERSIONS.contains(version) {
+                return Err(DecodeError::UnsupportedVersion {
+                    message: "DescribableLogDirTopic",
+                    version,
+                    supported: Self::SUPPORTED_VERSIONS,
+                });
+            }
+
             let topic = if Self::is_flexible(version) {
                 decoder.read_compact_string()?
             } else {
@@ -72,6 +102,8 @@ pub mod describe_log_dirs_request {
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+
             if Self::is_flexible(version) {
                 encoder.write_compact_string(&self.topic)?;
             } else {
@@ -88,11 +120,6 @@ pub mod describe_log_dirs_request {
 
             if Self::is_flexible(version) {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-            } else if !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
-                    message: "DescribableLogDirTopic",
-                    version,
-                });
             }
 
             Ok(())
@@ -132,6 +159,26 @@ pub mod describe_log_dirs_request {
         type Response = super::DescribeLogDirsResponse;
     }
 
+    impl DescribeLogDirsRequest {
+        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            crate::message::ensure_encode_version::<Self>(version)?;
+
+            if let Some(values) = &self.topics {
+                for value in values {
+                    value.validate_for_version(version)?;
+                }
+            }
+            if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: Self::NAME,
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+
     impl KafkaDecode for DescribeLogDirsRequest {
         fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
             crate::message::ensure_decode_version::<Self>(version)?;
@@ -169,7 +216,7 @@ pub mod describe_log_dirs_request {
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            crate::message::ensure_encode_version::<Self>(version)?;
+            self.validate_for_version(version)?;
 
             if Self::is_flexible(version) {
                 encoder.write_compact_nullable_array_len(self.topics.as_ref().map(Vec::len))?;
@@ -184,11 +231,6 @@ pub mod describe_log_dirs_request {
 
             if Self::is_flexible(version) {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-            } else if !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
-                    message: Self::NAME,
-                    version,
-                });
             }
 
             Ok(())
@@ -229,10 +271,35 @@ pub mod describe_log_dirs_response {
     }
 
     impl DescribeLogDirsResult {
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(1, 5);
         const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(2, 5));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+        }
+    }
+
+    impl DescribeLogDirsResult {
+        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            if !Self::SUPPORTED_VERSIONS.contains(version) {
+                return Err(EncodeError::UnsupportedVersion {
+                    message: "DescribeLogDirsResult",
+                    version,
+                    supported: Self::SUPPORTED_VERSIONS,
+                });
+            }
+
+            for value in &self.topics {
+                value.validate_for_version(version)?;
+            }
+            if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "DescribeLogDirsResult",
+                    version,
+                });
+            }
+
+            Ok(())
         }
     }
 
@@ -252,6 +319,14 @@ pub mod describe_log_dirs_response {
 
     impl KafkaDecode for DescribeLogDirsResult {
         fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            if !Self::SUPPORTED_VERSIONS.contains(version) {
+                return Err(DecodeError::UnsupportedVersion {
+                    message: "DescribeLogDirsResult",
+                    version,
+                    supported: Self::SUPPORTED_VERSIONS,
+                });
+            }
+
             let error_code = decoder.read_i16()?;
             let log_dir = if Self::is_flexible(version) {
                 decoder.read_compact_string()?
@@ -307,6 +382,8 @@ pub mod describe_log_dirs_response {
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+
             encoder.write_i16(self.error_code)?;
             if Self::is_flexible(version) {
                 encoder.write_compact_string(&self.log_dir)?;
@@ -333,11 +410,6 @@ pub mod describe_log_dirs_response {
 
             if Self::is_flexible(version) {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-            } else if !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
-                    message: "DescribeLogDirsResult",
-                    version,
-                });
             }
 
             Ok(())
@@ -357,6 +429,7 @@ pub mod describe_log_dirs_response {
     }
 
     impl DescribeLogDirsTopic {
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(1, 5);
         const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(2, 5));
 
         fn is_flexible(version: ApiVersion) -> bool {
@@ -364,8 +437,40 @@ pub mod describe_log_dirs_response {
         }
     }
 
+    impl DescribeLogDirsTopic {
+        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            if !Self::SUPPORTED_VERSIONS.contains(version) {
+                return Err(EncodeError::UnsupportedVersion {
+                    message: "DescribeLogDirsTopic",
+                    version,
+                    supported: Self::SUPPORTED_VERSIONS,
+                });
+            }
+
+            for value in &self.partitions {
+                value.validate_for_version(version)?;
+            }
+            if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "DescribeLogDirsTopic",
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+
     impl KafkaDecode for DescribeLogDirsTopic {
         fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            if !Self::SUPPORTED_VERSIONS.contains(version) {
+                return Err(DecodeError::UnsupportedVersion {
+                    message: "DescribeLogDirsTopic",
+                    version,
+                    supported: Self::SUPPORTED_VERSIONS,
+                });
+            }
+
             let name = if Self::is_flexible(version) {
                 decoder.read_compact_string()?
             } else {
@@ -401,6 +506,8 @@ pub mod describe_log_dirs_response {
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+
             if Self::is_flexible(version) {
                 encoder.write_compact_string(&self.name)?;
             } else {
@@ -417,11 +524,6 @@ pub mod describe_log_dirs_response {
 
             if Self::is_flexible(version) {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-            } else if !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
-                    message: "DescribeLogDirsTopic",
-                    version,
-                });
             }
 
             Ok(())
@@ -445,6 +547,7 @@ pub mod describe_log_dirs_response {
     }
 
     impl DescribeLogDirsPartition {
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(1, 5);
         const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(2, 5));
 
         fn is_flexible(version: ApiVersion) -> bool {
@@ -452,8 +555,37 @@ pub mod describe_log_dirs_response {
         }
     }
 
+    impl DescribeLogDirsPartition {
+        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            if !Self::SUPPORTED_VERSIONS.contains(version) {
+                return Err(EncodeError::UnsupportedVersion {
+                    message: "DescribeLogDirsPartition",
+                    version,
+                    supported: Self::SUPPORTED_VERSIONS,
+                });
+            }
+
+            if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "DescribeLogDirsPartition",
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+
     impl KafkaDecode for DescribeLogDirsPartition {
         fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            if !Self::SUPPORTED_VERSIONS.contains(version) {
+                return Err(DecodeError::UnsupportedVersion {
+                    message: "DescribeLogDirsPartition",
+                    version,
+                    supported: Self::SUPPORTED_VERSIONS,
+                });
+            }
+
             let partition_index = decoder.read_i32()?;
             let partition_size = decoder.read_i64()?;
             let offset_lag = decoder.read_i64()?;
@@ -480,6 +612,8 @@ pub mod describe_log_dirs_response {
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+
             encoder.write_i32(self.partition_index)?;
             encoder.write_i64(self.partition_size)?;
             encoder.write_i64(self.offset_lag)?;
@@ -487,11 +621,6 @@ pub mod describe_log_dirs_response {
 
             if Self::is_flexible(version) {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-            } else if !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
-                    message: "DescribeLogDirsPartition",
-                    version,
-                });
             }
 
             Ok(())
@@ -520,6 +649,24 @@ pub mod describe_log_dirs_response {
 
     impl KafkaResponse for DescribeLogDirsResponse {
         const API_KEY: ApiKey = ApiKey::new(35);
+    }
+
+    impl DescribeLogDirsResponse {
+        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            crate::message::ensure_encode_version::<Self>(version)?;
+
+            for value in &self.results {
+                value.validate_for_version(version)?;
+            }
+            if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: Self::NAME,
+                    version,
+                });
+            }
+
+            Ok(())
+        }
     }
 
     impl KafkaDecode for DescribeLogDirsResponse {
@@ -563,7 +710,7 @@ pub mod describe_log_dirs_response {
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            crate::message::ensure_encode_version::<Self>(version)?;
+            self.validate_for_version(version)?;
 
             encoder.write_i32(self.throttle_time_ms)?;
             if version.value() >= 3 {
@@ -580,11 +727,6 @@ pub mod describe_log_dirs_response {
 
             if Self::is_flexible(version) {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-            } else if !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
-                    message: Self::NAME,
-                    version,
-                });
             }
 
             Ok(())

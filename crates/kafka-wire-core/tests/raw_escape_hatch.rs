@@ -34,7 +34,7 @@ fn write_raw_slice_then_take_bytes_round_trips_from_outside_the_crate() {
     encoder.write_i32(7).unwrap();
     encoder.write_raw_slice(PAYLOAD).unwrap();
 
-    let mut decoder = Decoder::new(buffer.freeze(), DecodeLimits::default());
+    let mut decoder = Decoder::new(buffer.freeze(), DecodeLimits::default()).unwrap();
     assert_eq!(decoder.read_i32().unwrap(), 7);
     let claimed = decoder.take_bytes(PAYLOAD.len()).unwrap();
     assert_eq!(claimed.as_ref(), PAYLOAD);
@@ -44,14 +44,15 @@ fn write_raw_slice_then_take_bytes_round_trips_from_outside_the_crate() {
 #[test]
 fn take_bytes_returns_a_zero_copy_slice_of_the_input() {
     let frame = Bytes::from(PAYLOAD.to_vec());
-    let mut decoder = Decoder::new(frame, DecodeLimits::default());
+    let mut decoder = Decoder::new(frame, DecodeLimits::default()).unwrap();
     let claimed = decoder.take_bytes(PAYLOAD.len()).unwrap();
     assert_eq!(claimed.as_ref(), PAYLOAD);
 }
 
 #[test]
 fn take_bytes_is_bounded_by_the_remaining_frame() {
-    let mut decoder = Decoder::new(Bytes::from_static(&[0xaa, 0xbb]), DecodeLimits::default());
+    let mut decoder =
+        Decoder::new(Bytes::from_static(&[0xaa, 0xbb]), DecodeLimits::default()).unwrap();
     let error = decoder.take_bytes(8).unwrap_err();
     assert!(matches!(
         error,

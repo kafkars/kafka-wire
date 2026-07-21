@@ -30,6 +30,7 @@ pub mod delete_topics_request {
     }
 
     impl DeleteTopicState {
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(1, 6);
         const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(4, 6));
 
         fn is_flexible(version: ApiVersion) -> bool {
@@ -37,8 +38,51 @@ pub mod delete_topics_request {
         }
     }
 
+    impl DeleteTopicState {
+        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            if !Self::SUPPORTED_VERSIONS.contains(version) {
+                return Err(EncodeError::UnsupportedVersion {
+                    message: "DeleteTopicState",
+                    version,
+                    supported: Self::SUPPORTED_VERSIONS,
+                });
+            }
+
+            if version.value() < 6 && self.name.is_some() {
+                return Err(EncodeError::FieldNotRepresentable {
+                    message: "DeleteTopicState",
+                    field: "Name",
+                    version,
+                });
+            }
+            if version.value() < 6 && self.topic_id != Uuid::ZERO {
+                return Err(EncodeError::FieldNotRepresentable {
+                    message: "DeleteTopicState",
+                    field: "TopicId",
+                    version,
+                });
+            }
+            if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "DeleteTopicState",
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+
     impl KafkaDecode for DeleteTopicState {
         fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            if !Self::SUPPORTED_VERSIONS.contains(version) {
+                return Err(DecodeError::UnsupportedVersion {
+                    message: "DeleteTopicState",
+                    version,
+                    supported: Self::SUPPORTED_VERSIONS,
+                });
+            }
+
             let name = if version.value() >= 6 {
                 decoder.read_compact_nullable_string()?
             } else {
@@ -69,6 +113,8 @@ pub mod delete_topics_request {
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+
             if version.value() >= 6 {
                 encoder.write_compact_nullable_string(self.name.as_ref())?;
             }
@@ -78,11 +124,6 @@ pub mod delete_topics_request {
 
             if Self::is_flexible(version) {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-            } else if !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
-                    message: "DeleteTopicState",
-                    version,
-                });
             }
 
             Ok(())
@@ -115,6 +156,33 @@ pub mod delete_topics_request {
 
     impl RequestResponsePair for DeleteTopicsRequest {
         type Response = super::DeleteTopicsResponse;
+    }
+
+    impl DeleteTopicsRequest {
+        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            crate::message::ensure_encode_version::<Self>(version)?;
+
+            if version.value() < 6 && !self.topics.is_empty() {
+                return Err(EncodeError::FieldNotRepresentable {
+                    message: Self::NAME,
+                    field: "Topics",
+                    version,
+                });
+            }
+            if version.value() >= 6 {
+                for value in &self.topics {
+                    value.validate_for_version(version)?;
+                }
+            }
+            if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: Self::NAME,
+                    version,
+                });
+            }
+
+            Ok(())
+        }
     }
 
     impl KafkaDecode for DeleteTopicsRequest {
@@ -165,15 +233,7 @@ pub mod delete_topics_request {
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            crate::message::ensure_encode_version::<Self>(version)?;
-
-            if version.value() < 6 && !self.topics.is_empty() {
-                return Err(EncodeError::FieldNotRepresentable {
-                    message: Self::NAME,
-                    field: "Topics",
-                    version,
-                });
-            }
+            self.validate_for_version(version)?;
 
             if version.value() >= 6 {
                 encoder.write_compact_array_len(self.topics.len())?;
@@ -199,11 +259,6 @@ pub mod delete_topics_request {
 
             if Self::is_flexible(version) {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-            } else if !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
-                    message: Self::NAME,
-                    version,
-                });
             }
 
             Ok(())
@@ -240,10 +295,39 @@ pub mod delete_topics_response {
     }
 
     impl DeletableTopicResult {
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(1, 6);
         const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(4, 6));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+        }
+    }
+
+    impl DeletableTopicResult {
+        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            if !Self::SUPPORTED_VERSIONS.contains(version) {
+                return Err(EncodeError::UnsupportedVersion {
+                    message: "DeletableTopicResult",
+                    version,
+                    supported: Self::SUPPORTED_VERSIONS,
+                });
+            }
+
+            if version.value() <= 5 && self.name.is_none() {
+                return Err(EncodeError::NullNotAllowed {
+                    message: "DeletableTopicResult",
+                    field: "Name",
+                    version,
+                });
+            }
+            if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "DeletableTopicResult",
+                    version,
+                });
+            }
+
+            Ok(())
         }
     }
 
@@ -261,6 +345,14 @@ pub mod delete_topics_response {
 
     impl KafkaDecode for DeletableTopicResult {
         fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            if !Self::SUPPORTED_VERSIONS.contains(version) {
+                return Err(DecodeError::UnsupportedVersion {
+                    message: "DeletableTopicResult",
+                    version,
+                    supported: Self::SUPPORTED_VERSIONS,
+                });
+            }
+
             let name = if version.value() >= 6 {
                 decoder.read_compact_nullable_string()?
             } else {
@@ -303,13 +395,8 @@ pub mod delete_topics_response {
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            if version.value() <= 5 && self.name.is_none() {
-                return Err(EncodeError::NullNotAllowed {
-                    message: "DeletableTopicResult",
-                    field: "Name",
-                    version,
-                });
-            }
+            self.validate_for_version(version)?;
+
             if Self::is_flexible(version) {
                 encoder.write_compact_nullable_string(self.name.as_ref())?;
             } else {
@@ -325,11 +412,6 @@ pub mod delete_topics_response {
 
             if Self::is_flexible(version) {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-            } else if !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
-                    message: "DeletableTopicResult",
-                    version,
-                });
             }
 
             Ok(())
@@ -356,6 +438,24 @@ pub mod delete_topics_response {
 
     impl KafkaResponse for DeleteTopicsResponse {
         const API_KEY: ApiKey = ApiKey::new(20);
+    }
+
+    impl DeleteTopicsResponse {
+        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            crate::message::ensure_encode_version::<Self>(version)?;
+
+            for value in &self.responses {
+                value.validate_for_version(version)?;
+            }
+            if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: Self::NAME,
+                    version,
+                });
+            }
+
+            Ok(())
+        }
     }
 
     impl KafkaDecode for DeleteTopicsResponse {
@@ -393,7 +493,7 @@ pub mod delete_topics_response {
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            crate::message::ensure_encode_version::<Self>(version)?;
+            self.validate_for_version(version)?;
 
             encoder.write_i32(self.throttle_time_ms)?;
             if Self::is_flexible(version) {
@@ -407,11 +507,6 @@ pub mod delete_topics_response {
 
             if Self::is_flexible(version) {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-            } else if !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
-                    message: Self::NAME,
-                    version,
-                });
             }
 
             Ok(())

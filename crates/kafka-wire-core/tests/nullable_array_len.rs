@@ -7,7 +7,7 @@
 #![allow(clippy::expect_used, clippy::unwrap_used)]
 
 use bytes::{Bytes, BytesMut};
-use kafka_wire_core::{DecodeError, DecodeLimits, Decoder, Encoder};
+use kafka_wire_core::{BoundedCount, DecodeError, DecodeLimits, Decoder, Encoder};
 
 fn wire_legacy(length: Option<usize>) -> Vec<u8> {
     let mut buffer = BytesMut::new();
@@ -38,7 +38,7 @@ fn decoder(bytes: &[u8]) -> Decoder {
     // enough that the remaining-bytes check accepts it.
     let mut frame = bytes.to_vec();
     frame.resize(bytes.len() + 8, 0);
-    Decoder::new(Bytes::from(frame), DecodeLimits::default())
+    Decoder::new(Bytes::from(frame), DecodeLimits::default()).unwrap()
 }
 
 #[test]
@@ -52,7 +52,13 @@ fn legacy_null_is_int32_minus_one() {
 fn legacy_present_count_is_a_plain_int32() {
     let bytes = wire_legacy(Some(2));
     assert_eq!(bytes, [0x00, 0x00, 0x00, 0x02]);
-    assert_eq!(decoder(&bytes).read_nullable_array_len().unwrap(), Some(2));
+    assert_eq!(
+        decoder(&bytes)
+            .read_nullable_array_len()
+            .unwrap()
+            .map(BoundedCount::get),
+        Some(2)
+    );
 }
 
 #[test]
@@ -70,7 +76,10 @@ fn compact_present_count_is_stored_plus_one() {
     let bytes = wire_compact(Some(2));
     assert_eq!(bytes, [0x03]);
     assert_eq!(
-        decoder(&bytes).read_compact_nullable_array_len().unwrap(),
+        decoder(&bytes)
+            .read_compact_nullable_array_len()
+            .unwrap()
+            .map(BoundedCount::get),
         Some(2)
     );
 }
@@ -81,6 +90,7 @@ fn a_legacy_length_below_minus_one_is_malformed() {
         Bytes::from_static(&[0xff, 0xff, 0xff, 0xfe]),
         DecodeLimits::default(),
     )
+    .unwrap()
     .read_nullable_array_len()
     .unwrap_err();
     assert!(matches!(
@@ -93,21 +103,17 @@ fn a_legacy_length_below_minus_one_is_malformed() {
 }
 
 #[test]
-fn a_present_count_beyond_the_frame_is_rejected_at_the_prefix() {
-    // int32 count 100 with nothing behind it: unbacked, so rejected before it
-    // can drive a reservation.
-    let error = Decoder::new(
+fn a_present_count_is_bounded_without_assuming_an_element_width() {
+    // An array element may have zero wire width in some schema version. The
+    // prefix therefore proves only the configured count budget; `read_vec`
+    // grows after each successful element instead of reserving from this count.
+    let count = Decoder::new(
         Bytes::from_static(&[0x00, 0x00, 0x00, 0x64]),
         DecodeLimits::default(),
     )
+    .unwrap()
     .read_nullable_array_len()
-    .unwrap_err();
-    assert!(matches!(
-        error,
-        DecodeError::CountExceedsFrame {
-            kind: "nullable array",
-            count: 100,
-            ..
-        }
-    ));
+    .unwrap()
+    .unwrap();
+    assert_eq!(count.get(), 100);
 }

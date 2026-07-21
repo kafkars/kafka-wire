@@ -7,9 +7,7 @@
 //! table (`struct_table.rs`), or uniqueness within a module
 //! (`validate/uniqueness.rs`).
 
-use heck::ToUpperCamelCase;
-
-use super::MessageName;
+use super::{MessageName, RustIdent, RustIdentError};
 
 /// Which scope disambiguates a struct name.
 ///
@@ -48,7 +46,7 @@ pub struct StructRef {
     declared: String,
     owner: String,
     protocol: String,
-    rust_type: String,
+    rust_type: RustIdent,
     qualification: Qualification,
 }
 
@@ -66,19 +64,30 @@ impl StructRef {
     /// three levels down is spelled exactly as upstream spelled it, which bounds
     /// every generated name at `len(struct)` however deep upstream nests.
     pub fn qualify(owner: &MessageName, declared: impl Into<String>) -> Self {
+        match Self::try_qualify(owner, declared) {
+            Ok(reference) => reference,
+            Err(error) => panic!("struct name must normalize to valid Rust: {error}"),
+        }
+    }
+
+    /// Binds an upstream struct spelling after validating its emitted name.
+    pub fn try_qualify(
+        owner: &MessageName,
+        declared: impl Into<String>,
+    ) -> Result<Self, RustIdentError> {
         let declared = declared.into();
         let owner = owner.protocol().to_owned();
 
         let (protocol, qualification) = (declared.clone(), Qualification::ModuleScoped);
-        let rust_type = protocol.to_upper_camel_case();
+        let rust_type = RustIdent::upper_camel(&protocol)?;
 
-        Self {
+        Ok(Self {
             declared,
             owner,
             protocol,
             rust_type,
             qualification,
-        }
+        })
     }
 
     /// Returns the bare upstream spelling, as written in the schema.
@@ -101,7 +110,7 @@ impl StructRef {
 
     /// Returns the Rust type identifier this struct is emitted as.
     pub fn rust_type(&self) -> &str {
-        &self.rust_type
+        self.rust_type.as_str()
     }
 
     /// Returns which scope disambiguates this name.

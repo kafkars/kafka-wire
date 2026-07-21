@@ -30,6 +30,7 @@ pub mod offset_for_leader_epoch_request {
     }
 
     impl OffsetForLeaderTopic {
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(2, 4);
         const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(4, 4));
 
         fn is_flexible(version: ApiVersion) -> bool {
@@ -37,8 +38,40 @@ pub mod offset_for_leader_epoch_request {
         }
     }
 
+    impl OffsetForLeaderTopic {
+        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            if !Self::SUPPORTED_VERSIONS.contains(version) {
+                return Err(EncodeError::UnsupportedVersion {
+                    message: "OffsetForLeaderTopic",
+                    version,
+                    supported: Self::SUPPORTED_VERSIONS,
+                });
+            }
+
+            for value in &self.partitions {
+                value.validate_for_version(version)?;
+            }
+            if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "OffsetForLeaderTopic",
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+
     impl KafkaDecode for OffsetForLeaderTopic {
         fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            if !Self::SUPPORTED_VERSIONS.contains(version) {
+                return Err(DecodeError::UnsupportedVersion {
+                    message: "OffsetForLeaderTopic",
+                    version,
+                    supported: Self::SUPPORTED_VERSIONS,
+                });
+            }
+
             let topic = if Self::is_flexible(version) {
                 decoder.read_compact_string()?
             } else {
@@ -74,6 +107,8 @@ pub mod offset_for_leader_epoch_request {
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+
             if Self::is_flexible(version) {
                 encoder.write_compact_string(&self.topic)?;
             } else {
@@ -90,11 +125,6 @@ pub mod offset_for_leader_epoch_request {
 
             if Self::is_flexible(version) {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-            } else if !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
-                    message: "OffsetForLeaderTopic",
-                    version,
-                });
             }
 
             Ok(())
@@ -116,10 +146,32 @@ pub mod offset_for_leader_epoch_request {
     }
 
     impl OffsetForLeaderPartition {
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(2, 4);
         const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(4, 4));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+        }
+    }
+
+    impl OffsetForLeaderPartition {
+        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            if !Self::SUPPORTED_VERSIONS.contains(version) {
+                return Err(EncodeError::UnsupportedVersion {
+                    message: "OffsetForLeaderPartition",
+                    version,
+                    supported: Self::SUPPORTED_VERSIONS,
+                });
+            }
+
+            if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "OffsetForLeaderPartition",
+                    version,
+                });
+            }
+
+            Ok(())
         }
     }
 
@@ -136,6 +188,14 @@ pub mod offset_for_leader_epoch_request {
 
     impl KafkaDecode for OffsetForLeaderPartition {
         fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            if !Self::SUPPORTED_VERSIONS.contains(version) {
+                return Err(DecodeError::UnsupportedVersion {
+                    message: "OffsetForLeaderPartition",
+                    version,
+                    supported: Self::SUPPORTED_VERSIONS,
+                });
+            }
+
             let partition = decoder.read_i32()?;
             let current_leader_epoch = decoder.read_i32()?;
             let leader_epoch = decoder.read_i32()?;
@@ -160,17 +220,14 @@ pub mod offset_for_leader_epoch_request {
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+
             encoder.write_i32(self.partition)?;
             encoder.write_i32(self.current_leader_epoch)?;
             encoder.write_i32(self.leader_epoch)?;
 
             if Self::is_flexible(version) {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-            } else if !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
-                    message: "OffsetForLeaderPartition",
-                    version,
-                });
             }
 
             Ok(())
@@ -213,6 +270,24 @@ pub mod offset_for_leader_epoch_request {
         type Response = super::OffsetForLeaderEpochResponse;
     }
 
+    impl OffsetForLeaderEpochRequest {
+        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            crate::message::ensure_encode_version::<Self>(version)?;
+
+            for value in &self.topics {
+                value.validate_for_version(version)?;
+            }
+            if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: Self::NAME,
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+
     impl KafkaDecode for OffsetForLeaderEpochRequest {
         fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
             crate::message::ensure_decode_version::<Self>(version)?;
@@ -252,7 +327,7 @@ pub mod offset_for_leader_epoch_request {
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            crate::message::ensure_encode_version::<Self>(version)?;
+            self.validate_for_version(version)?;
 
             if version.value() >= 3 {
                 encoder.write_i32(self.replica_id)?;
@@ -268,11 +343,6 @@ pub mod offset_for_leader_epoch_request {
 
             if Self::is_flexible(version) {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-            } else if !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
-                    message: Self::NAME,
-                    version,
-                });
             }
 
             Ok(())
@@ -305,6 +375,7 @@ pub mod offset_for_leader_epoch_response {
     }
 
     impl OffsetForLeaderTopicResult {
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(2, 4);
         const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(4, 4));
 
         fn is_flexible(version: ApiVersion) -> bool {
@@ -312,8 +383,40 @@ pub mod offset_for_leader_epoch_response {
         }
     }
 
+    impl OffsetForLeaderTopicResult {
+        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            if !Self::SUPPORTED_VERSIONS.contains(version) {
+                return Err(EncodeError::UnsupportedVersion {
+                    message: "OffsetForLeaderTopicResult",
+                    version,
+                    supported: Self::SUPPORTED_VERSIONS,
+                });
+            }
+
+            for value in &self.partitions {
+                value.validate_for_version(version)?;
+            }
+            if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "OffsetForLeaderTopicResult",
+                    version,
+                });
+            }
+
+            Ok(())
+        }
+    }
+
     impl KafkaDecode for OffsetForLeaderTopicResult {
         fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            if !Self::SUPPORTED_VERSIONS.contains(version) {
+                return Err(DecodeError::UnsupportedVersion {
+                    message: "OffsetForLeaderTopicResult",
+                    version,
+                    supported: Self::SUPPORTED_VERSIONS,
+                });
+            }
+
             let topic = if Self::is_flexible(version) {
                 decoder.read_compact_string()?
             } else {
@@ -347,6 +450,8 @@ pub mod offset_for_leader_epoch_response {
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+
             if Self::is_flexible(version) {
                 encoder.write_compact_string(&self.topic)?;
             } else {
@@ -363,11 +468,6 @@ pub mod offset_for_leader_epoch_response {
 
             if Self::is_flexible(version) {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-            } else if !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
-                    message: "OffsetForLeaderTopicResult",
-                    version,
-                });
             }
 
             Ok(())
@@ -391,10 +491,32 @@ pub mod offset_for_leader_epoch_response {
     }
 
     impl EpochEndOffset {
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(2, 4);
         const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(4, 4));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
+        }
+    }
+
+    impl EpochEndOffset {
+        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            if !Self::SUPPORTED_VERSIONS.contains(version) {
+                return Err(EncodeError::UnsupportedVersion {
+                    message: "EpochEndOffset",
+                    version,
+                    supported: Self::SUPPORTED_VERSIONS,
+                });
+            }
+
+            if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: "EpochEndOffset",
+                    version,
+                });
+            }
+
+            Ok(())
         }
     }
 
@@ -412,6 +534,14 @@ pub mod offset_for_leader_epoch_response {
 
     impl KafkaDecode for EpochEndOffset {
         fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+            if !Self::SUPPORTED_VERSIONS.contains(version) {
+                return Err(DecodeError::UnsupportedVersion {
+                    message: "EpochEndOffset",
+                    version,
+                    supported: Self::SUPPORTED_VERSIONS,
+                });
+            }
+
             let error_code = decoder.read_i16()?;
             let partition = decoder.read_i32()?;
             let leader_epoch = decoder.read_i32()?;
@@ -438,6 +568,8 @@ pub mod offset_for_leader_epoch_response {
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+
             encoder.write_i16(self.error_code)?;
             encoder.write_i32(self.partition)?;
             encoder.write_i32(self.leader_epoch)?;
@@ -445,11 +577,6 @@ pub mod offset_for_leader_epoch_response {
 
             if Self::is_flexible(version) {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-            } else if !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
-                    message: "EpochEndOffset",
-                    version,
-                });
             }
 
             Ok(())
@@ -476,6 +603,24 @@ pub mod offset_for_leader_epoch_response {
 
     impl KafkaResponse for OffsetForLeaderEpochResponse {
         const API_KEY: ApiKey = ApiKey::new(23);
+    }
+
+    impl OffsetForLeaderEpochResponse {
+        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            crate::message::ensure_encode_version::<Self>(version)?;
+
+            for value in &self.topics {
+                value.validate_for_version(version)?;
+            }
+            if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
+                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                    message: Self::NAME,
+                    version,
+                });
+            }
+
+            Ok(())
+        }
     }
 
     impl KafkaDecode for OffsetForLeaderEpochResponse {
@@ -513,7 +658,7 @@ pub mod offset_for_leader_epoch_response {
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            crate::message::ensure_encode_version::<Self>(version)?;
+            self.validate_for_version(version)?;
 
             encoder.write_i32(self.throttle_time_ms)?;
             if Self::is_flexible(version) {
@@ -527,11 +672,6 @@ pub mod offset_for_leader_epoch_response {
 
             if Self::is_flexible(version) {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-            } else if !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
-                    message: Self::NAME,
-                    version,
-                });
             }
 
             Ok(())

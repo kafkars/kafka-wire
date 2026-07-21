@@ -42,15 +42,33 @@ pub(crate) fn format_rendered_rust(
     files: BTreeMap<String, String>,
     workspace_root: &Path,
 ) -> Result<BTreeMap<String, String>, GenerationError> {
-    let formatter = RustFormatter::pinned(workspace_root);
+    format_rendered_rust_with_identity(files, workspace_root).map(|formatted| formatted.files)
+}
 
-    files
+/// Formatted files paired with the exact formatter implementation identity.
+pub(crate) struct FormattedRust {
+    pub(crate) files: BTreeMap<String, String>,
+    pub(crate) formatter_identity: String,
+}
+
+/// Formats files and records the formatter whose behavior produced them.
+pub(crate) fn format_rendered_rust_with_identity(
+    files: BTreeMap<String, String>,
+    workspace_root: &Path,
+) -> Result<FormattedRust, GenerationError> {
+    let formatter = RustFormatter::pinned(workspace_root);
+    let formatter_identity = formatter.identity()?;
+    let files = files
         .into_iter()
         .map(|(path, rendered)| {
             let formatted = formatter.format(&path, &rendered)?;
             Ok((path, formatted))
         })
-        .collect()
+        .collect::<Result<BTreeMap<_, _>, GenerationError>>()?;
+    Ok(FormattedRust {
+        files,
+        formatter_identity,
+    })
 }
 
 /// One configured `rustfmt` invocation target.
@@ -96,6 +114,30 @@ impl RustFormatter {
             path: path.to_owned(),
             details: "rustfmt returned bytes that are not valid UTF-8".to_owned(),
         })
+    }
+
+    /// Names the concrete formatter binary and behavior-affecting edition.
+    fn identity(&self) -> Result<String, GenerationError> {
+        let output = Command::new(&self.program)
+            .arg("--version")
+            .current_dir(&self.workspace_root)
+            .output()
+            .map_err(|source| self.unavailable(source))?;
+        if !output.status.success() {
+            return Err(GenerationError::Formatter {
+                path: "<formatter identity>".to_owned(),
+                details: format!(
+                    "{}\n{}",
+                    output.status,
+                    String::from_utf8_lossy(&output.stderr).trim_end()
+                ),
+            });
+        }
+        let version = String::from_utf8(output.stdout).map_err(|_| GenerationError::Formatter {
+            path: "<formatter identity>".to_owned(),
+            details: "rustfmt --version returned non-UTF-8 bytes".to_owned(),
+        })?;
+        Ok(format!("version={}; edition={EDITION}", version.trim()))
     }
 
     /// Reports a formatter that could not be launched at all.

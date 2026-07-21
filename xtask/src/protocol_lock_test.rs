@@ -15,7 +15,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
-use crate::protocol_lock::{ProtocolLock, SourceStatus, digest};
+use crate::protocol_lock::{ProtocolLock, SourceStatus, digest, read, recorded_statuses, render};
 
 fn repository_root() -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR"))
@@ -28,8 +28,7 @@ fn lock_path() -> PathBuf {
 }
 
 fn checked_in_lock() -> ProtocolLock {
-    ProtocolLock::read(&lock_path())
-        .unwrap_or_else(|error| panic!("read the repository lockfile: {error}"))
+    read(&lock_path()).unwrap_or_else(|error| panic!("read the repository lockfile: {error}"))
 }
 
 #[test]
@@ -41,7 +40,7 @@ fn re_rendering_the_checked_in_lockfile_reproduces_it_exactly() {
         .unwrap_or_else(|error| panic!("read the repository lockfile: {error}"));
 
     assert_eq!(
-        checked_in_lock().render(),
+        render(&checked_in_lock()),
         on_disk,
         "re-rendering spec/protocol.lock does not reproduce the checked-in bytes; \
          `cargo xtask vendor` would report a diff on an unchanged commit"
@@ -50,12 +49,12 @@ fn re_rendering_the_checked_in_lockfile_reproduces_it_exactly() {
 
 #[test]
 fn parsing_a_rendered_lockfile_is_a_fixed_point() {
-    let once = checked_in_lock().render();
-    let reparsed: ProtocolLock = toml::from_str(&once)
+    let once = render(&checked_in_lock());
+    let reparsed = ProtocolLock::parse(&lock_path(), &once)
         .unwrap_or_else(|error| panic!("re-parse the rendered lockfile: {error}"));
 
     assert_eq!(
-        reparsed.render(),
+        render(&reparsed),
         once,
         "parse -> render -> parse -> render is not stable"
     );
@@ -64,7 +63,7 @@ fn parsing_a_rendered_lockfile_is_a_fixed_point() {
 #[test]
 fn a_round_trip_preserves_every_pinned_fact() {
     let original = checked_in_lock();
-    let reparsed: ProtocolLock = toml::from_str(&original.render())
+    let reparsed = ProtocolLock::parse(&lock_path(), &render(&original))
         .unwrap_or_else(|error| panic!("re-parse the rendered lockfile: {error}"));
 
     assert_eq!(original.schema, reparsed.schema);
@@ -137,7 +136,7 @@ fn the_checked_in_digests_match_the_vendored_bytes() {
 #[test]
 fn recorded_statuses_report_what_the_document_says() {
     let lock = checked_in_lock();
-    let statuses = lock.recorded_statuses();
+    let statuses = recorded_statuses(&lock);
 
     assert_eq!(
         statuses.len(),

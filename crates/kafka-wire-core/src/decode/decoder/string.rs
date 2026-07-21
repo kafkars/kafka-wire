@@ -93,10 +93,9 @@ impl Decoder {
         )?;
         let payload_offset = self.offset();
         let bytes = self.take(length)?;
-        let text = std::str::from_utf8(&bytes).map_err(|error| DecodeError::InvalidUtf8 {
+        StrBytes::try_from(bytes).map_err(|error| DecodeError::InvalidUtf8 {
             offset: payload_offset,
             valid_up_to: error.valid_up_to(),
-        })?;
-        Ok(StrBytes::from(text))
+        })
     }
 }

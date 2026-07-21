@@ -81,7 +81,7 @@ impl RecordBatch {
     /// Bytes after the declared batch remain in `bytes`, ready for the next
     /// call. A failure leaves the cursor unchanged.
     pub fn decode(bytes: &mut Bytes, limits: RecordDecodeLimits) -> Result<Self, RecordError> {
-        let mut decoder = Decoder::new(bytes.clone(), limits.wire);
+        let mut decoder = Decoder::new(bytes.clone(), limits.wire)?;
         let base_offset = decoder.read_i64()?;
         let batch_length = decoder.read_i32()?;
         let declared =

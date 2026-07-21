@@ -13,15 +13,19 @@
 use std::{
     collections::{BTreeMap, BTreeSet},
     fs,
-    path::{Path, PathBuf},
+    path::Path,
 };
 
 use serde::Deserialize;
 
 use crate::{
     fetch::{self, Accept},
-    protocol_lock::{ProtocolLock, SourceStatus, VendoredFile, digest},
+    protocol_lock::{
+        SourceStatus, VendoredFile, digest, read as read_lock, recorded_statuses,
+        render as render_lock,
+    },
     upstream_name::{is_schema_file, plain_filename, repository_slug},
+    vendor_transaction::StagedVendor,
 };
 
 /// What one vendoring run changed on disk.
@@ -53,36 +57,39 @@ struct TreeListing {
 /// Refreshes the vendored corpus and lockfile from the pinned upstream commit.
 pub(crate) fn vendor(workspace: &Path) -> Result<VendorReport, String> {
     let lock_path = workspace.join("spec").join("protocol.lock");
-    let mut lock = ProtocolLock::read(&lock_path)?;
+    let mut lock = read_lock(&lock_path)?;
     let slug = repository_slug(&lock.kafka.repository)?;
 
     let filenames = discover(&slug, &lock.kafka.commit, &lock.kafka.upstream_message_root)?;
-    let recorded = lock.recorded_statuses();
-    let destination = vendored_message_root(workspace, &lock)?;
-    fs::create_dir_all(&destination)
-        .map_err(|error| format!("could not create {}: {error}", destination.display()))?;
+    let recorded = recorded_statuses(&lock);
+    let destination = lock
+        .kafka
+        .vendored_message_root(workspace)
+        .map_err(|error| error.to_string())?;
 
     let mut files = Vec::with_capacity(filenames.len());
+    let mut corpus = BTreeMap::new();
     for filename in &filenames {
         let url = format!(
             "https://raw.githubusercontent.com/{slug}/{}/{}/{filename}",
             lock.kafka.commit, lock.kafka.upstream_message_root
         );
         let bytes = fetch::get(&url, Accept::RawBytes)?;
-        let path = destination.join(filename);
-        fs::write(&path, &bytes)
-            .map_err(|error| format!("could not write {}: {error}", path.display()))?;
         files.push(relock(filename, &bytes, &recorded));
+        if corpus.insert(filename.clone(), bytes).is_some() {
+            return Err(format!("upstream listed duplicate schema file {filename}"));
+        }
     }
 
-    let removed = prune(&destination, &filenames)?;
+    let removed = removed_files(&destination, &filenames)?;
     let enabled = files
         .iter()
         .filter(|file| file.status == SourceStatus::Enabled)
         .count();
 
     lock.kafka.files = files;
-    lock.write(&lock_path)?;
+    let lock_document = render_lock(&lock);
+    StagedVendor::new(&destination, &lock_path, &corpus, lock_document.as_bytes())?.commit()?;
 
     Ok(VendorReport {
         vendored: filenames.len(),
@@ -127,6 +134,11 @@ pub(crate) fn schema_filenames(listing: &[u8], commit: &str) -> Result<Vec<Strin
         filenames.push(plain_filename(&entry.path)?);
     }
     filenames.sort();
+    if filenames.windows(2).any(|pair| pair[0] == pair[1]) {
+        return Err(format!(
+            "the message tree for {commit} listed one schema filename more than once"
+        ));
+    }
 
     if filenames.is_empty() {
         return Err(format!(
@@ -156,8 +168,11 @@ pub(crate) fn relock(
     }
 }
 
-/// Removes vendored schema files the pinned commit no longer contains.
-fn prune(destination: &Path, expected: &[String]) -> Result<Vec<String>, String> {
+/// Reports schema files the complete staged replacement will remove.
+fn removed_files(destination: &Path, expected: &[String]) -> Result<Vec<String>, String> {
+    if !destination.exists() {
+        return Ok(Vec::new());
+    }
     let expected = expected.iter().map(String::as_str).collect::<BTreeSet<_>>();
     let entries = fs::read_dir(destination)
         .map_err(|error| format!("could not read {}: {error}", destination.display()))?;
@@ -173,29 +188,9 @@ fn prune(destination: &Path, expected: &[String]) -> Result<Vec<String>, String>
         if !path.is_file() || !is_schema_file(name) || expected.contains(name) {
             continue;
         }
-        let name = name.to_owned();
-        fs::remove_file(&path)
-            .map_err(|error| format!("could not remove {}: {error}", path.display()))?;
-        removed.push(name);
+        removed.push(name.to_owned());
     }
 
     removed.sort();
     Ok(removed)
-}
-
-/// Directory mirroring the pinned commit's message tree, named as upstream names it.
-fn vendored_message_root(workspace: &Path, lock: &ProtocolLock) -> Result<PathBuf, String> {
-    let directory = Path::new(&lock.kafka.upstream_message_root)
-        .file_name()
-        .and_then(|name| name.to_str())
-        .ok_or_else(|| {
-            format!(
-                "kafka.upstream_message_root has no directory name: {}",
-                lock.kafka.upstream_message_root
-            )
-        })?;
-    Ok(workspace
-        .join(&lock.kafka.vendored_root)
-        .join(&lock.kafka.commit)
-        .join(directory))
 }

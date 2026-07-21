@@ -13,7 +13,7 @@ mod support;
 use std::{fs, path::Path};
 
 use kafka_wire_codegen::GenerationMode;
-use support::{SUPPORTED, Workspace, read, repository_root};
+use support::{SUPPORTED, Workspace, read, repository_root, write};
 
 #[test]
 fn a_generated_file_carries_the_provenance_of_exactly_one_generator() {
@@ -40,6 +40,73 @@ fn a_generated_file_carries_the_provenance_of_exactly_one_generator() {
     assert!(
         manifest.contains(&format!("\"generator\": \"{expected}\"")),
         "the manifest names a different generator than the banner: {manifest}"
+    );
+
+    let value: serde_json::Value = serde_json::from_str(manifest)
+        .unwrap_or_else(|error| panic!("decode generated manifest: {error}"));
+    for field in [
+        "semantic_inputs_sha256",
+        "protocol_lock_sha256",
+        "headers_override_sha256",
+        "schema_exceptions_sha256",
+        "compiler_source_sha256",
+        "rustfmt_sha256",
+    ] {
+        let digest = value[field]
+            .as_str()
+            .unwrap_or_else(|| panic!("manifest has no string field {field}: {manifest}"));
+        assert_eq!(digest.len(), 64, "{field} is not a SHA-256 digest");
+        assert!(
+            digest.bytes().all(|byte| byte.is_ascii_hexdigit()),
+            "{field} is not hexadecimal: {digest}"
+        );
+    }
+    assert!(
+        value["rustfmt_identity"]
+            .as_str()
+            .is_some_and(|identity| identity.contains("rustfmt") && identity.contains("2024")),
+        "manifest does not identify formatter behavior: {manifest}"
+    );
+}
+
+#[test]
+fn changing_an_override_document_changes_semantic_provenance() {
+    let workspace = Workspace::pinning("provenance-override", &SUPPORTED);
+    workspace
+        .generate(GenerationMode::Write)
+        .unwrap_or_else(|error| panic!("generation failed: {error}"));
+    let first: serde_json::Value = serde_json::from_str(
+        workspace
+            .tree()
+            .get("MANIFEST.json")
+            .unwrap_or_else(|| panic!("generation produced no manifest")),
+    )
+    .unwrap_or_else(|error| panic!("decode first manifest: {error}"));
+
+    let headers = workspace.root.join("spec/overrides/headers.toml");
+    write(&headers, "schema = 1\n# reviewed empty exception set\n");
+    workspace
+        .generate(GenerationMode::Write)
+        .unwrap_or_else(|error| panic!("regeneration failed: {error}"));
+    let second: serde_json::Value = serde_json::from_str(
+        workspace
+            .tree()
+            .get("MANIFEST.json")
+            .unwrap_or_else(|| panic!("regeneration produced no manifest")),
+    )
+    .unwrap_or_else(|error| panic!("decode second manifest: {error}"));
+
+    assert_ne!(
+        first["headers_override_sha256"], second["headers_override_sha256"],
+        "changed override bytes kept the same component digest"
+    );
+    assert_ne!(
+        first["semantic_inputs_sha256"], second["semantic_inputs_sha256"],
+        "changed override bytes kept the same aggregate provenance"
+    );
+    assert_eq!(
+        first["protocol_lock_sha256"], second["protocol_lock_sha256"],
+        "an unchanged lockfile digest moved"
     );
 }
 

@@ -37,8 +37,27 @@ pub fn load_message_with(
         source,
     })?;
 
+    load_source_with(source, exceptions)
+}
+
+/// Parses, lowers, and validates one source object already held in memory.
+pub fn load_source(source: SourceFile) -> Result<Message, SchemaError> {
+    load_source_with(source, &SchemaExceptions::none())
+}
+
+/// Loads one in-memory source, accepting documented upstream defects.
+///
+/// This is the trust-boundary seam for callers that verified the source bytes:
+/// the object parsed here is the exact object they hashed, with no path reopen.
+pub fn load_source_with(
+    source: SourceFile,
+    exceptions: &SchemaExceptions,
+) -> Result<Message, SchemaError> {
+    let path = source.path().to_path_buf();
+
     let raw = crate::parse_jsonc(&source)?;
-    let mut message = crate::lower_message(raw, PathBuf::from(source.path()))?;
+    drop(source);
+    let mut message = crate::lower_message(raw, PathBuf::from(&path))?;
     crate::validate_message_with(&message, exceptions)?;
     prune_unreachable_fields(&mut message);
 

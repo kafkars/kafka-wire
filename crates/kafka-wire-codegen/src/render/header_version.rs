@@ -41,7 +41,8 @@ pub(crate) fn render_header_version(overrides: &HeaderOverrides, commit: &str) -
         rust.line(format!("// {}", exception.reason));
         rust.open(format!(
             "if api_key.value() == {} && version.value() >= {}",
-            exception.api_key, exception.versions
+            exception.api_key,
+            exception.first_version()
         ));
         rust.line(format!("return {};", exception.header_version));
         rust.close("");

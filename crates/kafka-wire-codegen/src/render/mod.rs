@@ -4,6 +4,7 @@ mod api;
 mod exports;
 mod field;
 mod header_version;
+mod invariant;
 mod module_file;
 mod registry;
 mod text;

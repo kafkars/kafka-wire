@@ -58,7 +58,7 @@ fn assert_wire(field: &Field, expected: &[u8]) -> Bytes {
 }
 
 fn decoder(bytes: Bytes) -> Decoder {
-    Decoder::new(bytes, DecodeLimits::default())
+    Decoder::new(bytes, DecodeLimits::default()).unwrap()
 }
 
 fn frame(bytes: &[u8]) -> Decoder {

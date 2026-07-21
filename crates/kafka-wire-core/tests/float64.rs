@@ -21,7 +21,7 @@ fn wire(value: f64) -> Vec<u8> {
 }
 
 fn decoder(bytes: &[u8]) -> Decoder {
-    Decoder::new(Bytes::copy_from_slice(bytes), DecodeLimits::default())
+    Decoder::new(Bytes::copy_from_slice(bytes), DecodeLimits::default()).unwrap()
 }
 
 #[test]

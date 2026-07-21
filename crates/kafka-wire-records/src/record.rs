@@ -188,7 +188,7 @@ pub(crate) fn decode_all(
     count: usize,
     limits: DecodeLimits,
 ) -> Result<Vec<Record>, RecordError> {
-    let mut decoder = Decoder::new(payload, limits);
+    let mut decoder = Decoder::new(payload, limits)?;
     let mut records = Vec::with_capacity(count.min(decoder.remaining()));
     for _ in 0..count {
         if decoder.remaining() == 0 {

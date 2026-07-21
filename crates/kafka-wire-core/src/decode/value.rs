@@ -20,7 +20,7 @@ pub trait KafkaDecode: Sized {
         version: ApiVersion,
         limits: DecodeLimits,
     ) -> Result<Self, DecodeError> {
-        let mut decoder = Decoder::new(bytes, limits);
+        let mut decoder = Decoder::new(bytes, limits)?;
         let value = Self::decode(&mut decoder, version)?;
         decoder.finish()?;
         Ok(value)

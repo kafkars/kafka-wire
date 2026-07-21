@@ -79,8 +79,8 @@ pub enum DecodeError {
 
     /// A claimed element count cannot be backed by the bytes that remain.
     ///
-    /// Every array element and every tagged field occupies at least one wire
-    /// byte, so this rejects an unbacked count before it reaches a reservation.
+    /// Every tagged-field entry occupies at least its tag and size prefixes, so
+    /// this rejects an unbacked tagged count before parsing its entries.
     #[error("{kind} count {count} exceeds the {remaining} bytes remaining at byte {offset}")]
     CountExceedsFrame {
         /// Kind of counted value.

@@ -10,33 +10,6 @@ use crate::{
 use super::imports::spell;
 use super::tagged::{is_tagged, render_tagged_decode, render_tagged_encode};
 
-/// How a structure names itself in an encode error.
-///
-/// Both messages and structs refuse; they differ only in how the name is
-/// spelled, because a struct has no `KafkaMessage` and therefore no
-/// `Self::NAME`. An earlier version let a struct stay silent on the theory that
-/// its message had already refused — which was false. The message-level check
-/// reads `self.unknown_tagged_fields` on the message alone and never descends,
-/// so a nested struct's retained tags were dropped without a word.
-#[derive(Clone, Copy, Eq, PartialEq)]
-pub(super) enum Owner<'a> {
-    /// A message, which carries its protocol name as a constant.
-    Message,
-    /// A struct, named by the Rust type the generator gave it. Not a protocol
-    /// name, because a nested struct has none on the wire.
-    Struct(&'a str),
-}
-
-impl Owner<'_> {
-    /// The expression that names this structure in an encode error.
-    pub(super) fn name(self) -> String {
-        match self {
-            Self::Message => "Self::NAME".to_owned(),
-            Self::Struct(rust_type) => format!("{rust_type:?}"),
-        }
-    }
-}
-
 pub(super) fn render_decode(rust: &mut RustText, message: &Message) -> Result<(), GenerationError> {
     rust.open(format!(
         "impl {} for {}",
@@ -83,12 +56,12 @@ pub(super) fn render_encode(rust: &mut RustText, message: &Message) -> Result<()
         ") -> Result<(), {}>",
         spell(message, "EncodeError")
     ));
-    rust.line("crate::message::ensure_encode_version::<Self>(version)?;");
-    render_representability_checks(rust, message);
+    rust.line("self.validate_for_version(version)?;");
+    rust.blank();
 
-    render_writes(rust, &message.fields, message, Owner::Message)?;
+    render_writes(rust, &message.fields, message)?;
     if !message.effective_flexible_versions().is_empty() {
-        render_tagged_encode(rust, &message.fields, message, Owner::Message)?;
+        render_tagged_encode(rust, &message.fields, message)?;
     }
 
     rust.blank();
@@ -189,7 +162,6 @@ pub(super) fn render_writes(
     rust: &mut RustText,
     fields: &[kafka_wire_schema::Field],
     message: &Message,
-    owner: Owner<'_>,
 ) -> Result<(), GenerationError> {
     for field in fields {
         // The counterpart of the skip in `render_reads`: a tagged field is
@@ -197,7 +169,6 @@ pub(super) fn render_writes(
         if is_tagged(field) {
             continue;
         }
-        render_null_guard(rust, field, message, owner);
         if let FieldType::Array(element) = &field.ty {
             let (_, write) = field::element_codec(element, field, message)?;
             let (_, length) = field::array_length_codec(field, message);
@@ -259,74 +230,6 @@ fn binding(field: &kafka_wire_schema::Field) -> String {
         return name.to_owned();
     }
     format!("{name}: {local}")
-}
-
-/// Refuses a null in the versions where the protocol does not allow one.
-///
-/// A field nullable in only some of its versions is `Option<T>` in all of them,
-/// because the Rust type cannot change with a runtime version. The writer needs
-/// no version gate — every nullable writer delegates to its non-null
-/// counterpart for a present value, so `Some(v)` is byte-identical either way —
-/// but `None` is a real divergence: it would emit the null sentinel where the
-/// peer expects a length, and the frame would desync from that point on.
-fn render_null_guard(
-    rust: &mut RustText,
-    field: &kafka_wire_schema::Field,
-    message: &Message,
-    owner: Owner<'_>,
-) {
-    let Some(condition) = field::null_forbidden_condition(field, message) else {
-        return;
-    };
-    let name = field.name.rust_field();
-    rust.open(format!(
-        "if {} && self.{name}.is_none()",
-        field::as_conjunct(&condition)
-    ));
-    rust.open(format!(
-        "return Err({}::NullNotAllowed",
-        spell(message, "EncodeError")
-    ));
-    rust.line(format!("message: {},", owner.name()));
-    rust.line(format!("field: {:?},", field.name.protocol()));
-    rust.line("version,");
-    rust.close(");");
-    rust.close("");
-}
-
-fn render_representability_checks(rust: &mut RustText, message: &Message) {
-    let conditional = message
-        .fields
-        .iter()
-        .filter_map(|candidate| {
-            field::absence_condition(candidate, message)
-                .filter(|_| !candidate.ignorable)
-                .map(|condition| (candidate, condition))
-        })
-        .collect::<Vec<_>>();
-    if conditional.is_empty() {
-        rust.blank();
-        return;
-    }
-
-    rust.blank();
-    for (candidate, condition) in conditional {
-        rust.open(format!(
-            "if {} && {}",
-            field::as_conjunct(&condition),
-            field::non_default_condition(candidate, message)
-        ));
-        rust.open(format!(
-            "return Err({}::FieldNotRepresentable",
-            spell(message, "EncodeError")
-        ));
-        rust.line("message: Self::NAME,");
-        rust.line(format!("field: {:?},", candidate.name.protocol()));
-        rust.line("version,");
-        rust.close(");");
-        rust.close("");
-    }
-    rust.blank();
 }
 
 /// The array read as one expression, so a version gate can wrap it.

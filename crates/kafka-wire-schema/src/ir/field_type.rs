@@ -103,9 +103,12 @@ impl FieldType {
             "string" => Ok(Self::String),
             "bytes" => Ok(Self::Bytes),
             "records" => Ok(Self::Records),
-            other if is_struct_spelling(other) => {
-                Ok(Self::Struct(StructRef::qualify(owner, other)))
-            }
+            other if is_struct_spelling(other) => StructRef::try_qualify(owner, other)
+                .map(Self::Struct)
+                .map_err(|error| TypeParseError::Identifier {
+                    spelling: other.to_owned(),
+                    reason: error.to_string(),
+                }),
             other => Err(TypeParseError::Unknown {
                 spelling: other.to_owned(),
             }),
@@ -153,6 +156,14 @@ pub enum TypeParseError {
         spelling: String,
         /// The enforced nesting limit.
         limit: usize,
+    },
+    /// A struct spelling cannot become a valid Rust identifier.
+    #[error("type `{spelling}` cannot be emitted as Rust: {reason}")]
+    Identifier {
+        /// Upstream struct spelling.
+        spelling: String,
+        /// Identifier diagnostic.
+        reason: String,
     },
 }
 

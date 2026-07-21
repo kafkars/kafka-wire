@@ -9,5 +9,6 @@ mod tagged;
 mod uuid;
 mod varint;
 
+pub use array::BoundedCount;
 pub use core::Decoder;
 pub use tagged::TagOutcome;
