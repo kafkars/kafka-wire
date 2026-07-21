@@ -238,7 +238,7 @@ fn the_uncompressed_vectors_carry_the_shapes_that_discriminate() {
     // Header values are nullable; header keys are not.
     let headers = &named("headers_on_one_record").records[0].headers;
     assert_eq!(headers.len(), 3);
-    assert_eq!(headers[0].key, "trace-id");
+    assert_eq!(headers[0].key.as_str(), "trace-id");
     assert_eq!(headers[1].value.as_deref(), Some(&b""[..]));
     assert_eq!(
         headers[2].value, None,

@@ -7,7 +7,7 @@
 //! value is a tombstone — so nothing here may collapse them.
 
 use bytes::{Bytes, BytesMut};
-use kafka_wire_core::{DecodeLimits, Decoder, EncodeError, EncodeTarget, Encoder};
+use kafka_wire_core::{DecodeLimits, Decoder, EncodeError, EncodeTarget, Encoder, StrBytes};
 
 use crate::error::RecordError;
 
@@ -15,7 +15,7 @@ use crate::error::RecordError;
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct RecordHeader {
     /// Header key. Never null on the wire, unlike the value.
-    pub key: String,
+    pub key: StrBytes,
     /// Header value, which may be absent.
     pub value: Option<Bytes>,
 }
@@ -40,38 +40,46 @@ pub struct Record {
 impl Record {
     /// Reads one length-prefixed record from `decoder`.
     ///
-    /// The declared length is checked against what the fields consumed rather
-    /// than used to skip ahead. A record that reads short means this build and
-    /// the peer disagree about the record format, and continuing would decode
-    /// the next record from the middle of this one.
+    /// The declared body becomes a bounded child decoder before any field is
+    /// read. A field cannot observe its successor record, and trailing child
+    /// bytes still report the declared-versus-consumed disagreement.
     pub fn decode(decoder: &mut Decoder) -> Result<Self, RecordError> {
+        let declared_offset = decoder.offset();
         let declared = decoder.read_varint()?;
-        let declared = usize::try_from(declared).map_err(|_| RecordError::RecordSizeMismatch {
-            declared: 0,
-            consumed: 0,
+        if declared < 0 {
+            return Err(RecordError::NegativeRecordLength {
+                length: declared,
+                offset: declared_offset,
+            });
+        }
+        let declared = usize::try_from(declared).map_err(|_| {
+            RecordError::Wire(kafka_wire_core::DecodeError::LengthOverflow {
+                kind: "record",
+                offset: declared_offset,
+            })
         })?;
-        let start = decoder.remaining();
+        let mut body = decoder.take_child(declared)?;
 
-        let attributes = decoder.read_i8()?;
-        let timestamp_delta = decoder.read_varlong()?;
-        let offset_delta = decoder.read_varint()?;
-        let key = read_varint_bytes(decoder)?;
-        let value = read_varint_bytes(decoder)?;
+        let attributes = body.read_i8()?;
+        let timestamp_delta = body.read_varlong()?;
+        let offset_delta = body.read_varint()?;
+        let key = read_varint_bytes(&mut body, "record key")?;
+        let value = read_varint_bytes(&mut body, "record value")?;
 
-        let header_count_offset = decoder.offset();
-        let header_count = decoder.read_varint()?;
+        let header_count_offset = body.offset();
+        let header_count = body.read_varint()?;
         let header_count =
             usize::try_from(header_count).map_err(|_| RecordError::RecordSizeMismatch {
                 declared,
-                consumed: start - decoder.remaining(),
+                consumed: declared - body.remaining(),
             })?;
-        decoder.check_collection_limit("record headers", header_count, header_count_offset)?;
-        let mut headers = Vec::with_capacity(header_count.min(start));
+        body.check_collection_limit("record headers", header_count, header_count_offset)?;
+        let mut headers = Vec::with_capacity(header_count.min(body.remaining()));
         for _ in 0..header_count {
-            headers.push(RecordHeader::decode(decoder)?);
+            headers.push(RecordHeader::decode(&mut body)?);
         }
 
-        let consumed = start - decoder.remaining();
+        let consumed = declared - body.remaining();
         if consumed != declared {
             return Err(RecordError::RecordSizeMismatch { declared, consumed });
         }
@@ -121,16 +129,13 @@ impl Record {
 
 impl RecordHeader {
     fn decode(decoder: &mut Decoder) -> Result<Self, RecordError> {
-        let key = read_varint_bytes(decoder)?.ok_or(RecordError::NullHeaderKey)?;
-        let key = String::from_utf8(key.to_vec()).map_err(|error| {
-            RecordError::Wire(kafka_wire_core::DecodeError::InvalidUtf8 {
-                offset: decoder.offset(),
-                valid_up_to: error.utf8_error().valid_up_to(),
-            })
-        })?;
+        let Some((key_length, key_prefix_offset)) = read_varint_length(decoder)? else {
+            return Err(RecordError::NullHeaderKey);
+        };
+        let key = decoder.take_string_field("record header key", key_length, key_prefix_offset)?;
         Ok(Self {
             key,
-            value: read_varint_bytes(decoder)?,
+            value: read_varint_bytes(decoder, "record header value")?,
         })
     }
 
@@ -141,7 +146,21 @@ impl RecordHeader {
 }
 
 /// Reads a zigzag-varint length-prefixed byte string, where `-1` is null.
-fn read_varint_bytes(decoder: &mut Decoder) -> Result<Option<Bytes>, RecordError> {
+fn read_varint_bytes(
+    decoder: &mut Decoder,
+    kind: &'static str,
+) -> Result<Option<Bytes>, RecordError> {
+    let Some((length, prefix_offset)) = read_varint_length(decoder)? else {
+        return Ok(None);
+    };
+    decoder
+        .take_byte_field(kind, length, prefix_offset)
+        .map(Some)
+        .map_err(RecordError::from)
+}
+
+fn read_varint_length(decoder: &mut Decoder) -> Result<Option<(usize, usize)>, RecordError> {
+    let prefix_offset = decoder.offset();
     let length = decoder.read_varint()?;
     if length == -1 {
         return Ok(None);
@@ -150,7 +169,7 @@ fn read_varint_bytes(decoder: &mut Decoder) -> Result<Option<Bytes>, RecordError
         return Err(RecordError::InvalidRecordFieldLength { length });
     }
     let length = usize::try_from(length).unwrap_or(usize::MAX);
-    Ok(Some(decoder.take_bytes(length)?))
+    Ok(Some((length, prefix_offset)))
 }
 
 /// Writes one, spelling absent as `-1` and empty as `0`.

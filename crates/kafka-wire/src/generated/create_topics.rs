@@ -11,8 +11,9 @@
 /// written to name the message itself.
 pub mod create_topics_request {
     use kafka_wire_core::{
-        ApiKey, ApiVersion, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
-        KafkaEncode, StrBytes, TaggedFields, VersionRange,
+        ApiKey, ApiVersion, BytesMut, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder,
+        KafkaDecode, KafkaEncode, StrBytes, TaggedFields, VersionRange, encode_into_with,
+        encoded_len_with,
     };
 
     use crate::{KafkaMessage, KafkaRequest, RequestResponsePair};
@@ -173,18 +174,24 @@ pub mod create_topics_request {
             CreatableTopic::encode_validated(self, encoder, version)
         }
 
-        #[doc(hidden)]
-        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
-            self.validate_for_version(version)
+        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+            encoded_len_with(
+                || self.validate_for_version(version),
+                |encoder| CreatableTopic::encode_validated(self, encoder, version),
+            )
         }
 
-        #[doc(hidden)]
-        fn encode_validated<T: EncodeTarget>(
+        fn encode_into(
             &self,
-            encoder: &mut Encoder<T>,
+            buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
-            CreatableTopic::encode_validated(self, encoder, version)
+        ) -> Result<usize, EncodeError> {
+            encode_into_with(
+                buffer,
+                || self.validate_for_version(version),
+                |encoder| CreatableTopic::encode_validated(self, encoder, version),
+                |encoder| CreatableTopic::encode_validated(self, encoder, version),
+            )
         }
     }
 
@@ -297,18 +304,24 @@ pub mod create_topics_request {
             CreatableReplicaAssignment::encode_validated(self, encoder, version)
         }
 
-        #[doc(hidden)]
-        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
-            self.validate_for_version(version)
+        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+            encoded_len_with(
+                || self.validate_for_version(version),
+                |encoder| CreatableReplicaAssignment::encode_validated(self, encoder, version),
+            )
         }
 
-        #[doc(hidden)]
-        fn encode_validated<T: EncodeTarget>(
+        fn encode_into(
             &self,
-            encoder: &mut Encoder<T>,
+            buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
-            CreatableReplicaAssignment::encode_validated(self, encoder, version)
+        ) -> Result<usize, EncodeError> {
+            encode_into_with(
+                buffer,
+                || self.validate_for_version(version),
+                |encoder| CreatableReplicaAssignment::encode_validated(self, encoder, version),
+                |encoder| CreatableReplicaAssignment::encode_validated(self, encoder, version),
+            )
         }
     }
 
@@ -433,18 +446,24 @@ pub mod create_topics_request {
             CreatableTopicConfig::encode_validated(self, encoder, version)
         }
 
-        #[doc(hidden)]
-        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
-            self.validate_for_version(version)
+        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+            encoded_len_with(
+                || self.validate_for_version(version),
+                |encoder| CreatableTopicConfig::encode_validated(self, encoder, version),
+            )
         }
 
-        #[doc(hidden)]
-        fn encode_validated<T: EncodeTarget>(
+        fn encode_into(
             &self,
-            encoder: &mut Encoder<T>,
+            buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
-            CreatableTopicConfig::encode_validated(self, encoder, version)
+        ) -> Result<usize, EncodeError> {
+            encode_into_with(
+                buffer,
+                || self.validate_for_version(version),
+                |encoder| CreatableTopicConfig::encode_validated(self, encoder, version),
+                |encoder| CreatableTopicConfig::encode_validated(self, encoder, version),
+            )
         }
     }
 
@@ -481,6 +500,7 @@ pub mod create_topics_request {
 
     impl KafkaRequest for CreateTopicsRequest {
         const API_KEY: ApiKey = ApiKey::new(19);
+        const LATEST_VERSION_UNSTABLE: bool = false;
     }
 
     impl RequestResponsePair for CreateTopicsRequest {
@@ -569,18 +589,24 @@ pub mod create_topics_request {
             CreateTopicsRequest::encode_validated(self, encoder, version)
         }
 
-        #[doc(hidden)]
-        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
-            self.validate_for_version(version)
+        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+            encoded_len_with(
+                || self.validate_for_version(version),
+                |encoder| CreateTopicsRequest::encode_validated(self, encoder, version),
+            )
         }
 
-        #[doc(hidden)]
-        fn encode_validated<T: EncodeTarget>(
+        fn encode_into(
             &self,
-            encoder: &mut Encoder<T>,
+            buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
-            CreateTopicsRequest::encode_validated(self, encoder, version)
+        ) -> Result<usize, EncodeError> {
+            encode_into_with(
+                buffer,
+                || self.validate_for_version(version),
+                |encoder| CreateTopicsRequest::encode_validated(self, encoder, version),
+                |encoder| CreateTopicsRequest::encode_validated(self, encoder, version),
+            )
         }
     }
 }
@@ -591,8 +617,9 @@ pub mod create_topics_request {
 /// written to name the message itself.
 pub mod create_topics_response {
     use kafka_wire_core::{
-        ApiKey, ApiVersion, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
-        KafkaEncode, KnownTags, StrBytes, TagOutcome, TaggedFields, Uuid, VersionRange,
+        ApiKey, ApiVersion, BytesMut, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder,
+        KafkaDecode, KafkaEncode, KnownTags, StrBytes, TagOutcome, TaggedFields, Uuid,
+        VersionRange, encode_into_with, encoded_len_with,
     };
 
     use crate::{KafkaMessage, KafkaResponse};
@@ -809,18 +836,24 @@ pub mod create_topics_response {
             CreatableTopicResult::encode_validated(self, encoder, version)
         }
 
-        #[doc(hidden)]
-        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
-            self.validate_for_version(version)
+        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+            encoded_len_with(
+                || self.validate_for_version(version),
+                |encoder| CreatableTopicResult::encode_validated(self, encoder, version),
+            )
         }
 
-        #[doc(hidden)]
-        fn encode_validated<T: EncodeTarget>(
+        fn encode_into(
             &self,
-            encoder: &mut Encoder<T>,
+            buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
-            CreatableTopicResult::encode_validated(self, encoder, version)
+        ) -> Result<usize, EncodeError> {
+            encode_into_with(
+                buffer,
+                || self.validate_for_version(version),
+                |encoder| CreatableTopicResult::encode_validated(self, encoder, version),
+                |encoder| CreatableTopicResult::encode_validated(self, encoder, version),
+            )
         }
     }
 
@@ -947,18 +980,24 @@ pub mod create_topics_response {
             CreatableTopicConfigs::encode_validated(self, encoder, version)
         }
 
-        #[doc(hidden)]
-        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
-            self.validate_for_version(version)
+        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+            encoded_len_with(
+                || self.validate_for_version(version),
+                |encoder| CreatableTopicConfigs::encode_validated(self, encoder, version),
+            )
         }
 
-        #[doc(hidden)]
-        fn encode_validated<T: EncodeTarget>(
+        fn encode_into(
             &self,
-            encoder: &mut Encoder<T>,
+            buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
-            CreatableTopicConfigs::encode_validated(self, encoder, version)
+        ) -> Result<usize, EncodeError> {
+            encode_into_with(
+                buffer,
+                || self.validate_for_version(version),
+                |encoder| CreatableTopicConfigs::encode_validated(self, encoder, version),
+                |encoder| CreatableTopicConfigs::encode_validated(self, encoder, version),
+            )
         }
     }
 
@@ -1065,18 +1104,24 @@ pub mod create_topics_response {
             CreateTopicsResponse::encode_validated(self, encoder, version)
         }
 
-        #[doc(hidden)]
-        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
-            self.validate_for_version(version)
+        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+            encoded_len_with(
+                || self.validate_for_version(version),
+                |encoder| CreateTopicsResponse::encode_validated(self, encoder, version),
+            )
         }
 
-        #[doc(hidden)]
-        fn encode_validated<T: EncodeTarget>(
+        fn encode_into(
             &self,
-            encoder: &mut Encoder<T>,
+            buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
-            CreateTopicsResponse::encode_validated(self, encoder, version)
+        ) -> Result<usize, EncodeError> {
+            encode_into_with(
+                buffer,
+                || self.validate_for_version(version),
+                |encoder| CreateTopicsResponse::encode_validated(self, encoder, version),
+                |encoder| CreateTopicsResponse::encode_validated(self, encoder, version),
+            )
         }
     }
 }
@@ -1095,6 +1140,7 @@ pub const CREATE_TOPICS_REQUEST_DESCRIPTOR: MessageDescriptor = MessageDescripto
     MessageDirection::Request,
     VersionRange::new(2, 7),
     Some(VersionRange::new(5, 7)),
+    false,
 );
 
 /// Static metadata for [`CreateTopicsResponse`].
@@ -1104,4 +1150,5 @@ pub const CREATE_TOPICS_RESPONSE_DESCRIPTOR: MessageDescriptor = MessageDescript
     MessageDirection::Response,
     VersionRange::new(2, 7),
     Some(VersionRange::new(5, 7)),
+    false,
 );

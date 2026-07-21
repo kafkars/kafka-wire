@@ -11,8 +11,9 @@
 /// written to name the message itself.
 pub mod delete_acls_request {
     use kafka_wire_core::{
-        ApiKey, ApiVersion, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
-        KafkaEncode, StrBytes, TaggedFields, VersionRange,
+        ApiKey, ApiVersion, BytesMut, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder,
+        KafkaDecode, KafkaEncode, StrBytes, TaggedFields, VersionRange, encode_into_with,
+        encoded_len_with,
     };
 
     use crate::{KafkaMessage, KafkaRequest, RequestResponsePair};
@@ -176,18 +177,24 @@ pub mod delete_acls_request {
             DeleteAclsFilter::encode_validated(self, encoder, version)
         }
 
-        #[doc(hidden)]
-        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
-            self.validate_for_version(version)
+        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+            encoded_len_with(
+                || self.validate_for_version(version),
+                |encoder| DeleteAclsFilter::encode_validated(self, encoder, version),
+            )
         }
 
-        #[doc(hidden)]
-        fn encode_validated<T: EncodeTarget>(
+        fn encode_into(
             &self,
-            encoder: &mut Encoder<T>,
+            buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
-            DeleteAclsFilter::encode_validated(self, encoder, version)
+        ) -> Result<usize, EncodeError> {
+            encode_into_with(
+                buffer,
+                || self.validate_for_version(version),
+                |encoder| DeleteAclsFilter::encode_validated(self, encoder, version),
+                |encoder| DeleteAclsFilter::encode_validated(self, encoder, version),
+            )
         }
     }
 
@@ -209,6 +216,7 @@ pub mod delete_acls_request {
 
     impl KafkaRequest for DeleteAclsRequest {
         const API_KEY: ApiKey = ApiKey::new(31);
+        const LATEST_VERSION_UNSTABLE: bool = false;
     }
 
     impl RequestResponsePair for DeleteAclsRequest {
@@ -291,18 +299,24 @@ pub mod delete_acls_request {
             DeleteAclsRequest::encode_validated(self, encoder, version)
         }
 
-        #[doc(hidden)]
-        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
-            self.validate_for_version(version)
+        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+            encoded_len_with(
+                || self.validate_for_version(version),
+                |encoder| DeleteAclsRequest::encode_validated(self, encoder, version),
+            )
         }
 
-        #[doc(hidden)]
-        fn encode_validated<T: EncodeTarget>(
+        fn encode_into(
             &self,
-            encoder: &mut Encoder<T>,
+            buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
-            DeleteAclsRequest::encode_validated(self, encoder, version)
+        ) -> Result<usize, EncodeError> {
+            encode_into_with(
+                buffer,
+                || self.validate_for_version(version),
+                |encoder| DeleteAclsRequest::encode_validated(self, encoder, version),
+                |encoder| DeleteAclsRequest::encode_validated(self, encoder, version),
+            )
         }
     }
 }
@@ -313,8 +327,9 @@ pub mod delete_acls_request {
 /// written to name the message itself.
 pub mod delete_acls_response {
     use kafka_wire_core::{
-        ApiKey, ApiVersion, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
-        KafkaEncode, StrBytes, TaggedFields, VersionRange,
+        ApiKey, ApiVersion, BytesMut, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder,
+        KafkaDecode, KafkaEncode, StrBytes, TaggedFields, VersionRange, encode_into_with,
+        encoded_len_with,
     };
 
     use crate::{KafkaMessage, KafkaResponse};
@@ -457,18 +472,24 @@ pub mod delete_acls_response {
             DeleteAclsFilterResult::encode_validated(self, encoder, version)
         }
 
-        #[doc(hidden)]
-        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
-            self.validate_for_version(version)
+        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+            encoded_len_with(
+                || self.validate_for_version(version),
+                |encoder| DeleteAclsFilterResult::encode_validated(self, encoder, version),
+            )
         }
 
-        #[doc(hidden)]
-        fn encode_validated<T: EncodeTarget>(
+        fn encode_into(
             &self,
-            encoder: &mut Encoder<T>,
+            buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
-            DeleteAclsFilterResult::encode_validated(self, encoder, version)
+        ) -> Result<usize, EncodeError> {
+            encode_into_with(
+                buffer,
+                || self.validate_for_version(version),
+                |encoder| DeleteAclsFilterResult::encode_validated(self, encoder, version),
+                |encoder| DeleteAclsFilterResult::encode_validated(self, encoder, version),
+            )
         }
     }
 
@@ -651,18 +672,24 @@ pub mod delete_acls_response {
             DeleteAclsMatchingAcl::encode_validated(self, encoder, version)
         }
 
-        #[doc(hidden)]
-        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
-            self.validate_for_version(version)
+        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+            encoded_len_with(
+                || self.validate_for_version(version),
+                |encoder| DeleteAclsMatchingAcl::encode_validated(self, encoder, version),
+            )
         }
 
-        #[doc(hidden)]
-        fn encode_validated<T: EncodeTarget>(
+        fn encode_into(
             &self,
-            encoder: &mut Encoder<T>,
+            buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
-            DeleteAclsMatchingAcl::encode_validated(self, encoder, version)
+        ) -> Result<usize, EncodeError> {
+            encode_into_with(
+                buffer,
+                || self.validate_for_version(version),
+                |encoder| DeleteAclsMatchingAcl::encode_validated(self, encoder, version),
+                |encoder| DeleteAclsMatchingAcl::encode_validated(self, encoder, version),
+            )
         }
     }
 
@@ -769,18 +796,24 @@ pub mod delete_acls_response {
             DeleteAclsResponse::encode_validated(self, encoder, version)
         }
 
-        #[doc(hidden)]
-        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
-            self.validate_for_version(version)
+        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+            encoded_len_with(
+                || self.validate_for_version(version),
+                |encoder| DeleteAclsResponse::encode_validated(self, encoder, version),
+            )
         }
 
-        #[doc(hidden)]
-        fn encode_validated<T: EncodeTarget>(
+        fn encode_into(
             &self,
-            encoder: &mut Encoder<T>,
+            buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
-            DeleteAclsResponse::encode_validated(self, encoder, version)
+        ) -> Result<usize, EncodeError> {
+            encode_into_with(
+                buffer,
+                || self.validate_for_version(version),
+                |encoder| DeleteAclsResponse::encode_validated(self, encoder, version),
+                |encoder| DeleteAclsResponse::encode_validated(self, encoder, version),
+            )
         }
     }
 }
@@ -799,6 +832,7 @@ pub const DELETE_ACLS_REQUEST_DESCRIPTOR: MessageDescriptor = MessageDescriptor:
     MessageDirection::Request,
     VersionRange::new(1, 3),
     Some(VersionRange::new(2, 3)),
+    false,
 );
 
 /// Static metadata for [`DeleteAclsResponse`].
@@ -808,4 +842,5 @@ pub const DELETE_ACLS_RESPONSE_DESCRIPTOR: MessageDescriptor = MessageDescriptor
     MessageDirection::Response,
     VersionRange::new(1, 3),
     Some(VersionRange::new(2, 3)),
+    false,
 );

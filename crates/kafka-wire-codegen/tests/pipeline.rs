@@ -138,3 +138,78 @@ fn a_refused_schema_leaves_no_partial_tree_behind() {
         "a refused generation modified an already-generated tree"
     );
 }
+
+#[test]
+fn an_output_redirect_cannot_replace_a_source_directory() {
+    let workspace = Workspace::pinning("output-authorization", &SUPPORTED);
+    let source = workspace.root.join("crates/keep.rs");
+    write(
+        &source,
+        "//! Handwritten source that generation must preserve.\n",
+    );
+    let lock = workspace.root.join("spec/protocol.lock");
+    write(
+        &lock,
+        &read(&lock).replace("crates/kafka-wire/src/generated", "crates"),
+    );
+
+    let error = workspace
+        .generate(GenerationMode::Write)
+        .err()
+        .unwrap_or_else(|| panic!("an unauthorized output path was accepted"));
+
+    assert!(matches!(
+        error,
+        GenerationError::InvalidLockfileValue { ref field, .. }
+            if field == "generator.output"
+    ));
+    assert_eq!(
+        read(&source),
+        "//! Handwritten source that generation must preserve.\n"
+    );
+}
+
+#[test]
+fn an_existing_destination_requires_a_generator_manifest() {
+    let workspace = Workspace::pinning("output-ownership", &SUPPORTED);
+    let handwritten = workspace.output_root().join("handwritten.rs");
+    write(&handwritten, "//! This directory is not generator-owned.\n");
+
+    let error = workspace
+        .generate(GenerationMode::Write)
+        .err()
+        .unwrap_or_else(|| panic!("an unowned output directory was replaced"));
+
+    assert!(matches!(error, GenerationError::UnownedOutputTree { .. }));
+    assert_eq!(
+        read(&handwritten),
+        "//! This directory is not generator-owned.\n"
+    );
+}
+
+#[test]
+fn a_manifest_must_name_the_expected_schema_and_generator() {
+    for (name, manifest) in [
+        (
+            "output-schema",
+            r#"{ "schema": 2, "generator": "kafka-wire-codegen 0.1.0" }"#,
+        ),
+        (
+            "output-generator",
+            r#"{ "schema": 1, "generator": "another-generator 0.1.0" }"#,
+        ),
+    ] {
+        let workspace = Workspace::pinning(name, &SUPPORTED);
+        let handwritten = workspace.output_root().join("handwritten.rs");
+        write(&handwritten, "//! Preserve me.\n");
+        write(&workspace.output_root().join("MANIFEST.json"), manifest);
+
+        let error = workspace
+            .generate(GenerationMode::Write)
+            .err()
+            .unwrap_or_else(|| panic!("invalid ownership manifest was accepted"));
+
+        assert!(matches!(error, GenerationError::UnownedOutputTree { .. }));
+        assert_eq!(read(&handwritten), "//! Preserve me.\n");
+    }
+}

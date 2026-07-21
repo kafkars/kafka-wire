@@ -11,8 +11,9 @@
 /// written to name the message itself.
 pub mod fetch_request {
     use kafka_wire_core::{
-        ApiKey, ApiVersion, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
-        KafkaEncode, KnownTags, StrBytes, TagOutcome, TaggedFields, Uuid, VersionRange,
+        ApiKey, ApiVersion, BytesMut, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder,
+        KafkaDecode, KafkaEncode, KnownTags, StrBytes, TagOutcome, TaggedFields, Uuid,
+        VersionRange, encode_into_with, encoded_len_with,
     };
 
     use crate::{KafkaMessage, KafkaRequest, RequestResponsePair};
@@ -122,18 +123,24 @@ pub mod fetch_request {
             ReplicaState::encode_validated(self, encoder, version)
         }
 
-        #[doc(hidden)]
-        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
-            self.validate_for_version(version)
+        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+            encoded_len_with(
+                || self.validate_for_version(version),
+                |encoder| ReplicaState::encode_validated(self, encoder, version),
+            )
         }
 
-        #[doc(hidden)]
-        fn encode_validated<T: EncodeTarget>(
+        fn encode_into(
             &self,
-            encoder: &mut Encoder<T>,
+            buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
-            ReplicaState::encode_validated(self, encoder, version)
+        ) -> Result<usize, EncodeError> {
+            encode_into_with(
+                buffer,
+                || self.validate_for_version(version),
+                |encoder| ReplicaState::encode_validated(self, encoder, version),
+                |encoder| ReplicaState::encode_validated(self, encoder, version),
+            )
         }
     }
 
@@ -274,18 +281,24 @@ pub mod fetch_request {
             FetchTopic::encode_validated(self, encoder, version)
         }
 
-        #[doc(hidden)]
-        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
-            self.validate_for_version(version)
+        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+            encoded_len_with(
+                || self.validate_for_version(version),
+                |encoder| FetchTopic::encode_validated(self, encoder, version),
+            )
         }
 
-        #[doc(hidden)]
-        fn encode_validated<T: EncodeTarget>(
+        fn encode_into(
             &self,
-            encoder: &mut Encoder<T>,
+            buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
-            FetchTopic::encode_validated(self, encoder, version)
+        ) -> Result<usize, EncodeError> {
+            encode_into_with(
+                buffer,
+                || self.validate_for_version(version),
+                |encoder| FetchTopic::encode_validated(self, encoder, version),
+                |encoder| FetchTopic::encode_validated(self, encoder, version),
+            )
         }
     }
 
@@ -476,18 +489,24 @@ pub mod fetch_request {
             FetchPartition::encode_validated(self, encoder, version)
         }
 
-        #[doc(hidden)]
-        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
-            self.validate_for_version(version)
+        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+            encoded_len_with(
+                || self.validate_for_version(version),
+                |encoder| FetchPartition::encode_validated(self, encoder, version),
+            )
         }
 
-        #[doc(hidden)]
-        fn encode_validated<T: EncodeTarget>(
+        fn encode_into(
             &self,
-            encoder: &mut Encoder<T>,
+            buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
-            FetchPartition::encode_validated(self, encoder, version)
+        ) -> Result<usize, EncodeError> {
+            encode_into_with(
+                buffer,
+                || self.validate_for_version(version),
+                |encoder| FetchPartition::encode_validated(self, encoder, version),
+                |encoder| FetchPartition::encode_validated(self, encoder, version),
+            )
         }
     }
 
@@ -625,18 +644,24 @@ pub mod fetch_request {
             ForgottenTopic::encode_validated(self, encoder, version)
         }
 
-        #[doc(hidden)]
-        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
-            self.validate_for_version(version)
+        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+            encoded_len_with(
+                || self.validate_for_version(version),
+                |encoder| ForgottenTopic::encode_validated(self, encoder, version),
+            )
         }
 
-        #[doc(hidden)]
-        fn encode_validated<T: EncodeTarget>(
+        fn encode_into(
             &self,
-            encoder: &mut Encoder<T>,
+            buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
-            ForgottenTopic::encode_validated(self, encoder, version)
+        ) -> Result<usize, EncodeError> {
+            encode_into_with(
+                buffer,
+                || self.validate_for_version(version),
+                |encoder| ForgottenTopic::encode_validated(self, encoder, version),
+                |encoder| ForgottenTopic::encode_validated(self, encoder, version),
+            )
         }
     }
 
@@ -700,6 +725,7 @@ pub mod fetch_request {
 
     impl KafkaRequest for FetchRequest {
         const API_KEY: ApiKey = ApiKey::new(1);
+        const LATEST_VERSION_UNSTABLE: bool = false;
     }
 
     impl RequestResponsePair for FetchRequest {
@@ -915,18 +941,24 @@ pub mod fetch_request {
             FetchRequest::encode_validated(self, encoder, version)
         }
 
-        #[doc(hidden)]
-        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
-            self.validate_for_version(version)
+        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+            encoded_len_with(
+                || self.validate_for_version(version),
+                |encoder| FetchRequest::encode_validated(self, encoder, version),
+            )
         }
 
-        #[doc(hidden)]
-        fn encode_validated<T: EncodeTarget>(
+        fn encode_into(
             &self,
-            encoder: &mut Encoder<T>,
+            buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
-            FetchRequest::encode_validated(self, encoder, version)
+        ) -> Result<usize, EncodeError> {
+            encode_into_with(
+                buffer,
+                || self.validate_for_version(version),
+                |encoder| FetchRequest::encode_validated(self, encoder, version),
+                |encoder| FetchRequest::encode_validated(self, encoder, version),
+            )
         }
     }
 }
@@ -937,9 +969,9 @@ pub mod fetch_request {
 /// written to name the message itself.
 pub mod fetch_response {
     use kafka_wire_core::{
-        ApiKey, ApiVersion, Bytes, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder,
-        KafkaDecode, KafkaEncode, KnownTags, StrBytes, TagOutcome, TaggedFields, Uuid,
-        VersionRange,
+        ApiKey, ApiVersion, Bytes, BytesMut, DecodeError, Decoder, EncodeError, EncodeTarget,
+        Encoder, KafkaDecode, KafkaEncode, KnownTags, StrBytes, TagOutcome, TaggedFields, Uuid,
+        VersionRange, encode_into_with, encoded_len_with,
     };
 
     use crate::{KafkaMessage, KafkaResponse};
@@ -1081,18 +1113,24 @@ pub mod fetch_response {
             FetchableTopicResponse::encode_validated(self, encoder, version)
         }
 
-        #[doc(hidden)]
-        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
-            self.validate_for_version(version)
+        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+            encoded_len_with(
+                || self.validate_for_version(version),
+                |encoder| FetchableTopicResponse::encode_validated(self, encoder, version),
+            )
         }
 
-        #[doc(hidden)]
-        fn encode_validated<T: EncodeTarget>(
+        fn encode_into(
             &self,
-            encoder: &mut Encoder<T>,
+            buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
-            FetchableTopicResponse::encode_validated(self, encoder, version)
+        ) -> Result<usize, EncodeError> {
+            encode_into_with(
+                buffer,
+                || self.validate_for_version(version),
+                |encoder| FetchableTopicResponse::encode_validated(self, encoder, version),
+                |encoder| FetchableTopicResponse::encode_validated(self, encoder, version),
+            )
         }
     }
 
@@ -1372,18 +1410,24 @@ pub mod fetch_response {
             PartitionData::encode_validated(self, encoder, version)
         }
 
-        #[doc(hidden)]
-        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
-            self.validate_for_version(version)
+        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+            encoded_len_with(
+                || self.validate_for_version(version),
+                |encoder| PartitionData::encode_validated(self, encoder, version),
+            )
         }
 
-        #[doc(hidden)]
-        fn encode_validated<T: EncodeTarget>(
+        fn encode_into(
             &self,
-            encoder: &mut Encoder<T>,
+            buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
-            PartitionData::encode_validated(self, encoder, version)
+        ) -> Result<usize, EncodeError> {
+            encode_into_with(
+                buffer,
+                || self.validate_for_version(version),
+                |encoder| PartitionData::encode_validated(self, encoder, version),
+                |encoder| PartitionData::encode_validated(self, encoder, version),
+            )
         }
     }
 
@@ -1492,18 +1536,24 @@ pub mod fetch_response {
             EpochEndOffset::encode_validated(self, encoder, version)
         }
 
-        #[doc(hidden)]
-        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
-            self.validate_for_version(version)
+        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+            encoded_len_with(
+                || self.validate_for_version(version),
+                |encoder| EpochEndOffset::encode_validated(self, encoder, version),
+            )
         }
 
-        #[doc(hidden)]
-        fn encode_validated<T: EncodeTarget>(
+        fn encode_into(
             &self,
-            encoder: &mut Encoder<T>,
+            buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
-            EpochEndOffset::encode_validated(self, encoder, version)
+        ) -> Result<usize, EncodeError> {
+            encode_into_with(
+                buffer,
+                || self.validate_for_version(version),
+                |encoder| EpochEndOffset::encode_validated(self, encoder, version),
+                |encoder| EpochEndOffset::encode_validated(self, encoder, version),
+            )
         }
     }
 
@@ -1612,18 +1662,24 @@ pub mod fetch_response {
             LeaderIdAndEpoch::encode_validated(self, encoder, version)
         }
 
-        #[doc(hidden)]
-        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
-            self.validate_for_version(version)
+        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+            encoded_len_with(
+                || self.validate_for_version(version),
+                |encoder| LeaderIdAndEpoch::encode_validated(self, encoder, version),
+            )
         }
 
-        #[doc(hidden)]
-        fn encode_validated<T: EncodeTarget>(
+        fn encode_into(
             &self,
-            encoder: &mut Encoder<T>,
+            buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
-            LeaderIdAndEpoch::encode_validated(self, encoder, version)
+        ) -> Result<usize, EncodeError> {
+            encode_into_with(
+                buffer,
+                || self.validate_for_version(version),
+                |encoder| LeaderIdAndEpoch::encode_validated(self, encoder, version),
+                |encoder| LeaderIdAndEpoch::encode_validated(self, encoder, version),
+            )
         }
     }
 
@@ -1732,18 +1788,24 @@ pub mod fetch_response {
             SnapshotId::encode_validated(self, encoder, version)
         }
 
-        #[doc(hidden)]
-        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
-            self.validate_for_version(version)
+        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+            encoded_len_with(
+                || self.validate_for_version(version),
+                |encoder| SnapshotId::encode_validated(self, encoder, version),
+            )
         }
 
-        #[doc(hidden)]
-        fn encode_validated<T: EncodeTarget>(
+        fn encode_into(
             &self,
-            encoder: &mut Encoder<T>,
+            buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
-            SnapshotId::encode_validated(self, encoder, version)
+        ) -> Result<usize, EncodeError> {
+            encode_into_with(
+                buffer,
+                || self.validate_for_version(version),
+                |encoder| SnapshotId::encode_validated(self, encoder, version),
+                |encoder| SnapshotId::encode_validated(self, encoder, version),
+            )
         }
     }
 
@@ -1842,18 +1904,24 @@ pub mod fetch_response {
             AbortedTransaction::encode_validated(self, encoder, version)
         }
 
-        #[doc(hidden)]
-        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
-            self.validate_for_version(version)
+        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+            encoded_len_with(
+                || self.validate_for_version(version),
+                |encoder| AbortedTransaction::encode_validated(self, encoder, version),
+            )
         }
 
-        #[doc(hidden)]
-        fn encode_validated<T: EncodeTarget>(
+        fn encode_into(
             &self,
-            encoder: &mut Encoder<T>,
+            buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
-            AbortedTransaction::encode_validated(self, encoder, version)
+        ) -> Result<usize, EncodeError> {
+            encode_into_with(
+                buffer,
+                || self.validate_for_version(version),
+                |encoder| AbortedTransaction::encode_validated(self, encoder, version),
+                |encoder| AbortedTransaction::encode_validated(self, encoder, version),
+            )
         }
     }
 
@@ -1962,18 +2030,24 @@ pub mod fetch_response {
             NodeEndpoint::encode_validated(self, encoder, version)
         }
 
-        #[doc(hidden)]
-        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
-            self.validate_for_version(version)
+        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+            encoded_len_with(
+                || self.validate_for_version(version),
+                |encoder| NodeEndpoint::encode_validated(self, encoder, version),
+            )
         }
 
-        #[doc(hidden)]
-        fn encode_validated<T: EncodeTarget>(
+        fn encode_into(
             &self,
-            encoder: &mut Encoder<T>,
+            buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
-            NodeEndpoint::encode_validated(self, encoder, version)
+        ) -> Result<usize, EncodeError> {
+            encode_into_with(
+                buffer,
+                || self.validate_for_version(version),
+                |encoder| NodeEndpoint::encode_validated(self, encoder, version),
+                |encoder| NodeEndpoint::encode_validated(self, encoder, version),
+            )
         }
     }
 
@@ -2146,18 +2220,24 @@ pub mod fetch_response {
             FetchResponse::encode_validated(self, encoder, version)
         }
 
-        #[doc(hidden)]
-        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
-            self.validate_for_version(version)
+        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+            encoded_len_with(
+                || self.validate_for_version(version),
+                |encoder| FetchResponse::encode_validated(self, encoder, version),
+            )
         }
 
-        #[doc(hidden)]
-        fn encode_validated<T: EncodeTarget>(
+        fn encode_into(
             &self,
-            encoder: &mut Encoder<T>,
+            buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
-            FetchResponse::encode_validated(self, encoder, version)
+        ) -> Result<usize, EncodeError> {
+            encode_into_with(
+                buffer,
+                || self.validate_for_version(version),
+                |encoder| FetchResponse::encode_validated(self, encoder, version),
+                |encoder| FetchResponse::encode_validated(self, encoder, version),
+            )
         }
     }
 }
@@ -2176,6 +2256,7 @@ pub const FETCH_REQUEST_DESCRIPTOR: MessageDescriptor = MessageDescriptor::new(
     MessageDirection::Request,
     VersionRange::new(4, 18),
     Some(VersionRange::new(12, 18)),
+    false,
 );
 
 /// Static metadata for [`FetchResponse`].
@@ -2185,4 +2266,5 @@ pub const FETCH_RESPONSE_DESCRIPTOR: MessageDescriptor = MessageDescriptor::new(
     MessageDirection::Response,
     VersionRange::new(4, 18),
     Some(VersionRange::new(12, 18)),
+    false,
 );

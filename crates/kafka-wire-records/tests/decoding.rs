@@ -6,7 +6,7 @@
 #![allow(clippy::field_reassign_with_default, clippy::unwrap_used)]
 
 use bytes::{Bytes, BytesMut};
-use kafka_wire_core::DecodeError;
+use kafka_wire_core::{DecodeError, StrBytes};
 use kafka_wire_records::{
     Compression, Record, RecordBatch, RecordDecodeLimits, RecordError, RecordHeader, TimestampType,
 };
@@ -173,7 +173,7 @@ fn a_null_record_header_key_is_rejected_instead_of_becoming_empty() {
     let mut source = batch(Compression::None, 10);
     source.records[0].value = None;
     source.records[0].headers = vec![RecordHeader {
-        key: String::new(),
+        key: StrBytes::default(),
         value: None,
     }];
     let mut bytes = source.encode_to_bytes().unwrap().to_vec();
@@ -229,11 +229,11 @@ fn a_header_count_above_the_element_budget_is_rejected_before_allocation() {
     let mut source = batch(Compression::None, 10);
     source.records[0].headers = vec![
         RecordHeader {
-            key: "first".to_owned(),
+            key: StrBytes::from("first"),
             value: None,
         },
         RecordHeader {
-            key: "second".to_owned(),
+            key: StrBytes::from("second"),
             value: None,
         },
     ];

@@ -12,8 +12,8 @@
 /// written to name the message itself.
 pub mod aborted_txn {
     use kafka_wire_core::{
-        ApiVersion, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
-        KafkaEncode, VersionRange,
+        ApiVersion, BytesMut, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder,
+        KafkaDecode, KafkaEncode, VersionRange, encode_into_with, encoded_len_with,
     };
 
     use crate::KafkaMessage;
@@ -90,18 +90,24 @@ pub mod aborted_txn {
             AbortedTxn::encode_validated(self, encoder, version)
         }
 
-        #[doc(hidden)]
-        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
-            self.validate_for_version(version)
+        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+            encoded_len_with(
+                || self.validate_for_version(version),
+                |encoder| AbortedTxn::encode_validated(self, encoder, version),
+            )
         }
 
-        #[doc(hidden)]
-        fn encode_validated<T: EncodeTarget>(
+        fn encode_into(
             &self,
-            encoder: &mut Encoder<T>,
+            buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
-            AbortedTxn::encode_validated(self, encoder, version)
+        ) -> Result<usize, EncodeError> {
+            encode_into_with(
+                buffer,
+                || self.validate_for_version(version),
+                |encoder| AbortedTxn::encode_validated(self, encoder, version),
+                |encoder| AbortedTxn::encode_validated(self, encoder, version),
+            )
         }
     }
 }
@@ -112,8 +118,8 @@ pub mod aborted_txn {
 /// written to name the message itself.
 pub mod consumer_protocol_assignment {
     use kafka_wire_core::{
-        ApiVersion, Bytes, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
-        KafkaEncode, StrBytes, VersionRange,
+        ApiVersion, Bytes, BytesMut, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder,
+        KafkaDecode, KafkaEncode, StrBytes, VersionRange, encode_into_with, encoded_len_with,
     };
 
     use crate::KafkaMessage;
@@ -193,18 +199,24 @@ pub mod consumer_protocol_assignment {
             TopicPartition::encode_validated(self, encoder, version)
         }
 
-        #[doc(hidden)]
-        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
-            self.validate_for_version(version)
+        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+            encoded_len_with(
+                || self.validate_for_version(version),
+                |encoder| TopicPartition::encode_validated(self, encoder, version),
+            )
         }
 
-        #[doc(hidden)]
-        fn encode_validated<T: EncodeTarget>(
+        fn encode_into(
             &self,
-            encoder: &mut Encoder<T>,
+            buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
-            TopicPartition::encode_validated(self, encoder, version)
+        ) -> Result<usize, EncodeError> {
+            encode_into_with(
+                buffer,
+                || self.validate_for_version(version),
+                |encoder| TopicPartition::encode_validated(self, encoder, version),
+                |encoder| TopicPartition::encode_validated(self, encoder, version),
+            )
         }
     }
 
@@ -279,18 +291,24 @@ pub mod consumer_protocol_assignment {
             ConsumerProtocolAssignment::encode_validated(self, encoder, version)
         }
 
-        #[doc(hidden)]
-        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
-            self.validate_for_version(version)
+        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+            encoded_len_with(
+                || self.validate_for_version(version),
+                |encoder| ConsumerProtocolAssignment::encode_validated(self, encoder, version),
+            )
         }
 
-        #[doc(hidden)]
-        fn encode_validated<T: EncodeTarget>(
+        fn encode_into(
             &self,
-            encoder: &mut Encoder<T>,
+            buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
-            ConsumerProtocolAssignment::encode_validated(self, encoder, version)
+        ) -> Result<usize, EncodeError> {
+            encode_into_with(
+                buffer,
+                || self.validate_for_version(version),
+                |encoder| ConsumerProtocolAssignment::encode_validated(self, encoder, version),
+                |encoder| ConsumerProtocolAssignment::encode_validated(self, encoder, version),
+            )
         }
     }
 }
@@ -301,8 +319,8 @@ pub mod consumer_protocol_assignment {
 /// written to name the message itself.
 pub mod consumer_protocol_subscription {
     use kafka_wire_core::{
-        ApiVersion, Bytes, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
-        KafkaEncode, StrBytes, VersionRange,
+        ApiVersion, Bytes, BytesMut, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder,
+        KafkaDecode, KafkaEncode, StrBytes, VersionRange, encode_into_with, encoded_len_with,
     };
 
     use crate::KafkaMessage;
@@ -382,18 +400,24 @@ pub mod consumer_protocol_subscription {
             TopicPartition::encode_validated(self, encoder, version)
         }
 
-        #[doc(hidden)]
-        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
-            self.validate_for_version(version)
+        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+            encoded_len_with(
+                || self.validate_for_version(version),
+                |encoder| TopicPartition::encode_validated(self, encoder, version),
+            )
         }
 
-        #[doc(hidden)]
-        fn encode_validated<T: EncodeTarget>(
+        fn encode_into(
             &self,
-            encoder: &mut Encoder<T>,
+            buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
-            TopicPartition::encode_validated(self, encoder, version)
+        ) -> Result<usize, EncodeError> {
+            encode_into_with(
+                buffer,
+                || self.validate_for_version(version),
+                |encoder| TopicPartition::encode_validated(self, encoder, version),
+                |encoder| TopicPartition::encode_validated(self, encoder, version),
+            )
         }
     }
 
@@ -519,18 +543,24 @@ pub mod consumer_protocol_subscription {
             ConsumerProtocolSubscription::encode_validated(self, encoder, version)
         }
 
-        #[doc(hidden)]
-        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
-            self.validate_for_version(version)
+        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+            encoded_len_with(
+                || self.validate_for_version(version),
+                |encoder| ConsumerProtocolSubscription::encode_validated(self, encoder, version),
+            )
         }
 
-        #[doc(hidden)]
-        fn encode_validated<T: EncodeTarget>(
+        fn encode_into(
             &self,
-            encoder: &mut Encoder<T>,
+            buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
-            ConsumerProtocolSubscription::encode_validated(self, encoder, version)
+        ) -> Result<usize, EncodeError> {
+            encode_into_with(
+                buffer,
+                || self.validate_for_version(version),
+                |encoder| ConsumerProtocolSubscription::encode_validated(self, encoder, version),
+                |encoder| ConsumerProtocolSubscription::encode_validated(self, encoder, version),
+            )
         }
     }
 }
@@ -541,8 +571,8 @@ pub mod consumer_protocol_subscription {
 /// written to name the message itself.
 pub mod control_record_type_schema {
     use kafka_wire_core::{
-        ApiVersion, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
-        KafkaEncode, VersionRange,
+        ApiVersion, BytesMut, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder,
+        KafkaDecode, KafkaEncode, VersionRange, encode_into_with, encoded_len_with,
     };
 
     use crate::KafkaMessage;
@@ -602,18 +632,24 @@ pub mod control_record_type_schema {
             ControlRecordTypeSchema::encode_validated(self, encoder, version)
         }
 
-        #[doc(hidden)]
-        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
-            self.validate_for_version(version)
+        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+            encoded_len_with(
+                || self.validate_for_version(version),
+                |encoder| ControlRecordTypeSchema::encode_validated(self, encoder, version),
+            )
         }
 
-        #[doc(hidden)]
-        fn encode_validated<T: EncodeTarget>(
+        fn encode_into(
             &self,
-            encoder: &mut Encoder<T>,
+            buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
-            ControlRecordTypeSchema::encode_validated(self, encoder, version)
+        ) -> Result<usize, EncodeError> {
+            encode_into_with(
+                buffer,
+                || self.validate_for_version(version),
+                |encoder| ControlRecordTypeSchema::encode_validated(self, encoder, version),
+                |encoder| ControlRecordTypeSchema::encode_validated(self, encoder, version),
+            )
         }
     }
 }
@@ -624,8 +660,9 @@ pub mod control_record_type_schema {
 /// written to name the message itself.
 pub mod default_principal_data {
     use kafka_wire_core::{
-        ApiVersion, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
-        KafkaEncode, StrBytes, TaggedFields, VersionRange,
+        ApiVersion, BytesMut, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder,
+        KafkaDecode, KafkaEncode, StrBytes, TaggedFields, VersionRange, encode_into_with,
+        encoded_len_with,
     };
 
     use crate::KafkaMessage;
@@ -715,18 +752,24 @@ pub mod default_principal_data {
             DefaultPrincipalData::encode_validated(self, encoder, version)
         }
 
-        #[doc(hidden)]
-        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
-            self.validate_for_version(version)
+        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+            encoded_len_with(
+                || self.validate_for_version(version),
+                |encoder| DefaultPrincipalData::encode_validated(self, encoder, version),
+            )
         }
 
-        #[doc(hidden)]
-        fn encode_validated<T: EncodeTarget>(
+        fn encode_into(
             &self,
-            encoder: &mut Encoder<T>,
+            buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
-            DefaultPrincipalData::encode_validated(self, encoder, version)
+        ) -> Result<usize, EncodeError> {
+            encode_into_with(
+                buffer,
+                || self.validate_for_version(version),
+                |encoder| DefaultPrincipalData::encode_validated(self, encoder, version),
+                |encoder| DefaultPrincipalData::encode_validated(self, encoder, version),
+            )
         }
     }
 }
@@ -737,8 +780,8 @@ pub mod default_principal_data {
 /// written to name the message itself.
 pub mod end_txn_marker {
     use kafka_wire_core::{
-        ApiVersion, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
-        KafkaEncode, VersionRange,
+        ApiVersion, BytesMut, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder,
+        KafkaDecode, KafkaEncode, VersionRange, encode_into_with, encoded_len_with,
     };
 
     use crate::KafkaMessage;
@@ -798,18 +841,24 @@ pub mod end_txn_marker {
             EndTxnMarker::encode_validated(self, encoder, version)
         }
 
-        #[doc(hidden)]
-        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
-            self.validate_for_version(version)
+        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+            encoded_len_with(
+                || self.validate_for_version(version),
+                |encoder| EndTxnMarker::encode_validated(self, encoder, version),
+            )
         }
 
-        #[doc(hidden)]
-        fn encode_validated<T: EncodeTarget>(
+        fn encode_into(
             &self,
-            encoder: &mut Encoder<T>,
+            buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
-            EndTxnMarker::encode_validated(self, encoder, version)
+        ) -> Result<usize, EncodeError> {
+            encode_into_with(
+                buffer,
+                || self.validate_for_version(version),
+                |encoder| EndTxnMarker::encode_validated(self, encoder, version),
+                |encoder| EndTxnMarker::encode_validated(self, encoder, version),
+            )
         }
     }
 }
@@ -820,8 +869,8 @@ pub mod end_txn_marker {
 /// written to name the message itself.
 pub mod k_raft_version_record {
     use kafka_wire_core::{
-        ApiVersion, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
-        KafkaEncode, TaggedFields, VersionRange,
+        ApiVersion, BytesMut, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder,
+        KafkaDecode, KafkaEncode, TaggedFields, VersionRange, encode_into_with, encoded_len_with,
     };
 
     use crate::KafkaMessage;
@@ -906,18 +955,24 @@ pub mod k_raft_version_record {
             KRaftVersionRecord::encode_validated(self, encoder, version)
         }
 
-        #[doc(hidden)]
-        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
-            self.validate_for_version(version)
+        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+            encoded_len_with(
+                || self.validate_for_version(version),
+                |encoder| KRaftVersionRecord::encode_validated(self, encoder, version),
+            )
         }
 
-        #[doc(hidden)]
-        fn encode_validated<T: EncodeTarget>(
+        fn encode_into(
             &self,
-            encoder: &mut Encoder<T>,
+            buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
-            KRaftVersionRecord::encode_validated(self, encoder, version)
+        ) -> Result<usize, EncodeError> {
+            encode_into_with(
+                buffer,
+                || self.validate_for_version(version),
+                |encoder| KRaftVersionRecord::encode_validated(self, encoder, version),
+                |encoder| KRaftVersionRecord::encode_validated(self, encoder, version),
+            )
         }
     }
 }
@@ -928,8 +983,9 @@ pub mod k_raft_version_record {
 /// written to name the message itself.
 pub mod leader_change_message {
     use kafka_wire_core::{
-        ApiVersion, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
-        KafkaEncode, TaggedFields, Uuid, VersionRange,
+        ApiVersion, BytesMut, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder,
+        KafkaDecode, KafkaEncode, TaggedFields, Uuid, VersionRange, encode_into_with,
+        encoded_len_with,
     };
 
     use crate::KafkaMessage;
@@ -1042,18 +1098,24 @@ pub mod leader_change_message {
             Voter::encode_validated(self, encoder, version)
         }
 
-        #[doc(hidden)]
-        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
-            self.validate_for_version(version)
+        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+            encoded_len_with(
+                || self.validate_for_version(version),
+                |encoder| Voter::encode_validated(self, encoder, version),
+            )
         }
 
-        #[doc(hidden)]
-        fn encode_validated<T: EncodeTarget>(
+        fn encode_into(
             &self,
-            encoder: &mut Encoder<T>,
+            buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
-            Voter::encode_validated(self, encoder, version)
+        ) -> Result<usize, EncodeError> {
+            encode_into_with(
+                buffer,
+                || self.validate_for_version(version),
+                |encoder| Voter::encode_validated(self, encoder, version),
+                |encoder| Voter::encode_validated(self, encoder, version),
+            )
         }
     }
 
@@ -1165,18 +1227,24 @@ pub mod leader_change_message {
             LeaderChangeMessage::encode_validated(self, encoder, version)
         }
 
-        #[doc(hidden)]
-        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
-            self.validate_for_version(version)
+        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+            encoded_len_with(
+                || self.validate_for_version(version),
+                |encoder| LeaderChangeMessage::encode_validated(self, encoder, version),
+            )
         }
 
-        #[doc(hidden)]
-        fn encode_validated<T: EncodeTarget>(
+        fn encode_into(
             &self,
-            encoder: &mut Encoder<T>,
+            buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
-            LeaderChangeMessage::encode_validated(self, encoder, version)
+        ) -> Result<usize, EncodeError> {
+            encode_into_with(
+                buffer,
+                || self.validate_for_version(version),
+                |encoder| LeaderChangeMessage::encode_validated(self, encoder, version),
+                |encoder| LeaderChangeMessage::encode_validated(self, encoder, version),
+            )
         }
     }
 }
@@ -1187,8 +1255,9 @@ pub mod leader_change_message {
 /// written to name the message itself.
 pub mod request_header {
     use kafka_wire_core::{
-        ApiVersion, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
-        KafkaEncode, StrBytes, TaggedFields, VersionRange,
+        ApiVersion, BytesMut, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder,
+        KafkaDecode, KafkaEncode, StrBytes, TaggedFields, VersionRange, encode_into_with,
+        encoded_len_with,
     };
 
     use crate::KafkaMessage;
@@ -1295,18 +1364,24 @@ pub mod request_header {
             RequestHeader::encode_validated(self, encoder, version)
         }
 
-        #[doc(hidden)]
-        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
-            self.validate_for_version(version)
+        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+            encoded_len_with(
+                || self.validate_for_version(version),
+                |encoder| RequestHeader::encode_validated(self, encoder, version),
+            )
         }
 
-        #[doc(hidden)]
-        fn encode_validated<T: EncodeTarget>(
+        fn encode_into(
             &self,
-            encoder: &mut Encoder<T>,
+            buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
-            RequestHeader::encode_validated(self, encoder, version)
+        ) -> Result<usize, EncodeError> {
+            encode_into_with(
+                buffer,
+                || self.validate_for_version(version),
+                |encoder| RequestHeader::encode_validated(self, encoder, version),
+                |encoder| RequestHeader::encode_validated(self, encoder, version),
+            )
         }
     }
 }
@@ -1317,8 +1392,8 @@ pub mod request_header {
 /// written to name the message itself.
 pub mod response_header {
     use kafka_wire_core::{
-        ApiVersion, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
-        KafkaEncode, TaggedFields, VersionRange,
+        ApiVersion, BytesMut, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder,
+        KafkaDecode, KafkaEncode, TaggedFields, VersionRange, encode_into_with, encoded_len_with,
     };
 
     use crate::KafkaMessage;
@@ -1398,18 +1473,24 @@ pub mod response_header {
             ResponseHeader::encode_validated(self, encoder, version)
         }
 
-        #[doc(hidden)]
-        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
-            self.validate_for_version(version)
+        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+            encoded_len_with(
+                || self.validate_for_version(version),
+                |encoder| ResponseHeader::encode_validated(self, encoder, version),
+            )
         }
 
-        #[doc(hidden)]
-        fn encode_validated<T: EncodeTarget>(
+        fn encode_into(
             &self,
-            encoder: &mut Encoder<T>,
+            buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
-            ResponseHeader::encode_validated(self, encoder, version)
+        ) -> Result<usize, EncodeError> {
+            encode_into_with(
+                buffer,
+                || self.validate_for_version(version),
+                |encoder| ResponseHeader::encode_validated(self, encoder, version),
+                |encoder| ResponseHeader::encode_validated(self, encoder, version),
+            )
         }
     }
 }
@@ -1420,8 +1501,8 @@ pub mod response_header {
 /// written to name the message itself.
 pub mod snapshot_footer_record {
     use kafka_wire_core::{
-        ApiVersion, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
-        KafkaEncode, TaggedFields, VersionRange,
+        ApiVersion, BytesMut, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder,
+        KafkaDecode, KafkaEncode, TaggedFields, VersionRange, encode_into_with, encoded_len_with,
     };
 
     use crate::KafkaMessage;
@@ -1501,18 +1582,24 @@ pub mod snapshot_footer_record {
             SnapshotFooterRecord::encode_validated(self, encoder, version)
         }
 
-        #[doc(hidden)]
-        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
-            self.validate_for_version(version)
+        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+            encoded_len_with(
+                || self.validate_for_version(version),
+                |encoder| SnapshotFooterRecord::encode_validated(self, encoder, version),
+            )
         }
 
-        #[doc(hidden)]
-        fn encode_validated<T: EncodeTarget>(
+        fn encode_into(
             &self,
-            encoder: &mut Encoder<T>,
+            buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
-            SnapshotFooterRecord::encode_validated(self, encoder, version)
+        ) -> Result<usize, EncodeError> {
+            encode_into_with(
+                buffer,
+                || self.validate_for_version(version),
+                |encoder| SnapshotFooterRecord::encode_validated(self, encoder, version),
+                |encoder| SnapshotFooterRecord::encode_validated(self, encoder, version),
+            )
         }
     }
 }
@@ -1523,8 +1610,8 @@ pub mod snapshot_footer_record {
 /// written to name the message itself.
 pub mod snapshot_header_record {
     use kafka_wire_core::{
-        ApiVersion, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
-        KafkaEncode, TaggedFields, VersionRange,
+        ApiVersion, BytesMut, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder,
+        KafkaDecode, KafkaEncode, TaggedFields, VersionRange, encode_into_with, encoded_len_with,
     };
 
     use crate::KafkaMessage;
@@ -1609,18 +1696,24 @@ pub mod snapshot_header_record {
             SnapshotHeaderRecord::encode_validated(self, encoder, version)
         }
 
-        #[doc(hidden)]
-        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
-            self.validate_for_version(version)
+        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+            encoded_len_with(
+                || self.validate_for_version(version),
+                |encoder| SnapshotHeaderRecord::encode_validated(self, encoder, version),
+            )
         }
 
-        #[doc(hidden)]
-        fn encode_validated<T: EncodeTarget>(
+        fn encode_into(
             &self,
-            encoder: &mut Encoder<T>,
+            buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
-            SnapshotHeaderRecord::encode_validated(self, encoder, version)
+        ) -> Result<usize, EncodeError> {
+            encode_into_with(
+                buffer,
+                || self.validate_for_version(version),
+                |encoder| SnapshotHeaderRecord::encode_validated(self, encoder, version),
+                |encoder| SnapshotHeaderRecord::encode_validated(self, encoder, version),
+            )
         }
     }
 }
@@ -1631,8 +1724,9 @@ pub mod snapshot_header_record {
 /// written to name the message itself.
 pub mod voters_record {
     use kafka_wire_core::{
-        ApiVersion, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
-        KafkaEncode, StrBytes, TaggedFields, Uuid, VersionRange,
+        ApiVersion, BytesMut, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder,
+        KafkaDecode, KafkaEncode, StrBytes, TaggedFields, Uuid, VersionRange, encode_into_with,
+        encoded_len_with,
     };
 
     use crate::KafkaMessage;
@@ -1753,18 +1847,24 @@ pub mod voters_record {
             Voter::encode_validated(self, encoder, version)
         }
 
-        #[doc(hidden)]
-        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
-            self.validate_for_version(version)
+        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+            encoded_len_with(
+                || self.validate_for_version(version),
+                |encoder| Voter::encode_validated(self, encoder, version),
+            )
         }
 
-        #[doc(hidden)]
-        fn encode_validated<T: EncodeTarget>(
+        fn encode_into(
             &self,
-            encoder: &mut Encoder<T>,
+            buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
-            Voter::encode_validated(self, encoder, version)
+        ) -> Result<usize, EncodeError> {
+            encode_into_with(
+                buffer,
+                || self.validate_for_version(version),
+                |encoder| Voter::encode_validated(self, encoder, version),
+                |encoder| Voter::encode_validated(self, encoder, version),
+            )
         }
     }
 
@@ -1868,18 +1968,24 @@ pub mod voters_record {
             Endpoint::encode_validated(self, encoder, version)
         }
 
-        #[doc(hidden)]
-        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
-            self.validate_for_version(version)
+        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+            encoded_len_with(
+                || self.validate_for_version(version),
+                |encoder| Endpoint::encode_validated(self, encoder, version),
+            )
         }
 
-        #[doc(hidden)]
-        fn encode_validated<T: EncodeTarget>(
+        fn encode_into(
             &self,
-            encoder: &mut Encoder<T>,
+            buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
-            Endpoint::encode_validated(self, encoder, version)
+        ) -> Result<usize, EncodeError> {
+            encode_into_with(
+                buffer,
+                || self.validate_for_version(version),
+                |encoder| Endpoint::encode_validated(self, encoder, version),
+                |encoder| Endpoint::encode_validated(self, encoder, version),
+            )
         }
     }
 
@@ -1978,18 +2084,24 @@ pub mod voters_record {
             KRaftVersionFeature::encode_validated(self, encoder, version)
         }
 
-        #[doc(hidden)]
-        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
-            self.validate_for_version(version)
+        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+            encoded_len_with(
+                || self.validate_for_version(version),
+                |encoder| KRaftVersionFeature::encode_validated(self, encoder, version),
+            )
         }
 
-        #[doc(hidden)]
-        fn encode_validated<T: EncodeTarget>(
+        fn encode_into(
             &self,
-            encoder: &mut Encoder<T>,
+            buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
-            KRaftVersionFeature::encode_validated(self, encoder, version)
+        ) -> Result<usize, EncodeError> {
+            encode_into_with(
+                buffer,
+                || self.validate_for_version(version),
+                |encoder| KRaftVersionFeature::encode_validated(self, encoder, version),
+                |encoder| KRaftVersionFeature::encode_validated(self, encoder, version),
+            )
         }
     }
 
@@ -2082,18 +2194,24 @@ pub mod voters_record {
             VotersRecord::encode_validated(self, encoder, version)
         }
 
-        #[doc(hidden)]
-        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
-            self.validate_for_version(version)
+        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+            encoded_len_with(
+                || self.validate_for_version(version),
+                |encoder| VotersRecord::encode_validated(self, encoder, version),
+            )
         }
 
-        #[doc(hidden)]
-        fn encode_validated<T: EncodeTarget>(
+        fn encode_into(
             &self,
-            encoder: &mut Encoder<T>,
+            buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
-            VotersRecord::encode_validated(self, encoder, version)
+        ) -> Result<usize, EncodeError> {
+            encode_into_with(
+                buffer,
+                || self.validate_for_version(version),
+                |encoder| VotersRecord::encode_validated(self, encoder, version),
+                |encoder| VotersRecord::encode_validated(self, encoder, version),
+            )
         }
     }
 }

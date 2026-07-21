@@ -11,8 +11,9 @@
 /// written to name the message itself.
 pub mod streams_group_heartbeat_request {
     use kafka_wire_core::{
-        ApiKey, ApiVersion, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
-        KafkaEncode, StrBytes, TaggedFields, VersionRange,
+        ApiKey, ApiVersion, BytesMut, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder,
+        KafkaDecode, KafkaEncode, StrBytes, TaggedFields, VersionRange, encode_into_with,
+        encoded_len_with,
     };
 
     use crate::{KafkaMessage, KafkaRequest, RequestResponsePair};
@@ -112,18 +113,24 @@ pub mod streams_group_heartbeat_request {
             KeyValue::encode_validated(self, encoder, version)
         }
 
-        #[doc(hidden)]
-        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
-            self.validate_for_version(version)
+        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+            encoded_len_with(
+                || self.validate_for_version(version),
+                |encoder| KeyValue::encode_validated(self, encoder, version),
+            )
         }
 
-        #[doc(hidden)]
-        fn encode_validated<T: EncodeTarget>(
+        fn encode_into(
             &self,
-            encoder: &mut Encoder<T>,
+            buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
-            KeyValue::encode_validated(self, encoder, version)
+        ) -> Result<usize, EncodeError> {
+            encode_into_with(
+                buffer,
+                || self.validate_for_version(version),
+                |encoder| KeyValue::encode_validated(self, encoder, version),
+                |encoder| KeyValue::encode_validated(self, encoder, version),
+            )
         }
     }
 
@@ -241,18 +248,24 @@ pub mod streams_group_heartbeat_request {
             TopicInfo::encode_validated(self, encoder, version)
         }
 
-        #[doc(hidden)]
-        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
-            self.validate_for_version(version)
+        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+            encoded_len_with(
+                || self.validate_for_version(version),
+                |encoder| TopicInfo::encode_validated(self, encoder, version),
+            )
         }
 
-        #[doc(hidden)]
-        fn encode_validated<T: EncodeTarget>(
+        fn encode_into(
             &self,
-            encoder: &mut Encoder<T>,
+            buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
-            TopicInfo::encode_validated(self, encoder, version)
+        ) -> Result<usize, EncodeError> {
+            encode_into_with(
+                buffer,
+                || self.validate_for_version(version),
+                |encoder| TopicInfo::encode_validated(self, encoder, version),
+                |encoder| TopicInfo::encode_validated(self, encoder, version),
+            )
         }
     }
 
@@ -351,18 +364,24 @@ pub mod streams_group_heartbeat_request {
             Endpoint::encode_validated(self, encoder, version)
         }
 
-        #[doc(hidden)]
-        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
-            self.validate_for_version(version)
+        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+            encoded_len_with(
+                || self.validate_for_version(version),
+                |encoder| Endpoint::encode_validated(self, encoder, version),
+            )
         }
 
-        #[doc(hidden)]
-        fn encode_validated<T: EncodeTarget>(
+        fn encode_into(
             &self,
-            encoder: &mut Encoder<T>,
+            buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
-            Endpoint::encode_validated(self, encoder, version)
+        ) -> Result<usize, EncodeError> {
+            encode_into_with(
+                buffer,
+                || self.validate_for_version(version),
+                |encoder| Endpoint::encode_validated(self, encoder, version),
+                |encoder| Endpoint::encode_validated(self, encoder, version),
+            )
         }
     }
 
@@ -466,18 +485,24 @@ pub mod streams_group_heartbeat_request {
             TaskOffset::encode_validated(self, encoder, version)
         }
 
-        #[doc(hidden)]
-        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
-            self.validate_for_version(version)
+        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+            encoded_len_with(
+                || self.validate_for_version(version),
+                |encoder| TaskOffset::encode_validated(self, encoder, version),
+            )
         }
 
-        #[doc(hidden)]
-        fn encode_validated<T: EncodeTarget>(
+        fn encode_into(
             &self,
-            encoder: &mut Encoder<T>,
+            buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
-            TaskOffset::encode_validated(self, encoder, version)
+        ) -> Result<usize, EncodeError> {
+            encode_into_with(
+                buffer,
+                || self.validate_for_version(version),
+                |encoder| TaskOffset::encode_validated(self, encoder, version),
+                |encoder| TaskOffset::encode_validated(self, encoder, version),
+            )
         }
     }
 
@@ -582,18 +607,24 @@ pub mod streams_group_heartbeat_request {
             TaskIds::encode_validated(self, encoder, version)
         }
 
-        #[doc(hidden)]
-        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
-            self.validate_for_version(version)
+        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+            encoded_len_with(
+                || self.validate_for_version(version),
+                |encoder| TaskIds::encode_validated(self, encoder, version),
+            )
         }
 
-        #[doc(hidden)]
-        fn encode_validated<T: EncodeTarget>(
+        fn encode_into(
             &self,
-            encoder: &mut Encoder<T>,
+            buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
-            TaskIds::encode_validated(self, encoder, version)
+        ) -> Result<usize, EncodeError> {
+            encode_into_with(
+                buffer,
+                || self.validate_for_version(version),
+                |encoder| TaskIds::encode_validated(self, encoder, version),
+                |encoder| TaskIds::encode_validated(self, encoder, version),
+            )
         }
     }
 
@@ -701,18 +732,24 @@ pub mod streams_group_heartbeat_request {
             Topology::encode_validated(self, encoder, version)
         }
 
-        #[doc(hidden)]
-        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
-            self.validate_for_version(version)
+        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+            encoded_len_with(
+                || self.validate_for_version(version),
+                |encoder| Topology::encode_validated(self, encoder, version),
+            )
         }
 
-        #[doc(hidden)]
-        fn encode_validated<T: EncodeTarget>(
+        fn encode_into(
             &self,
-            encoder: &mut Encoder<T>,
+            buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
-            Topology::encode_validated(self, encoder, version)
+        ) -> Result<usize, EncodeError> {
+            encode_into_with(
+                buffer,
+                || self.validate_for_version(version),
+                |encoder| Topology::encode_validated(self, encoder, version),
+                |encoder| Topology::encode_validated(self, encoder, version),
+            )
         }
     }
 
@@ -881,18 +918,24 @@ pub mod streams_group_heartbeat_request {
             Subtopology::encode_validated(self, encoder, version)
         }
 
-        #[doc(hidden)]
-        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
-            self.validate_for_version(version)
+        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+            encoded_len_with(
+                || self.validate_for_version(version),
+                |encoder| Subtopology::encode_validated(self, encoder, version),
+            )
         }
 
-        #[doc(hidden)]
-        fn encode_validated<T: EncodeTarget>(
+        fn encode_into(
             &self,
-            encoder: &mut Encoder<T>,
+            buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
-            Subtopology::encode_validated(self, encoder, version)
+        ) -> Result<usize, EncodeError> {
+            encode_into_with(
+                buffer,
+                || self.validate_for_version(version),
+                |encoder| Subtopology::encode_validated(self, encoder, version),
+                |encoder| Subtopology::encode_validated(self, encoder, version),
+            )
         }
     }
 
@@ -1014,18 +1057,24 @@ pub mod streams_group_heartbeat_request {
             CopartitionGroup::encode_validated(self, encoder, version)
         }
 
-        #[doc(hidden)]
-        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
-            self.validate_for_version(version)
+        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+            encoded_len_with(
+                || self.validate_for_version(version),
+                |encoder| CopartitionGroup::encode_validated(self, encoder, version),
+            )
         }
 
-        #[doc(hidden)]
-        fn encode_validated<T: EncodeTarget>(
+        fn encode_into(
             &self,
-            encoder: &mut Encoder<T>,
+            buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
-            CopartitionGroup::encode_validated(self, encoder, version)
+        ) -> Result<usize, EncodeError> {
+            encode_into_with(
+                buffer,
+                || self.validate_for_version(version),
+                |encoder| CopartitionGroup::encode_validated(self, encoder, version),
+                |encoder| CopartitionGroup::encode_validated(self, encoder, version),
+            )
         }
     }
 
@@ -1104,6 +1153,7 @@ pub mod streams_group_heartbeat_request {
 
     impl KafkaRequest for StreamsGroupHeartbeatRequest {
         const API_KEY: ApiKey = ApiKey::new(88);
+        const LATEST_VERSION_UNSTABLE: bool = false;
     }
 
     impl RequestResponsePair for StreamsGroupHeartbeatRequest {
@@ -1344,18 +1394,24 @@ pub mod streams_group_heartbeat_request {
             StreamsGroupHeartbeatRequest::encode_validated(self, encoder, version)
         }
 
-        #[doc(hidden)]
-        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
-            self.validate_for_version(version)
+        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+            encoded_len_with(
+                || self.validate_for_version(version),
+                |encoder| StreamsGroupHeartbeatRequest::encode_validated(self, encoder, version),
+            )
         }
 
-        #[doc(hidden)]
-        fn encode_validated<T: EncodeTarget>(
+        fn encode_into(
             &self,
-            encoder: &mut Encoder<T>,
+            buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
-            StreamsGroupHeartbeatRequest::encode_validated(self, encoder, version)
+        ) -> Result<usize, EncodeError> {
+            encode_into_with(
+                buffer,
+                || self.validate_for_version(version),
+                |encoder| StreamsGroupHeartbeatRequest::encode_validated(self, encoder, version),
+                |encoder| StreamsGroupHeartbeatRequest::encode_validated(self, encoder, version),
+            )
         }
     }
 }
@@ -1366,8 +1422,9 @@ pub mod streams_group_heartbeat_request {
 /// written to name the message itself.
 pub mod streams_group_heartbeat_response {
     use kafka_wire_core::{
-        ApiKey, ApiVersion, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
-        KafkaEncode, StrBytes, TaggedFields, VersionRange,
+        ApiKey, ApiVersion, BytesMut, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder,
+        KafkaDecode, KafkaEncode, StrBytes, TaggedFields, VersionRange, encode_into_with,
+        encoded_len_with,
     };
 
     use crate::{KafkaMessage, KafkaResponse};
@@ -1467,18 +1524,24 @@ pub mod streams_group_heartbeat_response {
             Status::encode_validated(self, encoder, version)
         }
 
-        #[doc(hidden)]
-        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
-            self.validate_for_version(version)
+        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+            encoded_len_with(
+                || self.validate_for_version(version),
+                |encoder| Status::encode_validated(self, encoder, version),
+            )
         }
 
-        #[doc(hidden)]
-        fn encode_validated<T: EncodeTarget>(
+        fn encode_into(
             &self,
-            encoder: &mut Encoder<T>,
+            buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
-            Status::encode_validated(self, encoder, version)
+        ) -> Result<usize, EncodeError> {
+            encode_into_with(
+                buffer,
+                || self.validate_for_version(version),
+                |encoder| Status::encode_validated(self, encoder, version),
+                |encoder| Status::encode_validated(self, encoder, version),
+            )
         }
     }
 
@@ -1583,18 +1646,24 @@ pub mod streams_group_heartbeat_response {
             TopicPartition::encode_validated(self, encoder, version)
         }
 
-        #[doc(hidden)]
-        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
-            self.validate_for_version(version)
+        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+            encoded_len_with(
+                || self.validate_for_version(version),
+                |encoder| TopicPartition::encode_validated(self, encoder, version),
+            )
         }
 
-        #[doc(hidden)]
-        fn encode_validated<T: EncodeTarget>(
+        fn encode_into(
             &self,
-            encoder: &mut Encoder<T>,
+            buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
-            TopicPartition::encode_validated(self, encoder, version)
+        ) -> Result<usize, EncodeError> {
+            encode_into_with(
+                buffer,
+                || self.validate_for_version(version),
+                |encoder| TopicPartition::encode_validated(self, encoder, version),
+                |encoder| TopicPartition::encode_validated(self, encoder, version),
+            )
         }
     }
 
@@ -1699,18 +1768,24 @@ pub mod streams_group_heartbeat_response {
             TaskIds::encode_validated(self, encoder, version)
         }
 
-        #[doc(hidden)]
-        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
-            self.validate_for_version(version)
+        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+            encoded_len_with(
+                || self.validate_for_version(version),
+                |encoder| TaskIds::encode_validated(self, encoder, version),
+            )
         }
 
-        #[doc(hidden)]
-        fn encode_validated<T: EncodeTarget>(
+        fn encode_into(
             &self,
-            encoder: &mut Encoder<T>,
+            buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
-            TaskIds::encode_validated(self, encoder, version)
+        ) -> Result<usize, EncodeError> {
+            encode_into_with(
+                buffer,
+                || self.validate_for_version(version),
+                |encoder| TaskIds::encode_validated(self, encoder, version),
+                |encoder| TaskIds::encode_validated(self, encoder, version),
+            )
         }
     }
 
@@ -1809,18 +1884,24 @@ pub mod streams_group_heartbeat_response {
             Endpoint::encode_validated(self, encoder, version)
         }
 
-        #[doc(hidden)]
-        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
-            self.validate_for_version(version)
+        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+            encoded_len_with(
+                || self.validate_for_version(version),
+                |encoder| Endpoint::encode_validated(self, encoder, version),
+            )
         }
 
-        #[doc(hidden)]
-        fn encode_validated<T: EncodeTarget>(
+        fn encode_into(
             &self,
-            encoder: &mut Encoder<T>,
+            buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
-            Endpoint::encode_validated(self, encoder, version)
+        ) -> Result<usize, EncodeError> {
+            encode_into_with(
+                buffer,
+                || self.validate_for_version(version),
+                |encoder| Endpoint::encode_validated(self, encoder, version),
+                |encoder| Endpoint::encode_validated(self, encoder, version),
+            )
         }
     }
 
@@ -1943,18 +2024,24 @@ pub mod streams_group_heartbeat_response {
             EndpointToPartitions::encode_validated(self, encoder, version)
         }
 
-        #[doc(hidden)]
-        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
-            self.validate_for_version(version)
+        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+            encoded_len_with(
+                || self.validate_for_version(version),
+                |encoder| EndpointToPartitions::encode_validated(self, encoder, version),
+            )
         }
 
-        #[doc(hidden)]
-        fn encode_validated<T: EncodeTarget>(
+        fn encode_into(
             &self,
-            encoder: &mut Encoder<T>,
+            buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
-            EndpointToPartitions::encode_validated(self, encoder, version)
+        ) -> Result<usize, EncodeError> {
+            encode_into_with(
+                buffer,
+                || self.validate_for_version(version),
+                |encoder| EndpointToPartitions::encode_validated(self, encoder, version),
+                |encoder| EndpointToPartitions::encode_validated(self, encoder, version),
+            )
         }
     }
 
@@ -2257,18 +2344,24 @@ pub mod streams_group_heartbeat_response {
             StreamsGroupHeartbeatResponse::encode_validated(self, encoder, version)
         }
 
-        #[doc(hidden)]
-        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
-            self.validate_for_version(version)
+        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+            encoded_len_with(
+                || self.validate_for_version(version),
+                |encoder| StreamsGroupHeartbeatResponse::encode_validated(self, encoder, version),
+            )
         }
 
-        #[doc(hidden)]
-        fn encode_validated<T: EncodeTarget>(
+        fn encode_into(
             &self,
-            encoder: &mut Encoder<T>,
+            buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
-            StreamsGroupHeartbeatResponse::encode_validated(self, encoder, version)
+        ) -> Result<usize, EncodeError> {
+            encode_into_with(
+                buffer,
+                || self.validate_for_version(version),
+                |encoder| StreamsGroupHeartbeatResponse::encode_validated(self, encoder, version),
+                |encoder| StreamsGroupHeartbeatResponse::encode_validated(self, encoder, version),
+            )
         }
     }
 }
@@ -2287,6 +2380,7 @@ pub const STREAMS_GROUP_HEARTBEAT_REQUEST_DESCRIPTOR: MessageDescriptor = Messag
     MessageDirection::Request,
     VersionRange::new(0, 1),
     Some(VersionRange::new(0, 1)),
+    false,
 );
 
 /// Static metadata for [`StreamsGroupHeartbeatResponse`].
@@ -2296,4 +2390,5 @@ pub const STREAMS_GROUP_HEARTBEAT_RESPONSE_DESCRIPTOR: MessageDescriptor = Messa
     MessageDirection::Response,
     VersionRange::new(0, 1),
     Some(VersionRange::new(0, 1)),
+    false,
 );

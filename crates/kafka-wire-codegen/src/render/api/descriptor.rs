@@ -36,6 +36,7 @@ pub(super) fn render_descriptor(
         "    {},",
         option_range(message, &message.effective_flexible_versions())?
     ));
+    rust.line(format!("    {},", message.latest_version_unstable));
     rust.line(");");
     rust.blank();
     Ok(())

@@ -98,6 +98,7 @@ fn render_imports(rust: &mut RustText, message: &kafka_wire_schema::Message, gro
     let mut wire = vec![
         "ApiKey",
         "ApiVersion",
+        "BytesMut",
         "DecodeError",
         "Decoder",
         "EncodeError",
@@ -105,6 +106,8 @@ fn render_imports(rust: &mut RustText, message: &kafka_wire_schema::Message, gro
         "Encoder",
         "KafkaDecode",
         "KafkaEncode",
+        "encode_into_with",
+        "encoded_len_with",
     ];
     if field::uses_type(message, &FieldType::String) {
         wire.push("StrBytes");

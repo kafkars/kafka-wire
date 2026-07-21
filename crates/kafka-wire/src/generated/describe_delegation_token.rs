@@ -11,8 +11,9 @@
 /// written to name the message itself.
 pub mod describe_delegation_token_request {
     use kafka_wire_core::{
-        ApiKey, ApiVersion, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
-        KafkaEncode, StrBytes, TaggedFields, VersionRange,
+        ApiKey, ApiVersion, BytesMut, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder,
+        KafkaDecode, KafkaEncode, StrBytes, TaggedFields, VersionRange, encode_into_with,
+        encoded_len_with,
     };
 
     use crate::{KafkaMessage, KafkaRequest, RequestResponsePair};
@@ -128,18 +129,24 @@ pub mod describe_delegation_token_request {
             DescribeDelegationTokenOwner::encode_validated(self, encoder, version)
         }
 
-        #[doc(hidden)]
-        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
-            self.validate_for_version(version)
+        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+            encoded_len_with(
+                || self.validate_for_version(version),
+                |encoder| DescribeDelegationTokenOwner::encode_validated(self, encoder, version),
+            )
         }
 
-        #[doc(hidden)]
-        fn encode_validated<T: EncodeTarget>(
+        fn encode_into(
             &self,
-            encoder: &mut Encoder<T>,
+            buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
-            DescribeDelegationTokenOwner::encode_validated(self, encoder, version)
+        ) -> Result<usize, EncodeError> {
+            encode_into_with(
+                buffer,
+                || self.validate_for_version(version),
+                |encoder| DescribeDelegationTokenOwner::encode_validated(self, encoder, version),
+                |encoder| DescribeDelegationTokenOwner::encode_validated(self, encoder, version),
+            )
         }
     }
 
@@ -170,6 +177,7 @@ pub mod describe_delegation_token_request {
 
     impl KafkaRequest for DescribeDelegationTokenRequest {
         const API_KEY: ApiKey = ApiKey::new(41);
+        const LATEST_VERSION_UNSTABLE: bool = false;
     }
 
     impl RequestResponsePair for DescribeDelegationTokenRequest {
@@ -262,18 +270,24 @@ pub mod describe_delegation_token_request {
             DescribeDelegationTokenRequest::encode_validated(self, encoder, version)
         }
 
-        #[doc(hidden)]
-        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
-            self.validate_for_version(version)
+        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+            encoded_len_with(
+                || self.validate_for_version(version),
+                |encoder| DescribeDelegationTokenRequest::encode_validated(self, encoder, version),
+            )
         }
 
-        #[doc(hidden)]
-        fn encode_validated<T: EncodeTarget>(
+        fn encode_into(
             &self,
-            encoder: &mut Encoder<T>,
+            buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
-            DescribeDelegationTokenRequest::encode_validated(self, encoder, version)
+        ) -> Result<usize, EncodeError> {
+            encode_into_with(
+                buffer,
+                || self.validate_for_version(version),
+                |encoder| DescribeDelegationTokenRequest::encode_validated(self, encoder, version),
+                |encoder| DescribeDelegationTokenRequest::encode_validated(self, encoder, version),
+            )
         }
     }
 }
@@ -284,8 +298,9 @@ pub mod describe_delegation_token_request {
 /// written to name the message itself.
 pub mod describe_delegation_token_response {
     use kafka_wire_core::{
-        ApiKey, ApiVersion, Bytes, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder,
-        KafkaDecode, KafkaEncode, StrBytes, TaggedFields, VersionRange,
+        ApiKey, ApiVersion, Bytes, BytesMut, DecodeError, Decoder, EncodeError, EncodeTarget,
+        Encoder, KafkaDecode, KafkaEncode, StrBytes, TaggedFields, VersionRange, encode_into_with,
+        encoded_len_with,
     };
 
     use crate::{KafkaMessage, KafkaResponse};
@@ -502,18 +517,24 @@ pub mod describe_delegation_token_response {
             DescribedDelegationToken::encode_validated(self, encoder, version)
         }
 
-        #[doc(hidden)]
-        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
-            self.validate_for_version(version)
+        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+            encoded_len_with(
+                || self.validate_for_version(version),
+                |encoder| DescribedDelegationToken::encode_validated(self, encoder, version),
+            )
         }
 
-        #[doc(hidden)]
-        fn encode_validated<T: EncodeTarget>(
+        fn encode_into(
             &self,
-            encoder: &mut Encoder<T>,
+            buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
-            DescribedDelegationToken::encode_validated(self, encoder, version)
+        ) -> Result<usize, EncodeError> {
+            encode_into_with(
+                buffer,
+                || self.validate_for_version(version),
+                |encoder| DescribedDelegationToken::encode_validated(self, encoder, version),
+                |encoder| DescribedDelegationToken::encode_validated(self, encoder, version),
+            )
         }
     }
 
@@ -628,18 +649,24 @@ pub mod describe_delegation_token_response {
             DescribedDelegationTokenRenewer::encode_validated(self, encoder, version)
         }
 
-        #[doc(hidden)]
-        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
-            self.validate_for_version(version)
+        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+            encoded_len_with(
+                || self.validate_for_version(version),
+                |encoder| DescribedDelegationTokenRenewer::encode_validated(self, encoder, version),
+            )
         }
 
-        #[doc(hidden)]
-        fn encode_validated<T: EncodeTarget>(
+        fn encode_into(
             &self,
-            encoder: &mut Encoder<T>,
+            buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
-            DescribedDelegationTokenRenewer::encode_validated(self, encoder, version)
+        ) -> Result<usize, EncodeError> {
+            encode_into_with(
+                buffer,
+                || self.validate_for_version(version),
+                |encoder| DescribedDelegationTokenRenewer::encode_validated(self, encoder, version),
+                |encoder| DescribedDelegationTokenRenewer::encode_validated(self, encoder, version),
+            )
         }
     }
 
@@ -751,18 +778,24 @@ pub mod describe_delegation_token_response {
             DescribeDelegationTokenResponse::encode_validated(self, encoder, version)
         }
 
-        #[doc(hidden)]
-        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
-            self.validate_for_version(version)
+        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+            encoded_len_with(
+                || self.validate_for_version(version),
+                |encoder| DescribeDelegationTokenResponse::encode_validated(self, encoder, version),
+            )
         }
 
-        #[doc(hidden)]
-        fn encode_validated<T: EncodeTarget>(
+        fn encode_into(
             &self,
-            encoder: &mut Encoder<T>,
+            buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
-            DescribeDelegationTokenResponse::encode_validated(self, encoder, version)
+        ) -> Result<usize, EncodeError> {
+            encode_into_with(
+                buffer,
+                || self.validate_for_version(version),
+                |encoder| DescribeDelegationTokenResponse::encode_validated(self, encoder, version),
+                |encoder| DescribeDelegationTokenResponse::encode_validated(self, encoder, version),
+            )
         }
     }
 }
@@ -781,6 +814,7 @@ pub const DESCRIBE_DELEGATION_TOKEN_REQUEST_DESCRIPTOR: MessageDescriptor = Mess
     MessageDirection::Request,
     VersionRange::new(1, 3),
     Some(VersionRange::new(2, 3)),
+    false,
 );
 
 /// Static metadata for [`DescribeDelegationTokenResponse`].
@@ -790,4 +824,5 @@ pub const DESCRIBE_DELEGATION_TOKEN_RESPONSE_DESCRIPTOR: MessageDescriptor = Mes
     MessageDirection::Response,
     VersionRange::new(1, 3),
     Some(VersionRange::new(2, 3)),
+    false,
 );

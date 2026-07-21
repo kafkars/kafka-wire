@@ -11,8 +11,9 @@
 /// written to name the message itself.
 pub mod describe_acls_request {
     use kafka_wire_core::{
-        ApiKey, ApiVersion, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
-        KafkaEncode, StrBytes, TaggedFields, VersionRange,
+        ApiKey, ApiVersion, BytesMut, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder,
+        KafkaDecode, KafkaEncode, StrBytes, TaggedFields, VersionRange, encode_into_with,
+        encoded_len_with,
     };
 
     use crate::{KafkaMessage, KafkaRequest, RequestResponsePair};
@@ -62,6 +63,7 @@ pub mod describe_acls_request {
 
     impl KafkaRequest for DescribeAclsRequest {
         const API_KEY: ApiKey = ApiKey::new(29);
+        const LATEST_VERSION_UNSTABLE: bool = false;
     }
 
     impl RequestResponsePair for DescribeAclsRequest {
@@ -169,18 +171,24 @@ pub mod describe_acls_request {
             DescribeAclsRequest::encode_validated(self, encoder, version)
         }
 
-        #[doc(hidden)]
-        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
-            self.validate_for_version(version)
+        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+            encoded_len_with(
+                || self.validate_for_version(version),
+                |encoder| DescribeAclsRequest::encode_validated(self, encoder, version),
+            )
         }
 
-        #[doc(hidden)]
-        fn encode_validated<T: EncodeTarget>(
+        fn encode_into(
             &self,
-            encoder: &mut Encoder<T>,
+            buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
-            DescribeAclsRequest::encode_validated(self, encoder, version)
+        ) -> Result<usize, EncodeError> {
+            encode_into_with(
+                buffer,
+                || self.validate_for_version(version),
+                |encoder| DescribeAclsRequest::encode_validated(self, encoder, version),
+                |encoder| DescribeAclsRequest::encode_validated(self, encoder, version),
+            )
         }
     }
 }
@@ -191,8 +199,9 @@ pub mod describe_acls_request {
 /// written to name the message itself.
 pub mod describe_acls_response {
     use kafka_wire_core::{
-        ApiKey, ApiVersion, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
-        KafkaEncode, StrBytes, TaggedFields, VersionRange,
+        ApiKey, ApiVersion, BytesMut, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder,
+        KafkaDecode, KafkaEncode, StrBytes, TaggedFields, VersionRange, encode_into_with,
+        encoded_len_with,
     };
 
     use crate::{KafkaMessage, KafkaResponse};
@@ -339,18 +348,24 @@ pub mod describe_acls_response {
             DescribeAclsResource::encode_validated(self, encoder, version)
         }
 
-        #[doc(hidden)]
-        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
-            self.validate_for_version(version)
+        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+            encoded_len_with(
+                || self.validate_for_version(version),
+                |encoder| DescribeAclsResource::encode_validated(self, encoder, version),
+            )
         }
 
-        #[doc(hidden)]
-        fn encode_validated<T: EncodeTarget>(
+        fn encode_into(
             &self,
-            encoder: &mut Encoder<T>,
+            buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
-            DescribeAclsResource::encode_validated(self, encoder, version)
+        ) -> Result<usize, EncodeError> {
+            encode_into_with(
+                buffer,
+                || self.validate_for_version(version),
+                |encoder| DescribeAclsResource::encode_validated(self, encoder, version),
+                |encoder| DescribeAclsResource::encode_validated(self, encoder, version),
+            )
         }
     }
 
@@ -475,18 +490,24 @@ pub mod describe_acls_response {
             AclDescription::encode_validated(self, encoder, version)
         }
 
-        #[doc(hidden)]
-        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
-            self.validate_for_version(version)
+        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+            encoded_len_with(
+                || self.validate_for_version(version),
+                |encoder| AclDescription::encode_validated(self, encoder, version),
+            )
         }
 
-        #[doc(hidden)]
-        fn encode_validated<T: EncodeTarget>(
+        fn encode_into(
             &self,
-            encoder: &mut Encoder<T>,
+            buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
-            AclDescription::encode_validated(self, encoder, version)
+        ) -> Result<usize, EncodeError> {
+            encode_into_with(
+                buffer,
+                || self.validate_for_version(version),
+                |encoder| AclDescription::encode_validated(self, encoder, version),
+                |encoder| AclDescription::encode_validated(self, encoder, version),
+            )
         }
     }
 
@@ -623,18 +644,24 @@ pub mod describe_acls_response {
             DescribeAclsResponse::encode_validated(self, encoder, version)
         }
 
-        #[doc(hidden)]
-        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
-            self.validate_for_version(version)
+        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+            encoded_len_with(
+                || self.validate_for_version(version),
+                |encoder| DescribeAclsResponse::encode_validated(self, encoder, version),
+            )
         }
 
-        #[doc(hidden)]
-        fn encode_validated<T: EncodeTarget>(
+        fn encode_into(
             &self,
-            encoder: &mut Encoder<T>,
+            buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
-            DescribeAclsResponse::encode_validated(self, encoder, version)
+        ) -> Result<usize, EncodeError> {
+            encode_into_with(
+                buffer,
+                || self.validate_for_version(version),
+                |encoder| DescribeAclsResponse::encode_validated(self, encoder, version),
+                |encoder| DescribeAclsResponse::encode_validated(self, encoder, version),
+            )
         }
     }
 }
@@ -653,6 +680,7 @@ pub const DESCRIBE_ACLS_REQUEST_DESCRIPTOR: MessageDescriptor = MessageDescripto
     MessageDirection::Request,
     VersionRange::new(1, 3),
     Some(VersionRange::new(2, 3)),
+    false,
 );
 
 /// Static metadata for [`DescribeAclsResponse`].
@@ -662,4 +690,5 @@ pub const DESCRIBE_ACLS_RESPONSE_DESCRIPTOR: MessageDescriptor = MessageDescript
     MessageDirection::Response,
     VersionRange::new(1, 3),
     Some(VersionRange::new(2, 3)),
+    false,
 );

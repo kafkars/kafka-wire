@@ -11,8 +11,9 @@
 /// written to name the message itself.
 pub mod elect_leaders_request {
     use kafka_wire_core::{
-        ApiKey, ApiVersion, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
-        KafkaEncode, StrBytes, TaggedFields, VersionRange,
+        ApiKey, ApiVersion, BytesMut, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder,
+        KafkaDecode, KafkaEncode, StrBytes, TaggedFields, VersionRange, encode_into_with,
+        encoded_len_with,
     };
 
     use crate::{KafkaMessage, KafkaRequest, RequestResponsePair};
@@ -134,18 +135,24 @@ pub mod elect_leaders_request {
             TopicPartitions::encode_validated(self, encoder, version)
         }
 
-        #[doc(hidden)]
-        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
-            self.validate_for_version(version)
+        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+            encoded_len_with(
+                || self.validate_for_version(version),
+                |encoder| TopicPartitions::encode_validated(self, encoder, version),
+            )
         }
 
-        #[doc(hidden)]
-        fn encode_validated<T: EncodeTarget>(
+        fn encode_into(
             &self,
-            encoder: &mut Encoder<T>,
+            buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
-            TopicPartitions::encode_validated(self, encoder, version)
+        ) -> Result<usize, EncodeError> {
+            encode_into_with(
+                buffer,
+                || self.validate_for_version(version),
+                |encoder| TopicPartitions::encode_validated(self, encoder, version),
+                |encoder| TopicPartitions::encode_validated(self, encoder, version),
+            )
         }
     }
 
@@ -182,6 +189,7 @@ pub mod elect_leaders_request {
 
     impl KafkaRequest for ElectLeadersRequest {
         const API_KEY: ApiKey = ApiKey::new(43);
+        const LATEST_VERSION_UNSTABLE: bool = false;
     }
 
     impl RequestResponsePair for ElectLeadersRequest {
@@ -294,18 +302,24 @@ pub mod elect_leaders_request {
             ElectLeadersRequest::encode_validated(self, encoder, version)
         }
 
-        #[doc(hidden)]
-        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
-            self.validate_for_version(version)
+        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+            encoded_len_with(
+                || self.validate_for_version(version),
+                |encoder| ElectLeadersRequest::encode_validated(self, encoder, version),
+            )
         }
 
-        #[doc(hidden)]
-        fn encode_validated<T: EncodeTarget>(
+        fn encode_into(
             &self,
-            encoder: &mut Encoder<T>,
+            buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
-            ElectLeadersRequest::encode_validated(self, encoder, version)
+        ) -> Result<usize, EncodeError> {
+            encode_into_with(
+                buffer,
+                || self.validate_for_version(version),
+                |encoder| ElectLeadersRequest::encode_validated(self, encoder, version),
+                |encoder| ElectLeadersRequest::encode_validated(self, encoder, version),
+            )
         }
     }
 }
@@ -316,8 +330,9 @@ pub mod elect_leaders_request {
 /// written to name the message itself.
 pub mod elect_leaders_response {
     use kafka_wire_core::{
-        ApiKey, ApiVersion, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
-        KafkaEncode, StrBytes, TaggedFields, VersionRange,
+        ApiKey, ApiVersion, BytesMut, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder,
+        KafkaDecode, KafkaEncode, StrBytes, TaggedFields, VersionRange, encode_into_with,
+        encoded_len_with,
     };
 
     use crate::{KafkaMessage, KafkaResponse};
@@ -442,18 +457,24 @@ pub mod elect_leaders_response {
             ReplicaElectionResult::encode_validated(self, encoder, version)
         }
 
-        #[doc(hidden)]
-        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
-            self.validate_for_version(version)
+        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+            encoded_len_with(
+                || self.validate_for_version(version),
+                |encoder| ReplicaElectionResult::encode_validated(self, encoder, version),
+            )
         }
 
-        #[doc(hidden)]
-        fn encode_validated<T: EncodeTarget>(
+        fn encode_into(
             &self,
-            encoder: &mut Encoder<T>,
+            buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
-            ReplicaElectionResult::encode_validated(self, encoder, version)
+        ) -> Result<usize, EncodeError> {
+            encode_into_with(
+                buffer,
+                || self.validate_for_version(version),
+                |encoder| ReplicaElectionResult::encode_validated(self, encoder, version),
+                |encoder| ReplicaElectionResult::encode_validated(self, encoder, version),
+            )
         }
     }
 
@@ -576,18 +597,24 @@ pub mod elect_leaders_response {
             PartitionResult::encode_validated(self, encoder, version)
         }
 
-        #[doc(hidden)]
-        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
-            self.validate_for_version(version)
+        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+            encoded_len_with(
+                || self.validate_for_version(version),
+                |encoder| PartitionResult::encode_validated(self, encoder, version),
+            )
         }
 
-        #[doc(hidden)]
-        fn encode_validated<T: EncodeTarget>(
+        fn encode_into(
             &self,
-            encoder: &mut Encoder<T>,
+            buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
-            PartitionResult::encode_validated(self, encoder, version)
+        ) -> Result<usize, EncodeError> {
+            encode_into_with(
+                buffer,
+                || self.validate_for_version(version),
+                |encoder| PartitionResult::encode_validated(self, encoder, version),
+                |encoder| PartitionResult::encode_validated(self, encoder, version),
+            )
         }
     }
 
@@ -712,18 +739,24 @@ pub mod elect_leaders_response {
             ElectLeadersResponse::encode_validated(self, encoder, version)
         }
 
-        #[doc(hidden)]
-        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
-            self.validate_for_version(version)
+        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+            encoded_len_with(
+                || self.validate_for_version(version),
+                |encoder| ElectLeadersResponse::encode_validated(self, encoder, version),
+            )
         }
 
-        #[doc(hidden)]
-        fn encode_validated<T: EncodeTarget>(
+        fn encode_into(
             &self,
-            encoder: &mut Encoder<T>,
+            buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
-            ElectLeadersResponse::encode_validated(self, encoder, version)
+        ) -> Result<usize, EncodeError> {
+            encode_into_with(
+                buffer,
+                || self.validate_for_version(version),
+                |encoder| ElectLeadersResponse::encode_validated(self, encoder, version),
+                |encoder| ElectLeadersResponse::encode_validated(self, encoder, version),
+            )
         }
     }
 }
@@ -742,6 +775,7 @@ pub const ELECT_LEADERS_REQUEST_DESCRIPTOR: MessageDescriptor = MessageDescripto
     MessageDirection::Request,
     VersionRange::new(0, 2),
     Some(VersionRange::new(2, 2)),
+    false,
 );
 
 /// Static metadata for [`ElectLeadersResponse`].
@@ -751,4 +785,5 @@ pub const ELECT_LEADERS_RESPONSE_DESCRIPTOR: MessageDescriptor = MessageDescript
     MessageDirection::Response,
     VersionRange::new(0, 2),
     Some(VersionRange::new(2, 2)),
+    false,
 );

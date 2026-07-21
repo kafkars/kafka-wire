@@ -5,6 +5,7 @@
 
 mod config;
 mod corpus;
+mod corpus_output;
 mod error;
 mod format;
 mod group;
@@ -13,6 +14,7 @@ mod lock_path;
 mod lockfile;
 mod manifest;
 mod output;
+mod output_ownership;
 mod output_staging;
 mod overrides;
 mod pipeline;

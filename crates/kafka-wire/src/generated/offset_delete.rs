@@ -11,8 +11,8 @@
 /// written to name the message itself.
 pub mod offset_delete_request {
     use kafka_wire_core::{
-        ApiKey, ApiVersion, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
-        KafkaEncode, StrBytes, VersionRange,
+        ApiKey, ApiVersion, BytesMut, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder,
+        KafkaDecode, KafkaEncode, StrBytes, VersionRange, encode_into_with, encoded_len_with,
     };
 
     use crate::{KafkaMessage, KafkaRequest, RequestResponsePair};
@@ -97,18 +97,24 @@ pub mod offset_delete_request {
             OffsetDeleteRequestTopic::encode_validated(self, encoder, version)
         }
 
-        #[doc(hidden)]
-        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
-            self.validate_for_version(version)
+        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+            encoded_len_with(
+                || self.validate_for_version(version),
+                |encoder| OffsetDeleteRequestTopic::encode_validated(self, encoder, version),
+            )
         }
 
-        #[doc(hidden)]
-        fn encode_validated<T: EncodeTarget>(
+        fn encode_into(
             &self,
-            encoder: &mut Encoder<T>,
+            buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
-            OffsetDeleteRequestTopic::encode_validated(self, encoder, version)
+        ) -> Result<usize, EncodeError> {
+            encode_into_with(
+                buffer,
+                || self.validate_for_version(version),
+                |encoder| OffsetDeleteRequestTopic::encode_validated(self, encoder, version),
+                |encoder| OffsetDeleteRequestTopic::encode_validated(self, encoder, version),
+            )
         }
     }
 
@@ -177,18 +183,24 @@ pub mod offset_delete_request {
             OffsetDeleteRequestPartition::encode_validated(self, encoder, version)
         }
 
-        #[doc(hidden)]
-        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
-            self.validate_for_version(version)
+        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+            encoded_len_with(
+                || self.validate_for_version(version),
+                |encoder| OffsetDeleteRequestPartition::encode_validated(self, encoder, version),
+            )
         }
 
-        #[doc(hidden)]
-        fn encode_validated<T: EncodeTarget>(
+        fn encode_into(
             &self,
-            encoder: &mut Encoder<T>,
+            buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
-            OffsetDeleteRequestPartition::encode_validated(self, encoder, version)
+        ) -> Result<usize, EncodeError> {
+            encode_into_with(
+                buffer,
+                || self.validate_for_version(version),
+                |encoder| OffsetDeleteRequestPartition::encode_validated(self, encoder, version),
+                |encoder| OffsetDeleteRequestPartition::encode_validated(self, encoder, version),
+            )
         }
     }
 
@@ -210,6 +222,7 @@ pub mod offset_delete_request {
 
     impl KafkaRequest for OffsetDeleteRequest {
         const API_KEY: ApiKey = ApiKey::new(47);
+        const LATEST_VERSION_UNSTABLE: bool = false;
     }
 
     impl RequestResponsePair for OffsetDeleteRequest {
@@ -270,18 +283,24 @@ pub mod offset_delete_request {
             OffsetDeleteRequest::encode_validated(self, encoder, version)
         }
 
-        #[doc(hidden)]
-        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
-            self.validate_for_version(version)
+        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+            encoded_len_with(
+                || self.validate_for_version(version),
+                |encoder| OffsetDeleteRequest::encode_validated(self, encoder, version),
+            )
         }
 
-        #[doc(hidden)]
-        fn encode_validated<T: EncodeTarget>(
+        fn encode_into(
             &self,
-            encoder: &mut Encoder<T>,
+            buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
-            OffsetDeleteRequest::encode_validated(self, encoder, version)
+        ) -> Result<usize, EncodeError> {
+            encode_into_with(
+                buffer,
+                || self.validate_for_version(version),
+                |encoder| OffsetDeleteRequest::encode_validated(self, encoder, version),
+                |encoder| OffsetDeleteRequest::encode_validated(self, encoder, version),
+            )
         }
     }
 }
@@ -292,8 +311,8 @@ pub mod offset_delete_request {
 /// written to name the message itself.
 pub mod offset_delete_response {
     use kafka_wire_core::{
-        ApiKey, ApiVersion, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
-        KafkaEncode, StrBytes, VersionRange,
+        ApiKey, ApiVersion, BytesMut, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder,
+        KafkaDecode, KafkaEncode, StrBytes, VersionRange, encode_into_with, encoded_len_with,
     };
 
     use crate::{KafkaMessage, KafkaResponse};
@@ -378,18 +397,24 @@ pub mod offset_delete_response {
             OffsetDeleteResponseTopic::encode_validated(self, encoder, version)
         }
 
-        #[doc(hidden)]
-        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
-            self.validate_for_version(version)
+        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+            encoded_len_with(
+                || self.validate_for_version(version),
+                |encoder| OffsetDeleteResponseTopic::encode_validated(self, encoder, version),
+            )
         }
 
-        #[doc(hidden)]
-        fn encode_validated<T: EncodeTarget>(
+        fn encode_into(
             &self,
-            encoder: &mut Encoder<T>,
+            buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
-            OffsetDeleteResponseTopic::encode_validated(self, encoder, version)
+        ) -> Result<usize, EncodeError> {
+            encode_into_with(
+                buffer,
+                || self.validate_for_version(version),
+                |encoder| OffsetDeleteResponseTopic::encode_validated(self, encoder, version),
+                |encoder| OffsetDeleteResponseTopic::encode_validated(self, encoder, version),
+            )
         }
     }
 
@@ -465,18 +490,24 @@ pub mod offset_delete_response {
             OffsetDeleteResponsePartition::encode_validated(self, encoder, version)
         }
 
-        #[doc(hidden)]
-        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
-            self.validate_for_version(version)
+        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+            encoded_len_with(
+                || self.validate_for_version(version),
+                |encoder| OffsetDeleteResponsePartition::encode_validated(self, encoder, version),
+            )
         }
 
-        #[doc(hidden)]
-        fn encode_validated<T: EncodeTarget>(
+        fn encode_into(
             &self,
-            encoder: &mut Encoder<T>,
+            buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
-            OffsetDeleteResponsePartition::encode_validated(self, encoder, version)
+        ) -> Result<usize, EncodeError> {
+            encode_into_with(
+                buffer,
+                || self.validate_for_version(version),
+                |encoder| OffsetDeleteResponsePartition::encode_validated(self, encoder, version),
+                |encoder| OffsetDeleteResponsePartition::encode_validated(self, encoder, version),
+            )
         }
     }
 
@@ -562,18 +593,24 @@ pub mod offset_delete_response {
             OffsetDeleteResponse::encode_validated(self, encoder, version)
         }
 
-        #[doc(hidden)]
-        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
-            self.validate_for_version(version)
+        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+            encoded_len_with(
+                || self.validate_for_version(version),
+                |encoder| OffsetDeleteResponse::encode_validated(self, encoder, version),
+            )
         }
 
-        #[doc(hidden)]
-        fn encode_validated<T: EncodeTarget>(
+        fn encode_into(
             &self,
-            encoder: &mut Encoder<T>,
+            buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
-            OffsetDeleteResponse::encode_validated(self, encoder, version)
+        ) -> Result<usize, EncodeError> {
+            encode_into_with(
+                buffer,
+                || self.validate_for_version(version),
+                |encoder| OffsetDeleteResponse::encode_validated(self, encoder, version),
+                |encoder| OffsetDeleteResponse::encode_validated(self, encoder, version),
+            )
         }
     }
 }
@@ -592,6 +629,7 @@ pub const OFFSET_DELETE_REQUEST_DESCRIPTOR: MessageDescriptor = MessageDescripto
     MessageDirection::Request,
     VersionRange::new(0, 0),
     None,
+    false,
 );
 
 /// Static metadata for [`OffsetDeleteResponse`].
@@ -601,4 +639,5 @@ pub const OFFSET_DELETE_RESPONSE_DESCRIPTOR: MessageDescriptor = MessageDescript
     MessageDirection::Response,
     VersionRange::new(0, 0),
     None,
+    false,
 );

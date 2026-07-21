@@ -24,6 +24,8 @@ pub struct MessageDescriptor {
     pub supported_versions: VersionRange,
     /// Flexible versions intersected with supported versions.
     pub flexible_versions: Option<VersionRange>,
+    /// Whether the highest version is excluded from default negotiation.
+    pub latest_version_unstable: bool,
 }
 
 impl MessageDescriptor {
@@ -34,6 +36,7 @@ impl MessageDescriptor {
         direction: MessageDirection,
         supported_versions: VersionRange,
         flexible_versions: Option<VersionRange>,
+        latest_version_unstable: bool,
     ) -> Self {
         Self {
             api_key: ApiKey::new(api_key),
@@ -41,6 +44,12 @@ impl MessageDescriptor {
             direction,
             supported_versions,
             flexible_versions,
+            latest_version_unstable,
         }
+    }
+
+    /// Highest version suitable for default negotiation.
+    pub const fn latest_stable_version(self) -> Option<kafka_wire_core::ApiVersion> {
+        crate::message::latest_stable_version(self.supported_versions, self.latest_version_unstable)
     }
 }

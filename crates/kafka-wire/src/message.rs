@@ -5,6 +5,26 @@ use kafka_wire_core::{
 };
 
 /// Shared metadata and wire contracts for every generated message.
+///
+/// Generated unchecked writers are private implementation details. In
+/// particular, downstream safe code cannot recover the old hidden trait hook
+/// and use it to bypass representability validation:
+///
+/// ```compile_fail
+/// use kafka_wire::update_features_request::FeatureUpdateKey;
+/// use kafka_wire_core::{ApiVersion, BytesMut, Encoder, KafkaEncode};
+///
+/// let mut value = FeatureUpdateKey::default();
+/// value.allow_downgrade = true;
+/// let mut bytes = BytesMut::new();
+/// let mut encoder = Encoder::new(&mut bytes);
+/// <FeatureUpdateKey as KafkaEncode>::encode_validated(
+///     &value,
+///     &mut encoder,
+///     ApiVersion::new(1),
+/// )?;
+/// # Ok::<(), kafka_wire_core::EncodeError>(())
+/// ```
 pub trait KafkaMessage: KafkaEncode + KafkaDecode {
     /// Upstream protocol name.
     const NAME: &'static str;
@@ -28,6 +48,33 @@ pub trait KafkaMessage: KafkaEncode + KafkaDecode {
 pub trait KafkaRequest: KafkaMessage {
     /// Numeric Kafka API key.
     const API_KEY: ApiKey;
+    /// Whether the highest supported version is excluded from default negotiation.
+    const LATEST_VERSION_UNSTABLE: bool = false;
+
+    /// Highest version suitable for default negotiation.
+    ///
+    /// An unstable highest version remains explicitly encodable; it is omitted
+    /// only from the default ceiling. `None` means the sole supported version
+    /// is unstable.
+    fn latest_stable_version() -> Option<ApiVersion> {
+        latest_stable_version(Self::SUPPORTED_VERSIONS, Self::LATEST_VERSION_UNSTABLE)
+    }
+}
+
+pub(crate) const fn latest_stable_version(
+    supported: VersionRange,
+    latest_unstable: bool,
+) -> Option<ApiVersion> {
+    if !latest_unstable {
+        return Some(supported.max());
+    }
+    let minimum = supported.min().value();
+    let maximum = supported.max().value();
+    if maximum == minimum {
+        None
+    } else {
+        Some(ApiVersion::new(maximum - 1))
+    }
 }
 
 /// Server-to-client Kafka message.

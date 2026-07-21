@@ -218,7 +218,11 @@ fn assert_record(found: &ReadRecord, expected: &Record, batch: &RecordBatch, at:
         "{at}: header count"
     );
     for (found, expected) in found.headers.iter().zip(&expected.headers) {
-        assert_eq!(found.key, expected.key, "{at}: header key");
+        assert_eq!(
+            found.key.as_str(),
+            expected.key.as_str(),
+            "{at}: header key"
+        );
         assert_eq!(
             found.value,
             expected.value.as_deref().map(to_hex),

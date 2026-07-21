@@ -11,8 +11,8 @@
 /// written to name the message itself.
 pub mod unregister_broker_request {
     use kafka_wire_core::{
-        ApiKey, ApiVersion, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
-        KafkaEncode, TaggedFields, VersionRange,
+        ApiKey, ApiVersion, BytesMut, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder,
+        KafkaDecode, KafkaEncode, TaggedFields, VersionRange, encode_into_with, encoded_len_with,
     };
 
     use crate::{KafkaMessage, KafkaRequest, RequestResponsePair};
@@ -35,6 +35,7 @@ pub mod unregister_broker_request {
 
     impl KafkaRequest for UnregisterBrokerRequest {
         const API_KEY: ApiKey = ApiKey::new(64);
+        const LATEST_VERSION_UNSTABLE: bool = false;
     }
 
     impl RequestResponsePair for UnregisterBrokerRequest {
@@ -100,18 +101,24 @@ pub mod unregister_broker_request {
             UnregisterBrokerRequest::encode_validated(self, encoder, version)
         }
 
-        #[doc(hidden)]
-        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
-            self.validate_for_version(version)
+        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+            encoded_len_with(
+                || self.validate_for_version(version),
+                |encoder| UnregisterBrokerRequest::encode_validated(self, encoder, version),
+            )
         }
 
-        #[doc(hidden)]
-        fn encode_validated<T: EncodeTarget>(
+        fn encode_into(
             &self,
-            encoder: &mut Encoder<T>,
+            buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
-            UnregisterBrokerRequest::encode_validated(self, encoder, version)
+        ) -> Result<usize, EncodeError> {
+            encode_into_with(
+                buffer,
+                || self.validate_for_version(version),
+                |encoder| UnregisterBrokerRequest::encode_validated(self, encoder, version),
+                |encoder| UnregisterBrokerRequest::encode_validated(self, encoder, version),
+            )
         }
     }
 }
@@ -122,8 +129,9 @@ pub mod unregister_broker_request {
 /// written to name the message itself.
 pub mod unregister_broker_response {
     use kafka_wire_core::{
-        ApiKey, ApiVersion, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
-        KafkaEncode, StrBytes, TaggedFields, VersionRange,
+        ApiKey, ApiVersion, BytesMut, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder,
+        KafkaDecode, KafkaEncode, StrBytes, TaggedFields, VersionRange, encode_into_with,
+        encoded_len_with,
     };
 
     use crate::{KafkaMessage, KafkaResponse};
@@ -228,18 +236,24 @@ pub mod unregister_broker_response {
             UnregisterBrokerResponse::encode_validated(self, encoder, version)
         }
 
-        #[doc(hidden)]
-        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
-            self.validate_for_version(version)
+        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+            encoded_len_with(
+                || self.validate_for_version(version),
+                |encoder| UnregisterBrokerResponse::encode_validated(self, encoder, version),
+            )
         }
 
-        #[doc(hidden)]
-        fn encode_validated<T: EncodeTarget>(
+        fn encode_into(
             &self,
-            encoder: &mut Encoder<T>,
+            buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
-            UnregisterBrokerResponse::encode_validated(self, encoder, version)
+        ) -> Result<usize, EncodeError> {
+            encode_into_with(
+                buffer,
+                || self.validate_for_version(version),
+                |encoder| UnregisterBrokerResponse::encode_validated(self, encoder, version),
+                |encoder| UnregisterBrokerResponse::encode_validated(self, encoder, version),
+            )
         }
     }
 }
@@ -258,6 +272,7 @@ pub const UNREGISTER_BROKER_REQUEST_DESCRIPTOR: MessageDescriptor = MessageDescr
     MessageDirection::Request,
     VersionRange::new(0, 0),
     Some(VersionRange::new(0, 0)),
+    false,
 );
 
 /// Static metadata for [`UnregisterBrokerResponse`].
@@ -267,4 +282,5 @@ pub const UNREGISTER_BROKER_RESPONSE_DESCRIPTOR: MessageDescriptor = MessageDesc
     MessageDirection::Response,
     VersionRange::new(0, 0),
     Some(VersionRange::new(0, 0)),
+    false,
 );

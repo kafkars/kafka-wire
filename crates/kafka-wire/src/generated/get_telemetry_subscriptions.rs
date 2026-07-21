@@ -11,8 +11,9 @@
 /// written to name the message itself.
 pub mod get_telemetry_subscriptions_request {
     use kafka_wire_core::{
-        ApiKey, ApiVersion, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
-        KafkaEncode, TaggedFields, Uuid, VersionRange,
+        ApiKey, ApiVersion, BytesMut, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder,
+        KafkaDecode, KafkaEncode, TaggedFields, Uuid, VersionRange, encode_into_with,
+        encoded_len_with,
     };
 
     use crate::{KafkaMessage, KafkaRequest, RequestResponsePair};
@@ -35,6 +36,7 @@ pub mod get_telemetry_subscriptions_request {
 
     impl KafkaRequest for GetTelemetrySubscriptionsRequest {
         const API_KEY: ApiKey = ApiKey::new(71);
+        const LATEST_VERSION_UNSTABLE: bool = false;
     }
 
     impl RequestResponsePair for GetTelemetrySubscriptionsRequest {
@@ -100,18 +102,30 @@ pub mod get_telemetry_subscriptions_request {
             GetTelemetrySubscriptionsRequest::encode_validated(self, encoder, version)
         }
 
-        #[doc(hidden)]
-        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
-            self.validate_for_version(version)
+        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+            encoded_len_with(
+                || self.validate_for_version(version),
+                |encoder| {
+                    GetTelemetrySubscriptionsRequest::encode_validated(self, encoder, version)
+                },
+            )
         }
 
-        #[doc(hidden)]
-        fn encode_validated<T: EncodeTarget>(
+        fn encode_into(
             &self,
-            encoder: &mut Encoder<T>,
+            buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
-            GetTelemetrySubscriptionsRequest::encode_validated(self, encoder, version)
+        ) -> Result<usize, EncodeError> {
+            encode_into_with(
+                buffer,
+                || self.validate_for_version(version),
+                |encoder| {
+                    GetTelemetrySubscriptionsRequest::encode_validated(self, encoder, version)
+                },
+                |encoder| {
+                    GetTelemetrySubscriptionsRequest::encode_validated(self, encoder, version)
+                },
+            )
         }
     }
 }
@@ -122,8 +136,9 @@ pub mod get_telemetry_subscriptions_request {
 /// written to name the message itself.
 pub mod get_telemetry_subscriptions_response {
     use kafka_wire_core::{
-        ApiKey, ApiVersion, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
-        KafkaEncode, StrBytes, TaggedFields, Uuid, VersionRange,
+        ApiKey, ApiVersion, BytesMut, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder,
+        KafkaDecode, KafkaEncode, StrBytes, TaggedFields, Uuid, VersionRange, encode_into_with,
+        encoded_len_with,
     };
 
     use crate::{KafkaMessage, KafkaResponse};
@@ -259,18 +274,30 @@ pub mod get_telemetry_subscriptions_response {
             GetTelemetrySubscriptionsResponse::encode_validated(self, encoder, version)
         }
 
-        #[doc(hidden)]
-        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
-            self.validate_for_version(version)
+        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+            encoded_len_with(
+                || self.validate_for_version(version),
+                |encoder| {
+                    GetTelemetrySubscriptionsResponse::encode_validated(self, encoder, version)
+                },
+            )
         }
 
-        #[doc(hidden)]
-        fn encode_validated<T: EncodeTarget>(
+        fn encode_into(
             &self,
-            encoder: &mut Encoder<T>,
+            buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
-            GetTelemetrySubscriptionsResponse::encode_validated(self, encoder, version)
+        ) -> Result<usize, EncodeError> {
+            encode_into_with(
+                buffer,
+                || self.validate_for_version(version),
+                |encoder| {
+                    GetTelemetrySubscriptionsResponse::encode_validated(self, encoder, version)
+                },
+                |encoder| {
+                    GetTelemetrySubscriptionsResponse::encode_validated(self, encoder, version)
+                },
+            )
         }
     }
 }
@@ -290,6 +317,7 @@ pub const GET_TELEMETRY_SUBSCRIPTIONS_REQUEST_DESCRIPTOR: MessageDescriptor =
         MessageDirection::Request,
         VersionRange::new(0, 0),
         Some(VersionRange::new(0, 0)),
+        false,
     );
 
 /// Static metadata for [`GetTelemetrySubscriptionsResponse`].
@@ -300,4 +328,5 @@ pub const GET_TELEMETRY_SUBSCRIPTIONS_RESPONSE_DESCRIPTOR: MessageDescriptor =
         MessageDirection::Response,
         VersionRange::new(0, 0),
         Some(VersionRange::new(0, 0)),
+        false,
     );

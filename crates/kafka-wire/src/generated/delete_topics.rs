@@ -11,8 +11,9 @@
 /// written to name the message itself.
 pub mod delete_topics_request {
     use kafka_wire_core::{
-        ApiKey, ApiVersion, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
-        KafkaEncode, StrBytes, TaggedFields, Uuid, VersionRange,
+        ApiKey, ApiVersion, BytesMut, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder,
+        KafkaDecode, KafkaEncode, StrBytes, TaggedFields, Uuid, VersionRange, encode_into_with,
+        encoded_len_with,
     };
 
     use crate::{KafkaMessage, KafkaRequest, RequestResponsePair};
@@ -112,18 +113,24 @@ pub mod delete_topics_request {
             DeleteTopicState::encode_validated(self, encoder, version)
         }
 
-        #[doc(hidden)]
-        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
-            self.validate_for_version(version)
+        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+            encoded_len_with(
+                || self.validate_for_version(version),
+                |encoder| DeleteTopicState::encode_validated(self, encoder, version),
+            )
         }
 
-        #[doc(hidden)]
-        fn encode_validated<T: EncodeTarget>(
+        fn encode_into(
             &self,
-            encoder: &mut Encoder<T>,
+            buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
-            DeleteTopicState::encode_validated(self, encoder, version)
+        ) -> Result<usize, EncodeError> {
+            encode_into_with(
+                buffer,
+                || self.validate_for_version(version),
+                |encoder| DeleteTopicState::encode_validated(self, encoder, version),
+                |encoder| DeleteTopicState::encode_validated(self, encoder, version),
+            )
         }
     }
 
@@ -149,6 +156,7 @@ pub mod delete_topics_request {
 
     impl KafkaRequest for DeleteTopicsRequest {
         const API_KEY: ApiKey = ApiKey::new(20);
+        const LATEST_VERSION_UNSTABLE: bool = false;
     }
 
     impl RequestResponsePair for DeleteTopicsRequest {
@@ -270,18 +278,24 @@ pub mod delete_topics_request {
             DeleteTopicsRequest::encode_validated(self, encoder, version)
         }
 
-        #[doc(hidden)]
-        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
-            self.validate_for_version(version)
+        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+            encoded_len_with(
+                || self.validate_for_version(version),
+                |encoder| DeleteTopicsRequest::encode_validated(self, encoder, version),
+            )
         }
 
-        #[doc(hidden)]
-        fn encode_validated<T: EncodeTarget>(
+        fn encode_into(
             &self,
-            encoder: &mut Encoder<T>,
+            buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
-            DeleteTopicsRequest::encode_validated(self, encoder, version)
+        ) -> Result<usize, EncodeError> {
+            encode_into_with(
+                buffer,
+                || self.validate_for_version(version),
+                |encoder| DeleteTopicsRequest::encode_validated(self, encoder, version),
+                |encoder| DeleteTopicsRequest::encode_validated(self, encoder, version),
+            )
         }
     }
 }
@@ -292,8 +306,9 @@ pub mod delete_topics_request {
 /// written to name the message itself.
 pub mod delete_topics_response {
     use kafka_wire_core::{
-        ApiKey, ApiVersion, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
-        KafkaEncode, StrBytes, TaggedFields, Uuid, VersionRange,
+        ApiKey, ApiVersion, BytesMut, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder,
+        KafkaDecode, KafkaEncode, StrBytes, TaggedFields, Uuid, VersionRange, encode_into_with,
+        encoded_len_with,
     };
 
     use crate::{KafkaMessage, KafkaResponse};
@@ -446,18 +461,24 @@ pub mod delete_topics_response {
             DeletableTopicResult::encode_validated(self, encoder, version)
         }
 
-        #[doc(hidden)]
-        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
-            self.validate_for_version(version)
+        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+            encoded_len_with(
+                || self.validate_for_version(version),
+                |encoder| DeletableTopicResult::encode_validated(self, encoder, version),
+            )
         }
 
-        #[doc(hidden)]
-        fn encode_validated<T: EncodeTarget>(
+        fn encode_into(
             &self,
-            encoder: &mut Encoder<T>,
+            buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
-            DeletableTopicResult::encode_validated(self, encoder, version)
+        ) -> Result<usize, EncodeError> {
+            encode_into_with(
+                buffer,
+                || self.validate_for_version(version),
+                |encoder| DeletableTopicResult::encode_validated(self, encoder, version),
+                |encoder| DeletableTopicResult::encode_validated(self, encoder, version),
+            )
         }
     }
 
@@ -564,18 +585,24 @@ pub mod delete_topics_response {
             DeleteTopicsResponse::encode_validated(self, encoder, version)
         }
 
-        #[doc(hidden)]
-        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
-            self.validate_for_version(version)
+        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+            encoded_len_with(
+                || self.validate_for_version(version),
+                |encoder| DeleteTopicsResponse::encode_validated(self, encoder, version),
+            )
         }
 
-        #[doc(hidden)]
-        fn encode_validated<T: EncodeTarget>(
+        fn encode_into(
             &self,
-            encoder: &mut Encoder<T>,
+            buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
-            DeleteTopicsResponse::encode_validated(self, encoder, version)
+        ) -> Result<usize, EncodeError> {
+            encode_into_with(
+                buffer,
+                || self.validate_for_version(version),
+                |encoder| DeleteTopicsResponse::encode_validated(self, encoder, version),
+                |encoder| DeleteTopicsResponse::encode_validated(self, encoder, version),
+            )
         }
     }
 }
@@ -594,6 +621,7 @@ pub const DELETE_TOPICS_REQUEST_DESCRIPTOR: MessageDescriptor = MessageDescripto
     MessageDirection::Request,
     VersionRange::new(1, 6),
     Some(VersionRange::new(4, 6)),
+    false,
 );
 
 /// Static metadata for [`DeleteTopicsResponse`].
@@ -603,4 +631,5 @@ pub const DELETE_TOPICS_RESPONSE_DESCRIPTOR: MessageDescriptor = MessageDescript
     MessageDirection::Response,
     VersionRange::new(1, 6),
     Some(VersionRange::new(4, 6)),
+    false,
 );

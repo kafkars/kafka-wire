@@ -61,6 +61,7 @@ fn render_imports(rust: &mut RustText, message: &Message) {
     let flexible = !message.effective_flexible_versions().is_empty();
     let mut wire = vec![
         "ApiVersion",
+        "BytesMut",
         "DecodeError",
         "Decoder",
         "EncodeError",
@@ -68,6 +69,8 @@ fn render_imports(rust: &mut RustText, message: &Message) {
         "Encoder",
         "KafkaDecode",
         "KafkaEncode",
+        "encode_into_with",
+        "encoded_len_with",
     ];
     let uses = |ty: &FieldType| crate::render::field::uses_type(message, ty);
     if crate::render::field::uses_bytes(message) {

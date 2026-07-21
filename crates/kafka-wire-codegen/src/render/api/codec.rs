@@ -80,33 +80,33 @@ pub(super) fn render_struct_encode(
     ));
     rust.close("");
     rust.blank();
-    rust.line("#[doc(hidden)]");
+    let validated_body =
+        format!("    |encoder| {rust_type}::encode_validated(self, encoder, version),");
     rust.open(format!(
-        "fn validate_encoding(&self, version: {}) -> Result<(), {}>",
+        "fn encoded_len(&self, version: {}) -> Result<usize, {}>",
         spell(message, "ApiVersion"),
         spell(message, "EncodeError"),
     ));
-    rust.line("self.validate_for_version(version)");
+    rust.line(format!("{}(", spell(message, "encoded_len_with")));
+    rust.line("    || self.validate_for_version(version),");
+    rust.line(&validated_body);
+    rust.line(")");
     rust.close("");
     rust.blank();
-    rust.line("#[doc(hidden)]");
-    rust.line(format!(
-        "fn encode_validated<T: {}>(",
-        spell(message, "EncodeTarget")
-    ));
+    rust.line("fn encode_into(");
     rust.line("    &self,");
-    rust.line(format!(
-        "    encoder: &mut {}<T>,",
-        spell(message, "Encoder")
-    ));
+    rust.line(format!("    buffer: &mut {},", spell(message, "BytesMut")));
     rust.line(format!("    version: {},", spell(message, "ApiVersion")));
     rust.open(format!(
-        ") -> Result<(), {}>",
+        ") -> Result<usize, {}>",
         spell(message, "EncodeError")
     ));
-    rust.line(format!(
-        "{rust_type}::encode_validated(self, encoder, version)"
-    ));
+    rust.line(format!("{}(", spell(message, "encode_into_with")));
+    rust.line("    buffer,");
+    rust.line("    || self.validate_for_version(version),");
+    rust.line(&validated_body);
+    rust.line(validated_body);
+    rust.line(")");
     rust.close("");
     rust.close("");
     rust.blank();

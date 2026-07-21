@@ -11,8 +11,9 @@
 /// written to name the message itself.
 pub mod add_partitions_to_txn_request {
     use kafka_wire_core::{
-        ApiKey, ApiVersion, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
-        KafkaEncode, StrBytes, TaggedFields, VersionRange,
+        ApiKey, ApiVersion, BytesMut, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder,
+        KafkaDecode, KafkaEncode, StrBytes, TaggedFields, VersionRange, encode_into_with,
+        encoded_len_with,
     };
 
     use crate::{KafkaMessage, KafkaRequest, RequestResponsePair};
@@ -134,18 +135,24 @@ pub mod add_partitions_to_txn_request {
             AddPartitionsToTxnTopic::encode_validated(self, encoder, version)
         }
 
-        #[doc(hidden)]
-        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
-            self.validate_for_version(version)
+        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+            encoded_len_with(
+                || self.validate_for_version(version),
+                |encoder| AddPartitionsToTxnTopic::encode_validated(self, encoder, version),
+            )
         }
 
-        #[doc(hidden)]
-        fn encode_validated<T: EncodeTarget>(
+        fn encode_into(
             &self,
-            encoder: &mut Encoder<T>,
+            buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
-            AddPartitionsToTxnTopic::encode_validated(self, encoder, version)
+        ) -> Result<usize, EncodeError> {
+            encode_into_with(
+                buffer,
+                || self.validate_for_version(version),
+                |encoder| AddPartitionsToTxnTopic::encode_validated(self, encoder, version),
+                |encoder| AddPartitionsToTxnTopic::encode_validated(self, encoder, version),
+            )
         }
     }
 
@@ -270,18 +277,24 @@ pub mod add_partitions_to_txn_request {
             AddPartitionsToTxnTransaction::encode_validated(self, encoder, version)
         }
 
-        #[doc(hidden)]
-        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
-            self.validate_for_version(version)
+        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+            encoded_len_with(
+                || self.validate_for_version(version),
+                |encoder| AddPartitionsToTxnTransaction::encode_validated(self, encoder, version),
+            )
         }
 
-        #[doc(hidden)]
-        fn encode_validated<T: EncodeTarget>(
+        fn encode_into(
             &self,
-            encoder: &mut Encoder<T>,
+            buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
-            AddPartitionsToTxnTransaction::encode_validated(self, encoder, version)
+        ) -> Result<usize, EncodeError> {
+            encode_into_with(
+                buffer,
+                || self.validate_for_version(version),
+                |encoder| AddPartitionsToTxnTransaction::encode_validated(self, encoder, version),
+                |encoder| AddPartitionsToTxnTransaction::encode_validated(self, encoder, version),
+            )
         }
     }
 
@@ -311,6 +324,7 @@ pub mod add_partitions_to_txn_request {
 
     impl KafkaRequest for AddPartitionsToTxnRequest {
         const API_KEY: ApiKey = ApiKey::new(24);
+        const LATEST_VERSION_UNSTABLE: bool = false;
     }
 
     impl RequestResponsePair for AddPartitionsToTxnRequest {
@@ -491,18 +505,24 @@ pub mod add_partitions_to_txn_request {
             AddPartitionsToTxnRequest::encode_validated(self, encoder, version)
         }
 
-        #[doc(hidden)]
-        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
-            self.validate_for_version(version)
+        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+            encoded_len_with(
+                || self.validate_for_version(version),
+                |encoder| AddPartitionsToTxnRequest::encode_validated(self, encoder, version),
+            )
         }
 
-        #[doc(hidden)]
-        fn encode_validated<T: EncodeTarget>(
+        fn encode_into(
             &self,
-            encoder: &mut Encoder<T>,
+            buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
-            AddPartitionsToTxnRequest::encode_validated(self, encoder, version)
+        ) -> Result<usize, EncodeError> {
+            encode_into_with(
+                buffer,
+                || self.validate_for_version(version),
+                |encoder| AddPartitionsToTxnRequest::encode_validated(self, encoder, version),
+                |encoder| AddPartitionsToTxnRequest::encode_validated(self, encoder, version),
+            )
         }
     }
 }
@@ -513,8 +533,9 @@ pub mod add_partitions_to_txn_request {
 /// written to name the message itself.
 pub mod add_partitions_to_txn_response {
     use kafka_wire_core::{
-        ApiKey, ApiVersion, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
-        KafkaEncode, StrBytes, TaggedFields, VersionRange,
+        ApiKey, ApiVersion, BytesMut, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder,
+        KafkaDecode, KafkaEncode, StrBytes, TaggedFields, VersionRange, encode_into_with,
+        encoded_len_with,
     };
 
     use crate::{KafkaMessage, KafkaResponse};
@@ -641,18 +662,24 @@ pub mod add_partitions_to_txn_response {
             AddPartitionsToTxnTopicResult::encode_validated(self, encoder, version)
         }
 
-        #[doc(hidden)]
-        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
-            self.validate_for_version(version)
+        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+            encoded_len_with(
+                || self.validate_for_version(version),
+                |encoder| AddPartitionsToTxnTopicResult::encode_validated(self, encoder, version),
+            )
         }
 
-        #[doc(hidden)]
-        fn encode_validated<T: EncodeTarget>(
+        fn encode_into(
             &self,
-            encoder: &mut Encoder<T>,
+            buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
-            AddPartitionsToTxnTopicResult::encode_validated(self, encoder, version)
+        ) -> Result<usize, EncodeError> {
+            encode_into_with(
+                buffer,
+                || self.validate_for_version(version),
+                |encoder| AddPartitionsToTxnTopicResult::encode_validated(self, encoder, version),
+                |encoder| AddPartitionsToTxnTopicResult::encode_validated(self, encoder, version),
+            )
         }
     }
 
@@ -751,18 +778,30 @@ pub mod add_partitions_to_txn_response {
             AddPartitionsToTxnPartitionResult::encode_validated(self, encoder, version)
         }
 
-        #[doc(hidden)]
-        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
-            self.validate_for_version(version)
+        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+            encoded_len_with(
+                || self.validate_for_version(version),
+                |encoder| {
+                    AddPartitionsToTxnPartitionResult::encode_validated(self, encoder, version)
+                },
+            )
         }
 
-        #[doc(hidden)]
-        fn encode_validated<T: EncodeTarget>(
+        fn encode_into(
             &self,
-            encoder: &mut Encoder<T>,
+            buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
-            AddPartitionsToTxnPartitionResult::encode_validated(self, encoder, version)
+        ) -> Result<usize, EncodeError> {
+            encode_into_with(
+                buffer,
+                || self.validate_for_version(version),
+                |encoder| {
+                    AddPartitionsToTxnPartitionResult::encode_validated(self, encoder, version)
+                },
+                |encoder| {
+                    AddPartitionsToTxnPartitionResult::encode_validated(self, encoder, version)
+                },
+            )
         }
     }
 
@@ -872,18 +911,24 @@ pub mod add_partitions_to_txn_response {
             AddPartitionsToTxnResult::encode_validated(self, encoder, version)
         }
 
-        #[doc(hidden)]
-        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
-            self.validate_for_version(version)
+        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+            encoded_len_with(
+                || self.validate_for_version(version),
+                |encoder| AddPartitionsToTxnResult::encode_validated(self, encoder, version),
+            )
         }
 
-        #[doc(hidden)]
-        fn encode_validated<T: EncodeTarget>(
+        fn encode_into(
             &self,
-            encoder: &mut Encoder<T>,
+            buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
-            AddPartitionsToTxnResult::encode_validated(self, encoder, version)
+        ) -> Result<usize, EncodeError> {
+            encode_into_with(
+                buffer,
+                || self.validate_for_version(version),
+                |encoder| AddPartitionsToTxnResult::encode_validated(self, encoder, version),
+                |encoder| AddPartitionsToTxnResult::encode_validated(self, encoder, version),
+            )
         }
     }
 
@@ -1043,18 +1088,24 @@ pub mod add_partitions_to_txn_response {
             AddPartitionsToTxnResponse::encode_validated(self, encoder, version)
         }
 
-        #[doc(hidden)]
-        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
-            self.validate_for_version(version)
+        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+            encoded_len_with(
+                || self.validate_for_version(version),
+                |encoder| AddPartitionsToTxnResponse::encode_validated(self, encoder, version),
+            )
         }
 
-        #[doc(hidden)]
-        fn encode_validated<T: EncodeTarget>(
+        fn encode_into(
             &self,
-            encoder: &mut Encoder<T>,
+            buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
-            AddPartitionsToTxnResponse::encode_validated(self, encoder, version)
+        ) -> Result<usize, EncodeError> {
+            encode_into_with(
+                buffer,
+                || self.validate_for_version(version),
+                |encoder| AddPartitionsToTxnResponse::encode_validated(self, encoder, version),
+                |encoder| AddPartitionsToTxnResponse::encode_validated(self, encoder, version),
+            )
         }
     }
 }
@@ -1073,6 +1124,7 @@ pub const ADD_PARTITIONS_TO_TXN_REQUEST_DESCRIPTOR: MessageDescriptor = MessageD
     MessageDirection::Request,
     VersionRange::new(0, 5),
     Some(VersionRange::new(3, 5)),
+    false,
 );
 
 /// Static metadata for [`AddPartitionsToTxnResponse`].
@@ -1082,4 +1134,5 @@ pub const ADD_PARTITIONS_TO_TXN_RESPONSE_DESCRIPTOR: MessageDescriptor = Message
     MessageDirection::Response,
     VersionRange::new(0, 5),
     Some(VersionRange::new(3, 5)),
+    false,
 );

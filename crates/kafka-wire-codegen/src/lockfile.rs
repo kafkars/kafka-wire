@@ -19,6 +19,9 @@ use crate::{PortableFilename, RepoRelativePath};
 /// The one semantic IR contract implemented by this compiler.
 pub const SUPPORTED_IR_VERSION: u32 = 1;
 
+/// The only repository directory this generator is authorized to replace.
+pub(crate) const GENERATED_OUTPUT_PATH: &str = "crates/kafka-wire/src/generated";
+
 /// Parsed repository protocol lockfile.
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq)]
 #[serde(deny_unknown_fields)]
@@ -118,6 +121,13 @@ impl ProtocolLock {
                 found: lock.generator.ir_version,
                 supported: SUPPORTED_IR_VERSION,
             });
+        }
+        if lock.generator.output.as_str() != GENERATED_OUTPUT_PATH {
+            return invalid_value(
+                "generator.output",
+                lock.generator.output.as_str(),
+                "expected the owned kafka-wire generated source directory",
+            );
         }
         if lock.kafka.repository != "https://github.com/apache/kafka" {
             return invalid_value(

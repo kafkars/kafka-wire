@@ -11,8 +11,9 @@
 /// written to name the message itself.
 pub mod list_partition_reassignments_request {
     use kafka_wire_core::{
-        ApiKey, ApiVersion, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
-        KafkaEncode, StrBytes, TaggedFields, VersionRange,
+        ApiKey, ApiVersion, BytesMut, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder,
+        KafkaDecode, KafkaEncode, StrBytes, TaggedFields, VersionRange, encode_into_with,
+        encoded_len_with,
     };
 
     use crate::{KafkaMessage, KafkaRequest, RequestResponsePair};
@@ -118,18 +119,30 @@ pub mod list_partition_reassignments_request {
             ListPartitionReassignmentsTopics::encode_validated(self, encoder, version)
         }
 
-        #[doc(hidden)]
-        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
-            self.validate_for_version(version)
+        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+            encoded_len_with(
+                || self.validate_for_version(version),
+                |encoder| {
+                    ListPartitionReassignmentsTopics::encode_validated(self, encoder, version)
+                },
+            )
         }
 
-        #[doc(hidden)]
-        fn encode_validated<T: EncodeTarget>(
+        fn encode_into(
             &self,
-            encoder: &mut Encoder<T>,
+            buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
-            ListPartitionReassignmentsTopics::encode_validated(self, encoder, version)
+        ) -> Result<usize, EncodeError> {
+            encode_into_with(
+                buffer,
+                || self.validate_for_version(version),
+                |encoder| {
+                    ListPartitionReassignmentsTopics::encode_validated(self, encoder, version)
+                },
+                |encoder| {
+                    ListPartitionReassignmentsTopics::encode_validated(self, encoder, version)
+                },
+            )
         }
     }
 
@@ -163,6 +176,7 @@ pub mod list_partition_reassignments_request {
 
     impl KafkaRequest for ListPartitionReassignmentsRequest {
         const API_KEY: ApiKey = ApiKey::new(46);
+        const LATEST_VERSION_UNSTABLE: bool = false;
     }
 
     impl RequestResponsePair for ListPartitionReassignmentsRequest {
@@ -250,18 +264,30 @@ pub mod list_partition_reassignments_request {
             ListPartitionReassignmentsRequest::encode_validated(self, encoder, version)
         }
 
-        #[doc(hidden)]
-        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
-            self.validate_for_version(version)
+        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+            encoded_len_with(
+                || self.validate_for_version(version),
+                |encoder| {
+                    ListPartitionReassignmentsRequest::encode_validated(self, encoder, version)
+                },
+            )
         }
 
-        #[doc(hidden)]
-        fn encode_validated<T: EncodeTarget>(
+        fn encode_into(
             &self,
-            encoder: &mut Encoder<T>,
+            buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
-            ListPartitionReassignmentsRequest::encode_validated(self, encoder, version)
+        ) -> Result<usize, EncodeError> {
+            encode_into_with(
+                buffer,
+                || self.validate_for_version(version),
+                |encoder| {
+                    ListPartitionReassignmentsRequest::encode_validated(self, encoder, version)
+                },
+                |encoder| {
+                    ListPartitionReassignmentsRequest::encode_validated(self, encoder, version)
+                },
+            )
         }
     }
 }
@@ -272,8 +298,9 @@ pub mod list_partition_reassignments_request {
 /// written to name the message itself.
 pub mod list_partition_reassignments_response {
     use kafka_wire_core::{
-        ApiKey, ApiVersion, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
-        KafkaEncode, StrBytes, TaggedFields, VersionRange,
+        ApiKey, ApiVersion, BytesMut, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder,
+        KafkaDecode, KafkaEncode, StrBytes, TaggedFields, VersionRange, encode_into_with,
+        encoded_len_with,
     };
 
     use crate::{KafkaMessage, KafkaResponse};
@@ -384,18 +411,24 @@ pub mod list_partition_reassignments_response {
             OngoingTopicReassignment::encode_validated(self, encoder, version)
         }
 
-        #[doc(hidden)]
-        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
-            self.validate_for_version(version)
+        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+            encoded_len_with(
+                || self.validate_for_version(version),
+                |encoder| OngoingTopicReassignment::encode_validated(self, encoder, version),
+            )
         }
 
-        #[doc(hidden)]
-        fn encode_validated<T: EncodeTarget>(
+        fn encode_into(
             &self,
-            encoder: &mut Encoder<T>,
+            buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
-            OngoingTopicReassignment::encode_validated(self, encoder, version)
+        ) -> Result<usize, EncodeError> {
+            encode_into_with(
+                buffer,
+                || self.validate_for_version(version),
+                |encoder| OngoingTopicReassignment::encode_validated(self, encoder, version),
+                |encoder| OngoingTopicReassignment::encode_validated(self, encoder, version),
+            )
         }
     }
 
@@ -522,18 +555,24 @@ pub mod list_partition_reassignments_response {
             OngoingPartitionReassignment::encode_validated(self, encoder, version)
         }
 
-        #[doc(hidden)]
-        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
-            self.validate_for_version(version)
+        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+            encoded_len_with(
+                || self.validate_for_version(version),
+                |encoder| OngoingPartitionReassignment::encode_validated(self, encoder, version),
+            )
         }
 
-        #[doc(hidden)]
-        fn encode_validated<T: EncodeTarget>(
+        fn encode_into(
             &self,
-            encoder: &mut Encoder<T>,
+            buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
-            OngoingPartitionReassignment::encode_validated(self, encoder, version)
+        ) -> Result<usize, EncodeError> {
+            encode_into_with(
+                buffer,
+                || self.validate_for_version(version),
+                |encoder| OngoingPartitionReassignment::encode_validated(self, encoder, version),
+                |encoder| OngoingPartitionReassignment::encode_validated(self, encoder, version),
+            )
         }
     }
 
@@ -654,18 +693,30 @@ pub mod list_partition_reassignments_response {
             ListPartitionReassignmentsResponse::encode_validated(self, encoder, version)
         }
 
-        #[doc(hidden)]
-        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
-            self.validate_for_version(version)
+        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+            encoded_len_with(
+                || self.validate_for_version(version),
+                |encoder| {
+                    ListPartitionReassignmentsResponse::encode_validated(self, encoder, version)
+                },
+            )
         }
 
-        #[doc(hidden)]
-        fn encode_validated<T: EncodeTarget>(
+        fn encode_into(
             &self,
-            encoder: &mut Encoder<T>,
+            buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
-            ListPartitionReassignmentsResponse::encode_validated(self, encoder, version)
+        ) -> Result<usize, EncodeError> {
+            encode_into_with(
+                buffer,
+                || self.validate_for_version(version),
+                |encoder| {
+                    ListPartitionReassignmentsResponse::encode_validated(self, encoder, version)
+                },
+                |encoder| {
+                    ListPartitionReassignmentsResponse::encode_validated(self, encoder, version)
+                },
+            )
         }
     }
 }
@@ -685,6 +736,7 @@ pub const LIST_PARTITION_REASSIGNMENTS_REQUEST_DESCRIPTOR: MessageDescriptor =
         MessageDirection::Request,
         VersionRange::new(0, 0),
         Some(VersionRange::new(0, 0)),
+        false,
     );
 
 /// Static metadata for [`ListPartitionReassignmentsResponse`].
@@ -695,4 +747,5 @@ pub const LIST_PARTITION_REASSIGNMENTS_RESPONSE_DESCRIPTOR: MessageDescriptor =
         MessageDirection::Response,
         VersionRange::new(0, 0),
         Some(VersionRange::new(0, 0)),
+        false,
     );

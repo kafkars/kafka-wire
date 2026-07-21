@@ -11,8 +11,9 @@
 /// written to name the message itself.
 pub mod alter_replica_log_dirs_request {
     use kafka_wire_core::{
-        ApiKey, ApiVersion, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
-        KafkaEncode, StrBytes, TaggedFields, VersionRange,
+        ApiKey, ApiVersion, BytesMut, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder,
+        KafkaDecode, KafkaEncode, StrBytes, TaggedFields, VersionRange, encode_into_with,
+        encoded_len_with,
     };
 
     use crate::{KafkaMessage, KafkaRequest, RequestResponsePair};
@@ -139,18 +140,24 @@ pub mod alter_replica_log_dirs_request {
             AlterReplicaLogDir::encode_validated(self, encoder, version)
         }
 
-        #[doc(hidden)]
-        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
-            self.validate_for_version(version)
+        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+            encoded_len_with(
+                || self.validate_for_version(version),
+                |encoder| AlterReplicaLogDir::encode_validated(self, encoder, version),
+            )
         }
 
-        #[doc(hidden)]
-        fn encode_validated<T: EncodeTarget>(
+        fn encode_into(
             &self,
-            encoder: &mut Encoder<T>,
+            buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
-            AlterReplicaLogDir::encode_validated(self, encoder, version)
+        ) -> Result<usize, EncodeError> {
+            encode_into_with(
+                buffer,
+                || self.validate_for_version(version),
+                |encoder| AlterReplicaLogDir::encode_validated(self, encoder, version),
+                |encoder| AlterReplicaLogDir::encode_validated(self, encoder, version),
+            )
         }
     }
 
@@ -271,18 +278,24 @@ pub mod alter_replica_log_dirs_request {
             AlterReplicaLogDirTopic::encode_validated(self, encoder, version)
         }
 
-        #[doc(hidden)]
-        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
-            self.validate_for_version(version)
+        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+            encoded_len_with(
+                || self.validate_for_version(version),
+                |encoder| AlterReplicaLogDirTopic::encode_validated(self, encoder, version),
+            )
         }
 
-        #[doc(hidden)]
-        fn encode_validated<T: EncodeTarget>(
+        fn encode_into(
             &self,
-            encoder: &mut Encoder<T>,
+            buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
-            AlterReplicaLogDirTopic::encode_validated(self, encoder, version)
+        ) -> Result<usize, EncodeError> {
+            encode_into_with(
+                buffer,
+                || self.validate_for_version(version),
+                |encoder| AlterReplicaLogDirTopic::encode_validated(self, encoder, version),
+                |encoder| AlterReplicaLogDirTopic::encode_validated(self, encoder, version),
+            )
         }
     }
 
@@ -304,6 +317,7 @@ pub mod alter_replica_log_dirs_request {
 
     impl KafkaRequest for AlterReplicaLogDirsRequest {
         const API_KEY: ApiKey = ApiKey::new(34);
+        const LATEST_VERSION_UNSTABLE: bool = false;
     }
 
     impl RequestResponsePair for AlterReplicaLogDirsRequest {
@@ -388,18 +402,24 @@ pub mod alter_replica_log_dirs_request {
             AlterReplicaLogDirsRequest::encode_validated(self, encoder, version)
         }
 
-        #[doc(hidden)]
-        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
-            self.validate_for_version(version)
+        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+            encoded_len_with(
+                || self.validate_for_version(version),
+                |encoder| AlterReplicaLogDirsRequest::encode_validated(self, encoder, version),
+            )
         }
 
-        #[doc(hidden)]
-        fn encode_validated<T: EncodeTarget>(
+        fn encode_into(
             &self,
-            encoder: &mut Encoder<T>,
+            buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
-            AlterReplicaLogDirsRequest::encode_validated(self, encoder, version)
+        ) -> Result<usize, EncodeError> {
+            encode_into_with(
+                buffer,
+                || self.validate_for_version(version),
+                |encoder| AlterReplicaLogDirsRequest::encode_validated(self, encoder, version),
+                |encoder| AlterReplicaLogDirsRequest::encode_validated(self, encoder, version),
+            )
         }
     }
 }
@@ -410,8 +430,9 @@ pub mod alter_replica_log_dirs_request {
 /// written to name the message itself.
 pub mod alter_replica_log_dirs_response {
     use kafka_wire_core::{
-        ApiKey, ApiVersion, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
-        KafkaEncode, StrBytes, TaggedFields, VersionRange,
+        ApiKey, ApiVersion, BytesMut, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder,
+        KafkaDecode, KafkaEncode, StrBytes, TaggedFields, VersionRange, encode_into_with,
+        encoded_len_with,
     };
 
     use crate::{KafkaMessage, KafkaResponse};
@@ -538,18 +559,24 @@ pub mod alter_replica_log_dirs_response {
             AlterReplicaLogDirTopicResult::encode_validated(self, encoder, version)
         }
 
-        #[doc(hidden)]
-        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
-            self.validate_for_version(version)
+        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+            encoded_len_with(
+                || self.validate_for_version(version),
+                |encoder| AlterReplicaLogDirTopicResult::encode_validated(self, encoder, version),
+            )
         }
 
-        #[doc(hidden)]
-        fn encode_validated<T: EncodeTarget>(
+        fn encode_into(
             &self,
-            encoder: &mut Encoder<T>,
+            buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
-            AlterReplicaLogDirTopicResult::encode_validated(self, encoder, version)
+        ) -> Result<usize, EncodeError> {
+            encode_into_with(
+                buffer,
+                || self.validate_for_version(version),
+                |encoder| AlterReplicaLogDirTopicResult::encode_validated(self, encoder, version),
+                |encoder| AlterReplicaLogDirTopicResult::encode_validated(self, encoder, version),
+            )
         }
     }
 
@@ -648,18 +675,30 @@ pub mod alter_replica_log_dirs_response {
             AlterReplicaLogDirPartitionResult::encode_validated(self, encoder, version)
         }
 
-        #[doc(hidden)]
-        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
-            self.validate_for_version(version)
+        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+            encoded_len_with(
+                || self.validate_for_version(version),
+                |encoder| {
+                    AlterReplicaLogDirPartitionResult::encode_validated(self, encoder, version)
+                },
+            )
         }
 
-        #[doc(hidden)]
-        fn encode_validated<T: EncodeTarget>(
+        fn encode_into(
             &self,
-            encoder: &mut Encoder<T>,
+            buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
-            AlterReplicaLogDirPartitionResult::encode_validated(self, encoder, version)
+        ) -> Result<usize, EncodeError> {
+            encode_into_with(
+                buffer,
+                || self.validate_for_version(version),
+                |encoder| {
+                    AlterReplicaLogDirPartitionResult::encode_validated(self, encoder, version)
+                },
+                |encoder| {
+                    AlterReplicaLogDirPartitionResult::encode_validated(self, encoder, version)
+                },
+            )
         }
     }
 
@@ -766,18 +805,24 @@ pub mod alter_replica_log_dirs_response {
             AlterReplicaLogDirsResponse::encode_validated(self, encoder, version)
         }
 
-        #[doc(hidden)]
-        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
-            self.validate_for_version(version)
+        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+            encoded_len_with(
+                || self.validate_for_version(version),
+                |encoder| AlterReplicaLogDirsResponse::encode_validated(self, encoder, version),
+            )
         }
 
-        #[doc(hidden)]
-        fn encode_validated<T: EncodeTarget>(
+        fn encode_into(
             &self,
-            encoder: &mut Encoder<T>,
+            buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
-            AlterReplicaLogDirsResponse::encode_validated(self, encoder, version)
+        ) -> Result<usize, EncodeError> {
+            encode_into_with(
+                buffer,
+                || self.validate_for_version(version),
+                |encoder| AlterReplicaLogDirsResponse::encode_validated(self, encoder, version),
+                |encoder| AlterReplicaLogDirsResponse::encode_validated(self, encoder, version),
+            )
         }
     }
 }
@@ -796,6 +841,7 @@ pub const ALTER_REPLICA_LOG_DIRS_REQUEST_DESCRIPTOR: MessageDescriptor = Message
     MessageDirection::Request,
     VersionRange::new(1, 2),
     Some(VersionRange::new(2, 2)),
+    false,
 );
 
 /// Static metadata for [`AlterReplicaLogDirsResponse`].
@@ -805,4 +851,5 @@ pub const ALTER_REPLICA_LOG_DIRS_RESPONSE_DESCRIPTOR: MessageDescriptor = Messag
     MessageDirection::Response,
     VersionRange::new(1, 2),
     Some(VersionRange::new(2, 2)),
+    false,
 );

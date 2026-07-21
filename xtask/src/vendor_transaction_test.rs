@@ -162,7 +162,7 @@ fn lock_document(filename: &str, bytes: &[u8]) -> String {
          status = \"pending\"\n\n\
          [generator]\n\
          ir_version = 1\n\
-         output = \"generated\"\n",
+         output = \"crates/kafka-wire/src/generated\"\n",
         digest(bytes)
     )
 }

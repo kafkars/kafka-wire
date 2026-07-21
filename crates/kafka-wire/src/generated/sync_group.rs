@@ -11,8 +11,9 @@
 /// written to name the message itself.
 pub mod sync_group_request {
     use kafka_wire_core::{
-        ApiKey, ApiVersion, Bytes, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder,
-        KafkaDecode, KafkaEncode, StrBytes, TaggedFields, VersionRange,
+        ApiKey, ApiVersion, Bytes, BytesMut, DecodeError, Decoder, EncodeError, EncodeTarget,
+        Encoder, KafkaDecode, KafkaEncode, StrBytes, TaggedFields, VersionRange, encode_into_with,
+        encoded_len_with,
     };
 
     use crate::{KafkaMessage, KafkaRequest, RequestResponsePair};
@@ -128,18 +129,24 @@ pub mod sync_group_request {
             SyncGroupRequestAssignment::encode_validated(self, encoder, version)
         }
 
-        #[doc(hidden)]
-        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
-            self.validate_for_version(version)
+        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+            encoded_len_with(
+                || self.validate_for_version(version),
+                |encoder| SyncGroupRequestAssignment::encode_validated(self, encoder, version),
+            )
         }
 
-        #[doc(hidden)]
-        fn encode_validated<T: EncodeTarget>(
+        fn encode_into(
             &self,
-            encoder: &mut Encoder<T>,
+            buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
-            SyncGroupRequestAssignment::encode_validated(self, encoder, version)
+        ) -> Result<usize, EncodeError> {
+            encode_into_with(
+                buffer,
+                || self.validate_for_version(version),
+                |encoder| SyncGroupRequestAssignment::encode_validated(self, encoder, version),
+                |encoder| SyncGroupRequestAssignment::encode_validated(self, encoder, version),
+            )
         }
     }
 
@@ -173,6 +180,7 @@ pub mod sync_group_request {
 
     impl KafkaRequest for SyncGroupRequest {
         const API_KEY: ApiKey = ApiKey::new(14);
+        const LATEST_VERSION_UNSTABLE: bool = false;
     }
 
     impl RequestResponsePair for SyncGroupRequest {
@@ -324,18 +332,24 @@ pub mod sync_group_request {
             SyncGroupRequest::encode_validated(self, encoder, version)
         }
 
-        #[doc(hidden)]
-        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
-            self.validate_for_version(version)
+        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+            encoded_len_with(
+                || self.validate_for_version(version),
+                |encoder| SyncGroupRequest::encode_validated(self, encoder, version),
+            )
         }
 
-        #[doc(hidden)]
-        fn encode_validated<T: EncodeTarget>(
+        fn encode_into(
             &self,
-            encoder: &mut Encoder<T>,
+            buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
-            SyncGroupRequest::encode_validated(self, encoder, version)
+        ) -> Result<usize, EncodeError> {
+            encode_into_with(
+                buffer,
+                || self.validate_for_version(version),
+                |encoder| SyncGroupRequest::encode_validated(self, encoder, version),
+                |encoder| SyncGroupRequest::encode_validated(self, encoder, version),
+            )
         }
     }
 }
@@ -346,8 +360,9 @@ pub mod sync_group_request {
 /// written to name the message itself.
 pub mod sync_group_response {
     use kafka_wire_core::{
-        ApiKey, ApiVersion, Bytes, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder,
-        KafkaDecode, KafkaEncode, StrBytes, TaggedFields, VersionRange,
+        ApiKey, ApiVersion, Bytes, BytesMut, DecodeError, Decoder, EncodeError, EncodeTarget,
+        Encoder, KafkaDecode, KafkaEncode, StrBytes, TaggedFields, VersionRange, encode_into_with,
+        encoded_len_with,
     };
 
     use crate::{KafkaMessage, KafkaResponse};
@@ -477,18 +492,24 @@ pub mod sync_group_response {
             SyncGroupResponse::encode_validated(self, encoder, version)
         }
 
-        #[doc(hidden)]
-        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
-            self.validate_for_version(version)
+        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+            encoded_len_with(
+                || self.validate_for_version(version),
+                |encoder| SyncGroupResponse::encode_validated(self, encoder, version),
+            )
         }
 
-        #[doc(hidden)]
-        fn encode_validated<T: EncodeTarget>(
+        fn encode_into(
             &self,
-            encoder: &mut Encoder<T>,
+            buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
-            SyncGroupResponse::encode_validated(self, encoder, version)
+        ) -> Result<usize, EncodeError> {
+            encode_into_with(
+                buffer,
+                || self.validate_for_version(version),
+                |encoder| SyncGroupResponse::encode_validated(self, encoder, version),
+                |encoder| SyncGroupResponse::encode_validated(self, encoder, version),
+            )
         }
     }
 }
@@ -507,6 +528,7 @@ pub const SYNC_GROUP_REQUEST_DESCRIPTOR: MessageDescriptor = MessageDescriptor::
     MessageDirection::Request,
     VersionRange::new(0, 5),
     Some(VersionRange::new(4, 5)),
+    false,
 );
 
 /// Static metadata for [`SyncGroupResponse`].
@@ -516,4 +538,5 @@ pub const SYNC_GROUP_RESPONSE_DESCRIPTOR: MessageDescriptor = MessageDescriptor:
     MessageDirection::Response,
     VersionRange::new(0, 5),
     Some(VersionRange::new(4, 5)),
+    false,
 );

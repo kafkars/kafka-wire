@@ -6,6 +6,25 @@ use super::super::DecodeError;
 use super::Decoder;
 
 impl Decoder {
+    /// Takes an already length-decoded UTF-8 field under the string budget.
+    ///
+    /// The error retains both the caller-supplied prefix offset for limit
+    /// failures and this cursor's payload offset for invalid UTF-8.
+    pub fn take_string_field(
+        &mut self,
+        kind: &'static str,
+        length: usize,
+        prefix_offset: usize,
+    ) -> Result<StrBytes, DecodeError> {
+        Self::check_limit(kind, length, self.limits.max_string_bytes, prefix_offset)?;
+        let payload_offset = self.offset();
+        let bytes = self.take(length)?;
+        StrBytes::try_from(bytes).map_err(|error| DecodeError::InvalidUtf8 {
+            offset: payload_offset,
+            valid_up_to: error.valid_up_to(),
+        })
+    }
+
     /// Reads a legacy non-null string.
     pub fn read_string(&mut self) -> Result<StrBytes, DecodeError> {
         let offset = self.offset();
@@ -85,17 +104,6 @@ impl Decoder {
         length: usize,
         prefix_offset: usize,
     ) -> Result<StrBytes, DecodeError> {
-        Self::check_limit(
-            "string",
-            length,
-            self.limits.max_string_bytes,
-            prefix_offset,
-        )?;
-        let payload_offset = self.offset();
-        let bytes = self.take(length)?;
-        StrBytes::try_from(bytes).map_err(|error| DecodeError::InvalidUtf8 {
-            offset: payload_offset,
-            valid_up_to: error.valid_up_to(),
-        })
+        self.take_string_field("string", length, prefix_offset)
     }
 }

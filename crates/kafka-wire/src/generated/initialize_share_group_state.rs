@@ -11,8 +11,9 @@
 /// written to name the message itself.
 pub mod initialize_share_group_state_request {
     use kafka_wire_core::{
-        ApiKey, ApiVersion, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
-        KafkaEncode, StrBytes, TaggedFields, Uuid, VersionRange,
+        ApiKey, ApiVersion, BytesMut, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder,
+        KafkaDecode, KafkaEncode, StrBytes, TaggedFields, Uuid, VersionRange, encode_into_with,
+        encoded_len_with,
     };
 
     use crate::{KafkaMessage, KafkaRequest, RequestResponsePair};
@@ -121,18 +122,24 @@ pub mod initialize_share_group_state_request {
             InitializeStateData::encode_validated(self, encoder, version)
         }
 
-        #[doc(hidden)]
-        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
-            self.validate_for_version(version)
+        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+            encoded_len_with(
+                || self.validate_for_version(version),
+                |encoder| InitializeStateData::encode_validated(self, encoder, version),
+            )
         }
 
-        #[doc(hidden)]
-        fn encode_validated<T: EncodeTarget>(
+        fn encode_into(
             &self,
-            encoder: &mut Encoder<T>,
+            buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
-            InitializeStateData::encode_validated(self, encoder, version)
+        ) -> Result<usize, EncodeError> {
+            encode_into_with(
+                buffer,
+                || self.validate_for_version(version),
+                |encoder| InitializeStateData::encode_validated(self, encoder, version),
+                |encoder| InitializeStateData::encode_validated(self, encoder, version),
+            )
         }
     }
 
@@ -236,18 +243,24 @@ pub mod initialize_share_group_state_request {
             PartitionData::encode_validated(self, encoder, version)
         }
 
-        #[doc(hidden)]
-        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
-            self.validate_for_version(version)
+        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+            encoded_len_with(
+                || self.validate_for_version(version),
+                |encoder| PartitionData::encode_validated(self, encoder, version),
+            )
         }
 
-        #[doc(hidden)]
-        fn encode_validated<T: EncodeTarget>(
+        fn encode_into(
             &self,
-            encoder: &mut Encoder<T>,
+            buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
-            PartitionData::encode_validated(self, encoder, version)
+        ) -> Result<usize, EncodeError> {
+            encode_into_with(
+                buffer,
+                || self.validate_for_version(version),
+                |encoder| PartitionData::encode_validated(self, encoder, version),
+                |encoder| PartitionData::encode_validated(self, encoder, version),
+            )
         }
     }
 
@@ -271,6 +284,7 @@ pub mod initialize_share_group_state_request {
 
     impl KafkaRequest for InitializeShareGroupStateRequest {
         const API_KEY: ApiKey = ApiKey::new(83);
+        const LATEST_VERSION_UNSTABLE: bool = false;
     }
 
     impl RequestResponsePair for InitializeShareGroupStateRequest {
@@ -350,18 +364,30 @@ pub mod initialize_share_group_state_request {
             InitializeShareGroupStateRequest::encode_validated(self, encoder, version)
         }
 
-        #[doc(hidden)]
-        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
-            self.validate_for_version(version)
+        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+            encoded_len_with(
+                || self.validate_for_version(version),
+                |encoder| {
+                    InitializeShareGroupStateRequest::encode_validated(self, encoder, version)
+                },
+            )
         }
 
-        #[doc(hidden)]
-        fn encode_validated<T: EncodeTarget>(
+        fn encode_into(
             &self,
-            encoder: &mut Encoder<T>,
+            buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
-            InitializeShareGroupStateRequest::encode_validated(self, encoder, version)
+        ) -> Result<usize, EncodeError> {
+            encode_into_with(
+                buffer,
+                || self.validate_for_version(version),
+                |encoder| {
+                    InitializeShareGroupStateRequest::encode_validated(self, encoder, version)
+                },
+                |encoder| {
+                    InitializeShareGroupStateRequest::encode_validated(self, encoder, version)
+                },
+            )
         }
     }
 }
@@ -372,8 +398,9 @@ pub mod initialize_share_group_state_request {
 /// written to name the message itself.
 pub mod initialize_share_group_state_response {
     use kafka_wire_core::{
-        ApiKey, ApiVersion, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
-        KafkaEncode, StrBytes, TaggedFields, Uuid, VersionRange,
+        ApiKey, ApiVersion, BytesMut, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder,
+        KafkaDecode, KafkaEncode, StrBytes, TaggedFields, Uuid, VersionRange, encode_into_with,
+        encoded_len_with,
     };
 
     use crate::{KafkaMessage, KafkaResponse};
@@ -482,18 +509,24 @@ pub mod initialize_share_group_state_response {
             InitializeStateResult::encode_validated(self, encoder, version)
         }
 
-        #[doc(hidden)]
-        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
-            self.validate_for_version(version)
+        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+            encoded_len_with(
+                || self.validate_for_version(version),
+                |encoder| InitializeStateResult::encode_validated(self, encoder, version),
+            )
         }
 
-        #[doc(hidden)]
-        fn encode_validated<T: EncodeTarget>(
+        fn encode_into(
             &self,
-            encoder: &mut Encoder<T>,
+            buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
-            InitializeStateResult::encode_validated(self, encoder, version)
+        ) -> Result<usize, EncodeError> {
+            encode_into_with(
+                buffer,
+                || self.validate_for_version(version),
+                |encoder| InitializeStateResult::encode_validated(self, encoder, version),
+                |encoder| InitializeStateResult::encode_validated(self, encoder, version),
+            )
         }
     }
 
@@ -597,18 +630,24 @@ pub mod initialize_share_group_state_response {
             PartitionResult::encode_validated(self, encoder, version)
         }
 
-        #[doc(hidden)]
-        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
-            self.validate_for_version(version)
+        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+            encoded_len_with(
+                || self.validate_for_version(version),
+                |encoder| PartitionResult::encode_validated(self, encoder, version),
+            )
         }
 
-        #[doc(hidden)]
-        fn encode_validated<T: EncodeTarget>(
+        fn encode_into(
             &self,
-            encoder: &mut Encoder<T>,
+            buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
-            PartitionResult::encode_validated(self, encoder, version)
+        ) -> Result<usize, EncodeError> {
+            encode_into_with(
+                buffer,
+                || self.validate_for_version(version),
+                |encoder| PartitionResult::encode_validated(self, encoder, version),
+                |encoder| PartitionResult::encode_validated(self, encoder, version),
+            )
         }
     }
 
@@ -702,18 +741,30 @@ pub mod initialize_share_group_state_response {
             InitializeShareGroupStateResponse::encode_validated(self, encoder, version)
         }
 
-        #[doc(hidden)]
-        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
-            self.validate_for_version(version)
+        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+            encoded_len_with(
+                || self.validate_for_version(version),
+                |encoder| {
+                    InitializeShareGroupStateResponse::encode_validated(self, encoder, version)
+                },
+            )
         }
 
-        #[doc(hidden)]
-        fn encode_validated<T: EncodeTarget>(
+        fn encode_into(
             &self,
-            encoder: &mut Encoder<T>,
+            buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
-            InitializeShareGroupStateResponse::encode_validated(self, encoder, version)
+        ) -> Result<usize, EncodeError> {
+            encode_into_with(
+                buffer,
+                || self.validate_for_version(version),
+                |encoder| {
+                    InitializeShareGroupStateResponse::encode_validated(self, encoder, version)
+                },
+                |encoder| {
+                    InitializeShareGroupStateResponse::encode_validated(self, encoder, version)
+                },
+            )
         }
     }
 }
@@ -733,6 +784,7 @@ pub const INITIALIZE_SHARE_GROUP_STATE_REQUEST_DESCRIPTOR: MessageDescriptor =
         MessageDirection::Request,
         VersionRange::new(0, 0),
         Some(VersionRange::new(0, 0)),
+        false,
     );
 
 /// Static metadata for [`InitializeShareGroupStateResponse`].
@@ -743,4 +795,5 @@ pub const INITIALIZE_SHARE_GROUP_STATE_RESPONSE_DESCRIPTOR: MessageDescriptor =
         MessageDirection::Response,
         VersionRange::new(0, 0),
         Some(VersionRange::new(0, 0)),
+        false,
     );

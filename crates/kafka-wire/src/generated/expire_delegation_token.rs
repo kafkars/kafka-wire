@@ -11,8 +11,9 @@
 /// written to name the message itself.
 pub mod expire_delegation_token_request {
     use kafka_wire_core::{
-        ApiKey, ApiVersion, Bytes, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder,
-        KafkaDecode, KafkaEncode, TaggedFields, VersionRange,
+        ApiKey, ApiVersion, Bytes, BytesMut, DecodeError, Decoder, EncodeError, EncodeTarget,
+        Encoder, KafkaDecode, KafkaEncode, TaggedFields, VersionRange, encode_into_with,
+        encoded_len_with,
     };
 
     use crate::{KafkaMessage, KafkaRequest, RequestResponsePair};
@@ -37,6 +38,7 @@ pub mod expire_delegation_token_request {
 
     impl KafkaRequest for ExpireDelegationTokenRequest {
         const API_KEY: ApiKey = ApiKey::new(40);
+        const LATEST_VERSION_UNSTABLE: bool = false;
     }
 
     impl RequestResponsePair for ExpireDelegationTokenRequest {
@@ -113,18 +115,24 @@ pub mod expire_delegation_token_request {
             ExpireDelegationTokenRequest::encode_validated(self, encoder, version)
         }
 
-        #[doc(hidden)]
-        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
-            self.validate_for_version(version)
+        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+            encoded_len_with(
+                || self.validate_for_version(version),
+                |encoder| ExpireDelegationTokenRequest::encode_validated(self, encoder, version),
+            )
         }
 
-        #[doc(hidden)]
-        fn encode_validated<T: EncodeTarget>(
+        fn encode_into(
             &self,
-            encoder: &mut Encoder<T>,
+            buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
-            ExpireDelegationTokenRequest::encode_validated(self, encoder, version)
+        ) -> Result<usize, EncodeError> {
+            encode_into_with(
+                buffer,
+                || self.validate_for_version(version),
+                |encoder| ExpireDelegationTokenRequest::encode_validated(self, encoder, version),
+                |encoder| ExpireDelegationTokenRequest::encode_validated(self, encoder, version),
+            )
         }
     }
 }
@@ -135,8 +143,8 @@ pub mod expire_delegation_token_request {
 /// written to name the message itself.
 pub mod expire_delegation_token_response {
     use kafka_wire_core::{
-        ApiKey, ApiVersion, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
-        KafkaEncode, TaggedFields, VersionRange,
+        ApiKey, ApiVersion, BytesMut, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder,
+        KafkaDecode, KafkaEncode, TaggedFields, VersionRange, encode_into_with, encoded_len_with,
     };
 
     use crate::{KafkaMessage, KafkaResponse};
@@ -230,18 +238,24 @@ pub mod expire_delegation_token_response {
             ExpireDelegationTokenResponse::encode_validated(self, encoder, version)
         }
 
-        #[doc(hidden)]
-        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
-            self.validate_for_version(version)
+        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+            encoded_len_with(
+                || self.validate_for_version(version),
+                |encoder| ExpireDelegationTokenResponse::encode_validated(self, encoder, version),
+            )
         }
 
-        #[doc(hidden)]
-        fn encode_validated<T: EncodeTarget>(
+        fn encode_into(
             &self,
-            encoder: &mut Encoder<T>,
+            buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
-            ExpireDelegationTokenResponse::encode_validated(self, encoder, version)
+        ) -> Result<usize, EncodeError> {
+            encode_into_with(
+                buffer,
+                || self.validate_for_version(version),
+                |encoder| ExpireDelegationTokenResponse::encode_validated(self, encoder, version),
+                |encoder| ExpireDelegationTokenResponse::encode_validated(self, encoder, version),
+            )
         }
     }
 }
@@ -260,6 +274,7 @@ pub const EXPIRE_DELEGATION_TOKEN_REQUEST_DESCRIPTOR: MessageDescriptor = Messag
     MessageDirection::Request,
     VersionRange::new(1, 2),
     Some(VersionRange::new(2, 2)),
+    false,
 );
 
 /// Static metadata for [`ExpireDelegationTokenResponse`].
@@ -269,4 +284,5 @@ pub const EXPIRE_DELEGATION_TOKEN_RESPONSE_DESCRIPTOR: MessageDescriptor = Messa
     MessageDirection::Response,
     VersionRange::new(1, 2),
     Some(VersionRange::new(2, 2)),
+    false,
 );

@@ -10,7 +10,9 @@
 use std::cell::Cell;
 
 use bytes::BytesMut;
-use kafka_wire_core::{ApiVersion, EncodeError, EncodeTarget, Encoder, KafkaEncode, StrBytes};
+use kafka_wire_core::{
+    ApiVersion, EncodeError, EncodeTarget, Encoder, KafkaEncode, StrBytes, encode_into_with,
+};
 
 const VERSION: ApiVersion = ApiVersion::new(0);
 
@@ -65,26 +67,6 @@ impl KafkaEncode for MisreportedSize {
 
     fn encoded_len(&self, _version: ApiVersion) -> Result<usize, EncodeError> {
         Ok(5)
-    }
-}
-
-/// One value whose preflight count exposes repeated validation passes.
-struct PreflightCounter {
-    validations: Cell<usize>,
-}
-
-impl KafkaEncode for PreflightCounter {
-    fn encode<T: EncodeTarget>(
-        &self,
-        encoder: &mut Encoder<T>,
-        _version: ApiVersion,
-    ) -> Result<(), EncodeError> {
-        encoder.write_i8(7)
-    }
-
-    fn validate_encoding(&self, _version: ApiVersion) -> Result<(), EncodeError> {
-        self.validations.set(self.validations.get() + 1);
-        Ok(())
     }
 }
 
@@ -187,14 +169,34 @@ fn encoding_to_bytes_agrees_with_encoding_into_a_buffer() {
 
 #[test]
 fn sizing_and_writing_share_one_successful_preflight() {
-    let message = PreflightCounter {
-        validations: Cell::new(0),
-    };
+    let validations = Cell::new(0);
+    let sizings = Cell::new(0);
+    let writes = Cell::new(0);
+    let mut buffer = BytesMut::new();
 
-    assert_eq!(message.encode_to_bytes(VERSION).unwrap().as_ref(), &[7]);
+    encode_into_with(
+        &mut buffer,
+        || {
+            validations.set(validations.get() + 1);
+            Ok(())
+        },
+        |encoder| {
+            sizings.set(sizings.get() + 1);
+            encoder.write_i8(7)
+        },
+        |encoder| {
+            writes.set(writes.get() + 1);
+            encoder.write_i8(7)
+        },
+    )
+    .unwrap();
+
+    assert_eq!(buffer.as_ref(), &[7]);
     assert_eq!(
-        message.validations.get(),
+        validations.get(),
         1,
-        "encode_to_bytes repeated preflight for sizing and writing"
+        "the shared generated-code mechanics repeated preflight"
     );
+    assert_eq!(sizings.get(), 1);
+    assert_eq!(writes.get(), 1);
 }

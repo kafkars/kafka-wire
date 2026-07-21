@@ -11,8 +11,9 @@
 /// written to name the message itself.
 pub mod leave_group_request {
     use kafka_wire_core::{
-        ApiKey, ApiVersion, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
-        KafkaEncode, StrBytes, TaggedFields, VersionRange,
+        ApiKey, ApiVersion, BytesMut, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder,
+        KafkaDecode, KafkaEncode, StrBytes, TaggedFields, VersionRange, encode_into_with,
+        encoded_len_with,
     };
 
     use crate::{KafkaMessage, KafkaRequest, RequestResponsePair};
@@ -139,18 +140,24 @@ pub mod leave_group_request {
             MemberIdentity::encode_validated(self, encoder, version)
         }
 
-        #[doc(hidden)]
-        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
-            self.validate_for_version(version)
+        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+            encoded_len_with(
+                || self.validate_for_version(version),
+                |encoder| MemberIdentity::encode_validated(self, encoder, version),
+            )
         }
 
-        #[doc(hidden)]
-        fn encode_validated<T: EncodeTarget>(
+        fn encode_into(
             &self,
-            encoder: &mut Encoder<T>,
+            buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
-            MemberIdentity::encode_validated(self, encoder, version)
+        ) -> Result<usize, EncodeError> {
+            encode_into_with(
+                buffer,
+                || self.validate_for_version(version),
+                |encoder| MemberIdentity::encode_validated(self, encoder, version),
+                |encoder| MemberIdentity::encode_validated(self, encoder, version),
+            )
         }
     }
 
@@ -176,6 +183,7 @@ pub mod leave_group_request {
 
     impl KafkaRequest for LeaveGroupRequest {
         const API_KEY: ApiKey = ApiKey::new(13);
+        const LATEST_VERSION_UNSTABLE: bool = false;
     }
 
     impl RequestResponsePair for LeaveGroupRequest {
@@ -298,18 +306,24 @@ pub mod leave_group_request {
             LeaveGroupRequest::encode_validated(self, encoder, version)
         }
 
-        #[doc(hidden)]
-        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
-            self.validate_for_version(version)
+        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+            encoded_len_with(
+                || self.validate_for_version(version),
+                |encoder| LeaveGroupRequest::encode_validated(self, encoder, version),
+            )
         }
 
-        #[doc(hidden)]
-        fn encode_validated<T: EncodeTarget>(
+        fn encode_into(
             &self,
-            encoder: &mut Encoder<T>,
+            buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
-            LeaveGroupRequest::encode_validated(self, encoder, version)
+        ) -> Result<usize, EncodeError> {
+            encode_into_with(
+                buffer,
+                || self.validate_for_version(version),
+                |encoder| LeaveGroupRequest::encode_validated(self, encoder, version),
+                |encoder| LeaveGroupRequest::encode_validated(self, encoder, version),
+            )
         }
     }
 }
@@ -320,8 +334,9 @@ pub mod leave_group_request {
 /// written to name the message itself.
 pub mod leave_group_response {
     use kafka_wire_core::{
-        ApiKey, ApiVersion, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
-        KafkaEncode, StrBytes, TaggedFields, VersionRange,
+        ApiKey, ApiVersion, BytesMut, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder,
+        KafkaDecode, KafkaEncode, StrBytes, TaggedFields, VersionRange, encode_into_with,
+        encoded_len_with,
     };
 
     use crate::{KafkaMessage, KafkaResponse};
@@ -453,18 +468,24 @@ pub mod leave_group_response {
             MemberResponse::encode_validated(self, encoder, version)
         }
 
-        #[doc(hidden)]
-        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
-            self.validate_for_version(version)
+        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+            encoded_len_with(
+                || self.validate_for_version(version),
+                |encoder| MemberResponse::encode_validated(self, encoder, version),
+            )
         }
 
-        #[doc(hidden)]
-        fn encode_validated<T: EncodeTarget>(
+        fn encode_into(
             &self,
-            encoder: &mut Encoder<T>,
+            buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
-            MemberResponse::encode_validated(self, encoder, version)
+        ) -> Result<usize, EncodeError> {
+            encode_into_with(
+                buffer,
+                || self.validate_for_version(version),
+                |encoder| MemberResponse::encode_validated(self, encoder, version),
+                |encoder| MemberResponse::encode_validated(self, encoder, version),
+            )
         }
     }
 
@@ -593,18 +614,24 @@ pub mod leave_group_response {
             LeaveGroupResponse::encode_validated(self, encoder, version)
         }
 
-        #[doc(hidden)]
-        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
-            self.validate_for_version(version)
+        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+            encoded_len_with(
+                || self.validate_for_version(version),
+                |encoder| LeaveGroupResponse::encode_validated(self, encoder, version),
+            )
         }
 
-        #[doc(hidden)]
-        fn encode_validated<T: EncodeTarget>(
+        fn encode_into(
             &self,
-            encoder: &mut Encoder<T>,
+            buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
-            LeaveGroupResponse::encode_validated(self, encoder, version)
+        ) -> Result<usize, EncodeError> {
+            encode_into_with(
+                buffer,
+                || self.validate_for_version(version),
+                |encoder| LeaveGroupResponse::encode_validated(self, encoder, version),
+                |encoder| LeaveGroupResponse::encode_validated(self, encoder, version),
+            )
         }
     }
 }
@@ -623,6 +650,7 @@ pub const LEAVE_GROUP_REQUEST_DESCRIPTOR: MessageDescriptor = MessageDescriptor:
     MessageDirection::Request,
     VersionRange::new(0, 5),
     Some(VersionRange::new(4, 5)),
+    false,
 );
 
 /// Static metadata for [`LeaveGroupResponse`].
@@ -632,4 +660,5 @@ pub const LEAVE_GROUP_RESPONSE_DESCRIPTOR: MessageDescriptor = MessageDescriptor
     MessageDirection::Response,
     VersionRange::new(0, 5),
     Some(VersionRange::new(4, 5)),
+    false,
 );

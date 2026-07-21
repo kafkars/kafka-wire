@@ -11,8 +11,9 @@
 /// written to name the message itself.
 pub mod txn_offset_commit_request {
     use kafka_wire_core::{
-        ApiKey, ApiVersion, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
-        KafkaEncode, StrBytes, TaggedFields, Uuid, VersionRange,
+        ApiKey, ApiVersion, BytesMut, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder,
+        KafkaDecode, KafkaEncode, StrBytes, TaggedFields, Uuid, VersionRange, encode_into_with,
+        encoded_len_with,
     };
 
     use crate::{KafkaMessage, KafkaRequest, RequestResponsePair};
@@ -156,18 +157,24 @@ pub mod txn_offset_commit_request {
             TxnOffsetCommitRequestTopic::encode_validated(self, encoder, version)
         }
 
-        #[doc(hidden)]
-        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
-            self.validate_for_version(version)
+        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+            encoded_len_with(
+                || self.validate_for_version(version),
+                |encoder| TxnOffsetCommitRequestTopic::encode_validated(self, encoder, version),
+            )
         }
 
-        #[doc(hidden)]
-        fn encode_validated<T: EncodeTarget>(
+        fn encode_into(
             &self,
-            encoder: &mut Encoder<T>,
+            buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
-            TxnOffsetCommitRequestTopic::encode_validated(self, encoder, version)
+        ) -> Result<usize, EncodeError> {
+            encode_into_with(
+                buffer,
+                || self.validate_for_version(version),
+                |encoder| TxnOffsetCommitRequestTopic::encode_validated(self, encoder, version),
+                |encoder| TxnOffsetCommitRequestTopic::encode_validated(self, encoder, version),
+            )
         }
     }
 
@@ -302,18 +309,24 @@ pub mod txn_offset_commit_request {
             TxnOffsetCommitRequestPartition::encode_validated(self, encoder, version)
         }
 
-        #[doc(hidden)]
-        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
-            self.validate_for_version(version)
+        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+            encoded_len_with(
+                || self.validate_for_version(version),
+                |encoder| TxnOffsetCommitRequestPartition::encode_validated(self, encoder, version),
+            )
         }
 
-        #[doc(hidden)]
-        fn encode_validated<T: EncodeTarget>(
+        fn encode_into(
             &self,
-            encoder: &mut Encoder<T>,
+            buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
-            TxnOffsetCommitRequestPartition::encode_validated(self, encoder, version)
+        ) -> Result<usize, EncodeError> {
+            encode_into_with(
+                buffer,
+                || self.validate_for_version(version),
+                |encoder| TxnOffsetCommitRequestPartition::encode_validated(self, encoder, version),
+                |encoder| TxnOffsetCommitRequestPartition::encode_validated(self, encoder, version),
+            )
         }
     }
 
@@ -365,6 +378,7 @@ pub mod txn_offset_commit_request {
 
     impl KafkaRequest for TxnOffsetCommitRequest {
         const API_KEY: ApiKey = ApiKey::new(28);
+        const LATEST_VERSION_UNSTABLE: bool = false;
     }
 
     impl RequestResponsePair for TxnOffsetCommitRequest {
@@ -525,18 +539,24 @@ pub mod txn_offset_commit_request {
             TxnOffsetCommitRequest::encode_validated(self, encoder, version)
         }
 
-        #[doc(hidden)]
-        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
-            self.validate_for_version(version)
+        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+            encoded_len_with(
+                || self.validate_for_version(version),
+                |encoder| TxnOffsetCommitRequest::encode_validated(self, encoder, version),
+            )
         }
 
-        #[doc(hidden)]
-        fn encode_validated<T: EncodeTarget>(
+        fn encode_into(
             &self,
-            encoder: &mut Encoder<T>,
+            buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
-            TxnOffsetCommitRequest::encode_validated(self, encoder, version)
+        ) -> Result<usize, EncodeError> {
+            encode_into_with(
+                buffer,
+                || self.validate_for_version(version),
+                |encoder| TxnOffsetCommitRequest::encode_validated(self, encoder, version),
+                |encoder| TxnOffsetCommitRequest::encode_validated(self, encoder, version),
+            )
         }
     }
 }
@@ -547,8 +567,9 @@ pub mod txn_offset_commit_request {
 /// written to name the message itself.
 pub mod txn_offset_commit_response {
     use kafka_wire_core::{
-        ApiKey, ApiVersion, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
-        KafkaEncode, StrBytes, TaggedFields, Uuid, VersionRange,
+        ApiKey, ApiVersion, BytesMut, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder,
+        KafkaDecode, KafkaEncode, StrBytes, TaggedFields, Uuid, VersionRange, encode_into_with,
+        encoded_len_with,
     };
 
     use crate::{KafkaMessage, KafkaResponse};
@@ -692,18 +713,24 @@ pub mod txn_offset_commit_response {
             TxnOffsetCommitResponseTopic::encode_validated(self, encoder, version)
         }
 
-        #[doc(hidden)]
-        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
-            self.validate_for_version(version)
+        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+            encoded_len_with(
+                || self.validate_for_version(version),
+                |encoder| TxnOffsetCommitResponseTopic::encode_validated(self, encoder, version),
+            )
         }
 
-        #[doc(hidden)]
-        fn encode_validated<T: EncodeTarget>(
+        fn encode_into(
             &self,
-            encoder: &mut Encoder<T>,
+            buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
-            TxnOffsetCommitResponseTopic::encode_validated(self, encoder, version)
+        ) -> Result<usize, EncodeError> {
+            encode_into_with(
+                buffer,
+                || self.validate_for_version(version),
+                |encoder| TxnOffsetCommitResponseTopic::encode_validated(self, encoder, version),
+                |encoder| TxnOffsetCommitResponseTopic::encode_validated(self, encoder, version),
+            )
         }
     }
 
@@ -802,18 +829,30 @@ pub mod txn_offset_commit_response {
             TxnOffsetCommitResponsePartition::encode_validated(self, encoder, version)
         }
 
-        #[doc(hidden)]
-        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
-            self.validate_for_version(version)
+        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+            encoded_len_with(
+                || self.validate_for_version(version),
+                |encoder| {
+                    TxnOffsetCommitResponsePartition::encode_validated(self, encoder, version)
+                },
+            )
         }
 
-        #[doc(hidden)]
-        fn encode_validated<T: EncodeTarget>(
+        fn encode_into(
             &self,
-            encoder: &mut Encoder<T>,
+            buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
-            TxnOffsetCommitResponsePartition::encode_validated(self, encoder, version)
+        ) -> Result<usize, EncodeError> {
+            encode_into_with(
+                buffer,
+                || self.validate_for_version(version),
+                |encoder| {
+                    TxnOffsetCommitResponsePartition::encode_validated(self, encoder, version)
+                },
+                |encoder| {
+                    TxnOffsetCommitResponsePartition::encode_validated(self, encoder, version)
+                },
+            )
         }
     }
 
@@ -920,18 +959,24 @@ pub mod txn_offset_commit_response {
             TxnOffsetCommitResponse::encode_validated(self, encoder, version)
         }
 
-        #[doc(hidden)]
-        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
-            self.validate_for_version(version)
+        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+            encoded_len_with(
+                || self.validate_for_version(version),
+                |encoder| TxnOffsetCommitResponse::encode_validated(self, encoder, version),
+            )
         }
 
-        #[doc(hidden)]
-        fn encode_validated<T: EncodeTarget>(
+        fn encode_into(
             &self,
-            encoder: &mut Encoder<T>,
+            buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
-            TxnOffsetCommitResponse::encode_validated(self, encoder, version)
+        ) -> Result<usize, EncodeError> {
+            encode_into_with(
+                buffer,
+                || self.validate_for_version(version),
+                |encoder| TxnOffsetCommitResponse::encode_validated(self, encoder, version),
+                |encoder| TxnOffsetCommitResponse::encode_validated(self, encoder, version),
+            )
         }
     }
 }
@@ -950,6 +995,7 @@ pub const TXN_OFFSET_COMMIT_REQUEST_DESCRIPTOR: MessageDescriptor = MessageDescr
     MessageDirection::Request,
     VersionRange::new(0, 6),
     Some(VersionRange::new(3, 6)),
+    false,
 );
 
 /// Static metadata for [`TxnOffsetCommitResponse`].
@@ -959,4 +1005,5 @@ pub const TXN_OFFSET_COMMIT_RESPONSE_DESCRIPTOR: MessageDescriptor = MessageDesc
     MessageDirection::Response,
     VersionRange::new(0, 6),
     Some(VersionRange::new(3, 6)),
+    false,
 );

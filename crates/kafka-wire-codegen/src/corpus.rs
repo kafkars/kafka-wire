@@ -15,12 +15,14 @@ use std::{collections::BTreeMap, path::Path};
 
 use crate::{
     GenerationError,
+    corpus_output::{insert_probe_file, refusal_cause, render_group},
     format::format_rendered_rust,
-    group::{ApiGroup, group_sources},
+    group::group_sources,
     lockfile::ProtocolLock,
     overrides::HeaderOverrides,
     render::{
-        render_api, render_header_version, render_module_file, render_registry, render_unkeyed,
+        render_fuzz_dispatch, render_header_version, render_module_file, render_registry,
+        render_unkeyed,
     },
     source::load_every_source,
 };
@@ -93,6 +95,7 @@ pub fn render_corpus(workspace_root: impl AsRef<Path>) -> Result<CorpusRender, G
     let corpus = load_every_source(workspace, &lock)?;
 
     let mut probe = CorpusRender::default();
+    let mut producers = BTreeMap::new();
     for (filename, reason) in corpus.rejected {
         probe
             .outcomes
@@ -107,7 +110,13 @@ pub fn render_corpus(workspace_root: impl AsRef<Path>) -> Result<CorpusRender, G
     if !grouped.unkeyed.is_empty() {
         match render_unkeyed(&grouped.unkeyed, &lock.kafka.commit) {
             Ok(source) => {
-                probe.files.insert("framing.rs".to_owned(), source);
+                insert_probe_file(
+                    &mut probe.files,
+                    &mut producers,
+                    "framing.rs".to_owned(),
+                    source,
+                    "fixed framing output",
+                )?;
                 for unkeyed in &grouped.unkeyed {
                     probe.outcomes.insert(
                         unkeyed.filename.clone(),
@@ -122,7 +131,7 @@ pub fn render_corpus(workspace_root: impl AsRef<Path>) -> Result<CorpusRender, G
                     probe.outcomes.insert(
                         unkeyed.filename.clone(),
                         CorpusOutcome::NotRendered {
-                            reason: cause(&error),
+                            reason: refusal_cause(&error),
                         },
                     );
                 }
@@ -138,7 +147,8 @@ pub fn render_corpus(workspace_root: impl AsRef<Path>) -> Result<CorpusRender, G
             workspace,
             &mut probe,
             &mut emitted,
-        );
+            &mut producers,
+        )?;
     }
 
     // Every file `mod.rs` declares must be written, or the probe cannot compile
@@ -159,65 +169,23 @@ pub fn render_corpus(workspace_root: impl AsRef<Path>) -> Result<CorpusRender, G
                 "header_version.rs".to_owned(),
                 render_header_version(&overrides, &lock.kafka.commit),
             ),
+            (
+                "fuzz_roundtrip.rs".to_owned(),
+                render_fuzz_dispatch(&emitted, &lock.kafka.commit)?,
+            ),
         ]),
         workspace,
     )?;
-    probe.files.extend(facades);
+    for (path, source) in facades {
+        let producer = match path.as_str() {
+            "mod.rs" => "fixed module facade",
+            "registry.rs" => "fixed API registry",
+            "header_version.rs" => "fixed header-version policy",
+            "fuzz_roundtrip.rs" => "fixed fuzz dispatch",
+            _ => "fixed corpus-probe output",
+        };
+        insert_probe_file(&mut probe.files, &mut producers, path, source, producer)?;
+    }
 
     Ok(probe)
-}
-
-/// The construct a refusal is about, with the message and field stripped off.
-///
-/// Two messages blocked on inline structs are one piece of work. Keying the
-/// taxonomy on the full diagnostic would report them as two, and the queue
-/// would be as long as the corpus.
-fn cause(error: &GenerationError) -> String {
-    match error {
-        GenerationError::UnsupportedSchema { reason, .. } => reason.clone(),
-        other => other.to_string(),
-    }
-}
-
-/// Renders one API pair, recording either its module or why it was refused.
-fn render_group(
-    group: &ApiGroup,
-    commit: &str,
-    workspace: &Path,
-    probe: &mut CorpusRender,
-    emitted: &mut Vec<ApiGroup>,
-) {
-    let filename = format!("{}.rs", group.module_name);
-    // Formatting is part of rendering here: text this backend produced that
-    // rustfmt cannot parse is not Rust, and counting it as rendered would
-    // overstate the answer this probe exists to give.
-    let rendered = render_api(group, commit).and_then(|source| {
-        format_rendered_rust(BTreeMap::from([(filename.clone(), source)]), workspace)
-    });
-
-    match rendered {
-        Ok(formatted) => {
-            probe.files.extend(formatted);
-            for source in group.messages() {
-                probe.outcomes.insert(
-                    source.filename.clone(),
-                    CorpusOutcome::Rendered {
-                        module: filename.clone(),
-                    },
-                );
-            }
-            emitted.push(group.clone());
-        }
-        Err(error) => {
-            let reason = cause(&error);
-            for source in group.messages() {
-                probe.outcomes.insert(
-                    source.filename.clone(),
-                    CorpusOutcome::NotRendered {
-                        reason: reason.clone(),
-                    },
-                );
-            }
-        }
-    }
 }

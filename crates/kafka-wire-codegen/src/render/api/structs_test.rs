@@ -116,11 +116,18 @@ fn every_nested_codec_uses_its_declarations_effective_window() {
             source.filename,
         );
         assert_eq!(
-            rendered.matches("fn validate_encoding").count(),
+            rendered.matches("fn encoded_len").count(),
             declarations.len(),
-            "{} did not expose exactly one preflight hook per nested codec",
+            "{} did not emit one checked sizing entry point per nested codec",
             source.filename,
         );
+        assert_eq!(
+            rendered.matches("fn encode_into").count(),
+            declarations.len(),
+            "{} did not emit one checked buffered entry point per nested codec",
+            source.filename,
+        );
+        assert!(!rendered.contains("fn validate_encoding"));
         assert!(
             !rendered.contains(".encode(encoder, version)?;"),
             "{} re-entered checked encoding during validated nested descent",

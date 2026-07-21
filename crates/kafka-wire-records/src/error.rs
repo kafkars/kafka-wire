@@ -99,6 +99,15 @@ pub enum RecordError {
         count: i32,
     },
 
+    /// A record declared a negative body length.
+    #[error("record declares negative length {length} at byte {offset}")]
+    NegativeRecordLength {
+        /// Signed zigzag-varint length read from the record prefix.
+        length: i32,
+        /// Absolute byte offset of the prefix reported by the decoder.
+        offset: usize,
+    },
+
     /// A record's length prefix disagreed with what its fields consumed.
     #[error("record declares {declared} bytes but its fields used {consumed}")]
     RecordSizeMismatch {

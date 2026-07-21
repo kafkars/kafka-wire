@@ -15,6 +15,8 @@ mod validation;
 #[cfg(test)]
 mod imports_test;
 #[cfg(test)]
+mod metadata_test;
+#[cfg(test)]
 mod structs_test;
 
 pub(crate) use descriptor::descriptor_name;

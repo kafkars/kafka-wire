@@ -11,8 +11,9 @@
 /// written to name the message itself.
 pub mod describe_groups_request {
     use kafka_wire_core::{
-        ApiKey, ApiVersion, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
-        KafkaEncode, StrBytes, TaggedFields, VersionRange,
+        ApiKey, ApiVersion, BytesMut, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder,
+        KafkaDecode, KafkaEncode, StrBytes, TaggedFields, VersionRange, encode_into_with,
+        encoded_len_with,
     };
 
     use crate::{KafkaMessage, KafkaRequest, RequestResponsePair};
@@ -37,6 +38,7 @@ pub mod describe_groups_request {
 
     impl KafkaRequest for DescribeGroupsRequest {
         const API_KEY: ApiKey = ApiKey::new(15);
+        const LATEST_VERSION_UNSTABLE: bool = false;
     }
 
     impl RequestResponsePair for DescribeGroupsRequest {
@@ -142,18 +144,24 @@ pub mod describe_groups_request {
             DescribeGroupsRequest::encode_validated(self, encoder, version)
         }
 
-        #[doc(hidden)]
-        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
-            self.validate_for_version(version)
+        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+            encoded_len_with(
+                || self.validate_for_version(version),
+                |encoder| DescribeGroupsRequest::encode_validated(self, encoder, version),
+            )
         }
 
-        #[doc(hidden)]
-        fn encode_validated<T: EncodeTarget>(
+        fn encode_into(
             &self,
-            encoder: &mut Encoder<T>,
+            buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
-            DescribeGroupsRequest::encode_validated(self, encoder, version)
+        ) -> Result<usize, EncodeError> {
+            encode_into_with(
+                buffer,
+                || self.validate_for_version(version),
+                |encoder| DescribeGroupsRequest::encode_validated(self, encoder, version),
+                |encoder| DescribeGroupsRequest::encode_validated(self, encoder, version),
+            )
         }
     }
 }
@@ -164,8 +172,9 @@ pub mod describe_groups_request {
 /// written to name the message itself.
 pub mod describe_groups_response {
     use kafka_wire_core::{
-        ApiKey, ApiVersion, Bytes, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder,
-        KafkaDecode, KafkaEncode, StrBytes, TaggedFields, VersionRange,
+        ApiKey, ApiVersion, Bytes, BytesMut, DecodeError, Decoder, EncodeError, EncodeTarget,
+        Encoder, KafkaDecode, KafkaEncode, StrBytes, TaggedFields, VersionRange, encode_into_with,
+        encoded_len_with,
     };
 
     use crate::{KafkaMessage, KafkaResponse};
@@ -388,18 +397,24 @@ pub mod describe_groups_response {
             DescribedGroup::encode_validated(self, encoder, version)
         }
 
-        #[doc(hidden)]
-        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
-            self.validate_for_version(version)
+        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+            encoded_len_with(
+                || self.validate_for_version(version),
+                |encoder| DescribedGroup::encode_validated(self, encoder, version),
+            )
         }
 
-        #[doc(hidden)]
-        fn encode_validated<T: EncodeTarget>(
+        fn encode_into(
             &self,
-            encoder: &mut Encoder<T>,
+            buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
-            DescribedGroup::encode_validated(self, encoder, version)
+        ) -> Result<usize, EncodeError> {
+            encode_into_with(
+                buffer,
+                || self.validate_for_version(version),
+                |encoder| DescribedGroup::encode_validated(self, encoder, version),
+                |encoder| DescribedGroup::encode_validated(self, encoder, version),
+            )
         }
     }
 
@@ -572,18 +587,24 @@ pub mod describe_groups_response {
             DescribedGroupMember::encode_validated(self, encoder, version)
         }
 
-        #[doc(hidden)]
-        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
-            self.validate_for_version(version)
+        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+            encoded_len_with(
+                || self.validate_for_version(version),
+                |encoder| DescribedGroupMember::encode_validated(self, encoder, version),
+            )
         }
 
-        #[doc(hidden)]
-        fn encode_validated<T: EncodeTarget>(
+        fn encode_into(
             &self,
-            encoder: &mut Encoder<T>,
+            buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
-            DescribedGroupMember::encode_validated(self, encoder, version)
+        ) -> Result<usize, EncodeError> {
+            encode_into_with(
+                buffer,
+                || self.validate_for_version(version),
+                |encoder| DescribedGroupMember::encode_validated(self, encoder, version),
+                |encoder| DescribedGroupMember::encode_validated(self, encoder, version),
+            )
         }
     }
 
@@ -694,18 +715,24 @@ pub mod describe_groups_response {
             DescribeGroupsResponse::encode_validated(self, encoder, version)
         }
 
-        #[doc(hidden)]
-        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
-            self.validate_for_version(version)
+        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+            encoded_len_with(
+                || self.validate_for_version(version),
+                |encoder| DescribeGroupsResponse::encode_validated(self, encoder, version),
+            )
         }
 
-        #[doc(hidden)]
-        fn encode_validated<T: EncodeTarget>(
+        fn encode_into(
             &self,
-            encoder: &mut Encoder<T>,
+            buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
-            DescribeGroupsResponse::encode_validated(self, encoder, version)
+        ) -> Result<usize, EncodeError> {
+            encode_into_with(
+                buffer,
+                || self.validate_for_version(version),
+                |encoder| DescribeGroupsResponse::encode_validated(self, encoder, version),
+                |encoder| DescribeGroupsResponse::encode_validated(self, encoder, version),
+            )
         }
     }
 }
@@ -724,6 +751,7 @@ pub const DESCRIBE_GROUPS_REQUEST_DESCRIPTOR: MessageDescriptor = MessageDescrip
     MessageDirection::Request,
     VersionRange::new(0, 6),
     Some(VersionRange::new(5, 6)),
+    false,
 );
 
 /// Static metadata for [`DescribeGroupsResponse`].
@@ -733,4 +761,5 @@ pub const DESCRIBE_GROUPS_RESPONSE_DESCRIPTOR: MessageDescriptor = MessageDescri
     MessageDirection::Response,
     VersionRange::new(0, 6),
     Some(VersionRange::new(5, 6)),
+    false,
 );

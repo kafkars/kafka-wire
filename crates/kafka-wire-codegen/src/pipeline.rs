@@ -12,8 +12,8 @@ use crate::{
     overrides::{HeaderOverrides, SchemaExceptionOverrides},
     provenance::semantic_inputs,
     render::{
-        render_api, render_exports_file, render_header_version, render_module_file,
-        render_registry, render_unkeyed,
+        render_api, render_exports_file, render_fuzz_dispatch, render_header_version,
+        render_module_file, render_registry, render_unkeyed,
     },
     source::load_sources_with,
 };
@@ -85,6 +85,13 @@ pub fn generate(config: &GeneratorConfig) -> Result<GenerationReport, Generation
         render_header_version(&overrides, &lock.kafka.commit),
         "fixed header-version policy",
     )?;
+    insert_unique(
+        &mut rendered,
+        &mut producers,
+        "fuzz_roundtrip.rs".to_owned(),
+        render_fuzz_dispatch(&groups, &lock.kafka.commit)?,
+        "fixed fuzz dispatch",
+    )?;
 
     // Layout belongs to rustfmt, so the manifest must hash formatted bytes.
     let formatted = format_rendered_rust_with_identity(rendered, config.workspace_root())?;
@@ -125,6 +132,7 @@ fn validate_output_paths(groups: &[crate::group::ApiGroup]) -> Result<(), Genera
         ("exports.rsi", "fixed crate export list"),
         ("registry.rs", "fixed API registry"),
         ("header_version.rs", "fixed header-version policy"),
+        ("fuzz_roundtrip.rs", "fixed fuzz dispatch"),
         ("MANIFEST.json", "generated-tree manifest"),
     ] {
         claim_output_path(&mut claimed, path, producer)?;
@@ -139,7 +147,7 @@ fn validate_output_paths(groups: &[crate::group::ApiGroup]) -> Result<(), Genera
     Ok(())
 }
 
-fn api_producer(group: &crate::group::ApiGroup) -> String {
+pub(crate) fn api_producer(group: &crate::group::ApiGroup) -> String {
     let names = group
         .messages()
         .map(|source| source.message.name.protocol())

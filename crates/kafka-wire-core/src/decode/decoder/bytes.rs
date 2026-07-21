@@ -14,6 +14,21 @@ use super::super::DecodeError;
 use super::Decoder;
 
 impl Decoder {
+    /// Takes an already length-decoded byte field under the byte-field budget.
+    ///
+    /// Downstream containers with their own prefix encoding supply the field
+    /// name and prefix offset; this method remains the authority for the
+    /// configured byte limit and zero-copy extraction.
+    pub fn take_byte_field(
+        &mut self,
+        kind: &'static str,
+        length: usize,
+        prefix_offset: usize,
+    ) -> Result<Bytes, DecodeError> {
+        Self::check_limit(kind, length, self.limits.max_bytes_bytes, prefix_offset)?;
+        self.take(length)
+    }
+
     /// Reads a legacy non-null byte string: an `int32` length then the bytes.
     pub fn read_bytes(&mut self) -> Result<Bytes, DecodeError> {
         let offset = self.offset();

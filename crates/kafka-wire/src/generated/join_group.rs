@@ -11,8 +11,9 @@
 /// written to name the message itself.
 pub mod join_group_request {
     use kafka_wire_core::{
-        ApiKey, ApiVersion, Bytes, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder,
-        KafkaDecode, KafkaEncode, StrBytes, TaggedFields, VersionRange,
+        ApiKey, ApiVersion, Bytes, BytesMut, DecodeError, Decoder, EncodeError, EncodeTarget,
+        Encoder, KafkaDecode, KafkaEncode, StrBytes, TaggedFields, VersionRange, encode_into_with,
+        encoded_len_with,
     };
 
     use crate::{KafkaMessage, KafkaRequest, RequestResponsePair};
@@ -128,18 +129,24 @@ pub mod join_group_request {
             JoinGroupRequestProtocol::encode_validated(self, encoder, version)
         }
 
-        #[doc(hidden)]
-        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
-            self.validate_for_version(version)
+        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+            encoded_len_with(
+                || self.validate_for_version(version),
+                |encoder| JoinGroupRequestProtocol::encode_validated(self, encoder, version),
+            )
         }
 
-        #[doc(hidden)]
-        fn encode_validated<T: EncodeTarget>(
+        fn encode_into(
             &self,
-            encoder: &mut Encoder<T>,
+            buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
-            JoinGroupRequestProtocol::encode_validated(self, encoder, version)
+        ) -> Result<usize, EncodeError> {
+            encode_into_with(
+                buffer,
+                || self.validate_for_version(version),
+                |encoder| JoinGroupRequestProtocol::encode_validated(self, encoder, version),
+                |encoder| JoinGroupRequestProtocol::encode_validated(self, encoder, version),
+            )
         }
     }
 
@@ -191,6 +198,7 @@ pub mod join_group_request {
 
     impl KafkaRequest for JoinGroupRequest {
         const API_KEY: ApiKey = ApiKey::new(11);
+        const LATEST_VERSION_UNSTABLE: bool = false;
     }
 
     impl RequestResponsePair for JoinGroupRequest {
@@ -353,18 +361,24 @@ pub mod join_group_request {
             JoinGroupRequest::encode_validated(self, encoder, version)
         }
 
-        #[doc(hidden)]
-        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
-            self.validate_for_version(version)
+        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+            encoded_len_with(
+                || self.validate_for_version(version),
+                |encoder| JoinGroupRequest::encode_validated(self, encoder, version),
+            )
         }
 
-        #[doc(hidden)]
-        fn encode_validated<T: EncodeTarget>(
+        fn encode_into(
             &self,
-            encoder: &mut Encoder<T>,
+            buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
-            JoinGroupRequest::encode_validated(self, encoder, version)
+        ) -> Result<usize, EncodeError> {
+            encode_into_with(
+                buffer,
+                || self.validate_for_version(version),
+                |encoder| JoinGroupRequest::encode_validated(self, encoder, version),
+                |encoder| JoinGroupRequest::encode_validated(self, encoder, version),
+            )
         }
     }
 }
@@ -375,8 +389,9 @@ pub mod join_group_request {
 /// written to name the message itself.
 pub mod join_group_response {
     use kafka_wire_core::{
-        ApiKey, ApiVersion, Bytes, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder,
-        KafkaDecode, KafkaEncode, StrBytes, TaggedFields, VersionRange,
+        ApiKey, ApiVersion, Bytes, BytesMut, DecodeError, Decoder, EncodeError, EncodeTarget,
+        Encoder, KafkaDecode, KafkaEncode, StrBytes, TaggedFields, VersionRange, encode_into_with,
+        encoded_len_with,
     };
 
     use crate::{KafkaMessage, KafkaResponse};
@@ -511,18 +526,24 @@ pub mod join_group_response {
             JoinGroupResponseMember::encode_validated(self, encoder, version)
         }
 
-        #[doc(hidden)]
-        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
-            self.validate_for_version(version)
+        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+            encoded_len_with(
+                || self.validate_for_version(version),
+                |encoder| JoinGroupResponseMember::encode_validated(self, encoder, version),
+            )
         }
 
-        #[doc(hidden)]
-        fn encode_validated<T: EncodeTarget>(
+        fn encode_into(
             &self,
-            encoder: &mut Encoder<T>,
+            buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
-            JoinGroupResponseMember::encode_validated(self, encoder, version)
+        ) -> Result<usize, EncodeError> {
+            encode_into_with(
+                buffer,
+                || self.validate_for_version(version),
+                |encoder| JoinGroupResponseMember::encode_validated(self, encoder, version),
+                |encoder| JoinGroupResponseMember::encode_validated(self, encoder, version),
+            )
         }
     }
 
@@ -741,18 +762,24 @@ pub mod join_group_response {
             JoinGroupResponse::encode_validated(self, encoder, version)
         }
 
-        #[doc(hidden)]
-        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
-            self.validate_for_version(version)
+        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+            encoded_len_with(
+                || self.validate_for_version(version),
+                |encoder| JoinGroupResponse::encode_validated(self, encoder, version),
+            )
         }
 
-        #[doc(hidden)]
-        fn encode_validated<T: EncodeTarget>(
+        fn encode_into(
             &self,
-            encoder: &mut Encoder<T>,
+            buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
-            JoinGroupResponse::encode_validated(self, encoder, version)
+        ) -> Result<usize, EncodeError> {
+            encode_into_with(
+                buffer,
+                || self.validate_for_version(version),
+                |encoder| JoinGroupResponse::encode_validated(self, encoder, version),
+                |encoder| JoinGroupResponse::encode_validated(self, encoder, version),
+            )
         }
     }
 }
@@ -771,6 +798,7 @@ pub const JOIN_GROUP_REQUEST_DESCRIPTOR: MessageDescriptor = MessageDescriptor::
     MessageDirection::Request,
     VersionRange::new(0, 9),
     Some(VersionRange::new(6, 9)),
+    false,
 );
 
 /// Static metadata for [`JoinGroupResponse`].
@@ -780,4 +808,5 @@ pub const JOIN_GROUP_RESPONSE_DESCRIPTOR: MessageDescriptor = MessageDescriptor:
     MessageDirection::Response,
     VersionRange::new(0, 9),
     Some(VersionRange::new(6, 9)),
+    false,
 );

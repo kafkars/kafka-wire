@@ -11,8 +11,9 @@
 /// written to name the message itself.
 pub mod broker_registration_request {
     use kafka_wire_core::{
-        ApiKey, ApiVersion, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
-        KafkaEncode, StrBytes, TaggedFields, Uuid, VersionRange,
+        ApiKey, ApiVersion, BytesMut, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder,
+        KafkaDecode, KafkaEncode, StrBytes, TaggedFields, Uuid, VersionRange, encode_into_with,
+        encoded_len_with,
     };
 
     use crate::{KafkaMessage, KafkaRequest, RequestResponsePair};
@@ -122,18 +123,24 @@ pub mod broker_registration_request {
             Listener::encode_validated(self, encoder, version)
         }
 
-        #[doc(hidden)]
-        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
-            self.validate_for_version(version)
+        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+            encoded_len_with(
+                || self.validate_for_version(version),
+                |encoder| Listener::encode_validated(self, encoder, version),
+            )
         }
 
-        #[doc(hidden)]
-        fn encode_validated<T: EncodeTarget>(
+        fn encode_into(
             &self,
-            encoder: &mut Encoder<T>,
+            buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
-            Listener::encode_validated(self, encoder, version)
+        ) -> Result<usize, EncodeError> {
+            encode_into_with(
+                buffer,
+                || self.validate_for_version(version),
+                |encoder| Listener::encode_validated(self, encoder, version),
+                |encoder| Listener::encode_validated(self, encoder, version),
+            )
         }
     }
 
@@ -237,18 +244,24 @@ pub mod broker_registration_request {
             Feature::encode_validated(self, encoder, version)
         }
 
-        #[doc(hidden)]
-        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
-            self.validate_for_version(version)
+        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+            encoded_len_with(
+                || self.validate_for_version(version),
+                |encoder| Feature::encode_validated(self, encoder, version),
+            )
         }
 
-        #[doc(hidden)]
-        fn encode_validated<T: EncodeTarget>(
+        fn encode_into(
             &self,
-            encoder: &mut Encoder<T>,
+            buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
-            Feature::encode_validated(self, encoder, version)
+        ) -> Result<usize, EncodeError> {
+            encode_into_with(
+                buffer,
+                || self.validate_for_version(version),
+                |encoder| Feature::encode_validated(self, encoder, version),
+                |encoder| Feature::encode_validated(self, encoder, version),
+            )
         }
     }
 
@@ -303,6 +316,7 @@ pub mod broker_registration_request {
 
     impl KafkaRequest for BrokerRegistrationRequest {
         const API_KEY: ApiKey = ApiKey::new(62);
+        const LATEST_VERSION_UNSTABLE: bool = false;
     }
 
     impl RequestResponsePair for BrokerRegistrationRequest {
@@ -439,18 +453,24 @@ pub mod broker_registration_request {
             BrokerRegistrationRequest::encode_validated(self, encoder, version)
         }
 
-        #[doc(hidden)]
-        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
-            self.validate_for_version(version)
+        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+            encoded_len_with(
+                || self.validate_for_version(version),
+                |encoder| BrokerRegistrationRequest::encode_validated(self, encoder, version),
+            )
         }
 
-        #[doc(hidden)]
-        fn encode_validated<T: EncodeTarget>(
+        fn encode_into(
             &self,
-            encoder: &mut Encoder<T>,
+            buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
-            BrokerRegistrationRequest::encode_validated(self, encoder, version)
+        ) -> Result<usize, EncodeError> {
+            encode_into_with(
+                buffer,
+                || self.validate_for_version(version),
+                |encoder| BrokerRegistrationRequest::encode_validated(self, encoder, version),
+                |encoder| BrokerRegistrationRequest::encode_validated(self, encoder, version),
+            )
         }
     }
 }
@@ -461,8 +481,8 @@ pub mod broker_registration_request {
 /// written to name the message itself.
 pub mod broker_registration_response {
     use kafka_wire_core::{
-        ApiKey, ApiVersion, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
-        KafkaEncode, TaggedFields, VersionRange,
+        ApiKey, ApiVersion, BytesMut, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder,
+        KafkaDecode, KafkaEncode, TaggedFields, VersionRange, encode_into_with, encoded_len_with,
     };
 
     use crate::{KafkaMessage, KafkaResponse};
@@ -567,18 +587,24 @@ pub mod broker_registration_response {
             BrokerRegistrationResponse::encode_validated(self, encoder, version)
         }
 
-        #[doc(hidden)]
-        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
-            self.validate_for_version(version)
+        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+            encoded_len_with(
+                || self.validate_for_version(version),
+                |encoder| BrokerRegistrationResponse::encode_validated(self, encoder, version),
+            )
         }
 
-        #[doc(hidden)]
-        fn encode_validated<T: EncodeTarget>(
+        fn encode_into(
             &self,
-            encoder: &mut Encoder<T>,
+            buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
-            BrokerRegistrationResponse::encode_validated(self, encoder, version)
+        ) -> Result<usize, EncodeError> {
+            encode_into_with(
+                buffer,
+                || self.validate_for_version(version),
+                |encoder| BrokerRegistrationResponse::encode_validated(self, encoder, version),
+                |encoder| BrokerRegistrationResponse::encode_validated(self, encoder, version),
+            )
         }
     }
 }
@@ -597,6 +623,7 @@ pub const BROKER_REGISTRATION_REQUEST_DESCRIPTOR: MessageDescriptor = MessageDes
     MessageDirection::Request,
     VersionRange::new(0, 4),
     Some(VersionRange::new(0, 4)),
+    false,
 );
 
 /// Static metadata for [`BrokerRegistrationResponse`].
@@ -606,4 +633,5 @@ pub const BROKER_REGISTRATION_RESPONSE_DESCRIPTOR: MessageDescriptor = MessageDe
     MessageDirection::Response,
     VersionRange::new(0, 4),
     Some(VersionRange::new(0, 4)),
+    false,
 );

@@ -11,8 +11,9 @@
 /// written to name the message itself.
 pub mod write_txn_markers_request {
     use kafka_wire_core::{
-        ApiKey, ApiVersion, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
-        KafkaEncode, StrBytes, TaggedFields, VersionRange,
+        ApiKey, ApiVersion, BytesMut, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder,
+        KafkaDecode, KafkaEncode, StrBytes, TaggedFields, VersionRange, encode_into_with,
+        encoded_len_with,
     };
 
     use crate::{KafkaMessage, KafkaRequest, RequestResponsePair};
@@ -149,18 +150,24 @@ pub mod write_txn_markers_request {
             WritableTxnMarker::encode_validated(self, encoder, version)
         }
 
-        #[doc(hidden)]
-        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
-            self.validate_for_version(version)
+        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+            encoded_len_with(
+                || self.validate_for_version(version),
+                |encoder| WritableTxnMarker::encode_validated(self, encoder, version),
+            )
         }
 
-        #[doc(hidden)]
-        fn encode_validated<T: EncodeTarget>(
+        fn encode_into(
             &self,
-            encoder: &mut Encoder<T>,
+            buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
-            WritableTxnMarker::encode_validated(self, encoder, version)
+        ) -> Result<usize, EncodeError> {
+            encode_into_with(
+                buffer,
+                || self.validate_for_version(version),
+                |encoder| WritableTxnMarker::encode_validated(self, encoder, version),
+                |encoder| WritableTxnMarker::encode_validated(self, encoder, version),
+            )
         }
     }
 
@@ -265,18 +272,24 @@ pub mod write_txn_markers_request {
             WritableTxnMarkerTopic::encode_validated(self, encoder, version)
         }
 
-        #[doc(hidden)]
-        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
-            self.validate_for_version(version)
+        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+            encoded_len_with(
+                || self.validate_for_version(version),
+                |encoder| WritableTxnMarkerTopic::encode_validated(self, encoder, version),
+            )
         }
 
-        #[doc(hidden)]
-        fn encode_validated<T: EncodeTarget>(
+        fn encode_into(
             &self,
-            encoder: &mut Encoder<T>,
+            buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
-            WritableTxnMarkerTopic::encode_validated(self, encoder, version)
+        ) -> Result<usize, EncodeError> {
+            encode_into_with(
+                buffer,
+                || self.validate_for_version(version),
+                |encoder| WritableTxnMarkerTopic::encode_validated(self, encoder, version),
+                |encoder| WritableTxnMarkerTopic::encode_validated(self, encoder, version),
+            )
         }
     }
 
@@ -298,6 +311,7 @@ pub mod write_txn_markers_request {
 
     impl KafkaRequest for WriteTxnMarkersRequest {
         const API_KEY: ApiKey = ApiKey::new(27);
+        const LATEST_VERSION_UNSTABLE: bool = false;
     }
 
     impl RequestResponsePair for WriteTxnMarkersRequest {
@@ -374,18 +388,24 @@ pub mod write_txn_markers_request {
             WriteTxnMarkersRequest::encode_validated(self, encoder, version)
         }
 
-        #[doc(hidden)]
-        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
-            self.validate_for_version(version)
+        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+            encoded_len_with(
+                || self.validate_for_version(version),
+                |encoder| WriteTxnMarkersRequest::encode_validated(self, encoder, version),
+            )
         }
 
-        #[doc(hidden)]
-        fn encode_validated<T: EncodeTarget>(
+        fn encode_into(
             &self,
-            encoder: &mut Encoder<T>,
+            buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
-            WriteTxnMarkersRequest::encode_validated(self, encoder, version)
+        ) -> Result<usize, EncodeError> {
+            encode_into_with(
+                buffer,
+                || self.validate_for_version(version),
+                |encoder| WriteTxnMarkersRequest::encode_validated(self, encoder, version),
+                |encoder| WriteTxnMarkersRequest::encode_validated(self, encoder, version),
+            )
         }
     }
 }
@@ -396,8 +416,9 @@ pub mod write_txn_markers_request {
 /// written to name the message itself.
 pub mod write_txn_markers_response {
     use kafka_wire_core::{
-        ApiKey, ApiVersion, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
-        KafkaEncode, StrBytes, TaggedFields, VersionRange,
+        ApiKey, ApiVersion, BytesMut, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder,
+        KafkaDecode, KafkaEncode, StrBytes, TaggedFields, VersionRange, encode_into_with,
+        encoded_len_with,
     };
 
     use crate::{KafkaMessage, KafkaResponse};
@@ -508,18 +529,24 @@ pub mod write_txn_markers_response {
             WritableTxnMarkerResult::encode_validated(self, encoder, version)
         }
 
-        #[doc(hidden)]
-        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
-            self.validate_for_version(version)
+        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+            encoded_len_with(
+                || self.validate_for_version(version),
+                |encoder| WritableTxnMarkerResult::encode_validated(self, encoder, version),
+            )
         }
 
-        #[doc(hidden)]
-        fn encode_validated<T: EncodeTarget>(
+        fn encode_into(
             &self,
-            encoder: &mut Encoder<T>,
+            buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
-            WritableTxnMarkerResult::encode_validated(self, encoder, version)
+        ) -> Result<usize, EncodeError> {
+            encode_into_with(
+                buffer,
+                || self.validate_for_version(version),
+                |encoder| WritableTxnMarkerResult::encode_validated(self, encoder, version),
+                |encoder| WritableTxnMarkerResult::encode_validated(self, encoder, version),
+            )
         }
     }
 
@@ -629,18 +656,24 @@ pub mod write_txn_markers_response {
             WritableTxnMarkerTopicResult::encode_validated(self, encoder, version)
         }
 
-        #[doc(hidden)]
-        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
-            self.validate_for_version(version)
+        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+            encoded_len_with(
+                || self.validate_for_version(version),
+                |encoder| WritableTxnMarkerTopicResult::encode_validated(self, encoder, version),
+            )
         }
 
-        #[doc(hidden)]
-        fn encode_validated<T: EncodeTarget>(
+        fn encode_into(
             &self,
-            encoder: &mut Encoder<T>,
+            buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
-            WritableTxnMarkerTopicResult::encode_validated(self, encoder, version)
+        ) -> Result<usize, EncodeError> {
+            encode_into_with(
+                buffer,
+                || self.validate_for_version(version),
+                |encoder| WritableTxnMarkerTopicResult::encode_validated(self, encoder, version),
+                |encoder| WritableTxnMarkerTopicResult::encode_validated(self, encoder, version),
+            )
         }
     }
 
@@ -739,18 +772,30 @@ pub mod write_txn_markers_response {
             WritableTxnMarkerPartitionResult::encode_validated(self, encoder, version)
         }
 
-        #[doc(hidden)]
-        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
-            self.validate_for_version(version)
+        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+            encoded_len_with(
+                || self.validate_for_version(version),
+                |encoder| {
+                    WritableTxnMarkerPartitionResult::encode_validated(self, encoder, version)
+                },
+            )
         }
 
-        #[doc(hidden)]
-        fn encode_validated<T: EncodeTarget>(
+        fn encode_into(
             &self,
-            encoder: &mut Encoder<T>,
+            buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
-            WritableTxnMarkerPartitionResult::encode_validated(self, encoder, version)
+        ) -> Result<usize, EncodeError> {
+            encode_into_with(
+                buffer,
+                || self.validate_for_version(version),
+                |encoder| {
+                    WritableTxnMarkerPartitionResult::encode_validated(self, encoder, version)
+                },
+                |encoder| {
+                    WritableTxnMarkerPartitionResult::encode_validated(self, encoder, version)
+                },
+            )
         }
     }
 
@@ -844,18 +889,24 @@ pub mod write_txn_markers_response {
             WriteTxnMarkersResponse::encode_validated(self, encoder, version)
         }
 
-        #[doc(hidden)]
-        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
-            self.validate_for_version(version)
+        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+            encoded_len_with(
+                || self.validate_for_version(version),
+                |encoder| WriteTxnMarkersResponse::encode_validated(self, encoder, version),
+            )
         }
 
-        #[doc(hidden)]
-        fn encode_validated<T: EncodeTarget>(
+        fn encode_into(
             &self,
-            encoder: &mut Encoder<T>,
+            buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
-            WriteTxnMarkersResponse::encode_validated(self, encoder, version)
+        ) -> Result<usize, EncodeError> {
+            encode_into_with(
+                buffer,
+                || self.validate_for_version(version),
+                |encoder| WriteTxnMarkersResponse::encode_validated(self, encoder, version),
+                |encoder| WriteTxnMarkersResponse::encode_validated(self, encoder, version),
+            )
         }
     }
 }
@@ -874,6 +925,7 @@ pub const WRITE_TXN_MARKERS_REQUEST_DESCRIPTOR: MessageDescriptor = MessageDescr
     MessageDirection::Request,
     VersionRange::new(1, 2),
     Some(VersionRange::new(1, 2)),
+    false,
 );
 
 /// Static metadata for [`WriteTxnMarkersResponse`].
@@ -883,4 +935,5 @@ pub const WRITE_TXN_MARKERS_RESPONSE_DESCRIPTOR: MessageDescriptor = MessageDesc
     MessageDirection::Response,
     VersionRange::new(1, 2),
     Some(VersionRange::new(1, 2)),
+    false,
 );

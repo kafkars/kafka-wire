@@ -11,8 +11,9 @@
 /// written to name the message itself.
 pub mod init_producer_id_request {
     use kafka_wire_core::{
-        ApiKey, ApiVersion, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
-        KafkaEncode, StrBytes, TaggedFields, VersionRange,
+        ApiKey, ApiVersion, BytesMut, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder,
+        KafkaDecode, KafkaEncode, StrBytes, TaggedFields, VersionRange, encode_into_with,
+        encoded_len_with,
     };
 
     use crate::{KafkaMessage, KafkaRequest, RequestResponsePair};
@@ -59,6 +60,7 @@ pub mod init_producer_id_request {
 
     impl KafkaRequest for InitProducerIdRequest {
         const API_KEY: ApiKey = ApiKey::new(22);
+        const LATEST_VERSION_UNSTABLE: bool = true;
     }
 
     impl RequestResponsePair for InitProducerIdRequest {
@@ -199,18 +201,24 @@ pub mod init_producer_id_request {
             InitProducerIdRequest::encode_validated(self, encoder, version)
         }
 
-        #[doc(hidden)]
-        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
-            self.validate_for_version(version)
+        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+            encoded_len_with(
+                || self.validate_for_version(version),
+                |encoder| InitProducerIdRequest::encode_validated(self, encoder, version),
+            )
         }
 
-        #[doc(hidden)]
-        fn encode_validated<T: EncodeTarget>(
+        fn encode_into(
             &self,
-            encoder: &mut Encoder<T>,
+            buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
-            InitProducerIdRequest::encode_validated(self, encoder, version)
+        ) -> Result<usize, EncodeError> {
+            encode_into_with(
+                buffer,
+                || self.validate_for_version(version),
+                |encoder| InitProducerIdRequest::encode_validated(self, encoder, version),
+                |encoder| InitProducerIdRequest::encode_validated(self, encoder, version),
+            )
         }
     }
 }
@@ -221,8 +229,8 @@ pub mod init_producer_id_request {
 /// written to name the message itself.
 pub mod init_producer_id_response {
     use kafka_wire_core::{
-        ApiKey, ApiVersion, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
-        KafkaEncode, TaggedFields, VersionRange,
+        ApiKey, ApiVersion, BytesMut, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder,
+        KafkaDecode, KafkaEncode, TaggedFields, VersionRange, encode_into_with, encoded_len_with,
     };
 
     use crate::{KafkaMessage, KafkaResponse};
@@ -371,18 +379,24 @@ pub mod init_producer_id_response {
             InitProducerIdResponse::encode_validated(self, encoder, version)
         }
 
-        #[doc(hidden)]
-        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
-            self.validate_for_version(version)
+        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+            encoded_len_with(
+                || self.validate_for_version(version),
+                |encoder| InitProducerIdResponse::encode_validated(self, encoder, version),
+            )
         }
 
-        #[doc(hidden)]
-        fn encode_validated<T: EncodeTarget>(
+        fn encode_into(
             &self,
-            encoder: &mut Encoder<T>,
+            buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
-            InitProducerIdResponse::encode_validated(self, encoder, version)
+        ) -> Result<usize, EncodeError> {
+            encode_into_with(
+                buffer,
+                || self.validate_for_version(version),
+                |encoder| InitProducerIdResponse::encode_validated(self, encoder, version),
+                |encoder| InitProducerIdResponse::encode_validated(self, encoder, version),
+            )
         }
     }
 }
@@ -401,6 +415,7 @@ pub const INIT_PRODUCER_ID_REQUEST_DESCRIPTOR: MessageDescriptor = MessageDescri
     MessageDirection::Request,
     VersionRange::new(0, 6),
     Some(VersionRange::new(2, 6)),
+    true,
 );
 
 /// Static metadata for [`InitProducerIdResponse`].
@@ -410,4 +425,5 @@ pub const INIT_PRODUCER_ID_RESPONSE_DESCRIPTOR: MessageDescriptor = MessageDescr
     MessageDirection::Response,
     VersionRange::new(0, 6),
     Some(VersionRange::new(2, 6)),
+    false,
 );

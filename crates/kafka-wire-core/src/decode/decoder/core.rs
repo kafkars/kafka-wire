@@ -129,6 +129,17 @@ impl Decoder {
         self.take(count)
     }
 
+    /// Removes exactly `length` bytes and returns a decoder confined to them.
+    ///
+    /// The child inherits this decoder's limits and absolute offset, so a
+    /// downstream length-delimited parser cannot observe the field or record
+    /// that follows its declared body.
+    pub fn take_child(&mut self, length: usize) -> Result<Self, DecodeError> {
+        let base_offset = self.offset();
+        let input = self.take(length)?;
+        Ok(Self::child(input, self.limits, base_offset))
+    }
+
     #[inline]
     pub(super) fn take(&mut self, length: usize) -> Result<Bytes, DecodeError> {
         let remaining = self.input.len();

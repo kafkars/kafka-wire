@@ -11,8 +11,8 @@
 /// written to name the message itself.
 pub mod allocate_producer_ids_request {
     use kafka_wire_core::{
-        ApiKey, ApiVersion, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
-        KafkaEncode, TaggedFields, VersionRange,
+        ApiKey, ApiVersion, BytesMut, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder,
+        KafkaDecode, KafkaEncode, TaggedFields, VersionRange, encode_into_with, encoded_len_with,
     };
 
     use crate::{KafkaMessage, KafkaRequest, RequestResponsePair};
@@ -47,6 +47,7 @@ pub mod allocate_producer_ids_request {
 
     impl KafkaRequest for AllocateProducerIdsRequest {
         const API_KEY: ApiKey = ApiKey::new(67);
+        const LATEST_VERSION_UNSTABLE: bool = false;
     }
 
     impl RequestResponsePair for AllocateProducerIdsRequest {
@@ -115,18 +116,24 @@ pub mod allocate_producer_ids_request {
             AllocateProducerIdsRequest::encode_validated(self, encoder, version)
         }
 
-        #[doc(hidden)]
-        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
-            self.validate_for_version(version)
+        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+            encoded_len_with(
+                || self.validate_for_version(version),
+                |encoder| AllocateProducerIdsRequest::encode_validated(self, encoder, version),
+            )
         }
 
-        #[doc(hidden)]
-        fn encode_validated<T: EncodeTarget>(
+        fn encode_into(
             &self,
-            encoder: &mut Encoder<T>,
+            buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
-            AllocateProducerIdsRequest::encode_validated(self, encoder, version)
+        ) -> Result<usize, EncodeError> {
+            encode_into_with(
+                buffer,
+                || self.validate_for_version(version),
+                |encoder| AllocateProducerIdsRequest::encode_validated(self, encoder, version),
+                |encoder| AllocateProducerIdsRequest::encode_validated(self, encoder, version),
+            )
         }
     }
 }
@@ -137,8 +144,8 @@ pub mod allocate_producer_ids_request {
 /// written to name the message itself.
 pub mod allocate_producer_ids_response {
     use kafka_wire_core::{
-        ApiKey, ApiVersion, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
-        KafkaEncode, TaggedFields, VersionRange,
+        ApiKey, ApiVersion, BytesMut, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder,
+        KafkaDecode, KafkaEncode, TaggedFields, VersionRange, encode_into_with, encoded_len_with,
     };
 
     use crate::{KafkaMessage, KafkaResponse};
@@ -237,18 +244,24 @@ pub mod allocate_producer_ids_response {
             AllocateProducerIdsResponse::encode_validated(self, encoder, version)
         }
 
-        #[doc(hidden)]
-        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
-            self.validate_for_version(version)
+        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+            encoded_len_with(
+                || self.validate_for_version(version),
+                |encoder| AllocateProducerIdsResponse::encode_validated(self, encoder, version),
+            )
         }
 
-        #[doc(hidden)]
-        fn encode_validated<T: EncodeTarget>(
+        fn encode_into(
             &self,
-            encoder: &mut Encoder<T>,
+            buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
-            AllocateProducerIdsResponse::encode_validated(self, encoder, version)
+        ) -> Result<usize, EncodeError> {
+            encode_into_with(
+                buffer,
+                || self.validate_for_version(version),
+                |encoder| AllocateProducerIdsResponse::encode_validated(self, encoder, version),
+                |encoder| AllocateProducerIdsResponse::encode_validated(self, encoder, version),
+            )
         }
     }
 }
@@ -267,6 +280,7 @@ pub const ALLOCATE_PRODUCER_IDS_REQUEST_DESCRIPTOR: MessageDescriptor = MessageD
     MessageDirection::Request,
     VersionRange::new(0, 0),
     Some(VersionRange::new(0, 0)),
+    false,
 );
 
 /// Static metadata for [`AllocateProducerIdsResponse`].
@@ -276,4 +290,5 @@ pub const ALLOCATE_PRODUCER_IDS_RESPONSE_DESCRIPTOR: MessageDescriptor = Message
     MessageDirection::Response,
     VersionRange::new(0, 0),
     Some(VersionRange::new(0, 0)),
+    false,
 );

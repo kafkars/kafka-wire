@@ -21,6 +21,8 @@ use sha2::{Digest, Sha256};
 /// Commit the synthetic lockfile pins, and the directory the corpus lives in.
 pub(crate) const COMMIT: &str = "678c0e07e4733c5a592e52046dc2c4e1625587f1";
 
+const GENERATED_OUTPUT_PATH: &str = "crates/kafka-wire/src/generated";
+
 /// One request and response pair the backend is known to render.
 pub(crate) const SUPPORTED: [&str; 2] = ["SaslHandshakeRequest.json", "SaslHandshakeResponse.json"];
 
@@ -125,7 +127,7 @@ impl Workspace {
              {}\n\n\
              [generator]\n\
              ir_version = 1\n\
-             output = \"generated\"\n",
+             output = \"{GENERATED_OUTPUT_PATH}\"\n",
             entries.join("\n\n")
         );
         write(&root.join("spec/protocol.lock"), &lock);
@@ -148,7 +150,7 @@ impl Workspace {
     }
 
     pub(crate) fn output_root(&self) -> PathBuf {
-        self.root.join("generated")
+        self.root.join(GENERATED_OUTPUT_PATH)
     }
 
     /// Every file currently in the output tree, by relative path.

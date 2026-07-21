@@ -11,8 +11,9 @@
 /// written to name the message itself.
 pub mod offset_for_leader_epoch_request {
     use kafka_wire_core::{
-        ApiKey, ApiVersion, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
-        KafkaEncode, StrBytes, TaggedFields, VersionRange,
+        ApiKey, ApiVersion, BytesMut, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder,
+        KafkaDecode, KafkaEncode, StrBytes, TaggedFields, VersionRange, encode_into_with,
+        encoded_len_with,
     };
 
     use crate::{KafkaMessage, KafkaRequest, RequestResponsePair};
@@ -139,18 +140,24 @@ pub mod offset_for_leader_epoch_request {
             OffsetForLeaderTopic::encode_validated(self, encoder, version)
         }
 
-        #[doc(hidden)]
-        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
-            self.validate_for_version(version)
+        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+            encoded_len_with(
+                || self.validate_for_version(version),
+                |encoder| OffsetForLeaderTopic::encode_validated(self, encoder, version),
+            )
         }
 
-        #[doc(hidden)]
-        fn encode_validated<T: EncodeTarget>(
+        fn encode_into(
             &self,
-            encoder: &mut Encoder<T>,
+            buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
-            OffsetForLeaderTopic::encode_validated(self, encoder, version)
+        ) -> Result<usize, EncodeError> {
+            encode_into_with(
+                buffer,
+                || self.validate_for_version(version),
+                |encoder| OffsetForLeaderTopic::encode_validated(self, encoder, version),
+                |encoder| OffsetForLeaderTopic::encode_validated(self, encoder, version),
+            )
         }
     }
 
@@ -265,18 +272,24 @@ pub mod offset_for_leader_epoch_request {
             OffsetForLeaderPartition::encode_validated(self, encoder, version)
         }
 
-        #[doc(hidden)]
-        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
-            self.validate_for_version(version)
+        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+            encoded_len_with(
+                || self.validate_for_version(version),
+                |encoder| OffsetForLeaderPartition::encode_validated(self, encoder, version),
+            )
         }
 
-        #[doc(hidden)]
-        fn encode_validated<T: EncodeTarget>(
+        fn encode_into(
             &self,
-            encoder: &mut Encoder<T>,
+            buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
-            OffsetForLeaderPartition::encode_validated(self, encoder, version)
+        ) -> Result<usize, EncodeError> {
+            encode_into_with(
+                buffer,
+                || self.validate_for_version(version),
+                |encoder| OffsetForLeaderPartition::encode_validated(self, encoder, version),
+                |encoder| OffsetForLeaderPartition::encode_validated(self, encoder, version),
+            )
         }
     }
 
@@ -310,6 +323,7 @@ pub mod offset_for_leader_epoch_request {
 
     impl KafkaRequest for OffsetForLeaderEpochRequest {
         const API_KEY: ApiKey = ApiKey::new(23);
+        const LATEST_VERSION_UNSTABLE: bool = false;
     }
 
     impl RequestResponsePair for OffsetForLeaderEpochRequest {
@@ -403,18 +417,24 @@ pub mod offset_for_leader_epoch_request {
             OffsetForLeaderEpochRequest::encode_validated(self, encoder, version)
         }
 
-        #[doc(hidden)]
-        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
-            self.validate_for_version(version)
+        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+            encoded_len_with(
+                || self.validate_for_version(version),
+                |encoder| OffsetForLeaderEpochRequest::encode_validated(self, encoder, version),
+            )
         }
 
-        #[doc(hidden)]
-        fn encode_validated<T: EncodeTarget>(
+        fn encode_into(
             &self,
-            encoder: &mut Encoder<T>,
+            buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
-            OffsetForLeaderEpochRequest::encode_validated(self, encoder, version)
+        ) -> Result<usize, EncodeError> {
+            encode_into_with(
+                buffer,
+                || self.validate_for_version(version),
+                |encoder| OffsetForLeaderEpochRequest::encode_validated(self, encoder, version),
+                |encoder| OffsetForLeaderEpochRequest::encode_validated(self, encoder, version),
+            )
         }
     }
 }
@@ -425,8 +445,9 @@ pub mod offset_for_leader_epoch_request {
 /// written to name the message itself.
 pub mod offset_for_leader_epoch_response {
     use kafka_wire_core::{
-        ApiKey, ApiVersion, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
-        KafkaEncode, StrBytes, TaggedFields, VersionRange,
+        ApiKey, ApiVersion, BytesMut, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder,
+        KafkaDecode, KafkaEncode, StrBytes, TaggedFields, VersionRange, encode_into_with,
+        encoded_len_with,
     };
 
     use crate::{KafkaMessage, KafkaResponse};
@@ -551,18 +572,24 @@ pub mod offset_for_leader_epoch_response {
             OffsetForLeaderTopicResult::encode_validated(self, encoder, version)
         }
 
-        #[doc(hidden)]
-        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
-            self.validate_for_version(version)
+        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+            encoded_len_with(
+                || self.validate_for_version(version),
+                |encoder| OffsetForLeaderTopicResult::encode_validated(self, encoder, version),
+            )
         }
 
-        #[doc(hidden)]
-        fn encode_validated<T: EncodeTarget>(
+        fn encode_into(
             &self,
-            encoder: &mut Encoder<T>,
+            buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
-            OffsetForLeaderTopicResult::encode_validated(self, encoder, version)
+        ) -> Result<usize, EncodeError> {
+            encode_into_with(
+                buffer,
+                || self.validate_for_version(version),
+                |encoder| OffsetForLeaderTopicResult::encode_validated(self, encoder, version),
+                |encoder| OffsetForLeaderTopicResult::encode_validated(self, encoder, version),
+            )
         }
     }
 
@@ -683,18 +710,24 @@ pub mod offset_for_leader_epoch_response {
             EpochEndOffset::encode_validated(self, encoder, version)
         }
 
-        #[doc(hidden)]
-        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
-            self.validate_for_version(version)
+        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+            encoded_len_with(
+                || self.validate_for_version(version),
+                |encoder| EpochEndOffset::encode_validated(self, encoder, version),
+            )
         }
 
-        #[doc(hidden)]
-        fn encode_validated<T: EncodeTarget>(
+        fn encode_into(
             &self,
-            encoder: &mut Encoder<T>,
+            buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
-            EpochEndOffset::encode_validated(self, encoder, version)
+        ) -> Result<usize, EncodeError> {
+            encode_into_with(
+                buffer,
+                || self.validate_for_version(version),
+                |encoder| EpochEndOffset::encode_validated(self, encoder, version),
+                |encoder| EpochEndOffset::encode_validated(self, encoder, version),
+            )
         }
     }
 
@@ -801,18 +834,24 @@ pub mod offset_for_leader_epoch_response {
             OffsetForLeaderEpochResponse::encode_validated(self, encoder, version)
         }
 
-        #[doc(hidden)]
-        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
-            self.validate_for_version(version)
+        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+            encoded_len_with(
+                || self.validate_for_version(version),
+                |encoder| OffsetForLeaderEpochResponse::encode_validated(self, encoder, version),
+            )
         }
 
-        #[doc(hidden)]
-        fn encode_validated<T: EncodeTarget>(
+        fn encode_into(
             &self,
-            encoder: &mut Encoder<T>,
+            buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
-            OffsetForLeaderEpochResponse::encode_validated(self, encoder, version)
+        ) -> Result<usize, EncodeError> {
+            encode_into_with(
+                buffer,
+                || self.validate_for_version(version),
+                |encoder| OffsetForLeaderEpochResponse::encode_validated(self, encoder, version),
+                |encoder| OffsetForLeaderEpochResponse::encode_validated(self, encoder, version),
+            )
         }
     }
 }
@@ -831,6 +870,7 @@ pub const OFFSET_FOR_LEADER_EPOCH_REQUEST_DESCRIPTOR: MessageDescriptor = Messag
     MessageDirection::Request,
     VersionRange::new(2, 4),
     Some(VersionRange::new(4, 4)),
+    false,
 );
 
 /// Static metadata for [`OffsetForLeaderEpochResponse`].
@@ -840,4 +880,5 @@ pub const OFFSET_FOR_LEADER_EPOCH_RESPONSE_DESCRIPTOR: MessageDescriptor = Messa
     MessageDirection::Response,
     VersionRange::new(2, 4),
     Some(VersionRange::new(4, 4)),
+    false,
 );

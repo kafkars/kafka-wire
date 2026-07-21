@@ -10,7 +10,10 @@ use std::{
 
 use walkdir::WalkDir;
 
-use crate::{GenerationError, GenerationMode, output_staging::StagingDirectory};
+use crate::{
+    GenerationError, GenerationMode, output_ownership::verify_output_ownership,
+    output_staging::StagingDirectory,
+};
 
 /// Summary of one generation or verification run.
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
@@ -58,6 +61,7 @@ fn write_tree(
     root: &Path,
     expected: &BTreeMap<String, String>,
 ) -> Result<GenerationReport, GenerationError> {
+    verify_output_ownership(root)?;
     let actual = existing_files(root)?;
     let (mut report, drift) = compare_trees(&actual, expected);
     if drift.is_empty() {

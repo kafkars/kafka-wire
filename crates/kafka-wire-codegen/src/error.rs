@@ -80,6 +80,14 @@ pub enum GenerationError {
         /// Rejected path.
         path: String,
     },
+    /// The configured output exists but does not prove generator ownership.
+    #[error("refusing to replace unowned output tree {path}: {reason}")]
+    UnownedOutputTree {
+        /// Configured generated-tree destination.
+        path: PathBuf,
+        /// Missing or invalid ownership proof.
+        reason: String,
+    },
     /// A pinned source hash did not match the vendored file.
     #[error("source hash mismatch for {path}: expected {expected}, found {actual}")]
     SourceHash {

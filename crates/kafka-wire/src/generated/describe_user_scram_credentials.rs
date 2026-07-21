@@ -11,8 +11,9 @@
 /// written to name the message itself.
 pub mod describe_user_scram_credentials_request {
     use kafka_wire_core::{
-        ApiKey, ApiVersion, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
-        KafkaEncode, StrBytes, TaggedFields, VersionRange,
+        ApiKey, ApiVersion, BytesMut, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder,
+        KafkaDecode, KafkaEncode, StrBytes, TaggedFields, VersionRange, encode_into_with,
+        encoded_len_with,
     };
 
     use crate::{KafkaMessage, KafkaRequest, RequestResponsePair};
@@ -107,18 +108,24 @@ pub mod describe_user_scram_credentials_request {
             UserName::encode_validated(self, encoder, version)
         }
 
-        #[doc(hidden)]
-        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
-            self.validate_for_version(version)
+        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+            encoded_len_with(
+                || self.validate_for_version(version),
+                |encoder| UserName::encode_validated(self, encoder, version),
+            )
         }
 
-        #[doc(hidden)]
-        fn encode_validated<T: EncodeTarget>(
+        fn encode_into(
             &self,
-            encoder: &mut Encoder<T>,
+            buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
-            UserName::encode_validated(self, encoder, version)
+        ) -> Result<usize, EncodeError> {
+            encode_into_with(
+                buffer,
+                || self.validate_for_version(version),
+                |encoder| UserName::encode_validated(self, encoder, version),
+                |encoder| UserName::encode_validated(self, encoder, version),
+            )
         }
     }
 
@@ -149,6 +156,7 @@ pub mod describe_user_scram_credentials_request {
 
     impl KafkaRequest for DescribeUserScramCredentialsRequest {
         const API_KEY: ApiKey = ApiKey::new(50);
+        const LATEST_VERSION_UNSTABLE: bool = false;
     }
 
     impl RequestResponsePair for DescribeUserScramCredentialsRequest {
@@ -231,18 +239,30 @@ pub mod describe_user_scram_credentials_request {
             DescribeUserScramCredentialsRequest::encode_validated(self, encoder, version)
         }
 
-        #[doc(hidden)]
-        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
-            self.validate_for_version(version)
+        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+            encoded_len_with(
+                || self.validate_for_version(version),
+                |encoder| {
+                    DescribeUserScramCredentialsRequest::encode_validated(self, encoder, version)
+                },
+            )
         }
 
-        #[doc(hidden)]
-        fn encode_validated<T: EncodeTarget>(
+        fn encode_into(
             &self,
-            encoder: &mut Encoder<T>,
+            buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
-            DescribeUserScramCredentialsRequest::encode_validated(self, encoder, version)
+        ) -> Result<usize, EncodeError> {
+            encode_into_with(
+                buffer,
+                || self.validate_for_version(version),
+                |encoder| {
+                    DescribeUserScramCredentialsRequest::encode_validated(self, encoder, version)
+                },
+                |encoder| {
+                    DescribeUserScramCredentialsRequest::encode_validated(self, encoder, version)
+                },
+            )
         }
     }
 }
@@ -253,8 +273,9 @@ pub mod describe_user_scram_credentials_request {
 /// written to name the message itself.
 pub mod describe_user_scram_credentials_response {
     use kafka_wire_core::{
-        ApiKey, ApiVersion, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
-        KafkaEncode, StrBytes, TaggedFields, VersionRange,
+        ApiKey, ApiVersion, BytesMut, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder,
+        KafkaDecode, KafkaEncode, StrBytes, TaggedFields, VersionRange, encode_into_with,
+        encoded_len_with,
     };
 
     use crate::{KafkaMessage, KafkaResponse};
@@ -385,18 +406,30 @@ pub mod describe_user_scram_credentials_response {
             DescribeUserScramCredentialsResult::encode_validated(self, encoder, version)
         }
 
-        #[doc(hidden)]
-        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
-            self.validate_for_version(version)
+        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+            encoded_len_with(
+                || self.validate_for_version(version),
+                |encoder| {
+                    DescribeUserScramCredentialsResult::encode_validated(self, encoder, version)
+                },
+            )
         }
 
-        #[doc(hidden)]
-        fn encode_validated<T: EncodeTarget>(
+        fn encode_into(
             &self,
-            encoder: &mut Encoder<T>,
+            buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
-            DescribeUserScramCredentialsResult::encode_validated(self, encoder, version)
+        ) -> Result<usize, EncodeError> {
+            encode_into_with(
+                buffer,
+                || self.validate_for_version(version),
+                |encoder| {
+                    DescribeUserScramCredentialsResult::encode_validated(self, encoder, version)
+                },
+                |encoder| {
+                    DescribeUserScramCredentialsResult::encode_validated(self, encoder, version)
+                },
+            )
         }
     }
 
@@ -495,18 +528,24 @@ pub mod describe_user_scram_credentials_response {
             CredentialInfo::encode_validated(self, encoder, version)
         }
 
-        #[doc(hidden)]
-        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
-            self.validate_for_version(version)
+        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+            encoded_len_with(
+                || self.validate_for_version(version),
+                |encoder| CredentialInfo::encode_validated(self, encoder, version),
+            )
         }
 
-        #[doc(hidden)]
-        fn encode_validated<T: EncodeTarget>(
+        fn encode_into(
             &self,
-            encoder: &mut Encoder<T>,
+            buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
-            CredentialInfo::encode_validated(self, encoder, version)
+        ) -> Result<usize, EncodeError> {
+            encode_into_with(
+                buffer,
+                || self.validate_for_version(version),
+                |encoder| CredentialInfo::encode_validated(self, encoder, version),
+                |encoder| CredentialInfo::encode_validated(self, encoder, version),
+            )
         }
     }
 
@@ -627,18 +666,30 @@ pub mod describe_user_scram_credentials_response {
             DescribeUserScramCredentialsResponse::encode_validated(self, encoder, version)
         }
 
-        #[doc(hidden)]
-        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
-            self.validate_for_version(version)
+        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+            encoded_len_with(
+                || self.validate_for_version(version),
+                |encoder| {
+                    DescribeUserScramCredentialsResponse::encode_validated(self, encoder, version)
+                },
+            )
         }
 
-        #[doc(hidden)]
-        fn encode_validated<T: EncodeTarget>(
+        fn encode_into(
             &self,
-            encoder: &mut Encoder<T>,
+            buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
-            DescribeUserScramCredentialsResponse::encode_validated(self, encoder, version)
+        ) -> Result<usize, EncodeError> {
+            encode_into_with(
+                buffer,
+                || self.validate_for_version(version),
+                |encoder| {
+                    DescribeUserScramCredentialsResponse::encode_validated(self, encoder, version)
+                },
+                |encoder| {
+                    DescribeUserScramCredentialsResponse::encode_validated(self, encoder, version)
+                },
+            )
         }
     }
 }
@@ -658,6 +709,7 @@ pub const DESCRIBE_USER_SCRAM_CREDENTIALS_REQUEST_DESCRIPTOR: MessageDescriptor 
         MessageDirection::Request,
         VersionRange::new(0, 0),
         Some(VersionRange::new(0, 0)),
+        false,
     );
 
 /// Static metadata for [`DescribeUserScramCredentialsResponse`].
@@ -668,4 +720,5 @@ pub const DESCRIBE_USER_SCRAM_CREDENTIALS_RESPONSE_DESCRIPTOR: MessageDescriptor
         MessageDirection::Response,
         VersionRange::new(0, 0),
         Some(VersionRange::new(0, 0)),
+        false,
     );

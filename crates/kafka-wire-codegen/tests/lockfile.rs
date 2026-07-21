@@ -228,3 +228,18 @@ fn the_lock_must_name_the_ir_contract_this_compiler_implements() {
         "an uninterpreted IR contract version was accepted"
     );
 }
+
+#[test]
+fn the_lock_cannot_redirect_generated_tree_replacement() {
+    for output in ["crates", "crates/kafka-wire/src", "generated"] {
+        let source = valid().replace("crates/kafka-wire/src/generated", output);
+        assert!(
+            matches!(
+                parse!(&source),
+                Err(GenerationError::InvalidLockfileValue { ref field, .. })
+                    if field == "generator.output"
+            ),
+            "unauthorized generator output `{output}` was accepted"
+        );
+    }
+}

@@ -172,6 +172,10 @@ fn render_request_metadata(rust: &mut RustText, message: &Message, group: &ApiGr
         spell(message, "ApiKey"),
         group.api_key
     ));
+    rust.line(format!(
+        "const LATEST_VERSION_UNSTABLE: bool = {};",
+        message.latest_version_unstable
+    ));
     rust.close("");
     rust.blank();
 

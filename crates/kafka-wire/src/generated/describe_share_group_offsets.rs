@@ -11,8 +11,9 @@
 /// written to name the message itself.
 pub mod describe_share_group_offsets_request {
     use kafka_wire_core::{
-        ApiKey, ApiVersion, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
-        KafkaEncode, StrBytes, TaggedFields, VersionRange,
+        ApiKey, ApiVersion, BytesMut, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder,
+        KafkaDecode, KafkaEncode, StrBytes, TaggedFields, VersionRange, encode_into_with,
+        encoded_len_with,
     };
 
     use crate::{KafkaMessage, KafkaRequest, RequestResponsePair};
@@ -141,18 +142,30 @@ pub mod describe_share_group_offsets_request {
             DescribeShareGroupOffsetsRequestGroup::encode_validated(self, encoder, version)
         }
 
-        #[doc(hidden)]
-        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
-            self.validate_for_version(version)
+        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+            encoded_len_with(
+                || self.validate_for_version(version),
+                |encoder| {
+                    DescribeShareGroupOffsetsRequestGroup::encode_validated(self, encoder, version)
+                },
+            )
         }
 
-        #[doc(hidden)]
-        fn encode_validated<T: EncodeTarget>(
+        fn encode_into(
             &self,
-            encoder: &mut Encoder<T>,
+            buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
-            DescribeShareGroupOffsetsRequestGroup::encode_validated(self, encoder, version)
+        ) -> Result<usize, EncodeError> {
+            encode_into_with(
+                buffer,
+                || self.validate_for_version(version),
+                |encoder| {
+                    DescribeShareGroupOffsetsRequestGroup::encode_validated(self, encoder, version)
+                },
+                |encoder| {
+                    DescribeShareGroupOffsetsRequestGroup::encode_validated(self, encoder, version)
+                },
+            )
         }
     }
 
@@ -257,18 +270,30 @@ pub mod describe_share_group_offsets_request {
             DescribeShareGroupOffsetsRequestTopic::encode_validated(self, encoder, version)
         }
 
-        #[doc(hidden)]
-        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
-            self.validate_for_version(version)
+        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+            encoded_len_with(
+                || self.validate_for_version(version),
+                |encoder| {
+                    DescribeShareGroupOffsetsRequestTopic::encode_validated(self, encoder, version)
+                },
+            )
         }
 
-        #[doc(hidden)]
-        fn encode_validated<T: EncodeTarget>(
+        fn encode_into(
             &self,
-            encoder: &mut Encoder<T>,
+            buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
-            DescribeShareGroupOffsetsRequestTopic::encode_validated(self, encoder, version)
+        ) -> Result<usize, EncodeError> {
+            encode_into_with(
+                buffer,
+                || self.validate_for_version(version),
+                |encoder| {
+                    DescribeShareGroupOffsetsRequestTopic::encode_validated(self, encoder, version)
+                },
+                |encoder| {
+                    DescribeShareGroupOffsetsRequestTopic::encode_validated(self, encoder, version)
+                },
+            )
         }
     }
 
@@ -290,6 +315,7 @@ pub mod describe_share_group_offsets_request {
 
     impl KafkaRequest for DescribeShareGroupOffsetsRequest {
         const API_KEY: ApiKey = ApiKey::new(90);
+        const LATEST_VERSION_UNSTABLE: bool = false;
     }
 
     impl RequestResponsePair for DescribeShareGroupOffsetsRequest {
@@ -366,18 +392,30 @@ pub mod describe_share_group_offsets_request {
             DescribeShareGroupOffsetsRequest::encode_validated(self, encoder, version)
         }
 
-        #[doc(hidden)]
-        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
-            self.validate_for_version(version)
+        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+            encoded_len_with(
+                || self.validate_for_version(version),
+                |encoder| {
+                    DescribeShareGroupOffsetsRequest::encode_validated(self, encoder, version)
+                },
+            )
         }
 
-        #[doc(hidden)]
-        fn encode_validated<T: EncodeTarget>(
+        fn encode_into(
             &self,
-            encoder: &mut Encoder<T>,
+            buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
-            DescribeShareGroupOffsetsRequest::encode_validated(self, encoder, version)
+        ) -> Result<usize, EncodeError> {
+            encode_into_with(
+                buffer,
+                || self.validate_for_version(version),
+                |encoder| {
+                    DescribeShareGroupOffsetsRequest::encode_validated(self, encoder, version)
+                },
+                |encoder| {
+                    DescribeShareGroupOffsetsRequest::encode_validated(self, encoder, version)
+                },
+            )
         }
     }
 }
@@ -388,8 +426,9 @@ pub mod describe_share_group_offsets_request {
 /// written to name the message itself.
 pub mod describe_share_group_offsets_response {
     use kafka_wire_core::{
-        ApiKey, ApiVersion, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
-        KafkaEncode, StrBytes, TaggedFields, Uuid, VersionRange,
+        ApiKey, ApiVersion, BytesMut, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder,
+        KafkaDecode, KafkaEncode, StrBytes, TaggedFields, Uuid, VersionRange, encode_into_with,
+        encoded_len_with,
     };
 
     use crate::{KafkaMessage, KafkaResponse};
@@ -510,18 +549,30 @@ pub mod describe_share_group_offsets_response {
             DescribeShareGroupOffsetsResponseGroup::encode_validated(self, encoder, version)
         }
 
-        #[doc(hidden)]
-        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
-            self.validate_for_version(version)
+        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+            encoded_len_with(
+                || self.validate_for_version(version),
+                |encoder| {
+                    DescribeShareGroupOffsetsResponseGroup::encode_validated(self, encoder, version)
+                },
+            )
         }
 
-        #[doc(hidden)]
-        fn encode_validated<T: EncodeTarget>(
+        fn encode_into(
             &self,
-            encoder: &mut Encoder<T>,
+            buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
-            DescribeShareGroupOffsetsResponseGroup::encode_validated(self, encoder, version)
+        ) -> Result<usize, EncodeError> {
+            encode_into_with(
+                buffer,
+                || self.validate_for_version(version),
+                |encoder| {
+                    DescribeShareGroupOffsetsResponseGroup::encode_validated(self, encoder, version)
+                },
+                |encoder| {
+                    DescribeShareGroupOffsetsResponseGroup::encode_validated(self, encoder, version)
+                },
+            )
         }
     }
 
@@ -636,18 +687,30 @@ pub mod describe_share_group_offsets_response {
             DescribeShareGroupOffsetsResponseTopic::encode_validated(self, encoder, version)
         }
 
-        #[doc(hidden)]
-        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
-            self.validate_for_version(version)
+        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+            encoded_len_with(
+                || self.validate_for_version(version),
+                |encoder| {
+                    DescribeShareGroupOffsetsResponseTopic::encode_validated(self, encoder, version)
+                },
+            )
         }
 
-        #[doc(hidden)]
-        fn encode_validated<T: EncodeTarget>(
+        fn encode_into(
             &self,
-            encoder: &mut Encoder<T>,
+            buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
-            DescribeShareGroupOffsetsResponseTopic::encode_validated(self, encoder, version)
+        ) -> Result<usize, EncodeError> {
+            encode_into_with(
+                buffer,
+                || self.validate_for_version(version),
+                |encoder| {
+                    DescribeShareGroupOffsetsResponseTopic::encode_validated(self, encoder, version)
+                },
+                |encoder| {
+                    DescribeShareGroupOffsetsResponseTopic::encode_validated(self, encoder, version)
+                },
+            )
         }
     }
 
@@ -786,18 +849,36 @@ pub mod describe_share_group_offsets_response {
             DescribeShareGroupOffsetsResponsePartition::encode_validated(self, encoder, version)
         }
 
-        #[doc(hidden)]
-        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
-            self.validate_for_version(version)
+        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+            encoded_len_with(
+                || self.validate_for_version(version),
+                |encoder| {
+                    DescribeShareGroupOffsetsResponsePartition::encode_validated(
+                        self, encoder, version,
+                    )
+                },
+            )
         }
 
-        #[doc(hidden)]
-        fn encode_validated<T: EncodeTarget>(
+        fn encode_into(
             &self,
-            encoder: &mut Encoder<T>,
+            buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
-            DescribeShareGroupOffsetsResponsePartition::encode_validated(self, encoder, version)
+        ) -> Result<usize, EncodeError> {
+            encode_into_with(
+                buffer,
+                || self.validate_for_version(version),
+                |encoder| {
+                    DescribeShareGroupOffsetsResponsePartition::encode_validated(
+                        self, encoder, version,
+                    )
+                },
+                |encoder| {
+                    DescribeShareGroupOffsetsResponsePartition::encode_validated(
+                        self, encoder, version,
+                    )
+                },
+            )
         }
     }
 
@@ -896,18 +977,30 @@ pub mod describe_share_group_offsets_response {
             DescribeShareGroupOffsetsResponse::encode_validated(self, encoder, version)
         }
 
-        #[doc(hidden)]
-        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
-            self.validate_for_version(version)
+        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+            encoded_len_with(
+                || self.validate_for_version(version),
+                |encoder| {
+                    DescribeShareGroupOffsetsResponse::encode_validated(self, encoder, version)
+                },
+            )
         }
 
-        #[doc(hidden)]
-        fn encode_validated<T: EncodeTarget>(
+        fn encode_into(
             &self,
-            encoder: &mut Encoder<T>,
+            buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
-            DescribeShareGroupOffsetsResponse::encode_validated(self, encoder, version)
+        ) -> Result<usize, EncodeError> {
+            encode_into_with(
+                buffer,
+                || self.validate_for_version(version),
+                |encoder| {
+                    DescribeShareGroupOffsetsResponse::encode_validated(self, encoder, version)
+                },
+                |encoder| {
+                    DescribeShareGroupOffsetsResponse::encode_validated(self, encoder, version)
+                },
+            )
         }
     }
 }
@@ -927,6 +1020,7 @@ pub const DESCRIBE_SHARE_GROUP_OFFSETS_REQUEST_DESCRIPTOR: MessageDescriptor =
         MessageDirection::Request,
         VersionRange::new(0, 1),
         Some(VersionRange::new(0, 1)),
+        false,
     );
 
 /// Static metadata for [`DescribeShareGroupOffsetsResponse`].
@@ -937,4 +1031,5 @@ pub const DESCRIBE_SHARE_GROUP_OFFSETS_RESPONSE_DESCRIPTOR: MessageDescriptor =
         MessageDirection::Response,
         VersionRange::new(0, 1),
         Some(VersionRange::new(0, 1)),
+        false,
     );
