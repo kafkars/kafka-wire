@@ -82,14 +82,12 @@ pub mod renew_delegation_token_request {
         }
     }
 
-    impl KafkaEncode for RenewDelegationTokenRequest {
-        fn encode<T: EncodeTarget>(
+    impl RenewDelegationTokenRequest {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             if Self::is_flexible(version) {
                 encoder.write_compact_bytes(&self.hmac)?;
             } else {
@@ -102,6 +100,31 @@ pub mod renew_delegation_token_request {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for RenewDelegationTokenRequest {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            RenewDelegationTokenRequest::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            RenewDelegationTokenRequest::encode_validated(self, encoder, version)
         }
     }
 }
@@ -179,14 +202,12 @@ pub mod renew_delegation_token_response {
         }
     }
 
-    impl KafkaEncode for RenewDelegationTokenResponse {
-        fn encode<T: EncodeTarget>(
+    impl RenewDelegationTokenResponse {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             encoder.write_i16(self.error_code)?;
             encoder.write_i64(self.expiry_timestamp_ms)?;
             encoder.write_i32(self.throttle_time_ms)?;
@@ -196,6 +217,31 @@ pub mod renew_delegation_token_response {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for RenewDelegationTokenResponse {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            RenewDelegationTokenResponse::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            RenewDelegationTokenResponse::encode_validated(self, encoder, version)
         }
     }
 }

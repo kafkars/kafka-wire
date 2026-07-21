@@ -93,14 +93,12 @@ pub mod join_group_request {
         }
     }
 
-    impl KafkaEncode for JoinGroupRequestProtocol {
-        fn encode<T: EncodeTarget>(
+    impl JoinGroupRequestProtocol {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             if Self::is_flexible(version) {
                 encoder.write_compact_string(&self.name)?;
             } else {
@@ -117,6 +115,31 @@ pub mod join_group_request {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for JoinGroupRequestProtocol {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            JoinGroupRequestProtocol::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            JoinGroupRequestProtocol::encode_validated(self, encoder, version)
         }
     }
 
@@ -268,14 +291,12 @@ pub mod join_group_request {
         }
     }
 
-    impl KafkaEncode for JoinGroupRequest {
-        fn encode<T: EncodeTarget>(
+    impl JoinGroupRequest {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             if Self::is_flexible(version) {
                 encoder.write_compact_string(&self.group_id)?;
             } else {
@@ -308,7 +329,7 @@ pub mod join_group_request {
                 encoder.write_array_len(self.protocols.len())?;
             }
             for value in &self.protocols {
-                value.encode(encoder, version)?;
+                value.encode_validated(encoder, version)?;
             }
             if version.value() >= 8 {
                 encoder.write_compact_nullable_string(self.reason.as_ref())?;
@@ -319,6 +340,31 @@ pub mod join_group_request {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for JoinGroupRequest {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            JoinGroupRequest::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            JoinGroupRequest::encode_validated(self, encoder, version)
         }
     }
 }
@@ -423,14 +469,12 @@ pub mod join_group_response {
         }
     }
 
-    impl KafkaEncode for JoinGroupResponseMember {
-        fn encode<T: EncodeTarget>(
+    impl JoinGroupResponseMember {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             if Self::is_flexible(version) {
                 encoder.write_compact_string(&self.member_id)?;
             } else {
@@ -454,6 +498,31 @@ pub mod join_group_response {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for JoinGroupResponseMember {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            JoinGroupResponseMember::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            JoinGroupResponseMember::encode_validated(self, encoder, version)
         }
     }
 
@@ -613,14 +682,12 @@ pub mod join_group_response {
         }
     }
 
-    impl KafkaEncode for JoinGroupResponse {
-        fn encode<T: EncodeTarget>(
+    impl JoinGroupResponse {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             if version.value() >= 2 {
                 encoder.write_i32(self.throttle_time_ms)?;
             }
@@ -653,7 +720,7 @@ pub mod join_group_response {
                 encoder.write_array_len(self.members.len())?;
             }
             for value in &self.members {
-                value.encode(encoder, version)?;
+                value.encode_validated(encoder, version)?;
             }
 
             if Self::is_flexible(version) {
@@ -661,6 +728,31 @@ pub mod join_group_response {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for JoinGroupResponse {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            JoinGroupResponse::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            JoinGroupResponse::encode_validated(self, encoder, version)
         }
     }
 }

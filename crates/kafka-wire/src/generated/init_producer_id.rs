@@ -156,14 +156,12 @@ pub mod init_producer_id_request {
         }
     }
 
-    impl KafkaEncode for InitProducerIdRequest {
-        fn encode<T: EncodeTarget>(
+    impl InitProducerIdRequest {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             if Self::is_flexible(version) {
                 encoder.write_compact_nullable_string(self.transactional_id.as_ref())?;
             } else {
@@ -188,6 +186,31 @@ pub mod init_producer_id_request {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for InitProducerIdRequest {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            InitProducerIdRequest::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            InitProducerIdRequest::encode_validated(self, encoder, version)
         }
     }
 }
@@ -313,14 +336,12 @@ pub mod init_producer_id_response {
         }
     }
 
-    impl KafkaEncode for InitProducerIdResponse {
-        fn encode<T: EncodeTarget>(
+    impl InitProducerIdResponse {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             encoder.write_i32(self.throttle_time_ms)?;
             encoder.write_i16(self.error_code)?;
             encoder.write_i64(self.producer_id)?;
@@ -337,6 +358,31 @@ pub mod init_producer_id_response {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for InitProducerIdResponse {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            InitProducerIdResponse::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            InitProducerIdResponse::encode_validated(self, encoder, version)
         }
     }
 }

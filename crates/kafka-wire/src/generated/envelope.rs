@@ -93,14 +93,12 @@ pub mod envelope_request {
         }
     }
 
-    impl KafkaEncode for EnvelopeRequest {
-        fn encode<T: EncodeTarget>(
+    impl EnvelopeRequest {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             encoder.write_compact_bytes(&self.request_data)?;
             encoder.write_compact_nullable_bytes(self.request_principal.as_deref())?;
             encoder.write_compact_bytes(&self.client_host_address)?;
@@ -110,6 +108,31 @@ pub mod envelope_request {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for EnvelopeRequest {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            EnvelopeRequest::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            EnvelopeRequest::encode_validated(self, encoder, version)
         }
     }
 }
@@ -183,14 +206,12 @@ pub mod envelope_response {
         }
     }
 
-    impl KafkaEncode for EnvelopeResponse {
-        fn encode<T: EncodeTarget>(
+    impl EnvelopeResponse {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             encoder.write_compact_nullable_bytes(self.response_data.as_deref())?;
             encoder.write_i16(self.error_code)?;
 
@@ -199,6 +220,31 @@ pub mod envelope_response {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for EnvelopeResponse {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            EnvelopeResponse::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            EnvelopeResponse::encode_validated(self, encoder, version)
         }
     }
 }

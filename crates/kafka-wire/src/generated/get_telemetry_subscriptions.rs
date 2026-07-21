@@ -74,14 +74,12 @@ pub mod get_telemetry_subscriptions_request {
         }
     }
 
-    impl KafkaEncode for GetTelemetrySubscriptionsRequest {
-        fn encode<T: EncodeTarget>(
+    impl GetTelemetrySubscriptionsRequest {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             encoder.write_uuid(self.client_instance_id)?;
 
             if Self::is_flexible(version) {
@@ -89,6 +87,31 @@ pub mod get_telemetry_subscriptions_request {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for GetTelemetrySubscriptionsRequest {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            GetTelemetrySubscriptionsRequest::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            GetTelemetrySubscriptionsRequest::encode_validated(self, encoder, version)
         }
     }
 }
@@ -196,14 +219,12 @@ pub mod get_telemetry_subscriptions_response {
         }
     }
 
-    impl KafkaEncode for GetTelemetrySubscriptionsResponse {
-        fn encode<T: EncodeTarget>(
+    impl GetTelemetrySubscriptionsResponse {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             encoder.write_i32(self.throttle_time_ms)?;
             encoder.write_i16(self.error_code)?;
             encoder.write_uuid(self.client_instance_id)?;
@@ -225,6 +246,31 @@ pub mod get_telemetry_subscriptions_response {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for GetTelemetrySubscriptionsResponse {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            GetTelemetrySubscriptionsResponse::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            GetTelemetrySubscriptionsResponse::encode_validated(self, encoder, version)
         }
     }
 }

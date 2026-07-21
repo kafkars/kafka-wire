@@ -90,14 +90,12 @@ pub mod end_txn_request {
         }
     }
 
-    impl KafkaEncode for EndTxnRequest {
-        fn encode<T: EncodeTarget>(
+    impl EndTxnRequest {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             if Self::is_flexible(version) {
                 encoder.write_compact_string(&self.transactional_id)?;
             } else {
@@ -112,6 +110,31 @@ pub mod end_txn_request {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for EndTxnRequest {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            EndTxnRequest::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            EndTxnRequest::encode_validated(self, encoder, version)
         }
     }
 }
@@ -213,14 +236,12 @@ pub mod end_txn_response {
         }
     }
 
-    impl KafkaEncode for EndTxnResponse {
-        fn encode<T: EncodeTarget>(
+    impl EndTxnResponse {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             encoder.write_i32(self.throttle_time_ms)?;
             encoder.write_i16(self.error_code)?;
             if version.value() >= 5 {
@@ -235,6 +256,31 @@ pub mod end_txn_response {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for EndTxnResponse {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            EndTxnResponse::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            EndTxnResponse::encode_validated(self, encoder, version)
         }
     }
 }

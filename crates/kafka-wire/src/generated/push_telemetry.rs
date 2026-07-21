@@ -90,14 +90,12 @@ pub mod push_telemetry_request {
         }
     }
 
-    impl KafkaEncode for PushTelemetryRequest {
-        fn encode<T: EncodeTarget>(
+    impl PushTelemetryRequest {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             encoder.write_uuid(self.client_instance_id)?;
             encoder.write_i32(self.subscription_id)?;
             encoder.write_bool(self.terminating)?;
@@ -109,6 +107,31 @@ pub mod push_telemetry_request {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for PushTelemetryRequest {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            PushTelemetryRequest::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            PushTelemetryRequest::encode_validated(self, encoder, version)
         }
     }
 }
@@ -182,14 +205,12 @@ pub mod push_telemetry_response {
         }
     }
 
-    impl KafkaEncode for PushTelemetryResponse {
-        fn encode<T: EncodeTarget>(
+    impl PushTelemetryResponse {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             encoder.write_i32(self.throttle_time_ms)?;
             encoder.write_i16(self.error_code)?;
 
@@ -198,6 +219,31 @@ pub mod push_telemetry_response {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for PushTelemetryResponse {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            PushTelemetryResponse::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            PushTelemetryResponse::encode_validated(self, encoder, version)
         }
     }
 }

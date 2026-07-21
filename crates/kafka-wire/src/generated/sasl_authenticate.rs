@@ -78,14 +78,12 @@ pub mod sasl_authenticate_request {
         }
     }
 
-    impl KafkaEncode for SaslAuthenticateRequest {
-        fn encode<T: EncodeTarget>(
+    impl SaslAuthenticateRequest {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             if Self::is_flexible(version) {
                 encoder.write_compact_bytes(&self.auth_bytes)?;
             } else {
@@ -97,6 +95,31 @@ pub mod sasl_authenticate_request {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for SaslAuthenticateRequest {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            SaslAuthenticateRequest::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            SaslAuthenticateRequest::encode_validated(self, encoder, version)
         }
     }
 }
@@ -202,14 +225,12 @@ pub mod sasl_authenticate_response {
         }
     }
 
-    impl KafkaEncode for SaslAuthenticateResponse {
-        fn encode<T: EncodeTarget>(
+    impl SaslAuthenticateResponse {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             encoder.write_i16(self.error_code)?;
             if Self::is_flexible(version) {
                 encoder.write_compact_nullable_string(self.error_message.as_ref())?;
@@ -230,6 +251,31 @@ pub mod sasl_authenticate_response {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for SaslAuthenticateResponse {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            SaslAuthenticateResponse::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            SaslAuthenticateResponse::encode_validated(self, encoder, version)
         }
     }
 }

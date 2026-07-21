@@ -65,6 +65,21 @@ pub mod aborted_txn {
         }
     }
 
+    impl AbortedTxn {
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            _version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            encoder.write_i64(self.producer_id)?;
+            encoder.write_i64(self.first_offset)?;
+            encoder.write_i64(self.last_offset)?;
+            encoder.write_i64(self.last_stable_offset)?;
+
+            Ok(())
+        }
+    }
+
     impl KafkaEncode for AbortedTxn {
         fn encode<T: EncodeTarget>(
             &self,
@@ -72,13 +87,21 @@ pub mod aborted_txn {
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
             self.validate_for_version(version)?;
+            AbortedTxn::encode_validated(self, encoder, version)
+        }
 
-            encoder.write_i64(self.producer_id)?;
-            encoder.write_i64(self.first_offset)?;
-            encoder.write_i64(self.last_offset)?;
-            encoder.write_i64(self.last_stable_offset)?;
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
 
-            Ok(())
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            AbortedTxn::encode_validated(self, encoder, version)
         }
     }
 }
@@ -144,14 +167,12 @@ pub mod consumer_protocol_assignment {
         }
     }
 
-    impl KafkaEncode for TopicPartition {
-        fn encode<T: EncodeTarget>(
+    impl TopicPartition {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
-            version: ApiVersion,
+            _version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             encoder.write_string(&self.topic)?;
             encoder.write_array_len(self.partitions.len())?;
             for value in &self.partitions {
@@ -159,6 +180,31 @@ pub mod consumer_protocol_assignment {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for TopicPartition {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            TopicPartition::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            TopicPartition::encode_validated(self, encoder, version)
         }
     }
 
@@ -207,6 +253,22 @@ pub mod consumer_protocol_assignment {
         }
     }
 
+    impl ConsumerProtocolAssignment {
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            encoder.write_array_len(self.assigned_partitions.len())?;
+            for value in &self.assigned_partitions {
+                value.encode_validated(encoder, version)?;
+            }
+            encoder.write_nullable_bytes(self.user_data.as_deref())?;
+
+            Ok(())
+        }
+    }
+
     impl KafkaEncode for ConsumerProtocolAssignment {
         fn encode<T: EncodeTarget>(
             &self,
@@ -214,14 +276,21 @@ pub mod consumer_protocol_assignment {
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
             self.validate_for_version(version)?;
+            ConsumerProtocolAssignment::encode_validated(self, encoder, version)
+        }
 
-            encoder.write_array_len(self.assigned_partitions.len())?;
-            for value in &self.assigned_partitions {
-                value.encode(encoder, version)?;
-            }
-            encoder.write_nullable_bytes(self.user_data.as_deref())?;
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
 
-            Ok(())
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            ConsumerProtocolAssignment::encode_validated(self, encoder, version)
         }
     }
 }
@@ -249,31 +318,17 @@ pub mod consumer_protocol_subscription {
     }
 
     impl TopicPartition {
-        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 3);
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(1, 3);
     }
 
     impl TopicPartition {
+        #[allow(clippy::unused_self)]
         fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
                 return Err(EncodeError::UnsupportedVersion {
                     message: "TopicPartition",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
-                });
-            }
-
-            if version.value() < 1 && !self.topic.is_empty() {
-                return Err(EncodeError::FieldNotRepresentable {
-                    message: "TopicPartition",
-                    field: "Topic",
-                    version,
-                });
-            }
-            if version.value() < 1 && !self.partitions.is_empty() {
-                return Err(EncodeError::FieldNotRepresentable {
-                    message: "TopicPartition",
-                    field: "Partitions",
-                    version,
                 });
             }
 
@@ -291,19 +346,29 @@ pub mod consumer_protocol_subscription {
                 });
             }
 
-            let topic = if version.value() >= 1 {
-                decoder.read_string()?
-            } else {
-                StrBytes::default()
-            };
-            let partitions = if version.value() >= 1 {
+            let topic = decoder.read_string()?;
+            let partitions = {
                 let length = decoder.read_array_len()?;
                 decoder.read_vec(length, Decoder::read_i32)?
-            } else {
-                Vec::new()
             };
 
             Ok(Self { topic, partitions })
+        }
+    }
+
+    impl TopicPartition {
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            _version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            encoder.write_string(&self.topic)?;
+            encoder.write_array_len(self.partitions.len())?;
+            for value in &self.partitions {
+                encoder.write_i32(*value)?;
+            }
+
+            Ok(())
         }
     }
 
@@ -314,18 +379,21 @@ pub mod consumer_protocol_subscription {
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
             self.validate_for_version(version)?;
+            TopicPartition::encode_validated(self, encoder, version)
+        }
 
-            if version.value() >= 1 {
-                encoder.write_string(&self.topic)?;
-            }
-            if version.value() >= 1 {
-                encoder.write_array_len(self.partitions.len())?;
-                for value in &self.partitions {
-                    encoder.write_i32(*value)?;
-                }
-            }
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
 
-            Ok(())
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            TopicPartition::encode_validated(self, encoder, version)
         }
     }
 
@@ -413,14 +481,12 @@ pub mod consumer_protocol_subscription {
         }
     }
 
-    impl KafkaEncode for ConsumerProtocolSubscription {
-        fn encode<T: EncodeTarget>(
+    impl ConsumerProtocolSubscription {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             encoder.write_array_len(self.topics.len())?;
             for value in &self.topics {
                 encoder.write_string(value)?;
@@ -429,7 +495,7 @@ pub mod consumer_protocol_subscription {
             if version.value() >= 1 {
                 encoder.write_array_len(self.owned_partitions.len())?;
                 for value in &self.owned_partitions {
-                    value.encode(encoder, version)?;
+                    value.encode_validated(encoder, version)?;
                 }
             }
             if version.value() >= 2 {
@@ -440,6 +506,31 @@ pub mod consumer_protocol_subscription {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for ConsumerProtocolSubscription {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            ConsumerProtocolSubscription::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            ConsumerProtocolSubscription::encode_validated(self, encoder, version)
         }
     }
 }
@@ -489,6 +580,18 @@ pub mod control_record_type_schema {
         }
     }
 
+    impl ControlRecordTypeSchema {
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            _version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            encoder.write_i16(self.type_)?;
+
+            Ok(())
+        }
+    }
+
     impl KafkaEncode for ControlRecordTypeSchema {
         fn encode<T: EncodeTarget>(
             &self,
@@ -496,10 +599,21 @@ pub mod control_record_type_schema {
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
             self.validate_for_version(version)?;
+            ControlRecordTypeSchema::encode_validated(self, encoder, version)
+        }
 
-            encoder.write_i16(self.type_)?;
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
 
-            Ok(())
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            ControlRecordTypeSchema::encode_validated(self, encoder, version)
         }
     }
 }
@@ -573,14 +687,12 @@ pub mod default_principal_data {
         }
     }
 
-    impl KafkaEncode for DefaultPrincipalData {
-        fn encode<T: EncodeTarget>(
+    impl DefaultPrincipalData {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             encoder.write_compact_string(&self.type_)?;
             encoder.write_compact_string(&self.name)?;
             encoder.write_bool(self.token_authenticated)?;
@@ -590,6 +702,31 @@ pub mod default_principal_data {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for DefaultPrincipalData {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            DefaultPrincipalData::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            DefaultPrincipalData::encode_validated(self, encoder, version)
         }
     }
 }
@@ -639,6 +776,18 @@ pub mod end_txn_marker {
         }
     }
 
+    impl EndTxnMarker {
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            _version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            encoder.write_i32(self.coordinator_epoch)?;
+
+            Ok(())
+        }
+    }
+
     impl KafkaEncode for EndTxnMarker {
         fn encode<T: EncodeTarget>(
             &self,
@@ -646,10 +795,21 @@ pub mod end_txn_marker {
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
             self.validate_for_version(version)?;
+            EndTxnMarker::encode_validated(self, encoder, version)
+        }
 
-            encoder.write_i32(self.coordinator_epoch)?;
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
 
-            Ok(())
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            EndTxnMarker::encode_validated(self, encoder, version)
         }
     }
 }
@@ -719,14 +879,12 @@ pub mod k_raft_version_record {
         }
     }
 
-    impl KafkaEncode for KRaftVersionRecord {
-        fn encode<T: EncodeTarget>(
+    impl KRaftVersionRecord {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             encoder.write_i16(self.version)?;
             encoder.write_i16(self.k_raft_version)?;
 
@@ -735,6 +893,31 @@ pub mod k_raft_version_record {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for KRaftVersionRecord {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            KRaftVersionRecord::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            KRaftVersionRecord::encode_validated(self, encoder, version)
         }
     }
 }
@@ -830,14 +1013,12 @@ pub mod leader_change_message {
         }
     }
 
-    impl KafkaEncode for Voter {
-        fn encode<T: EncodeTarget>(
+    impl Voter {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             encoder.write_i32(self.voter_id)?;
             if version.value() >= 1 {
                 encoder.write_uuid(self.voter_directory_id)?;
@@ -848,6 +1029,31 @@ pub mod leader_change_message {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for Voter {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            Voter::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            Voter::encode_validated(self, encoder, version)
         }
     }
 
@@ -924,23 +1130,21 @@ pub mod leader_change_message {
         }
     }
 
-    impl KafkaEncode for LeaderChangeMessage {
-        fn encode<T: EncodeTarget>(
+    impl LeaderChangeMessage {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             encoder.write_i16(self.version)?;
             encoder.write_i32(self.leader_id)?;
             encoder.write_compact_array_len(self.voters.len())?;
             for value in &self.voters {
-                value.encode(encoder, version)?;
+                value.encode_validated(encoder, version)?;
             }
             encoder.write_compact_array_len(self.granting_voters.len())?;
             for value in &self.granting_voters {
-                value.encode(encoder, version)?;
+                value.encode_validated(encoder, version)?;
             }
 
             if Self::is_flexible(version) {
@@ -948,6 +1152,31 @@ pub mod leader_change_message {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for LeaderChangeMessage {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            LeaderChangeMessage::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            LeaderChangeMessage::encode_validated(self, encoder, version)
         }
     }
 }
@@ -1037,14 +1266,12 @@ pub mod request_header {
         }
     }
 
-    impl KafkaEncode for RequestHeader {
-        fn encode<T: EncodeTarget>(
+    impl RequestHeader {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             encoder.write_i16(self.request_api_key)?;
             encoder.write_i16(self.request_api_version)?;
             encoder.write_i32(self.correlation_id)?;
@@ -1055,6 +1282,31 @@ pub mod request_header {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for RequestHeader {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            RequestHeader::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            RequestHeader::encode_validated(self, encoder, version)
         }
     }
 }
@@ -1120,14 +1372,12 @@ pub mod response_header {
         }
     }
 
-    impl KafkaEncode for ResponseHeader {
-        fn encode<T: EncodeTarget>(
+    impl ResponseHeader {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             encoder.write_i32(self.correlation_id)?;
 
             if Self::is_flexible(version) {
@@ -1135,6 +1385,31 @@ pub mod response_header {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for ResponseHeader {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            ResponseHeader::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            ResponseHeader::encode_validated(self, encoder, version)
         }
     }
 }
@@ -1200,14 +1475,12 @@ pub mod snapshot_footer_record {
         }
     }
 
-    impl KafkaEncode for SnapshotFooterRecord {
-        fn encode<T: EncodeTarget>(
+    impl SnapshotFooterRecord {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             encoder.write_i16(self.version)?;
 
             if Self::is_flexible(version) {
@@ -1215,6 +1488,31 @@ pub mod snapshot_footer_record {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for SnapshotFooterRecord {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            SnapshotFooterRecord::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            SnapshotFooterRecord::encode_validated(self, encoder, version)
         }
     }
 }
@@ -1284,14 +1582,12 @@ pub mod snapshot_header_record {
         }
     }
 
-    impl KafkaEncode for SnapshotHeaderRecord {
-        fn encode<T: EncodeTarget>(
+    impl SnapshotHeaderRecord {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             encoder.write_i16(self.version)?;
             encoder.write_i64(self.last_contained_log_timestamp)?;
 
@@ -1300,6 +1596,31 @@ pub mod snapshot_header_record {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for SnapshotHeaderRecord {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            SnapshotHeaderRecord::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            SnapshotHeaderRecord::encode_validated(self, encoder, version)
         }
     }
 }
@@ -1399,6 +1720,29 @@ pub mod voters_record {
         }
     }
 
+    impl Voter {
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            encoder.write_i32(self.voter_id)?;
+            encoder.write_uuid(self.voter_directory_id)?;
+            encoder.write_compact_array_len(self.endpoints.len())?;
+            for value in &self.endpoints {
+                value.encode_validated(encoder, version)?;
+            }
+            self.k_raft_version_feature
+                .encode_validated(encoder, version)?;
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            }
+
+            Ok(())
+        }
+    }
+
     impl KafkaEncode for Voter {
         fn encode<T: EncodeTarget>(
             &self,
@@ -1406,20 +1750,21 @@ pub mod voters_record {
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
             self.validate_for_version(version)?;
+            Voter::encode_validated(self, encoder, version)
+        }
 
-            encoder.write_i32(self.voter_id)?;
-            encoder.write_uuid(self.voter_directory_id)?;
-            encoder.write_compact_array_len(self.endpoints.len())?;
-            for value in &self.endpoints {
-                value.encode(encoder, version)?;
-            }
-            self.k_raft_version_feature.encode(encoder, version)?;
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
 
-            if Self::is_flexible(version) {
-                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-            }
-
-            Ok(())
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            Voter::encode_validated(self, encoder, version)
         }
     }
 
@@ -1495,14 +1840,12 @@ pub mod voters_record {
         }
     }
 
-    impl KafkaEncode for Endpoint {
-        fn encode<T: EncodeTarget>(
+    impl Endpoint {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             encoder.write_compact_string(&self.name)?;
             encoder.write_compact_string(&self.host)?;
             encoder.write_u16(self.port)?;
@@ -1512,6 +1855,31 @@ pub mod voters_record {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for Endpoint {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            Endpoint::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            Endpoint::encode_validated(self, encoder, version)
         }
     }
 
@@ -1583,14 +1951,12 @@ pub mod voters_record {
         }
     }
 
-    impl KafkaEncode for KRaftVersionFeature {
-        fn encode<T: EncodeTarget>(
+    impl KRaftVersionFeature {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             encoder.write_i16(self.min_supported_version)?;
             encoder.write_i16(self.max_supported_version)?;
 
@@ -1599,6 +1965,31 @@ pub mod voters_record {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for KRaftVersionFeature {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            KRaftVersionFeature::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            KRaftVersionFeature::encode_validated(self, encoder, version)
         }
     }
 
@@ -1661,18 +2052,16 @@ pub mod voters_record {
         }
     }
 
-    impl KafkaEncode for VotersRecord {
-        fn encode<T: EncodeTarget>(
+    impl VotersRecord {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             encoder.write_i16(self.version)?;
             encoder.write_compact_array_len(self.voters.len())?;
             for value in &self.voters {
-                value.encode(encoder, version)?;
+                value.encode_validated(encoder, version)?;
             }
 
             if Self::is_flexible(version) {
@@ -1680,6 +2069,31 @@ pub mod voters_record {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for VotersRecord {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            VotersRecord::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            VotersRecord::encode_validated(self, encoder, version)
         }
     }
 }

@@ -93,14 +93,12 @@ pub mod describe_delegation_token_request {
         }
     }
 
-    impl KafkaEncode for DescribeDelegationTokenOwner {
-        fn encode<T: EncodeTarget>(
+    impl DescribeDelegationTokenOwner {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             if Self::is_flexible(version) {
                 encoder.write_compact_string(&self.principal_type)?;
             } else {
@@ -117,6 +115,31 @@ pub mod describe_delegation_token_request {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for DescribeDelegationTokenOwner {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            DescribeDelegationTokenOwner::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            DescribeDelegationTokenOwner::encode_validated(self, encoder, version)
         }
     }
 
@@ -204,14 +227,12 @@ pub mod describe_delegation_token_request {
         }
     }
 
-    impl KafkaEncode for DescribeDelegationTokenRequest {
-        fn encode<T: EncodeTarget>(
+    impl DescribeDelegationTokenRequest {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             if Self::is_flexible(version) {
                 encoder.write_compact_nullable_array_len(self.owners.as_ref().map(Vec::len))?;
             } else {
@@ -219,7 +240,7 @@ pub mod describe_delegation_token_request {
             }
             if let Some(values) = &self.owners {
                 for value in values {
-                    value.encode(encoder, version)?;
+                    value.encode_validated(encoder, version)?;
                 }
             }
 
@@ -228,6 +249,31 @@ pub mod describe_delegation_token_request {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for DescribeDelegationTokenRequest {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            DescribeDelegationTokenRequest::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            DescribeDelegationTokenRequest::encode_validated(self, encoder, version)
         }
     }
 }
@@ -394,14 +440,12 @@ pub mod describe_delegation_token_response {
         }
     }
 
-    impl KafkaEncode for DescribedDelegationToken {
-        fn encode<T: EncodeTarget>(
+    impl DescribedDelegationToken {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             if Self::is_flexible(version) {
                 encoder.write_compact_string(&self.principal_type)?;
             } else {
@@ -437,7 +481,7 @@ pub mod describe_delegation_token_response {
                 encoder.write_array_len(self.renewers.len())?;
             }
             for value in &self.renewers {
-                value.encode(encoder, version)?;
+                value.encode_validated(encoder, version)?;
             }
 
             if Self::is_flexible(version) {
@@ -445,6 +489,31 @@ pub mod describe_delegation_token_response {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for DescribedDelegationToken {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            DescribedDelegationToken::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            DescribedDelegationToken::encode_validated(self, encoder, version)
         }
     }
 
@@ -524,14 +593,12 @@ pub mod describe_delegation_token_response {
         }
     }
 
-    impl KafkaEncode for DescribedDelegationTokenRenewer {
-        fn encode<T: EncodeTarget>(
+    impl DescribedDelegationTokenRenewer {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             if Self::is_flexible(version) {
                 encoder.write_compact_string(&self.principal_type)?;
             } else {
@@ -548,6 +615,31 @@ pub mod describe_delegation_token_response {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for DescribedDelegationTokenRenewer {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            DescribedDelegationTokenRenewer::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            DescribedDelegationTokenRenewer::encode_validated(self, encoder, version)
         }
     }
 
@@ -624,14 +716,12 @@ pub mod describe_delegation_token_response {
         }
     }
 
-    impl KafkaEncode for DescribeDelegationTokenResponse {
-        fn encode<T: EncodeTarget>(
+    impl DescribeDelegationTokenResponse {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             encoder.write_i16(self.error_code)?;
             if Self::is_flexible(version) {
                 encoder.write_compact_array_len(self.tokens.len())?;
@@ -639,7 +729,7 @@ pub mod describe_delegation_token_response {
                 encoder.write_array_len(self.tokens.len())?;
             }
             for value in &self.tokens {
-                value.encode(encoder, version)?;
+                value.encode_validated(encoder, version)?;
             }
             encoder.write_i32(self.throttle_time_ms)?;
 
@@ -648,6 +738,31 @@ pub mod describe_delegation_token_response {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for DescribeDelegationTokenResponse {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            DescribeDelegationTokenResponse::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            DescribeDelegationTokenResponse::encode_validated(self, encoder, version)
         }
     }
 }

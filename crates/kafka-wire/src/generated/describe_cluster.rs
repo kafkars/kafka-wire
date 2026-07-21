@@ -115,14 +115,12 @@ pub mod describe_cluster_request {
         }
     }
 
-    impl KafkaEncode for DescribeClusterRequest {
-        fn encode<T: EncodeTarget>(
+    impl DescribeClusterRequest {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             encoder.write_bool(self.include_cluster_authorized_operations)?;
             if version.value() >= 1 {
                 encoder.write_i8(self.endpoint_type)?;
@@ -136,6 +134,31 @@ pub mod describe_cluster_request {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for DescribeClusterRequest {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            DescribeClusterRequest::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            DescribeClusterRequest::encode_validated(self, encoder, version)
         }
     }
 }
@@ -243,14 +266,12 @@ pub mod describe_cluster_response {
         }
     }
 
-    impl KafkaEncode for DescribeClusterBroker {
-        fn encode<T: EncodeTarget>(
+    impl DescribeClusterBroker {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             encoder.write_i32(self.broker_id)?;
             encoder.write_compact_string(&self.host)?;
             encoder.write_i32(self.port)?;
@@ -264,6 +285,31 @@ pub mod describe_cluster_response {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for DescribeClusterBroker {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            DescribeClusterBroker::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            DescribeClusterBroker::encode_validated(self, encoder, version)
         }
     }
 
@@ -383,14 +429,12 @@ pub mod describe_cluster_response {
         }
     }
 
-    impl KafkaEncode for DescribeClusterResponse {
-        fn encode<T: EncodeTarget>(
+    impl DescribeClusterResponse {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             encoder.write_i32(self.throttle_time_ms)?;
             encoder.write_i16(self.error_code)?;
             encoder.write_compact_nullable_string(self.error_message.as_ref())?;
@@ -401,7 +445,7 @@ pub mod describe_cluster_response {
             encoder.write_i32(self.controller_id)?;
             encoder.write_compact_array_len(self.brokers.len())?;
             for value in &self.brokers {
-                value.encode(encoder, version)?;
+                value.encode_validated(encoder, version)?;
             }
             encoder.write_i32(self.cluster_authorized_operations)?;
 
@@ -410,6 +454,31 @@ pub mod describe_cluster_response {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for DescribeClusterResponse {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            DescribeClusterResponse::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            DescribeClusterResponse::encode_validated(self, encoder, version)
         }
     }
 }

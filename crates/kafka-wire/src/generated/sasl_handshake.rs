@@ -58,6 +58,18 @@ pub mod sasl_handshake_request {
         }
     }
 
+    impl SaslHandshakeRequest {
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            _version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            encoder.write_string(&self.mechanism)?;
+
+            Ok(())
+        }
+    }
+
     impl KafkaEncode for SaslHandshakeRequest {
         fn encode<T: EncodeTarget>(
             &self,
@@ -65,10 +77,21 @@ pub mod sasl_handshake_request {
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
             self.validate_for_version(version)?;
+            SaslHandshakeRequest::encode_validated(self, encoder, version)
+        }
 
-            encoder.write_string(&self.mechanism)?;
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
 
-            Ok(())
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            SaslHandshakeRequest::encode_validated(self, encoder, version)
         }
     }
 }
@@ -131,14 +154,12 @@ pub mod sasl_handshake_response {
         }
     }
 
-    impl KafkaEncode for SaslHandshakeResponse {
-        fn encode<T: EncodeTarget>(
+    impl SaslHandshakeResponse {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
-            version: ApiVersion,
+            _version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             encoder.write_i16(self.error_code)?;
             encoder.write_array_len(self.mechanisms.len())?;
             for value in &self.mechanisms {
@@ -146,6 +167,31 @@ pub mod sasl_handshake_response {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for SaslHandshakeResponse {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            SaslHandshakeResponse::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            SaslHandshakeResponse::encode_validated(self, encoder, version)
         }
     }
 }

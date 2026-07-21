@@ -114,14 +114,12 @@ pub mod api_versions_request {
         }
     }
 
-    impl KafkaEncode for ApiVersionsRequest {
-        fn encode<T: EncodeTarget>(
+    impl ApiVersionsRequest {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             if version.value() >= 3 {
                 encoder.write_compact_string(&self.client_software_name)?;
             }
@@ -140,6 +138,31 @@ pub mod api_versions_request {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for ApiVersionsRequest {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            ApiVersionsRequest::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            ApiVersionsRequest::encode_validated(self, encoder, version)
         }
     }
 }
@@ -234,14 +257,12 @@ pub mod api_versions_response {
         }
     }
 
-    impl KafkaEncode for ApiVersion {
-        fn encode<T: EncodeTarget>(
+    impl ApiVersion {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: kafka_wire_core::ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             encoder.write_i16(self.api_key)?;
             encoder.write_i16(self.min_version)?;
             encoder.write_i16(self.max_version)?;
@@ -251,6 +272,34 @@ pub mod api_versions_response {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for ApiVersion {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: kafka_wire_core::ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            ApiVersion::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(
+            &self,
+            version: kafka_wire_core::ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: kafka_wire_core::ApiVersion,
+        ) -> Result<(), EncodeError> {
+            ApiVersion::encode_validated(self, encoder, version)
         }
     }
 
@@ -269,7 +318,7 @@ pub mod api_versions_response {
     }
 
     impl SupportedFeatureKey {
-        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 5);
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(3, 5);
         const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(3, 5));
 
         fn is_flexible(version: kafka_wire_core::ApiVersion) -> bool {
@@ -290,27 +339,6 @@ pub mod api_versions_response {
                 });
             }
 
-            if version.value() < 3 && !self.name.is_empty() {
-                return Err(EncodeError::FieldNotRepresentable {
-                    message: "SupportedFeatureKey",
-                    field: "Name",
-                    version,
-                });
-            }
-            if version.value() < 3 && self.min_version != 0 {
-                return Err(EncodeError::FieldNotRepresentable {
-                    message: "SupportedFeatureKey",
-                    field: "MinVersion",
-                    version,
-                });
-            }
-            if version.value() < 3 && self.max_version != 0 {
-                return Err(EncodeError::FieldNotRepresentable {
-                    message: "SupportedFeatureKey",
-                    field: "MaxVersion",
-                    version,
-                });
-            }
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
                 return Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: "SupportedFeatureKey",
@@ -335,21 +363,9 @@ pub mod api_versions_response {
                 });
             }
 
-            let name = if version.value() >= 3 {
-                decoder.read_compact_string()?
-            } else {
-                StrBytes::default()
-            };
-            let min_version = if version.value() >= 3 {
-                decoder.read_i16()?
-            } else {
-                0
-            };
-            let max_version = if version.value() >= 3 {
-                decoder.read_i16()?
-            } else {
-                0
-            };
+            let name = decoder.read_compact_string()?;
+            let min_version = decoder.read_i16()?;
+            let max_version = decoder.read_i16()?;
             let unknown_tagged_fields = if Self::is_flexible(version) {
                 decoder.read_tagged_fields()?
             } else {
@@ -365,6 +381,24 @@ pub mod api_versions_response {
         }
     }
 
+    impl SupportedFeatureKey {
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: kafka_wire_core::ApiVersion,
+        ) -> Result<(), EncodeError> {
+            encoder.write_compact_string(&self.name)?;
+            encoder.write_i16(self.min_version)?;
+            encoder.write_i16(self.max_version)?;
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            }
+
+            Ok(())
+        }
+    }
+
     impl KafkaEncode for SupportedFeatureKey {
         fn encode<T: EncodeTarget>(
             &self,
@@ -372,22 +406,24 @@ pub mod api_versions_response {
             version: kafka_wire_core::ApiVersion,
         ) -> Result<(), EncodeError> {
             self.validate_for_version(version)?;
+            SupportedFeatureKey::encode_validated(self, encoder, version)
+        }
 
-            if version.value() >= 3 {
-                encoder.write_compact_string(&self.name)?;
-            }
-            if version.value() >= 3 {
-                encoder.write_i16(self.min_version)?;
-            }
-            if version.value() >= 3 {
-                encoder.write_i16(self.max_version)?;
-            }
+        #[doc(hidden)]
+        fn validate_encoding(
+            &self,
+            version: kafka_wire_core::ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
 
-            if Self::is_flexible(version) {
-                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-            }
-
-            Ok(())
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: kafka_wire_core::ApiVersion,
+        ) -> Result<(), EncodeError> {
+            SupportedFeatureKey::encode_validated(self, encoder, version)
         }
     }
 
@@ -406,7 +442,7 @@ pub mod api_versions_response {
     }
 
     impl FinalizedFeatureKey {
-        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 5);
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(3, 5);
         const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(3, 5));
 
         fn is_flexible(version: kafka_wire_core::ApiVersion) -> bool {
@@ -427,27 +463,6 @@ pub mod api_versions_response {
                 });
             }
 
-            if version.value() < 3 && !self.name.is_empty() {
-                return Err(EncodeError::FieldNotRepresentable {
-                    message: "FinalizedFeatureKey",
-                    field: "Name",
-                    version,
-                });
-            }
-            if version.value() < 3 && self.max_version_level != 0 {
-                return Err(EncodeError::FieldNotRepresentable {
-                    message: "FinalizedFeatureKey",
-                    field: "MaxVersionLevel",
-                    version,
-                });
-            }
-            if version.value() < 3 && self.min_version_level != 0 {
-                return Err(EncodeError::FieldNotRepresentable {
-                    message: "FinalizedFeatureKey",
-                    field: "MinVersionLevel",
-                    version,
-                });
-            }
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
                 return Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: "FinalizedFeatureKey",
@@ -472,21 +487,9 @@ pub mod api_versions_response {
                 });
             }
 
-            let name = if version.value() >= 3 {
-                decoder.read_compact_string()?
-            } else {
-                StrBytes::default()
-            };
-            let max_version_level = if version.value() >= 3 {
-                decoder.read_i16()?
-            } else {
-                0
-            };
-            let min_version_level = if version.value() >= 3 {
-                decoder.read_i16()?
-            } else {
-                0
-            };
+            let name = decoder.read_compact_string()?;
+            let max_version_level = decoder.read_i16()?;
+            let min_version_level = decoder.read_i16()?;
             let unknown_tagged_fields = if Self::is_flexible(version) {
                 decoder.read_tagged_fields()?
             } else {
@@ -502,6 +505,24 @@ pub mod api_versions_response {
         }
     }
 
+    impl FinalizedFeatureKey {
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: kafka_wire_core::ApiVersion,
+        ) -> Result<(), EncodeError> {
+            encoder.write_compact_string(&self.name)?;
+            encoder.write_i16(self.max_version_level)?;
+            encoder.write_i16(self.min_version_level)?;
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            }
+
+            Ok(())
+        }
+    }
+
     impl KafkaEncode for FinalizedFeatureKey {
         fn encode<T: EncodeTarget>(
             &self,
@@ -509,22 +530,24 @@ pub mod api_versions_response {
             version: kafka_wire_core::ApiVersion,
         ) -> Result<(), EncodeError> {
             self.validate_for_version(version)?;
+            FinalizedFeatureKey::encode_validated(self, encoder, version)
+        }
 
-            if version.value() >= 3 {
-                encoder.write_compact_string(&self.name)?;
-            }
-            if version.value() >= 3 {
-                encoder.write_i16(self.max_version_level)?;
-            }
-            if version.value() >= 3 {
-                encoder.write_i16(self.min_version_level)?;
-            }
+        #[doc(hidden)]
+        fn validate_encoding(
+            &self,
+            version: kafka_wire_core::ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
 
-            if Self::is_flexible(version) {
-                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-            }
-
-            Ok(())
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: kafka_wire_core::ApiVersion,
+        ) -> Result<(), EncodeError> {
+            FinalizedFeatureKey::encode_validated(self, encoder, version)
         }
     }
 
@@ -678,14 +701,12 @@ pub mod api_versions_response {
         }
     }
 
-    impl KafkaEncode for ApiVersionsResponse {
-        fn encode<T: EncodeTarget>(
+    impl ApiVersionsResponse {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: kafka_wire_core::ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             encoder.write_i16(self.error_code)?;
             if Self::is_flexible(version) {
                 encoder.write_compact_array_len(self.api_keys.len())?;
@@ -693,7 +714,7 @@ pub mod api_versions_response {
                 encoder.write_array_len(self.api_keys.len())?;
             }
             for value in &self.api_keys {
-                value.encode(encoder, version)?;
+                value.encode_validated(encoder, version)?;
             }
             if version.value() >= 1 {
                 encoder.write_i32(self.throttle_time_ms)?;
@@ -705,7 +726,7 @@ pub mod api_versions_response {
                     known.write(0, |encoder| {
                         encoder.write_compact_array_len(self.supported_features.len())?;
                         for value in &self.supported_features {
-                            value.encode(encoder, version)?;
+                            value.encode_validated(encoder, version)?;
                         }
                         Ok(())
                     })?;
@@ -720,7 +741,7 @@ pub mod api_versions_response {
                     known.write(2, |encoder| {
                         encoder.write_compact_array_len(self.finalized_features.len())?;
                         for value in &self.finalized_features {
-                            value.encode(encoder, version)?;
+                            value.encode_validated(encoder, version)?;
                         }
                         Ok(())
                     })?;
@@ -735,6 +756,34 @@ pub mod api_versions_response {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for ApiVersionsResponse {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: kafka_wire_core::ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            ApiVersionsResponse::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(
+            &self,
+            version: kafka_wire_core::ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: kafka_wire_core::ApiVersion,
+        ) -> Result<(), EncodeError> {
+            ApiVersionsResponse::encode_validated(self, encoder, version)
         }
     }
 }

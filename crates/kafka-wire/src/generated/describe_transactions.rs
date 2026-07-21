@@ -77,14 +77,12 @@ pub mod describe_transactions_request {
         }
     }
 
-    impl KafkaEncode for DescribeTransactionsRequest {
-        fn encode<T: EncodeTarget>(
+    impl DescribeTransactionsRequest {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             encoder.write_compact_array_len(self.transactional_ids.len())?;
             for value in &self.transactional_ids {
                 encoder.write_compact_string(value)?;
@@ -95,6 +93,31 @@ pub mod describe_transactions_request {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for DescribeTransactionsRequest {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            DescribeTransactionsRequest::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            DescribeTransactionsRequest::encode_validated(self, encoder, version)
         }
     }
 }
@@ -209,14 +232,12 @@ pub mod describe_transactions_response {
         }
     }
 
-    impl KafkaEncode for TransactionState {
-        fn encode<T: EncodeTarget>(
+    impl TransactionState {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             encoder.write_i16(self.error_code)?;
             encoder.write_compact_string(&self.transactional_id)?;
             encoder.write_compact_string(&self.transaction_state)?;
@@ -226,7 +247,7 @@ pub mod describe_transactions_response {
             encoder.write_i16(self.producer_epoch)?;
             encoder.write_compact_array_len(self.topics.len())?;
             for value in &self.topics {
-                value.encode(encoder, version)?;
+                value.encode_validated(encoder, version)?;
             }
 
             if Self::is_flexible(version) {
@@ -234,6 +255,31 @@ pub mod describe_transactions_response {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for TransactionState {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            TransactionState::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            TransactionState::encode_validated(self, encoder, version)
         }
     }
 
@@ -308,14 +354,12 @@ pub mod describe_transactions_response {
         }
     }
 
-    impl KafkaEncode for TopicData {
-        fn encode<T: EncodeTarget>(
+    impl TopicData {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             encoder.write_compact_string(&self.topic)?;
             encoder.write_compact_array_len(self.partitions.len())?;
             for value in &self.partitions {
@@ -327,6 +371,31 @@ pub mod describe_transactions_response {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for TopicData {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            TopicData::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            TopicData::encode_validated(self, encoder, version)
         }
     }
 
@@ -393,18 +462,16 @@ pub mod describe_transactions_response {
         }
     }
 
-    impl KafkaEncode for DescribeTransactionsResponse {
-        fn encode<T: EncodeTarget>(
+    impl DescribeTransactionsResponse {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             encoder.write_i32(self.throttle_time_ms)?;
             encoder.write_compact_array_len(self.transaction_states.len())?;
             for value in &self.transaction_states {
-                value.encode(encoder, version)?;
+                value.encode_validated(encoder, version)?;
             }
 
             if Self::is_flexible(version) {
@@ -412,6 +479,31 @@ pub mod describe_transactions_response {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for DescribeTransactionsResponse {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            DescribeTransactionsResponse::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            DescribeTransactionsResponse::encode_validated(self, encoder, version)
         }
     }
 }

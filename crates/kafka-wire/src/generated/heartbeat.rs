@@ -109,14 +109,12 @@ pub mod heartbeat_request {
         }
     }
 
-    impl KafkaEncode for HeartbeatRequest {
-        fn encode<T: EncodeTarget>(
+    impl HeartbeatRequest {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             if Self::is_flexible(version) {
                 encoder.write_compact_string(&self.group_id)?;
             } else {
@@ -141,6 +139,31 @@ pub mod heartbeat_request {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for HeartbeatRequest {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            HeartbeatRequest::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            HeartbeatRequest::encode_validated(self, encoder, version)
         }
     }
 }
@@ -218,14 +241,12 @@ pub mod heartbeat_response {
         }
     }
 
-    impl KafkaEncode for HeartbeatResponse {
-        fn encode<T: EncodeTarget>(
+    impl HeartbeatResponse {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             if version.value() >= 1 {
                 encoder.write_i32(self.throttle_time_ms)?;
             }
@@ -236,6 +257,31 @@ pub mod heartbeat_response {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for HeartbeatResponse {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            HeartbeatResponse::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            HeartbeatResponse::encode_validated(self, encoder, version)
         }
     }
 }

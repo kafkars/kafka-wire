@@ -204,10 +204,8 @@ fn a_common_struct_takes_the_ordinary_rule_with_no_special_case() {
 
 #[test]
 fn the_struct_table_unifies_both_declaration_forms_in_source_order() {
-    // One table, two spellings. Each entry keeps its own version window: a
-    // `commonStructs` entry states one, and an inline body takes the presence
-    // window of the field that carries it, because that is exactly where it
-    // exists.
+    // One table, two spellings. Each entry keeps its effective version window:
+    // the declaration or carrying field intersected with its owner.
     let message = lower(
         r#"{ "apiKey": 1, "type": "request", "name": "ExampleRequest",
              "validVersions": "0-4", "flexibleVersions": "0+",
@@ -225,10 +223,10 @@ fn the_struct_table_unifies_both_declaration_forms_in_source_order() {
     assert_eq!(declarations.len(), 2);
     assert_eq!(declarations[0].name.declared(), "Hoisted");
     assert_eq!(declarations[0].origin, StructOrigin::Common);
-    assert_eq!(declarations[0].versions.to_string(), "2+");
+    assert_eq!(declarations[0].versions.to_string(), "2-4");
     assert_eq!(declarations[1].name.declared(), "Inline");
     assert_eq!(declarations[1].origin, StructOrigin::Inline);
-    assert_eq!(declarations[1].versions.to_string(), "3+");
+    assert_eq!(declarations[1].versions.to_string(), "3-4");
 
     assert_eq!(
         message

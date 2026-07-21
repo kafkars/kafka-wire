@@ -91,18 +91,16 @@ pub mod read_share_group_state_request {
         }
     }
 
-    impl KafkaEncode for ReadStateData {
-        fn encode<T: EncodeTarget>(
+    impl ReadStateData {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             encoder.write_uuid(self.topic_id)?;
             encoder.write_compact_array_len(self.partitions.len())?;
             for value in &self.partitions {
-                value.encode(encoder, version)?;
+                value.encode_validated(encoder, version)?;
             }
 
             if Self::is_flexible(version) {
@@ -110,6 +108,31 @@ pub mod read_share_group_state_request {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for ReadStateData {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            ReadStateData::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            ReadStateData::encode_validated(self, encoder, version)
         }
     }
 
@@ -181,14 +204,12 @@ pub mod read_share_group_state_request {
         }
     }
 
-    impl KafkaEncode for PartitionData {
-        fn encode<T: EncodeTarget>(
+    impl PartitionData {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             encoder.write_i32(self.partition)?;
             encoder.write_i32(self.leader_epoch)?;
 
@@ -197,6 +218,31 @@ pub mod read_share_group_state_request {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for PartitionData {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            PartitionData::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            PartitionData::encode_validated(self, encoder, version)
         }
     }
 
@@ -267,18 +313,16 @@ pub mod read_share_group_state_request {
         }
     }
 
-    impl KafkaEncode for ReadShareGroupStateRequest {
-        fn encode<T: EncodeTarget>(
+    impl ReadShareGroupStateRequest {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             encoder.write_compact_string(&self.group_id)?;
             encoder.write_compact_array_len(self.topics.len())?;
             for value in &self.topics {
-                value.encode(encoder, version)?;
+                value.encode_validated(encoder, version)?;
             }
 
             if Self::is_flexible(version) {
@@ -286,6 +330,31 @@ pub mod read_share_group_state_request {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for ReadShareGroupStateRequest {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            ReadShareGroupStateRequest::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            ReadShareGroupStateRequest::encode_validated(self, encoder, version)
         }
     }
 }
@@ -376,18 +445,16 @@ pub mod read_share_group_state_response {
         }
     }
 
-    impl KafkaEncode for ReadStateResult {
-        fn encode<T: EncodeTarget>(
+    impl ReadStateResult {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             encoder.write_uuid(self.topic_id)?;
             encoder.write_compact_array_len(self.partitions.len())?;
             for value in &self.partitions {
-                value.encode(encoder, version)?;
+                value.encode_validated(encoder, version)?;
             }
 
             if Self::is_flexible(version) {
@@ -395,6 +462,31 @@ pub mod read_share_group_state_response {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for ReadStateResult {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            ReadStateResult::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            ReadStateResult::encode_validated(self, encoder, version)
         }
     }
 
@@ -488,14 +580,12 @@ pub mod read_share_group_state_response {
         }
     }
 
-    impl KafkaEncode for PartitionResult {
-        fn encode<T: EncodeTarget>(
+    impl PartitionResult {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             encoder.write_i32(self.partition)?;
             encoder.write_i16(self.error_code)?;
             encoder.write_compact_nullable_string(self.error_message.as_ref())?;
@@ -503,7 +593,7 @@ pub mod read_share_group_state_response {
             encoder.write_i64(self.start_offset)?;
             encoder.write_compact_array_len(self.state_batches.len())?;
             for value in &self.state_batches {
-                value.encode(encoder, version)?;
+                value.encode_validated(encoder, version)?;
             }
 
             if Self::is_flexible(version) {
@@ -511,6 +601,31 @@ pub mod read_share_group_state_response {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for PartitionResult {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            PartitionResult::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            PartitionResult::encode_validated(self, encoder, version)
         }
     }
 
@@ -590,14 +705,12 @@ pub mod read_share_group_state_response {
         }
     }
 
-    impl KafkaEncode for StateBatch {
-        fn encode<T: EncodeTarget>(
+    impl StateBatch {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             encoder.write_i64(self.first_offset)?;
             encoder.write_i64(self.last_offset)?;
             encoder.write_i8(self.delivery_state)?;
@@ -608,6 +721,31 @@ pub mod read_share_group_state_response {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for StateBatch {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            StateBatch::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            StateBatch::encode_validated(self, encoder, version)
         }
     }
 
@@ -670,17 +808,15 @@ pub mod read_share_group_state_response {
         }
     }
 
-    impl KafkaEncode for ReadShareGroupStateResponse {
-        fn encode<T: EncodeTarget>(
+    impl ReadShareGroupStateResponse {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             encoder.write_compact_array_len(self.results.len())?;
             for value in &self.results {
-                value.encode(encoder, version)?;
+                value.encode_validated(encoder, version)?;
             }
 
             if Self::is_flexible(version) {
@@ -688,6 +824,31 @@ pub mod read_share_group_state_response {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for ReadShareGroupStateResponse {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            ReadShareGroupStateResponse::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            ReadShareGroupStateResponse::encode_validated(self, encoder, version)
         }
     }
 }

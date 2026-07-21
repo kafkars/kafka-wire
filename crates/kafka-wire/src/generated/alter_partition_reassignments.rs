@@ -93,18 +93,16 @@ pub mod alter_partition_reassignments_request {
         }
     }
 
-    impl KafkaEncode for ReassignableTopic {
-        fn encode<T: EncodeTarget>(
+    impl ReassignableTopic {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             encoder.write_compact_string(&self.name)?;
             encoder.write_compact_array_len(self.partitions.len())?;
             for value in &self.partitions {
-                value.encode(encoder, version)?;
+                value.encode_validated(encoder, version)?;
             }
 
             if Self::is_flexible(version) {
@@ -112,6 +110,31 @@ pub mod alter_partition_reassignments_request {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for ReassignableTopic {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            ReassignableTopic::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            ReassignableTopic::encode_validated(self, encoder, version)
         }
     }
 
@@ -188,14 +211,12 @@ pub mod alter_partition_reassignments_request {
         }
     }
 
-    impl KafkaEncode for ReassignablePartition {
-        fn encode<T: EncodeTarget>(
+    impl ReassignablePartition {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             encoder.write_i32(self.partition_index)?;
             encoder.write_compact_nullable_array_len(self.replicas.as_ref().map(Vec::len))?;
             if let Some(values) = &self.replicas {
@@ -209,6 +230,31 @@ pub mod alter_partition_reassignments_request {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for ReassignablePartition {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            ReassignablePartition::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            ReassignablePartition::encode_validated(self, encoder, version)
         }
     }
 
@@ -307,21 +353,19 @@ pub mod alter_partition_reassignments_request {
         }
     }
 
-    impl KafkaEncode for AlterPartitionReassignmentsRequest {
-        fn encode<T: EncodeTarget>(
+    impl AlterPartitionReassignmentsRequest {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             encoder.write_i32(self.timeout_ms)?;
             if version.value() >= 1 {
                 encoder.write_bool(self.allow_replication_factor_change)?;
             }
             encoder.write_compact_array_len(self.topics.len())?;
             for value in &self.topics {
-                value.encode(encoder, version)?;
+                value.encode_validated(encoder, version)?;
             }
 
             if Self::is_flexible(version) {
@@ -329,6 +373,31 @@ pub mod alter_partition_reassignments_request {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for AlterPartitionReassignmentsRequest {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            AlterPartitionReassignmentsRequest::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            AlterPartitionReassignmentsRequest::encode_validated(self, encoder, version)
         }
     }
 }
@@ -421,18 +490,16 @@ pub mod alter_partition_reassignments_response {
         }
     }
 
-    impl KafkaEncode for ReassignableTopicResponse {
-        fn encode<T: EncodeTarget>(
+    impl ReassignableTopicResponse {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             encoder.write_compact_string(&self.name)?;
             encoder.write_compact_array_len(self.partitions.len())?;
             for value in &self.partitions {
-                value.encode(encoder, version)?;
+                value.encode_validated(encoder, version)?;
             }
 
             if Self::is_flexible(version) {
@@ -440,6 +507,31 @@ pub mod alter_partition_reassignments_response {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for ReassignableTopicResponse {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            ReassignableTopicResponse::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            ReassignableTopicResponse::encode_validated(self, encoder, version)
         }
     }
 
@@ -526,14 +618,12 @@ pub mod alter_partition_reassignments_response {
         }
     }
 
-    impl KafkaEncode for ReassignablePartitionResponse {
-        fn encode<T: EncodeTarget>(
+    impl ReassignablePartitionResponse {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             encoder.write_i32(self.partition_index)?;
             encoder.write_i16(self.error_code)?;
             encoder.write_compact_nullable_string(self.error_message.as_ref())?;
@@ -543,6 +633,31 @@ pub mod alter_partition_reassignments_response {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for ReassignablePartitionResponse {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            ReassignablePartitionResponse::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            ReassignablePartitionResponse::encode_validated(self, encoder, version)
         }
     }
 
@@ -640,14 +755,12 @@ pub mod alter_partition_reassignments_response {
         }
     }
 
-    impl KafkaEncode for AlterPartitionReassignmentsResponse {
-        fn encode<T: EncodeTarget>(
+    impl AlterPartitionReassignmentsResponse {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             encoder.write_i32(self.throttle_time_ms)?;
             if version.value() >= 1 {
                 encoder.write_bool(self.allow_replication_factor_change)?;
@@ -656,7 +769,7 @@ pub mod alter_partition_reassignments_response {
             encoder.write_compact_nullable_string(self.error_message.as_ref())?;
             encoder.write_compact_array_len(self.responses.len())?;
             for value in &self.responses {
-                value.encode(encoder, version)?;
+                value.encode_validated(encoder, version)?;
             }
 
             if Self::is_flexible(version) {
@@ -664,6 +777,31 @@ pub mod alter_partition_reassignments_response {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for AlterPartitionReassignmentsResponse {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            AlterPartitionReassignmentsResponse::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            AlterPartitionReassignmentsResponse::encode_validated(self, encoder, version)
         }
     }
 }

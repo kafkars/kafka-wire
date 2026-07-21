@@ -48,6 +48,14 @@ pub enum GenerationError {
         /// Encountered schema version.
         found: u32,
     },
+    /// The lock names a semantic IR contract this compiler does not implement.
+    #[error("unsupported generator IR version {found}; expected {supported}")]
+    IrVersion {
+        /// Encountered semantic contract version.
+        found: u32,
+        /// The one semantic contract this compiler implements.
+        supported: u32,
+    },
     /// A decoded lockfile value violated its field contract.
     #[error("invalid {field} in protocol.lock: {reason}; found `{value}`")]
     InvalidLockfileValue {

@@ -34,9 +34,10 @@ pub(super) fn render_validation(
     fields: &[Field],
     message: &Message,
     owner: Owner<'_>,
+    flexible: bool,
 ) {
     rust.open(format!("impl {rust_type}"));
-    if !validation_uses_self(fields, message) {
+    if !validation_uses_self(fields, message, flexible) {
         rust.line("#[allow(clippy::unused_self)]");
     }
     rust.open(format!(
@@ -55,7 +56,7 @@ pub(super) fn render_validation(
         render_null_guard(rust, field, message, owner);
     }
     render_nested_validation(rust, fields, message);
-    if !message.effective_flexible_versions().is_empty() {
+    if flexible {
         rust.open("if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty()");
         rust.open(format!(
             "return Err({}::TaggedFieldsNotRepresentable",
@@ -73,8 +74,8 @@ pub(super) fn render_validation(
     rust.blank();
 }
 
-fn validation_uses_self(fields: &[Field], message: &Message) -> bool {
-    !message.effective_flexible_versions().is_empty()
+fn validation_uses_self(fields: &[Field], message: &Message, flexible: bool) -> bool {
+    flexible
         || fields.iter().any(|field| {
             field.ty.struct_reference().is_some()
                 || field::null_forbidden_condition(field, message).is_some()

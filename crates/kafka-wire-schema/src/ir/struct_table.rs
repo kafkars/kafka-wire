@@ -38,11 +38,12 @@ impl StructOrigin {
 pub struct StructDeclaration {
     /// Module-scoped identity: upstream's spelling, bound to its owner.
     pub name: StructRef,
-    /// Versions in which this declaration applies.
+    /// Effective versions in which this declaration exists.
     ///
-    /// A `commonStructs` entry states its own. An inline body takes the
-    /// presence window of the field that carries it, because it exists in
-    /// exactly the versions where that field does.
+    /// This is already intersected with the owner message and every enclosing
+    /// declaration. Backends consume this value directly; they do not repeat
+    /// the presence calculation or infer a nested type's public codec range
+    /// from its owner.
     pub versions: VersionSet,
     /// Where the message wrote it.
     pub origin: StructOrigin,

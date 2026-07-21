@@ -4,7 +4,10 @@
 //! encoding its public nested structure directly and through its request owner.
 
 use bytes::Bytes;
-use kafka_wire::{UpdateFeaturesRequest, update_features_request::FeatureUpdateKey};
+use kafka_wire::{
+    UpdateFeaturesRequest, delete_topics_request::DeleteTopicState,
+    update_features_request::FeatureUpdateKey,
+};
 use kafka_wire_core::{
     ApiVersion, DecodeError, DecodeLimits, EncodeError, KafkaDecode, KafkaEncode, VersionRange,
 };
@@ -80,6 +83,34 @@ fn direct_nested_decoding_rejects_versions_its_owner_does_not_support() {
             message: "FeatureUpdateKey",
             version: ApiVersion::new(3),
             supported: VersionRange::new(0, 2),
+        })
+    );
+}
+
+#[test]
+fn direct_nested_encoding_uses_the_declarations_narrower_range() {
+    assert_eq!(
+        DeleteTopicState::default().encode_to_bytes(ApiVersion::new(1)),
+        Err(EncodeError::UnsupportedVersion {
+            message: "DeleteTopicState",
+            version: ApiVersion::new(1),
+            supported: VersionRange::new(6, 6),
+        })
+    );
+}
+
+#[test]
+fn direct_nested_decoding_uses_the_declarations_narrower_range() {
+    assert_eq!(
+        DeleteTopicState::decode_from_bytes(
+            Bytes::new(),
+            ApiVersion::new(1),
+            DecodeLimits::default(),
+        ),
+        Err(DecodeError::UnsupportedVersion {
+            message: "DeleteTopicState",
+            version: ApiVersion::new(1),
+            supported: VersionRange::new(6, 6),
         })
     );
 }

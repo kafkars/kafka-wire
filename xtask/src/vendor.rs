@@ -35,6 +35,7 @@ pub(crate) struct VendorReport {
     pub(crate) enabled: usize,
     pub(crate) pending: usize,
     pub(crate) removed: Vec<String>,
+    pub(crate) cleanup_warnings: Vec<String>,
 }
 
 /// One entry of a GitHub git-tree listing.
@@ -60,12 +61,13 @@ pub(crate) fn vendor(workspace: &Path) -> Result<VendorReport, String> {
     let mut lock = read_lock(&lock_path)?;
     let slug = repository_slug(&lock.kafka.repository)?;
 
-    let filenames = discover(&slug, &lock.kafka.commit, &lock.kafka.upstream_message_root)?;
+    let filenames = discover(
+        &slug,
+        &lock.kafka.commit,
+        lock.kafka.upstream_message_root.as_str(),
+    )?;
     let recorded = recorded_statuses(&lock);
-    let destination = lock
-        .kafka
-        .vendored_message_root(workspace)
-        .map_err(|error| error.to_string())?;
+    let destination = lock.kafka.vendored_message_root(workspace);
 
     let mut files = Vec::with_capacity(filenames.len());
     let mut corpus = BTreeMap::new();
@@ -75,7 +77,7 @@ pub(crate) fn vendor(workspace: &Path) -> Result<VendorReport, String> {
             lock.kafka.commit, lock.kafka.upstream_message_root
         );
         let bytes = fetch::get(&url, Accept::RawBytes)?;
-        files.push(relock(filename, &bytes, &recorded));
+        files.push(relock(filename, &bytes, &recorded)?);
         if corpus.insert(filename.clone(), bytes).is_some() {
             return Err(format!("upstream listed duplicate schema file {filename}"));
         }
@@ -89,13 +91,15 @@ pub(crate) fn vendor(workspace: &Path) -> Result<VendorReport, String> {
 
     lock.kafka.files = files;
     let lock_document = render_lock(&lock);
-    StagedVendor::new(&destination, &lock_path, &corpus, lock_document.as_bytes())?.commit()?;
+    let cleanup_warnings =
+        StagedVendor::new(&destination, &lock_path, &corpus, lock_document.as_bytes())?.commit()?;
 
     Ok(VendorReport {
         vendored: filenames.len(),
         enabled,
         pending: filenames.len() - enabled,
         removed,
+        cleanup_warnings,
     })
 }
 
@@ -127,18 +131,20 @@ pub(crate) fn schema_filenames(listing: &[u8], commit: &str) -> Result<Vec<Strin
     }
 
     let mut filenames = Vec::new();
+    let mut folded_names = BTreeSet::new();
     for entry in listing.tree {
         if entry.kind != "blob" || !is_schema_file(&entry.path) {
             continue;
         }
-        filenames.push(plain_filename(&entry.path)?);
+        let filename = plain_filename(&entry.path)?;
+        if !folded_names.insert(filename.to_ascii_lowercase()) {
+            return Err(format!(
+                "the message tree for {commit} listed colliding schema filename `{filename}`"
+            ));
+        }
+        filenames.push(filename);
     }
     filenames.sort();
-    if filenames.windows(2).any(|pair| pair[0] == pair[1]) {
-        return Err(format!(
-            "the message tree for {commit} listed one schema filename more than once"
-        ));
-    }
 
     if filenames.is_empty() {
         return Err(format!(
@@ -157,15 +163,16 @@ pub(crate) fn relock(
     filename: &str,
     bytes: &[u8],
     recorded: &BTreeMap<&str, SourceStatus>,
-) -> VendoredFile {
-    VendoredFile {
+) -> Result<VendoredFile, String> {
+    Ok(VendoredFile {
         sha256: digest(bytes),
         status: recorded
             .get(filename)
             .copied()
             .unwrap_or(SourceStatus::Pending),
-        path: filename.to_owned(),
-    }
+        path: crate::protocol_lock::PortableFilename::try_new(filename.to_owned())
+            .map_err(|error| error.to_string())?,
+    })
 }
 
 /// Reports schema files the complete staged replacement will remove.

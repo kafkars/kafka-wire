@@ -10,6 +10,7 @@ mod records;
 mod upstream_name;
 mod vectors;
 mod vendor;
+mod vendor_cleanup;
 mod vendor_transaction;
 mod vendor_verification;
 mod workspace;

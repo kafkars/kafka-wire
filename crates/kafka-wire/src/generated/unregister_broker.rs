@@ -74,14 +74,12 @@ pub mod unregister_broker_request {
         }
     }
 
-    impl KafkaEncode for UnregisterBrokerRequest {
-        fn encode<T: EncodeTarget>(
+    impl UnregisterBrokerRequest {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             encoder.write_i32(self.broker_id)?;
 
             if Self::is_flexible(version) {
@@ -89,6 +87,31 @@ pub mod unregister_broker_request {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for UnregisterBrokerRequest {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            UnregisterBrokerRequest::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            UnregisterBrokerRequest::encode_validated(self, encoder, version)
         }
     }
 }
@@ -177,14 +200,12 @@ pub mod unregister_broker_response {
         }
     }
 
-    impl KafkaEncode for UnregisterBrokerResponse {
-        fn encode<T: EncodeTarget>(
+    impl UnregisterBrokerResponse {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             encoder.write_i32(self.throttle_time_ms)?;
             encoder.write_i16(self.error_code)?;
             encoder.write_compact_nullable_string(self.error_message.as_ref())?;
@@ -194,6 +215,31 @@ pub mod unregister_broker_response {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for UnregisterBrokerResponse {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            UnregisterBrokerResponse::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            UnregisterBrokerResponse::encode_validated(self, encoder, version)
         }
     }
 }

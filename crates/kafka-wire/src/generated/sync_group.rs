@@ -93,14 +93,12 @@ pub mod sync_group_request {
         }
     }
 
-    impl KafkaEncode for SyncGroupRequestAssignment {
-        fn encode<T: EncodeTarget>(
+    impl SyncGroupRequestAssignment {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             if Self::is_flexible(version) {
                 encoder.write_compact_string(&self.member_id)?;
             } else {
@@ -117,6 +115,31 @@ pub mod sync_group_request {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for SyncGroupRequestAssignment {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            SyncGroupRequestAssignment::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            SyncGroupRequestAssignment::encode_validated(self, encoder, version)
         }
     }
 
@@ -244,14 +267,12 @@ pub mod sync_group_request {
         }
     }
 
-    impl KafkaEncode for SyncGroupRequest {
-        fn encode<T: EncodeTarget>(
+    impl SyncGroupRequest {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             if Self::is_flexible(version) {
                 encoder.write_compact_string(&self.group_id)?;
             } else {
@@ -282,7 +303,7 @@ pub mod sync_group_request {
                 encoder.write_array_len(self.assignments.len())?;
             }
             for value in &self.assignments {
-                value.encode(encoder, version)?;
+                value.encode_validated(encoder, version)?;
             }
 
             if Self::is_flexible(version) {
@@ -290,6 +311,31 @@ pub mod sync_group_request {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for SyncGroupRequest {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            SyncGroupRequest::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            SyncGroupRequest::encode_validated(self, encoder, version)
         }
     }
 }
@@ -391,14 +437,12 @@ pub mod sync_group_response {
         }
     }
 
-    impl KafkaEncode for SyncGroupResponse {
-        fn encode<T: EncodeTarget>(
+    impl SyncGroupResponse {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             if version.value() >= 1 {
                 encoder.write_i32(self.throttle_time_ms)?;
             }
@@ -420,6 +464,31 @@ pub mod sync_group_response {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for SyncGroupResponse {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            SyncGroupResponse::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            SyncGroupResponse::encode_validated(self, encoder, version)
         }
     }
 }

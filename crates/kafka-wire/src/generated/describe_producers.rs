@@ -88,14 +88,12 @@ pub mod describe_producers_request {
         }
     }
 
-    impl KafkaEncode for TopicRequest {
-        fn encode<T: EncodeTarget>(
+    impl TopicRequest {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             encoder.write_compact_string(&self.name)?;
             encoder.write_compact_array_len(self.partition_indexes.len())?;
             for value in &self.partition_indexes {
@@ -107,6 +105,31 @@ pub mod describe_producers_request {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for TopicRequest {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            TopicRequest::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            TopicRequest::encode_validated(self, encoder, version)
         }
     }
 
@@ -173,17 +196,15 @@ pub mod describe_producers_request {
         }
     }
 
-    impl KafkaEncode for DescribeProducersRequest {
-        fn encode<T: EncodeTarget>(
+    impl DescribeProducersRequest {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             encoder.write_compact_array_len(self.topics.len())?;
             for value in &self.topics {
-                value.encode(encoder, version)?;
+                value.encode_validated(encoder, version)?;
             }
 
             if Self::is_flexible(version) {
@@ -191,6 +212,31 @@ pub mod describe_producers_request {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for DescribeProducersRequest {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            DescribeProducersRequest::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            DescribeProducersRequest::encode_validated(self, encoder, version)
         }
     }
 }
@@ -283,18 +329,16 @@ pub mod describe_producers_response {
         }
     }
 
-    impl KafkaEncode for TopicResponse {
-        fn encode<T: EncodeTarget>(
+    impl TopicResponse {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             encoder.write_compact_string(&self.name)?;
             encoder.write_compact_array_len(self.partitions.len())?;
             for value in &self.partitions {
-                value.encode(encoder, version)?;
+                value.encode_validated(encoder, version)?;
             }
 
             if Self::is_flexible(version) {
@@ -302,6 +346,31 @@ pub mod describe_producers_response {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for TopicResponse {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            TopicResponse::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            TopicResponse::encode_validated(self, encoder, version)
         }
     }
 
@@ -387,20 +456,18 @@ pub mod describe_producers_response {
         }
     }
 
-    impl KafkaEncode for PartitionResponse {
-        fn encode<T: EncodeTarget>(
+    impl PartitionResponse {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             encoder.write_i32(self.partition_index)?;
             encoder.write_i16(self.error_code)?;
             encoder.write_compact_nullable_string(self.error_message.as_ref())?;
             encoder.write_compact_array_len(self.active_producers.len())?;
             for value in &self.active_producers {
-                value.encode(encoder, version)?;
+                value.encode_validated(encoder, version)?;
             }
 
             if Self::is_flexible(version) {
@@ -408,6 +475,31 @@ pub mod describe_producers_response {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for PartitionResponse {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            PartitionResponse::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            PartitionResponse::encode_validated(self, encoder, version)
         }
     }
 
@@ -509,14 +601,12 @@ pub mod describe_producers_response {
         }
     }
 
-    impl KafkaEncode for ProducerState {
-        fn encode<T: EncodeTarget>(
+    impl ProducerState {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             encoder.write_i64(self.producer_id)?;
             encoder.write_i32(self.producer_epoch)?;
             encoder.write_i32(self.last_sequence)?;
@@ -529,6 +619,31 @@ pub mod describe_producers_response {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for ProducerState {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            ProducerState::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            ProducerState::encode_validated(self, encoder, version)
         }
     }
 
@@ -595,18 +710,16 @@ pub mod describe_producers_response {
         }
     }
 
-    impl KafkaEncode for DescribeProducersResponse {
-        fn encode<T: EncodeTarget>(
+    impl DescribeProducersResponse {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             encoder.write_i32(self.throttle_time_ms)?;
             encoder.write_compact_array_len(self.topics.len())?;
             for value in &self.topics {
-                value.encode(encoder, version)?;
+                value.encode_validated(encoder, version)?;
             }
 
             if Self::is_flexible(version) {
@@ -614,6 +727,31 @@ pub mod describe_producers_response {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for DescribeProducersResponse {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            DescribeProducersResponse::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            DescribeProducersResponse::encode_validated(self, encoder, version)
         }
     }
 }

@@ -12,7 +12,7 @@ use std::{
     sync::atomic::{AtomicU64, Ordering},
 };
 
-use crate::vendor_verification::verify_staged;
+use crate::{vendor_cleanup, vendor_verification::verify_staged};
 
 static TEMP_SEQUENCE: AtomicU64 = AtomicU64::new(0);
 
@@ -38,7 +38,15 @@ impl StagedVendor {
         fs::create_dir_all(lock_parent).map_err(|error| io_error(lock_parent, error))?;
 
         let corpus_staging = create_unique_directory(destination, "vendor-staging")?;
-        let lock_staging = create_unique_file(lock_path, "vendor-staging", lock_document)?;
+        let lock_staging = match create_unique_file(lock_path, "vendor-staging", lock_document) {
+            Ok(path) => path,
+            Err(cause) => {
+                return Err(vendor_cleanup::directory_after_error(
+                    &corpus_staging,
+                    cause,
+                ));
+            }
+        };
         let staged = Self {
             destination: destination.to_path_buf(),
             lock_path: lock_path.to_path_buf(),
@@ -60,7 +68,7 @@ impl StagedVendor {
     }
 
     /// Installs both staged targets and restores both previous targets on error.
-    pub(crate) fn commit(mut self) -> Result<(), String> {
+    pub(crate) fn commit(mut self) -> Result<Vec<String>, String> {
         let corpus_backup = unique_sibling(&self.destination, "vendor-backup");
         let lock_backup = unique_sibling(&self.lock_path, "vendor-backup");
         let had_corpus = self.destination.exists();
@@ -70,10 +78,17 @@ impl StagedVendor {
                 .map_err(|error| io_error(&self.destination, error))?;
         }
         if let Err(error) = fs::rename(&self.lock_path, &lock_backup) {
+            let cause = io_error(&self.lock_path, error);
             if had_corpus {
-                let _ = fs::rename(&corpus_backup, &self.destination);
+                return match fs::rename(&corpus_backup, &self.destination) {
+                    Ok(()) => Err(format!("{cause}; rollback succeeded")),
+                    Err(error) => Err(format!(
+                        "{cause}; rollback failures: {}",
+                        io_error(&corpus_backup, error)
+                    )),
+                };
             }
-            return Err(io_error(&self.lock_path, error));
+            return Err(format!("{cause}; rollback not needed"));
         }
 
         if let Err(error) = fs::rename(&self.corpus_staging, &self.destination) {
@@ -93,13 +108,13 @@ impl StagedVendor {
             ));
         }
 
-        if had_corpus {
-            fs::remove_dir_all(&corpus_backup).map_err(|error| io_error(&corpus_backup, error))?;
-        }
-        fs::remove_file(&lock_backup).map_err(|error| io_error(&lock_backup, error))?;
         self.corpus_staging.clear();
         self.lock_staging.clear();
-        Ok(())
+        Ok(vendor_cleanup::installed_backups(
+            &corpus_backup,
+            &lock_backup,
+            had_corpus,
+        ))
     }
 
     fn rollback(
@@ -173,8 +188,11 @@ fn create_unique_file(target: &Path, role: &str, bytes: &[u8]) -> Result<PathBuf
         let opened = OpenOptions::new().write(true).create_new(true).open(&path);
         match opened {
             Ok(mut file) => {
-                file.write_all(bytes)
-                    .map_err(|error| io_error(&path, error))?;
+                if let Err(error) = file.write_all(bytes) {
+                    let cause = io_error(&path, error);
+                    drop(file);
+                    return Err(vendor_cleanup::file_after_error(&path, cause));
+                }
                 return Ok(path);
             }
             Err(error) if error.kind() == io::ErrorKind::AlreadyExists => {}

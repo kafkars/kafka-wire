@@ -65,6 +65,42 @@ fn a_reference_that_binds_to_a_declaration_reports_nothing() {
 }
 
 #[test]
+fn a_reference_cannot_escape_its_declarations_effective_versions() {
+    let error = fault(&lower(
+        r#"{ "apiKey": 1, "type": "request", "name": "ExampleRequest",
+             "validVersions": "0-2", "flexibleVersions": "0+",
+             "commonStructs": [
+               { "name": "TopicData", "versions": "1+", "fields": [
+                 { "name": "Name", "type": "string", "versions": "1+" } ] } ],
+             "fields": [
+               { "name": "Topics", "type": "[]TopicData", "versions": "0+" } ] }"#,
+    ));
+
+    assert_eq!(error.code, "KAFKA_SCHEMA_STRUCT_VERSION_ESCAPE");
+    assert_eq!(error.field.as_deref(), Some("Topics"));
+    assert!(
+        error.message.contains("0-2") && error.message.contains("1-2"),
+        "the diagnostic must name both effective windows, got: {}",
+        error.message,
+    );
+}
+
+#[test]
+fn a_reference_inside_its_declarations_effective_versions_is_valid() {
+    let message = lower(
+        r#"{ "apiKey": 1, "type": "request", "name": "ExampleRequest",
+             "validVersions": "0-2", "flexibleVersions": "0+",
+             "commonStructs": [
+               { "name": "TopicData", "versions": "1+", "fields": [
+                 { "name": "Name", "type": "string", "versions": "1+" } ] } ],
+             "fields": [
+               { "name": "Topics", "type": "[]TopicData", "versions": "1+" } ] }"#,
+    );
+
+    assert_eq!(validate_message(&message), Ok(()));
+}
+
+#[test]
 fn two_messages_may_declare_one_struct_name() {
     // The inversion the module-scoped naming rule makes. Under a flat namespace this pair was the
     // canonical unexportable collision: both messages declare `PartitionData`

@@ -85,14 +85,12 @@ pub mod alter_user_scram_credentials_request {
         }
     }
 
-    impl KafkaEncode for ScramCredentialDeletion {
-        fn encode<T: EncodeTarget>(
+    impl ScramCredentialDeletion {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             encoder.write_compact_string(&self.name)?;
             encoder.write_i8(self.mechanism)?;
 
@@ -101,6 +99,31 @@ pub mod alter_user_scram_credentials_request {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for ScramCredentialDeletion {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            ScramCredentialDeletion::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            ScramCredentialDeletion::encode_validated(self, encoder, version)
         }
     }
 
@@ -184,14 +207,12 @@ pub mod alter_user_scram_credentials_request {
         }
     }
 
-    impl KafkaEncode for ScramCredentialUpsertion {
-        fn encode<T: EncodeTarget>(
+    impl ScramCredentialUpsertion {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             encoder.write_compact_string(&self.name)?;
             encoder.write_i8(self.mechanism)?;
             encoder.write_i32(self.iterations)?;
@@ -203,6 +224,31 @@ pub mod alter_user_scram_credentials_request {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for ScramCredentialUpsertion {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            ScramCredentialUpsertion::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            ScramCredentialUpsertion::encode_validated(self, encoder, version)
         }
     }
 
@@ -283,21 +329,19 @@ pub mod alter_user_scram_credentials_request {
         }
     }
 
-    impl KafkaEncode for AlterUserScramCredentialsRequest {
-        fn encode<T: EncodeTarget>(
+    impl AlterUserScramCredentialsRequest {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             encoder.write_compact_array_len(self.deletions.len())?;
             for value in &self.deletions {
-                value.encode(encoder, version)?;
+                value.encode_validated(encoder, version)?;
             }
             encoder.write_compact_array_len(self.upsertions.len())?;
             for value in &self.upsertions {
-                value.encode(encoder, version)?;
+                value.encode_validated(encoder, version)?;
             }
 
             if Self::is_flexible(version) {
@@ -305,6 +349,31 @@ pub mod alter_user_scram_credentials_request {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for AlterUserScramCredentialsRequest {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            AlterUserScramCredentialsRequest::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            AlterUserScramCredentialsRequest::encode_validated(self, encoder, version)
         }
     }
 }
@@ -404,14 +473,12 @@ pub mod alter_user_scram_credentials_response {
         }
     }
 
-    impl KafkaEncode for AlterUserScramCredentialsResult {
-        fn encode<T: EncodeTarget>(
+    impl AlterUserScramCredentialsResult {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             encoder.write_compact_string(&self.user)?;
             encoder.write_i16(self.error_code)?;
             encoder.write_compact_nullable_string(self.error_message.as_ref())?;
@@ -421,6 +488,31 @@ pub mod alter_user_scram_credentials_response {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for AlterUserScramCredentialsResult {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            AlterUserScramCredentialsResult::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            AlterUserScramCredentialsResult::encode_validated(self, encoder, version)
         }
     }
 
@@ -489,18 +581,16 @@ pub mod alter_user_scram_credentials_response {
         }
     }
 
-    impl KafkaEncode for AlterUserScramCredentialsResponse {
-        fn encode<T: EncodeTarget>(
+    impl AlterUserScramCredentialsResponse {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             encoder.write_i32(self.throttle_time_ms)?;
             encoder.write_compact_array_len(self.results.len())?;
             for value in &self.results {
-                value.encode(encoder, version)?;
+                value.encode_validated(encoder, version)?;
             }
 
             if Self::is_flexible(version) {
@@ -508,6 +598,31 @@ pub mod alter_user_scram_credentials_response {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for AlterUserScramCredentialsResponse {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            AlterUserScramCredentialsResponse::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            AlterUserScramCredentialsResponse::encode_validated(self, encoder, version)
         }
     }
 }

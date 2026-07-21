@@ -11,7 +11,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
-use crate::{protocol_lock::digest, vendor_transaction::StagedVendor};
+use crate::{protocol_lock::digest, vendor_cleanup, vendor_transaction::StagedVendor};
 
 const COMMIT: &str = "678c0e07e4733c5a592e52046dc2c4e1625587f1";
 
@@ -81,6 +81,47 @@ fn staging_rejects_a_lock_that_does_not_describe_the_corpus() {
     );
     assert!(!destination.exists());
     assert!(!lock_path.exists());
+}
+
+#[test]
+fn staging_cleanup_preserves_the_cause_and_removes_partial_artifacts() {
+    let root = fresh_workspace("staging-cleanup");
+    let directory = root.join("partial-directory");
+    let file = root.join("partial-lock");
+    fs::create_dir(&directory).unwrap();
+    fs::write(&file, b"partial").unwrap();
+
+    assert_eq!(
+        vendor_cleanup::directory_after_error(&directory, "lock staging failed".to_owned()),
+        "lock staging failed"
+    );
+    assert_eq!(
+        vendor_cleanup::file_after_error(&file, "lock write failed".to_owned()),
+        "lock write failed"
+    );
+    assert!(!directory.exists());
+    assert!(!file.exists());
+}
+
+#[test]
+fn failed_cleanup_is_reported_at_the_right_side_of_commit() {
+    let root = fresh_workspace("cleanup-reporting");
+    let not_a_directory = root.join("corpus-backup");
+    let not_a_file = root.join("lock-backup");
+    fs::write(&not_a_directory, b"obstacle").unwrap();
+    fs::create_dir(&not_a_file).unwrap();
+
+    let staged_error =
+        vendor_cleanup::directory_after_error(&not_a_directory, "staging failed".to_owned());
+    assert!(staged_error.contains("staging failed; cleanup failed"));
+
+    let warnings = vendor_cleanup::installed_backups(&not_a_directory, &not_a_file, true);
+    assert_eq!(warnings.len(), 2);
+    assert!(
+        warnings
+            .iter()
+            .all(|warning| warning.contains("vendor pair was installed"))
+    );
 }
 
 fn fresh_workspace(name: &str) -> PathBuf {

@@ -12,13 +12,14 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 
-use crate::{Field, Message, StructOrigin, StructRef};
+use crate::{Field, Message, StructOrigin, StructRef, VersionSet};
 
 use super::{ValidationError, error::diagnostic};
 
 pub(super) fn validate_structs(message: &Message, errors: &mut Vec<ValidationError>) {
     validate_unique_declarations(message, errors);
     validate_references(message, errors);
+    validate_reference_windows(message, errors);
     validate_acyclic(message, errors);
 }
 
@@ -110,6 +111,42 @@ fn collect_references<'a>(
             }
         }
         collect_references(message, &field.fields, referenced, errors);
+    }
+}
+
+/// Proves that a reference is never used where its declaration does not exist.
+fn validate_reference_windows(message: &Message, errors: &mut Vec<ValidationError>) {
+    for common in &message.common_structs {
+        let effective = common.versions.intersection(&message.valid_versions);
+        validate_field_reference_windows(message, &common.fields, &effective, errors);
+    }
+    validate_field_reference_windows(message, &message.fields, &message.valid_versions, errors);
+}
+
+fn validate_field_reference_windows(
+    message: &Message,
+    fields: &[Field],
+    parent_versions: &VersionSet,
+    errors: &mut Vec<ValidationError>,
+) {
+    for field in fields {
+        let used = field.versions.intersection(parent_versions);
+        if let Some(reference) = field.ty.struct_reference()
+            && let Some(declaration) = message.structs.resolve(reference.declared())
+            && !used.is_subset_of(&declaration.versions)
+        {
+            errors.push(diagnostic(
+                message,
+                Some(field),
+                "KAFKA_SCHEMA_STRUCT_VERSION_ESCAPE",
+                &format!(
+                    "struct `{}` is used in versions `{used}` but its declaration exists only in `{}`",
+                    reference.declared(),
+                    declaration.versions,
+                ),
+            ));
+        }
+        validate_field_reference_windows(message, &field.fields, &used, errors);
     }
 }
 

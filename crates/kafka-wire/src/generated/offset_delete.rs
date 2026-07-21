@@ -71,6 +71,22 @@ pub mod offset_delete_request {
         }
     }
 
+    impl OffsetDeleteRequestTopic {
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            encoder.write_string(&self.name)?;
+            encoder.write_array_len(self.partitions.len())?;
+            for value in &self.partitions {
+                value.encode_validated(encoder, version)?;
+            }
+
+            Ok(())
+        }
+    }
+
     impl KafkaEncode for OffsetDeleteRequestTopic {
         fn encode<T: EncodeTarget>(
             &self,
@@ -78,14 +94,21 @@ pub mod offset_delete_request {
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
             self.validate_for_version(version)?;
+            OffsetDeleteRequestTopic::encode_validated(self, encoder, version)
+        }
 
-            encoder.write_string(&self.name)?;
-            encoder.write_array_len(self.partitions.len())?;
-            for value in &self.partitions {
-                value.encode(encoder, version)?;
-            }
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
 
-            Ok(())
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            OffsetDeleteRequestTopic::encode_validated(self, encoder, version)
         }
     }
 
@@ -132,6 +155,18 @@ pub mod offset_delete_request {
         }
     }
 
+    impl OffsetDeleteRequestPartition {
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            _version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            encoder.write_i32(self.partition_index)?;
+
+            Ok(())
+        }
+    }
+
     impl KafkaEncode for OffsetDeleteRequestPartition {
         fn encode<T: EncodeTarget>(
             &self,
@@ -139,10 +174,21 @@ pub mod offset_delete_request {
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
             self.validate_for_version(version)?;
+            OffsetDeleteRequestPartition::encode_validated(self, encoder, version)
+        }
 
-            encoder.write_i32(self.partition_index)?;
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
 
-            Ok(())
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            OffsetDeleteRequestPartition::encode_validated(self, encoder, version)
         }
     }
 
@@ -198,6 +244,22 @@ pub mod offset_delete_request {
         }
     }
 
+    impl OffsetDeleteRequest {
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            encoder.write_string(&self.group_id)?;
+            encoder.write_array_len(self.topics.len())?;
+            for value in &self.topics {
+                value.encode_validated(encoder, version)?;
+            }
+
+            Ok(())
+        }
+    }
+
     impl KafkaEncode for OffsetDeleteRequest {
         fn encode<T: EncodeTarget>(
             &self,
@@ -205,14 +267,21 @@ pub mod offset_delete_request {
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
             self.validate_for_version(version)?;
+            OffsetDeleteRequest::encode_validated(self, encoder, version)
+        }
 
-            encoder.write_string(&self.group_id)?;
-            encoder.write_array_len(self.topics.len())?;
-            for value in &self.topics {
-                value.encode(encoder, version)?;
-            }
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
 
-            Ok(())
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            OffsetDeleteRequest::encode_validated(self, encoder, version)
         }
     }
 }
@@ -283,6 +352,22 @@ pub mod offset_delete_response {
         }
     }
 
+    impl OffsetDeleteResponseTopic {
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            encoder.write_string(&self.name)?;
+            encoder.write_array_len(self.partitions.len())?;
+            for value in &self.partitions {
+                value.encode_validated(encoder, version)?;
+            }
+
+            Ok(())
+        }
+    }
+
     impl KafkaEncode for OffsetDeleteResponseTopic {
         fn encode<T: EncodeTarget>(
             &self,
@@ -290,14 +375,21 @@ pub mod offset_delete_response {
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
             self.validate_for_version(version)?;
+            OffsetDeleteResponseTopic::encode_validated(self, encoder, version)
+        }
 
-            encoder.write_string(&self.name)?;
-            encoder.write_array_len(self.partitions.len())?;
-            for value in &self.partitions {
-                value.encode(encoder, version)?;
-            }
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
 
-            Ok(())
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            OffsetDeleteResponseTopic::encode_validated(self, encoder, version)
         }
     }
 
@@ -350,6 +442,19 @@ pub mod offset_delete_response {
         }
     }
 
+    impl OffsetDeleteResponsePartition {
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            _version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            encoder.write_i32(self.partition_index)?;
+            encoder.write_i16(self.error_code)?;
+
+            Ok(())
+        }
+    }
+
     impl KafkaEncode for OffsetDeleteResponsePartition {
         fn encode<T: EncodeTarget>(
             &self,
@@ -357,11 +462,21 @@ pub mod offset_delete_response {
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
             self.validate_for_version(version)?;
+            OffsetDeleteResponsePartition::encode_validated(self, encoder, version)
+        }
 
-            encoder.write_i32(self.partition_index)?;
-            encoder.write_i16(self.error_code)?;
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
 
-            Ok(())
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            OffsetDeleteResponsePartition::encode_validated(self, encoder, version)
         }
     }
 
@@ -420,6 +535,23 @@ pub mod offset_delete_response {
         }
     }
 
+    impl OffsetDeleteResponse {
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            encoder.write_i16(self.error_code)?;
+            encoder.write_i32(self.throttle_time_ms)?;
+            encoder.write_array_len(self.topics.len())?;
+            for value in &self.topics {
+                value.encode_validated(encoder, version)?;
+            }
+
+            Ok(())
+        }
+    }
+
     impl KafkaEncode for OffsetDeleteResponse {
         fn encode<T: EncodeTarget>(
             &self,
@@ -427,15 +559,21 @@ pub mod offset_delete_response {
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
             self.validate_for_version(version)?;
+            OffsetDeleteResponse::encode_validated(self, encoder, version)
+        }
 
-            encoder.write_i16(self.error_code)?;
-            encoder.write_i32(self.throttle_time_ms)?;
-            encoder.write_array_len(self.topics.len())?;
-            for value in &self.topics {
-                value.encode(encoder, version)?;
-            }
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
 
-            Ok(())
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            OffsetDeleteResponse::encode_validated(self, encoder, version)
         }
     }
 }

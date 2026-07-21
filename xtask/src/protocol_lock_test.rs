@@ -103,22 +103,20 @@ fn the_checked_in_digests_match_the_vendored_bytes() {
     // every file it opens. Asserting it here as well means a vendored file
     // edited by hand fails the fast test suite, not the slow generation.
     let lock = checked_in_lock();
-    let message_root = repository_root()
-        .join(&lock.kafka.vendored_root)
+    let message_root = lock
+        .kafka
+        .vendored_root
+        .join_to(&repository_root())
         .join(&lock.kafka.commit)
-        .join(
-            Path::new(&lock.kafka.upstream_message_root)
-                .file_name()
-                .unwrap_or_else(|| panic!("upstream_message_root names no directory")),
-        );
+        .join(lock.kafka.upstream_message_root.file_name());
 
     let mut mismatched = Vec::new();
     for file in &lock.kafka.files {
-        let path = message_root.join(&file.path);
+        let path = file.path.join_to(&message_root);
         let bytes =
             fs::read(&path).unwrap_or_else(|error| panic!("read {}: {error}", path.display()));
         if digest(&bytes) != file.sha256 {
-            mismatched.push(file.path.clone());
+            mismatched.push(file.path.as_str().to_owned());
         }
     }
 

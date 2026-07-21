@@ -126,14 +126,12 @@ pub mod list_transactions_request {
         }
     }
 
-    impl KafkaEncode for ListTransactionsRequest {
-        fn encode<T: EncodeTarget>(
+    impl ListTransactionsRequest {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             encoder.write_compact_array_len(self.state_filters.len())?;
             for value in &self.state_filters {
                 encoder.write_compact_string(value)?;
@@ -154,6 +152,31 @@ pub mod list_transactions_request {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for ListTransactionsRequest {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            ListTransactionsRequest::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            ListTransactionsRequest::encode_validated(self, encoder, version)
         }
     }
 }
@@ -242,14 +265,12 @@ pub mod list_transactions_response {
         }
     }
 
-    impl KafkaEncode for TransactionState {
-        fn encode<T: EncodeTarget>(
+    impl TransactionState {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             encoder.write_compact_string(&self.transactional_id)?;
             encoder.write_i64(self.producer_id)?;
             encoder.write_compact_string(&self.transaction_state)?;
@@ -259,6 +280,31 @@ pub mod list_transactions_response {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for TransactionState {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            TransactionState::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            TransactionState::encode_validated(self, encoder, version)
         }
     }
 
@@ -336,14 +382,12 @@ pub mod list_transactions_response {
         }
     }
 
-    impl KafkaEncode for ListTransactionsResponse {
-        fn encode<T: EncodeTarget>(
+    impl ListTransactionsResponse {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             encoder.write_i32(self.throttle_time_ms)?;
             encoder.write_i16(self.error_code)?;
             encoder.write_compact_array_len(self.unknown_state_filters.len())?;
@@ -352,7 +396,7 @@ pub mod list_transactions_response {
             }
             encoder.write_compact_array_len(self.transaction_states.len())?;
             for value in &self.transaction_states {
-                value.encode(encoder, version)?;
+                value.encode_validated(encoder, version)?;
             }
 
             if Self::is_flexible(version) {
@@ -360,6 +404,31 @@ pub mod list_transactions_response {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for ListTransactionsResponse {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            ListTransactionsResponse::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            ListTransactionsResponse::encode_validated(self, encoder, version)
         }
     }
 }

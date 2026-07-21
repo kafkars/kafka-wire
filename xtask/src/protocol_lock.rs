@@ -14,7 +14,9 @@ use std::{collections::BTreeMap, path::Path};
 
 use sha2::{Digest, Sha256};
 
-pub(crate) use kafka_wire_codegen::{LockedFile as VendoredFile, ProtocolLock, SourceStatus};
+pub(crate) use kafka_wire_codegen::{
+    LockedFile as VendoredFile, PortableFilename, ProtocolLock, SourceStatus,
+};
 
 /// Reads the writer's input through the generator's validated lock model.
 pub(crate) fn read(path: &Path) -> Result<ProtocolLock, String> {

@@ -91,18 +91,16 @@ pub mod assign_replicas_to_dirs_request {
         }
     }
 
-    impl KafkaEncode for DirectoryData {
-        fn encode<T: EncodeTarget>(
+    impl DirectoryData {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             encoder.write_uuid(self.id)?;
             encoder.write_compact_array_len(self.topics.len())?;
             for value in &self.topics {
-                value.encode(encoder, version)?;
+                value.encode_validated(encoder, version)?;
             }
 
             if Self::is_flexible(version) {
@@ -110,6 +108,31 @@ pub mod assign_replicas_to_dirs_request {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for DirectoryData {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            DirectoryData::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            DirectoryData::encode_validated(self, encoder, version)
         }
     }
 
@@ -187,18 +210,16 @@ pub mod assign_replicas_to_dirs_request {
         }
     }
 
-    impl KafkaEncode for TopicData {
-        fn encode<T: EncodeTarget>(
+    impl TopicData {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             encoder.write_uuid(self.topic_id)?;
             encoder.write_compact_array_len(self.partitions.len())?;
             for value in &self.partitions {
-                value.encode(encoder, version)?;
+                value.encode_validated(encoder, version)?;
             }
 
             if Self::is_flexible(version) {
@@ -206,6 +227,31 @@ pub mod assign_replicas_to_dirs_request {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for TopicData {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            TopicData::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            TopicData::encode_validated(self, encoder, version)
         }
     }
 
@@ -273,14 +319,12 @@ pub mod assign_replicas_to_dirs_request {
         }
     }
 
-    impl KafkaEncode for PartitionData {
-        fn encode<T: EncodeTarget>(
+    impl PartitionData {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             encoder.write_i32(self.partition_index)?;
 
             if Self::is_flexible(version) {
@@ -288,6 +332,31 @@ pub mod assign_replicas_to_dirs_request {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for PartitionData {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            PartitionData::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            PartitionData::encode_validated(self, encoder, version)
         }
     }
 
@@ -373,19 +442,17 @@ pub mod assign_replicas_to_dirs_request {
         }
     }
 
-    impl KafkaEncode for AssignReplicasToDirsRequest {
-        fn encode<T: EncodeTarget>(
+    impl AssignReplicasToDirsRequest {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             encoder.write_i32(self.broker_id)?;
             encoder.write_i64(self.broker_epoch)?;
             encoder.write_compact_array_len(self.directories.len())?;
             for value in &self.directories {
-                value.encode(encoder, version)?;
+                value.encode_validated(encoder, version)?;
             }
 
             if Self::is_flexible(version) {
@@ -393,6 +460,31 @@ pub mod assign_replicas_to_dirs_request {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for AssignReplicasToDirsRequest {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            AssignReplicasToDirsRequest::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            AssignReplicasToDirsRequest::encode_validated(self, encoder, version)
         }
     }
 }
@@ -483,18 +575,16 @@ pub mod assign_replicas_to_dirs_response {
         }
     }
 
-    impl KafkaEncode for DirectoryData {
-        fn encode<T: EncodeTarget>(
+    impl DirectoryData {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             encoder.write_uuid(self.id)?;
             encoder.write_compact_array_len(self.topics.len())?;
             for value in &self.topics {
-                value.encode(encoder, version)?;
+                value.encode_validated(encoder, version)?;
             }
 
             if Self::is_flexible(version) {
@@ -502,6 +592,31 @@ pub mod assign_replicas_to_dirs_response {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for DirectoryData {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            DirectoryData::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            DirectoryData::encode_validated(self, encoder, version)
         }
     }
 
@@ -579,18 +694,16 @@ pub mod assign_replicas_to_dirs_response {
         }
     }
 
-    impl KafkaEncode for TopicData {
-        fn encode<T: EncodeTarget>(
+    impl TopicData {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             encoder.write_uuid(self.topic_id)?;
             encoder.write_compact_array_len(self.partitions.len())?;
             for value in &self.partitions {
-                value.encode(encoder, version)?;
+                value.encode_validated(encoder, version)?;
             }
 
             if Self::is_flexible(version) {
@@ -598,6 +711,31 @@ pub mod assign_replicas_to_dirs_response {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for TopicData {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            TopicData::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            TopicData::encode_validated(self, encoder, version)
         }
     }
 
@@ -669,14 +807,12 @@ pub mod assign_replicas_to_dirs_response {
         }
     }
 
-    impl KafkaEncode for PartitionData {
-        fn encode<T: EncodeTarget>(
+    impl PartitionData {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             encoder.write_i32(self.partition_index)?;
             encoder.write_i16(self.error_code)?;
 
@@ -685,6 +821,31 @@ pub mod assign_replicas_to_dirs_response {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for PartitionData {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            PartitionData::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            PartitionData::encode_validated(self, encoder, version)
         }
     }
 
@@ -755,19 +916,17 @@ pub mod assign_replicas_to_dirs_response {
         }
     }
 
-    impl KafkaEncode for AssignReplicasToDirsResponse {
-        fn encode<T: EncodeTarget>(
+    impl AssignReplicasToDirsResponse {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             encoder.write_i32(self.throttle_time_ms)?;
             encoder.write_i16(self.error_code)?;
             encoder.write_compact_array_len(self.directories.len())?;
             for value in &self.directories {
-                value.encode(encoder, version)?;
+                value.encode_validated(encoder, version)?;
             }
 
             if Self::is_flexible(version) {
@@ -775,6 +934,31 @@ pub mod assign_replicas_to_dirs_response {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for AssignReplicasToDirsResponse {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            AssignReplicasToDirsResponse::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            AssignReplicasToDirsResponse::encode_validated(self, encoder, version)
         }
     }
 }

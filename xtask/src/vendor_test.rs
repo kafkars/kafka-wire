@@ -118,6 +118,22 @@ fn a_traversing_listing_entry_fails_the_whole_listing() {
 }
 
 #[test]
+fn case_folded_listing_collisions_fail_before_fetch_or_staging() {
+    let error = rejection(
+        &listing(
+            false,
+            &[("FooRequest.json", "blob"), ("fooRequest.json", "blob")],
+        ),
+        "a case-folding filename collision",
+    );
+
+    assert!(
+        error.contains("colliding schema filename"),
+        "the refusal must name the portable collision: {error}"
+    );
+}
+
+#[test]
 fn a_reviewed_status_survives_re_vendoring_and_a_new_file_does_not_inherit_one() {
     // This is what makes re-vendoring reproduce the lockfile: the digests come
     // from the bytes, and the statuses come from the document being replaced.
@@ -127,17 +143,22 @@ fn a_reviewed_status_survives_re_vendoring_and_a_new_file_does_not_inherit_one()
         ("MetadataRequest.json", SourceStatus::Pending),
     ]);
 
-    let enabled = relock("ApiVersionsRequest.json", bytes, &recorded);
+    let enabled = relock("ApiVersionsRequest.json", bytes, &recorded)
+        .unwrap_or_else(|error| panic!("ordinary filename rejected: {error}"));
     assert_eq!(enabled.status, SourceStatus::Enabled);
-    assert_eq!(enabled.path, "ApiVersionsRequest.json");
+    assert_eq!(enabled.path.as_str(), "ApiVersionsRequest.json");
     assert_eq!(enabled.sha256, digest(bytes));
 
     assert_eq!(
-        relock("MetadataRequest.json", bytes, &recorded).status,
+        relock("MetadataRequest.json", bytes, &recorded)
+            .unwrap_or_else(|error| panic!("ordinary filename rejected: {error}"))
+            .status,
         SourceStatus::Pending
     );
     assert_eq!(
-        relock("BrandNewRequest.json", bytes, &recorded).status,
+        relock("BrandNewRequest.json", bytes, &recorded)
+            .unwrap_or_else(|error| panic!("ordinary filename rejected: {error}"))
+            .status,
         SourceStatus::Pending,
         "a message upstream added since the last run must not join the compiled set"
     );

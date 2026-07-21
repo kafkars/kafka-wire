@@ -132,14 +132,12 @@ pub mod create_acls_request {
         }
     }
 
-    impl KafkaEncode for AclCreation {
-        fn encode<T: EncodeTarget>(
+    impl AclCreation {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             encoder.write_i8(self.resource_type)?;
             if Self::is_flexible(version) {
                 encoder.write_compact_string(&self.resource_name)?;
@@ -165,6 +163,31 @@ pub mod create_acls_request {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for AclCreation {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            AclCreation::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            AclCreation::encode_validated(self, encoder, version)
         }
     }
 
@@ -235,21 +258,19 @@ pub mod create_acls_request {
         }
     }
 
-    impl KafkaEncode for CreateAclsRequest {
-        fn encode<T: EncodeTarget>(
+    impl CreateAclsRequest {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             if Self::is_flexible(version) {
                 encoder.write_compact_array_len(self.creations.len())?;
             } else {
                 encoder.write_array_len(self.creations.len())?;
             }
             for value in &self.creations {
-                value.encode(encoder, version)?;
+                value.encode_validated(encoder, version)?;
             }
 
             if Self::is_flexible(version) {
@@ -257,6 +278,31 @@ pub mod create_acls_request {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for CreateAclsRequest {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            CreateAclsRequest::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            CreateAclsRequest::encode_validated(self, encoder, version)
         }
     }
 }
@@ -355,14 +401,12 @@ pub mod create_acls_response {
         }
     }
 
-    impl KafkaEncode for AclCreationResult {
-        fn encode<T: EncodeTarget>(
+    impl AclCreationResult {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             encoder.write_i16(self.error_code)?;
             if Self::is_flexible(version) {
                 encoder.write_compact_nullable_string(self.error_message.as_ref())?;
@@ -375,6 +419,31 @@ pub mod create_acls_response {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for AclCreationResult {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            AclCreationResult::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            AclCreationResult::encode_validated(self, encoder, version)
         }
     }
 
@@ -447,14 +516,12 @@ pub mod create_acls_response {
         }
     }
 
-    impl KafkaEncode for CreateAclsResponse {
-        fn encode<T: EncodeTarget>(
+    impl CreateAclsResponse {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             encoder.write_i32(self.throttle_time_ms)?;
             if Self::is_flexible(version) {
                 encoder.write_compact_array_len(self.results.len())?;
@@ -462,7 +529,7 @@ pub mod create_acls_response {
                 encoder.write_array_len(self.results.len())?;
             }
             for value in &self.results {
-                value.encode(encoder, version)?;
+                value.encode_validated(encoder, version)?;
             }
 
             if Self::is_flexible(version) {
@@ -470,6 +537,31 @@ pub mod create_acls_response {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for CreateAclsResponse {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            CreateAclsResponse::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            CreateAclsResponse::encode_validated(self, encoder, version)
         }
     }
 }

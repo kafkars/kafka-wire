@@ -86,14 +86,12 @@ pub mod list_config_resources_request {
         }
     }
 
-    impl KafkaEncode for ListConfigResourcesRequest {
-        fn encode<T: EncodeTarget>(
+    impl ListConfigResourcesRequest {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             if version.value() >= 1 {
                 encoder.write_compact_array_len(self.resource_types.len())?;
                 for value in &self.resource_types {
@@ -106,6 +104,31 @@ pub mod list_config_resources_request {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for ListConfigResourcesRequest {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            ListConfigResourcesRequest::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            ListConfigResourcesRequest::encode_validated(self, encoder, version)
         }
     }
 }
@@ -204,14 +227,12 @@ pub mod list_config_resources_response {
         }
     }
 
-    impl KafkaEncode for ConfigResource {
-        fn encode<T: EncodeTarget>(
+    impl ConfigResource {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             encoder.write_compact_string(&self.resource_name)?;
             if version.value() >= 1 {
                 encoder.write_i8(self.resource_type)?;
@@ -222,6 +243,31 @@ pub mod list_config_resources_response {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for ConfigResource {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            ConfigResource::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            ConfigResource::encode_validated(self, encoder, version)
         }
     }
 
@@ -292,19 +338,17 @@ pub mod list_config_resources_response {
         }
     }
 
-    impl KafkaEncode for ListConfigResourcesResponse {
-        fn encode<T: EncodeTarget>(
+    impl ListConfigResourcesResponse {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             encoder.write_i32(self.throttle_time_ms)?;
             encoder.write_i16(self.error_code)?;
             encoder.write_compact_array_len(self.config_resources.len())?;
             for value in &self.config_resources {
-                value.encode(encoder, version)?;
+                value.encode_validated(encoder, version)?;
             }
 
             if Self::is_flexible(version) {
@@ -312,6 +356,31 @@ pub mod list_config_resources_response {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for ListConfigResourcesResponse {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            ListConfigResourcesResponse::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            ListConfigResourcesResponse::encode_validated(self, encoder, version)
         }
     }
 }

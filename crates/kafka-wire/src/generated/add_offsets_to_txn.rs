@@ -94,14 +94,12 @@ pub mod add_offsets_to_txn_request {
         }
     }
 
-    impl KafkaEncode for AddOffsetsToTxnRequest {
-        fn encode<T: EncodeTarget>(
+    impl AddOffsetsToTxnRequest {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             if Self::is_flexible(version) {
                 encoder.write_compact_string(&self.transactional_id)?;
             } else {
@@ -120,6 +118,31 @@ pub mod add_offsets_to_txn_request {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for AddOffsetsToTxnRequest {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            AddOffsetsToTxnRequest::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            AddOffsetsToTxnRequest::encode_validated(self, encoder, version)
         }
     }
 }
@@ -193,14 +216,12 @@ pub mod add_offsets_to_txn_response {
         }
     }
 
-    impl KafkaEncode for AddOffsetsToTxnResponse {
-        fn encode<T: EncodeTarget>(
+    impl AddOffsetsToTxnResponse {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             encoder.write_i32(self.throttle_time_ms)?;
             encoder.write_i16(self.error_code)?;
 
@@ -209,6 +230,31 @@ pub mod add_offsets_to_txn_response {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for AddOffsetsToTxnResponse {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            AddOffsetsToTxnResponse::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            AddOffsetsToTxnResponse::encode_validated(self, encoder, version)
         }
     }
 }

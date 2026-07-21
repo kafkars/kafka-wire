@@ -102,14 +102,12 @@ pub mod list_groups_request {
         }
     }
 
-    impl KafkaEncode for ListGroupsRequest {
-        fn encode<T: EncodeTarget>(
+    impl ListGroupsRequest {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             if version.value() >= 4 {
                 encoder.write_compact_array_len(self.states_filter.len())?;
                 for value in &self.states_filter {
@@ -128,6 +126,31 @@ pub mod list_groups_request {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for ListGroupsRequest {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            ListGroupsRequest::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            ListGroupsRequest::encode_validated(self, encoder, version)
         }
     }
 }
@@ -236,14 +259,12 @@ pub mod list_groups_response {
         }
     }
 
-    impl KafkaEncode for ListedGroup {
-        fn encode<T: EncodeTarget>(
+    impl ListedGroup {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             if Self::is_flexible(version) {
                 encoder.write_compact_string(&self.group_id)?;
             } else {
@@ -266,6 +287,31 @@ pub mod list_groups_response {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for ListedGroup {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            ListedGroup::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            ListedGroup::encode_validated(self, encoder, version)
         }
     }
 
@@ -344,14 +390,12 @@ pub mod list_groups_response {
         }
     }
 
-    impl KafkaEncode for ListGroupsResponse {
-        fn encode<T: EncodeTarget>(
+    impl ListGroupsResponse {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             if version.value() >= 1 {
                 encoder.write_i32(self.throttle_time_ms)?;
             }
@@ -362,7 +406,7 @@ pub mod list_groups_response {
                 encoder.write_array_len(self.groups.len())?;
             }
             for value in &self.groups {
-                value.encode(encoder, version)?;
+                value.encode_validated(encoder, version)?;
             }
 
             if Self::is_flexible(version) {
@@ -370,6 +414,31 @@ pub mod list_groups_response {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for ListGroupsResponse {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            ListGroupsResponse::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            ListGroupsResponse::encode_validated(self, encoder, version)
         }
     }
 }

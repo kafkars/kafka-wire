@@ -91,18 +91,16 @@ pub mod alter_partition_request {
         }
     }
 
-    impl KafkaEncode for TopicData {
-        fn encode<T: EncodeTarget>(
+    impl TopicData {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             encoder.write_uuid(self.topic_id)?;
             encoder.write_compact_array_len(self.partitions.len())?;
             for value in &self.partitions {
-                value.encode(encoder, version)?;
+                value.encode_validated(encoder, version)?;
             }
 
             if Self::is_flexible(version) {
@@ -110,6 +108,31 @@ pub mod alter_partition_request {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for TopicData {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            TopicData::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            TopicData::encode_validated(self, encoder, version)
         }
     }
 
@@ -226,14 +249,12 @@ pub mod alter_partition_request {
         }
     }
 
-    impl KafkaEncode for PartitionData {
-        fn encode<T: EncodeTarget>(
+    impl PartitionData {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             encoder.write_i32(self.partition_index)?;
             encoder.write_i32(self.leader_epoch)?;
             if version.value() <= 2 {
@@ -245,7 +266,7 @@ pub mod alter_partition_request {
             if version.value() >= 3 {
                 encoder.write_compact_array_len(self.new_isr_with_epochs.len())?;
                 for value in &self.new_isr_with_epochs {
-                    value.encode(encoder, version)?;
+                    value.encode_validated(encoder, version)?;
                 }
             }
             encoder.write_i8(self.leader_recovery_state)?;
@@ -256,6 +277,31 @@ pub mod alter_partition_request {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for PartitionData {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            PartitionData::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            PartitionData::encode_validated(self, encoder, version)
         }
     }
 
@@ -272,8 +318,8 @@ pub mod alter_partition_request {
     }
 
     impl BrokerState {
-        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(2, 3);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(2, 3));
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(3, 3);
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(3, 3));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
@@ -290,20 +336,6 @@ pub mod alter_partition_request {
                 });
             }
 
-            if version.value() < 3 && self.broker_id != 0 {
-                return Err(EncodeError::FieldNotRepresentable {
-                    message: "BrokerState",
-                    field: "BrokerId",
-                    version,
-                });
-            }
-            if version.value() < 3 && self.broker_epoch != -1 {
-                return Err(EncodeError::FieldNotRepresentable {
-                    message: "BrokerState",
-                    field: "BrokerEpoch",
-                    version,
-                });
-            }
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
                 return Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: "BrokerState",
@@ -335,16 +367,8 @@ pub mod alter_partition_request {
                 });
             }
 
-            let broker_id = if version.value() >= 3 {
-                decoder.read_i32()?
-            } else {
-                0
-            };
-            let broker_epoch = if version.value() >= 3 {
-                decoder.read_i64()?
-            } else {
-                -1
-            };
+            let broker_id = decoder.read_i32()?;
+            let broker_epoch = decoder.read_i64()?;
             let unknown_tagged_fields = if Self::is_flexible(version) {
                 decoder.read_tagged_fields()?
             } else {
@@ -359,6 +383,23 @@ pub mod alter_partition_request {
         }
     }
 
+    impl BrokerState {
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            encoder.write_i32(self.broker_id)?;
+            encoder.write_i64(self.broker_epoch)?;
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            }
+
+            Ok(())
+        }
+    }
+
     impl KafkaEncode for BrokerState {
         fn encode<T: EncodeTarget>(
             &self,
@@ -366,19 +407,21 @@ pub mod alter_partition_request {
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
             self.validate_for_version(version)?;
+            BrokerState::encode_validated(self, encoder, version)
+        }
 
-            if version.value() >= 3 {
-                encoder.write_i32(self.broker_id)?;
-            }
-            if version.value() >= 3 {
-                encoder.write_i64(self.broker_epoch)?;
-            }
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
 
-            if Self::is_flexible(version) {
-                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-            }
-
-            Ok(())
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            BrokerState::encode_validated(self, encoder, version)
         }
     }
 
@@ -464,19 +507,17 @@ pub mod alter_partition_request {
         }
     }
 
-    impl KafkaEncode for AlterPartitionRequest {
-        fn encode<T: EncodeTarget>(
+    impl AlterPartitionRequest {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             encoder.write_i32(self.broker_id)?;
             encoder.write_i64(self.broker_epoch)?;
             encoder.write_compact_array_len(self.topics.len())?;
             for value in &self.topics {
-                value.encode(encoder, version)?;
+                value.encode_validated(encoder, version)?;
             }
 
             if Self::is_flexible(version) {
@@ -484,6 +525,31 @@ pub mod alter_partition_request {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for AlterPartitionRequest {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            AlterPartitionRequest::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            AlterPartitionRequest::encode_validated(self, encoder, version)
         }
     }
 }
@@ -574,18 +640,16 @@ pub mod alter_partition_response {
         }
     }
 
-    impl KafkaEncode for TopicData {
-        fn encode<T: EncodeTarget>(
+    impl TopicData {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             encoder.write_uuid(self.topic_id)?;
             encoder.write_compact_array_len(self.partitions.len())?;
             for value in &self.partitions {
-                value.encode(encoder, version)?;
+                value.encode_validated(encoder, version)?;
             }
 
             if Self::is_flexible(version) {
@@ -593,6 +657,31 @@ pub mod alter_partition_response {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for TopicData {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            TopicData::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            TopicData::encode_validated(self, encoder, version)
         }
     }
 
@@ -687,14 +776,12 @@ pub mod alter_partition_response {
         }
     }
 
-    impl KafkaEncode for PartitionData {
-        fn encode<T: EncodeTarget>(
+    impl PartitionData {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             encoder.write_i32(self.partition_index)?;
             encoder.write_i16(self.error_code)?;
             encoder.write_i32(self.leader_id)?;
@@ -711,6 +798,31 @@ pub mod alter_partition_response {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for PartitionData {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            PartitionData::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            PartitionData::encode_validated(self, encoder, version)
         }
     }
 
@@ -781,19 +893,17 @@ pub mod alter_partition_response {
         }
     }
 
-    impl KafkaEncode for AlterPartitionResponse {
-        fn encode<T: EncodeTarget>(
+    impl AlterPartitionResponse {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             encoder.write_i32(self.throttle_time_ms)?;
             encoder.write_i16(self.error_code)?;
             encoder.write_compact_array_len(self.topics.len())?;
             for value in &self.topics {
-                value.encode(encoder, version)?;
+                value.encode_validated(encoder, version)?;
             }
 
             if Self::is_flexible(version) {
@@ -801,6 +911,31 @@ pub mod alter_partition_response {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for AlterPartitionResponse {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            AlterPartitionResponse::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            AlterPartitionResponse::encode_validated(self, encoder, version)
         }
     }
 }

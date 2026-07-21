@@ -101,21 +101,19 @@ pub mod streams_group_topology_description_update_request {
         }
     }
 
-    impl KafkaEncode for TopologyDescription {
-        fn encode<T: EncodeTarget>(
+    impl TopologyDescription {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             encoder.write_compact_array_len(self.subtopologies.len())?;
             for value in &self.subtopologies {
-                value.encode(encoder, version)?;
+                value.encode_validated(encoder, version)?;
             }
             encoder.write_compact_array_len(self.global_stores.len())?;
             for value in &self.global_stores {
-                value.encode(encoder, version)?;
+                value.encode_validated(encoder, version)?;
             }
 
             if Self::is_flexible(version) {
@@ -123,6 +121,31 @@ pub mod streams_group_topology_description_update_request {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for TopologyDescription {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            TopologyDescription::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            TopologyDescription::encode_validated(self, encoder, version)
         }
     }
 
@@ -202,18 +225,16 @@ pub mod streams_group_topology_description_update_request {
         }
     }
 
-    impl KafkaEncode for TopologyDescriptionSubtopology {
-        fn encode<T: EncodeTarget>(
+    impl TopologyDescriptionSubtopology {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             encoder.write_compact_string(&self.subtopology_id)?;
             encoder.write_compact_array_len(self.nodes.len())?;
             for value in &self.nodes {
-                value.encode(encoder, version)?;
+                value.encode_validated(encoder, version)?;
             }
 
             if Self::is_flexible(version) {
@@ -221,6 +242,31 @@ pub mod streams_group_topology_description_update_request {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for TopologyDescriptionSubtopology {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            TopologyDescriptionSubtopology::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            TopologyDescriptionSubtopology::encode_validated(self, encoder, version)
         }
     }
 
@@ -317,14 +363,12 @@ pub mod streams_group_topology_description_update_request {
         }
     }
 
-    impl KafkaEncode for TopologyDescriptionNode {
-        fn encode<T: EncodeTarget>(
+    impl TopologyDescriptionNode {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             encoder.write_compact_string(&self.name)?;
             encoder.write_i8(self.node_type)?;
             encoder.write_compact_array_len(self.source_topics.len())?;
@@ -346,6 +390,31 @@ pub mod streams_group_topology_description_update_request {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for TopologyDescriptionNode {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            TopologyDescriptionNode::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            TopologyDescriptionNode::encode_validated(self, encoder, version)
         }
     }
 
@@ -419,6 +488,23 @@ pub mod streams_group_topology_description_update_request {
         }
     }
 
+    impl TopologyDescriptionGlobalStore {
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.source.encode_validated(encoder, version)?;
+            self.processor.encode_validated(encoder, version)?;
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            }
+
+            Ok(())
+        }
+    }
+
     impl KafkaEncode for TopologyDescriptionGlobalStore {
         fn encode<T: EncodeTarget>(
             &self,
@@ -426,15 +512,21 @@ pub mod streams_group_topology_description_update_request {
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
             self.validate_for_version(version)?;
+            TopologyDescriptionGlobalStore::encode_validated(self, encoder, version)
+        }
 
-            self.source.encode(encoder, version)?;
-            self.processor.encode(encoder, version)?;
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
 
-            if Self::is_flexible(version) {
-                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-            }
-
-            Ok(())
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            TopologyDescriptionGlobalStore::encode_validated(self, encoder, version)
         }
     }
 
@@ -508,6 +600,26 @@ pub mod streams_group_topology_description_update_request {
         }
     }
 
+    impl StreamsGroupTopologyDescriptionUpdateRequest {
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            encoder.write_compact_string(&self.group_id)?;
+            encoder.write_compact_string(&self.member_id)?;
+            encoder.write_i32(self.topology_epoch)?;
+            self.topology_description
+                .encode_validated(encoder, version)?;
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            }
+
+            Ok(())
+        }
+    }
+
     impl KafkaEncode for StreamsGroupTopologyDescriptionUpdateRequest {
         fn encode<T: EncodeTarget>(
             &self,
@@ -515,17 +627,21 @@ pub mod streams_group_topology_description_update_request {
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
             self.validate_for_version(version)?;
+            StreamsGroupTopologyDescriptionUpdateRequest::encode_validated(self, encoder, version)
+        }
 
-            encoder.write_compact_string(&self.group_id)?;
-            encoder.write_compact_string(&self.member_id)?;
-            encoder.write_i32(self.topology_epoch)?;
-            self.topology_description.encode(encoder, version)?;
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
 
-            if Self::is_flexible(version) {
-                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-            }
-
-            Ok(())
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            StreamsGroupTopologyDescriptionUpdateRequest::encode_validated(self, encoder, version)
         }
     }
 }
@@ -603,14 +719,12 @@ pub mod streams_group_topology_description_update_response {
         }
     }
 
-    impl KafkaEncode for StreamsGroupTopologyDescriptionUpdateResponse {
-        fn encode<T: EncodeTarget>(
+    impl StreamsGroupTopologyDescriptionUpdateResponse {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             encoder.write_i32(self.throttle_time_ms)?;
             encoder.write_i16(self.error_code)?;
             encoder.write_compact_nullable_string(self.error_message.as_ref())?;
@@ -620,6 +734,31 @@ pub mod streams_group_topology_description_update_response {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for StreamsGroupTopologyDescriptionUpdateResponse {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            StreamsGroupTopologyDescriptionUpdateResponse::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            StreamsGroupTopologyDescriptionUpdateResponse::encode_validated(self, encoder, version)
         }
     }
 }

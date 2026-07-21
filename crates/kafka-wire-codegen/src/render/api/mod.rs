@@ -1,6 +1,7 @@
 //! API-module rendering facade.
 
 mod codec;
+mod declarations;
 mod descriptor;
 mod file;
 mod header;

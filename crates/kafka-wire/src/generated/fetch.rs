@@ -30,8 +30,8 @@ pub mod fetch_request {
     }
 
     impl ReplicaState {
-        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(4, 18);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(12, 18));
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(15, 18);
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(15, 18));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
@@ -48,20 +48,6 @@ pub mod fetch_request {
                 });
             }
 
-            if version.value() < 15 && self.replica_id != -1 {
-                return Err(EncodeError::FieldNotRepresentable {
-                    message: "ReplicaState",
-                    field: "ReplicaId",
-                    version,
-                });
-            }
-            if version.value() < 15 && self.replica_epoch != -1 {
-                return Err(EncodeError::FieldNotRepresentable {
-                    message: "ReplicaState",
-                    field: "ReplicaEpoch",
-                    version,
-                });
-            }
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
                 return Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: "ReplicaState",
@@ -93,16 +79,8 @@ pub mod fetch_request {
                 });
             }
 
-            let replica_id = if version.value() >= 15 {
-                decoder.read_i32()?
-            } else {
-                -1
-            };
-            let replica_epoch = if version.value() >= 15 {
-                decoder.read_i64()?
-            } else {
-                -1
-            };
+            let replica_id = decoder.read_i32()?;
+            let replica_epoch = decoder.read_i64()?;
             let unknown_tagged_fields = if Self::is_flexible(version) {
                 decoder.read_tagged_fields()?
             } else {
@@ -117,6 +95,23 @@ pub mod fetch_request {
         }
     }
 
+    impl ReplicaState {
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            encoder.write_i32(self.replica_id)?;
+            encoder.write_i64(self.replica_epoch)?;
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            }
+
+            Ok(())
+        }
+    }
+
     impl KafkaEncode for ReplicaState {
         fn encode<T: EncodeTarget>(
             &self,
@@ -124,19 +119,21 @@ pub mod fetch_request {
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
             self.validate_for_version(version)?;
+            ReplicaState::encode_validated(self, encoder, version)
+        }
 
-            if version.value() >= 15 {
-                encoder.write_i32(self.replica_id)?;
-            }
-            if version.value() >= 15 {
-                encoder.write_i64(self.replica_epoch)?;
-            }
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
 
-            if Self::is_flexible(version) {
-                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-            }
-
-            Ok(())
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            ReplicaState::encode_validated(self, encoder, version)
         }
     }
 
@@ -234,14 +231,12 @@ pub mod fetch_request {
         }
     }
 
-    impl KafkaEncode for FetchTopic {
-        fn encode<T: EncodeTarget>(
+    impl FetchTopic {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             if version.value() <= 12 {
                 if Self::is_flexible(version) {
                     encoder.write_compact_string(&self.topic)?;
@@ -258,7 +253,7 @@ pub mod fetch_request {
                 encoder.write_array_len(self.partitions.len())?;
             }
             for value in &self.partitions {
-                value.encode(encoder, version)?;
+                value.encode_validated(encoder, version)?;
             }
 
             if Self::is_flexible(version) {
@@ -266,6 +261,31 @@ pub mod fetch_request {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for FetchTopic {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            FetchTopic::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            FetchTopic::encode_validated(self, encoder, version)
         }
     }
 
@@ -406,14 +426,12 @@ pub mod fetch_request {
         }
     }
 
-    impl KafkaEncode for FetchPartition {
-        fn encode<T: EncodeTarget>(
+    impl FetchPartition {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             encoder.write_i32(self.partition)?;
             if version.value() >= 9 {
                 encoder.write_i32(self.current_leader_epoch)?;
@@ -448,6 +466,31 @@ pub mod fetch_request {
         }
     }
 
+    impl KafkaEncode for FetchPartition {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            FetchPartition::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            FetchPartition::encode_validated(self, encoder, version)
+        }
+    }
+
     /// `ForgottenTopic` as declared by the `Fetch` API.
     #[non_exhaustive]
     #[derive(Clone, Debug, Default, Eq, PartialEq)]
@@ -463,7 +506,7 @@ pub mod fetch_request {
     }
 
     impl ForgottenTopic {
-        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(4, 18);
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(7, 18);
         const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(12, 18));
 
         fn is_flexible(version: ApiVersion) -> bool {
@@ -481,13 +524,6 @@ pub mod fetch_request {
                 });
             }
 
-            if version.value() < 7 && !self.partitions.is_empty() {
-                return Err(EncodeError::FieldNotRepresentable {
-                    message: "ForgottenTopic",
-                    field: "Partitions",
-                    version,
-                });
-            }
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
                 return Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: "ForgottenTopic",
@@ -509,7 +545,7 @@ pub mod fetch_request {
                 });
             }
 
-            let topic = if version.value() >= 7 && version.value() <= 12 {
+            let topic = if version.value() <= 12 {
                 if Self::is_flexible(version) {
                     decoder.read_compact_string()?
                 } else {
@@ -523,15 +559,13 @@ pub mod fetch_request {
             } else {
                 Uuid::ZERO
             };
-            let partitions = if version.value() >= 7 {
+            let partitions = {
                 let length = if Self::is_flexible(version) {
                     decoder.read_compact_array_len()?
                 } else {
                     decoder.read_array_len()?
                 };
                 decoder.read_vec(length, Decoder::read_i32)?
-            } else {
-                Vec::new()
             };
             let unknown_tagged_fields = if Self::is_flexible(version) {
                 decoder.read_tagged_fields()?
@@ -548,15 +582,13 @@ pub mod fetch_request {
         }
     }
 
-    impl KafkaEncode for ForgottenTopic {
-        fn encode<T: EncodeTarget>(
+    impl ForgottenTopic {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
-            if version.value() >= 7 && version.value() <= 12 {
+            if version.value() <= 12 {
                 if Self::is_flexible(version) {
                     encoder.write_compact_string(&self.topic)?;
                 } else {
@@ -566,15 +598,13 @@ pub mod fetch_request {
             if version.value() >= 13 {
                 encoder.write_uuid(self.topic_id)?;
             }
-            if version.value() >= 7 {
-                if Self::is_flexible(version) {
-                    encoder.write_compact_array_len(self.partitions.len())?;
-                } else {
-                    encoder.write_array_len(self.partitions.len())?;
-                }
-                for value in &self.partitions {
-                    encoder.write_i32(*value)?;
-                }
+            if Self::is_flexible(version) {
+                encoder.write_compact_array_len(self.partitions.len())?;
+            } else {
+                encoder.write_array_len(self.partitions.len())?;
+            }
+            for value in &self.partitions {
+                encoder.write_i32(*value)?;
             }
 
             if Self::is_flexible(version) {
@@ -582,6 +612,31 @@ pub mod fetch_request {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for ForgottenTopic {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            ForgottenTopic::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            ForgottenTopic::encode_validated(self, encoder, version)
         }
     }
 
@@ -784,14 +839,12 @@ pub mod fetch_request {
         }
     }
 
-    impl KafkaEncode for FetchRequest {
-        fn encode<T: EncodeTarget>(
+    impl FetchRequest {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             if version.value() <= 14 {
                 encoder.write_i32(self.replica_id)?;
             }
@@ -811,7 +864,7 @@ pub mod fetch_request {
                 encoder.write_array_len(self.topics.len())?;
             }
             for value in &self.topics {
-                value.encode(encoder, version)?;
+                value.encode_validated(encoder, version)?;
             }
             if version.value() >= 7 {
                 if Self::is_flexible(version) {
@@ -820,7 +873,7 @@ pub mod fetch_request {
                     encoder.write_array_len(self.forgotten_topics_data.len())?;
                 }
                 for value in &self.forgotten_topics_data {
-                    value.encode(encoder, version)?;
+                    value.encode_validated(encoder, version)?;
                 }
             }
             if version.value() >= 11 {
@@ -841,7 +894,7 @@ pub mod fetch_request {
                 }
                 if version.value() >= 15 && self.replica_state != ReplicaState::default() {
                     known.write(1, |encoder| {
-                        self.replica_state.encode(encoder, version)?;
+                        self.replica_state.encode_validated(encoder, version)?;
                         Ok(())
                     })?;
                 }
@@ -849,6 +902,31 @@ pub mod fetch_request {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for FetchRequest {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            FetchRequest::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            FetchRequest::encode_validated(self, encoder, version)
         }
     }
 }
@@ -960,14 +1038,12 @@ pub mod fetch_response {
         }
     }
 
-    impl KafkaEncode for FetchableTopicResponse {
-        fn encode<T: EncodeTarget>(
+    impl FetchableTopicResponse {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             if version.value() <= 12 {
                 if Self::is_flexible(version) {
                     encoder.write_compact_string(&self.topic)?;
@@ -984,7 +1060,7 @@ pub mod fetch_response {
                 encoder.write_array_len(self.partitions.len())?;
             }
             for value in &self.partitions {
-                value.encode(encoder, version)?;
+                value.encode_validated(encoder, version)?;
             }
 
             if Self::is_flexible(version) {
@@ -992,6 +1068,31 @@ pub mod fetch_response {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for FetchableTopicResponse {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            FetchableTopicResponse::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            FetchableTopicResponse::encode_validated(self, encoder, version)
         }
     }
 
@@ -1199,14 +1300,12 @@ pub mod fetch_response {
         }
     }
 
-    impl KafkaEncode for PartitionData {
-        fn encode<T: EncodeTarget>(
+    impl PartitionData {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             encoder.write_i32(self.partition_index)?;
             encoder.write_i16(self.error_code)?;
             encoder.write_i64(self.high_watermark)?;
@@ -1224,7 +1323,7 @@ pub mod fetch_response {
             }
             if let Some(values) = &self.aborted_transactions {
                 for value in values {
-                    value.encode(encoder, version)?;
+                    value.encode_validated(encoder, version)?;
                 }
             }
             if version.value() >= 11 {
@@ -1240,19 +1339,19 @@ pub mod fetch_response {
                 let mut known = KnownTags::new();
                 if self.diverging_epoch != EpochEndOffset::default() {
                     known.write(0, |encoder| {
-                        self.diverging_epoch.encode(encoder, version)?;
+                        self.diverging_epoch.encode_validated(encoder, version)?;
                         Ok(())
                     })?;
                 }
                 if self.current_leader != LeaderIdAndEpoch::default() {
                     known.write(1, |encoder| {
-                        self.current_leader.encode(encoder, version)?;
+                        self.current_leader.encode_validated(encoder, version)?;
                         Ok(())
                     })?;
                 }
                 if self.snapshot_id != SnapshotId::default() {
                     known.write(2, |encoder| {
-                        self.snapshot_id.encode(encoder, version)?;
+                        self.snapshot_id.encode_validated(encoder, version)?;
                         Ok(())
                     })?;
                 }
@@ -1260,6 +1359,31 @@ pub mod fetch_response {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for PartitionData {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            PartitionData::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            PartitionData::encode_validated(self, encoder, version)
         }
     }
 
@@ -1276,7 +1400,7 @@ pub mod fetch_response {
     }
 
     impl EpochEndOffset {
-        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(4, 18);
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(12, 18);
         const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(12, 18));
 
         fn is_flexible(version: ApiVersion) -> bool {
@@ -1294,20 +1418,6 @@ pub mod fetch_response {
                 });
             }
 
-            if version.value() < 12 && self.epoch != -1 {
-                return Err(EncodeError::FieldNotRepresentable {
-                    message: "EpochEndOffset",
-                    field: "Epoch",
-                    version,
-                });
-            }
-            if version.value() < 12 && self.end_offset != -1 {
-                return Err(EncodeError::FieldNotRepresentable {
-                    message: "EpochEndOffset",
-                    field: "EndOffset",
-                    version,
-                });
-            }
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
                 return Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: "EpochEndOffset",
@@ -1339,16 +1449,8 @@ pub mod fetch_response {
                 });
             }
 
-            let epoch = if version.value() >= 12 {
-                decoder.read_i32()?
-            } else {
-                -1
-            };
-            let end_offset = if version.value() >= 12 {
-                decoder.read_i64()?
-            } else {
-                -1
-            };
+            let epoch = decoder.read_i32()?;
+            let end_offset = decoder.read_i64()?;
             let unknown_tagged_fields = if Self::is_flexible(version) {
                 decoder.read_tagged_fields()?
             } else {
@@ -1363,6 +1465,23 @@ pub mod fetch_response {
         }
     }
 
+    impl EpochEndOffset {
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            encoder.write_i32(self.epoch)?;
+            encoder.write_i64(self.end_offset)?;
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            }
+
+            Ok(())
+        }
+    }
+
     impl KafkaEncode for EpochEndOffset {
         fn encode<T: EncodeTarget>(
             &self,
@@ -1370,19 +1489,21 @@ pub mod fetch_response {
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
             self.validate_for_version(version)?;
+            EpochEndOffset::encode_validated(self, encoder, version)
+        }
 
-            if version.value() >= 12 {
-                encoder.write_i32(self.epoch)?;
-            }
-            if version.value() >= 12 {
-                encoder.write_i64(self.end_offset)?;
-            }
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
 
-            if Self::is_flexible(version) {
-                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-            }
-
-            Ok(())
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            EpochEndOffset::encode_validated(self, encoder, version)
         }
     }
 
@@ -1399,7 +1520,7 @@ pub mod fetch_response {
     }
 
     impl LeaderIdAndEpoch {
-        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(4, 18);
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(12, 18);
         const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(12, 18));
 
         fn is_flexible(version: ApiVersion) -> bool {
@@ -1417,20 +1538,6 @@ pub mod fetch_response {
                 });
             }
 
-            if version.value() < 12 && self.leader_id != -1 {
-                return Err(EncodeError::FieldNotRepresentable {
-                    message: "LeaderIdAndEpoch",
-                    field: "LeaderId",
-                    version,
-                });
-            }
-            if version.value() < 12 && self.leader_epoch != -1 {
-                return Err(EncodeError::FieldNotRepresentable {
-                    message: "LeaderIdAndEpoch",
-                    field: "LeaderEpoch",
-                    version,
-                });
-            }
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
                 return Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: "LeaderIdAndEpoch",
@@ -1462,16 +1569,8 @@ pub mod fetch_response {
                 });
             }
 
-            let leader_id = if version.value() >= 12 {
-                decoder.read_i32()?
-            } else {
-                -1
-            };
-            let leader_epoch = if version.value() >= 12 {
-                decoder.read_i32()?
-            } else {
-                -1
-            };
+            let leader_id = decoder.read_i32()?;
+            let leader_epoch = decoder.read_i32()?;
             let unknown_tagged_fields = if Self::is_flexible(version) {
                 decoder.read_tagged_fields()?
             } else {
@@ -1486,6 +1585,23 @@ pub mod fetch_response {
         }
     }
 
+    impl LeaderIdAndEpoch {
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            encoder.write_i32(self.leader_id)?;
+            encoder.write_i32(self.leader_epoch)?;
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            }
+
+            Ok(())
+        }
+    }
+
     impl KafkaEncode for LeaderIdAndEpoch {
         fn encode<T: EncodeTarget>(
             &self,
@@ -1493,19 +1609,21 @@ pub mod fetch_response {
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
             self.validate_for_version(version)?;
+            LeaderIdAndEpoch::encode_validated(self, encoder, version)
+        }
 
-            if version.value() >= 12 {
-                encoder.write_i32(self.leader_id)?;
-            }
-            if version.value() >= 12 {
-                encoder.write_i32(self.leader_epoch)?;
-            }
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
 
-            if Self::is_flexible(version) {
-                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-            }
-
-            Ok(())
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            LeaderIdAndEpoch::encode_validated(self, encoder, version)
         }
     }
 
@@ -1522,7 +1640,7 @@ pub mod fetch_response {
     }
 
     impl SnapshotId {
-        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(4, 18);
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(12, 18);
         const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(12, 18));
 
         fn is_flexible(version: ApiVersion) -> bool {
@@ -1587,14 +1705,12 @@ pub mod fetch_response {
         }
     }
 
-    impl KafkaEncode for SnapshotId {
-        fn encode<T: EncodeTarget>(
+    impl SnapshotId {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             encoder.write_i64(self.end_offset)?;
             encoder.write_i32(self.epoch)?;
 
@@ -1603,6 +1719,31 @@ pub mod fetch_response {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for SnapshotId {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            SnapshotId::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            SnapshotId::encode_validated(self, encoder, version)
         }
     }
 
@@ -1674,14 +1815,12 @@ pub mod fetch_response {
         }
     }
 
-    impl KafkaEncode for AbortedTransaction {
-        fn encode<T: EncodeTarget>(
+    impl AbortedTransaction {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             encoder.write_i64(self.producer_id)?;
             encoder.write_i64(self.first_offset)?;
 
@@ -1690,6 +1829,31 @@ pub mod fetch_response {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for AbortedTransaction {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            AbortedTransaction::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            AbortedTransaction::encode_validated(self, encoder, version)
         }
     }
 
@@ -1710,8 +1874,8 @@ pub mod fetch_response {
     }
 
     impl NodeEndpoint {
-        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(4, 18);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(12, 18));
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(16, 18);
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(16, 18));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
@@ -1728,34 +1892,6 @@ pub mod fetch_response {
                 });
             }
 
-            if version.value() < 16 && self.node_id != 0 {
-                return Err(EncodeError::FieldNotRepresentable {
-                    message: "NodeEndpoint",
-                    field: "NodeId",
-                    version,
-                });
-            }
-            if version.value() < 16 && !self.host.is_empty() {
-                return Err(EncodeError::FieldNotRepresentable {
-                    message: "NodeEndpoint",
-                    field: "Host",
-                    version,
-                });
-            }
-            if version.value() < 16 && self.port != 0 {
-                return Err(EncodeError::FieldNotRepresentable {
-                    message: "NodeEndpoint",
-                    field: "Port",
-                    version,
-                });
-            }
-            if version.value() < 16 && self.rack.is_some() {
-                return Err(EncodeError::FieldNotRepresentable {
-                    message: "NodeEndpoint",
-                    field: "Rack",
-                    version,
-                });
-            }
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
                 return Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: "NodeEndpoint",
@@ -1777,26 +1913,10 @@ pub mod fetch_response {
                 });
             }
 
-            let node_id = if version.value() >= 16 {
-                decoder.read_i32()?
-            } else {
-                0
-            };
-            let host = if version.value() >= 16 {
-                decoder.read_compact_string()?
-            } else {
-                StrBytes::default()
-            };
-            let port = if version.value() >= 16 {
-                decoder.read_i32()?
-            } else {
-                0
-            };
-            let rack = if version.value() >= 16 {
-                decoder.read_compact_nullable_string()?
-            } else {
-                None
-            };
+            let node_id = decoder.read_i32()?;
+            let host = decoder.read_compact_string()?;
+            let port = decoder.read_i32()?;
+            let rack = decoder.read_compact_nullable_string()?;
             let unknown_tagged_fields = if Self::is_flexible(version) {
                 decoder.read_tagged_fields()?
             } else {
@@ -1813,6 +1933,25 @@ pub mod fetch_response {
         }
     }
 
+    impl NodeEndpoint {
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            encoder.write_i32(self.node_id)?;
+            encoder.write_compact_string(&self.host)?;
+            encoder.write_i32(self.port)?;
+            encoder.write_compact_nullable_string(self.rack.as_ref())?;
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            }
+
+            Ok(())
+        }
+    }
+
     impl KafkaEncode for NodeEndpoint {
         fn encode<T: EncodeTarget>(
             &self,
@@ -1820,25 +1959,21 @@ pub mod fetch_response {
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
             self.validate_for_version(version)?;
+            NodeEndpoint::encode_validated(self, encoder, version)
+        }
 
-            if version.value() >= 16 {
-                encoder.write_i32(self.node_id)?;
-            }
-            if version.value() >= 16 {
-                encoder.write_compact_string(&self.host)?;
-            }
-            if version.value() >= 16 {
-                encoder.write_i32(self.port)?;
-            }
-            if version.value() >= 16 {
-                encoder.write_compact_nullable_string(self.rack.as_ref())?;
-            }
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
 
-            if Self::is_flexible(version) {
-                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-            }
-
-            Ok(())
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            NodeEndpoint::encode_validated(self, encoder, version)
         }
     }
 
@@ -1961,14 +2096,12 @@ pub mod fetch_response {
         }
     }
 
-    impl KafkaEncode for FetchResponse {
-        fn encode<T: EncodeTarget>(
+    impl FetchResponse {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             encoder.write_i32(self.throttle_time_ms)?;
             if version.value() >= 7 {
                 encoder.write_i16(self.error_code)?;
@@ -1982,7 +2115,7 @@ pub mod fetch_response {
                 encoder.write_array_len(self.responses.len())?;
             }
             for value in &self.responses {
-                value.encode(encoder, version)?;
+                value.encode_validated(encoder, version)?;
             }
 
             if Self::is_flexible(version) {
@@ -1991,7 +2124,7 @@ pub mod fetch_response {
                     known.write(0, |encoder| {
                         encoder.write_compact_array_len(self.node_endpoints.len())?;
                         for value in &self.node_endpoints {
-                            value.encode(encoder, version)?;
+                            value.encode_validated(encoder, version)?;
                         }
                         Ok(())
                     })?;
@@ -2000,6 +2133,31 @@ pub mod fetch_response {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for FetchResponse {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            FetchResponse::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            FetchResponse::encode_validated(self, encoder, version)
         }
     }
 }

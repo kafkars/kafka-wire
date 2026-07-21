@@ -120,6 +120,11 @@ fn repository_paths_have_one_host_independent_grammar() {
         "clients\\message",
         "/clients/message",
         "clients/message/",
+        "C:/x",
+        "C:x",
+        "clients/CON/message",
+        "clients/name.",
+        "clients/name ",
     ] {
         let source = document(
             "https://github.com/apache/kafka",
@@ -140,6 +145,21 @@ fn repository_paths_have_one_host_independent_grammar() {
         parse!(&source).is_err(),
         "a Windows traversal spelling was accepted"
     );
+
+    for unsafe_filename in [
+        "C:x",
+        "file.json:stream",
+        "CON",
+        "NUL.txt",
+        "name.",
+        "name ",
+    ] {
+        let source = valid().replace("ApiVersionsRequest.json", unsafe_filename);
+        assert!(
+            parse!(&source).is_err(),
+            "non-portable filename `{unsafe_filename}` was accepted"
+        );
+    }
 }
 
 #[test]
@@ -165,5 +185,46 @@ fn duplicate_file_entries_are_rejected_even_when_statuses_conflict() {
                 if field == "kafka.files.path"
         ),
         "duplicate source entries were accepted"
+    );
+}
+
+#[test]
+fn source_paths_are_unique_under_ascii_case_folding() {
+    let files = [
+        one_file("Foo.json", DIGEST, "enabled"),
+        one_file("foo.json", DIGEST, "pending"),
+    ]
+    .join("\n\n");
+    let source = document(
+        "https://github.com/apache/kafka",
+        COMMIT,
+        "clients/src/main/resources/common/message",
+        "spec/upstream/apache-kafka",
+        "crates/kafka-wire/src/generated",
+        &files,
+    );
+
+    assert!(
+        matches!(
+            parse!(&source),
+            Err(GenerationError::InvalidLockfileValue { ref field, .. })
+                if field == "kafka.files.path"
+        ),
+        "case-folding source collision was accepted"
+    );
+}
+
+#[test]
+fn the_lock_must_name_the_ir_contract_this_compiler_implements() {
+    let source = valid().replace("ir_version = 1", "ir_version = 2");
+    assert!(
+        matches!(
+            parse!(&source),
+            Err(GenerationError::IrVersion {
+                found: 2,
+                supported: 1,
+            })
+        ),
+        "an uninterpreted IR contract version was accepted"
     );
 }

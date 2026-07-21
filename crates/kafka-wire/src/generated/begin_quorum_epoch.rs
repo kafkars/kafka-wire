@@ -99,14 +99,12 @@ pub mod begin_quorum_epoch_request {
         }
     }
 
-    impl KafkaEncode for TopicData {
-        fn encode<T: EncodeTarget>(
+    impl TopicData {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             if Self::is_flexible(version) {
                 encoder.write_compact_string(&self.topic_name)?;
             } else {
@@ -118,7 +116,7 @@ pub mod begin_quorum_epoch_request {
                 encoder.write_array_len(self.partitions.len())?;
             }
             for value in &self.partitions {
-                value.encode(encoder, version)?;
+                value.encode_validated(encoder, version)?;
             }
 
             if Self::is_flexible(version) {
@@ -126,6 +124,31 @@ pub mod begin_quorum_epoch_request {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for TopicData {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            TopicData::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            TopicData::encode_validated(self, encoder, version)
         }
     }
 
@@ -209,14 +232,12 @@ pub mod begin_quorum_epoch_request {
         }
     }
 
-    impl KafkaEncode for PartitionData {
-        fn encode<T: EncodeTarget>(
+    impl PartitionData {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             encoder.write_i32(self.partition_index)?;
             if version.value() >= 1 {
                 encoder.write_uuid(self.voter_directory_id)?;
@@ -229,6 +250,31 @@ pub mod begin_quorum_epoch_request {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for PartitionData {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            PartitionData::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            PartitionData::encode_validated(self, encoder, version)
         }
     }
 
@@ -247,7 +293,7 @@ pub mod begin_quorum_epoch_request {
     }
 
     impl LeaderEndpoint {
-        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 1);
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(1, 1);
         const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(1, 1));
 
         fn is_flexible(version: ApiVersion) -> bool {
@@ -265,27 +311,6 @@ pub mod begin_quorum_epoch_request {
                 });
             }
 
-            if version.value() < 1 && !self.name.is_empty() {
-                return Err(EncodeError::FieldNotRepresentable {
-                    message: "LeaderEndpoint",
-                    field: "Name",
-                    version,
-                });
-            }
-            if version.value() < 1 && !self.host.is_empty() {
-                return Err(EncodeError::FieldNotRepresentable {
-                    message: "LeaderEndpoint",
-                    field: "Host",
-                    version,
-                });
-            }
-            if version.value() < 1 && self.port != 0 {
-                return Err(EncodeError::FieldNotRepresentable {
-                    message: "LeaderEndpoint",
-                    field: "Port",
-                    version,
-                });
-            }
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
                 return Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: "LeaderEndpoint",
@@ -307,21 +332,9 @@ pub mod begin_quorum_epoch_request {
                 });
             }
 
-            let name = if version.value() >= 1 {
-                decoder.read_compact_string()?
-            } else {
-                StrBytes::default()
-            };
-            let host = if version.value() >= 1 {
-                decoder.read_compact_string()?
-            } else {
-                StrBytes::default()
-            };
-            let port = if version.value() >= 1 {
-                decoder.read_u16()?
-            } else {
-                0
-            };
+            let name = decoder.read_compact_string()?;
+            let host = decoder.read_compact_string()?;
+            let port = decoder.read_u16()?;
             let unknown_tagged_fields = if Self::is_flexible(version) {
                 decoder.read_tagged_fields()?
             } else {
@@ -337,6 +350,24 @@ pub mod begin_quorum_epoch_request {
         }
     }
 
+    impl LeaderEndpoint {
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            encoder.write_compact_string(&self.name)?;
+            encoder.write_compact_string(&self.host)?;
+            encoder.write_u16(self.port)?;
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            }
+
+            Ok(())
+        }
+    }
+
     impl KafkaEncode for LeaderEndpoint {
         fn encode<T: EncodeTarget>(
             &self,
@@ -344,22 +375,21 @@ pub mod begin_quorum_epoch_request {
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
             self.validate_for_version(version)?;
+            LeaderEndpoint::encode_validated(self, encoder, version)
+        }
 
-            if version.value() >= 1 {
-                encoder.write_compact_string(&self.name)?;
-            }
-            if version.value() >= 1 {
-                encoder.write_compact_string(&self.host)?;
-            }
-            if version.value() >= 1 {
-                encoder.write_u16(self.port)?;
-            }
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
 
-            if Self::is_flexible(version) {
-                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-            }
-
-            Ok(())
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            LeaderEndpoint::encode_validated(self, encoder, version)
         }
     }
 
@@ -472,14 +502,12 @@ pub mod begin_quorum_epoch_request {
         }
     }
 
-    impl KafkaEncode for BeginQuorumEpochRequest {
-        fn encode<T: EncodeTarget>(
+    impl BeginQuorumEpochRequest {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             if Self::is_flexible(version) {
                 encoder.write_compact_nullable_string(self.cluster_id.as_ref())?;
             } else {
@@ -494,12 +522,12 @@ pub mod begin_quorum_epoch_request {
                 encoder.write_array_len(self.topics.len())?;
             }
             for value in &self.topics {
-                value.encode(encoder, version)?;
+                value.encode_validated(encoder, version)?;
             }
             if version.value() >= 1 {
                 encoder.write_compact_array_len(self.leader_endpoints.len())?;
                 for value in &self.leader_endpoints {
-                    value.encode(encoder, version)?;
+                    value.encode_validated(encoder, version)?;
                 }
             }
 
@@ -508,6 +536,31 @@ pub mod begin_quorum_epoch_request {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for BeginQuorumEpochRequest {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            BeginQuorumEpochRequest::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            BeginQuorumEpochRequest::encode_validated(self, encoder, version)
         }
     }
 }
@@ -606,14 +659,12 @@ pub mod begin_quorum_epoch_response {
         }
     }
 
-    impl KafkaEncode for TopicData {
-        fn encode<T: EncodeTarget>(
+    impl TopicData {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             if Self::is_flexible(version) {
                 encoder.write_compact_string(&self.topic_name)?;
             } else {
@@ -625,7 +676,7 @@ pub mod begin_quorum_epoch_response {
                 encoder.write_array_len(self.partitions.len())?;
             }
             for value in &self.partitions {
-                value.encode(encoder, version)?;
+                value.encode_validated(encoder, version)?;
             }
 
             if Self::is_flexible(version) {
@@ -633,6 +684,31 @@ pub mod begin_quorum_epoch_response {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for TopicData {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            TopicData::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            TopicData::encode_validated(self, encoder, version)
         }
     }
 
@@ -712,14 +788,12 @@ pub mod begin_quorum_epoch_response {
         }
     }
 
-    impl KafkaEncode for PartitionData {
-        fn encode<T: EncodeTarget>(
+    impl PartitionData {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             encoder.write_i32(self.partition_index)?;
             encoder.write_i16(self.error_code)?;
             encoder.write_i32(self.leader_id)?;
@@ -730,6 +804,31 @@ pub mod begin_quorum_epoch_response {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for PartitionData {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            PartitionData::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            PartitionData::encode_validated(self, encoder, version)
         }
     }
 
@@ -748,7 +847,7 @@ pub mod begin_quorum_epoch_response {
     }
 
     impl NodeEndpoint {
-        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 1);
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(1, 1);
         const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(1, 1));
 
         fn is_flexible(version: ApiVersion) -> bool {
@@ -766,27 +865,6 @@ pub mod begin_quorum_epoch_response {
                 });
             }
 
-            if version.value() < 1 && self.node_id != 0 {
-                return Err(EncodeError::FieldNotRepresentable {
-                    message: "NodeEndpoint",
-                    field: "NodeId",
-                    version,
-                });
-            }
-            if version.value() < 1 && !self.host.is_empty() {
-                return Err(EncodeError::FieldNotRepresentable {
-                    message: "NodeEndpoint",
-                    field: "Host",
-                    version,
-                });
-            }
-            if version.value() < 1 && self.port != 0 {
-                return Err(EncodeError::FieldNotRepresentable {
-                    message: "NodeEndpoint",
-                    field: "Port",
-                    version,
-                });
-            }
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
                 return Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: "NodeEndpoint",
@@ -808,21 +886,9 @@ pub mod begin_quorum_epoch_response {
                 });
             }
 
-            let node_id = if version.value() >= 1 {
-                decoder.read_i32()?
-            } else {
-                0
-            };
-            let host = if version.value() >= 1 {
-                decoder.read_compact_string()?
-            } else {
-                StrBytes::default()
-            };
-            let port = if version.value() >= 1 {
-                decoder.read_u16()?
-            } else {
-                0
-            };
+            let node_id = decoder.read_i32()?;
+            let host = decoder.read_compact_string()?;
+            let port = decoder.read_u16()?;
             let unknown_tagged_fields = if Self::is_flexible(version) {
                 decoder.read_tagged_fields()?
             } else {
@@ -838,6 +904,24 @@ pub mod begin_quorum_epoch_response {
         }
     }
 
+    impl NodeEndpoint {
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            encoder.write_i32(self.node_id)?;
+            encoder.write_compact_string(&self.host)?;
+            encoder.write_u16(self.port)?;
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            }
+
+            Ok(())
+        }
+    }
+
     impl KafkaEncode for NodeEndpoint {
         fn encode<T: EncodeTarget>(
             &self,
@@ -845,22 +929,21 @@ pub mod begin_quorum_epoch_response {
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
             self.validate_for_version(version)?;
+            NodeEndpoint::encode_validated(self, encoder, version)
+        }
 
-            if version.value() >= 1 {
-                encoder.write_i32(self.node_id)?;
-            }
-            if version.value() >= 1 {
-                encoder.write_compact_string(&self.host)?;
-            }
-            if version.value() >= 1 {
-                encoder.write_u16(self.port)?;
-            }
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
 
-            if Self::is_flexible(version) {
-                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-            }
-
-            Ok(())
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            NodeEndpoint::encode_validated(self, encoder, version)
         }
     }
 
@@ -958,14 +1041,12 @@ pub mod begin_quorum_epoch_response {
         }
     }
 
-    impl KafkaEncode for BeginQuorumEpochResponse {
-        fn encode<T: EncodeTarget>(
+    impl BeginQuorumEpochResponse {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             encoder.write_i16(self.error_code)?;
             if Self::is_flexible(version) {
                 encoder.write_compact_array_len(self.topics.len())?;
@@ -973,7 +1054,7 @@ pub mod begin_quorum_epoch_response {
                 encoder.write_array_len(self.topics.len())?;
             }
             for value in &self.topics {
-                value.encode(encoder, version)?;
+                value.encode_validated(encoder, version)?;
             }
 
             if Self::is_flexible(version) {
@@ -982,7 +1063,7 @@ pub mod begin_quorum_epoch_response {
                     known.write(0, |encoder| {
                         encoder.write_compact_array_len(self.node_endpoints.len())?;
                         for value in &self.node_endpoints {
-                            value.encode(encoder, version)?;
+                            value.encode_validated(encoder, version)?;
                         }
                         Ok(())
                     })?;
@@ -991,6 +1072,31 @@ pub mod begin_quorum_epoch_response {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for BeginQuorumEpochResponse {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            BeginQuorumEpochResponse::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            BeginQuorumEpochResponse::encode_validated(self, encoder, version)
         }
     }
 }

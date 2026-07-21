@@ -93,18 +93,16 @@ pub mod fetch_snapshot_request {
         }
     }
 
-    impl KafkaEncode for TopicSnapshot {
-        fn encode<T: EncodeTarget>(
+    impl TopicSnapshot {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             encoder.write_compact_string(&self.name)?;
             encoder.write_compact_array_len(self.partitions.len())?;
             for value in &self.partitions {
-                value.encode(encoder, version)?;
+                value.encode_validated(encoder, version)?;
             }
 
             if Self::is_flexible(version) {
@@ -112,6 +110,31 @@ pub mod fetch_snapshot_request {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for TopicSnapshot {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            TopicSnapshot::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            TopicSnapshot::encode_validated(self, encoder, version)
         }
     }
 
@@ -202,17 +225,15 @@ pub mod fetch_snapshot_request {
         }
     }
 
-    impl KafkaEncode for PartitionSnapshot {
-        fn encode<T: EncodeTarget>(
+    impl PartitionSnapshot {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             encoder.write_i32(self.partition)?;
             encoder.write_i32(self.current_leader_epoch)?;
-            self.snapshot_id.encode(encoder, version)?;
+            self.snapshot_id.encode_validated(encoder, version)?;
             encoder.write_i64(self.position)?;
 
             if Self::is_flexible(version) {
@@ -227,6 +248,31 @@ pub mod fetch_snapshot_request {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for PartitionSnapshot {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            PartitionSnapshot::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            PartitionSnapshot::encode_validated(self, encoder, version)
         }
     }
 
@@ -298,14 +344,12 @@ pub mod fetch_snapshot_request {
         }
     }
 
-    impl KafkaEncode for SnapshotId {
-        fn encode<T: EncodeTarget>(
+    impl SnapshotId {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             encoder.write_i64(self.end_offset)?;
             encoder.write_i32(self.epoch)?;
 
@@ -314,6 +358,31 @@ pub mod fetch_snapshot_request {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for SnapshotId {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            SnapshotId::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            SnapshotId::encode_validated(self, encoder, version)
         }
     }
 
@@ -410,19 +479,17 @@ pub mod fetch_snapshot_request {
         }
     }
 
-    impl KafkaEncode for FetchSnapshotRequest {
-        fn encode<T: EncodeTarget>(
+    impl FetchSnapshotRequest {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             encoder.write_i32(self.replica_id)?;
             encoder.write_i32(self.max_bytes)?;
             encoder.write_compact_array_len(self.topics.len())?;
             for value in &self.topics {
-                value.encode(encoder, version)?;
+                value.encode_validated(encoder, version)?;
             }
 
             if Self::is_flexible(version) {
@@ -437,6 +504,31 @@ pub mod fetch_snapshot_request {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for FetchSnapshotRequest {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            FetchSnapshotRequest::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            FetchSnapshotRequest::encode_validated(self, encoder, version)
         }
     }
 }
@@ -529,18 +621,16 @@ pub mod fetch_snapshot_response {
         }
     }
 
-    impl KafkaEncode for TopicSnapshot {
-        fn encode<T: EncodeTarget>(
+    impl TopicSnapshot {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             encoder.write_compact_string(&self.name)?;
             encoder.write_compact_array_len(self.partitions.len())?;
             for value in &self.partitions {
-                value.encode(encoder, version)?;
+                value.encode_validated(encoder, version)?;
             }
 
             if Self::is_flexible(version) {
@@ -548,6 +638,31 @@ pub mod fetch_snapshot_response {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for TopicSnapshot {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            TopicSnapshot::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            TopicSnapshot::encode_validated(self, encoder, version)
         }
     }
 
@@ -647,17 +762,15 @@ pub mod fetch_snapshot_response {
         }
     }
 
-    impl KafkaEncode for PartitionSnapshot {
-        fn encode<T: EncodeTarget>(
+    impl PartitionSnapshot {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             encoder.write_i32(self.index)?;
             encoder.write_i16(self.error_code)?;
-            self.snapshot_id.encode(encoder, version)?;
+            self.snapshot_id.encode_validated(encoder, version)?;
             encoder.write_i64(self.size)?;
             encoder.write_i64(self.position)?;
             encoder.write_compact_bytes(&self.unaligned_records)?;
@@ -666,7 +779,7 @@ pub mod fetch_snapshot_response {
                 let mut known = KnownTags::new();
                 if self.current_leader != LeaderIdAndEpoch::default() {
                     known.write(0, |encoder| {
-                        self.current_leader.encode(encoder, version)?;
+                        self.current_leader.encode_validated(encoder, version)?;
                         Ok(())
                     })?;
                 }
@@ -674,6 +787,31 @@ pub mod fetch_snapshot_response {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for PartitionSnapshot {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            PartitionSnapshot::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            PartitionSnapshot::encode_validated(self, encoder, version)
         }
     }
 
@@ -745,14 +883,12 @@ pub mod fetch_snapshot_response {
         }
     }
 
-    impl KafkaEncode for SnapshotId {
-        fn encode<T: EncodeTarget>(
+    impl SnapshotId {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             encoder.write_i64(self.end_offset)?;
             encoder.write_i32(self.epoch)?;
 
@@ -761,6 +897,31 @@ pub mod fetch_snapshot_response {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for SnapshotId {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            SnapshotId::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            SnapshotId::encode_validated(self, encoder, version)
         }
     }
 
@@ -832,14 +993,12 @@ pub mod fetch_snapshot_response {
         }
     }
 
-    impl KafkaEncode for LeaderIdAndEpoch {
-        fn encode<T: EncodeTarget>(
+    impl LeaderIdAndEpoch {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             encoder.write_i32(self.leader_id)?;
             encoder.write_i32(self.leader_epoch)?;
 
@@ -848,6 +1007,31 @@ pub mod fetch_snapshot_response {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for LeaderIdAndEpoch {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            LeaderIdAndEpoch::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            LeaderIdAndEpoch::encode_validated(self, encoder, version)
         }
     }
 
@@ -866,8 +1050,8 @@ pub mod fetch_snapshot_response {
     }
 
     impl NodeEndpoint {
-        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 1);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 1));
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(1, 1);
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(1, 1));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
@@ -884,27 +1068,6 @@ pub mod fetch_snapshot_response {
                 });
             }
 
-            if version.value() < 1 && self.node_id != 0 {
-                return Err(EncodeError::FieldNotRepresentable {
-                    message: "NodeEndpoint",
-                    field: "NodeId",
-                    version,
-                });
-            }
-            if version.value() < 1 && !self.host.is_empty() {
-                return Err(EncodeError::FieldNotRepresentable {
-                    message: "NodeEndpoint",
-                    field: "Host",
-                    version,
-                });
-            }
-            if version.value() < 1 && self.port != 0 {
-                return Err(EncodeError::FieldNotRepresentable {
-                    message: "NodeEndpoint",
-                    field: "Port",
-                    version,
-                });
-            }
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
                 return Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: "NodeEndpoint",
@@ -926,21 +1089,9 @@ pub mod fetch_snapshot_response {
                 });
             }
 
-            let node_id = if version.value() >= 1 {
-                decoder.read_i32()?
-            } else {
-                0
-            };
-            let host = if version.value() >= 1 {
-                decoder.read_compact_string()?
-            } else {
-                StrBytes::default()
-            };
-            let port = if version.value() >= 1 {
-                decoder.read_u16()?
-            } else {
-                0
-            };
+            let node_id = decoder.read_i32()?;
+            let host = decoder.read_compact_string()?;
+            let port = decoder.read_u16()?;
             let unknown_tagged_fields = if Self::is_flexible(version) {
                 decoder.read_tagged_fields()?
             } else {
@@ -956,6 +1107,24 @@ pub mod fetch_snapshot_response {
         }
     }
 
+    impl NodeEndpoint {
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            encoder.write_i32(self.node_id)?;
+            encoder.write_compact_string(&self.host)?;
+            encoder.write_u16(self.port)?;
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            }
+
+            Ok(())
+        }
+    }
+
     impl KafkaEncode for NodeEndpoint {
         fn encode<T: EncodeTarget>(
             &self,
@@ -963,22 +1132,21 @@ pub mod fetch_snapshot_response {
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
             self.validate_for_version(version)?;
+            NodeEndpoint::encode_validated(self, encoder, version)
+        }
 
-            if version.value() >= 1 {
-                encoder.write_i32(self.node_id)?;
-            }
-            if version.value() >= 1 {
-                encoder.write_compact_string(&self.host)?;
-            }
-            if version.value() >= 1 {
-                encoder.write_u16(self.port)?;
-            }
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
 
-            if Self::is_flexible(version) {
-                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-            }
-
-            Ok(())
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            NodeEndpoint::encode_validated(self, encoder, version)
         }
     }
 
@@ -1076,19 +1244,17 @@ pub mod fetch_snapshot_response {
         }
     }
 
-    impl KafkaEncode for FetchSnapshotResponse {
-        fn encode<T: EncodeTarget>(
+    impl FetchSnapshotResponse {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             encoder.write_i32(self.throttle_time_ms)?;
             encoder.write_i16(self.error_code)?;
             encoder.write_compact_array_len(self.topics.len())?;
             for value in &self.topics {
-                value.encode(encoder, version)?;
+                value.encode_validated(encoder, version)?;
             }
 
             if Self::is_flexible(version) {
@@ -1097,7 +1263,7 @@ pub mod fetch_snapshot_response {
                     known.write(0, |encoder| {
                         encoder.write_compact_array_len(self.node_endpoints.len())?;
                         for value in &self.node_endpoints {
-                            value.encode(encoder, version)?;
+                            value.encode_validated(encoder, version)?;
                         }
                         Ok(())
                     })?;
@@ -1106,6 +1272,31 @@ pub mod fetch_snapshot_response {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for FetchSnapshotResponse {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            FetchSnapshotResponse::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            FetchSnapshotResponse::encode_validated(self, encoder, version)
         }
     }
 }

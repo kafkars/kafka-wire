@@ -87,14 +87,12 @@ pub mod delete_groups_request {
         }
     }
 
-    impl KafkaEncode for DeleteGroupsRequest {
-        fn encode<T: EncodeTarget>(
+    impl DeleteGroupsRequest {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             if Self::is_flexible(version) {
                 encoder.write_compact_array_len(self.groups_names.len())?;
             } else {
@@ -113,6 +111,31 @@ pub mod delete_groups_request {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for DeleteGroupsRequest {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            DeleteGroupsRequest::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            DeleteGroupsRequest::encode_validated(self, encoder, version)
         }
     }
 }
@@ -209,14 +232,12 @@ pub mod delete_groups_response {
         }
     }
 
-    impl KafkaEncode for DeletableGroupResult {
-        fn encode<T: EncodeTarget>(
+    impl DeletableGroupResult {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             if Self::is_flexible(version) {
                 encoder.write_compact_string(&self.group_id)?;
             } else {
@@ -232,6 +253,31 @@ pub mod delete_groups_response {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for DeletableGroupResult {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            DeletableGroupResult::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            DeletableGroupResult::encode_validated(self, encoder, version)
         }
     }
 
@@ -304,14 +350,12 @@ pub mod delete_groups_response {
         }
     }
 
-    impl KafkaEncode for DeleteGroupsResponse {
-        fn encode<T: EncodeTarget>(
+    impl DeleteGroupsResponse {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             encoder.write_i32(self.throttle_time_ms)?;
             if Self::is_flexible(version) {
                 encoder.write_compact_array_len(self.results.len())?;
@@ -319,7 +363,7 @@ pub mod delete_groups_response {
                 encoder.write_array_len(self.results.len())?;
             }
             for value in &self.results {
-                value.encode(encoder, version)?;
+                value.encode_validated(encoder, version)?;
             }
 
             if Self::is_flexible(version) {
@@ -327,6 +371,31 @@ pub mod delete_groups_response {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for DeleteGroupsResponse {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            DeleteGroupsResponse::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            DeleteGroupsResponse::encode_validated(self, encoder, version)
         }
     }
 }

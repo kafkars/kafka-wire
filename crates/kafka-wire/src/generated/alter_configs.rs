@@ -103,14 +103,12 @@ pub mod alter_configs_request {
         }
     }
 
-    impl KafkaEncode for AlterConfigsResource {
-        fn encode<T: EncodeTarget>(
+    impl AlterConfigsResource {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             encoder.write_i8(self.resource_type)?;
             if Self::is_flexible(version) {
                 encoder.write_compact_string(&self.resource_name)?;
@@ -123,7 +121,7 @@ pub mod alter_configs_request {
                 encoder.write_array_len(self.configs.len())?;
             }
             for value in &self.configs {
-                value.encode(encoder, version)?;
+                value.encode_validated(encoder, version)?;
             }
 
             if Self::is_flexible(version) {
@@ -131,6 +129,31 @@ pub mod alter_configs_request {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for AlterConfigsResource {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            AlterConfigsResource::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            AlterConfigsResource::encode_validated(self, encoder, version)
         }
     }
 
@@ -220,14 +243,12 @@ pub mod alter_configs_request {
         }
     }
 
-    impl KafkaEncode for AlterableConfig {
-        fn encode<T: EncodeTarget>(
+    impl AlterableConfig {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             if Self::is_flexible(version) {
                 encoder.write_compact_string(&self.name)?;
             } else {
@@ -244,6 +265,31 @@ pub mod alter_configs_request {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for AlterableConfig {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            AlterableConfig::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            AlterableConfig::encode_validated(self, encoder, version)
         }
     }
 
@@ -320,21 +366,19 @@ pub mod alter_configs_request {
         }
     }
 
-    impl KafkaEncode for AlterConfigsRequest {
-        fn encode<T: EncodeTarget>(
+    impl AlterConfigsRequest {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             if Self::is_flexible(version) {
                 encoder.write_compact_array_len(self.resources.len())?;
             } else {
                 encoder.write_array_len(self.resources.len())?;
             }
             for value in &self.resources {
-                value.encode(encoder, version)?;
+                value.encode_validated(encoder, version)?;
             }
             encoder.write_bool(self.validate_only)?;
 
@@ -343,6 +387,31 @@ pub mod alter_configs_request {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for AlterConfigsRequest {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            AlterConfigsRequest::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            AlterConfigsRequest::encode_validated(self, encoder, version)
         }
     }
 }
@@ -455,14 +524,12 @@ pub mod alter_configs_response {
         }
     }
 
-    impl KafkaEncode for AlterConfigsResourceResponse {
-        fn encode<T: EncodeTarget>(
+    impl AlterConfigsResourceResponse {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             encoder.write_i16(self.error_code)?;
             if Self::is_flexible(version) {
                 encoder.write_compact_nullable_string(self.error_message.as_ref())?;
@@ -481,6 +548,31 @@ pub mod alter_configs_response {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for AlterConfigsResourceResponse {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            AlterConfigsResourceResponse::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            AlterConfigsResourceResponse::encode_validated(self, encoder, version)
         }
     }
 
@@ -553,14 +645,12 @@ pub mod alter_configs_response {
         }
     }
 
-    impl KafkaEncode for AlterConfigsResponse {
-        fn encode<T: EncodeTarget>(
+    impl AlterConfigsResponse {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             encoder.write_i32(self.throttle_time_ms)?;
             if Self::is_flexible(version) {
                 encoder.write_compact_array_len(self.responses.len())?;
@@ -568,7 +658,7 @@ pub mod alter_configs_response {
                 encoder.write_array_len(self.responses.len())?;
             }
             for value in &self.responses {
-                value.encode(encoder, version)?;
+                value.encode_validated(encoder, version)?;
             }
 
             if Self::is_flexible(version) {
@@ -576,6 +666,31 @@ pub mod alter_configs_response {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for AlterConfigsResponse {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            AlterConfigsResponse::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            AlterConfigsResponse::encode_validated(self, encoder, version)
         }
     }
 }

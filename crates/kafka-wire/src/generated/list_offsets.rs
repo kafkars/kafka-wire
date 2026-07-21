@@ -101,14 +101,12 @@ pub mod list_offsets_request {
         }
     }
 
-    impl KafkaEncode for ListOffsetsTopic {
-        fn encode<T: EncodeTarget>(
+    impl ListOffsetsTopic {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             if Self::is_flexible(version) {
                 encoder.write_compact_string(&self.name)?;
             } else {
@@ -120,7 +118,7 @@ pub mod list_offsets_request {
                 encoder.write_array_len(self.partitions.len())?;
             }
             for value in &self.partitions {
-                value.encode(encoder, version)?;
+                value.encode_validated(encoder, version)?;
             }
 
             if Self::is_flexible(version) {
@@ -128,6 +126,31 @@ pub mod list_offsets_request {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for ListOffsetsTopic {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            ListOffsetsTopic::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            ListOffsetsTopic::encode_validated(self, encoder, version)
         }
     }
 
@@ -218,14 +241,12 @@ pub mod list_offsets_request {
         }
     }
 
-    impl KafkaEncode for ListOffsetsPartition {
-        fn encode<T: EncodeTarget>(
+    impl ListOffsetsPartition {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             encoder.write_i32(self.partition_index)?;
             if version.value() >= 4 {
                 encoder.write_i32(self.current_leader_epoch)?;
@@ -237,6 +258,31 @@ pub mod list_offsets_request {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for ListOffsetsPartition {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            ListOffsetsPartition::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            ListOffsetsPartition::encode_validated(self, encoder, version)
         }
     }
 
@@ -334,14 +380,12 @@ pub mod list_offsets_request {
         }
     }
 
-    impl KafkaEncode for ListOffsetsRequest {
-        fn encode<T: EncodeTarget>(
+    impl ListOffsetsRequest {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             encoder.write_i32(self.replica_id)?;
             if version.value() >= 2 {
                 encoder.write_i8(self.isolation_level)?;
@@ -352,7 +396,7 @@ pub mod list_offsets_request {
                 encoder.write_array_len(self.topics.len())?;
             }
             for value in &self.topics {
-                value.encode(encoder, version)?;
+                value.encode_validated(encoder, version)?;
             }
             if version.value() >= 10 {
                 encoder.write_i32(self.timeout_ms)?;
@@ -363,6 +407,31 @@ pub mod list_offsets_request {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for ListOffsetsRequest {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            ListOffsetsRequest::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            ListOffsetsRequest::encode_validated(self, encoder, version)
         }
     }
 }
@@ -463,14 +532,12 @@ pub mod list_offsets_response {
         }
     }
 
-    impl KafkaEncode for ListOffsetsTopicResponse {
-        fn encode<T: EncodeTarget>(
+    impl ListOffsetsTopicResponse {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             if Self::is_flexible(version) {
                 encoder.write_compact_string(&self.name)?;
             } else {
@@ -482,7 +549,7 @@ pub mod list_offsets_response {
                 encoder.write_array_len(self.partitions.len())?;
             }
             for value in &self.partitions {
-                value.encode(encoder, version)?;
+                value.encode_validated(encoder, version)?;
             }
 
             if Self::is_flexible(version) {
@@ -490,6 +557,31 @@ pub mod list_offsets_response {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for ListOffsetsTopicResponse {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            ListOffsetsTopicResponse::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            ListOffsetsTopicResponse::encode_validated(self, encoder, version)
         }
     }
 
@@ -597,14 +689,12 @@ pub mod list_offsets_response {
         }
     }
 
-    impl KafkaEncode for ListOffsetsPartitionResponse {
-        fn encode<T: EncodeTarget>(
+    impl ListOffsetsPartitionResponse {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             encoder.write_i32(self.partition_index)?;
             encoder.write_i16(self.error_code)?;
             encoder.write_i64(self.timestamp)?;
@@ -618,6 +708,31 @@ pub mod list_offsets_response {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for ListOffsetsPartitionResponse {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            ListOffsetsPartitionResponse::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            ListOffsetsPartitionResponse::encode_validated(self, encoder, version)
         }
     }
 
@@ -694,14 +809,12 @@ pub mod list_offsets_response {
         }
     }
 
-    impl KafkaEncode for ListOffsetsResponse {
-        fn encode<T: EncodeTarget>(
+    impl ListOffsetsResponse {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             if version.value() >= 2 {
                 encoder.write_i32(self.throttle_time_ms)?;
             }
@@ -711,7 +824,7 @@ pub mod list_offsets_response {
                 encoder.write_array_len(self.topics.len())?;
             }
             for value in &self.topics {
-                value.encode(encoder, version)?;
+                value.encode_validated(encoder, version)?;
             }
 
             if Self::is_flexible(version) {
@@ -719,6 +832,31 @@ pub mod list_offsets_response {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for ListOffsetsResponse {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            ListOffsetsResponse::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            ListOffsetsResponse::encode_validated(self, encoder, version)
         }
     }
 }

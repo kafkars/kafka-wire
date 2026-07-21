@@ -89,14 +89,12 @@ pub mod update_raft_voter_request {
         }
     }
 
-    impl KafkaEncode for Listener {
-        fn encode<T: EncodeTarget>(
+    impl Listener {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             encoder.write_compact_string(&self.name)?;
             encoder.write_compact_string(&self.host)?;
             encoder.write_u16(self.port)?;
@@ -106,6 +104,31 @@ pub mod update_raft_voter_request {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for Listener {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            Listener::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            Listener::encode_validated(self, encoder, version)
         }
     }
 
@@ -177,14 +200,12 @@ pub mod update_raft_voter_request {
         }
     }
 
-    impl KafkaEncode for KRaftVersionFeature {
-        fn encode<T: EncodeTarget>(
+    impl KRaftVersionFeature {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             encoder.write_i16(self.min_supported_version)?;
             encoder.write_i16(self.max_supported_version)?;
 
@@ -193,6 +214,31 @@ pub mod update_raft_voter_request {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for KRaftVersionFeature {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            KRaftVersionFeature::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            KRaftVersionFeature::encode_validated(self, encoder, version)
         }
     }
 
@@ -294,6 +340,31 @@ pub mod update_raft_voter_request {
         }
     }
 
+    impl UpdateRaftVoterRequest {
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            encoder.write_compact_nullable_string(self.cluster_id.as_ref())?;
+            encoder.write_i32(self.current_leader_epoch)?;
+            encoder.write_i32(self.voter_id)?;
+            encoder.write_uuid(self.voter_directory_id)?;
+            encoder.write_compact_array_len(self.listeners.len())?;
+            for value in &self.listeners {
+                value.encode_validated(encoder, version)?;
+            }
+            self.k_raft_version_feature
+                .encode_validated(encoder, version)?;
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            }
+
+            Ok(())
+        }
+    }
+
     impl KafkaEncode for UpdateRaftVoterRequest {
         fn encode<T: EncodeTarget>(
             &self,
@@ -301,22 +372,21 @@ pub mod update_raft_voter_request {
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
             self.validate_for_version(version)?;
+            UpdateRaftVoterRequest::encode_validated(self, encoder, version)
+        }
 
-            encoder.write_compact_nullable_string(self.cluster_id.as_ref())?;
-            encoder.write_i32(self.current_leader_epoch)?;
-            encoder.write_i32(self.voter_id)?;
-            encoder.write_uuid(self.voter_directory_id)?;
-            encoder.write_compact_array_len(self.listeners.len())?;
-            for value in &self.listeners {
-                value.encode(encoder, version)?;
-            }
-            self.k_raft_version_feature.encode(encoder, version)?;
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
 
-            if Self::is_flexible(version) {
-                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-            }
-
-            Ok(())
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            UpdateRaftVoterRequest::encode_validated(self, encoder, version)
         }
     }
 }
@@ -421,14 +491,12 @@ pub mod update_raft_voter_response {
         }
     }
 
-    impl KafkaEncode for CurrentLeader {
-        fn encode<T: EncodeTarget>(
+    impl CurrentLeader {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             encoder.write_i32(self.leader_id)?;
             encoder.write_i32(self.leader_epoch)?;
             encoder.write_compact_string(&self.host)?;
@@ -439,6 +507,31 @@ pub mod update_raft_voter_response {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for CurrentLeader {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            CurrentLeader::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            CurrentLeader::encode_validated(self, encoder, version)
         }
     }
 
@@ -510,14 +603,12 @@ pub mod update_raft_voter_response {
         }
     }
 
-    impl KafkaEncode for UpdateRaftVoterResponse {
-        fn encode<T: EncodeTarget>(
+    impl UpdateRaftVoterResponse {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             encoder.write_i32(self.throttle_time_ms)?;
             encoder.write_i16(self.error_code)?;
 
@@ -525,7 +616,7 @@ pub mod update_raft_voter_response {
                 let mut known = KnownTags::new();
                 if self.current_leader != CurrentLeader::default() {
                     known.write(0, |encoder| {
-                        self.current_leader.encode(encoder, version)?;
+                        self.current_leader.encode_validated(encoder, version)?;
                         Ok(())
                     })?;
                 }
@@ -533,6 +624,31 @@ pub mod update_raft_voter_response {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for UpdateRaftVoterResponse {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            UpdateRaftVoterResponse::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            UpdateRaftVoterResponse::encode_validated(self, encoder, version)
         }
     }
 }

@@ -95,14 +95,12 @@ pub mod share_group_heartbeat_request {
         }
     }
 
-    impl KafkaEncode for ShareGroupHeartbeatRequest {
-        fn encode<T: EncodeTarget>(
+    impl ShareGroupHeartbeatRequest {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             encoder.write_compact_string(&self.group_id)?;
             encoder.write_compact_string(&self.member_id)?;
             encoder.write_i32(self.member_epoch)?;
@@ -121,6 +119,31 @@ pub mod share_group_heartbeat_request {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for ShareGroupHeartbeatRequest {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            ShareGroupHeartbeatRequest::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            ShareGroupHeartbeatRequest::encode_validated(self, encoder, version)
         }
     }
 }
@@ -208,14 +231,12 @@ pub mod share_group_heartbeat_response {
         }
     }
 
-    impl KafkaEncode for TopicPartitions {
-        fn encode<T: EncodeTarget>(
+    impl TopicPartitions {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             encoder.write_uuid(self.topic_id)?;
             encoder.write_compact_array_len(self.partitions.len())?;
             for value in &self.partitions {
@@ -227,6 +248,31 @@ pub mod share_group_heartbeat_response {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for TopicPartitions {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            TopicPartitions::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            TopicPartitions::encode_validated(self, encoder, version)
         }
     }
 
@@ -300,17 +346,15 @@ pub mod share_group_heartbeat_response {
         }
     }
 
-    impl KafkaEncode for Assignment {
-        fn encode<T: EncodeTarget>(
+    impl Assignment {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             encoder.write_compact_array_len(self.topic_partitions.len())?;
             for value in &self.topic_partitions {
-                value.encode(encoder, version)?;
+                value.encode_validated(encoder, version)?;
             }
 
             if Self::is_flexible(version) {
@@ -318,6 +362,31 @@ pub mod share_group_heartbeat_response {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for Assignment {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            Assignment::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            Assignment::encode_validated(self, encoder, version)
         }
     }
 
@@ -405,14 +474,12 @@ pub mod share_group_heartbeat_response {
         }
     }
 
-    impl KafkaEncode for ShareGroupHeartbeatResponse {
-        fn encode<T: EncodeTarget>(
+    impl ShareGroupHeartbeatResponse {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             encoder.write_i32(self.throttle_time_ms)?;
             encoder.write_i16(self.error_code)?;
             encoder.write_compact_nullable_string(self.error_message.as_ref())?;
@@ -421,7 +488,7 @@ pub mod share_group_heartbeat_response {
             encoder.write_i32(self.heartbeat_interval_ms)?;
             if let Some(value) = &self.assignment {
                 encoder.write_struct_presence(true)?;
-                value.encode(encoder, version)?;
+                value.encode_validated(encoder, version)?;
             } else {
                 encoder.write_struct_presence(false)?;
             }
@@ -431,6 +498,31 @@ pub mod share_group_heartbeat_response {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for ShareGroupHeartbeatResponse {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            ShareGroupHeartbeatResponse::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            ShareGroupHeartbeatResponse::encode_validated(self, encoder, version)
         }
     }
 }

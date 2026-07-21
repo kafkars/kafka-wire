@@ -113,20 +113,18 @@ pub mod write_txn_markers_request {
         }
     }
 
-    impl KafkaEncode for WritableTxnMarker {
-        fn encode<T: EncodeTarget>(
+    impl WritableTxnMarker {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             encoder.write_i64(self.producer_id)?;
             encoder.write_i16(self.producer_epoch)?;
             encoder.write_bool(self.transaction_result)?;
             encoder.write_compact_array_len(self.topics.len())?;
             for value in &self.topics {
-                value.encode(encoder, version)?;
+                value.encode_validated(encoder, version)?;
             }
             encoder.write_i32(self.coordinator_epoch)?;
             if version.value() >= 2 {
@@ -138,6 +136,31 @@ pub mod write_txn_markers_request {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for WritableTxnMarker {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            WritableTxnMarker::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            WritableTxnMarker::encode_validated(self, encoder, version)
         }
     }
 
@@ -212,14 +235,12 @@ pub mod write_txn_markers_request {
         }
     }
 
-    impl KafkaEncode for WritableTxnMarkerTopic {
-        fn encode<T: EncodeTarget>(
+    impl WritableTxnMarkerTopic {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             encoder.write_compact_string(&self.name)?;
             encoder.write_compact_array_len(self.partition_indexes.len())?;
             for value in &self.partition_indexes {
@@ -231,6 +252,31 @@ pub mod write_txn_markers_request {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for WritableTxnMarkerTopic {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            WritableTxnMarkerTopic::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            WritableTxnMarkerTopic::encode_validated(self, encoder, version)
         }
     }
 
@@ -299,17 +345,15 @@ pub mod write_txn_markers_request {
         }
     }
 
-    impl KafkaEncode for WriteTxnMarkersRequest {
-        fn encode<T: EncodeTarget>(
+    impl WriteTxnMarkersRequest {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             encoder.write_compact_array_len(self.markers.len())?;
             for value in &self.markers {
-                value.encode(encoder, version)?;
+                value.encode_validated(encoder, version)?;
             }
 
             if Self::is_flexible(version) {
@@ -317,6 +361,31 @@ pub mod write_txn_markers_request {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for WriteTxnMarkersRequest {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            WriteTxnMarkersRequest::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            WriteTxnMarkersRequest::encode_validated(self, encoder, version)
         }
     }
 }
@@ -409,18 +478,16 @@ pub mod write_txn_markers_response {
         }
     }
 
-    impl KafkaEncode for WritableTxnMarkerResult {
-        fn encode<T: EncodeTarget>(
+    impl WritableTxnMarkerResult {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             encoder.write_i64(self.producer_id)?;
             encoder.write_compact_array_len(self.topics.len())?;
             for value in &self.topics {
-                value.encode(encoder, version)?;
+                value.encode_validated(encoder, version)?;
             }
 
             if Self::is_flexible(version) {
@@ -428,6 +495,31 @@ pub mod write_txn_markers_response {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for WritableTxnMarkerResult {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            WritableTxnMarkerResult::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            WritableTxnMarkerResult::encode_validated(self, encoder, version)
         }
     }
 
@@ -507,18 +599,16 @@ pub mod write_txn_markers_response {
         }
     }
 
-    impl KafkaEncode for WritableTxnMarkerTopicResult {
-        fn encode<T: EncodeTarget>(
+    impl WritableTxnMarkerTopicResult {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             encoder.write_compact_string(&self.name)?;
             encoder.write_compact_array_len(self.partitions.len())?;
             for value in &self.partitions {
-                value.encode(encoder, version)?;
+                value.encode_validated(encoder, version)?;
             }
 
             if Self::is_flexible(version) {
@@ -526,6 +616,31 @@ pub mod write_txn_markers_response {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for WritableTxnMarkerTopicResult {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            WritableTxnMarkerTopicResult::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            WritableTxnMarkerTopicResult::encode_validated(self, encoder, version)
         }
     }
 
@@ -597,14 +712,12 @@ pub mod write_txn_markers_response {
         }
     }
 
-    impl KafkaEncode for WritableTxnMarkerPartitionResult {
-        fn encode<T: EncodeTarget>(
+    impl WritableTxnMarkerPartitionResult {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             encoder.write_i32(self.partition_index)?;
             encoder.write_i16(self.error_code)?;
 
@@ -613,6 +726,31 @@ pub mod write_txn_markers_response {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for WritableTxnMarkerPartitionResult {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            WritableTxnMarkerPartitionResult::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            WritableTxnMarkerPartitionResult::encode_validated(self, encoder, version)
         }
     }
 
@@ -677,17 +815,15 @@ pub mod write_txn_markers_response {
         }
     }
 
-    impl KafkaEncode for WriteTxnMarkersResponse {
-        fn encode<T: EncodeTarget>(
+    impl WriteTxnMarkersResponse {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             encoder.write_compact_array_len(self.markers.len())?;
             for value in &self.markers {
-                value.encode(encoder, version)?;
+                value.encode_validated(encoder, version)?;
             }
 
             if Self::is_flexible(version) {
@@ -695,6 +831,31 @@ pub mod write_txn_markers_response {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for WriteTxnMarkersResponse {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            WriteTxnMarkersResponse::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            WriteTxnMarkersResponse::encode_validated(self, encoder, version)
         }
     }
 }

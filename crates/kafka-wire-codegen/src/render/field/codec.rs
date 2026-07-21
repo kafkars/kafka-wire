@@ -205,7 +205,7 @@ pub(crate) fn element_codec(
         FieldType::Struct(reference) => {
             return Ok((
                 format!("{}::decode(decoder, version)?", reference.rust_type()),
-                "value.encode(encoder, version)?;".to_owned(),
+                "value.encode_validated(encoder, version)?;".to_owned(),
             ));
         }
         // String and Bytes returned above through `length_prefixed_element`;
@@ -352,10 +352,10 @@ fn write_method(
         FieldType::Bytes | FieldType::Records => Ok(format!("encoder.write_bytes(&self.{name})?;")),
         FieldType::Struct(_) if nullable => Ok(format!(
             "if let Some(value) = &self.{name} {{ encoder.write_struct_presence(true)?; \
-             value.encode(encoder, version)?; }} \
+             value.encode_validated(encoder, version)?; }} \
              else {{ encoder.write_struct_presence(false)?; }}"
         )),
-        FieldType::Struct(_) => Ok(format!("self.{name}.encode(encoder, version)?;")),
+        FieldType::Struct(_) => Ok(format!("self.{name}.encode_validated(encoder, version)?;")),
         FieldType::Array(_) => Err(GenerationError::unsupported(
             message,
             field.name.protocol(),

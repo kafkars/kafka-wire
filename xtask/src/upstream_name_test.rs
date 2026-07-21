@@ -25,6 +25,11 @@ fn a_listing_entry_that_is_not_one_plain_filename_is_rejected() {
         "quote\".json",
         "back\\slash.json",
         "with space.json",
+        "C:x.json",
+        "file.json:stream",
+        "CON",
+        "NUL.txt",
+        "name.",
         "",
     ] {
         assert!(

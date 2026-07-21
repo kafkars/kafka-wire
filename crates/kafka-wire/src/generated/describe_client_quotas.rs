@@ -108,14 +108,12 @@ pub mod describe_client_quotas_request {
         }
     }
 
-    impl KafkaEncode for ComponentData {
-        fn encode<T: EncodeTarget>(
+    impl ComponentData {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             if Self::is_flexible(version) {
                 encoder.write_compact_string(&self.entity_type)?;
             } else {
@@ -133,6 +131,31 @@ pub mod describe_client_quotas_request {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for ComponentData {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            ComponentData::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            ComponentData::encode_validated(self, encoder, version)
         }
     }
 
@@ -207,21 +230,19 @@ pub mod describe_client_quotas_request {
         }
     }
 
-    impl KafkaEncode for DescribeClientQuotasRequest {
-        fn encode<T: EncodeTarget>(
+    impl DescribeClientQuotasRequest {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             if Self::is_flexible(version) {
                 encoder.write_compact_array_len(self.components.len())?;
             } else {
                 encoder.write_array_len(self.components.len())?;
             }
             for value in &self.components {
-                value.encode(encoder, version)?;
+                value.encode_validated(encoder, version)?;
             }
             encoder.write_bool(self.strict)?;
 
@@ -230,6 +251,31 @@ pub mod describe_client_quotas_request {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for DescribeClientQuotasRequest {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            DescribeClientQuotasRequest::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            DescribeClientQuotasRequest::encode_validated(self, encoder, version)
         }
     }
 }
@@ -334,21 +380,19 @@ pub mod describe_client_quotas_response {
         }
     }
 
-    impl KafkaEncode for EntryData {
-        fn encode<T: EncodeTarget>(
+    impl EntryData {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             if Self::is_flexible(version) {
                 encoder.write_compact_array_len(self.entity.len())?;
             } else {
                 encoder.write_array_len(self.entity.len())?;
             }
             for value in &self.entity {
-                value.encode(encoder, version)?;
+                value.encode_validated(encoder, version)?;
             }
             if Self::is_flexible(version) {
                 encoder.write_compact_array_len(self.values.len())?;
@@ -356,7 +400,7 @@ pub mod describe_client_quotas_response {
                 encoder.write_array_len(self.values.len())?;
             }
             for value in &self.values {
-                value.encode(encoder, version)?;
+                value.encode_validated(encoder, version)?;
             }
 
             if Self::is_flexible(version) {
@@ -364,6 +408,31 @@ pub mod describe_client_quotas_response {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for EntryData {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            EntryData::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            EntryData::encode_validated(self, encoder, version)
         }
     }
 
@@ -453,14 +522,12 @@ pub mod describe_client_quotas_response {
         }
     }
 
-    impl KafkaEncode for EntityData {
-        fn encode<T: EncodeTarget>(
+    impl EntityData {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             if Self::is_flexible(version) {
                 encoder.write_compact_string(&self.entity_type)?;
             } else {
@@ -477,6 +544,31 @@ pub mod describe_client_quotas_response {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for EntityData {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            EntityData::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            EntityData::encode_validated(self, encoder, version)
         }
     }
 
@@ -562,14 +654,12 @@ pub mod describe_client_quotas_response {
         }
     }
 
-    impl KafkaEncode for ValueData {
-        fn encode<T: EncodeTarget>(
+    impl ValueData {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             if Self::is_flexible(version) {
                 encoder.write_compact_string(&self.key)?;
             } else {
@@ -582,6 +672,31 @@ pub mod describe_client_quotas_response {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for ValueData {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            ValueData::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            ValueData::encode_validated(self, encoder, version)
         }
     }
 
@@ -682,14 +797,12 @@ pub mod describe_client_quotas_response {
         }
     }
 
-    impl KafkaEncode for DescribeClientQuotasResponse {
-        fn encode<T: EncodeTarget>(
+    impl DescribeClientQuotasResponse {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             encoder.write_i32(self.throttle_time_ms)?;
             encoder.write_i16(self.error_code)?;
             if Self::is_flexible(version) {
@@ -704,7 +817,7 @@ pub mod describe_client_quotas_response {
             }
             if let Some(values) = &self.entries {
                 for value in values {
-                    value.encode(encoder, version)?;
+                    value.encode_validated(encoder, version)?;
                 }
             }
 
@@ -713,6 +826,31 @@ pub mod describe_client_quotas_response {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for DescribeClientQuotasResponse {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            DescribeClientQuotasResponse::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            DescribeClientQuotasResponse::encode_validated(self, encoder, version)
         }
     }
 }

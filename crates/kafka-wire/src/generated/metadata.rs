@@ -114,14 +114,12 @@ pub mod metadata_request {
         }
     }
 
-    impl KafkaEncode for MetadataRequestTopic {
-        fn encode<T: EncodeTarget>(
+    impl MetadataRequestTopic {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             if version.value() >= 10 {
                 encoder.write_uuid(self.topic_id)?;
             }
@@ -136,6 +134,31 @@ pub mod metadata_request {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for MetadataRequestTopic {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            MetadataRequestTopic::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            MetadataRequestTopic::encode_validated(self, encoder, version)
         }
     }
 
@@ -285,14 +308,12 @@ pub mod metadata_request {
         }
     }
 
-    impl KafkaEncode for MetadataRequest {
-        fn encode<T: EncodeTarget>(
+    impl MetadataRequest {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             if Self::is_flexible(version) {
                 encoder.write_compact_nullable_array_len(self.topics.as_ref().map(Vec::len))?;
             } else {
@@ -300,7 +321,7 @@ pub mod metadata_request {
             }
             if let Some(values) = &self.topics {
                 for value in values {
-                    value.encode(encoder, version)?;
+                    value.encode_validated(encoder, version)?;
                 }
             }
             if version.value() >= 4 {
@@ -318,6 +339,31 @@ pub mod metadata_request {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for MetadataRequest {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            MetadataRequest::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            MetadataRequest::encode_validated(self, encoder, version)
         }
     }
 }
@@ -422,14 +468,12 @@ pub mod metadata_response {
         }
     }
 
-    impl KafkaEncode for MetadataResponseBroker {
-        fn encode<T: EncodeTarget>(
+    impl MetadataResponseBroker {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             encoder.write_i32(self.node_id)?;
             if Self::is_flexible(version) {
                 encoder.write_compact_string(&self.host)?;
@@ -450,6 +494,31 @@ pub mod metadata_response {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for MetadataResponseBroker {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            MetadataResponseBroker::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            MetadataResponseBroker::encode_validated(self, encoder, version)
         }
     }
 
@@ -597,14 +666,12 @@ pub mod metadata_response {
         }
     }
 
-    impl KafkaEncode for MetadataResponseTopic {
-        fn encode<T: EncodeTarget>(
+    impl MetadataResponseTopic {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             encoder.write_i16(self.error_code)?;
             if Self::is_flexible(version) {
                 encoder.write_compact_nullable_string(self.name.as_ref())?;
@@ -623,7 +690,7 @@ pub mod metadata_response {
                 encoder.write_array_len(self.partitions.len())?;
             }
             for value in &self.partitions {
-                value.encode(encoder, version)?;
+                value.encode_validated(encoder, version)?;
             }
             if version.value() >= 8 {
                 encoder.write_i32(self.topic_authorized_operations)?;
@@ -634,6 +701,31 @@ pub mod metadata_response {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for MetadataResponseTopic {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            MetadataResponseTopic::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            MetadataResponseTopic::encode_validated(self, encoder, version)
         }
     }
 
@@ -767,14 +859,12 @@ pub mod metadata_response {
         }
     }
 
-    impl KafkaEncode for MetadataResponsePartition {
-        fn encode<T: EncodeTarget>(
+    impl MetadataResponsePartition {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             encoder.write_i16(self.error_code)?;
             encoder.write_i32(self.partition_index)?;
             encoder.write_i32(self.leader_id)?;
@@ -813,6 +903,31 @@ pub mod metadata_response {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for MetadataResponsePartition {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            MetadataResponsePartition::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            MetadataResponsePartition::encode_validated(self, encoder, version)
         }
     }
 
@@ -965,14 +1080,12 @@ pub mod metadata_response {
         }
     }
 
-    impl KafkaEncode for MetadataResponse {
-        fn encode<T: EncodeTarget>(
+    impl MetadataResponse {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             if version.value() >= 3 {
                 encoder.write_i32(self.throttle_time_ms)?;
             }
@@ -982,7 +1095,7 @@ pub mod metadata_response {
                 encoder.write_array_len(self.brokers.len())?;
             }
             for value in &self.brokers {
-                value.encode(encoder, version)?;
+                value.encode_validated(encoder, version)?;
             }
             if version.value() >= 2 {
                 if Self::is_flexible(version) {
@@ -1000,7 +1113,7 @@ pub mod metadata_response {
                 encoder.write_array_len(self.topics.len())?;
             }
             for value in &self.topics {
-                value.encode(encoder, version)?;
+                value.encode_validated(encoder, version)?;
             }
             if version.value() >= 8 && version.value() <= 10 {
                 encoder.write_i32(self.cluster_authorized_operations)?;
@@ -1014,6 +1127,31 @@ pub mod metadata_response {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for MetadataResponse {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            MetadataResponse::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            MetadataResponse::encode_validated(self, encoder, version)
         }
     }
 }

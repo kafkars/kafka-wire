@@ -1,4 +1,4 @@
-//! Generated-tree comparison and transactional directory replacement.
+//! Generated-tree comparison and recoverable staged directory replacement.
 //!
 //! It stages a complete sibling before moving the tree and owns no rendering.
 
@@ -6,14 +6,11 @@ use std::{
     collections::BTreeMap,
     fs, io,
     path::{Path, PathBuf},
-    sync::atomic::{AtomicU64, Ordering},
 };
 
 use walkdir::WalkDir;
 
-use crate::{GenerationError, GenerationMode};
-
-static TEMP_SEQUENCE: AtomicU64 = AtomicU64::new(0);
+use crate::{GenerationError, GenerationMode, output_staging::StagingDirectory};
 
 /// Summary of one generation or verification run.
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
@@ -24,6 +21,11 @@ pub struct GenerationReport {
     pub unchanged: usize,
     /// Stale generated files removed by replacing the prior tree.
     pub removed: usize,
+    /// Best-effort cleanup that failed after the new tree was installed.
+    ///
+    /// These are warnings rather than generation failures: returning `Err`
+    /// after commit would leave the caller unable to tell which tree is live.
+    pub cleanup_warnings: Vec<String>,
 }
 
 pub(crate) fn apply_tree(
@@ -57,18 +59,17 @@ fn write_tree(
     expected: &BTreeMap<String, String>,
 ) -> Result<GenerationReport, GenerationError> {
     let actual = existing_files(root)?;
-    let (report, drift) = compare_trees(&actual, expected);
+    let (mut report, drift) = compare_trees(&actual, expected);
     if drift.is_empty() {
         return Ok(report);
     }
 
     let parent = root.parent().unwrap_or_else(|| Path::new("."));
     fs::create_dir_all(parent).map_err(|error| GenerationError::io(parent, error))?;
-    let staging = create_unique_sibling(root, "staging")?;
-    let mut staging_guard = DirectoryGuard::new(staging.clone());
-    write_complete_tree(&staging, expected)?;
+    let mut staging = StagingDirectory::create(root)?;
+    write_complete_tree(staging.path(), expected)?;
 
-    let staged = existing_files(&staging)?;
+    let staged = existing_files(staging.path())?;
     let (_, staged_drift) = compare_trees(&staged, expected);
     if !staged_drift.is_empty() {
         return Err(GenerationError::StagedTreeMismatch {
@@ -76,8 +77,10 @@ fn write_tree(
         });
     }
 
-    replace_directory(root, &staging)?;
-    staging_guard.disarm();
+    if let Some(warning) = replace_directory(root, staging.path())? {
+        report.cleanup_warnings.push(warning);
+    }
+    staging.disarm();
     Ok(report)
 }
 
@@ -97,14 +100,18 @@ fn write_complete_tree(
 /// Swaps a complete sibling directory into place without rename-over-existing.
 ///
 /// Moving the old tree aside first is portable across Windows and Unix; a
-/// failed staged install restores it before returning.
-pub(crate) fn replace_directory(root: &Path, staging: &Path) -> Result<(), GenerationError> {
+/// failed staged install attempts restoration and reports the rollback outcome.
+pub(crate) fn replace_directory(
+    root: &Path,
+    staging: &Path,
+) -> Result<Option<String>, GenerationError> {
     if !root.exists() {
-        return fs::rename(staging, root).map_err(|source| GenerationError::TreeSwap {
+        fs::rename(staging, root).map_err(|source| GenerationError::TreeSwap {
             root: root.to_path_buf(),
             source,
             rollback: "not needed; no prior tree was moved".to_owned(),
-        });
+        })?;
+        return Ok(None);
     }
 
     // Exclusive staging makes its derived backup name process-safe.
@@ -129,7 +136,16 @@ pub(crate) fn replace_directory(root: &Path, staging: &Path) -> Result<(), Gener
         });
     }
 
-    fs::remove_dir_all(&backup).map_err(|error| GenerationError::io(&backup, error))
+    Ok(cleanup_backup_after_install(&backup))
+}
+
+pub(crate) fn cleanup_backup_after_install(backup: &Path) -> Option<String> {
+    fs::remove_dir_all(backup).err().map(|error| {
+        format!(
+            "generated tree was installed, but obsolete backup {} could not be removed: {error}",
+            backup.display()
+        )
+    })
 }
 
 fn compare_trees(
@@ -185,56 +201,4 @@ fn existing_files(root: &Path) -> Result<BTreeMap<String, String>, GenerationErr
         files.insert(relative, source);
     }
     Ok(files)
-}
-
-fn create_unique_sibling(root: &Path, role: &str) -> Result<PathBuf, GenerationError> {
-    for _ in 0..1_000 {
-        let candidate = unique_sibling_path(root, role);
-        match fs::create_dir(&candidate) {
-            Ok(()) => return Ok(candidate),
-            Err(error) if error.kind() == io::ErrorKind::AlreadyExists => {}
-            Err(error) => return Err(GenerationError::io(&candidate, error)),
-        }
-    }
-    let candidate = unique_sibling_path(root, role);
-    Err(GenerationError::io(
-        &candidate,
-        io::Error::new(
-            io::ErrorKind::AlreadyExists,
-            "could not allocate a unique generated-tree sibling",
-        ),
-    ))
-}
-
-fn unique_sibling_path(root: &Path, role: &str) -> PathBuf {
-    let parent = root.parent().unwrap_or_else(|| Path::new("."));
-    let name = root
-        .file_name()
-        .and_then(|name| name.to_str())
-        .unwrap_or("generated");
-    let sequence = TEMP_SEQUENCE.fetch_add(1, Ordering::Relaxed);
-    parent.join(format!(".{name}.{role}.{sequence}"))
-}
-
-struct DirectoryGuard {
-    path: PathBuf,
-    armed: bool,
-}
-
-impl DirectoryGuard {
-    fn new(path: PathBuf) -> Self {
-        Self { path, armed: true }
-    }
-
-    fn disarm(&mut self) {
-        self.armed = false;
-    }
-}
-
-impl Drop for DirectoryGuard {
-    fn drop(&mut self) {
-        if self.armed {
-            let _ = fs::remove_dir_all(&self.path);
-        }
-    }
 }

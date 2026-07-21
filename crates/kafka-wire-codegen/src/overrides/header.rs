@@ -4,7 +4,7 @@
 
 use std::{path::Path, str::FromStr};
 
-use kafka_wire_schema::VersionSet;
+use kafka_wire_schema::{MessageKind, VersionSet};
 use serde::Deserialize;
 
 use crate::{GenerationError, group::ApiGroup, lockfile::ProtocolLock};
@@ -47,11 +47,12 @@ impl HeaderOverrides {
         workspace_root: &Path,
         lock: &ProtocolLock,
         groups: &[ApiGroup],
+        unkeyed: &[crate::source::MessageSource],
     ) -> Result<Self, GenerationError> {
         let (path, source) = read_override(workspace_root, "headers.toml")?;
         let mut overrides: Self = decode_override(&path, &source)?;
         overrides.input_bytes = source;
-        overrides.validate(&path, lock, groups)?;
+        overrides.validate(&path, lock, groups, unkeyed)?;
         Ok(overrides)
     }
 
@@ -65,6 +66,7 @@ impl HeaderOverrides {
         path: &Path,
         lock: &ProtocolLock,
         groups: &[ApiGroup],
+        unkeyed: &[crate::source::MessageSource],
     ) -> Result<(), GenerationError> {
         require_schema(path, self.schema)?;
         let mut seen: Vec<&ResponseHeaderException> = Vec::new();
@@ -85,6 +87,22 @@ impl HeaderOverrides {
                     format!(
                         "api key {} has negative header_version {}",
                         exception.api_key, exception.header_version
+                    ),
+                );
+            }
+            let response_header = response_header(unkeyed)?;
+            if !response_header
+                .message
+                .valid_versions
+                .contains(exception.header_version)
+            {
+                return invalid(
+                    path,
+                    format!(
+                        "api key {} header_version {} is outside ResponseHeader versions `{}`",
+                        exception.api_key,
+                        exception.header_version,
+                        response_header.message.valid_versions,
                     ),
                 );
             }
@@ -142,6 +160,21 @@ impl HeaderOverrides {
         }
         Ok(())
     }
+}
+
+fn response_header(
+    unkeyed: &[crate::source::MessageSource],
+) -> Result<&crate::source::MessageSource, GenerationError> {
+    unkeyed
+        .iter()
+        .find(|source| {
+            source.message.kind == MessageKind::Header
+                && source.message.name.protocol() == "ResponseHeader"
+        })
+        .ok_or_else(|| GenerationError::InternalInvariant {
+            message: "ResponseHeader".to_owned(),
+            invariant: "a header override requires the ResponseHeader schema".to_owned(),
+        })
 }
 
 fn validate_source(

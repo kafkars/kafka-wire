@@ -25,7 +25,12 @@ pub fn generate(config: &GeneratorConfig) -> Result<GenerationReport, Generation
     let exceptions = schema_overrides.exceptions();
     let sources = load_sources_with(config.workspace_root(), &lock, &exceptions)?;
     let grouped = group_sources(sources)?;
-    let overrides = HeaderOverrides::read(config.workspace_root(), &lock, &grouped.api)?;
+    let overrides = HeaderOverrides::read(
+        config.workspace_root(),
+        &lock,
+        &grouped.api,
+        &grouped.unkeyed,
+    )?;
     let groups = grouped.api;
     validate_output_paths(&groups)?;
 
@@ -108,7 +113,7 @@ pub fn generate(config: &GeneratorConfig) -> Result<GenerationReport, Generation
         "generated-tree manifest",
     )?;
 
-    let output_root = config.workspace_root().join(&lock.generator.output);
+    let output_root = lock.generator.output.join_to(config.workspace_root());
     apply_tree(&output_root, &files, config.mode())
 }
 

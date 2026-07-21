@@ -125,14 +125,12 @@ pub mod create_topics_request {
         }
     }
 
-    impl KafkaEncode for CreatableTopic {
-        fn encode<T: EncodeTarget>(
+    impl CreatableTopic {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             if Self::is_flexible(version) {
                 encoder.write_compact_string(&self.name)?;
             } else {
@@ -146,7 +144,7 @@ pub mod create_topics_request {
                 encoder.write_array_len(self.assignments.len())?;
             }
             for value in &self.assignments {
-                value.encode(encoder, version)?;
+                value.encode_validated(encoder, version)?;
             }
             if Self::is_flexible(version) {
                 encoder.write_compact_array_len(self.configs.len())?;
@@ -154,7 +152,7 @@ pub mod create_topics_request {
                 encoder.write_array_len(self.configs.len())?;
             }
             for value in &self.configs {
-                value.encode(encoder, version)?;
+                value.encode_validated(encoder, version)?;
             }
 
             if Self::is_flexible(version) {
@@ -162,6 +160,31 @@ pub mod create_topics_request {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for CreatableTopic {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            CreatableTopic::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            CreatableTopic::encode_validated(self, encoder, version)
         }
     }
 
@@ -240,14 +263,12 @@ pub mod create_topics_request {
         }
     }
 
-    impl KafkaEncode for CreatableReplicaAssignment {
-        fn encode<T: EncodeTarget>(
+    impl CreatableReplicaAssignment {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             encoder.write_i32(self.partition_index)?;
             if Self::is_flexible(version) {
                 encoder.write_compact_array_len(self.broker_ids.len())?;
@@ -263,6 +284,31 @@ pub mod create_topics_request {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for CreatableReplicaAssignment {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            CreatableReplicaAssignment::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            CreatableReplicaAssignment::encode_validated(self, encoder, version)
         }
     }
 
@@ -352,14 +398,12 @@ pub mod create_topics_request {
         }
     }
 
-    impl KafkaEncode for CreatableTopicConfig {
-        fn encode<T: EncodeTarget>(
+    impl CreatableTopicConfig {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             if Self::is_flexible(version) {
                 encoder.write_compact_string(&self.name)?;
             } else {
@@ -376,6 +420,31 @@ pub mod create_topics_request {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for CreatableTopicConfig {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            CreatableTopicConfig::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            CreatableTopicConfig::encode_validated(self, encoder, version)
         }
     }
 
@@ -465,21 +534,19 @@ pub mod create_topics_request {
         }
     }
 
-    impl KafkaEncode for CreateTopicsRequest {
-        fn encode<T: EncodeTarget>(
+    impl CreateTopicsRequest {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             if Self::is_flexible(version) {
                 encoder.write_compact_array_len(self.topics.len())?;
             } else {
                 encoder.write_array_len(self.topics.len())?;
             }
             for value in &self.topics {
-                value.encode(encoder, version)?;
+                value.encode_validated(encoder, version)?;
             }
             encoder.write_i32(self.timeout_ms)?;
             encoder.write_bool(self.validate_only)?;
@@ -489,6 +556,31 @@ pub mod create_topics_request {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for CreateTopicsRequest {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            CreateTopicsRequest::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            CreateTopicsRequest::encode_validated(self, encoder, version)
         }
     }
 }
@@ -657,14 +749,12 @@ pub mod create_topics_response {
         }
     }
 
-    impl KafkaEncode for CreatableTopicResult {
-        fn encode<T: EncodeTarget>(
+    impl CreatableTopicResult {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             if Self::is_flexible(version) {
                 encoder.write_compact_string(&self.name)?;
             } else {
@@ -689,7 +779,7 @@ pub mod create_topics_response {
                 encoder.write_compact_nullable_array_len(self.configs.as_ref().map(Vec::len))?;
                 if let Some(values) = &self.configs {
                     for value in values {
-                        value.encode(encoder, version)?;
+                        value.encode_validated(encoder, version)?;
                     }
                 }
             }
@@ -706,6 +796,31 @@ pub mod create_topics_response {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for CreatableTopicResult {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            CreatableTopicResult::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            CreatableTopicResult::encode_validated(self, encoder, version)
         }
     }
 
@@ -728,7 +843,7 @@ pub mod create_topics_response {
     }
 
     impl CreatableTopicConfigs {
-        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(2, 7);
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(5, 7);
         const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(5, 7));
 
         fn is_flexible(version: ApiVersion) -> bool {
@@ -746,34 +861,6 @@ pub mod create_topics_response {
                 });
             }
 
-            if version.value() < 5 && !self.name.is_empty() {
-                return Err(EncodeError::FieldNotRepresentable {
-                    message: "CreatableTopicConfigs",
-                    field: "Name",
-                    version,
-                });
-            }
-            if version.value() < 5 && self.value != Some(StrBytes::default()) {
-                return Err(EncodeError::FieldNotRepresentable {
-                    message: "CreatableTopicConfigs",
-                    field: "Value",
-                    version,
-                });
-            }
-            if version.value() < 5 && self.read_only {
-                return Err(EncodeError::FieldNotRepresentable {
-                    message: "CreatableTopicConfigs",
-                    field: "ReadOnly",
-                    version,
-                });
-            }
-            if version.value() < 5 && self.is_sensitive {
-                return Err(EncodeError::FieldNotRepresentable {
-                    message: "CreatableTopicConfigs",
-                    field: "IsSensitive",
-                    version,
-                });
-            }
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
                 return Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: "CreatableTopicConfigs",
@@ -808,31 +895,11 @@ pub mod create_topics_response {
                 });
             }
 
-            let name = if version.value() >= 5 {
-                decoder.read_compact_string()?
-            } else {
-                StrBytes::default()
-            };
-            let value = if version.value() >= 5 {
-                decoder.read_compact_nullable_string()?
-            } else {
-                Some(StrBytes::default())
-            };
-            let read_only = if version.value() >= 5 {
-                decoder.read_bool()?
-            } else {
-                false
-            };
-            let config_source = if version.value() >= 5 {
-                decoder.read_i8()?
-            } else {
-                -1
-            };
-            let is_sensitive = if version.value() >= 5 {
-                decoder.read_bool()?
-            } else {
-                false
-            };
+            let name = decoder.read_compact_string()?;
+            let value = decoder.read_compact_nullable_string()?;
+            let read_only = decoder.read_bool()?;
+            let config_source = decoder.read_i8()?;
+            let is_sensitive = decoder.read_bool()?;
             let unknown_tagged_fields = if Self::is_flexible(version) {
                 decoder.read_tagged_fields()?
             } else {
@@ -850,6 +917,26 @@ pub mod create_topics_response {
         }
     }
 
+    impl CreatableTopicConfigs {
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            encoder.write_compact_string(&self.name)?;
+            encoder.write_compact_nullable_string(self.value.as_ref())?;
+            encoder.write_bool(self.read_only)?;
+            encoder.write_i8(self.config_source)?;
+            encoder.write_bool(self.is_sensitive)?;
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            }
+
+            Ok(())
+        }
+    }
+
     impl KafkaEncode for CreatableTopicConfigs {
         fn encode<T: EncodeTarget>(
             &self,
@@ -857,28 +944,21 @@ pub mod create_topics_response {
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
             self.validate_for_version(version)?;
+            CreatableTopicConfigs::encode_validated(self, encoder, version)
+        }
 
-            if version.value() >= 5 {
-                encoder.write_compact_string(&self.name)?;
-            }
-            if version.value() >= 5 {
-                encoder.write_compact_nullable_string(self.value.as_ref())?;
-            }
-            if version.value() >= 5 {
-                encoder.write_bool(self.read_only)?;
-            }
-            if version.value() >= 5 {
-                encoder.write_i8(self.config_source)?;
-            }
-            if version.value() >= 5 {
-                encoder.write_bool(self.is_sensitive)?;
-            }
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
 
-            if Self::is_flexible(version) {
-                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-            }
-
-            Ok(())
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            CreatableTopicConfigs::encode_validated(self, encoder, version)
         }
     }
 
@@ -951,14 +1031,12 @@ pub mod create_topics_response {
         }
     }
 
-    impl KafkaEncode for CreateTopicsResponse {
-        fn encode<T: EncodeTarget>(
+    impl CreateTopicsResponse {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             encoder.write_i32(self.throttle_time_ms)?;
             if Self::is_flexible(version) {
                 encoder.write_compact_array_len(self.topics.len())?;
@@ -966,7 +1044,7 @@ pub mod create_topics_response {
                 encoder.write_array_len(self.topics.len())?;
             }
             for value in &self.topics {
-                value.encode(encoder, version)?;
+                value.encode_validated(encoder, version)?;
             }
 
             if Self::is_flexible(version) {
@@ -974,6 +1052,31 @@ pub mod create_topics_response {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for CreateTopicsResponse {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            CreateTopicsResponse::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            CreateTopicsResponse::encode_validated(self, encoder, version)
         }
     }
 }

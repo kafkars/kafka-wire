@@ -2,20 +2,22 @@
 //!
 //! This file owns turning one message's `commonStructs` and inline field bodies
 //! into Rust: the struct definition, its default, and its codecs. It
-//! deliberately owns no message-level concern — a struct has no API key, no
-//! supported version range, and no descriptor, so nothing here emits one.
+//! deliberately owns no message-level concern — a struct has no API key or
+//! descriptor, while its own effective supported range comes from the schema
+//! declaration table rather than from its owner message.
 
-use kafka_wire_schema::{Field, FieldType, Message, StructRef};
+use kafka_wire_schema::{Field, FieldType, Message, VersionSet};
 
 use crate::{
     GenerationError,
     render::{field, invariant, text::RustText},
 };
 
-use super::codec::{render_construction, render_reads, render_writes};
+use super::codec::{render_construction, render_reads, render_struct_encode};
+use super::declarations::{RenderableStruct, declared_structs};
 use super::imports::spell;
 use super::prose::sentence;
-use super::tagged::{render_tagged_decode, render_tagged_encode};
+use super::tagged::render_tagged_decode;
 use super::validation::{Owner, render_validation};
 
 /// Renders one whole schema as a standalone struct.
@@ -27,12 +29,18 @@ pub(crate) fn render_standalone(
     rust: &mut RustText,
     message: &Message,
 ) -> Result<(), GenerationError> {
+    let flexible_versions = message.effective_flexible_versions();
+    let versions = CodecVersions {
+        supported: &message.valid_versions,
+        flexible: &flexible_versions,
+    };
     render_struct_with(
         rust,
         message.name.rust_type(),
         message.name.protocol(),
         &message.fields,
         message,
+        versions,
         Identity::Message,
     )
 }
@@ -42,70 +50,22 @@ pub(crate) fn render_declared_structs(
     rust: &mut RustText,
     message: &Message,
 ) -> Result<(), GenerationError> {
-    for (rust_type, declared, fields) in declared_structs(message) {
-        render_struct(rust, &rust_type, &declared, fields, message)?;
+    for declaration in declared_structs(message)? {
+        render_struct(rust, &declaration, message)?;
     }
     Ok(())
 }
 
-/// Every struct this message declares, paired with its members, in protocol
-/// declaration order.
-///
-/// `commonStructs` and an inline body are two spellings of one concept, but the
-/// members live in different places: a common struct carries its own field
-/// list, while an inline body hangs off the field that declares the shape. This
-/// walks both so the emitter sees one ordered list.
-pub(super) fn declared_structs(message: &Message) -> Vec<(String, String, &[Field])> {
-    let mut declared = Vec::new();
-    for common in &message.common_structs {
-        declared.push((
-            common.name.rust_type().to_owned(),
-            common.name.declared().to_owned(),
-            common.fields.as_slice(),
-        ));
-    }
-    collect_inline(&message.fields, &mut declared);
-    declared
-}
-
-fn collect_inline<'a>(fields: &'a [Field], declared: &mut Vec<(String, String, &'a [Field])>) {
-    for field in fields {
-        if field.fields.is_empty() {
-            continue;
-        }
-        if let Some(reference) = struct_reference(&field.ty) {
-            declared.push((
-                reference.rust_type().to_owned(),
-                reference.declared().to_owned(),
-                field.fields.as_slice(),
-            ));
-        }
-        collect_inline(&field.fields, declared);
-    }
-}
-
-/// The struct a type denotes, looking through an array element.
-fn struct_reference(ty: &FieldType) -> Option<&StructRef> {
-    match ty {
-        FieldType::Struct(reference) => Some(reference),
-        FieldType::Array(element) => struct_reference(element),
-        _ => None,
-    }
-}
-
 /// Renders one declared struct: its definition, its default, and its codecs.
 ///
-/// A struct gets no `KafkaMessage` impl. It has no API key, no supported range,
-/// and no name of its own on the wire; it is a shape its owning message reads
-/// at the version the message already validated. What it does need is the
-/// flexible window, because its own members and its tagged-field section split
-/// on it — so it carries that one constant inherently, which is also what makes
-/// the `Self::is_flexible(version)` the field emitter writes resolve here.
+/// A struct gets no `KafkaMessage` impl. It has no API key or independent wire
+/// name, but its public codec does own the effective declaration range and the
+/// part of that range using flexible encoding.
 /// How a rendered struct states the flexible window its codecs read.
 #[derive(Clone, Copy, Eq, PartialEq)]
 enum Identity {
-    /// A struct nested inside a message: it owns the constant inherently,
-    /// because it has no name or version range of its own on the wire.
+    /// A struct nested inside a message: it owns both version constants
+    /// inherently because it does not implement `KafkaMessage`.
     Nested,
     /// A schema that stands alone. `KafkaMessage` carries exactly what a header
     /// has — a protocol name, a supported range, and a flexible window — while
@@ -114,14 +74,37 @@ enum Identity {
     Message,
 }
 
+/// The exact version universe one generated public codec promises to accept.
+#[derive(Clone, Copy)]
+struct CodecVersions<'a> {
+    supported: &'a VersionSet,
+    flexible: &'a VersionSet,
+}
+
 fn render_struct(
     rust: &mut RustText,
-    rust_type: &str,
-    declared: &str,
-    fields: &[Field],
+    declaration: &RenderableStruct<'_>,
     message: &Message,
 ) -> Result<(), GenerationError> {
-    render_struct_with(rust, rust_type, declared, fields, message, Identity::Nested)
+    // Field rendering asks the message for its version universe. A nested
+    // declaration has a narrower universe of its own, so give every field
+    // decision the same effective windows used by the public codec guards.
+    let mut context = message.clone();
+    context.valid_versions = declaration.versions.clone();
+    context.flexible_versions = declaration.flexible_versions.clone();
+    let versions = CodecVersions {
+        supported: declaration.versions,
+        flexible: &declaration.flexible_versions,
+    };
+    render_struct_with(
+        rust,
+        declaration.name.rust_type(),
+        declaration.name.declared(),
+        declaration.fields,
+        &context,
+        versions,
+        Identity::Nested,
+    )
 }
 
 fn render_struct_with(
@@ -130,6 +113,7 @@ fn render_struct_with(
     declared: &str,
     fields: &[Field],
     message: &Message,
+    versions: CodecVersions<'_>,
     identity: Identity,
 ) -> Result<(), GenerationError> {
     // Upstream's own spelling, not the Rust one the next line already shows.
@@ -167,7 +151,7 @@ fn render_struct_with(
             field::rust_type(member, message)
         ));
     }
-    let flexible = !message.effective_flexible_versions().is_empty();
+    let flexible = !versions.flexible.is_empty();
     if flexible {
         rust.line("/// Unknown flexible-version tagged fields retained for forwarding.");
         rust.line(format!(
@@ -178,12 +162,12 @@ fn render_struct_with(
     rust.close("");
     rust.blank();
 
-    render_identity(rust, rust_type, message, identity, flexible)?;
+    render_identity(rust, rust_type, message, versions, identity)?;
     let owner = match identity {
         Identity::Message => Owner::Message,
         Identity::Nested => Owner::Struct(rust_type),
     };
-    render_validation(rust, rust_type, fields, message, owner);
+    render_validation(rust, rust_type, fields, message, owner, flexible);
 
     if !derive_default {
         rust.open(format!("impl Default for {rust_type}"));
@@ -208,8 +192,8 @@ fn render_struct_with(
         rust.blank();
     }
 
-    render_struct_decode(rust, rust_type, fields, message, identity)?;
-    render_struct_encode(rust, rust_type, fields, message)?;
+    render_struct_decode(rust, rust_type, fields, message, identity, flexible)?;
+    render_struct_encode(rust, rust_type, fields, message, flexible)?;
     Ok(())
 }
 
@@ -217,31 +201,26 @@ fn render_struct_with(
 /// it.
 ///
 /// Split out because this is the one place the two identities differ: a
-/// standalone schema states the window through `KafkaMessage`, beside a protocol
-/// name and supported range a nested struct does not have, while a nested struct
-/// states it as an inherent constant. Everything around it is identical for
-/// both, so the seam is the distinction rather than a line count.
+/// standalone schema states the windows through `KafkaMessage`, while a nested
+/// struct states them as inherent constants. Everything around it is identical
+/// for both, so the seam is the distinction rather than a line count.
 fn render_identity(
     rust: &mut RustText,
     rust_type: &str,
     message: &Message,
+    versions: CodecVersions<'_>,
     identity: Identity,
-    flexible: bool,
 ) -> Result<(), GenerationError> {
     let version_range = spell(message, "VersionRange");
-    let range = invariant::optional_bounded(
-        message,
-        &message.effective_flexible_versions(),
-        "effective flexible versions",
-    )?
-    .map_or_else(
-        || "None".to_owned(),
-        |(start, end)| format!("Some({version_range}::new({start}, {end}))"),
-    );
+    let range =
+        invariant::optional_bounded(message, versions.flexible, "effective flexible versions")?
+            .map_or_else(
+                || "None".to_owned(),
+                |(start, end)| format!("Some({version_range}::new({start}, {end}))"),
+            );
     match identity {
         Identity::Message => {
-            let (start, end) =
-                invariant::bounded(message, &message.valid_versions, "valid versions")?;
+            let (start, end) = invariant::bounded(message, versions.supported, "valid versions")?;
             rust.open(format!(
                 "impl {} for {rust_type}",
                 spell(message, "KafkaMessage")
@@ -262,13 +241,13 @@ fn render_identity(
         }
         Identity::Nested => {
             let (start, end) =
-                invariant::bounded(message, &message.valid_versions, "valid versions")?;
+                invariant::bounded(message, versions.supported, "struct effective versions")?;
             rust.open(format!("impl {rust_type}"));
             rust.line(format!(
                 "const SUPPORTED_VERSIONS: {version_range} = \
                  {version_range}::new({start}, {end});"
             ));
-            if flexible {
+            if !versions.flexible.is_empty() {
                 rust.line(format!(
                     "const FLEXIBLE_VERSIONS: Option<{version_range}> = {range};"
                 ));
@@ -289,15 +268,14 @@ fn render_identity(
 
 /// Decode body for one struct a message declares.
 ///
-/// A struct carries no version check of its own: the message validated the
-/// version before any member was read, and re-checking here would claim the
-/// struct has a supported range independent of its owner, which it does not.
+/// A nested struct checks its own effective declaration range before reading.
 fn render_struct_decode(
     rust: &mut RustText,
     rust_type: &str,
     fields: &[kafka_wire_schema::Field],
     message: &Message,
     identity: Identity,
+    flexible: bool,
 ) -> Result<(), GenerationError> {
     rust.open(format!(
         "impl {} for {rust_type}",
@@ -326,48 +304,11 @@ fn render_struct_decode(
     }
     rust.blank();
     render_reads(rust, fields, message)?;
-    let flexible = !message.effective_flexible_versions().is_empty();
     if flexible {
         render_tagged_decode(rust, fields, message)?;
     }
     rust.blank();
     render_construction(rust, fields, flexible);
-    rust.close("");
-    rust.close("");
-    rust.blank();
-    Ok(())
-}
-
-/// Encode body for one struct a message declares.
-fn render_struct_encode(
-    rust: &mut RustText,
-    rust_type: &str,
-    fields: &[kafka_wire_schema::Field],
-    message: &Message,
-) -> Result<(), GenerationError> {
-    rust.open(format!(
-        "impl {} for {rust_type}",
-        spell(message, "KafkaEncode")
-    ));
-    rust.line(format!("fn encode<T: {}>(", spell(message, "EncodeTarget")));
-    rust.line("    &self,");
-    rust.line(format!(
-        "    encoder: &mut {}<T>,",
-        spell(message, "Encoder")
-    ));
-    rust.line(format!("    version: {},", spell(message, "ApiVersion")));
-    rust.open(format!(
-        ") -> Result<(), {}>",
-        spell(message, "EncodeError")
-    ));
-    rust.line("self.validate_for_version(version)?;");
-    rust.blank();
-    render_writes(rust, fields, message)?;
-    if !message.effective_flexible_versions().is_empty() {
-        render_tagged_encode(rust, fields, message)?;
-    }
-    rust.blank();
-    rust.line("Ok(())");
     rust.close("");
     rust.close("");
     rust.blank();

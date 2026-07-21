@@ -30,8 +30,8 @@ pub mod delete_topics_request {
     }
 
     impl DeleteTopicState {
-        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(1, 6);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(4, 6));
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(6, 6);
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(6, 6));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
@@ -48,20 +48,6 @@ pub mod delete_topics_request {
                 });
             }
 
-            if version.value() < 6 && self.name.is_some() {
-                return Err(EncodeError::FieldNotRepresentable {
-                    message: "DeleteTopicState",
-                    field: "Name",
-                    version,
-                });
-            }
-            if version.value() < 6 && self.topic_id != Uuid::ZERO {
-                return Err(EncodeError::FieldNotRepresentable {
-                    message: "DeleteTopicState",
-                    field: "TopicId",
-                    version,
-                });
-            }
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
                 return Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: "DeleteTopicState",
@@ -83,16 +69,8 @@ pub mod delete_topics_request {
                 });
             }
 
-            let name = if version.value() >= 6 {
-                decoder.read_compact_nullable_string()?
-            } else {
-                None
-            };
-            let topic_id = if version.value() >= 6 {
-                decoder.read_uuid()?
-            } else {
-                Uuid::ZERO
-            };
+            let name = decoder.read_compact_nullable_string()?;
+            let topic_id = decoder.read_uuid()?;
             let unknown_tagged_fields = if Self::is_flexible(version) {
                 decoder.read_tagged_fields()?
             } else {
@@ -107,6 +85,23 @@ pub mod delete_topics_request {
         }
     }
 
+    impl DeleteTopicState {
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            encoder.write_compact_nullable_string(self.name.as_ref())?;
+            encoder.write_uuid(self.topic_id)?;
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            }
+
+            Ok(())
+        }
+    }
+
     impl KafkaEncode for DeleteTopicState {
         fn encode<T: EncodeTarget>(
             &self,
@@ -114,19 +109,21 @@ pub mod delete_topics_request {
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
             self.validate_for_version(version)?;
+            DeleteTopicState::encode_validated(self, encoder, version)
+        }
 
-            if version.value() >= 6 {
-                encoder.write_compact_nullable_string(self.name.as_ref())?;
-            }
-            if version.value() >= 6 {
-                encoder.write_uuid(self.topic_id)?;
-            }
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
 
-            if Self::is_flexible(version) {
-                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-            }
-
-            Ok(())
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            DeleteTopicState::encode_validated(self, encoder, version)
         }
     }
 
@@ -227,18 +224,16 @@ pub mod delete_topics_request {
         }
     }
 
-    impl KafkaEncode for DeleteTopicsRequest {
-        fn encode<T: EncodeTarget>(
+    impl DeleteTopicsRequest {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             if version.value() >= 6 {
                 encoder.write_compact_array_len(self.topics.len())?;
                 for value in &self.topics {
-                    value.encode(encoder, version)?;
+                    value.encode_validated(encoder, version)?;
                 }
             }
             if version.value() <= 5 {
@@ -262,6 +257,31 @@ pub mod delete_topics_request {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for DeleteTopicsRequest {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            DeleteTopicsRequest::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            DeleteTopicsRequest::encode_validated(self, encoder, version)
         }
     }
 }
@@ -389,14 +409,12 @@ pub mod delete_topics_response {
         }
     }
 
-    impl KafkaEncode for DeletableTopicResult {
-        fn encode<T: EncodeTarget>(
+    impl DeletableTopicResult {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             if Self::is_flexible(version) {
                 encoder.write_compact_nullable_string(self.name.as_ref())?;
             } else {
@@ -415,6 +433,31 @@ pub mod delete_topics_response {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for DeletableTopicResult {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            DeletableTopicResult::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            DeletableTopicResult::encode_validated(self, encoder, version)
         }
     }
 
@@ -487,14 +530,12 @@ pub mod delete_topics_response {
         }
     }
 
-    impl KafkaEncode for DeleteTopicsResponse {
-        fn encode<T: EncodeTarget>(
+    impl DeleteTopicsResponse {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             encoder.write_i32(self.throttle_time_ms)?;
             if Self::is_flexible(version) {
                 encoder.write_compact_array_len(self.responses.len())?;
@@ -502,7 +543,7 @@ pub mod delete_topics_response {
                 encoder.write_array_len(self.responses.len())?;
             }
             for value in &self.responses {
-                value.encode(encoder, version)?;
+                value.encode_validated(encoder, version)?;
             }
 
             if Self::is_flexible(version) {
@@ -510,6 +551,31 @@ pub mod delete_topics_response {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for DeleteTopicsResponse {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            DeleteTopicsResponse::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            DeleteTopicsResponse::encode_validated(self, encoder, version)
         }
     }
 }

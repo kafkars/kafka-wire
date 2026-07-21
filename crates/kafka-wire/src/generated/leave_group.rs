@@ -32,7 +32,7 @@ pub mod leave_group_request {
     }
 
     impl MemberIdentity {
-        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 5);
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(3, 5);
         const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(4, 5));
 
         fn is_flexible(version: ApiVersion) -> bool {
@@ -50,20 +50,6 @@ pub mod leave_group_request {
                 });
             }
 
-            if version.value() < 3 && !self.member_id.is_empty() {
-                return Err(EncodeError::FieldNotRepresentable {
-                    message: "MemberIdentity",
-                    field: "MemberId",
-                    version,
-                });
-            }
-            if version.value() < 3 && self.group_instance_id.is_some() {
-                return Err(EncodeError::FieldNotRepresentable {
-                    message: "MemberIdentity",
-                    field: "GroupInstanceId",
-                    version,
-                });
-            }
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
                 return Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: "MemberIdentity",
@@ -85,23 +71,15 @@ pub mod leave_group_request {
                 });
             }
 
-            let member_id = if version.value() >= 3 {
-                if Self::is_flexible(version) {
-                    decoder.read_compact_string()?
-                } else {
-                    decoder.read_string()?
-                }
+            let member_id = if Self::is_flexible(version) {
+                decoder.read_compact_string()?
             } else {
-                StrBytes::default()
+                decoder.read_string()?
             };
-            let group_instance_id = if version.value() >= 3 {
-                if Self::is_flexible(version) {
-                    decoder.read_compact_nullable_string()?
-                } else {
-                    decoder.read_nullable_string()?
-                }
+            let group_instance_id = if Self::is_flexible(version) {
+                decoder.read_compact_nullable_string()?
             } else {
-                None
+                decoder.read_nullable_string()?
             };
             let reason = if version.value() >= 5 {
                 decoder.read_compact_nullable_string()?
@@ -123,27 +101,21 @@ pub mod leave_group_request {
         }
     }
 
-    impl KafkaEncode for MemberIdentity {
-        fn encode<T: EncodeTarget>(
+    impl MemberIdentity {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
-            if version.value() >= 3 {
-                if Self::is_flexible(version) {
-                    encoder.write_compact_string(&self.member_id)?;
-                } else {
-                    encoder.write_string(&self.member_id)?;
-                }
+            if Self::is_flexible(version) {
+                encoder.write_compact_string(&self.member_id)?;
+            } else {
+                encoder.write_string(&self.member_id)?;
             }
-            if version.value() >= 3 {
-                if Self::is_flexible(version) {
-                    encoder.write_compact_nullable_string(self.group_instance_id.as_ref())?;
-                } else {
-                    encoder.write_nullable_string(self.group_instance_id.as_ref())?;
-                }
+            if Self::is_flexible(version) {
+                encoder.write_compact_nullable_string(self.group_instance_id.as_ref())?;
+            } else {
+                encoder.write_nullable_string(self.group_instance_id.as_ref())?;
             }
             if version.value() >= 5 {
                 encoder.write_compact_nullable_string(self.reason.as_ref())?;
@@ -154,6 +126,31 @@ pub mod leave_group_request {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for MemberIdentity {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            MemberIdentity::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            MemberIdentity::encode_validated(self, encoder, version)
         }
     }
 
@@ -258,14 +255,12 @@ pub mod leave_group_request {
         }
     }
 
-    impl KafkaEncode for LeaveGroupRequest {
-        fn encode<T: EncodeTarget>(
+    impl LeaveGroupRequest {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             if Self::is_flexible(version) {
                 encoder.write_compact_string(&self.group_id)?;
             } else {
@@ -281,7 +276,7 @@ pub mod leave_group_request {
                     encoder.write_array_len(self.members.len())?;
                 }
                 for value in &self.members {
-                    value.encode(encoder, version)?;
+                    value.encode_validated(encoder, version)?;
                 }
             }
 
@@ -290,6 +285,31 @@ pub mod leave_group_request {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for LeaveGroupRequest {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            LeaveGroupRequest::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            LeaveGroupRequest::encode_validated(self, encoder, version)
         }
     }
 }
@@ -321,7 +341,7 @@ pub mod leave_group_response {
     }
 
     impl MemberResponse {
-        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 5);
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(3, 5);
         const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(4, 5));
 
         fn is_flexible(version: ApiVersion) -> bool {
@@ -339,27 +359,6 @@ pub mod leave_group_response {
                 });
             }
 
-            if version.value() < 3 && !self.member_id.is_empty() {
-                return Err(EncodeError::FieldNotRepresentable {
-                    message: "MemberResponse",
-                    field: "MemberId",
-                    version,
-                });
-            }
-            if version.value() < 3 && self.group_instance_id != Some(StrBytes::default()) {
-                return Err(EncodeError::FieldNotRepresentable {
-                    message: "MemberResponse",
-                    field: "GroupInstanceId",
-                    version,
-                });
-            }
-            if version.value() < 3 && self.error_code != 0 {
-                return Err(EncodeError::FieldNotRepresentable {
-                    message: "MemberResponse",
-                    field: "ErrorCode",
-                    version,
-                });
-            }
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
                 return Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: "MemberResponse",
@@ -392,29 +391,17 @@ pub mod leave_group_response {
                 });
             }
 
-            let member_id = if version.value() >= 3 {
-                if Self::is_flexible(version) {
-                    decoder.read_compact_string()?
-                } else {
-                    decoder.read_string()?
-                }
+            let member_id = if Self::is_flexible(version) {
+                decoder.read_compact_string()?
             } else {
-                StrBytes::default()
+                decoder.read_string()?
             };
-            let group_instance_id = if version.value() >= 3 {
-                if Self::is_flexible(version) {
-                    decoder.read_compact_nullable_string()?
-                } else {
-                    decoder.read_nullable_string()?
-                }
+            let group_instance_id = if Self::is_flexible(version) {
+                decoder.read_compact_nullable_string()?
             } else {
-                Some(StrBytes::default())
+                decoder.read_nullable_string()?
             };
-            let error_code = if version.value() >= 3 {
-                decoder.read_i16()?
-            } else {
-                0
-            };
+            let error_code = decoder.read_i16()?;
             let unknown_tagged_fields = if Self::is_flexible(version) {
                 decoder.read_tagged_fields()?
             } else {
@@ -430,6 +417,32 @@ pub mod leave_group_response {
         }
     }
 
+    impl MemberResponse {
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            if Self::is_flexible(version) {
+                encoder.write_compact_string(&self.member_id)?;
+            } else {
+                encoder.write_string(&self.member_id)?;
+            }
+            if Self::is_flexible(version) {
+                encoder.write_compact_nullable_string(self.group_instance_id.as_ref())?;
+            } else {
+                encoder.write_nullable_string(self.group_instance_id.as_ref())?;
+            }
+            encoder.write_i16(self.error_code)?;
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            }
+
+            Ok(())
+        }
+    }
+
     impl KafkaEncode for MemberResponse {
         fn encode<T: EncodeTarget>(
             &self,
@@ -437,30 +450,21 @@ pub mod leave_group_response {
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
             self.validate_for_version(version)?;
+            MemberResponse::encode_validated(self, encoder, version)
+        }
 
-            if version.value() >= 3 {
-                if Self::is_flexible(version) {
-                    encoder.write_compact_string(&self.member_id)?;
-                } else {
-                    encoder.write_string(&self.member_id)?;
-                }
-            }
-            if version.value() >= 3 {
-                if Self::is_flexible(version) {
-                    encoder.write_compact_nullable_string(self.group_instance_id.as_ref())?;
-                } else {
-                    encoder.write_nullable_string(self.group_instance_id.as_ref())?;
-                }
-            }
-            if version.value() >= 3 {
-                encoder.write_i16(self.error_code)?;
-            }
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
 
-            if Self::is_flexible(version) {
-                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-            }
-
-            Ok(())
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            MemberResponse::encode_validated(self, encoder, version)
         }
     }
 
@@ -550,14 +554,12 @@ pub mod leave_group_response {
         }
     }
 
-    impl KafkaEncode for LeaveGroupResponse {
-        fn encode<T: EncodeTarget>(
+    impl LeaveGroupResponse {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             if version.value() >= 1 {
                 encoder.write_i32(self.throttle_time_ms)?;
             }
@@ -569,7 +571,7 @@ pub mod leave_group_response {
                     encoder.write_array_len(self.members.len())?;
                 }
                 for value in &self.members {
-                    value.encode(encoder, version)?;
+                    value.encode_validated(encoder, version)?;
                 }
             }
 
@@ -578,6 +580,31 @@ pub mod leave_group_response {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for LeaveGroupResponse {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            LeaveGroupResponse::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            LeaveGroupResponse::encode_validated(self, encoder, version)
         }
     }
 }

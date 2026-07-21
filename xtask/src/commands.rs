@@ -35,6 +35,9 @@ fn vendor() -> Result<(), String> {
     for removed in &report.removed {
         println!("removed no-longer-upstream schema: {removed}");
     }
+    for warning in &report.cleanup_warnings {
+        eprintln!("warning: {warning}");
+    }
     Ok(())
 }
 
@@ -50,6 +53,9 @@ fn generate(mode: GenerationMode) -> Result<(), String> {
             "generated protocol is current: {} files verified",
             report.unchanged
         ),
+    }
+    for warning in &report.cleanup_warnings {
+        eprintln!("warning: {warning}");
     }
     Ok(())
 }

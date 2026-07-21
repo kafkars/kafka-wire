@@ -14,6 +14,10 @@ use std::{
 use serde::Deserialize;
 
 use crate::GenerationError;
+use crate::{PortableFilename, RepoRelativePath};
+
+/// The one semantic IR contract implemented by this compiler.
+pub const SUPPORTED_IR_VERSION: u32 = 1;
 
 /// Parsed repository protocol lockfile.
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq)]
@@ -36,9 +40,9 @@ pub struct KafkaLock {
     /// Full lowercase Git object ID.
     pub commit: String,
     /// Repository-relative upstream schema directory.
-    pub upstream_message_root: String,
+    pub upstream_message_root: RepoRelativePath,
     /// Repository-relative local vendor directory.
-    pub vendored_root: String,
+    pub vendored_root: RepoRelativePath,
     /// Complete pinned source inventory.
     pub files: Vec<LockedFile>,
 }
@@ -48,7 +52,7 @@ pub struct KafkaLock {
 #[serde(deny_unknown_fields)]
 pub struct LockedFile {
     /// Plain schema filename.
-    pub path: String,
+    pub path: PortableFilename,
     /// Lowercase SHA-256 of the exact vendored bytes.
     pub sha256: String,
     /// Whether generation compiles this source.
@@ -78,7 +82,7 @@ pub struct GeneratorLock {
     /// Semantic IR contract version.
     pub ir_version: u32,
     /// Repository-relative generated-tree destination.
-    pub output: String,
+    pub output: RepoRelativePath,
 }
 
 impl ProtocolLock {
@@ -109,6 +113,12 @@ impl ProtocolLock {
         if lock.schema != 1 {
             return Err(GenerationError::LockfileSchema { found: lock.schema });
         }
+        if lock.generator.ir_version != SUPPORTED_IR_VERSION {
+            return Err(GenerationError::IrVersion {
+                found: lock.generator.ir_version,
+                supported: SUPPORTED_IR_VERSION,
+            });
+        }
         if lock.kafka.repository != "https://github.com/apache/kafka" {
             return invalid_value(
                 "kafka.repository",
@@ -117,26 +127,18 @@ impl ProtocolLock {
             );
         }
         validate_lower_hex("kafka.commit", &lock.kafka.commit, 40)?;
-        validate_relative_path(
-            "kafka.upstream_message_root",
-            &lock.kafka.upstream_message_root,
-        )?;
-        validate_relative_path("kafka.vendored_root", &lock.kafka.vendored_root)?;
-        validate_relative_path("generator.output", &lock.generator.output)?;
-        lock.kafka.message_directory()?;
         let mut paths = BTreeSet::new();
         for file in &lock.kafka.files {
-            validate_plain_filename(&file.path)?;
             validate_lower_hex(
                 &format!("kafka.files[{}].sha256", file.path),
                 &file.sha256,
                 64,
             )?;
-            if !paths.insert(file.path.as_str()) {
+            if !paths.insert(file.path.as_str().to_ascii_lowercase()) {
                 return invalid_value(
                     "kafka.files.path",
-                    &file.path,
-                    "each source path must appear exactly once",
+                    file.path.as_str(),
+                    "source paths must be unique under ASCII case folding",
                 );
             }
         }
@@ -151,61 +153,17 @@ impl KafkaLock {
     /// commit, so `upstream_message_root` names both where the bytes came from
     /// and what the local directory is called. Without this the configured
     /// upstream path would be recorded and then ignored.
-    pub fn vendored_message_root(&self, workspace: &Path) -> Result<PathBuf, GenerationError> {
-        Ok(workspace
-            .join(&self.vendored_root)
+    pub fn vendored_message_root(&self, workspace: &Path) -> PathBuf {
+        self.vendored_root
+            .join_to(workspace)
             .join(&self.commit)
-            .join(self.message_directory()?))
+            .join(self.message_directory())
     }
 
     /// Leaf directory name shared by the upstream and vendored message trees.
-    fn message_directory(&self) -> Result<&str, GenerationError> {
-        self.upstream_message_root
-            .rsplit('/')
-            .next()
-            .filter(|name| !name.is_empty())
-            .ok_or_else(|| GenerationError::UnsafeConfiguredPath {
-                field: "kafka.upstream_message_root",
-                path: self.upstream_message_root.clone(),
-            })
+    fn message_directory(&self) -> &str {
+        self.upstream_message_root.file_name()
     }
-}
-
-fn validate_plain_filename(path: &str) -> Result<(), GenerationError> {
-    if repository_path_is_safe(path) && !path.contains('/') {
-        Ok(())
-    } else {
-        Err(GenerationError::UnsafeSourcePath {
-            path: path.to_owned(),
-        })
-    }
-}
-
-fn validate_relative_path(field: &'static str, path: &str) -> Result<(), GenerationError> {
-    if repository_path_is_safe(path) {
-        Ok(())
-    } else {
-        Err(GenerationError::UnsafeConfiguredPath {
-            field,
-            path: path.to_owned(),
-        })
-    }
-}
-
-/// Platform-independent repository path grammar.
-///
-/// Lockfiles always use `/`, whatever host consumes them. Rejecting every
-/// ambiguous component before constructing a native `Path` makes acceptance
-/// identical on Unix and Windows and prevents a later join from escaping.
-fn repository_path_is_safe(path: &str) -> bool {
-    !path.is_empty()
-        && !path.contains('\\')
-        && !path.contains('\0')
-        && !path.starts_with('/')
-        && !path.ends_with('/')
-        && path
-            .split('/')
-            .all(|component| !component.is_empty() && component != "." && component != "..")
 }
 
 fn validate_lower_hex(field: &str, value: &str, width: usize) -> Result<(), GenerationError> {

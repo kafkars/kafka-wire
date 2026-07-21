@@ -101,14 +101,12 @@ pub mod delete_records_request {
         }
     }
 
-    impl KafkaEncode for DeleteRecordsTopic {
-        fn encode<T: EncodeTarget>(
+    impl DeleteRecordsTopic {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             if Self::is_flexible(version) {
                 encoder.write_compact_string(&self.name)?;
             } else {
@@ -120,7 +118,7 @@ pub mod delete_records_request {
                 encoder.write_array_len(self.partitions.len())?;
             }
             for value in &self.partitions {
-                value.encode(encoder, version)?;
+                value.encode_validated(encoder, version)?;
             }
 
             if Self::is_flexible(version) {
@@ -128,6 +126,31 @@ pub mod delete_records_request {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for DeleteRecordsTopic {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            DeleteRecordsTopic::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            DeleteRecordsTopic::encode_validated(self, encoder, version)
         }
     }
 
@@ -199,14 +222,12 @@ pub mod delete_records_request {
         }
     }
 
-    impl KafkaEncode for DeleteRecordsPartition {
-        fn encode<T: EncodeTarget>(
+    impl DeleteRecordsPartition {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             encoder.write_i32(self.partition_index)?;
             encoder.write_i64(self.offset)?;
 
@@ -215,6 +236,31 @@ pub mod delete_records_request {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for DeleteRecordsPartition {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            DeleteRecordsPartition::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            DeleteRecordsPartition::encode_validated(self, encoder, version)
         }
     }
 
@@ -291,21 +337,19 @@ pub mod delete_records_request {
         }
     }
 
-    impl KafkaEncode for DeleteRecordsRequest {
-        fn encode<T: EncodeTarget>(
+    impl DeleteRecordsRequest {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             if Self::is_flexible(version) {
                 encoder.write_compact_array_len(self.topics.len())?;
             } else {
                 encoder.write_array_len(self.topics.len())?;
             }
             for value in &self.topics {
-                value.encode(encoder, version)?;
+                value.encode_validated(encoder, version)?;
             }
             encoder.write_i32(self.timeout_ms)?;
 
@@ -314,6 +358,31 @@ pub mod delete_records_request {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for DeleteRecordsRequest {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            DeleteRecordsRequest::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            DeleteRecordsRequest::encode_validated(self, encoder, version)
         }
     }
 }
@@ -414,14 +483,12 @@ pub mod delete_records_response {
         }
     }
 
-    impl KafkaEncode for DeleteRecordsTopicResult {
-        fn encode<T: EncodeTarget>(
+    impl DeleteRecordsTopicResult {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             if Self::is_flexible(version) {
                 encoder.write_compact_string(&self.name)?;
             } else {
@@ -433,7 +500,7 @@ pub mod delete_records_response {
                 encoder.write_array_len(self.partitions.len())?;
             }
             for value in &self.partitions {
-                value.encode(encoder, version)?;
+                value.encode_validated(encoder, version)?;
             }
 
             if Self::is_flexible(version) {
@@ -441,6 +508,31 @@ pub mod delete_records_response {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for DeleteRecordsTopicResult {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            DeleteRecordsTopicResult::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            DeleteRecordsTopicResult::encode_validated(self, encoder, version)
         }
     }
 
@@ -516,14 +608,12 @@ pub mod delete_records_response {
         }
     }
 
-    impl KafkaEncode for DeleteRecordsPartitionResult {
-        fn encode<T: EncodeTarget>(
+    impl DeleteRecordsPartitionResult {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             encoder.write_i32(self.partition_index)?;
             encoder.write_i64(self.low_watermark)?;
             encoder.write_i16(self.error_code)?;
@@ -533,6 +623,31 @@ pub mod delete_records_response {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for DeleteRecordsPartitionResult {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            DeleteRecordsPartitionResult::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            DeleteRecordsPartitionResult::encode_validated(self, encoder, version)
         }
     }
 
@@ -605,14 +720,12 @@ pub mod delete_records_response {
         }
     }
 
-    impl KafkaEncode for DeleteRecordsResponse {
-        fn encode<T: EncodeTarget>(
+    impl DeleteRecordsResponse {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             encoder.write_i32(self.throttle_time_ms)?;
             if Self::is_flexible(version) {
                 encoder.write_compact_array_len(self.topics.len())?;
@@ -620,7 +733,7 @@ pub mod delete_records_response {
                 encoder.write_array_len(self.topics.len())?;
             }
             for value in &self.topics {
-                value.encode(encoder, version)?;
+                value.encode_validated(encoder, version)?;
             }
 
             if Self::is_flexible(version) {
@@ -628,6 +741,31 @@ pub mod delete_records_response {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for DeleteRecordsResponse {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            DeleteRecordsResponse::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            DeleteRecordsResponse::encode_validated(self, encoder, version)
         }
     }
 }

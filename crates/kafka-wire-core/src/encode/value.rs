@@ -18,10 +18,37 @@ pub trait KafkaEncode {
         version: ApiVersion,
     ) -> Result<(), EncodeError>;
 
-    /// Calculates the encoded length through the normal encoding path.
+    /// Performs any value-level preflight required before byte emission.
+    ///
+    /// Generated implementations use this hook so `encode_into` validates one
+    /// complete value once before its sizing and writing passes. Handwritten
+    /// implementations need not override it unless they have a separate
+    /// preflight of their own.
+    #[doc(hidden)]
+    fn validate_encoding(&self, _version: ApiVersion) -> Result<(), EncodeError> {
+        Ok(())
+    }
+
+    /// Emits a value whose preflight has already succeeded.
+    ///
+    /// The default delegates to `encode`, preserving the contract for existing
+    /// handwritten implementations. Generated implementations override this
+    /// with their unchecked body so sizing, writing, and nested descent do not
+    /// repeat recursive validation.
+    #[doc(hidden)]
+    fn encode_validated<T: EncodeTarget>(
+        &self,
+        encoder: &mut Encoder<T>,
+        version: ApiVersion,
+    ) -> Result<(), EncodeError> {
+        self.encode(encoder, version)
+    }
+
+    /// Calculates the encoded length after one complete preflight.
     fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        self.validate_encoding(version)?;
         let mut encoder = Encoder::sizing();
-        self.encode(&mut encoder, version)?;
+        self.encode_validated(&mut encoder, version)?;
         Ok(encoder.len())
     }
 
@@ -45,7 +72,7 @@ pub trait KafkaEncode {
 
         let written = {
             let mut encoder = Encoder::new(buffer);
-            let outcome = self.encode(&mut encoder, version);
+            let outcome = self.encode_validated(&mut encoder, version);
             outcome.map(|()| encoder.len())
         };
 

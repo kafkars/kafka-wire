@@ -96,14 +96,12 @@ pub mod add_partitions_to_txn_request {
         }
     }
 
-    impl KafkaEncode for AddPartitionsToTxnTopic {
-        fn encode<T: EncodeTarget>(
+    impl AddPartitionsToTxnTopic {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             if Self::is_flexible(version) {
                 encoder.write_compact_string(&self.name)?;
             } else {
@@ -126,6 +124,31 @@ pub mod add_partitions_to_txn_request {
         }
     }
 
+    impl KafkaEncode for AddPartitionsToTxnTopic {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            AddPartitionsToTxnTopic::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            AddPartitionsToTxnTopic::encode_validated(self, encoder, version)
+        }
+    }
+
     /// `AddPartitionsToTxnTransaction` as declared by the `AddPartitionsToTxn` API.
     #[non_exhaustive]
     #[derive(Clone, Debug, Default, Eq, PartialEq)]
@@ -145,8 +168,8 @@ pub mod add_partitions_to_txn_request {
     }
 
     impl AddPartitionsToTxnTransaction {
-        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 5);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(3, 5));
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(4, 5);
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(4, 5));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
@@ -163,45 +186,8 @@ pub mod add_partitions_to_txn_request {
                 });
             }
 
-            if version.value() < 4 && !self.transactional_id.is_empty() {
-                return Err(EncodeError::FieldNotRepresentable {
-                    message: "AddPartitionsToTxnTransaction",
-                    field: "TransactionalId",
-                    version,
-                });
-            }
-            if version.value() < 4 && self.producer_id != 0 {
-                return Err(EncodeError::FieldNotRepresentable {
-                    message: "AddPartitionsToTxnTransaction",
-                    field: "ProducerId",
-                    version,
-                });
-            }
-            if version.value() < 4 && self.producer_epoch != 0 {
-                return Err(EncodeError::FieldNotRepresentable {
-                    message: "AddPartitionsToTxnTransaction",
-                    field: "ProducerEpoch",
-                    version,
-                });
-            }
-            if version.value() < 4 && self.verify_only {
-                return Err(EncodeError::FieldNotRepresentable {
-                    message: "AddPartitionsToTxnTransaction",
-                    field: "VerifyOnly",
-                    version,
-                });
-            }
-            if version.value() < 4 && !self.topics.is_empty() {
-                return Err(EncodeError::FieldNotRepresentable {
-                    message: "AddPartitionsToTxnTransaction",
-                    field: "Topics",
-                    version,
-                });
-            }
-            if version.value() >= 4 {
-                for value in &self.topics {
-                    value.validate_for_version(version)?;
-                }
+            for value in &self.topics {
+                value.validate_for_version(version)?;
             }
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
                 return Err(EncodeError::TaggedFieldsNotRepresentable {
@@ -224,33 +210,15 @@ pub mod add_partitions_to_txn_request {
                 });
             }
 
-            let transactional_id = if version.value() >= 4 {
-                decoder.read_compact_string()?
-            } else {
-                StrBytes::default()
-            };
-            let producer_id = if version.value() >= 4 {
-                decoder.read_i64()?
-            } else {
-                0
-            };
-            let producer_epoch = if version.value() >= 4 {
-                decoder.read_i16()?
-            } else {
-                0
-            };
-            let verify_only = if version.value() >= 4 {
-                decoder.read_bool()?
-            } else {
-                false
-            };
-            let topics = if version.value() >= 4 {
+            let transactional_id = decoder.read_compact_string()?;
+            let producer_id = decoder.read_i64()?;
+            let producer_epoch = decoder.read_i16()?;
+            let verify_only = decoder.read_bool()?;
+            let topics = {
                 let length = decoder.read_compact_array_len()?;
                 decoder.read_vec(length, |decoder| {
                     AddPartitionsToTxnTopic::decode(decoder, version)
                 })?
-            } else {
-                Vec::new()
             };
             let unknown_tagged_fields = if Self::is_flexible(version) {
                 decoder.read_tagged_fields()?
@@ -269,31 +237,19 @@ pub mod add_partitions_to_txn_request {
         }
     }
 
-    impl KafkaEncode for AddPartitionsToTxnTransaction {
-        fn encode<T: EncodeTarget>(
+    impl AddPartitionsToTxnTransaction {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
-            if version.value() >= 4 {
-                encoder.write_compact_string(&self.transactional_id)?;
-            }
-            if version.value() >= 4 {
-                encoder.write_i64(self.producer_id)?;
-            }
-            if version.value() >= 4 {
-                encoder.write_i16(self.producer_epoch)?;
-            }
-            if version.value() >= 4 {
-                encoder.write_bool(self.verify_only)?;
-            }
-            if version.value() >= 4 {
-                encoder.write_compact_array_len(self.topics.len())?;
-                for value in &self.topics {
-                    value.encode(encoder, version)?;
-                }
+            encoder.write_compact_string(&self.transactional_id)?;
+            encoder.write_i64(self.producer_id)?;
+            encoder.write_i16(self.producer_epoch)?;
+            encoder.write_bool(self.verify_only)?;
+            encoder.write_compact_array_len(self.topics.len())?;
+            for value in &self.topics {
+                value.encode_validated(encoder, version)?;
             }
 
             if Self::is_flexible(version) {
@@ -301,6 +257,31 @@ pub mod add_partitions_to_txn_request {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for AddPartitionsToTxnTransaction {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            AddPartitionsToTxnTransaction::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            AddPartitionsToTxnTransaction::encode_validated(self, encoder, version)
         }
     }
 
@@ -456,18 +437,16 @@ pub mod add_partitions_to_txn_request {
         }
     }
 
-    impl KafkaEncode for AddPartitionsToTxnRequest {
-        fn encode<T: EncodeTarget>(
+    impl AddPartitionsToTxnRequest {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             if version.value() >= 4 {
                 encoder.write_compact_array_len(self.transactions.len())?;
                 for value in &self.transactions {
-                    value.encode(encoder, version)?;
+                    value.encode_validated(encoder, version)?;
                 }
             }
             if version.value() <= 3 {
@@ -490,7 +469,7 @@ pub mod add_partitions_to_txn_request {
                     encoder.write_array_len(self.v3_and_below_topics.len())?;
                 }
                 for value in &self.v3_and_below_topics {
-                    value.encode(encoder, version)?;
+                    value.encode_validated(encoder, version)?;
                 }
             }
 
@@ -499,6 +478,31 @@ pub mod add_partitions_to_txn_request {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for AddPartitionsToTxnRequest {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            AddPartitionsToTxnRequest::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            AddPartitionsToTxnRequest::encode_validated(self, encoder, version)
         }
     }
 }
@@ -599,14 +603,12 @@ pub mod add_partitions_to_txn_response {
         }
     }
 
-    impl KafkaEncode for AddPartitionsToTxnTopicResult {
-        fn encode<T: EncodeTarget>(
+    impl AddPartitionsToTxnTopicResult {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             if Self::is_flexible(version) {
                 encoder.write_compact_string(&self.name)?;
             } else {
@@ -618,7 +620,7 @@ pub mod add_partitions_to_txn_response {
                 encoder.write_array_len(self.results_by_partition.len())?;
             }
             for value in &self.results_by_partition {
-                value.encode(encoder, version)?;
+                value.encode_validated(encoder, version)?;
             }
 
             if Self::is_flexible(version) {
@@ -626,6 +628,31 @@ pub mod add_partitions_to_txn_response {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for AddPartitionsToTxnTopicResult {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            AddPartitionsToTxnTopicResult::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            AddPartitionsToTxnTopicResult::encode_validated(self, encoder, version)
         }
     }
 
@@ -697,14 +724,12 @@ pub mod add_partitions_to_txn_response {
         }
     }
 
-    impl KafkaEncode for AddPartitionsToTxnPartitionResult {
-        fn encode<T: EncodeTarget>(
+    impl AddPartitionsToTxnPartitionResult {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             encoder.write_i32(self.partition_index)?;
             encoder.write_i16(self.partition_error_code)?;
 
@@ -713,6 +738,31 @@ pub mod add_partitions_to_txn_response {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for AddPartitionsToTxnPartitionResult {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            AddPartitionsToTxnPartitionResult::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            AddPartitionsToTxnPartitionResult::encode_validated(self, encoder, version)
         }
     }
 
@@ -729,8 +779,8 @@ pub mod add_partitions_to_txn_response {
     }
 
     impl AddPartitionsToTxnResult {
-        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 5);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(3, 5));
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(4, 5);
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(4, 5));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
@@ -747,24 +797,8 @@ pub mod add_partitions_to_txn_response {
                 });
             }
 
-            if version.value() < 4 && !self.transactional_id.is_empty() {
-                return Err(EncodeError::FieldNotRepresentable {
-                    message: "AddPartitionsToTxnResult",
-                    field: "TransactionalId",
-                    version,
-                });
-            }
-            if version.value() < 4 && !self.topic_results.is_empty() {
-                return Err(EncodeError::FieldNotRepresentable {
-                    message: "AddPartitionsToTxnResult",
-                    field: "TopicResults",
-                    version,
-                });
-            }
-            if version.value() >= 4 {
-                for value in &self.topic_results {
-                    value.validate_for_version(version)?;
-                }
+            for value in &self.topic_results {
+                value.validate_for_version(version)?;
             }
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
                 return Err(EncodeError::TaggedFieldsNotRepresentable {
@@ -787,18 +821,12 @@ pub mod add_partitions_to_txn_response {
                 });
             }
 
-            let transactional_id = if version.value() >= 4 {
-                decoder.read_compact_string()?
-            } else {
-                StrBytes::default()
-            };
-            let topic_results = if version.value() >= 4 {
+            let transactional_id = decoder.read_compact_string()?;
+            let topic_results = {
                 let length = decoder.read_compact_array_len()?;
                 decoder.read_vec(length, |decoder| {
                     AddPartitionsToTxnTopicResult::decode(decoder, version)
                 })?
-            } else {
-                Vec::new()
             };
             let unknown_tagged_fields = if Self::is_flexible(version) {
                 decoder.read_tagged_fields()?
@@ -814,22 +842,16 @@ pub mod add_partitions_to_txn_response {
         }
     }
 
-    impl KafkaEncode for AddPartitionsToTxnResult {
-        fn encode<T: EncodeTarget>(
+    impl AddPartitionsToTxnResult {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
-            if version.value() >= 4 {
-                encoder.write_compact_string(&self.transactional_id)?;
-            }
-            if version.value() >= 4 {
-                encoder.write_compact_array_len(self.topic_results.len())?;
-                for value in &self.topic_results {
-                    value.encode(encoder, version)?;
-                }
+            encoder.write_compact_string(&self.transactional_id)?;
+            encoder.write_compact_array_len(self.topic_results.len())?;
+            for value in &self.topic_results {
+                value.encode_validated(encoder, version)?;
             }
 
             if Self::is_flexible(version) {
@@ -837,6 +859,31 @@ pub mod add_partitions_to_txn_response {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for AddPartitionsToTxnResult {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            AddPartitionsToTxnResult::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            AddPartitionsToTxnResult::encode_validated(self, encoder, version)
         }
     }
 
@@ -951,14 +998,12 @@ pub mod add_partitions_to_txn_response {
         }
     }
 
-    impl KafkaEncode for AddPartitionsToTxnResponse {
-        fn encode<T: EncodeTarget>(
+    impl AddPartitionsToTxnResponse {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             encoder.write_i32(self.throttle_time_ms)?;
             if version.value() >= 4 {
                 encoder.write_i16(self.error_code)?;
@@ -966,7 +1011,7 @@ pub mod add_partitions_to_txn_response {
             if version.value() >= 4 {
                 encoder.write_compact_array_len(self.results_by_transaction.len())?;
                 for value in &self.results_by_transaction {
-                    value.encode(encoder, version)?;
+                    value.encode_validated(encoder, version)?;
                 }
             }
             if version.value() <= 3 {
@@ -976,7 +1021,7 @@ pub mod add_partitions_to_txn_response {
                     encoder.write_array_len(self.results_by_topic_v3_and_below.len())?;
                 }
                 for value in &self.results_by_topic_v3_and_below {
-                    value.encode(encoder, version)?;
+                    value.encode_validated(encoder, version)?;
                 }
             }
 
@@ -985,6 +1030,31 @@ pub mod add_partitions_to_txn_response {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for AddPartitionsToTxnResponse {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            AddPartitionsToTxnResponse::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            AddPartitionsToTxnResponse::encode_validated(self, encoder, version)
         }
     }
 }

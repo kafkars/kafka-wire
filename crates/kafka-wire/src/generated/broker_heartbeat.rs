@@ -145,14 +145,12 @@ pub mod broker_heartbeat_request {
         }
     }
 
-    impl KafkaEncode for BrokerHeartbeatRequest {
-        fn encode<T: EncodeTarget>(
+    impl BrokerHeartbeatRequest {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             encoder.write_i32(self.broker_id)?;
             encoder.write_i64(self.broker_epoch)?;
             encoder.write_i64(self.current_metadata_offset)?;
@@ -187,6 +185,31 @@ pub mod broker_heartbeat_request {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for BrokerHeartbeatRequest {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            BrokerHeartbeatRequest::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            BrokerHeartbeatRequest::encode_validated(self, encoder, version)
         }
     }
 }
@@ -285,14 +308,12 @@ pub mod broker_heartbeat_response {
         }
     }
 
-    impl KafkaEncode for BrokerHeartbeatResponse {
-        fn encode<T: EncodeTarget>(
+    impl BrokerHeartbeatResponse {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             encoder.write_i32(self.throttle_time_ms)?;
             encoder.write_i16(self.error_code)?;
             encoder.write_bool(self.is_caught_up)?;
@@ -304,6 +325,31 @@ pub mod broker_heartbeat_response {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for BrokerHeartbeatResponse {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            BrokerHeartbeatResponse::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            BrokerHeartbeatResponse::encode_validated(self, encoder, version)
         }
     }
 }

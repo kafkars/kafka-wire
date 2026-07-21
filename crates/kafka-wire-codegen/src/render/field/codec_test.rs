@@ -210,7 +210,7 @@ fn fixed_width_cells() -> Vec<Cell> {
             nullable: false,
             flexible: "none",
             read: "TopicData::decode(decoder, version)?",
-            write: "self.probe.encode(encoder, version)?;",
+            write: "self.probe.encode_validated(encoder, version)?;",
         },
     ]
 }

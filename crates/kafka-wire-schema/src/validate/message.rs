@@ -37,7 +37,8 @@ pub fn validate_message_with(
     // they are judged inside the declaration's own version window and `mapKey`
     // is meaningful on them.
     for common in &message.common_structs {
-        let scope = Presence::member(&common.versions);
+        let effective = common.versions.intersection(&message.valid_versions);
+        let scope = Presence::member(&effective);
         validate_fields(message, &common.fields, &scope, &mut errors);
     }
     validate_fields(

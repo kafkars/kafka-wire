@@ -14,7 +14,7 @@ use crate::{
     group::{ApiGroup, group_sources},
     lockfile::ProtocolLock,
     overrides::{HeaderOverrides, SchemaExceptionOverrides},
-    source::load_sources,
+    source::{MessageSource, load_sources},
 };
 
 fn repository_root() -> PathBuf {
@@ -24,16 +24,15 @@ fn repository_root() -> PathBuf {
         .map_or_else(|| PathBuf::from("."), Path::to_path_buf)
 }
 
-fn corpus() -> (ProtocolLock, Vec<ApiGroup>) {
+fn corpus() -> (ProtocolLock, Vec<ApiGroup>, Vec<MessageSource>) {
     let root = repository_root();
     let lock = ProtocolLock::read(&root.join("spec/protocol.lock"))
         .unwrap_or_else(|error| panic!("read protocol lock: {error}"));
     let sources =
         load_sources(&root, &lock).unwrap_or_else(|error| panic!("load pinned sources: {error}"));
-    let groups = group_sources(sources)
-        .unwrap_or_else(|error| panic!("group pinned sources: {error}"))
-        .api;
-    (lock, groups)
+    let grouped =
+        group_sources(sources).unwrap_or_else(|error| panic!("group pinned sources: {error}"));
+    (lock, grouped.api, grouped.unkeyed)
 }
 
 fn workspace(name: &str, file: &str, source: &str) -> PathBuf {
@@ -65,17 +64,17 @@ fn header(versions: &str, api_key: i16, source: &str) -> String {
 
 #[test]
 fn header_versions_are_strict_open_ranges_tied_to_a_real_response() {
-    let (lock, groups) = corpus();
+    let (lock, groups, unkeyed) = corpus();
     let source = "clients/src/main/resources/common/message/ApiVersionsResponse.json";
 
     let valid = workspace("header-valid", "headers.toml", &header("3+", 18, source));
-    HeaderOverrides::read(&valid, &lock, &groups)
+    HeaderOverrides::read(&valid, &lock, &groups, &unkeyed)
         .unwrap_or_else(|error| panic!("valid header override rejected: {error}"));
 
     for (name, versions) in [("closed", "3-5"), ("repeated-plus", "3++")] {
         let root = workspace(name, "headers.toml", &header(versions, 18, source));
         assert!(
-            HeaderOverrides::read(&root, &lock, &groups).is_err(),
+            HeaderOverrides::read(&root, &lock, &groups, &unkeyed).is_err(),
             "malformed header versions `{versions}` were accepted"
         );
     }
@@ -83,23 +82,45 @@ fn header_versions_are_strict_open_ranges_tied_to_a_real_response() {
     let missing = workspace("missing-api", "headers.toml", &header("3+", 9_000, source));
     assert!(
         matches!(
-            HeaderOverrides::read(&missing, &lock, &groups),
+            HeaderOverrides::read(&missing, &lock, &groups, &unkeyed),
             Err(GenerationError::InvalidOverride { .. })
         ),
         "an exception for an unknown API key was accepted"
     );
+
+    let unsupported = workspace(
+        "unsupported-header-version",
+        "headers.toml",
+        &header("3+", 18, source).replace("header_version = 0", "header_version = 20"),
+    );
+    assert!(
+        matches!(
+            HeaderOverrides::read(&unsupported, &lock, &groups, &unkeyed),
+            Err(GenerationError::InvalidOverride { .. })
+        ),
+        "a header version absent from ResponseHeader was accepted"
+    );
+}
+
+#[test]
+fn an_empty_header_policy_does_not_require_unrelated_header_schemas() {
+    let (lock, _, _) = corpus();
+    let root = workspace("empty-header-policy", "headers.toml", "schema = 1\n");
+
+    HeaderOverrides::read(&root, &lock, &[], &[])
+        .unwrap_or_else(|error| panic!("empty header policy rejected: {error}"));
 }
 
 #[test]
 fn header_sources_unknown_keys_and_overlaps_are_rejected() {
-    let (lock, groups) = corpus();
+    let (lock, groups, unkeyed) = corpus();
     let source = "clients/src/main/resources/common/message/ApiVersionsResponse.json";
     let wrong = workspace(
         "wrong-source",
         "headers.toml",
         &header("3+", 18, "message/MetadataResponse.json"),
     );
-    assert!(HeaderOverrides::read(&wrong, &lock, &groups).is_err());
+    assert!(HeaderOverrides::read(&wrong, &lock, &groups, &unkeyed).is_err());
 
     let unknown = workspace(
         "unknown-key",
@@ -108,7 +129,7 @@ fn header_sources_unknown_keys_and_overlaps_are_rejected() {
     );
     assert!(
         matches!(
-            HeaderOverrides::read(&unknown, &lock, &groups),
+            HeaderOverrides::read(&unknown, &lock, &groups, &unkeyed),
             Err(GenerationError::Override { .. })
         ),
         "an unknown override key was ignored"
@@ -119,7 +140,7 @@ fn header_sources_unknown_keys_and_overlaps_are_rejected() {
     let overlap = workspace("overlap", "headers.toml", &format!("{entry}\n{duplicate}"));
     assert!(
         matches!(
-            HeaderOverrides::read(&overlap, &lock, &groups),
+            HeaderOverrides::read(&overlap, &lock, &groups, &unkeyed),
             Err(GenerationError::InvalidOverride { .. })
         ),
         "overlapping header exceptions were accepted"
@@ -128,7 +149,7 @@ fn header_sources_unknown_keys_and_overlaps_are_rejected() {
 
 #[test]
 fn schema_exceptions_are_versioned_unique_and_tied_to_pinned_sources() {
-    let (lock, _) = corpus();
+    let (lock, _, _) = corpus();
     let valid = "schema = 1\n\n\
         [[accepted]]\n\
         message = \"ShareFetchRequest\"\n\

@@ -101,14 +101,12 @@ pub mod offset_for_leader_epoch_request {
         }
     }
 
-    impl KafkaEncode for OffsetForLeaderTopic {
-        fn encode<T: EncodeTarget>(
+    impl OffsetForLeaderTopic {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             if Self::is_flexible(version) {
                 encoder.write_compact_string(&self.topic)?;
             } else {
@@ -120,7 +118,7 @@ pub mod offset_for_leader_epoch_request {
                 encoder.write_array_len(self.partitions.len())?;
             }
             for value in &self.partitions {
-                value.encode(encoder, version)?;
+                value.encode_validated(encoder, version)?;
             }
 
             if Self::is_flexible(version) {
@@ -128,6 +126,31 @@ pub mod offset_for_leader_epoch_request {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for OffsetForLeaderTopic {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            OffsetForLeaderTopic::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            OffsetForLeaderTopic::encode_validated(self, encoder, version)
         }
     }
 
@@ -214,14 +237,12 @@ pub mod offset_for_leader_epoch_request {
         }
     }
 
-    impl KafkaEncode for OffsetForLeaderPartition {
-        fn encode<T: EncodeTarget>(
+    impl OffsetForLeaderPartition {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             encoder.write_i32(self.partition)?;
             encoder.write_i32(self.current_leader_epoch)?;
             encoder.write_i32(self.leader_epoch)?;
@@ -231,6 +252,31 @@ pub mod offset_for_leader_epoch_request {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for OffsetForLeaderPartition {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            OffsetForLeaderPartition::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            OffsetForLeaderPartition::encode_validated(self, encoder, version)
         }
     }
 
@@ -321,14 +367,12 @@ pub mod offset_for_leader_epoch_request {
         }
     }
 
-    impl KafkaEncode for OffsetForLeaderEpochRequest {
-        fn encode<T: EncodeTarget>(
+    impl OffsetForLeaderEpochRequest {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             if version.value() >= 3 {
                 encoder.write_i32(self.replica_id)?;
             }
@@ -338,7 +382,7 @@ pub mod offset_for_leader_epoch_request {
                 encoder.write_array_len(self.topics.len())?;
             }
             for value in &self.topics {
-                value.encode(encoder, version)?;
+                value.encode_validated(encoder, version)?;
             }
 
             if Self::is_flexible(version) {
@@ -346,6 +390,31 @@ pub mod offset_for_leader_epoch_request {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for OffsetForLeaderEpochRequest {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            OffsetForLeaderEpochRequest::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            OffsetForLeaderEpochRequest::encode_validated(self, encoder, version)
         }
     }
 }
@@ -444,14 +513,12 @@ pub mod offset_for_leader_epoch_response {
         }
     }
 
-    impl KafkaEncode for OffsetForLeaderTopicResult {
-        fn encode<T: EncodeTarget>(
+    impl OffsetForLeaderTopicResult {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             if Self::is_flexible(version) {
                 encoder.write_compact_string(&self.topic)?;
             } else {
@@ -463,7 +530,7 @@ pub mod offset_for_leader_epoch_response {
                 encoder.write_array_len(self.partitions.len())?;
             }
             for value in &self.partitions {
-                value.encode(encoder, version)?;
+                value.encode_validated(encoder, version)?;
             }
 
             if Self::is_flexible(version) {
@@ -471,6 +538,31 @@ pub mod offset_for_leader_epoch_response {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for OffsetForLeaderTopicResult {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            OffsetForLeaderTopicResult::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            OffsetForLeaderTopicResult::encode_validated(self, encoder, version)
         }
     }
 
@@ -562,14 +654,12 @@ pub mod offset_for_leader_epoch_response {
         }
     }
 
-    impl KafkaEncode for EpochEndOffset {
-        fn encode<T: EncodeTarget>(
+    impl EpochEndOffset {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             encoder.write_i16(self.error_code)?;
             encoder.write_i32(self.partition)?;
             encoder.write_i32(self.leader_epoch)?;
@@ -580,6 +670,31 @@ pub mod offset_for_leader_epoch_response {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for EpochEndOffset {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            EpochEndOffset::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            EpochEndOffset::encode_validated(self, encoder, version)
         }
     }
 
@@ -652,14 +767,12 @@ pub mod offset_for_leader_epoch_response {
         }
     }
 
-    impl KafkaEncode for OffsetForLeaderEpochResponse {
-        fn encode<T: EncodeTarget>(
+    impl OffsetForLeaderEpochResponse {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             encoder.write_i32(self.throttle_time_ms)?;
             if Self::is_flexible(version) {
                 encoder.write_compact_array_len(self.topics.len())?;
@@ -667,7 +780,7 @@ pub mod offset_for_leader_epoch_response {
                 encoder.write_array_len(self.topics.len())?;
             }
             for value in &self.topics {
-                value.encode(encoder, version)?;
+                value.encode_validated(encoder, version)?;
             }
 
             if Self::is_flexible(version) {
@@ -675,6 +788,31 @@ pub mod offset_for_leader_epoch_response {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for OffsetForLeaderEpochResponse {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            OffsetForLeaderEpochResponse::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            OffsetForLeaderEpochResponse::encode_validated(self, encoder, version)
         }
     }
 }

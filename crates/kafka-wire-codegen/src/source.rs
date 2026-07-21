@@ -58,22 +58,22 @@ fn load_every_source_with(
     lock: &ProtocolLock,
     exceptions: &kafka_wire_schema::SchemaExceptions,
 ) -> Result<LoadedCorpus, GenerationError> {
-    let source_root = lock.kafka.vendored_message_root(workspace)?;
+    let source_root = lock.kafka.vendored_message_root(workspace);
     let mut corpus = LoadedCorpus::default();
     for locked in &lock.kafka.files {
-        let path = source_root.join(&locked.path);
+        let path = locked.path.join_to(&source_root);
         let source = read_verified_source(&path, &locked.sha256)?;
 
         match kafka_wire_schema::load_source_with(source, exceptions) {
             Ok(message) => corpus.sources.push(MessageSource {
                 message,
-                filename: locked.path.clone(),
+                filename: locked.path.as_str().to_owned(),
                 sha256: locked.sha256.clone(),
             }),
             Err(error) => {
                 corpus
                     .rejected
-                    .insert(locked.path.clone(), error.to_string());
+                    .insert(locked.path.as_str().to_owned(), error.to_string());
             }
         }
     }
@@ -94,7 +94,7 @@ pub(crate) fn load_sources_with(
     lock: &ProtocolLock,
     exceptions: &kafka_wire_schema::SchemaExceptions,
 ) -> Result<Vec<MessageSource>, GenerationError> {
-    let source_root = lock.kafka.vendored_message_root(workspace)?;
+    let source_root = lock.kafka.vendored_message_root(workspace);
     let enabled = lock
         .kafka
         .files
@@ -103,7 +103,7 @@ pub(crate) fn load_sources_with(
         .count();
     let mut sources = Vec::with_capacity(enabled);
     for locked in &lock.kafka.files {
-        let path = source_root.join(&locked.path);
+        let path = locked.path.join_to(&source_root);
         let source = read_verified_source(&path, &locked.sha256)?;
 
         if locked.status == SourceStatus::Pending {
@@ -113,7 +113,7 @@ pub(crate) fn load_sources_with(
         let message = kafka_wire_schema::load_source_with(source, exceptions)?;
         sources.push(MessageSource {
             message,
-            filename: locked.path.clone(),
+            filename: locked.path.as_str().to_owned(),
             sha256: locked.sha256.clone(),
         });
     }

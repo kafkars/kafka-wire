@@ -93,18 +93,16 @@ pub mod share_acknowledge_request {
         }
     }
 
-    impl KafkaEncode for AcknowledgeTopic {
-        fn encode<T: EncodeTarget>(
+    impl AcknowledgeTopic {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             encoder.write_uuid(self.topic_id)?;
             encoder.write_compact_array_len(self.partitions.len())?;
             for value in &self.partitions {
-                value.encode(encoder, version)?;
+                value.encode_validated(encoder, version)?;
             }
 
             if Self::is_flexible(version) {
@@ -112,6 +110,31 @@ pub mod share_acknowledge_request {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for AcknowledgeTopic {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            AcknowledgeTopic::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            AcknowledgeTopic::encode_validated(self, encoder, version)
         }
     }
 
@@ -191,18 +214,16 @@ pub mod share_acknowledge_request {
         }
     }
 
-    impl KafkaEncode for AcknowledgePartition {
-        fn encode<T: EncodeTarget>(
+    impl AcknowledgePartition {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             encoder.write_i32(self.partition_index)?;
             encoder.write_compact_array_len(self.acknowledgement_batches.len())?;
             for value in &self.acknowledgement_batches {
-                value.encode(encoder, version)?;
+                value.encode_validated(encoder, version)?;
             }
 
             if Self::is_flexible(version) {
@@ -210,6 +231,31 @@ pub mod share_acknowledge_request {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for AcknowledgePartition {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            AcknowledgePartition::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            AcknowledgePartition::encode_validated(self, encoder, version)
         }
     }
 
@@ -288,14 +334,12 @@ pub mod share_acknowledge_request {
         }
     }
 
-    impl KafkaEncode for AcknowledgementBatch {
-        fn encode<T: EncodeTarget>(
+    impl AcknowledgementBatch {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             encoder.write_i64(self.first_offset)?;
             encoder.write_i64(self.last_offset)?;
             encoder.write_compact_array_len(self.acknowledge_types.len())?;
@@ -308,6 +352,31 @@ pub mod share_acknowledge_request {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for AcknowledgementBatch {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            AcknowledgementBatch::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            AcknowledgementBatch::encode_validated(self, encoder, version)
         }
     }
 
@@ -414,14 +483,12 @@ pub mod share_acknowledge_request {
         }
     }
 
-    impl KafkaEncode for ShareAcknowledgeRequest {
-        fn encode<T: EncodeTarget>(
+    impl ShareAcknowledgeRequest {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             encoder.write_compact_nullable_string(self.group_id.as_ref())?;
             encoder.write_compact_nullable_string(self.member_id.as_ref())?;
             encoder.write_i32(self.share_session_epoch)?;
@@ -430,7 +497,7 @@ pub mod share_acknowledge_request {
             }
             encoder.write_compact_array_len(self.topics.len())?;
             for value in &self.topics {
-                value.encode(encoder, version)?;
+                value.encode_validated(encoder, version)?;
             }
 
             if Self::is_flexible(version) {
@@ -438,6 +505,31 @@ pub mod share_acknowledge_request {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for ShareAcknowledgeRequest {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            ShareAcknowledgeRequest::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            ShareAcknowledgeRequest::encode_validated(self, encoder, version)
         }
     }
 }
@@ -528,18 +620,16 @@ pub mod share_acknowledge_response {
         }
     }
 
-    impl KafkaEncode for ShareAcknowledgeTopicResponse {
-        fn encode<T: EncodeTarget>(
+    impl ShareAcknowledgeTopicResponse {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             encoder.write_uuid(self.topic_id)?;
             encoder.write_compact_array_len(self.partitions.len())?;
             for value in &self.partitions {
-                value.encode(encoder, version)?;
+                value.encode_validated(encoder, version)?;
             }
 
             if Self::is_flexible(version) {
@@ -547,6 +637,31 @@ pub mod share_acknowledge_response {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for ShareAcknowledgeTopicResponse {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            ShareAcknowledgeTopicResponse::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            ShareAcknowledgeTopicResponse::encode_validated(self, encoder, version)
         }
     }
 
@@ -627,6 +742,25 @@ pub mod share_acknowledge_response {
         }
     }
 
+    impl PartitionData {
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            encoder.write_i32(self.partition_index)?;
+            encoder.write_i16(self.error_code)?;
+            encoder.write_compact_nullable_string(self.error_message.as_ref())?;
+            self.current_leader.encode_validated(encoder, version)?;
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            }
+
+            Ok(())
+        }
+    }
+
     impl KafkaEncode for PartitionData {
         fn encode<T: EncodeTarget>(
             &self,
@@ -634,17 +768,21 @@ pub mod share_acknowledge_response {
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
             self.validate_for_version(version)?;
+            PartitionData::encode_validated(self, encoder, version)
+        }
 
-            encoder.write_i32(self.partition_index)?;
-            encoder.write_i16(self.error_code)?;
-            encoder.write_compact_nullable_string(self.error_message.as_ref())?;
-            self.current_leader.encode(encoder, version)?;
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
 
-            if Self::is_flexible(version) {
-                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-            }
-
-            Ok(())
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            PartitionData::encode_validated(self, encoder, version)
         }
     }
 
@@ -716,14 +854,12 @@ pub mod share_acknowledge_response {
         }
     }
 
-    impl KafkaEncode for LeaderIdAndEpoch {
-        fn encode<T: EncodeTarget>(
+    impl LeaderIdAndEpoch {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             encoder.write_i32(self.leader_id)?;
             encoder.write_i32(self.leader_epoch)?;
 
@@ -732,6 +868,31 @@ pub mod share_acknowledge_response {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for LeaderIdAndEpoch {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            LeaderIdAndEpoch::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            LeaderIdAndEpoch::encode_validated(self, encoder, version)
         }
     }
 
@@ -811,14 +972,12 @@ pub mod share_acknowledge_response {
         }
     }
 
-    impl KafkaEncode for NodeEndpoint {
-        fn encode<T: EncodeTarget>(
+    impl NodeEndpoint {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             encoder.write_i32(self.node_id)?;
             encoder.write_compact_string(&self.host)?;
             encoder.write_i32(self.port)?;
@@ -829,6 +988,31 @@ pub mod share_acknowledge_response {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for NodeEndpoint {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            NodeEndpoint::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            NodeEndpoint::encode_validated(self, encoder, version)
         }
     }
 
@@ -923,14 +1107,12 @@ pub mod share_acknowledge_response {
         }
     }
 
-    impl KafkaEncode for ShareAcknowledgeResponse {
-        fn encode<T: EncodeTarget>(
+    impl ShareAcknowledgeResponse {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             encoder.write_i32(self.throttle_time_ms)?;
             encoder.write_i16(self.error_code)?;
             encoder.write_compact_nullable_string(self.error_message.as_ref())?;
@@ -939,11 +1121,11 @@ pub mod share_acknowledge_response {
             }
             encoder.write_compact_array_len(self.responses.len())?;
             for value in &self.responses {
-                value.encode(encoder, version)?;
+                value.encode_validated(encoder, version)?;
             }
             encoder.write_compact_array_len(self.node_endpoints.len())?;
             for value in &self.node_endpoints {
-                value.encode(encoder, version)?;
+                value.encode_validated(encoder, version)?;
             }
 
             if Self::is_flexible(version) {
@@ -951,6 +1133,31 @@ pub mod share_acknowledge_response {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for ShareAcknowledgeResponse {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            ShareAcknowledgeResponse::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            ShareAcknowledgeResponse::encode_validated(self, encoder, version)
         }
     }
 }

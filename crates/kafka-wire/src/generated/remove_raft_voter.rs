@@ -93,14 +93,12 @@ pub mod remove_raft_voter_request {
         }
     }
 
-    impl KafkaEncode for RemoveRaftVoterRequest {
-        fn encode<T: EncodeTarget>(
+    impl RemoveRaftVoterRequest {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             encoder.write_compact_nullable_string(self.cluster_id.as_ref())?;
             encoder.write_i32(self.voter_id)?;
             encoder.write_uuid(self.voter_directory_id)?;
@@ -110,6 +108,31 @@ pub mod remove_raft_voter_request {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for RemoveRaftVoterRequest {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            RemoveRaftVoterRequest::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            RemoveRaftVoterRequest::encode_validated(self, encoder, version)
         }
     }
 }
@@ -198,14 +221,12 @@ pub mod remove_raft_voter_response {
         }
     }
 
-    impl KafkaEncode for RemoveRaftVoterResponse {
-        fn encode<T: EncodeTarget>(
+    impl RemoveRaftVoterResponse {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             encoder.write_i32(self.throttle_time_ms)?;
             encoder.write_i16(self.error_code)?;
             encoder.write_compact_nullable_string(self.error_message.as_ref())?;
@@ -215,6 +236,31 @@ pub mod remove_raft_voter_response {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for RemoveRaftVoterResponse {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            RemoveRaftVoterResponse::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            RemoveRaftVoterResponse::encode_validated(self, encoder, version)
         }
     }
 }

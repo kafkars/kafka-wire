@@ -60,6 +60,11 @@ pub fn load_source_with(
     let mut message = crate::lower_message(raw, PathBuf::from(&path))?;
     crate::validate_message_with(&message, exceptions)?;
     prune_unreachable_fields(&mut message);
+    message.structs = crate::lower::collect_struct_table(
+        &message.common_structs,
+        &message.fields,
+        &message.valid_versions,
+    );
 
     Ok(message)
 }
@@ -91,6 +96,7 @@ fn prune_unreachable_fields(message: &mut Message) {
     let valid = message.valid_versions.clone();
     prune(&mut message.fields, &valid);
     for common in &mut message.common_structs {
-        prune(&mut common.fields, &valid);
+        let effective = common.versions.intersection(&valid);
+        prune(&mut common.fields, &effective);
     }
 }

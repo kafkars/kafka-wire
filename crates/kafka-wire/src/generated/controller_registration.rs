@@ -93,14 +93,12 @@ pub mod controller_registration_request {
         }
     }
 
-    impl KafkaEncode for Listener {
-        fn encode<T: EncodeTarget>(
+    impl Listener {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             encoder.write_compact_string(&self.name)?;
             encoder.write_compact_string(&self.host)?;
             encoder.write_u16(self.port)?;
@@ -111,6 +109,31 @@ pub mod controller_registration_request {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for Listener {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            Listener::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            Listener::encode_validated(self, encoder, version)
         }
     }
 
@@ -186,14 +209,12 @@ pub mod controller_registration_request {
         }
     }
 
-    impl KafkaEncode for Feature {
-        fn encode<T: EncodeTarget>(
+    impl Feature {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             encoder.write_compact_string(&self.name)?;
             encoder.write_i16(self.min_supported_version)?;
             encoder.write_i16(self.max_supported_version)?;
@@ -203,6 +224,31 @@ pub mod controller_registration_request {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for Feature {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            Feature::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            Feature::encode_validated(self, encoder, version)
         }
     }
 
@@ -291,24 +337,22 @@ pub mod controller_registration_request {
         }
     }
 
-    impl KafkaEncode for ControllerRegistrationRequest {
-        fn encode<T: EncodeTarget>(
+    impl ControllerRegistrationRequest {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             encoder.write_i32(self.controller_id)?;
             encoder.write_uuid(self.incarnation_id)?;
             encoder.write_bool(self.zk_migration_ready)?;
             encoder.write_compact_array_len(self.listeners.len())?;
             for value in &self.listeners {
-                value.encode(encoder, version)?;
+                value.encode_validated(encoder, version)?;
             }
             encoder.write_compact_array_len(self.features.len())?;
             for value in &self.features {
-                value.encode(encoder, version)?;
+                value.encode_validated(encoder, version)?;
             }
 
             if Self::is_flexible(version) {
@@ -316,6 +360,31 @@ pub mod controller_registration_request {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for ControllerRegistrationRequest {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            ControllerRegistrationRequest::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            ControllerRegistrationRequest::encode_validated(self, encoder, version)
         }
     }
 }
@@ -404,14 +473,12 @@ pub mod controller_registration_response {
         }
     }
 
-    impl KafkaEncode for ControllerRegistrationResponse {
-        fn encode<T: EncodeTarget>(
+    impl ControllerRegistrationResponse {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             encoder.write_i32(self.throttle_time_ms)?;
             encoder.write_i16(self.error_code)?;
             encoder.write_compact_nullable_string(self.error_message.as_ref())?;
@@ -421,6 +488,31 @@ pub mod controller_registration_response {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for ControllerRegistrationResponse {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            ControllerRegistrationResponse::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            ControllerRegistrationResponse::encode_validated(self, encoder, version)
         }
     }
 }

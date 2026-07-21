@@ -11,7 +11,9 @@
 //! because losing one of two same-named declarations here would hide the very
 //! collision the module-scoped naming rule's guard requires be reported.
 
-use crate::{CommonStruct, Field, StructDeclaration, StructOrigin, StructRef, StructTable};
+use crate::{
+    CommonStruct, Field, StructDeclaration, StructOrigin, StructRef, StructTable, VersionSet,
+};
 
 /// Indexes every struct declaration a lowered message makes.
 ///
@@ -19,22 +21,24 @@ use crate::{CommonStruct, Field, StructDeclaration, StructOrigin, StructRef, Str
 /// inside it, then the inline bodies of the root field tree. That is the order
 /// upstream wrote the declarations in, which the earlier flat naming rule fixed as generated item
 /// order and the module-scoped naming rule leaves untouched.
-pub(super) fn collect_struct_table(
+pub(crate) fn collect_struct_table(
     common_structs: &[CommonStruct],
     fields: &[Field],
+    valid_versions: &VersionSet,
 ) -> StructTable {
     let mut declarations = Vec::new();
 
     for common in common_structs {
+        let effective = common.versions.intersection(valid_versions);
         declarations.push(StructDeclaration {
             name: common.name.clone(),
-            versions: common.versions.clone(),
+            versions: effective.clone(),
             origin: StructOrigin::Common,
             references: references(&common.fields),
         });
-        collect_inline(&common.fields, &mut declarations);
+        collect_inline(&common.fields, &effective, &mut declarations);
     }
-    collect_inline(fields, &mut declarations);
+    collect_inline(fields, valid_versions, &mut declarations);
 
     StructTable::new(declarations)
 }
@@ -44,8 +48,13 @@ pub(super) fn collect_struct_table(
 /// Recursion is bounded by the field tree itself, which `lower/field.rs` has
 /// already rejected past its nesting limit, so this walk cannot be driven
 /// deeper than that bound by a crafted schema.
-fn collect_inline(fields: &[Field], declarations: &mut Vec<StructDeclaration>) {
+fn collect_inline(
+    fields: &[Field],
+    parent_versions: &VersionSet,
+    declarations: &mut Vec<StructDeclaration>,
+) {
     for field in fields {
+        let effective = field.versions.intersection(parent_versions);
         if !field.declares_struct() {
             continue;
         }
@@ -58,14 +67,13 @@ fn collect_inline(fields: &[Field], declarations: &mut Vec<StructDeclaration>) {
             declarations.push(StructDeclaration {
                 name: reference.clone(),
                 // An inline body exists exactly where the field carrying it
-                // exists, so the field's presence window is the declaration's
-                // version set. There is no separate `versions` to read.
-                versions: field.versions.clone(),
+                // exists, including every enclosing declaration's window.
+                versions: effective.clone(),
                 origin: StructOrigin::Inline,
                 references: references(&field.fields),
             });
         }
-        collect_inline(&field.fields, declarations);
+        collect_inline(&field.fields, &effective, declarations);
     }
 }
 

@@ -50,7 +50,7 @@ pub fn lower_message(raw: RawMessage, source: PathBuf) -> Result<Message, LowerE
         .map(|field| lower_field(field, &name, &valid_versions, &source))
         .collect::<Result<Vec<_>, _>>()?;
 
-    let structs = collect_struct_table(&common_structs, &fields);
+    let structs = collect_struct_table(&common_structs, &fields, &valid_versions);
 
     Ok(Message {
         source,

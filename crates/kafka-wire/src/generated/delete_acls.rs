@@ -132,14 +132,12 @@ pub mod delete_acls_request {
         }
     }
 
-    impl KafkaEncode for DeleteAclsFilter {
-        fn encode<T: EncodeTarget>(
+    impl DeleteAclsFilter {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             encoder.write_i8(self.resource_type_filter)?;
             if Self::is_flexible(version) {
                 encoder.write_compact_nullable_string(self.resource_name_filter.as_ref())?;
@@ -165,6 +163,31 @@ pub mod delete_acls_request {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for DeleteAclsFilter {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            DeleteAclsFilter::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            DeleteAclsFilter::encode_validated(self, encoder, version)
         }
     }
 
@@ -235,21 +258,19 @@ pub mod delete_acls_request {
         }
     }
 
-    impl KafkaEncode for DeleteAclsRequest {
-        fn encode<T: EncodeTarget>(
+    impl DeleteAclsRequest {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             if Self::is_flexible(version) {
                 encoder.write_compact_array_len(self.filters.len())?;
             } else {
                 encoder.write_array_len(self.filters.len())?;
             }
             for value in &self.filters {
-                value.encode(encoder, version)?;
+                value.encode_validated(encoder, version)?;
             }
 
             if Self::is_flexible(version) {
@@ -257,6 +278,31 @@ pub mod delete_acls_request {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for DeleteAclsRequest {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            DeleteAclsRequest::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            DeleteAclsRequest::encode_validated(self, encoder, version)
         }
     }
 }
@@ -372,14 +418,12 @@ pub mod delete_acls_response {
         }
     }
 
-    impl KafkaEncode for DeleteAclsFilterResult {
-        fn encode<T: EncodeTarget>(
+    impl DeleteAclsFilterResult {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             encoder.write_i16(self.error_code)?;
             if Self::is_flexible(version) {
                 encoder.write_compact_nullable_string(self.error_message.as_ref())?;
@@ -392,7 +436,7 @@ pub mod delete_acls_response {
                 encoder.write_array_len(self.matching_acls.len())?;
             }
             for value in &self.matching_acls {
-                value.encode(encoder, version)?;
+                value.encode_validated(encoder, version)?;
             }
 
             if Self::is_flexible(version) {
@@ -400,6 +444,31 @@ pub mod delete_acls_response {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for DeleteAclsFilterResult {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            DeleteAclsFilterResult::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            DeleteAclsFilterResult::encode_validated(self, encoder, version)
         }
     }
 
@@ -532,14 +601,12 @@ pub mod delete_acls_response {
         }
     }
 
-    impl KafkaEncode for DeleteAclsMatchingAcl {
-        fn encode<T: EncodeTarget>(
+    impl DeleteAclsMatchingAcl {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             encoder.write_i16(self.error_code)?;
             if Self::is_flexible(version) {
                 encoder.write_compact_nullable_string(self.error_message.as_ref())?;
@@ -571,6 +638,31 @@ pub mod delete_acls_response {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for DeleteAclsMatchingAcl {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            DeleteAclsMatchingAcl::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            DeleteAclsMatchingAcl::encode_validated(self, encoder, version)
         }
     }
 
@@ -643,14 +735,12 @@ pub mod delete_acls_response {
         }
     }
 
-    impl KafkaEncode for DeleteAclsResponse {
-        fn encode<T: EncodeTarget>(
+    impl DeleteAclsResponse {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             encoder.write_i32(self.throttle_time_ms)?;
             if Self::is_flexible(version) {
                 encoder.write_compact_array_len(self.filter_results.len())?;
@@ -658,7 +748,7 @@ pub mod delete_acls_response {
                 encoder.write_array_len(self.filter_results.len())?;
             }
             for value in &self.filter_results {
-                value.encode(encoder, version)?;
+                value.encode_validated(encoder, version)?;
             }
 
             if Self::is_flexible(version) {
@@ -666,6 +756,31 @@ pub mod delete_acls_response {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for DeleteAclsResponse {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            DeleteAclsResponse::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            DeleteAclsResponse::encode_validated(self, encoder, version)
         }
     }
 }

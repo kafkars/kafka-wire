@@ -127,14 +127,12 @@ pub mod update_features_request {
         }
     }
 
-    impl KafkaEncode for FeatureUpdateKey {
-        fn encode<T: EncodeTarget>(
+    impl FeatureUpdateKey {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             encoder.write_compact_string(&self.feature)?;
             encoder.write_i16(self.max_version_level)?;
             if version.value() <= 0 {
@@ -149,6 +147,31 @@ pub mod update_features_request {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for FeatureUpdateKey {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            FeatureUpdateKey::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            FeatureUpdateKey::encode_validated(self, encoder, version)
         }
     }
 
@@ -245,18 +268,16 @@ pub mod update_features_request {
         }
     }
 
-    impl KafkaEncode for UpdateFeaturesRequest {
-        fn encode<T: EncodeTarget>(
+    impl UpdateFeaturesRequest {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             encoder.write_i32(self.timeout_ms)?;
             encoder.write_compact_array_len(self.feature_updates.len())?;
             for value in &self.feature_updates {
-                value.encode(encoder, version)?;
+                value.encode_validated(encoder, version)?;
             }
             if version.value() >= 1 {
                 encoder.write_bool(self.validate_only)?;
@@ -267,6 +288,31 @@ pub mod update_features_request {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for UpdateFeaturesRequest {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            UpdateFeaturesRequest::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            UpdateFeaturesRequest::encode_validated(self, encoder, version)
         }
     }
 }
@@ -298,8 +344,8 @@ pub mod update_features_response {
     }
 
     impl UpdatableFeatureResult {
-        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 2);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 2));
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 1);
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 1));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
@@ -366,14 +412,12 @@ pub mod update_features_response {
         }
     }
 
-    impl KafkaEncode for UpdatableFeatureResult {
-        fn encode<T: EncodeTarget>(
+    impl UpdatableFeatureResult {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             encoder.write_compact_string(&self.feature)?;
             encoder.write_i16(self.error_code)?;
             encoder.write_compact_nullable_string(self.error_message.as_ref())?;
@@ -383,6 +427,31 @@ pub mod update_features_response {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for UpdatableFeatureResult {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            UpdatableFeatureResult::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            UpdatableFeatureResult::encode_validated(self, encoder, version)
         }
     }
 
@@ -475,21 +544,19 @@ pub mod update_features_response {
         }
     }
 
-    impl KafkaEncode for UpdateFeaturesResponse {
-        fn encode<T: EncodeTarget>(
+    impl UpdateFeaturesResponse {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             encoder.write_i32(self.throttle_time_ms)?;
             encoder.write_i16(self.error_code)?;
             encoder.write_compact_nullable_string(self.error_message.as_ref())?;
             if version.value() <= 1 {
                 encoder.write_compact_array_len(self.results.len())?;
                 for value in &self.results {
-                    value.encode(encoder, version)?;
+                    value.encode_validated(encoder, version)?;
                 }
             }
 
@@ -498,6 +565,31 @@ pub mod update_features_response {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for UpdateFeaturesResponse {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            UpdateFeaturesResponse::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            UpdateFeaturesResponse::encode_validated(self, encoder, version)
         }
     }
 }

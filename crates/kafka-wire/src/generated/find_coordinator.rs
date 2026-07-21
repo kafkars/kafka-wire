@@ -120,14 +120,12 @@ pub mod find_coordinator_request {
         }
     }
 
-    impl KafkaEncode for FindCoordinatorRequest {
-        fn encode<T: EncodeTarget>(
+    impl FindCoordinatorRequest {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             if version.value() <= 3 {
                 if Self::is_flexible(version) {
                     encoder.write_compact_string(&self.key)?;
@@ -150,6 +148,31 @@ pub mod find_coordinator_request {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for FindCoordinatorRequest {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            FindCoordinatorRequest::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            FindCoordinatorRequest::encode_validated(self, encoder, version)
         }
     }
 }
@@ -187,8 +210,8 @@ pub mod find_coordinator_response {
     }
 
     impl Coordinator {
-        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 6);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(3, 6));
+        const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(4, 6);
+        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(4, 6));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
@@ -205,41 +228,6 @@ pub mod find_coordinator_response {
                 });
             }
 
-            if version.value() < 4 && !self.key.is_empty() {
-                return Err(EncodeError::FieldNotRepresentable {
-                    message: "Coordinator",
-                    field: "Key",
-                    version,
-                });
-            }
-            if version.value() < 4 && self.node_id != 0 {
-                return Err(EncodeError::FieldNotRepresentable {
-                    message: "Coordinator",
-                    field: "NodeId",
-                    version,
-                });
-            }
-            if version.value() < 4 && !self.host.is_empty() {
-                return Err(EncodeError::FieldNotRepresentable {
-                    message: "Coordinator",
-                    field: "Host",
-                    version,
-                });
-            }
-            if version.value() < 4 && self.port != 0 {
-                return Err(EncodeError::FieldNotRepresentable {
-                    message: "Coordinator",
-                    field: "Port",
-                    version,
-                });
-            }
-            if version.value() < 4 && self.error_code != 0 {
-                return Err(EncodeError::FieldNotRepresentable {
-                    message: "Coordinator",
-                    field: "ErrorCode",
-                    version,
-                });
-            }
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
                 return Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: "Coordinator",
@@ -275,36 +263,12 @@ pub mod find_coordinator_response {
                 });
             }
 
-            let key = if version.value() >= 4 {
-                decoder.read_compact_string()?
-            } else {
-                StrBytes::default()
-            };
-            let node_id = if version.value() >= 4 {
-                decoder.read_i32()?
-            } else {
-                0
-            };
-            let host = if version.value() >= 4 {
-                decoder.read_compact_string()?
-            } else {
-                StrBytes::default()
-            };
-            let port = if version.value() >= 4 {
-                decoder.read_i32()?
-            } else {
-                0
-            };
-            let error_code = if version.value() >= 4 {
-                decoder.read_i16()?
-            } else {
-                0
-            };
-            let error_message = if version.value() >= 4 {
-                decoder.read_compact_nullable_string()?
-            } else {
-                Some(StrBytes::default())
-            };
+            let key = decoder.read_compact_string()?;
+            let node_id = decoder.read_i32()?;
+            let host = decoder.read_compact_string()?;
+            let port = decoder.read_i32()?;
+            let error_code = decoder.read_i16()?;
+            let error_message = decoder.read_compact_nullable_string()?;
             let unknown_tagged_fields = if Self::is_flexible(version) {
                 decoder.read_tagged_fields()?
             } else {
@@ -323,6 +287,27 @@ pub mod find_coordinator_response {
         }
     }
 
+    impl Coordinator {
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            encoder.write_compact_string(&self.key)?;
+            encoder.write_i32(self.node_id)?;
+            encoder.write_compact_string(&self.host)?;
+            encoder.write_i32(self.port)?;
+            encoder.write_i16(self.error_code)?;
+            encoder.write_compact_nullable_string(self.error_message.as_ref())?;
+
+            if Self::is_flexible(version) {
+                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
+            }
+
+            Ok(())
+        }
+    }
+
     impl KafkaEncode for Coordinator {
         fn encode<T: EncodeTarget>(
             &self,
@@ -330,31 +315,21 @@ pub mod find_coordinator_response {
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
             self.validate_for_version(version)?;
+            Coordinator::encode_validated(self, encoder, version)
+        }
 
-            if version.value() >= 4 {
-                encoder.write_compact_string(&self.key)?;
-            }
-            if version.value() >= 4 {
-                encoder.write_i32(self.node_id)?;
-            }
-            if version.value() >= 4 {
-                encoder.write_compact_string(&self.host)?;
-            }
-            if version.value() >= 4 {
-                encoder.write_i32(self.port)?;
-            }
-            if version.value() >= 4 {
-                encoder.write_i16(self.error_code)?;
-            }
-            if version.value() >= 4 {
-                encoder.write_compact_nullable_string(self.error_message.as_ref())?;
-            }
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
 
-            if Self::is_flexible(version) {
-                encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
-            }
-
-            Ok(())
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            Coordinator::encode_validated(self, encoder, version)
         }
     }
 
@@ -527,14 +502,12 @@ pub mod find_coordinator_response {
         }
     }
 
-    impl KafkaEncode for FindCoordinatorResponse {
-        fn encode<T: EncodeTarget>(
+    impl FindCoordinatorResponse {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             if version.value() >= 1 {
                 encoder.write_i32(self.throttle_time_ms)?;
             }
@@ -564,7 +537,7 @@ pub mod find_coordinator_response {
             if version.value() >= 4 {
                 encoder.write_compact_array_len(self.coordinators.len())?;
                 for value in &self.coordinators {
-                    value.encode(encoder, version)?;
+                    value.encode_validated(encoder, version)?;
                 }
             }
 
@@ -573,6 +546,31 @@ pub mod find_coordinator_response {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for FindCoordinatorResponse {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            FindCoordinatorResponse::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            FindCoordinatorResponse::encode_validated(self, encoder, version)
         }
     }
 }

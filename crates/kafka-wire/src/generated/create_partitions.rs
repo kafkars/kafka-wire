@@ -122,14 +122,12 @@ pub mod create_partitions_request {
         }
     }
 
-    impl KafkaEncode for CreatePartitionsTopic {
-        fn encode<T: EncodeTarget>(
+    impl CreatePartitionsTopic {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             if Self::is_flexible(version) {
                 encoder.write_compact_string(&self.name)?;
             } else {
@@ -144,7 +142,7 @@ pub mod create_partitions_request {
             }
             if let Some(values) = &self.assignments {
                 for value in values {
-                    value.encode(encoder, version)?;
+                    value.encode_validated(encoder, version)?;
                 }
             }
 
@@ -153,6 +151,31 @@ pub mod create_partitions_request {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for CreatePartitionsTopic {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            CreatePartitionsTopic::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            CreatePartitionsTopic::encode_validated(self, encoder, version)
         }
     }
 
@@ -227,14 +250,12 @@ pub mod create_partitions_request {
         }
     }
 
-    impl KafkaEncode for CreatePartitionsAssignment {
-        fn encode<T: EncodeTarget>(
+    impl CreatePartitionsAssignment {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             if Self::is_flexible(version) {
                 encoder.write_compact_array_len(self.broker_ids.len())?;
             } else {
@@ -249,6 +270,31 @@ pub mod create_partitions_request {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for CreatePartitionsAssignment {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            CreatePartitionsAssignment::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            CreatePartitionsAssignment::encode_validated(self, encoder, version)
         }
     }
 
@@ -329,21 +375,19 @@ pub mod create_partitions_request {
         }
     }
 
-    impl KafkaEncode for CreatePartitionsRequest {
-        fn encode<T: EncodeTarget>(
+    impl CreatePartitionsRequest {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             if Self::is_flexible(version) {
                 encoder.write_compact_array_len(self.topics.len())?;
             } else {
                 encoder.write_array_len(self.topics.len())?;
             }
             for value in &self.topics {
-                value.encode(encoder, version)?;
+                value.encode_validated(encoder, version)?;
             }
             encoder.write_i32(self.timeout_ms)?;
             encoder.write_bool(self.validate_only)?;
@@ -353,6 +397,31 @@ pub mod create_partitions_request {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for CreatePartitionsRequest {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            CreatePartitionsRequest::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            CreatePartitionsRequest::encode_validated(self, encoder, version)
         }
     }
 }
@@ -449,14 +518,12 @@ pub mod create_partitions_response {
         }
     }
 
-    impl KafkaEncode for CreatePartitionsTopicResult {
-        fn encode<T: EncodeTarget>(
+    impl CreatePartitionsTopicResult {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             if Self::is_flexible(version) {
                 encoder.write_compact_string(&self.name)?;
             } else {
@@ -474,6 +541,31 @@ pub mod create_partitions_response {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for CreatePartitionsTopicResult {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            CreatePartitionsTopicResult::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            CreatePartitionsTopicResult::encode_validated(self, encoder, version)
         }
     }
 
@@ -546,14 +638,12 @@ pub mod create_partitions_response {
         }
     }
 
-    impl KafkaEncode for CreatePartitionsResponse {
-        fn encode<T: EncodeTarget>(
+    impl CreatePartitionsResponse {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             encoder.write_i32(self.throttle_time_ms)?;
             if Self::is_flexible(version) {
                 encoder.write_compact_array_len(self.results.len())?;
@@ -561,7 +651,7 @@ pub mod create_partitions_response {
                 encoder.write_array_len(self.results.len())?;
             }
             for value in &self.results {
-                value.encode(encoder, version)?;
+                value.encode_validated(encoder, version)?;
             }
 
             if Self::is_flexible(version) {
@@ -569,6 +659,31 @@ pub mod create_partitions_response {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for CreatePartitionsResponse {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            CreatePartitionsResponse::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            CreatePartitionsResponse::encode_validated(self, encoder, version)
         }
     }
 }

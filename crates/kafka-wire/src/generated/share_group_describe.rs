@@ -81,14 +81,12 @@ pub mod share_group_describe_request {
         }
     }
 
-    impl KafkaEncode for ShareGroupDescribeRequest {
-        fn encode<T: EncodeTarget>(
+    impl ShareGroupDescribeRequest {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             encoder.write_compact_array_len(self.group_ids.len())?;
             for value in &self.group_ids {
                 encoder.write_compact_string(value)?;
@@ -100,6 +98,31 @@ pub mod share_group_describe_request {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for ShareGroupDescribeRequest {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            ShareGroupDescribeRequest::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            ShareGroupDescribeRequest::encode_validated(self, encoder, version)
         }
     }
 }
@@ -191,14 +214,12 @@ pub mod share_group_describe_response {
         }
     }
 
-    impl KafkaEncode for TopicPartitions {
-        fn encode<T: EncodeTarget>(
+    impl TopicPartitions {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             encoder.write_uuid(self.topic_id)?;
             encoder.write_compact_string(&self.topic_name)?;
             encoder.write_compact_array_len(self.partitions.len())?;
@@ -211,6 +232,31 @@ pub mod share_group_describe_response {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for TopicPartitions {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            TopicPartitions::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            TopicPartitions::encode_validated(self, encoder, version)
         }
     }
 
@@ -284,17 +330,15 @@ pub mod share_group_describe_response {
         }
     }
 
-    impl KafkaEncode for Assignment {
-        fn encode<T: EncodeTarget>(
+    impl Assignment {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             encoder.write_compact_array_len(self.topic_partitions.len())?;
             for value in &self.topic_partitions {
-                value.encode(encoder, version)?;
+                value.encode_validated(encoder, version)?;
             }
 
             if Self::is_flexible(version) {
@@ -302,6 +346,31 @@ pub mod share_group_describe_response {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for Assignment {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            Assignment::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            Assignment::encode_validated(self, encoder, version)
         }
     }
 
@@ -424,14 +493,12 @@ pub mod share_group_describe_response {
         }
     }
 
-    impl KafkaEncode for DescribedGroup {
-        fn encode<T: EncodeTarget>(
+    impl DescribedGroup {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             encoder.write_i16(self.error_code)?;
             encoder.write_compact_nullable_string(self.error_message.as_ref())?;
             encoder.write_compact_string(&self.group_id)?;
@@ -441,7 +508,7 @@ pub mod share_group_describe_response {
             encoder.write_compact_string(&self.assignor_name)?;
             encoder.write_compact_array_len(self.members.len())?;
             for value in &self.members {
-                value.encode(encoder, version)?;
+                value.encode_validated(encoder, version)?;
             }
             encoder.write_i32(self.authorized_operations)?;
 
@@ -450,6 +517,31 @@ pub mod share_group_describe_response {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for DescribedGroup {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            DescribedGroup::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            DescribedGroup::encode_validated(self, encoder, version)
         }
     }
 
@@ -545,14 +637,12 @@ pub mod share_group_describe_response {
         }
     }
 
-    impl KafkaEncode for Member {
-        fn encode<T: EncodeTarget>(
+    impl Member {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             encoder.write_compact_string(&self.member_id)?;
             encoder.write_compact_nullable_string(self.rack_id.as_ref())?;
             encoder.write_i32(self.member_epoch)?;
@@ -562,13 +652,38 @@ pub mod share_group_describe_response {
             for value in &self.subscribed_topic_names {
                 encoder.write_compact_string(value)?;
             }
-            self.assignment.encode(encoder, version)?;
+            self.assignment.encode_validated(encoder, version)?;
 
             if Self::is_flexible(version) {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for Member {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            Member::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            Member::encode_validated(self, encoder, version)
         }
     }
 
@@ -635,18 +750,16 @@ pub mod share_group_describe_response {
         }
     }
 
-    impl KafkaEncode for ShareGroupDescribeResponse {
-        fn encode<T: EncodeTarget>(
+    impl ShareGroupDescribeResponse {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             encoder.write_i32(self.throttle_time_ms)?;
             encoder.write_compact_array_len(self.groups.len())?;
             for value in &self.groups {
-                value.encode(encoder, version)?;
+                value.encode_validated(encoder, version)?;
             }
 
             if Self::is_flexible(version) {
@@ -654,6 +767,31 @@ pub mod share_group_describe_response {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for ShareGroupDescribeResponse {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            ShareGroupDescribeResponse::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            ShareGroupDescribeResponse::encode_validated(self, encoder, version)
         }
     }
 }

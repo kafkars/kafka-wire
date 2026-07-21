@@ -83,6 +83,7 @@ pub(super) fn render_message(
         &message.fields,
         message,
         Owner::Message,
+        !message.effective_flexible_versions().is_empty(),
     );
     render_decode(rust, message)?;
     render_encode(rust, message)?;

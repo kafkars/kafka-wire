@@ -40,10 +40,28 @@ pub(super) fn render_decode(rust: &mut RustText, message: &Message) -> Result<()
 }
 
 pub(super) fn render_encode(rust: &mut RustText, message: &Message) -> Result<(), GenerationError> {
+    render_struct_encode(
+        rust,
+        message.name.rust_type(),
+        &message.fields,
+        message,
+        !message.effective_flexible_versions().is_empty(),
+    )
+}
+
+/// Emits one checked public encoder around one reusable validated write body.
+pub(super) fn render_struct_encode(
+    rust: &mut RustText,
+    rust_type: &str,
+    fields: &[kafka_wire_schema::Field],
+    message: &Message,
+    flexible: bool,
+) -> Result<(), GenerationError> {
+    render_validated_encode_body(rust, rust_type, fields, message, flexible)?;
     rust.open(format!(
         "impl {} for {}",
         spell(message, "KafkaEncode"),
-        message.name.rust_type()
+        rust_type
     ));
     rust.line(format!("fn encode<T: {}>(", spell(message, "EncodeTarget")));
     rust.line("    &self,");
@@ -57,19 +75,97 @@ pub(super) fn render_encode(rust: &mut RustText, message: &Message) -> Result<()
         spell(message, "EncodeError")
     ));
     rust.line("self.validate_for_version(version)?;");
+    rust.line(format!(
+        "{rust_type}::encode_validated(self, encoder, version)"
+    ));
+    rust.close("");
     rust.blank();
-
-    render_writes(rust, &message.fields, message)?;
-    if !message.effective_flexible_versions().is_empty() {
-        render_tagged_encode(rust, &message.fields, message)?;
-    }
-
+    rust.line("#[doc(hidden)]");
+    rust.open(format!(
+        "fn validate_encoding(&self, version: {}) -> Result<(), {}>",
+        spell(message, "ApiVersion"),
+        spell(message, "EncodeError"),
+    ));
+    rust.line("self.validate_for_version(version)");
+    rust.close("");
     rust.blank();
-    rust.line("Ok(())");
+    rust.line("#[doc(hidden)]");
+    rust.line(format!(
+        "fn encode_validated<T: {}>(",
+        spell(message, "EncodeTarget")
+    ));
+    rust.line("    &self,");
+    rust.line(format!(
+        "    encoder: &mut {}<T>,",
+        spell(message, "Encoder")
+    ));
+    rust.line(format!("    version: {},", spell(message, "ApiVersion")));
+    rust.open(format!(
+        ") -> Result<(), {}>",
+        spell(message, "EncodeError")
+    ));
+    rust.line(format!(
+        "{rust_type}::encode_validated(self, encoder, version)"
+    ));
     rust.close("");
     rust.close("");
     rust.blank();
     Ok(())
+}
+
+fn render_validated_encode_body(
+    rust: &mut RustText,
+    rust_type: &str,
+    fields: &[kafka_wire_schema::Field],
+    message: &Message,
+    flexible: bool,
+) -> Result<(), GenerationError> {
+    let mut body = RustText::default();
+    render_writes(&mut body, fields, message)?;
+    if flexible {
+        render_tagged_encode(&mut body, fields, message)?;
+    }
+    body.blank();
+    body.line("Ok(())");
+    let body = body.finish();
+    let version = if validated_body_uses_version(&body) {
+        "version"
+    } else {
+        "_version"
+    };
+
+    rust.open(format!("impl {rust_type}"));
+    rust.line(format!(
+        "fn encode_validated<T: {}>(",
+        spell(message, "EncodeTarget")
+    ));
+    rust.line("    &self,");
+    rust.line(format!(
+        "    encoder: &mut {}<T>,",
+        spell(message, "Encoder")
+    ));
+    rust.line(format!("    {version}: {},", spell(message, "ApiVersion")));
+    rust.open(format!(
+        ") -> Result<(), {}>",
+        spell(message, "EncodeError")
+    ));
+    for line in body.lines() {
+        if line.is_empty() {
+            rust.blank();
+        } else {
+            rust.line(line);
+        }
+    }
+    rust.close("");
+    rust.close("");
+    rust.blank();
+    Ok(())
+}
+
+fn validated_body_uses_version(body: &str) -> bool {
+    body.contains("version.value()")
+        || body.contains("Self::is_flexible(version)")
+        || body.contains("encoder, version)")
 }
 
 /// The local one decoded field binds to.

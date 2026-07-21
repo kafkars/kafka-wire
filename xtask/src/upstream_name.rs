@@ -12,6 +12,8 @@
 
 use std::path::Path;
 
+use kafka_wire_codegen::PortableFilename;
+
 /// Whether a listing or directory entry names a JSON schema definition.
 pub(crate) fn is_schema_file(name: &str) -> bool {
     Path::new(name)
@@ -34,21 +36,7 @@ pub(crate) fn repository_slug(repository: &str) -> Result<String, String> {
 
 /// Accepts a listing entry only if it is one ordinary, quotable filename.
 pub(crate) fn plain_filename(candidate: &str) -> Result<String, String> {
-    let ordinary = !candidate.is_empty()
-        && candidate != "."
-        && candidate != ".."
-        && Path::new(candidate)
-            .file_name()
-            .and_then(|name| name.to_str())
-            == Some(candidate)
-        && candidate
-            .chars()
-            .all(|character| character.is_ascii_graphic() && character != '"' && character != '\\');
-    if ordinary {
-        Ok(candidate.to_owned())
-    } else {
-        Err(format!(
-            "upstream listed an unusable schema filename: {candidate}"
-        ))
-    }
+    PortableFilename::try_new(candidate.to_owned())
+        .map(PortableFilename::into_string)
+        .map_err(|error| format!("upstream listed an unusable schema filename: {error}"))
 }

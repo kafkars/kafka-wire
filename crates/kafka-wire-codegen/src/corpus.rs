@@ -100,7 +100,7 @@ pub fn render_corpus(workspace_root: impl AsRef<Path>) -> Result<CorpusRender, G
     }
 
     let grouped = group_sources(corpus.sources)?;
-    let overrides = HeaderOverrides::read(workspace, &lock, &grouped.api)?;
+    let overrides = HeaderOverrides::read(workspace, &lock, &grouped.api, &grouped.unkeyed)?;
 
     // Headers and data schemas answer to no API key and render into one module
     // of their own rather than joining a pair.

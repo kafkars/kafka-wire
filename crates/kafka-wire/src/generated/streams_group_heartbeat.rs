@@ -85,14 +85,12 @@ pub mod streams_group_heartbeat_request {
         }
     }
 
-    impl KafkaEncode for KeyValue {
-        fn encode<T: EncodeTarget>(
+    impl KeyValue {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             encoder.write_compact_string(&self.key)?;
             encoder.write_compact_string(&self.value)?;
 
@@ -101,6 +99,31 @@ pub mod streams_group_heartbeat_request {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for KeyValue {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            KeyValue::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            KeyValue::encode_validated(self, encoder, version)
         }
     }
 
@@ -186,20 +209,18 @@ pub mod streams_group_heartbeat_request {
         }
     }
 
-    impl KafkaEncode for TopicInfo {
-        fn encode<T: EncodeTarget>(
+    impl TopicInfo {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             encoder.write_compact_string(&self.name)?;
             encoder.write_i32(self.partitions)?;
             encoder.write_i16(self.replication_factor)?;
             encoder.write_compact_array_len(self.topic_configs.len())?;
             for value in &self.topic_configs {
-                value.encode(encoder, version)?;
+                value.encode_validated(encoder, version)?;
             }
 
             if Self::is_flexible(version) {
@@ -207,6 +228,31 @@ pub mod streams_group_heartbeat_request {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for TopicInfo {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            TopicInfo::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            TopicInfo::encode_validated(self, encoder, version)
         }
     }
 
@@ -278,14 +324,12 @@ pub mod streams_group_heartbeat_request {
         }
     }
 
-    impl KafkaEncode for Endpoint {
-        fn encode<T: EncodeTarget>(
+    impl Endpoint {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             encoder.write_compact_string(&self.host)?;
             encoder.write_u16(self.port)?;
 
@@ -294,6 +338,31 @@ pub mod streams_group_heartbeat_request {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for Endpoint {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            Endpoint::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            Endpoint::encode_validated(self, encoder, version)
         }
     }
 
@@ -369,14 +438,12 @@ pub mod streams_group_heartbeat_request {
         }
     }
 
-    impl KafkaEncode for TaskOffset {
-        fn encode<T: EncodeTarget>(
+    impl TaskOffset {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             encoder.write_compact_string(&self.subtopology_id)?;
             encoder.write_i32(self.partition)?;
             encoder.write_i64(self.offset)?;
@@ -386,6 +453,31 @@ pub mod streams_group_heartbeat_request {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for TaskOffset {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            TaskOffset::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            TaskOffset::encode_validated(self, encoder, version)
         }
     }
 
@@ -460,14 +552,12 @@ pub mod streams_group_heartbeat_request {
         }
     }
 
-    impl KafkaEncode for TaskIds {
-        fn encode<T: EncodeTarget>(
+    impl TaskIds {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             encoder.write_compact_string(&self.subtopology_id)?;
             encoder.write_compact_array_len(self.partitions.len())?;
             for value in &self.partitions {
@@ -479,6 +569,31 @@ pub mod streams_group_heartbeat_request {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for TaskIds {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            TaskIds::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            TaskIds::encode_validated(self, encoder, version)
         }
     }
 
@@ -556,18 +671,16 @@ pub mod streams_group_heartbeat_request {
         }
     }
 
-    impl KafkaEncode for Topology {
-        fn encode<T: EncodeTarget>(
+    impl Topology {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             encoder.write_i32(self.epoch)?;
             encoder.write_compact_array_len(self.subtopologies.len())?;
             for value in &self.subtopologies {
-                value.encode(encoder, version)?;
+                value.encode_validated(encoder, version)?;
             }
 
             if Self::is_flexible(version) {
@@ -575,6 +688,31 @@ pub mod streams_group_heartbeat_request {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for Topology {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            Topology::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            Topology::encode_validated(self, encoder, version)
         }
     }
 
@@ -693,14 +831,12 @@ pub mod streams_group_heartbeat_request {
         }
     }
 
-    impl KafkaEncode for Subtopology {
-        fn encode<T: EncodeTarget>(
+    impl Subtopology {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             encoder.write_compact_string(&self.subtopology_id)?;
             encoder.write_compact_array_len(self.source_topics.len())?;
             for value in &self.source_topics {
@@ -712,7 +848,7 @@ pub mod streams_group_heartbeat_request {
             }
             encoder.write_compact_array_len(self.state_changelog_topics.len())?;
             for value in &self.state_changelog_topics {
-                value.encode(encoder, version)?;
+                value.encode_validated(encoder, version)?;
             }
             encoder.write_compact_array_len(self.repartition_sink_topics.len())?;
             for value in &self.repartition_sink_topics {
@@ -720,11 +856,11 @@ pub mod streams_group_heartbeat_request {
             }
             encoder.write_compact_array_len(self.repartition_source_topics.len())?;
             for value in &self.repartition_source_topics {
-                value.encode(encoder, version)?;
+                value.encode_validated(encoder, version)?;
             }
             encoder.write_compact_array_len(self.copartition_groups.len())?;
             for value in &self.copartition_groups {
-                value.encode(encoder, version)?;
+                value.encode_validated(encoder, version)?;
             }
 
             if Self::is_flexible(version) {
@@ -732,6 +868,31 @@ pub mod streams_group_heartbeat_request {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for Subtopology {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            Subtopology::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            Subtopology::encode_validated(self, encoder, version)
         }
     }
 
@@ -816,14 +977,12 @@ pub mod streams_group_heartbeat_request {
         }
     }
 
-    impl KafkaEncode for CopartitionGroup {
-        fn encode<T: EncodeTarget>(
+    impl CopartitionGroup {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             encoder.write_compact_array_len(self.source_topics.len())?;
             for value in &self.source_topics {
                 encoder.write_i16(*value)?;
@@ -842,6 +1001,31 @@ pub mod streams_group_heartbeat_request {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for CopartitionGroup {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            CopartitionGroup::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            CopartitionGroup::encode_validated(self, encoder, version)
         }
     }
 
@@ -1077,14 +1261,12 @@ pub mod streams_group_heartbeat_request {
         }
     }
 
-    impl KafkaEncode for StreamsGroupHeartbeatRequest {
-        fn encode<T: EncodeTarget>(
+    impl StreamsGroupHeartbeatRequest {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             encoder.write_compact_string(&self.group_id)?;
             encoder.write_compact_string(&self.member_id)?;
             encoder.write_i32(self.member_epoch)?;
@@ -1094,52 +1276,52 @@ pub mod streams_group_heartbeat_request {
             encoder.write_i32(self.rebalance_timeout_ms)?;
             if let Some(value) = &self.topology {
                 encoder.write_struct_presence(true)?;
-                value.encode(encoder, version)?;
+                value.encode_validated(encoder, version)?;
             } else {
                 encoder.write_struct_presence(false)?;
             }
             encoder.write_compact_nullable_array_len(self.active_tasks.as_ref().map(Vec::len))?;
             if let Some(values) = &self.active_tasks {
                 for value in values {
-                    value.encode(encoder, version)?;
+                    value.encode_validated(encoder, version)?;
                 }
             }
             encoder.write_compact_nullable_array_len(self.standby_tasks.as_ref().map(Vec::len))?;
             if let Some(values) = &self.standby_tasks {
                 for value in values {
-                    value.encode(encoder, version)?;
+                    value.encode_validated(encoder, version)?;
                 }
             }
             encoder.write_compact_nullable_array_len(self.warmup_tasks.as_ref().map(Vec::len))?;
             if let Some(values) = &self.warmup_tasks {
                 for value in values {
-                    value.encode(encoder, version)?;
+                    value.encode_validated(encoder, version)?;
                 }
             }
             encoder.write_compact_nullable_string(self.process_id.as_ref())?;
             if let Some(value) = &self.user_endpoint {
                 encoder.write_struct_presence(true)?;
-                value.encode(encoder, version)?;
+                value.encode_validated(encoder, version)?;
             } else {
                 encoder.write_struct_presence(false)?;
             }
             encoder.write_compact_nullable_array_len(self.client_tags.as_ref().map(Vec::len))?;
             if let Some(values) = &self.client_tags {
                 for value in values {
-                    value.encode(encoder, version)?;
+                    value.encode_validated(encoder, version)?;
                 }
             }
             encoder.write_compact_nullable_array_len(self.task_offsets.as_ref().map(Vec::len))?;
             if let Some(values) = &self.task_offsets {
                 for value in values {
-                    value.encode(encoder, version)?;
+                    value.encode_validated(encoder, version)?;
                 }
             }
             encoder
                 .write_compact_nullable_array_len(self.task_end_offsets.as_ref().map(Vec::len))?;
             if let Some(values) = &self.task_end_offsets {
                 for value in values {
-                    value.encode(encoder, version)?;
+                    value.encode_validated(encoder, version)?;
                 }
             }
             encoder.write_bool(self.shutdown_application)?;
@@ -1149,6 +1331,31 @@ pub mod streams_group_heartbeat_request {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for StreamsGroupHeartbeatRequest {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            StreamsGroupHeartbeatRequest::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            StreamsGroupHeartbeatRequest::encode_validated(self, encoder, version)
         }
     }
 }
@@ -1233,14 +1440,12 @@ pub mod streams_group_heartbeat_response {
         }
     }
 
-    impl KafkaEncode for Status {
-        fn encode<T: EncodeTarget>(
+    impl Status {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             encoder.write_i8(self.status_code)?;
             encoder.write_compact_string(&self.status_detail)?;
 
@@ -1249,6 +1454,31 @@ pub mod streams_group_heartbeat_response {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for Status {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            Status::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            Status::encode_validated(self, encoder, version)
         }
     }
 
@@ -1323,14 +1553,12 @@ pub mod streams_group_heartbeat_response {
         }
     }
 
-    impl KafkaEncode for TopicPartition {
-        fn encode<T: EncodeTarget>(
+    impl TopicPartition {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             encoder.write_compact_string(&self.topic)?;
             encoder.write_compact_array_len(self.partitions.len())?;
             for value in &self.partitions {
@@ -1342,6 +1570,31 @@ pub mod streams_group_heartbeat_response {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for TopicPartition {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            TopicPartition::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            TopicPartition::encode_validated(self, encoder, version)
         }
     }
 
@@ -1416,14 +1669,12 @@ pub mod streams_group_heartbeat_response {
         }
     }
 
-    impl KafkaEncode for TaskIds {
-        fn encode<T: EncodeTarget>(
+    impl TaskIds {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             encoder.write_compact_string(&self.subtopology_id)?;
             encoder.write_compact_array_len(self.partitions.len())?;
             for value in &self.partitions {
@@ -1435,6 +1686,31 @@ pub mod streams_group_heartbeat_response {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for TaskIds {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            TaskIds::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            TaskIds::encode_validated(self, encoder, version)
         }
     }
 
@@ -1506,14 +1782,12 @@ pub mod streams_group_heartbeat_response {
         }
     }
 
-    impl KafkaEncode for Endpoint {
-        fn encode<T: EncodeTarget>(
+    impl Endpoint {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             encoder.write_compact_string(&self.host)?;
             encoder.write_u16(self.port)?;
 
@@ -1522,6 +1796,31 @@ pub mod streams_group_heartbeat_response {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for Endpoint {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            Endpoint::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            Endpoint::encode_validated(self, encoder, version)
         }
     }
 
@@ -1610,22 +1909,20 @@ pub mod streams_group_heartbeat_response {
         }
     }
 
-    impl KafkaEncode for EndpointToPartitions {
-        fn encode<T: EncodeTarget>(
+    impl EndpointToPartitions {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
-            self.user_endpoint.encode(encoder, version)?;
+            self.user_endpoint.encode_validated(encoder, version)?;
             encoder.write_compact_array_len(self.active_partitions.len())?;
             for value in &self.active_partitions {
-                value.encode(encoder, version)?;
+                value.encode_validated(encoder, version)?;
             }
             encoder.write_compact_array_len(self.standby_partitions.len())?;
             for value in &self.standby_partitions {
-                value.encode(encoder, version)?;
+                value.encode_validated(encoder, version)?;
             }
 
             if Self::is_flexible(version) {
@@ -1633,6 +1930,31 @@ pub mod streams_group_heartbeat_response {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for EndpointToPartitions {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            EndpointToPartitions::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            EndpointToPartitions::encode_validated(self, encoder, version)
         }
     }
 
@@ -1861,14 +2183,12 @@ pub mod streams_group_heartbeat_response {
         }
     }
 
-    impl KafkaEncode for StreamsGroupHeartbeatResponse {
-        fn encode<T: EncodeTarget>(
+    impl StreamsGroupHeartbeatResponse {
+        fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
         ) -> Result<(), EncodeError> {
-            self.validate_for_version(version)?;
-
             encoder.write_i32(self.throttle_time_ms)?;
             encoder.write_i16(self.error_code)?;
             encoder.write_compact_nullable_string(self.error_message.as_ref())?;
@@ -1885,25 +2205,25 @@ pub mod streams_group_heartbeat_response {
             encoder.write_compact_nullable_array_len(self.status.as_ref().map(Vec::len))?;
             if let Some(values) = &self.status {
                 for value in values {
-                    value.encode(encoder, version)?;
+                    value.encode_validated(encoder, version)?;
                 }
             }
             encoder.write_compact_nullable_array_len(self.active_tasks.as_ref().map(Vec::len))?;
             if let Some(values) = &self.active_tasks {
                 for value in values {
-                    value.encode(encoder, version)?;
+                    value.encode_validated(encoder, version)?;
                 }
             }
             encoder.write_compact_nullable_array_len(self.standby_tasks.as_ref().map(Vec::len))?;
             if let Some(values) = &self.standby_tasks {
                 for value in values {
-                    value.encode(encoder, version)?;
+                    value.encode_validated(encoder, version)?;
                 }
             }
             encoder.write_compact_nullable_array_len(self.warmup_tasks.as_ref().map(Vec::len))?;
             if let Some(values) = &self.warmup_tasks {
                 for value in values {
-                    value.encode(encoder, version)?;
+                    value.encode_validated(encoder, version)?;
                 }
             }
             if version.value() >= 1 {
@@ -1915,7 +2235,7 @@ pub mod streams_group_heartbeat_response {
             )?;
             if let Some(values) = &self.partitions_by_user_endpoint {
                 for value in values {
-                    value.encode(encoder, version)?;
+                    value.encode_validated(encoder, version)?;
                 }
             }
 
@@ -1924,6 +2244,31 @@ pub mod streams_group_heartbeat_response {
             }
 
             Ok(())
+        }
+    }
+
+    impl KafkaEncode for StreamsGroupHeartbeatResponse {
+        fn encode<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            self.validate_for_version(version)?;
+            StreamsGroupHeartbeatResponse::encode_validated(self, encoder, version)
+        }
+
+        #[doc(hidden)]
+        fn validate_encoding(&self, version: ApiVersion) -> Result<(), EncodeError> {
+            self.validate_for_version(version)
+        }
+
+        #[doc(hidden)]
+        fn encode_validated<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> Result<(), EncodeError> {
+            StreamsGroupHeartbeatResponse::encode_validated(self, encoder, version)
         }
     }
 }

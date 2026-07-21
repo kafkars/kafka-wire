@@ -30,7 +30,7 @@ pub(crate) fn verify_staged(
     }
     for file in &lock.kafka.files {
         let bytes = found
-            .get(&file.path)
+            .get(file.path.as_str())
             .ok_or_else(|| format!("staged protocol.lock names a missing file: {}", file.path))?;
         if digest(bytes) != file.sha256 {
             return Err(format!(

@@ -7,7 +7,7 @@
 
 use std::{fs, path::Path};
 
-use crate::output::replace_directory;
+use crate::output::{cleanup_backup_after_install, replace_directory};
 
 #[test]
 fn a_failed_staged_install_restores_the_prior_tree() {
@@ -38,4 +38,25 @@ fn a_failed_staged_install_restores_the_prior_tree() {
         "old",
         "the prior generated tree was not restored"
     );
+}
+
+#[test]
+fn a_post_install_cleanup_failure_is_a_warning_not_a_failed_commit() {
+    let parent = Path::new(env!("CARGO_MANIFEST_DIR"))
+        .parent()
+        .and_then(Path::parent)
+        .unwrap_or_else(|| Path::new("."))
+        .join("target/output-transaction-cleanup-warning");
+    fs::create_dir_all(&parent)
+        .unwrap_or_else(|error| panic!("create {}: {error}", parent.display()));
+    let not_a_directory = parent.join("obsolete-backup");
+    fs::write(&not_a_directory, "still obsolete")
+        .unwrap_or_else(|error| panic!("write cleanup obstacle: {error}"));
+
+    let warning = cleanup_backup_after_install(&not_a_directory)
+        .unwrap_or_else(|| panic!("a cleanup failure was silently accepted"));
+
+    assert!(warning.contains("generated tree was installed"));
+    assert!(warning.contains("obsolete-backup"));
+    assert!(not_a_directory.exists());
 }
