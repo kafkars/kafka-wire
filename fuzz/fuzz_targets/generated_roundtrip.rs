@@ -1,18 +1,20 @@
-//! Fuzzes the generated ApiVersions request/response pair across versions 0-5.
+//! Fuzzes every generated request and response across every supported version.
 
 #![no_main]
 
-use kafka_wire::{ApiVersionsRequest, ApiVersionsResponse};
 use kafka_wire_core::{ApiVersion, Bytes, DecodeLimits, KafkaDecode, KafkaEncode};
 use libfuzzer_sys::fuzz_target;
 
+#[path = "../../crates/kafka-wire/src/generated/fuzz_roundtrip.rs"]
+mod generated_dispatch;
+
 fuzz_target!(|data: &[u8]| {
-    let Some((&selector, body)) = data.split_first() else {
+    if data.len() < 4 {
         return;
-    };
-    let version = ApiVersion::new(i16::from(selector % 6));
-    round_trip::<ApiVersionsRequest>(body, version);
-    round_trip::<ApiVersionsResponse>(body, version);
+    }
+    let message_selector = u16::from_le_bytes([data[0], data[1]]);
+    let version_selector = u16::from_le_bytes([data[2], data[3]]);
+    generated_dispatch::dispatch(message_selector, version_selector, &data[4..]);
 });
 
 fn round_trip<T>(body: &[u8], version: ApiVersion)
