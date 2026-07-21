@@ -15,6 +15,7 @@
 
 mod attributes;
 mod batch;
+mod batch_prefix;
 mod compression;
 #[cfg(test)]
 mod compression_test;

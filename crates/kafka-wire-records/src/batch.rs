@@ -17,6 +17,7 @@ use bytes::{Buf as _, Bytes, BytesMut};
 use kafka_wire_core::{Decoder, EncodeError, EncodeTarget, Encoder};
 
 use crate::attributes::{Attributes, Compression, TimestampType};
+use crate::batch_prefix::exact_batch;
 use crate::error::RecordError;
 use crate::limits::RecordDecodeLimits;
 use crate::record::{self, Record};
@@ -29,9 +30,6 @@ pub const MAGIC_V2: i8 = 2;
 /// The CRC sits at offset 17 and is four bytes wide, so it covers everything
 /// from 21 to the end of the batch — not the batch, and not the records alone.
 const CRC_COVERAGE_START: usize = 21;
-
-/// Bytes from `partition_leader_epoch` through `records_count`.
-const HEADER_AFTER_LENGTH: usize = 49;
 
 /// One Kafka record batch, magic v2.
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -81,29 +79,11 @@ impl RecordBatch {
     /// Bytes after the declared batch remain in `bytes`, ready for the next
     /// call. A failure leaves the cursor unchanged.
     pub fn decode(bytes: &mut Bytes, limits: RecordDecodeLimits) -> Result<Self, RecordError> {
-        let mut decoder = Decoder::new(bytes.clone(), limits.wire)?;
+        let batch_bytes = exact_batch(bytes, limits.max_batch_bytes)?;
+        let end = batch_bytes.len();
+        let mut decoder = Decoder::new(batch_bytes.clone(), limits.wire_for_container(end))?;
         let base_offset = decoder.read_i64()?;
-        let batch_length = decoder.read_i32()?;
-        let declared =
-            usize::try_from(batch_length).map_err(|_| RecordError::NegativeBatchLength {
-                length: batch_length,
-            })?;
-        if declared < HEADER_AFTER_LENGTH || declared > decoder.remaining() {
-            return Err(RecordError::TruncatedBatch {
-                declared,
-                available: decoder.remaining(),
-            });
-        }
-        // Everything past the declared length belongs to the next batch in the
-        // blob, not to this one. The length is stated from just after itself,
-        // so the batch ends 12 bytes (base offset plus the length) further on.
-        let end = 12 + declared;
-        if end > limits.max_batch_bytes {
-            return Err(RecordError::BatchLimitExceeded {
-                length: end,
-                limit: limits.max_batch_bytes,
-            });
-        }
+        let _validated_batch_length = decoder.read_i32()?;
 
         let partition_leader_epoch = decoder.read_i32()?;
         let magic = decoder.read_i8()?;
@@ -111,7 +91,7 @@ impl RecordBatch {
             return Err(RecordError::UnsupportedMagic { magic });
         }
         let crc = decoder.read_u32()?;
-        let actual = crc32c::crc32c(&bytes[CRC_COVERAGE_START..end]);
+        let actual = crc32c::crc32c(&batch_bytes[CRC_COVERAGE_START..]);
         if actual != crc {
             return Err(RecordError::CorruptBatch {
                 declared: crc,
@@ -142,7 +122,12 @@ impl RecordBatch {
         let payload = attributes
             .compression
             .decompress(&payload, limits.max_decompressed_records_bytes)?;
-        let records = record::decode_all(Bytes::from(payload), records_count, limits.wire)?;
+        let payload_len = payload.len();
+        let records = record::decode_all(
+            Bytes::from(payload),
+            records_count,
+            limits.wire_for_container(payload_len),
+        )?;
 
         let batch = Self {
             base_offset,

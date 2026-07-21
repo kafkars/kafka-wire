@@ -16,6 +16,11 @@ pub struct RecordDecodeLimits {
     pub max_decompressed_records_bytes: usize,
     /// Wire limits used inside records; `max_array_elements` bounds both records
     /// per batch and headers per record before either collection allocates.
+    ///
+    /// `max_frame_bytes` is deliberately superseded here: `max_batch_bytes`
+    /// bounds the exact encoded batch and `max_decompressed_records_bytes`
+    /// bounds its expanded payload. The remaining wire limits govern fields
+    /// inside those already-bounded containers.
     pub wire: DecodeLimits,
 }
 
@@ -31,6 +36,12 @@ impl RecordDecodeLimits {
             max_decompressed_records_bytes,
             wire,
         }
+    }
+
+    pub(crate) const fn wire_for_container(self, length: usize) -> DecodeLimits {
+        let mut wire = self.wire;
+        wire.max_frame_bytes = length;
+        wire
     }
 }
 
