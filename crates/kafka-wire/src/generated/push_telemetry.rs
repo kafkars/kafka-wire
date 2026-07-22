@@ -16,7 +16,7 @@ pub mod push_telemetry_request {
         encoded_len_with,
     };
 
-    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, RequestResponsePair};
+    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, ProtocolEq, RequestResponsePair};
 
     /// Request body for the `PushTelemetry` API.
     #[non_exhaustive]
@@ -34,6 +34,20 @@ pub mod push_telemetry_request {
         pub metrics: Bytes,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl ProtocolEq for PushTelemetryRequest {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.client_instance_id, &other.client_instance_id)
+                && ProtocolEq::protocol_eq(&self.subscription_id, &other.subscription_id)
+                && ProtocolEq::protocol_eq(&self.terminating, &other.terminating)
+                && ProtocolEq::protocol_eq(&self.compression_type, &other.compression_type)
+                && ProtocolEq::protocol_eq(&self.metrics, &other.metrics)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
+        }
     }
 
     impl KafkaMessage for PushTelemetryRequest {
@@ -161,7 +175,7 @@ pub mod push_telemetry_response {
         KafkaDecode, KafkaEncode, TaggedFields, VersionRange, encode_into_with, encoded_len_with,
     };
 
-    use crate::{KafkaMessage, KafkaResponse};
+    use crate::{KafkaMessage, KafkaResponse, ProtocolEq};
 
     /// Response body for the `PushTelemetry` API.
     #[non_exhaustive]
@@ -173,6 +187,17 @@ pub mod push_telemetry_response {
         pub error_code: i16,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl ProtocolEq for PushTelemetryResponse {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.throttle_time_ms, &other.throttle_time_ms)
+                && ProtocolEq::protocol_eq(&self.error_code, &other.error_code)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
+        }
     }
 
     impl KafkaMessage for PushTelemetryResponse {

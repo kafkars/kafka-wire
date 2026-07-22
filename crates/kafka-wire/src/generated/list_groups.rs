@@ -16,7 +16,7 @@ pub mod list_groups_request {
         encoded_len_with,
     };
 
-    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, RequestResponsePair};
+    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, ProtocolEq, RequestResponsePair};
 
     /// Request body for the `ListGroups` API.
     #[non_exhaustive]
@@ -28,6 +28,17 @@ pub mod list_groups_request {
         pub types_filter: ::std::vec::Vec<StrBytes>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl ProtocolEq for ListGroupsRequest {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.states_filter, &other.states_filter)
+                && ProtocolEq::protocol_eq(&self.types_filter, &other.types_filter)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
+        }
     }
 
     impl KafkaMessage for ListGroupsRequest {
@@ -181,7 +192,7 @@ pub mod list_groups_response {
         encoded_len_with,
     };
 
-    use crate::{KafkaMessage, KafkaResponse};
+    use crate::{KafkaMessage, KafkaResponse, ProtocolEq};
 
     /// `ListedGroup` as declared by the `ListGroups` API.
     #[non_exhaustive]
@@ -230,6 +241,19 @@ pub mod list_groups_response {
             }
 
             ::core::result::Result::Ok(())
+        }
+    }
+
+    impl ProtocolEq for ListedGroup {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.group_id, &other.group_id)
+                && ProtocolEq::protocol_eq(&self.protocol_type, &other.protocol_type)
+                && ProtocolEq::protocol_eq(&self.group_state, &other.group_state)
+                && ProtocolEq::protocol_eq(&self.group_type, &other.group_type)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
         }
     }
 
@@ -356,6 +380,18 @@ pub mod list_groups_response {
         pub groups: ::std::vec::Vec<ListedGroup>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl ProtocolEq for ListGroupsResponse {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.throttle_time_ms, &other.throttle_time_ms)
+                && ProtocolEq::protocol_eq(&self.error_code, &other.error_code)
+                && ProtocolEq::protocol_eq(&self.groups, &other.groups)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
+        }
     }
 
     impl KafkaMessage for ListGroupsResponse {

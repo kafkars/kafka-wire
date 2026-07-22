@@ -1,10 +1,80 @@
 //! Stable traits relating generated messages to Kafka API metadata.
 
 use kafka_wire_core::{
-    ApiKey, ApiVersion, DecodeError, EncodeError, KafkaDecode, KafkaEncode, VersionRange,
+    ApiKey, ApiVersion, Bytes, DecodeError, EncodeError, KafkaDecode, KafkaEncode, StrBytes,
+    TaggedFields, Uuid, VersionRange,
 };
 
 use crate::ApiDescriptor;
+
+/// Equality under Kafka's wire semantics.
+///
+/// IEEE-754 values compare by payload bits rather than Rust's ordinary
+/// `PartialEq`: identical NaNs are equal here, while the two zero signs are
+/// distinct. Generated structures recurse through this relation, which keeps
+/// default omission and the generated-code fuzz oracle on one definition.
+#[doc(hidden)]
+pub trait ProtocolEq: Default {
+    /// Returns whether both values preserve exactly the same protocol state.
+    fn protocol_eq(&self, other: &Self) -> bool;
+
+    /// Returns whether this value is its exact protocol default.
+    fn is_protocol_default(&self) -> bool {
+        self.protocol_eq(&Self::default())
+    }
+}
+
+macro_rules! protocol_eq_by_equality {
+    ($($ty:ty),+ $(,)?) => {
+        $(
+            impl ProtocolEq for $ty {
+                fn protocol_eq(&self, other: &Self) -> bool {
+                    self == other
+                }
+            }
+        )+
+    };
+}
+
+protocol_eq_by_equality!(
+    bool,
+    i8,
+    i16,
+    i32,
+    i64,
+    u16,
+    u32,
+    Bytes,
+    StrBytes,
+    TaggedFields,
+    Uuid,
+);
+
+impl ProtocolEq for f64 {
+    fn protocol_eq(&self, other: &Self) -> bool {
+        self.to_bits() == other.to_bits()
+    }
+}
+
+impl<T: ProtocolEq> ProtocolEq for Option<T> {
+    fn protocol_eq(&self, other: &Self) -> bool {
+        match (self, other) {
+            (Some(left), Some(right)) => left.protocol_eq(right),
+            (None, None) => true,
+            (Some(_), None) | (None, Some(_)) => false,
+        }
+    }
+}
+
+impl<T: ProtocolEq> ProtocolEq for Vec<T> {
+    fn protocol_eq(&self, other: &Self) -> bool {
+        self.len() == other.len()
+            && self
+                .iter()
+                .zip(other)
+                .all(|(left, right)| left.protocol_eq(right))
+    }
+}
 
 /// Shared metadata and wire contracts for every generated message.
 ///

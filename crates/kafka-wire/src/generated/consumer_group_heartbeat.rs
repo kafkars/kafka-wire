@@ -16,7 +16,7 @@ pub mod consumer_group_heartbeat_request {
         encoded_len_with,
     };
 
-    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, RequestResponsePair};
+    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, ProtocolEq, RequestResponsePair};
 
     /// `TopicPartitions` as declared by the `ConsumerGroupHeartbeat` API.
     #[non_exhaustive]
@@ -61,6 +61,17 @@ pub mod consumer_group_heartbeat_request {
             }
 
             ::core::result::Result::Ok(())
+        }
+    }
+
+    impl ProtocolEq for TopicPartitions {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.topic_id, &other.topic_id)
+                && ProtocolEq::protocol_eq(&self.partitions, &other.partitions)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
         }
     }
 
@@ -190,6 +201,31 @@ pub mod consumer_group_heartbeat_request {
                 topic_partitions: ::core::option::Option::None,
                 unknown_tagged_fields: TaggedFields::default(),
             }
+        }
+    }
+
+    impl ProtocolEq for ConsumerGroupHeartbeatRequest {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.group_id, &other.group_id)
+                && ProtocolEq::protocol_eq(&self.member_id, &other.member_id)
+                && ProtocolEq::protocol_eq(&self.member_epoch, &other.member_epoch)
+                && ProtocolEq::protocol_eq(&self.instance_id, &other.instance_id)
+                && ProtocolEq::protocol_eq(&self.rack_id, &other.rack_id)
+                && ProtocolEq::protocol_eq(&self.rebalance_timeout_ms, &other.rebalance_timeout_ms)
+                && ProtocolEq::protocol_eq(
+                    &self.subscribed_topic_names,
+                    &other.subscribed_topic_names,
+                )
+                && ProtocolEq::protocol_eq(
+                    &self.subscribed_topic_regex,
+                    &other.subscribed_topic_regex,
+                )
+                && ProtocolEq::protocol_eq(&self.server_assignor, &other.server_assignor)
+                && ProtocolEq::protocol_eq(&self.topic_partitions, &other.topic_partitions)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
         }
     }
 
@@ -382,7 +418,7 @@ pub mod consumer_group_heartbeat_response {
         encoded_len_with,
     };
 
-    use crate::{KafkaMessage, KafkaResponse};
+    use crate::{KafkaMessage, KafkaResponse, ProtocolEq};
 
     /// `TopicPartitions` as declared by the `ConsumerGroupHeartbeat` API.
     #[non_exhaustive]
@@ -427,6 +463,17 @@ pub mod consumer_group_heartbeat_response {
             }
 
             ::core::result::Result::Ok(())
+        }
+    }
+
+    impl ProtocolEq for TopicPartitions {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.topic_id, &other.topic_id)
+                && ProtocolEq::protocol_eq(&self.partitions, &other.partitions)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
         }
     }
 
@@ -560,6 +607,16 @@ pub mod consumer_group_heartbeat_response {
         }
     }
 
+    impl ProtocolEq for Assignment {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.topic_partitions, &other.topic_partitions)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
+        }
+    }
+
     impl KafkaDecode for Assignment {
         fn decode(
             decoder: &mut Decoder,
@@ -660,6 +717,25 @@ pub mod consumer_group_heartbeat_response {
         pub assignment: ::core::option::Option<Assignment>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl ProtocolEq for ConsumerGroupHeartbeatResponse {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.throttle_time_ms, &other.throttle_time_ms)
+                && ProtocolEq::protocol_eq(&self.error_code, &other.error_code)
+                && ProtocolEq::protocol_eq(&self.error_message, &other.error_message)
+                && ProtocolEq::protocol_eq(&self.member_id, &other.member_id)
+                && ProtocolEq::protocol_eq(&self.member_epoch, &other.member_epoch)
+                && ProtocolEq::protocol_eq(
+                    &self.heartbeat_interval_ms,
+                    &other.heartbeat_interval_ms,
+                )
+                && ProtocolEq::protocol_eq(&self.assignment, &other.assignment)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
+        }
     }
 
     impl KafkaMessage for ConsumerGroupHeartbeatResponse {

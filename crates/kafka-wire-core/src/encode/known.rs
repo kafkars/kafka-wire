@@ -1,25 +1,27 @@
 //! The known half of a tagged-field section.
 //!
 //! A tagged entry is `varint tag`, `varint size`, then that many payload bytes.
-//! The size precedes the payload, so a writer has to know how long the value is
-//! before it can write either — which means a known tag's value is encoded into
-//! a buffer of its own first. That buffering is the whole reason this type
-//! exists: generated code says what a tag's value is, and this says how a tag
-//! becomes bytes.
+//! The size precedes the payload, so a sizing target measures each known value
+//! first. Only its tag and predicted length are retained; the actual value is
+//! encoded directly into the outer target after its prefix.
 //!
 //! Unknown tags need none of this. They arrive as payload bytes already and are
 //! carried verbatim by `TaggedFields`.
 
-use bytes::BytesMut;
+use crate::{TaggedField, TaggedFields, TaggedFieldsError};
 
-use crate::{TaggedField, TaggedFields};
+use super::{EncodeError, EncodeTarget, Encoder, SizeTarget};
 
-use super::{BufferTarget, EncodeError, EncodeTarget, Encoder};
+#[derive(Debug)]
+struct KnownTag {
+    tag: u32,
+    length: u32,
+}
 
 /// The known tagged fields of one structure, collected before they are written.
 #[derive(Debug, Default)]
 pub struct KnownTags {
-    fields: Vec<TaggedField>,
+    fields: Vec<KnownTag>,
 }
 
 impl KnownTags {
@@ -35,28 +37,37 @@ impl KnownTags {
         self.fields.is_empty()
     }
 
-    /// Encodes one known tag's value and records it under `tag`.
+    /// Measures one known tag's value and records its exact wire length.
     ///
-    /// The closure receives an encoder over a fresh buffer, so what it writes is
-    /// the entry's payload exactly — it must not write the tag or the size, and
-    /// whatever it does write becomes the declared size.
+    /// The closure receives a sizing encoder, so payload bytes are never
+    /// materialized during preflight. It must not write the tag or size.
     ///
     /// Callers decide *whether* to call this. A tagged field is omitted when it
     /// holds its protocol default, which is what makes the section sparse, and
     /// that comparison belongs to the field, not here.
-    pub fn write<F>(&mut self, tag: u32, value: F) -> Result<(), EncodeError>
+    pub fn measure<F>(&mut self, tag: u32, value: F) -> Result<(), EncodeError>
     where
-        F: FnOnce(&mut Encoder<BufferTarget<'_>>) -> Result<(), EncodeError>,
+        F: FnOnce(&mut Encoder<SizeTarget>) -> Result<(), EncodeError>,
     {
-        let mut payload = BytesMut::new();
-        let mut encoder = Encoder::new(&mut payload);
+        let mut encoder = Encoder::sizing();
         value(&mut encoder)?;
-        self.fields.push(TaggedField::new(tag, payload.freeze()));
+        let length = u32::try_from(encoder.len()).map_err(|_| EncodeError::LengthOverflow {
+            kind: "tagged field",
+            length: encoder.len(),
+            maximum: usize::try_from(u32::MAX).unwrap_or(usize::MAX),
+        })?;
+        self.fields.push(KnownTag { tag, length });
         Ok(())
     }
 
-    pub(super) fn into_fields(self) -> Vec<TaggedField> {
-        self.fields
+    fn into_sorted(mut self) -> Result<Vec<KnownTag>, TaggedFieldsError> {
+        self.fields.sort_by_key(|field| field.tag);
+        for pair in self.fields.windows(2) {
+            if pair[0].tag == pair[1].tag {
+                return Err(TaggedFieldsError::Duplicate { tag: pair[0].tag });
+            }
+        }
+        Ok(self.fields)
     }
 }
 
@@ -72,14 +83,102 @@ impl<T: EncodeTarget> Encoder<T> {
         &mut self,
         known: KnownTags,
         unknown: &TaggedFields,
+        mut write_known: impl FnMut(u32, &mut Encoder<T>) -> Result<(), EncodeError>,
     ) -> Result<(), EncodeError> {
         if known.is_empty() {
             return self.write_tagged_fields(unknown);
         }
 
-        let mut merged = known.into_fields();
-        merged.extend(unknown.iter().cloned());
-        let merged = TaggedFields::from_unsorted(merged)?;
-        self.write_tagged_fields(&merged)
+        let known = known.into_sorted()?;
+        ensure_disjoint(&known, unknown)?;
+        let count = known
+            .len()
+            .checked_add(unknown.len())
+            .ok_or(EncodeError::LengthOverflow {
+                kind: "tagged field count",
+                length: usize::MAX,
+                maximum: usize::try_from(u32::MAX).unwrap_or(usize::MAX),
+            })?;
+        let count = u32::try_from(count).map_err(|_| EncodeError::LengthOverflow {
+            kind: "tagged field count",
+            length: count,
+            maximum: usize::try_from(u32::MAX).unwrap_or(usize::MAX),
+        })?;
+        self.write_unsigned_varint(count)?;
+
+        let mut known = known.iter().peekable();
+        let mut unknown = unknown.iter().peekable();
+        loop {
+            match (known.peek(), unknown.peek()) {
+                (Some(left), Some(right)) if left.tag < right.tag() => {
+                    self.write_known_tag(left, &mut write_known)?;
+                    known.next();
+                }
+                (Some(left), Some(right)) if left.tag > right.tag() => {
+                    self.write_unknown_tag(right)?;
+                    unknown.next();
+                }
+                (Some(left), Some(_)) => {
+                    return Err(TaggedFieldsError::Duplicate { tag: left.tag }.into());
+                }
+                (Some(left), None) => {
+                    self.write_known_tag(left, &mut write_known)?;
+                    known.next();
+                }
+                (None, Some(right)) => {
+                    self.write_unknown_tag(right)?;
+                    unknown.next();
+                }
+                (None, None) => return Ok(()),
+            }
+        }
     }
+
+    fn write_known_tag(
+        &mut self,
+        field: &KnownTag,
+        write: &mut impl FnMut(u32, &mut Encoder<T>) -> Result<(), EncodeError>,
+    ) -> Result<(), EncodeError> {
+        self.write_unsigned_varint(field.tag)?;
+        self.write_unsigned_varint(field.length)?;
+        let start = self.len();
+        write(field.tag, self)?;
+        let actual = self.len().saturating_sub(start);
+        let predicted = usize::try_from(field.length).unwrap_or(usize::MAX);
+        if actual != predicted {
+            return Err(EncodeError::SizeMismatch { predicted, actual });
+        }
+        Ok(())
+    }
+
+    fn write_unknown_tag(&mut self, field: &TaggedField) -> Result<(), EncodeError> {
+        self.write_unsigned_varint(field.tag())?;
+        let length =
+            u32::try_from(field.data().len()).map_err(|_| EncodeError::LengthOverflow {
+                kind: "tagged field",
+                length: field.data().len(),
+                maximum: usize::try_from(u32::MAX).unwrap_or(usize::MAX),
+            })?;
+        self.write_unsigned_varint(length)?;
+        self.write_raw_slice(field.data())
+    }
+}
+
+fn ensure_disjoint(known: &[KnownTag], unknown: &TaggedFields) -> Result<(), TaggedFieldsError> {
+    let mut known = known.iter().peekable();
+    let mut unknown = unknown.iter().peekable();
+    while let (Some(left), Some(right)) = (known.peek(), unknown.peek()) {
+        match left.tag.cmp(&right.tag()) {
+            std::cmp::Ordering::Less => {
+                known.next();
+            }
+            std::cmp::Ordering::Greater => {
+                unknown.next();
+            }
+            std::cmp::Ordering::Equal => {
+                return Err(TaggedFieldsError::Duplicate { tag: left.tag });
+            }
+        }
+    }
+    Ok(())
 }

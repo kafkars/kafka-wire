@@ -16,7 +16,7 @@ pub mod list_transactions_request {
         encoded_len_with,
     };
 
-    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, RequestResponsePair};
+    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, ProtocolEq, RequestResponsePair};
 
     /// Request body for the `ListTransactions` API.
     #[non_exhaustive]
@@ -43,6 +43,22 @@ pub mod list_transactions_request {
                 transactional_id_pattern: ::core::option::Option::None,
                 unknown_tagged_fields: TaggedFields::default(),
             }
+        }
+    }
+
+    impl ProtocolEq for ListTransactionsRequest {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.state_filters, &other.state_filters)
+                && ProtocolEq::protocol_eq(&self.producer_id_filters, &other.producer_id_filters)
+                && ProtocolEq::protocol_eq(&self.duration_filter, &other.duration_filter)
+                && ProtocolEq::protocol_eq(
+                    &self.transactional_id_pattern,
+                    &other.transactional_id_pattern,
+                )
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
         }
     }
 
@@ -207,7 +223,7 @@ pub mod list_transactions_response {
         encoded_len_with,
     };
 
-    use crate::{KafkaMessage, KafkaResponse};
+    use crate::{KafkaMessage, KafkaResponse, ProtocolEq};
 
     /// `TransactionState` as declared by the `ListTransactions` API.
     #[non_exhaustive]
@@ -254,6 +270,18 @@ pub mod list_transactions_response {
             }
 
             ::core::result::Result::Ok(())
+        }
+    }
+
+    impl ProtocolEq for TransactionState {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.transactional_id, &other.transactional_id)
+                && ProtocolEq::protocol_eq(&self.producer_id, &other.producer_id)
+                && ProtocolEq::protocol_eq(&self.transaction_state, &other.transaction_state)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
         }
     }
 
@@ -351,6 +379,22 @@ pub mod list_transactions_response {
         pub transaction_states: ::std::vec::Vec<TransactionState>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl ProtocolEq for ListTransactionsResponse {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.throttle_time_ms, &other.throttle_time_ms)
+                && ProtocolEq::protocol_eq(&self.error_code, &other.error_code)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_state_filters,
+                    &other.unknown_state_filters,
+                )
+                && ProtocolEq::protocol_eq(&self.transaction_states, &other.transaction_states)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
+        }
     }
 
     impl KafkaMessage for ListTransactionsResponse {

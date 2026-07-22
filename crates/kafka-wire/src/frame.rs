@@ -11,7 +11,7 @@
 //! crate's boundary.
 
 use bytes::BytesMut;
-use kafka_wire_core::{ApiVersion, EncodeError, KafkaEncode, StrBytes};
+use kafka_wire_core::{ApiVersion, EncodeError, Encoder, KafkaEncode, StrBytes};
 
 use crate::{KafkaRequest, RequestHeader, request_header_version, response_header_version};
 
@@ -39,8 +39,9 @@ impl OutboundFrameLimits {
 /// Encodes one request as a complete wire frame, returning the bytes written.
 ///
 /// Exact header and body sizes are computed before reserving or writing. The
-/// frame is rejected before allocation when it exceeds either Kafka's signed
-/// 32-bit prefix or the caller's outbound budget.
+/// frame is rejected before reserving its output or materializing a tagged
+/// payload when it exceeds either Kafka's signed 32-bit prefix or the caller's
+/// outbound budget.
 ///
 /// On failure the buffer is truncated back to where it started, so a rejected
 /// request leaves no partial frame for the next write to append to.
@@ -103,10 +104,12 @@ where
     let start = buffer.len();
     buffer.reserve(frame_len);
     buffer.extend_from_slice(&[0; LENGTH_PREFIX]);
-    header.encode_into(buffer, header_version)?;
-    request.encode_into(buffer, version)?;
-
-    let actual = buffer.len() - start - LENGTH_PREFIX;
+    let actual = {
+        let mut encoder = Encoder::new(buffer);
+        header.encode(&mut encoder, header_version)?;
+        request.encode(&mut encoder, version)?;
+        encoder.len()
+    };
     if actual != body {
         return Err(EncodeError::SizeMismatch {
             predicted: body,

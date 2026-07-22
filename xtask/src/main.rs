@@ -5,6 +5,7 @@ mod commands;
 mod defaults;
 mod fetch;
 mod probe;
+mod probe_fixtures;
 mod protocol_lock;
 mod records;
 mod upstream_name;

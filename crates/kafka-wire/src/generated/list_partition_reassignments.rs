@@ -16,7 +16,7 @@ pub mod list_partition_reassignments_request {
         encoded_len_with,
     };
 
-    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, RequestResponsePair};
+    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, ProtocolEq, RequestResponsePair};
 
     /// `ListPartitionReassignmentsTopics` as declared by the `ListPartitionReassignments` API.
     #[non_exhaustive]
@@ -61,6 +61,17 @@ pub mod list_partition_reassignments_request {
             }
 
             ::core::result::Result::Ok(())
+        }
+    }
+
+    impl ProtocolEq for ListPartitionReassignmentsTopics {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.name, &other.name)
+                && ProtocolEq::protocol_eq(&self.partition_indexes, &other.partition_indexes)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
         }
     }
 
@@ -172,6 +183,17 @@ pub mod list_partition_reassignments_request {
                 topics: ::core::option::Option::None,
                 unknown_tagged_fields: TaggedFields::default(),
             }
+        }
+    }
+
+    impl ProtocolEq for ListPartitionReassignmentsRequest {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.timeout_ms, &other.timeout_ms)
+                && ProtocolEq::protocol_eq(&self.topics, &other.topics)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
         }
     }
 
@@ -319,7 +341,7 @@ pub mod list_partition_reassignments_response {
         encoded_len_with,
     };
 
-    use crate::{KafkaMessage, KafkaResponse};
+    use crate::{KafkaMessage, KafkaResponse, ProtocolEq};
 
     /// `OngoingTopicReassignment` as declared by the `ListPartitionReassignments` API.
     #[non_exhaustive]
@@ -367,6 +389,17 @@ pub mod list_partition_reassignments_response {
             }
 
             ::core::result::Result::Ok(())
+        }
+    }
+
+    impl ProtocolEq for OngoingTopicReassignment {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.name, &other.name)
+                && ProtocolEq::protocol_eq(&self.partitions, &other.partitions)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
         }
     }
 
@@ -505,6 +538,19 @@ pub mod list_partition_reassignments_response {
         }
     }
 
+    impl ProtocolEq for OngoingPartitionReassignment {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.partition_index, &other.partition_index)
+                && ProtocolEq::protocol_eq(&self.replicas, &other.replicas)
+                && ProtocolEq::protocol_eq(&self.adding_replicas, &other.adding_replicas)
+                && ProtocolEq::protocol_eq(&self.removing_replicas, &other.removing_replicas)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
+        }
+    }
+
     impl KafkaDecode for OngoingPartitionReassignment {
         fn decode(
             decoder: &mut Decoder,
@@ -631,6 +677,19 @@ pub mod list_partition_reassignments_response {
                 topics: ::std::vec::Vec::new(),
                 unknown_tagged_fields: TaggedFields::default(),
             }
+        }
+    }
+
+    impl ProtocolEq for ListPartitionReassignmentsResponse {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.throttle_time_ms, &other.throttle_time_ms)
+                && ProtocolEq::protocol_eq(&self.error_code, &other.error_code)
+                && ProtocolEq::protocol_eq(&self.error_message, &other.error_message)
+                && ProtocolEq::protocol_eq(&self.topics, &other.topics)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
         }
     }
 

@@ -16,7 +16,7 @@ pub mod write_txn_markers_request {
         encoded_len_with,
     };
 
-    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, RequestResponsePair};
+    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, ProtocolEq, RequestResponsePair};
 
     /// `WritableTxnMarker` as declared by the `WriteTxnMarkers` API.
     #[non_exhaustive]
@@ -72,6 +72,21 @@ pub mod write_txn_markers_request {
             }
 
             ::core::result::Result::Ok(())
+        }
+    }
+
+    impl ProtocolEq for WritableTxnMarker {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.producer_id, &other.producer_id)
+                && ProtocolEq::protocol_eq(&self.producer_epoch, &other.producer_epoch)
+                && ProtocolEq::protocol_eq(&self.transaction_result, &other.transaction_result)
+                && ProtocolEq::protocol_eq(&self.topics, &other.topics)
+                && ProtocolEq::protocol_eq(&self.coordinator_epoch, &other.coordinator_epoch)
+                && ProtocolEq::protocol_eq(&self.transaction_version, &other.transaction_version)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
         }
     }
 
@@ -224,6 +239,17 @@ pub mod write_txn_markers_request {
         }
     }
 
+    impl ProtocolEq for WritableTxnMarkerTopic {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.name, &other.name)
+                && ProtocolEq::protocol_eq(&self.partition_indexes, &other.partition_indexes)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
+        }
+    }
+
     impl KafkaDecode for WritableTxnMarkerTopic {
         fn decode(
             decoder: &mut Decoder,
@@ -315,6 +341,16 @@ pub mod write_txn_markers_request {
         pub markers: ::std::vec::Vec<WritableTxnMarker>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl ProtocolEq for WriteTxnMarkersRequest {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.markers, &other.markers)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
+        }
     }
 
     impl KafkaMessage for WriteTxnMarkersRequest {
@@ -442,7 +478,7 @@ pub mod write_txn_markers_response {
         encoded_len_with,
     };
 
-    use crate::{KafkaMessage, KafkaResponse};
+    use crate::{KafkaMessage, KafkaResponse, ProtocolEq};
 
     /// `WritableTxnMarkerResult` as declared by the `WriteTxnMarkers` API.
     #[non_exhaustive]
@@ -490,6 +526,17 @@ pub mod write_txn_markers_response {
             }
 
             ::core::result::Result::Ok(())
+        }
+    }
+
+    impl ProtocolEq for WritableTxnMarkerResult {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.producer_id, &other.producer_id)
+                && ProtocolEq::protocol_eq(&self.topics, &other.topics)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
         }
     }
 
@@ -627,6 +674,17 @@ pub mod write_txn_markers_response {
         }
     }
 
+    impl ProtocolEq for WritableTxnMarkerTopicResult {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.name, &other.name)
+                && ProtocolEq::protocol_eq(&self.partitions, &other.partitions)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
+        }
+    }
+
     impl KafkaDecode for WritableTxnMarkerTopicResult {
         fn decode(
             decoder: &mut Decoder,
@@ -758,6 +816,17 @@ pub mod write_txn_markers_response {
         }
     }
 
+    impl ProtocolEq for WritableTxnMarkerPartitionResult {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.partition_index, &other.partition_index)
+                && ProtocolEq::protocol_eq(&self.error_code, &other.error_code)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
+        }
+    }
+
     impl KafkaDecode for WritableTxnMarkerPartitionResult {
         fn decode(
             decoder: &mut Decoder,
@@ -849,6 +918,16 @@ pub mod write_txn_markers_response {
         pub markers: ::std::vec::Vec<WritableTxnMarkerResult>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl ProtocolEq for WriteTxnMarkersResponse {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.markers, &other.markers)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
+        }
     }
 
     impl KafkaMessage for WriteTxnMarkersResponse {

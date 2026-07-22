@@ -18,6 +18,8 @@ use std::{
 
 use kafka_wire_codegen::CorpusRender;
 
+use crate::probe_fixtures::{ADVERSARIAL_DECODE_TEST, ADVERSARIAL_DEFAULTS_TEST};
+
 /// Where the scratch crate is written, relative to the repository root.
 const PROBE_ROOT: &str = "target/protocol-probe";
 
@@ -84,8 +86,17 @@ pub(crate) fn write_crate(
             .map_err(|error| format!("render adversarial decode fixture: {error}"))?,
     )?;
     write(
+        &root.join("src/adversarial_defaults.rs"),
+        &kafka_wire_codegen::render_adversarial_defaults_fixture()
+            .map_err(|error| format!("render adversarial defaults fixture: {error}"))?,
+    )?;
+    write(
         &root.join("tests/adversarial_decode.rs"),
         ADVERSARIAL_DECODE_TEST,
+    )?;
+    write(
+        &root.join("tests/adversarial_defaults.rs"),
+        ADVERSARIAL_DEFAULTS_TEST,
     )?;
     for (name, source) in &corpus.files {
         write(&root.join("src/generated").join(name), source)?;
@@ -144,36 +155,13 @@ pub(crate) const LIB: &str = "//! Compile probe for the whole pinned protocol co
      \n\
      pub use kafka_wire::{\n\
      \x20   ApiDescriptor, KafkaMessage, KafkaRequest, KafkaResponse, MessageDescriptor,\n\
-     \x20   MessageDirection, RequestResponsePair,\n\
+     \x20   MessageDirection, ProtocolEq, RequestResponsePair,\n\
      };\n\
      \n\
      pub mod adversarial_decode;\n\
+     pub mod adversarial_defaults;\n\
      mod generated;\n\
      mod message;\n";
-
-/// Runtime proof that positional decode locals preserve both sibling values.
-pub(crate) const ADVERSARIAL_DECODE_TEST: &str = "//! Generated decode locals preserve field identity at runtime.\n\
-     \n\
-     use kafka_wire_core::{ApiVersion, Bytes, DecodeLimits, Decoder, KafkaDecode};\n\
-     use protocol_probe::adversarial_decode::AdversarialDecodeRequest;\n\
-     \n\
-     #[test]\n\
-     fn sibling_names_decode_from_their_own_wire_positions() {\n\
-     \x20   let input = Bytes::from_static(&[\n\
-     \x20       0, 0, 0, 11,\n\
-     \x20       0, 0, 0, 22,\n\
-     \x20   ]);\n\
-     \x20   let mut decoder = Decoder::new(input, DecodeLimits::default()).unwrap();\n\
-     \x20   let decoded = AdversarialDecodeRequest::decode(\n\
-     \x20       &mut decoder,\n\
-     \x20       ApiVersion::new(0),\n\
-     \x20   )\n\
-     \x20   .unwrap();\n\
-     \n\
-     \x20   assert_eq!(decoded.version, 11);\n\
-     \x20   assert_eq!(decoded.version_value, 22);\n\
-     \x20   decoder.finish().unwrap();\n\
-     }\n";
 
 /// The two version gates generated code calls on every encode and decode.
 ///

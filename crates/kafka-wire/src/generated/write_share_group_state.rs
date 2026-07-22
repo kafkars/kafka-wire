@@ -16,7 +16,7 @@ pub mod write_share_group_state_request {
         encoded_len_with,
     };
 
-    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, RequestResponsePair};
+    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, ProtocolEq, RequestResponsePair};
 
     /// `WriteStateData` as declared by the `WriteShareGroupState` API.
     #[non_exhaustive]
@@ -64,6 +64,17 @@ pub mod write_share_group_state_request {
             }
 
             ::core::result::Result::Ok(())
+        }
+    }
+
+    impl ProtocolEq for WriteStateData {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.topic_id, &other.topic_id)
+                && ProtocolEq::protocol_eq(&self.partitions, &other.partitions)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
         }
     }
 
@@ -221,6 +232,24 @@ pub mod write_share_group_state_request {
         }
     }
 
+    impl ProtocolEq for PartitionData {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.partition, &other.partition)
+                && ProtocolEq::protocol_eq(&self.state_epoch, &other.state_epoch)
+                && ProtocolEq::protocol_eq(&self.leader_epoch, &other.leader_epoch)
+                && ProtocolEq::protocol_eq(&self.start_offset, &other.start_offset)
+                && ProtocolEq::protocol_eq(
+                    &self.delivery_complete_count,
+                    &other.delivery_complete_count,
+                )
+                && ProtocolEq::protocol_eq(&self.state_batches, &other.state_batches)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
+        }
+    }
+
     impl KafkaDecode for PartitionData {
         fn decode(
             decoder: &mut Decoder,
@@ -372,6 +401,19 @@ pub mod write_share_group_state_request {
         }
     }
 
+    impl ProtocolEq for StateBatch {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.first_offset, &other.first_offset)
+                && ProtocolEq::protocol_eq(&self.last_offset, &other.last_offset)
+                && ProtocolEq::protocol_eq(&self.delivery_state, &other.delivery_state)
+                && ProtocolEq::protocol_eq(&self.delivery_count, &other.delivery_count)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
+        }
+    }
+
     impl KafkaDecode for StateBatch {
         fn decode(
             decoder: &mut Decoder,
@@ -465,6 +507,17 @@ pub mod write_share_group_state_request {
         pub topics: ::std::vec::Vec<WriteStateData>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl ProtocolEq for WriteShareGroupStateRequest {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.group_id, &other.group_id)
+                && ProtocolEq::protocol_eq(&self.topics, &other.topics)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
+        }
     }
 
     impl KafkaMessage for WriteShareGroupStateRequest {
@@ -594,7 +647,7 @@ pub mod write_share_group_state_response {
         encoded_len_with,
     };
 
-    use crate::{KafkaMessage, KafkaResponse};
+    use crate::{KafkaMessage, KafkaResponse, ProtocolEq};
 
     /// `WriteStateResult` as declared by the `WriteShareGroupState` API.
     #[non_exhaustive]
@@ -642,6 +695,17 @@ pub mod write_share_group_state_response {
             }
 
             ::core::result::Result::Ok(())
+        }
+    }
+
+    impl ProtocolEq for WriteStateResult {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.topic_id, &other.topic_id)
+                && ProtocolEq::protocol_eq(&self.partitions, &other.partitions)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
         }
     }
 
@@ -776,6 +840,18 @@ pub mod write_share_group_state_response {
         }
     }
 
+    impl ProtocolEq for PartitionResult {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.partition, &other.partition)
+                && ProtocolEq::protocol_eq(&self.error_code, &other.error_code)
+                && ProtocolEq::protocol_eq(&self.error_message, &other.error_message)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
+        }
+    }
+
     impl KafkaDecode for PartitionResult {
         fn decode(
             decoder: &mut Decoder,
@@ -864,6 +940,16 @@ pub mod write_share_group_state_response {
         pub results: ::std::vec::Vec<WriteStateResult>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl ProtocolEq for WriteShareGroupStateResponse {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.results, &other.results)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
+        }
     }
 
     impl KafkaMessage for WriteShareGroupStateResponse {

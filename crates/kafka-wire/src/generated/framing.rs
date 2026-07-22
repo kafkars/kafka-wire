@@ -16,7 +16,7 @@ pub mod aborted_txn {
         KafkaDecode, KafkaEncode, VersionRange, encode_into_with, encoded_len_with,
     };
 
-    use crate::KafkaMessage;
+    use crate::{KafkaMessage, ProtocolEq};
 
     /// `AbortedTxn` as declared by the `AbortedTxn` API.
     #[non_exhaustive]
@@ -48,6 +48,15 @@ pub mod aborted_txn {
             crate::message::ensure_encode_version::<Self>(version)?;
 
             ::core::result::Result::Ok(())
+        }
+    }
+
+    impl ProtocolEq for AbortedTxn {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.producer_id, &other.producer_id)
+                && ProtocolEq::protocol_eq(&self.first_offset, &other.first_offset)
+                && ProtocolEq::protocol_eq(&self.last_offset, &other.last_offset)
+                && ProtocolEq::protocol_eq(&self.last_stable_offset, &other.last_stable_offset)
         }
     }
 
@@ -129,7 +138,7 @@ pub mod consumer_protocol_assignment {
         KafkaDecode, KafkaEncode, StrBytes, VersionRange, encode_into_with, encoded_len_with,
     };
 
-    use crate::KafkaMessage;
+    use crate::{KafkaMessage, ProtocolEq};
 
     /// `TopicPartition` as declared by the `ConsumerProtocolAssignment` API.
     #[non_exhaustive]
@@ -160,6 +169,13 @@ pub mod consumer_protocol_assignment {
             }
 
             ::core::result::Result::Ok(())
+        }
+    }
+
+    impl ProtocolEq for TopicPartition {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.topic, &other.topic)
+                && ProtocolEq::protocol_eq(&self.partitions, &other.partitions)
         }
     }
 
@@ -268,6 +284,13 @@ pub mod consumer_protocol_assignment {
         }
     }
 
+    impl ProtocolEq for ConsumerProtocolAssignment {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.assigned_partitions, &other.assigned_partitions)
+                && ProtocolEq::protocol_eq(&self.user_data, &other.user_data)
+        }
+    }
+
     impl KafkaDecode for ConsumerProtocolAssignment {
         fn decode(
             decoder: &mut Decoder,
@@ -346,7 +369,7 @@ pub mod consumer_protocol_subscription {
         KafkaDecode, KafkaEncode, StrBytes, VersionRange, encode_into_with, encoded_len_with,
     };
 
-    use crate::KafkaMessage;
+    use crate::{KafkaMessage, ProtocolEq};
 
     /// `TopicPartition` as declared by the `ConsumerProtocolSubscription` API.
     #[non_exhaustive]
@@ -377,6 +400,13 @@ pub mod consumer_protocol_subscription {
             }
 
             ::core::result::Result::Ok(())
+        }
+    }
+
+    impl ProtocolEq for TopicPartition {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.topic, &other.topic)
+                && ProtocolEq::protocol_eq(&self.partitions, &other.partitions)
         }
     }
 
@@ -505,6 +535,16 @@ pub mod consumer_protocol_subscription {
         }
     }
 
+    impl ProtocolEq for ConsumerProtocolSubscription {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.topics, &other.topics)
+                && ProtocolEq::protocol_eq(&self.user_data, &other.user_data)
+                && ProtocolEq::protocol_eq(&self.owned_partitions, &other.owned_partitions)
+                && ProtocolEq::protocol_eq(&self.generation_id, &other.generation_id)
+                && ProtocolEq::protocol_eq(&self.rack_id, &other.rack_id)
+        }
+    }
+
     impl KafkaDecode for ConsumerProtocolSubscription {
         fn decode(
             decoder: &mut Decoder,
@@ -614,7 +654,7 @@ pub mod control_record_type_schema {
         KafkaDecode, KafkaEncode, VersionRange, encode_into_with, encoded_len_with,
     };
 
-    use crate::KafkaMessage;
+    use crate::{KafkaMessage, ProtocolEq};
 
     /// `ControlRecordTypeSchema` as declared by the `ControlRecordTypeSchema` API.
     #[non_exhaustive]
@@ -640,6 +680,12 @@ pub mod control_record_type_schema {
             crate::message::ensure_encode_version::<Self>(version)?;
 
             ::core::result::Result::Ok(())
+        }
+    }
+
+    impl ProtocolEq for ControlRecordTypeSchema {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.type_, &other.type_)
         }
     }
 
@@ -713,7 +759,7 @@ pub mod default_principal_data {
         encoded_len_with,
     };
 
-    use crate::KafkaMessage;
+    use crate::{KafkaMessage, ProtocolEq};
 
     /// `DefaultPrincipalData` as declared by the `DefaultPrincipalData` API.
     #[non_exhaustive]
@@ -751,6 +797,18 @@ pub mod default_principal_data {
             }
 
             ::core::result::Result::Ok(())
+        }
+    }
+
+    impl ProtocolEq for DefaultPrincipalData {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.type_, &other.type_)
+                && ProtocolEq::protocol_eq(&self.name, &other.name)
+                && ProtocolEq::protocol_eq(&self.token_authenticated, &other.token_authenticated)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
         }
     }
 
@@ -839,7 +897,7 @@ pub mod end_txn_marker {
         KafkaDecode, KafkaEncode, VersionRange, encode_into_with, encoded_len_with,
     };
 
-    use crate::KafkaMessage;
+    use crate::{KafkaMessage, ProtocolEq};
 
     /// `EndTxnMarker` as declared by the `EndTxnMarker` API.
     #[non_exhaustive]
@@ -865,6 +923,12 @@ pub mod end_txn_marker {
             crate::message::ensure_encode_version::<Self>(version)?;
 
             ::core::result::Result::Ok(())
+        }
+    }
+
+    impl ProtocolEq for EndTxnMarker {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.coordinator_epoch, &other.coordinator_epoch)
         }
     }
 
@@ -937,7 +1001,7 @@ pub mod k_raft_version_record {
         KafkaDecode, KafkaEncode, TaggedFields, VersionRange, encode_into_with, encoded_len_with,
     };
 
-    use crate::KafkaMessage;
+    use crate::{KafkaMessage, ProtocolEq};
 
     /// `KRaftVersionRecord` as declared by the `KRaftVersionRecord` API.
     #[non_exhaustive]
@@ -973,6 +1037,17 @@ pub mod k_raft_version_record {
             }
 
             ::core::result::Result::Ok(())
+        }
+    }
+
+    impl ProtocolEq for KRaftVersionRecord {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.version, &other.version)
+                && ProtocolEq::protocol_eq(&self.k_raft_version, &other.k_raft_version)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
         }
     }
 
@@ -1059,7 +1134,7 @@ pub mod leader_change_message {
         encoded_len_with,
     };
 
-    use crate::KafkaMessage;
+    use crate::{KafkaMessage, ProtocolEq};
 
     /// `Voter` as declared by the `LeaderChangeMessage` API.
     #[non_exhaustive]
@@ -1111,6 +1186,17 @@ pub mod leader_change_message {
             }
 
             ::core::result::Result::Ok(())
+        }
+    }
+
+    impl ProtocolEq for Voter {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.voter_id, &other.voter_id)
+                && ProtocolEq::protocol_eq(&self.voter_directory_id, &other.voter_directory_id)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
         }
     }
 
@@ -1244,6 +1330,19 @@ pub mod leader_change_message {
         }
     }
 
+    impl ProtocolEq for LeaderChangeMessage {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.version, &other.version)
+                && ProtocolEq::protocol_eq(&self.leader_id, &other.leader_id)
+                && ProtocolEq::protocol_eq(&self.voters, &other.voters)
+                && ProtocolEq::protocol_eq(&self.granting_voters, &other.granting_voters)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
+        }
+    }
+
     impl KafkaDecode for LeaderChangeMessage {
         fn decode(
             decoder: &mut Decoder,
@@ -1345,7 +1444,7 @@ pub mod request_header {
         encoded_len_with,
     };
 
-    use crate::KafkaMessage;
+    use crate::{KafkaMessage, ProtocolEq};
 
     /// `RequestHeader` as declared by the `RequestHeader` API.
     #[non_exhaustive]
@@ -1397,6 +1496,19 @@ pub mod request_header {
                 client_id: ::core::option::Option::Some(StrBytes::default()),
                 unknown_tagged_fields: TaggedFields::default(),
             }
+        }
+    }
+
+    impl ProtocolEq for RequestHeader {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.request_api_key, &other.request_api_key)
+                && ProtocolEq::protocol_eq(&self.request_api_version, &other.request_api_version)
+                && ProtocolEq::protocol_eq(&self.correlation_id, &other.correlation_id)
+                && ProtocolEq::protocol_eq(&self.client_id, &other.client_id)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
         }
     }
 
@@ -1488,7 +1600,7 @@ pub mod response_header {
         KafkaDecode, KafkaEncode, TaggedFields, VersionRange, encode_into_with, encoded_len_with,
     };
 
-    use crate::KafkaMessage;
+    use crate::{KafkaMessage, ProtocolEq};
 
     /// `ResponseHeader` as declared by the `ResponseHeader` API.
     #[non_exhaustive]
@@ -1522,6 +1634,16 @@ pub mod response_header {
             }
 
             ::core::result::Result::Ok(())
+        }
+    }
+
+    impl ProtocolEq for ResponseHeader {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.correlation_id, &other.correlation_id)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
         }
     }
 
@@ -1604,7 +1726,7 @@ pub mod snapshot_footer_record {
         KafkaDecode, KafkaEncode, TaggedFields, VersionRange, encode_into_with, encoded_len_with,
     };
 
-    use crate::KafkaMessage;
+    use crate::{KafkaMessage, ProtocolEq};
 
     /// `SnapshotFooterRecord` as declared by the `SnapshotFooterRecord` API.
     #[non_exhaustive]
@@ -1638,6 +1760,16 @@ pub mod snapshot_footer_record {
             }
 
             ::core::result::Result::Ok(())
+        }
+    }
+
+    impl ProtocolEq for SnapshotFooterRecord {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.version, &other.version)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
         }
     }
 
@@ -1720,7 +1852,7 @@ pub mod snapshot_header_record {
         KafkaDecode, KafkaEncode, TaggedFields, VersionRange, encode_into_with, encoded_len_with,
     };
 
-    use crate::KafkaMessage;
+    use crate::{KafkaMessage, ProtocolEq};
 
     /// `SnapshotHeaderRecord` as declared by the `SnapshotHeaderRecord` API.
     #[non_exhaustive]
@@ -1756,6 +1888,20 @@ pub mod snapshot_header_record {
             }
 
             ::core::result::Result::Ok(())
+        }
+    }
+
+    impl ProtocolEq for SnapshotHeaderRecord {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.version, &other.version)
+                && ProtocolEq::protocol_eq(
+                    &self.last_contained_log_timestamp,
+                    &other.last_contained_log_timestamp,
+                )
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
         }
     }
 
@@ -1842,7 +1988,7 @@ pub mod voters_record {
         encoded_len_with,
     };
 
-    use crate::KafkaMessage;
+    use crate::{KafkaMessage, ProtocolEq};
 
     /// `Voter` as declared by the `VotersRecord` API.
     #[non_exhaustive]
@@ -1895,6 +2041,22 @@ pub mod voters_record {
             }
 
             ::core::result::Result::Ok(())
+        }
+    }
+
+    impl ProtocolEq for Voter {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.voter_id, &other.voter_id)
+                && ProtocolEq::protocol_eq(&self.voter_directory_id, &other.voter_directory_id)
+                && ProtocolEq::protocol_eq(&self.endpoints, &other.endpoints)
+                && ProtocolEq::protocol_eq(
+                    &self.k_raft_version_feature,
+                    &other.k_raft_version_feature,
+                )
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
         }
     }
 
@@ -2036,6 +2198,18 @@ pub mod voters_record {
         }
     }
 
+    impl ProtocolEq for Endpoint {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.name, &other.name)
+                && ProtocolEq::protocol_eq(&self.host, &other.host)
+                && ProtocolEq::protocol_eq(&self.port, &other.port)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
+        }
+    }
+
     impl KafkaDecode for Endpoint {
         fn decode(
             decoder: &mut Decoder,
@@ -2162,6 +2336,20 @@ pub mod voters_record {
         }
     }
 
+    impl ProtocolEq for KRaftVersionFeature {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.min_supported_version, &other.min_supported_version)
+                && ProtocolEq::protocol_eq(
+                    &self.max_supported_version,
+                    &other.max_supported_version,
+                )
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
+        }
+    }
+
     impl KafkaDecode for KRaftVersionFeature {
         fn decode(
             decoder: &mut Decoder,
@@ -2276,6 +2464,17 @@ pub mod voters_record {
             }
 
             ::core::result::Result::Ok(())
+        }
+    }
+
+    impl ProtocolEq for VotersRecord {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.version, &other.version)
+                && ProtocolEq::protocol_eq(&self.voters, &other.voters)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
         }
     }
 

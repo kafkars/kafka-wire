@@ -16,7 +16,7 @@ pub mod list_offsets_request {
         encoded_len_with,
     };
 
-    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, RequestResponsePair};
+    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, ProtocolEq, RequestResponsePair};
 
     /// `ListOffsetsTopic` as declared by the `ListOffsets` API.
     #[non_exhaustive]
@@ -64,6 +64,17 @@ pub mod list_offsets_request {
             }
 
             ::core::result::Result::Ok(())
+        }
+    }
+
+    impl ProtocolEq for ListOffsetsTopic {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.name, &other.name)
+                && ProtocolEq::protocol_eq(&self.partitions, &other.partitions)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
         }
     }
 
@@ -227,6 +238,18 @@ pub mod list_offsets_request {
         }
     }
 
+    impl ProtocolEq for ListOffsetsPartition {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.partition_index, &other.partition_index)
+                && ProtocolEq::protocol_eq(&self.current_leader_epoch, &other.current_leader_epoch)
+                && ProtocolEq::protocol_eq(&self.timestamp, &other.timestamp)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
+        }
+    }
+
     impl KafkaDecode for ListOffsetsPartition {
         fn decode(
             decoder: &mut Decoder,
@@ -327,6 +350,19 @@ pub mod list_offsets_request {
         pub timeout_ms: i32,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl ProtocolEq for ListOffsetsRequest {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.replica_id, &other.replica_id)
+                && ProtocolEq::protocol_eq(&self.isolation_level, &other.isolation_level)
+                && ProtocolEq::protocol_eq(&self.topics, &other.topics)
+                && ProtocolEq::protocol_eq(&self.timeout_ms, &other.timeout_ms)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
+        }
     }
 
     impl KafkaMessage for ListOffsetsRequest {
@@ -488,7 +524,7 @@ pub mod list_offsets_response {
         encoded_len_with,
     };
 
-    use crate::{KafkaMessage, KafkaResponse};
+    use crate::{KafkaMessage, KafkaResponse, ProtocolEq};
 
     /// `ListOffsetsTopicResponse` as declared by the `ListOffsets` API.
     #[non_exhaustive]
@@ -536,6 +572,17 @@ pub mod list_offsets_response {
             }
 
             ::core::result::Result::Ok(())
+        }
+    }
+
+    impl ProtocolEq for ListOffsetsTopicResponse {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.name, &other.name)
+                && ProtocolEq::protocol_eq(&self.partitions, &other.partitions)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
         }
     }
 
@@ -712,6 +759,20 @@ pub mod list_offsets_response {
         }
     }
 
+    impl ProtocolEq for ListOffsetsPartitionResponse {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.partition_index, &other.partition_index)
+                && ProtocolEq::protocol_eq(&self.error_code, &other.error_code)
+                && ProtocolEq::protocol_eq(&self.timestamp, &other.timestamp)
+                && ProtocolEq::protocol_eq(&self.offset, &other.offset)
+                && ProtocolEq::protocol_eq(&self.leader_epoch, &other.leader_epoch)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
+        }
+    }
+
     impl KafkaDecode for ListOffsetsPartitionResponse {
         fn decode(
             decoder: &mut Decoder,
@@ -814,6 +875,17 @@ pub mod list_offsets_response {
         pub topics: ::std::vec::Vec<ListOffsetsTopicResponse>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl ProtocolEq for ListOffsetsResponse {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.throttle_time_ms, &other.throttle_time_ms)
+                && ProtocolEq::protocol_eq(&self.topics, &other.topics)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
+        }
     }
 
     impl KafkaMessage for ListOffsetsResponse {

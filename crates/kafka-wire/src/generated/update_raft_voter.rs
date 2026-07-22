@@ -16,7 +16,7 @@ pub mod update_raft_voter_request {
         encoded_len_with,
     };
 
-    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, RequestResponsePair};
+    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, ProtocolEq, RequestResponsePair};
 
     /// `Listener` as declared by the `UpdateRaftVoter` API.
     #[non_exhaustive]
@@ -63,6 +63,18 @@ pub mod update_raft_voter_request {
             }
 
             ::core::result::Result::Ok(())
+        }
+    }
+
+    impl ProtocolEq for Listener {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.name, &other.name)
+                && ProtocolEq::protocol_eq(&self.host, &other.host)
+                && ProtocolEq::protocol_eq(&self.port, &other.port)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
         }
     }
 
@@ -192,6 +204,20 @@ pub mod update_raft_voter_request {
         }
     }
 
+    impl ProtocolEq for KRaftVersionFeature {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.min_supported_version, &other.min_supported_version)
+                && ProtocolEq::protocol_eq(
+                    &self.max_supported_version,
+                    &other.max_supported_version,
+                )
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
+        }
+    }
+
     impl KafkaDecode for KRaftVersionFeature {
         fn decode(
             decoder: &mut Decoder,
@@ -300,6 +326,24 @@ pub mod update_raft_voter_request {
                 k_raft_version_feature: KRaftVersionFeature::default(),
                 unknown_tagged_fields: TaggedFields::default(),
             }
+        }
+    }
+
+    impl ProtocolEq for UpdateRaftVoterRequest {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.cluster_id, &other.cluster_id)
+                && ProtocolEq::protocol_eq(&self.current_leader_epoch, &other.current_leader_epoch)
+                && ProtocolEq::protocol_eq(&self.voter_id, &other.voter_id)
+                && ProtocolEq::protocol_eq(&self.voter_directory_id, &other.voter_directory_id)
+                && ProtocolEq::protocol_eq(&self.listeners, &other.listeners)
+                && ProtocolEq::protocol_eq(
+                    &self.k_raft_version_feature,
+                    &other.k_raft_version_feature,
+                )
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
         }
     }
 
@@ -443,7 +487,7 @@ pub mod update_raft_voter_response {
         encode_into_with, encoded_len_with,
     };
 
-    use crate::{KafkaMessage, KafkaResponse};
+    use crate::{KafkaMessage, KafkaResponse, ProtocolEq};
 
     /// `CurrentLeader` as declared by the `UpdateRaftVoter` API.
     #[non_exhaustive]
@@ -504,6 +548,19 @@ pub mod update_raft_voter_response {
                 port: 0,
                 unknown_tagged_fields: TaggedFields::default(),
             }
+        }
+    }
+
+    impl ProtocolEq for CurrentLeader {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.leader_id, &other.leader_id)
+                && ProtocolEq::protocol_eq(&self.leader_epoch, &other.leader_epoch)
+                && ProtocolEq::protocol_eq(&self.host, &other.host)
+                && ProtocolEq::protocol_eq(&self.port, &other.port)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
         }
     }
 
@@ -604,6 +661,18 @@ pub mod update_raft_voter_response {
         pub unknown_tagged_fields: TaggedFields,
     }
 
+    impl ProtocolEq for UpdateRaftVoterResponse {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.throttle_time_ms, &other.throttle_time_ms)
+                && ProtocolEq::protocol_eq(&self.error_code, &other.error_code)
+                && ProtocolEq::protocol_eq(&self.current_leader, &other.current_leader)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
+        }
+    }
+
     impl KafkaMessage for UpdateRaftVoterResponse {
         const NAME: &'static str = "UpdateRaftVoterResponse";
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 0);
@@ -666,6 +735,15 @@ pub mod update_raft_voter_response {
     }
 
     impl UpdateRaftVoterResponse {
+        fn __kw_encode_known_tag_0<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
+            self.current_leader.encode_validated(encoder, version)?;
+            ::core::result::Result::Ok(())
+        }
+
         fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
@@ -676,13 +754,19 @@ pub mod update_raft_voter_response {
 
             if Self::is_flexible(version) {
                 let mut known = KnownTags::new();
-                if self.current_leader != CurrentLeader::default() {
-                    known.write(0, |encoder| {
-                        self.current_leader.encode_validated(encoder, version)?;
-                        ::core::result::Result::Ok(())
+                if !ProtocolEq::is_protocol_default(&self.current_leader) {
+                    known.measure(0, |encoder| {
+                        Self::__kw_encode_known_tag_0(self, encoder, version)
                     })?;
                 }
-                encoder.write_merged_tagged_fields(known, &self.unknown_tagged_fields)?;
+                encoder.write_merged_tagged_fields(
+                    known,
+                    &self.unknown_tagged_fields,
+                    |tag, encoder| match tag {
+                        0 => Self::__kw_encode_known_tag_0(self, encoder, version),
+                        _ => unreachable!("KnownTags yielded an unmeasured tag"),
+                    },
+                )?;
             }
 
             ::core::result::Result::Ok(())

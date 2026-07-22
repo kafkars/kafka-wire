@@ -16,7 +16,7 @@ pub mod offset_fetch_request {
         encoded_len_with,
     };
 
-    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, RequestResponsePair};
+    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, ProtocolEq, RequestResponsePair};
 
     /// `OffsetFetchRequestTopic` as declared by the `OffsetFetch` API.
     #[non_exhaustive]
@@ -61,6 +61,17 @@ pub mod offset_fetch_request {
             }
 
             ::core::result::Result::Ok(())
+        }
+    }
+
+    impl ProtocolEq for OffsetFetchRequestTopic {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.name, &other.name)
+                && ProtocolEq::protocol_eq(&self.partition_indexes, &other.partition_indexes)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
         }
     }
 
@@ -230,6 +241,19 @@ pub mod offset_fetch_request {
         }
     }
 
+    impl ProtocolEq for OffsetFetchRequestGroup {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.group_id, &other.group_id)
+                && ProtocolEq::protocol_eq(&self.member_id, &other.member_id)
+                && ProtocolEq::protocol_eq(&self.member_epoch, &other.member_epoch)
+                && ProtocolEq::protocol_eq(&self.topics, &other.topics)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
+        }
+    }
+
     impl KafkaDecode for OffsetFetchRequestGroup {
         fn decode(
             decoder: &mut Decoder,
@@ -388,6 +412,18 @@ pub mod offset_fetch_request {
         }
     }
 
+    impl ProtocolEq for OffsetFetchRequestTopics {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.name, &other.name)
+                && ProtocolEq::protocol_eq(&self.topic_id, &other.topic_id)
+                && ProtocolEq::protocol_eq(&self.partition_indexes, &other.partition_indexes)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
+        }
+    }
+
     impl KafkaDecode for OffsetFetchRequestTopics {
         fn decode(
             decoder: &mut Decoder,
@@ -511,6 +547,19 @@ pub mod offset_fetch_request {
                 require_stable: false,
                 unknown_tagged_fields: TaggedFields::default(),
             }
+        }
+    }
+
+    impl ProtocolEq for OffsetFetchRequest {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.group_id, &other.group_id)
+                && ProtocolEq::protocol_eq(&self.topics, &other.topics)
+                && ProtocolEq::protocol_eq(&self.groups, &other.groups)
+                && ProtocolEq::protocol_eq(&self.require_stable, &other.require_stable)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
         }
     }
 
@@ -751,7 +800,7 @@ pub mod offset_fetch_response {
         encoded_len_with,
     };
 
-    use crate::{KafkaMessage, KafkaResponse};
+    use crate::{KafkaMessage, KafkaResponse, ProtocolEq};
 
     /// `OffsetFetchResponseTopic` as declared by the `OffsetFetch` API.
     #[non_exhaustive]
@@ -799,6 +848,17 @@ pub mod offset_fetch_response {
             }
 
             ::core::result::Result::Ok(())
+        }
+    }
+
+    impl ProtocolEq for OffsetFetchResponseTopic {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.name, &other.name)
+                && ProtocolEq::protocol_eq(&self.partitions, &other.partitions)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
         }
     }
 
@@ -968,6 +1028,23 @@ pub mod offset_fetch_response {
         }
     }
 
+    impl ProtocolEq for OffsetFetchResponsePartition {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.partition_index, &other.partition_index)
+                && ProtocolEq::protocol_eq(&self.committed_offset, &other.committed_offset)
+                && ProtocolEq::protocol_eq(
+                    &self.committed_leader_epoch,
+                    &other.committed_leader_epoch,
+                )
+                && ProtocolEq::protocol_eq(&self.metadata, &other.metadata)
+                && ProtocolEq::protocol_eq(&self.error_code, &other.error_code)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
+        }
+    }
+
     impl KafkaDecode for OffsetFetchResponsePartition {
         fn decode(
             decoder: &mut Decoder,
@@ -1119,6 +1196,18 @@ pub mod offset_fetch_response {
         }
     }
 
+    impl ProtocolEq for OffsetFetchResponseGroup {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.group_id, &other.group_id)
+                && ProtocolEq::protocol_eq(&self.topics, &other.topics)
+                && ProtocolEq::protocol_eq(&self.error_code, &other.error_code)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
+        }
+    }
+
     impl KafkaDecode for OffsetFetchResponseGroup {
         fn decode(
             decoder: &mut Decoder,
@@ -1255,6 +1344,18 @@ pub mod offset_fetch_response {
             }
 
             ::core::result::Result::Ok(())
+        }
+    }
+
+    impl ProtocolEq for OffsetFetchResponseTopics {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.name, &other.name)
+                && ProtocolEq::protocol_eq(&self.topic_id, &other.topic_id)
+                && ProtocolEq::protocol_eq(&self.partitions, &other.partitions)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
         }
     }
 
@@ -1423,6 +1524,23 @@ pub mod offset_fetch_response {
         }
     }
 
+    impl ProtocolEq for OffsetFetchResponsePartitions {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.partition_index, &other.partition_index)
+                && ProtocolEq::protocol_eq(&self.committed_offset, &other.committed_offset)
+                && ProtocolEq::protocol_eq(
+                    &self.committed_leader_epoch,
+                    &other.committed_leader_epoch,
+                )
+                && ProtocolEq::protocol_eq(&self.metadata, &other.metadata)
+                && ProtocolEq::protocol_eq(&self.error_code, &other.error_code)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
+        }
+    }
+
     impl KafkaDecode for OffsetFetchResponsePartitions {
         fn decode(
             decoder: &mut Decoder,
@@ -1523,6 +1641,19 @@ pub mod offset_fetch_response {
         pub groups: ::std::vec::Vec<OffsetFetchResponseGroup>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl ProtocolEq for OffsetFetchResponse {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.throttle_time_ms, &other.throttle_time_ms)
+                && ProtocolEq::protocol_eq(&self.topics, &other.topics)
+                && ProtocolEq::protocol_eq(&self.error_code, &other.error_code)
+                && ProtocolEq::protocol_eq(&self.groups, &other.groups)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
+        }
     }
 
     impl KafkaMessage for OffsetFetchResponse {

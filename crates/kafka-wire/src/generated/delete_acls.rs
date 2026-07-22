@@ -16,7 +16,7 @@ pub mod delete_acls_request {
         encoded_len_with,
     };
 
-    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, RequestResponsePair};
+    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, ProtocolEq, RequestResponsePair};
 
     /// `DeleteAclsFilter` as declared by the `DeleteAcls` API.
     #[non_exhaustive]
@@ -86,6 +86,22 @@ pub mod delete_acls_request {
                 permission_type: 0,
                 unknown_tagged_fields: TaggedFields::default(),
             }
+        }
+    }
+
+    impl ProtocolEq for DeleteAclsFilter {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.resource_type_filter, &other.resource_type_filter)
+                && ProtocolEq::protocol_eq(&self.resource_name_filter, &other.resource_name_filter)
+                && ProtocolEq::protocol_eq(&self.pattern_type_filter, &other.pattern_type_filter)
+                && ProtocolEq::protocol_eq(&self.principal_filter, &other.principal_filter)
+                && ProtocolEq::protocol_eq(&self.host_filter, &other.host_filter)
+                && ProtocolEq::protocol_eq(&self.operation, &other.operation)
+                && ProtocolEq::protocol_eq(&self.permission_type, &other.permission_type)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
         }
     }
 
@@ -213,6 +229,16 @@ pub mod delete_acls_request {
         pub filters: ::std::vec::Vec<DeleteAclsFilter>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl ProtocolEq for DeleteAclsRequest {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.filters, &other.filters)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
+        }
     }
 
     impl KafkaMessage for DeleteAclsRequest {
@@ -346,7 +372,7 @@ pub mod delete_acls_response {
         encoded_len_with,
     };
 
-    use crate::{KafkaMessage, KafkaResponse};
+    use crate::{KafkaMessage, KafkaResponse, ProtocolEq};
 
     /// `DeleteAclsFilterResult` as declared by the `DeleteAcls` API.
     #[non_exhaustive]
@@ -407,6 +433,18 @@ pub mod delete_acls_response {
                 matching_acls: ::std::vec::Vec::new(),
                 unknown_tagged_fields: TaggedFields::default(),
             }
+        }
+    }
+
+    impl ProtocolEq for DeleteAclsFilterResult {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.error_code, &other.error_code)
+                && ProtocolEq::protocol_eq(&self.error_message, &other.error_message)
+                && ProtocolEq::protocol_eq(&self.matching_acls, &other.matching_acls)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
         }
     }
 
@@ -591,6 +629,24 @@ pub mod delete_acls_response {
         }
     }
 
+    impl ProtocolEq for DeleteAclsMatchingAcl {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.error_code, &other.error_code)
+                && ProtocolEq::protocol_eq(&self.error_message, &other.error_message)
+                && ProtocolEq::protocol_eq(&self.resource_type, &other.resource_type)
+                && ProtocolEq::protocol_eq(&self.resource_name, &other.resource_name)
+                && ProtocolEq::protocol_eq(&self.pattern_type, &other.pattern_type)
+                && ProtocolEq::protocol_eq(&self.principal, &other.principal)
+                && ProtocolEq::protocol_eq(&self.host, &other.host)
+                && ProtocolEq::protocol_eq(&self.operation, &other.operation)
+                && ProtocolEq::protocol_eq(&self.permission_type, &other.permission_type)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
+        }
+    }
+
     impl KafkaDecode for DeleteAclsMatchingAcl {
         fn decode(
             decoder: &mut Decoder,
@@ -731,6 +787,17 @@ pub mod delete_acls_response {
         pub filter_results: ::std::vec::Vec<DeleteAclsFilterResult>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl ProtocolEq for DeleteAclsResponse {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.throttle_time_ms, &other.throttle_time_ms)
+                && ProtocolEq::protocol_eq(&self.filter_results, &other.filter_results)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
+        }
     }
 
     impl KafkaMessage for DeleteAclsResponse {

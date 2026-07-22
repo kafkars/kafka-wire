@@ -15,7 +15,7 @@ pub mod sasl_handshake_request {
         KafkaDecode, KafkaEncode, StrBytes, VersionRange, encode_into_with, encoded_len_with,
     };
 
-    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, RequestResponsePair};
+    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, ProtocolEq, RequestResponsePair};
 
     /// Request body for the `SaslHandshake` API.
     #[non_exhaustive]
@@ -23,6 +23,12 @@ pub mod sasl_handshake_request {
     pub struct SaslHandshakeRequest {
         /// The SASL mechanism chosen by the client.
         pub mechanism: StrBytes,
+    }
+
+    impl ProtocolEq for SaslHandshakeRequest {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.mechanism, &other.mechanism)
+        }
     }
 
     impl KafkaMessage for SaslHandshakeRequest {
@@ -122,7 +128,7 @@ pub mod sasl_handshake_response {
         KafkaDecode, KafkaEncode, StrBytes, VersionRange, encode_into_with, encoded_len_with,
     };
 
-    use crate::{KafkaMessage, KafkaResponse};
+    use crate::{KafkaMessage, KafkaResponse, ProtocolEq};
 
     /// Response body for the `SaslHandshake` API.
     #[non_exhaustive]
@@ -132,6 +138,13 @@ pub mod sasl_handshake_response {
         pub error_code: i16,
         /// The mechanisms enabled in the server.
         pub mechanisms: ::std::vec::Vec<StrBytes>,
+    }
+
+    impl ProtocolEq for SaslHandshakeResponse {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.error_code, &other.error_code)
+                && ProtocolEq::protocol_eq(&self.mechanisms, &other.mechanisms)
+        }
     }
 
     impl KafkaMessage for SaslHandshakeResponse {

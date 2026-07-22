@@ -8,7 +8,10 @@ use crate::{
 };
 
 use super::imports::{ExternalSymbol as S, spell};
-use super::tagged::{is_tagged, render_tagged_decode, render_tagged_encode};
+use super::{
+    tagged::{is_tagged, render_tagged_decode, render_tagged_encode},
+    tagged_payload::render_known_tag_helpers,
+};
 
 pub(super) fn render_decode(rust: &mut RustText, message: &Message) -> Result<(), GenerationError> {
     rust.open(format!(
@@ -127,21 +130,23 @@ fn render_validated_encode_body(
     message: &Message,
     flexible: bool,
 ) -> Result<(), GenerationError> {
+    let uses_version = flexible
+        || fields
+            .iter()
+            .filter(|field| !is_tagged(field))
+            .any(|field| field::inline_write_uses_version(field, message));
     let mut body = RustText::default();
     render_writes(&mut body, fields, message)?;
     if flexible {
-        render_tagged_encode(&mut body, fields, message)?;
+        render_tagged_encode(&mut body, fields, message);
     }
     body.blank();
     body.line(format!("{}(())", spell(message, S::Ok)));
     let body = body.finish();
-    let version = if validated_body_uses_version(&body) {
-        "version"
-    } else {
-        "_version"
-    };
+    let version = if uses_version { "version" } else { "_version" };
 
     rust.open(format!("impl {rust_type}"));
+    render_known_tag_helpers(rust, fields, message)?;
     rust.line(format!(
         "fn encode_validated<T: {}>(",
         spell(message, S::EncodeTarget)
@@ -168,12 +173,6 @@ fn render_validated_encode_body(
     rust.close("");
     rust.blank();
     Ok(())
-}
-
-fn validated_body_uses_version(body: &str) -> bool {
-    body.contains("version.value()")
-        || body.contains("Self::is_flexible(version)")
-        || body.contains("encoder, version)")
 }
 
 /// The compiler-owned local one decoded field binds to.

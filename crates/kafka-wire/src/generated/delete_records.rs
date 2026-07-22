@@ -16,7 +16,7 @@ pub mod delete_records_request {
         encoded_len_with,
     };
 
-    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, RequestResponsePair};
+    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, ProtocolEq, RequestResponsePair};
 
     /// `DeleteRecordsTopic` as declared by the `DeleteRecords` API.
     #[non_exhaustive]
@@ -64,6 +64,17 @@ pub mod delete_records_request {
             }
 
             ::core::result::Result::Ok(())
+        }
+    }
+
+    impl ProtocolEq for DeleteRecordsTopic {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.name, &other.name)
+                && ProtocolEq::protocol_eq(&self.partitions, &other.partitions)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
         }
     }
 
@@ -214,6 +225,17 @@ pub mod delete_records_request {
         }
     }
 
+    impl ProtocolEq for DeleteRecordsPartition {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.partition_index, &other.partition_index)
+                && ProtocolEq::protocol_eq(&self.offset, &other.offset)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
+        }
+    }
+
     impl KafkaDecode for DeleteRecordsPartition {
         fn decode(
             decoder: &mut Decoder,
@@ -301,6 +323,17 @@ pub mod delete_records_request {
         pub timeout_ms: i32,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl ProtocolEq for DeleteRecordsRequest {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.topics, &other.topics)
+                && ProtocolEq::protocol_eq(&self.timeout_ms, &other.timeout_ms)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
+        }
     }
 
     impl KafkaMessage for DeleteRecordsRequest {
@@ -439,7 +472,7 @@ pub mod delete_records_response {
         encoded_len_with,
     };
 
-    use crate::{KafkaMessage, KafkaResponse};
+    use crate::{KafkaMessage, KafkaResponse, ProtocolEq};
 
     /// `DeleteRecordsTopicResult` as declared by the `DeleteRecords` API.
     #[non_exhaustive]
@@ -487,6 +520,17 @@ pub mod delete_records_response {
             }
 
             ::core::result::Result::Ok(())
+        }
+    }
+
+    impl ProtocolEq for DeleteRecordsTopicResult {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.name, &other.name)
+                && ProtocolEq::protocol_eq(&self.partitions, &other.partitions)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
         }
     }
 
@@ -639,6 +683,18 @@ pub mod delete_records_response {
         }
     }
 
+    impl ProtocolEq for DeleteRecordsPartitionResult {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.partition_index, &other.partition_index)
+                && ProtocolEq::protocol_eq(&self.low_watermark, &other.low_watermark)
+                && ProtocolEq::protocol_eq(&self.error_code, &other.error_code)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
+        }
+    }
+
     impl KafkaDecode for DeleteRecordsPartitionResult {
         fn decode(
             decoder: &mut Decoder,
@@ -729,6 +785,17 @@ pub mod delete_records_response {
         pub topics: ::std::vec::Vec<DeleteRecordsTopicResult>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl ProtocolEq for DeleteRecordsResponse {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.throttle_time_ms, &other.throttle_time_ms)
+                && ProtocolEq::protocol_eq(&self.topics, &other.topics)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
+        }
     }
 
     impl KafkaMessage for DeleteRecordsResponse {

@@ -16,7 +16,7 @@ pub mod describe_groups_request {
         encoded_len_with,
     };
 
-    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, RequestResponsePair};
+    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, ProtocolEq, RequestResponsePair};
 
     /// Request body for the `DescribeGroups` API.
     #[non_exhaustive]
@@ -28,6 +28,20 @@ pub mod describe_groups_request {
         pub include_authorized_operations: bool,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl ProtocolEq for DescribeGroupsRequest {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.groups, &other.groups)
+                && ProtocolEq::protocol_eq(
+                    &self.include_authorized_operations,
+                    &other.include_authorized_operations,
+                )
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
+        }
     }
 
     impl KafkaMessage for DescribeGroupsRequest {
@@ -184,7 +198,7 @@ pub mod describe_groups_response {
         encoded_len_with,
     };
 
-    use crate::{KafkaMessage, KafkaResponse};
+    use crate::{KafkaMessage, KafkaResponse, ProtocolEq};
 
     /// `DescribedGroup` as declared by the `DescribeGroups` API.
     #[non_exhaustive]
@@ -274,6 +288,26 @@ pub mod describe_groups_response {
                 authorized_operations: -2_147_483_648,
                 unknown_tagged_fields: TaggedFields::default(),
             }
+        }
+    }
+
+    impl ProtocolEq for DescribedGroup {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.error_code, &other.error_code)
+                && ProtocolEq::protocol_eq(&self.error_message, &other.error_message)
+                && ProtocolEq::protocol_eq(&self.group_id, &other.group_id)
+                && ProtocolEq::protocol_eq(&self.group_state, &other.group_state)
+                && ProtocolEq::protocol_eq(&self.protocol_type, &other.protocol_type)
+                && ProtocolEq::protocol_eq(&self.protocol_data, &other.protocol_data)
+                && ProtocolEq::protocol_eq(&self.members, &other.members)
+                && ProtocolEq::protocol_eq(
+                    &self.authorized_operations,
+                    &other.authorized_operations,
+                )
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
         }
     }
 
@@ -486,6 +520,21 @@ pub mod describe_groups_response {
         }
     }
 
+    impl ProtocolEq for DescribedGroupMember {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.member_id, &other.member_id)
+                && ProtocolEq::protocol_eq(&self.group_instance_id, &other.group_instance_id)
+                && ProtocolEq::protocol_eq(&self.client_id, &other.client_id)
+                && ProtocolEq::protocol_eq(&self.client_host, &other.client_host)
+                && ProtocolEq::protocol_eq(&self.member_metadata, &other.member_metadata)
+                && ProtocolEq::protocol_eq(&self.member_assignment, &other.member_assignment)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
+        }
+    }
+
     impl KafkaDecode for DescribedGroupMember {
         fn decode(
             decoder: &mut Decoder,
@@ -639,6 +688,17 @@ pub mod describe_groups_response {
         pub groups: ::std::vec::Vec<DescribedGroup>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl ProtocolEq for DescribeGroupsResponse {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.throttle_time_ms, &other.throttle_time_ms)
+                && ProtocolEq::protocol_eq(&self.groups, &other.groups)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
+        }
     }
 
     impl KafkaMessage for DescribeGroupsResponse {

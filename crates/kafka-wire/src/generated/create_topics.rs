@@ -16,7 +16,7 @@ pub mod create_topics_request {
         encoded_len_with,
     };
 
-    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, RequestResponsePair};
+    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, ProtocolEq, RequestResponsePair};
 
     /// `CreatableTopic` as declared by the `CreateTopics` API.
     #[non_exhaustive]
@@ -73,6 +73,20 @@ pub mod create_topics_request {
             }
 
             ::core::result::Result::Ok(())
+        }
+    }
+
+    impl ProtocolEq for CreatableTopic {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.name, &other.name)
+                && ProtocolEq::protocol_eq(&self.num_partitions, &other.num_partitions)
+                && ProtocolEq::protocol_eq(&self.replication_factor, &other.replication_factor)
+                && ProtocolEq::protocol_eq(&self.assignments, &other.assignments)
+                && ProtocolEq::protocol_eq(&self.configs, &other.configs)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
         }
     }
 
@@ -248,6 +262,17 @@ pub mod create_topics_request {
         }
     }
 
+    impl ProtocolEq for CreatableReplicaAssignment {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.partition_index, &other.partition_index)
+                && ProtocolEq::protocol_eq(&self.broker_ids, &other.broker_ids)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
+        }
+    }
+
     impl KafkaDecode for CreatableReplicaAssignment {
         fn decode(
             decoder: &mut Decoder,
@@ -395,6 +420,17 @@ pub mod create_topics_request {
         }
     }
 
+    impl ProtocolEq for CreatableTopicConfig {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.name, &other.name)
+                && ProtocolEq::protocol_eq(&self.value, &other.value)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
+        }
+    }
+
     impl KafkaDecode for CreatableTopicConfig {
         fn decode(
             decoder: &mut Decoder,
@@ -510,6 +546,18 @@ pub mod create_topics_request {
                 validate_only: false,
                 unknown_tagged_fields: TaggedFields::default(),
             }
+        }
+    }
+
+    impl ProtocolEq for CreateTopicsRequest {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.topics, &other.topics)
+                && ProtocolEq::protocol_eq(&self.timeout_ms, &other.timeout_ms)
+                && ProtocolEq::protocol_eq(&self.validate_only, &other.validate_only)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
         }
     }
 
@@ -650,7 +698,7 @@ pub mod create_topics_response {
         VersionRange, encode_into_with, encoded_len_with,
     };
 
-    use crate::{KafkaMessage, KafkaResponse};
+    use crate::{KafkaMessage, KafkaResponse, ProtocolEq};
 
     /// `CreatableTopicResult` as declared by the `CreateTopics` API.
     #[non_exhaustive]
@@ -733,6 +781,26 @@ pub mod create_topics_response {
         }
     }
 
+    impl ProtocolEq for CreatableTopicResult {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.name, &other.name)
+                && ProtocolEq::protocol_eq(&self.topic_id, &other.topic_id)
+                && ProtocolEq::protocol_eq(&self.error_code, &other.error_code)
+                && ProtocolEq::protocol_eq(&self.error_message, &other.error_message)
+                && ProtocolEq::protocol_eq(
+                    &self.topic_config_error_code,
+                    &other.topic_config_error_code,
+                )
+                && ProtocolEq::protocol_eq(&self.num_partitions, &other.num_partitions)
+                && ProtocolEq::protocol_eq(&self.replication_factor, &other.replication_factor)
+                && ProtocolEq::protocol_eq(&self.configs, &other.configs)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
+        }
+    }
+
     impl KafkaDecode for CreatableTopicResult {
         fn decode(
             decoder: &mut Decoder,
@@ -812,6 +880,15 @@ pub mod create_topics_response {
     }
 
     impl CreatableTopicResult {
+        fn __kw_encode_known_tag_0<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            _version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
+            encoder.write_i16(self.topic_config_error_code)?;
+            ::core::result::Result::Ok(())
+        }
+
         fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
@@ -851,12 +928,18 @@ pub mod create_topics_response {
             if Self::is_flexible(version) {
                 let mut known = KnownTags::new();
                 if self.topic_config_error_code != 0 {
-                    known.write(0, |encoder| {
-                        encoder.write_i16(self.topic_config_error_code)?;
-                        ::core::result::Result::Ok(())
+                    known.measure(0, |encoder| {
+                        Self::__kw_encode_known_tag_0(self, encoder, version)
                     })?;
                 }
-                encoder.write_merged_tagged_fields(known, &self.unknown_tagged_fields)?;
+                encoder.write_merged_tagged_fields(
+                    known,
+                    &self.unknown_tagged_fields,
+                    |tag, encoder| match tag {
+                        0 => Self::__kw_encode_known_tag_0(self, encoder, version),
+                        _ => unreachable!("KnownTags yielded an unmeasured tag"),
+                    },
+                )?;
             }
 
             ::core::result::Result::Ok(())
@@ -959,6 +1042,20 @@ pub mod create_topics_response {
         }
     }
 
+    impl ProtocolEq for CreatableTopicConfigs {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.name, &other.name)
+                && ProtocolEq::protocol_eq(&self.value, &other.value)
+                && ProtocolEq::protocol_eq(&self.read_only, &other.read_only)
+                && ProtocolEq::protocol_eq(&self.config_source, &other.config_source)
+                && ProtocolEq::protocol_eq(&self.is_sensitive, &other.is_sensitive)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
+        }
+    }
+
     impl KafkaDecode for CreatableTopicConfigs {
         fn decode(
             decoder: &mut Decoder,
@@ -1055,6 +1152,17 @@ pub mod create_topics_response {
         pub topics: ::std::vec::Vec<CreatableTopicResult>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl ProtocolEq for CreateTopicsResponse {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.throttle_time_ms, &other.throttle_time_ms)
+                && ProtocolEq::protocol_eq(&self.topics, &other.topics)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
+        }
     }
 
     impl KafkaMessage for CreateTopicsResponse {

@@ -16,7 +16,7 @@ pub mod broker_heartbeat_request {
         encode_into_with, encoded_len_with,
     };
 
-    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, RequestResponsePair};
+    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, ProtocolEq, RequestResponsePair};
 
     /// Request body for the `BrokerHeartbeat` API.
     #[non_exhaustive]
@@ -52,6 +52,25 @@ pub mod broker_heartbeat_request {
                 cordoned_log_dirs: ::core::option::Option::None,
                 unknown_tagged_fields: TaggedFields::default(),
             }
+        }
+    }
+
+    impl ProtocolEq for BrokerHeartbeatRequest {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.broker_id, &other.broker_id)
+                && ProtocolEq::protocol_eq(&self.broker_epoch, &other.broker_epoch)
+                && ProtocolEq::protocol_eq(
+                    &self.current_metadata_offset,
+                    &other.current_metadata_offset,
+                )
+                && ProtocolEq::protocol_eq(&self.want_fence, &other.want_fence)
+                && ProtocolEq::protocol_eq(&self.want_shut_down, &other.want_shut_down)
+                && ProtocolEq::protocol_eq(&self.offline_log_dirs, &other.offline_log_dirs)
+                && ProtocolEq::protocol_eq(&self.cordoned_log_dirs, &other.cordoned_log_dirs)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
         }
     }
 
@@ -156,6 +175,34 @@ pub mod broker_heartbeat_request {
     }
 
     impl BrokerHeartbeatRequest {
+        fn __kw_encode_known_tag_0<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            _version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
+            encoder.write_compact_array_len(self.offline_log_dirs.len())?;
+            for value in &self.offline_log_dirs {
+                encoder.write_uuid(*value)?;
+            }
+            ::core::result::Result::Ok(())
+        }
+
+        fn __kw_encode_known_tag_1<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            _version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
+            encoder.write_compact_nullable_array_len(
+                self.cordoned_log_dirs.as_ref().map(::std::vec::Vec::len),
+            )?;
+            if let ::core::option::Option::Some(values) = &self.cordoned_log_dirs {
+                for value in values {
+                    encoder.write_uuid(*value)?;
+                }
+            }
+            ::core::result::Result::Ok(())
+        }
+
         fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
@@ -170,28 +217,24 @@ pub mod broker_heartbeat_request {
             if Self::is_flexible(version) {
                 let mut known = KnownTags::new();
                 if version.value() >= 1 && !self.offline_log_dirs.is_empty() {
-                    known.write(0, |encoder| {
-                        encoder.write_compact_array_len(self.offline_log_dirs.len())?;
-                        for value in &self.offline_log_dirs {
-                            encoder.write_uuid(*value)?;
-                        }
-                        ::core::result::Result::Ok(())
+                    known.measure(0, |encoder| {
+                        Self::__kw_encode_known_tag_0(self, encoder, version)
                     })?;
                 }
                 if version.value() >= 2 && self.cordoned_log_dirs.is_some() {
-                    known.write(1, |encoder| {
-                        encoder.write_compact_nullable_array_len(
-                            self.cordoned_log_dirs.as_ref().map(::std::vec::Vec::len),
-                        )?;
-                        if let ::core::option::Option::Some(values) = &self.cordoned_log_dirs {
-                            for value in values {
-                                encoder.write_uuid(*value)?;
-                            }
-                        }
-                        ::core::result::Result::Ok(())
+                    known.measure(1, |encoder| {
+                        Self::__kw_encode_known_tag_1(self, encoder, version)
                     })?;
                 }
-                encoder.write_merged_tagged_fields(known, &self.unknown_tagged_fields)?;
+                encoder.write_merged_tagged_fields(
+                    known,
+                    &self.unknown_tagged_fields,
+                    |tag, encoder| match tag {
+                        0 => Self::__kw_encode_known_tag_0(self, encoder, version),
+                        1 => Self::__kw_encode_known_tag_1(self, encoder, version),
+                        _ => unreachable!("KnownTags yielded an unmeasured tag"),
+                    },
+                )?;
             }
 
             ::core::result::Result::Ok(())
@@ -240,7 +283,7 @@ pub mod broker_heartbeat_response {
         KafkaDecode, KafkaEncode, TaggedFields, VersionRange, encode_into_with, encoded_len_with,
     };
 
-    use crate::{KafkaMessage, KafkaResponse};
+    use crate::{KafkaMessage, KafkaResponse, ProtocolEq};
 
     /// Response body for the `BrokerHeartbeat` API.
     #[non_exhaustive]
@@ -270,6 +313,20 @@ pub mod broker_heartbeat_response {
                 should_shut_down: false,
                 unknown_tagged_fields: TaggedFields::default(),
             }
+        }
+    }
+
+    impl ProtocolEq for BrokerHeartbeatResponse {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.throttle_time_ms, &other.throttle_time_ms)
+                && ProtocolEq::protocol_eq(&self.error_code, &other.error_code)
+                && ProtocolEq::protocol_eq(&self.is_caught_up, &other.is_caught_up)
+                && ProtocolEq::protocol_eq(&self.is_fenced, &other.is_fenced)
+                && ProtocolEq::protocol_eq(&self.should_shut_down, &other.should_shut_down)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
         }
     }
 

@@ -16,7 +16,7 @@ pub mod describe_delegation_token_request {
         encoded_len_with,
     };
 
-    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, RequestResponsePair};
+    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, ProtocolEq, RequestResponsePair};
 
     /// `DescribeDelegationTokenOwner` as declared by the `DescribeDelegationToken` API.
     #[non_exhaustive]
@@ -61,6 +61,17 @@ pub mod describe_delegation_token_request {
             }
 
             ::core::result::Result::Ok(())
+        }
+    }
+
+    impl ProtocolEq for DescribeDelegationTokenOwner {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.principal_type, &other.principal_type)
+                && ProtocolEq::protocol_eq(&self.principal_name, &other.principal_name)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
         }
     }
 
@@ -173,6 +184,16 @@ pub mod describe_delegation_token_request {
                 owners: ::core::option::Option::Some(::std::vec::Vec::new()),
                 unknown_tagged_fields: TaggedFields::default(),
             }
+        }
+    }
+
+    impl ProtocolEq for DescribeDelegationTokenRequest {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.owners, &other.owners)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
         }
     }
 
@@ -320,7 +341,7 @@ pub mod describe_delegation_token_response {
         encoded_len_with,
     };
 
-    use crate::{KafkaMessage, KafkaResponse};
+    use crate::{KafkaMessage, KafkaResponse, ProtocolEq};
 
     /// `DescribedDelegationToken` as declared by the `DescribeDelegationToken` API.
     #[non_exhaustive]
@@ -398,6 +419,31 @@ pub mod describe_delegation_token_response {
             }
 
             ::core::result::Result::Ok(())
+        }
+    }
+
+    impl ProtocolEq for DescribedDelegationToken {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.principal_type, &other.principal_type)
+                && ProtocolEq::protocol_eq(&self.principal_name, &other.principal_name)
+                && ProtocolEq::protocol_eq(
+                    &self.token_requester_principal_type,
+                    &other.token_requester_principal_type,
+                )
+                && ProtocolEq::protocol_eq(
+                    &self.token_requester_principal_name,
+                    &other.token_requester_principal_name,
+                )
+                && ProtocolEq::protocol_eq(&self.issue_timestamp, &other.issue_timestamp)
+                && ProtocolEq::protocol_eq(&self.expiry_timestamp, &other.expiry_timestamp)
+                && ProtocolEq::protocol_eq(&self.max_timestamp, &other.max_timestamp)
+                && ProtocolEq::protocol_eq(&self.token_id, &other.token_id)
+                && ProtocolEq::protocol_eq(&self.hmac, &other.hmac)
+                && ProtocolEq::protocol_eq(&self.renewers, &other.renewers)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
         }
     }
 
@@ -608,6 +654,17 @@ pub mod describe_delegation_token_response {
         }
     }
 
+    impl ProtocolEq for DescribedDelegationTokenRenewer {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.principal_type, &other.principal_type)
+                && ProtocolEq::protocol_eq(&self.principal_name, &other.principal_name)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
+        }
+    }
+
     impl KafkaDecode for DescribedDelegationTokenRenewer {
         fn decode(
             decoder: &mut Decoder,
@@ -713,6 +770,18 @@ pub mod describe_delegation_token_response {
         pub throttle_time_ms: i32,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl ProtocolEq for DescribeDelegationTokenResponse {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.error_code, &other.error_code)
+                && ProtocolEq::protocol_eq(&self.tokens, &other.tokens)
+                && ProtocolEq::protocol_eq(&self.throttle_time_ms, &other.throttle_time_ms)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
+        }
     }
 
     impl KafkaMessage for DescribeDelegationTokenResponse {

@@ -16,7 +16,7 @@ pub mod consumer_group_describe_request {
         encoded_len_with,
     };
 
-    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, RequestResponsePair};
+    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, ProtocolEq, RequestResponsePair};
 
     /// Request body for the `ConsumerGroupDescribe` API.
     #[non_exhaustive]
@@ -28,6 +28,20 @@ pub mod consumer_group_describe_request {
         pub include_authorized_operations: bool,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl ProtocolEq for ConsumerGroupDescribeRequest {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.group_ids, &other.group_ids)
+                && ProtocolEq::protocol_eq(
+                    &self.include_authorized_operations,
+                    &other.include_authorized_operations,
+                )
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
+        }
     }
 
     impl KafkaMessage for ConsumerGroupDescribeRequest {
@@ -154,7 +168,7 @@ pub mod consumer_group_describe_response {
         encoded_len_with,
     };
 
-    use crate::{KafkaMessage, KafkaResponse};
+    use crate::{KafkaMessage, KafkaResponse, ProtocolEq};
 
     /// `TopicPartitions` as declared by the `ConsumerGroupDescribe` API.
     #[non_exhaustive]
@@ -201,6 +215,18 @@ pub mod consumer_group_describe_response {
             }
 
             ::core::result::Result::Ok(())
+        }
+    }
+
+    impl ProtocolEq for TopicPartitions {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.topic_id, &other.topic_id)
+                && ProtocolEq::protocol_eq(&self.topic_name, &other.topic_name)
+                && ProtocolEq::protocol_eq(&self.partitions, &other.partitions)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
         }
     }
 
@@ -334,6 +360,16 @@ pub mod consumer_group_describe_response {
             }
 
             ::core::result::Result::Ok(())
+        }
+    }
+
+    impl ProtocolEq for Assignment {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.topic_partitions, &other.topic_partitions)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
         }
     }
 
@@ -494,6 +530,27 @@ pub mod consumer_group_describe_response {
                 authorized_operations: -2_147_483_648,
                 unknown_tagged_fields: TaggedFields::default(),
             }
+        }
+    }
+
+    impl ProtocolEq for DescribedGroup {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.error_code, &other.error_code)
+                && ProtocolEq::protocol_eq(&self.error_message, &other.error_message)
+                && ProtocolEq::protocol_eq(&self.group_id, &other.group_id)
+                && ProtocolEq::protocol_eq(&self.group_state, &other.group_state)
+                && ProtocolEq::protocol_eq(&self.group_epoch, &other.group_epoch)
+                && ProtocolEq::protocol_eq(&self.assignment_epoch, &other.assignment_epoch)
+                && ProtocolEq::protocol_eq(&self.assignor_name, &other.assignor_name)
+                && ProtocolEq::protocol_eq(&self.members, &other.members)
+                && ProtocolEq::protocol_eq(
+                    &self.authorized_operations,
+                    &other.authorized_operations,
+                )
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
         }
     }
 
@@ -686,6 +743,32 @@ pub mod consumer_group_describe_response {
         }
     }
 
+    impl ProtocolEq for Member {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.member_id, &other.member_id)
+                && ProtocolEq::protocol_eq(&self.instance_id, &other.instance_id)
+                && ProtocolEq::protocol_eq(&self.rack_id, &other.rack_id)
+                && ProtocolEq::protocol_eq(&self.member_epoch, &other.member_epoch)
+                && ProtocolEq::protocol_eq(&self.client_id, &other.client_id)
+                && ProtocolEq::protocol_eq(&self.client_host, &other.client_host)
+                && ProtocolEq::protocol_eq(
+                    &self.subscribed_topic_names,
+                    &other.subscribed_topic_names,
+                )
+                && ProtocolEq::protocol_eq(
+                    &self.subscribed_topic_regex,
+                    &other.subscribed_topic_regex,
+                )
+                && ProtocolEq::protocol_eq(&self.assignment, &other.assignment)
+                && ProtocolEq::protocol_eq(&self.target_assignment, &other.target_assignment)
+                && ProtocolEq::protocol_eq(&self.member_type, &other.member_type)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
+        }
+    }
+
     impl KafkaDecode for Member {
         fn decode(
             decoder: &mut Decoder,
@@ -812,6 +895,17 @@ pub mod consumer_group_describe_response {
         pub groups: ::std::vec::Vec<DescribedGroup>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl ProtocolEq for ConsumerGroupDescribeResponse {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.throttle_time_ms, &other.throttle_time_ms)
+                && ProtocolEq::protocol_eq(&self.groups, &other.groups)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
+        }
     }
 
     impl KafkaMessage for ConsumerGroupDescribeResponse {

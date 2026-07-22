@@ -16,7 +16,7 @@ pub mod describe_user_scram_credentials_request {
         encoded_len_with,
     };
 
-    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, RequestResponsePair};
+    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, ProtocolEq, RequestResponsePair};
 
     /// `UserName` as declared by the `DescribeUserScramCredentials` API.
     #[non_exhaustive]
@@ -59,6 +59,16 @@ pub mod describe_user_scram_credentials_request {
             }
 
             ::core::result::Result::Ok(())
+        }
+    }
+
+    impl ProtocolEq for UserName {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.name, &other.name)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
         }
     }
 
@@ -152,6 +162,16 @@ pub mod describe_user_scram_credentials_request {
                 users: ::core::option::Option::Some(::std::vec::Vec::new()),
                 unknown_tagged_fields: TaggedFields::default(),
             }
+        }
+    }
+
+    impl ProtocolEq for DescribeUserScramCredentialsRequest {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.users, &other.users)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
         }
     }
 
@@ -294,7 +314,7 @@ pub mod describe_user_scram_credentials_response {
         encoded_len_with,
     };
 
-    use crate::{KafkaMessage, KafkaResponse};
+    use crate::{KafkaMessage, KafkaResponse, ProtocolEq};
 
     /// `DescribeUserScramCredentialsResult` as declared by the `DescribeUserScramCredentials` API.
     #[non_exhaustive]
@@ -358,6 +378,19 @@ pub mod describe_user_scram_credentials_response {
                 credential_infos: ::std::vec::Vec::new(),
                 unknown_tagged_fields: TaggedFields::default(),
             }
+        }
+    }
+
+    impl ProtocolEq for DescribeUserScramCredentialsResult {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.user, &other.user)
+                && ProtocolEq::protocol_eq(&self.error_code, &other.error_code)
+                && ProtocolEq::protocol_eq(&self.error_message, &other.error_message)
+                && ProtocolEq::protocol_eq(&self.credential_infos, &other.credential_infos)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
         }
     }
 
@@ -502,6 +535,17 @@ pub mod describe_user_scram_credentials_response {
         }
     }
 
+    impl ProtocolEq for CredentialInfo {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.mechanism, &other.mechanism)
+                && ProtocolEq::protocol_eq(&self.iterations, &other.iterations)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
+        }
+    }
+
     impl KafkaDecode for CredentialInfo {
         fn decode(
             decoder: &mut Decoder,
@@ -604,6 +648,19 @@ pub mod describe_user_scram_credentials_response {
                 results: ::std::vec::Vec::new(),
                 unknown_tagged_fields: TaggedFields::default(),
             }
+        }
+    }
+
+    impl ProtocolEq for DescribeUserScramCredentialsResponse {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.throttle_time_ms, &other.throttle_time_ms)
+                && ProtocolEq::protocol_eq(&self.error_code, &other.error_code)
+                && ProtocolEq::protocol_eq(&self.error_message, &other.error_message)
+                && ProtocolEq::protocol_eq(&self.results, &other.results)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
         }
     }
 

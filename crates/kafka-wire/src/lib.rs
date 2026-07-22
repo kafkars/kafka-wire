@@ -10,7 +10,7 @@ mod message;
 
 pub use descriptor::{ApiDescriptor, MessageDescriptor, MessageDirection};
 pub use frame::{OutboundFrameLimits, encode_request, response_header_version_for};
-pub use message::{KafkaMessage, KafkaRequest, KafkaResponse, RequestResponsePair};
+pub use message::{KafkaMessage, KafkaRequest, KafkaResponse, ProtocolEq, RequestResponsePair};
 
 // The generated half of the flat facade: one `pub use` naming every generated
 // item, emitted by `kafka-wire-codegen` and hashed in MANIFEST.json beside the

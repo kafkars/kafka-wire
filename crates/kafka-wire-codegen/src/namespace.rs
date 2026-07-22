@@ -218,6 +218,7 @@ fn handwritten_public_types() -> BTreeMap<String, String> {
         "MessageDescriptor",
         "MessageDirection",
         "OutboundFrameLimits",
+        "ProtocolEq",
         "RequestResponsePair",
     ]
     .into_iter()

@@ -16,7 +16,7 @@ pub mod get_telemetry_subscriptions_request {
         encoded_len_with,
     };
 
-    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, RequestResponsePair};
+    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, ProtocolEq, RequestResponsePair};
 
     /// Request body for the `GetTelemetrySubscriptions` API.
     #[non_exhaustive]
@@ -26,6 +26,16 @@ pub mod get_telemetry_subscriptions_request {
         pub client_instance_id: Uuid,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl ProtocolEq for GetTelemetrySubscriptionsRequest {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.client_instance_id, &other.client_instance_id)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
+        }
     }
 
     impl KafkaMessage for GetTelemetrySubscriptionsRequest {
@@ -149,7 +159,7 @@ pub mod get_telemetry_subscriptions_response {
         encoded_len_with,
     };
 
-    use crate::{KafkaMessage, KafkaResponse};
+    use crate::{KafkaMessage, KafkaResponse, ProtocolEq};
 
     /// Response body for the `GetTelemetrySubscriptions` API.
     #[non_exhaustive]
@@ -175,6 +185,27 @@ pub mod get_telemetry_subscriptions_response {
         pub requested_metrics: ::std::vec::Vec<StrBytes>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl ProtocolEq for GetTelemetrySubscriptionsResponse {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.throttle_time_ms, &other.throttle_time_ms)
+                && ProtocolEq::protocol_eq(&self.error_code, &other.error_code)
+                && ProtocolEq::protocol_eq(&self.client_instance_id, &other.client_instance_id)
+                && ProtocolEq::protocol_eq(&self.subscription_id, &other.subscription_id)
+                && ProtocolEq::protocol_eq(
+                    &self.accepted_compression_types,
+                    &other.accepted_compression_types,
+                )
+                && ProtocolEq::protocol_eq(&self.push_interval_ms, &other.push_interval_ms)
+                && ProtocolEq::protocol_eq(&self.telemetry_max_bytes, &other.telemetry_max_bytes)
+                && ProtocolEq::protocol_eq(&self.delta_temporality, &other.delta_temporality)
+                && ProtocolEq::protocol_eq(&self.requested_metrics, &other.requested_metrics)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
+        }
     }
 
     impl KafkaMessage for GetTelemetrySubscriptionsResponse {

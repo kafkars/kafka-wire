@@ -16,7 +16,7 @@ pub mod describe_client_quotas_request {
         encoded_len_with,
     };
 
-    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, RequestResponsePair};
+    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, ProtocolEq, RequestResponsePair};
 
     /// `ComponentData` as declared by the `DescribeClientQuotas` API.
     #[non_exhaustive]
@@ -74,6 +74,18 @@ pub mod describe_client_quotas_request {
                 match_: ::core::option::Option::Some(StrBytes::default()),
                 unknown_tagged_fields: TaggedFields::default(),
             }
+        }
+    }
+
+    impl ProtocolEq for ComponentData {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.entity_type, &other.entity_type)
+                && ProtocolEq::protocol_eq(&self.match_type, &other.match_type)
+                && ProtocolEq::protocol_eq(&self.match_, &other.match_)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
         }
     }
 
@@ -183,6 +195,17 @@ pub mod describe_client_quotas_request {
         pub strict: bool,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl ProtocolEq for DescribeClientQuotasRequest {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.components, &other.components)
+                && ProtocolEq::protocol_eq(&self.strict, &other.strict)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
+        }
     }
 
     impl KafkaMessage for DescribeClientQuotasRequest {
@@ -320,7 +343,7 @@ pub mod describe_client_quotas_response {
         encoded_len_with,
     };
 
-    use crate::{KafkaMessage, KafkaResponse};
+    use crate::{KafkaMessage, KafkaResponse, ProtocolEq};
 
     /// `EntryData` as declared by the `DescribeClientQuotas` API.
     #[non_exhaustive]
@@ -371,6 +394,17 @@ pub mod describe_client_quotas_response {
             }
 
             ::core::result::Result::Ok(())
+        }
+    }
+
+    impl ProtocolEq for EntryData {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.entity, &other.entity)
+                && ProtocolEq::protocol_eq(&self.values, &other.values)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
         }
     }
 
@@ -535,6 +569,17 @@ pub mod describe_client_quotas_response {
         }
     }
 
+    impl ProtocolEq for EntityData {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.entity_type, &other.entity_type)
+                && ProtocolEq::protocol_eq(&self.entity_name, &other.entity_name)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
+        }
+    }
+
     impl KafkaDecode for EntityData {
         fn decode(
             decoder: &mut Decoder,
@@ -684,6 +729,17 @@ pub mod describe_client_quotas_response {
         }
     }
 
+    impl ProtocolEq for ValueData {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.key, &other.key)
+                && ProtocolEq::protocol_eq(&self.value, &other.value)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
+        }
+    }
+
     impl KafkaDecode for ValueData {
         fn decode(
             decoder: &mut Decoder,
@@ -794,6 +850,19 @@ pub mod describe_client_quotas_response {
                 entries: ::core::option::Option::Some(::std::vec::Vec::new()),
                 unknown_tagged_fields: TaggedFields::default(),
             }
+        }
+    }
+
+    impl ProtocolEq for DescribeClientQuotasResponse {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.throttle_time_ms, &other.throttle_time_ms)
+                && ProtocolEq::protocol_eq(&self.error_code, &other.error_code)
+                && ProtocolEq::protocol_eq(&self.error_message, &other.error_message)
+                && ProtocolEq::protocol_eq(&self.entries, &other.entries)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
         }
     }
 

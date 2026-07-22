@@ -16,7 +16,7 @@ pub mod describe_log_dirs_request {
         encoded_len_with,
     };
 
-    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, RequestResponsePair};
+    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, ProtocolEq, RequestResponsePair};
 
     /// `DescribableLogDirTopic` as declared by the `DescribeLogDirs` API.
     #[non_exhaustive]
@@ -61,6 +61,17 @@ pub mod describe_log_dirs_request {
             }
 
             ::core::result::Result::Ok(())
+        }
+    }
+
+    impl ProtocolEq for DescribableLogDirTopic {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.topic, &other.topic)
+                && ProtocolEq::protocol_eq(&self.partitions, &other.partitions)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
         }
     }
 
@@ -179,6 +190,16 @@ pub mod describe_log_dirs_request {
                 topics: ::core::option::Option::Some(::std::vec::Vec::new()),
                 unknown_tagged_fields: TaggedFields::default(),
             }
+        }
+    }
+
+    impl ProtocolEq for DescribeLogDirsRequest {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.topics, &other.topics)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
         }
     }
 
@@ -325,7 +346,7 @@ pub mod describe_log_dirs_response {
         encoded_len_with,
     };
 
-    use crate::{KafkaMessage, KafkaResponse};
+    use crate::{KafkaMessage, KafkaResponse, ProtocolEq};
 
     /// `DescribeLogDirsResult` as declared by the `DescribeLogDirs` API.
     #[non_exhaustive]
@@ -395,6 +416,21 @@ pub mod describe_log_dirs_response {
                 is_cordoned: false,
                 unknown_tagged_fields: TaggedFields::default(),
             }
+        }
+    }
+
+    impl ProtocolEq for DescribeLogDirsResult {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.error_code, &other.error_code)
+                && ProtocolEq::protocol_eq(&self.log_dir, &other.log_dir)
+                && ProtocolEq::protocol_eq(&self.topics, &other.topics)
+                && ProtocolEq::protocol_eq(&self.total_bytes, &other.total_bytes)
+                && ProtocolEq::protocol_eq(&self.usable_bytes, &other.usable_bytes)
+                && ProtocolEq::protocol_eq(&self.is_cordoned, &other.is_cordoned)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
         }
     }
 
@@ -578,6 +614,17 @@ pub mod describe_log_dirs_response {
         }
     }
 
+    impl ProtocolEq for DescribeLogDirsTopic {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.name, &other.name)
+                && ProtocolEq::protocol_eq(&self.partitions, &other.partitions)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
+        }
+    }
+
     impl KafkaDecode for DescribeLogDirsTopic {
         fn decode(
             decoder: &mut Decoder,
@@ -729,6 +776,19 @@ pub mod describe_log_dirs_response {
         }
     }
 
+    impl ProtocolEq for DescribeLogDirsPartition {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.partition_index, &other.partition_index)
+                && ProtocolEq::protocol_eq(&self.partition_size, &other.partition_size)
+                && ProtocolEq::protocol_eq(&self.offset_lag, &other.offset_lag)
+                && ProtocolEq::protocol_eq(&self.is_future_key, &other.is_future_key)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
+        }
+    }
+
     impl KafkaDecode for DescribeLogDirsPartition {
         fn decode(
             decoder: &mut Decoder,
@@ -824,6 +884,18 @@ pub mod describe_log_dirs_response {
         pub results: ::std::vec::Vec<DescribeLogDirsResult>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl ProtocolEq for DescribeLogDirsResponse {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.throttle_time_ms, &other.throttle_time_ms)
+                && ProtocolEq::protocol_eq(&self.error_code, &other.error_code)
+                && ProtocolEq::protocol_eq(&self.results, &other.results)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
+        }
     }
 
     impl KafkaMessage for DescribeLogDirsResponse {

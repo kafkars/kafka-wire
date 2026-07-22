@@ -16,7 +16,7 @@ pub mod describe_configs_request {
         encoded_len_with,
     };
 
-    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, RequestResponsePair};
+    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, ProtocolEq, RequestResponsePair};
 
     /// `DescribeConfigsResource` as declared by the `DescribeConfigs` API.
     #[non_exhaustive]
@@ -74,6 +74,18 @@ pub mod describe_configs_request {
                 configuration_keys: ::core::option::Option::Some(::std::vec::Vec::new()),
                 unknown_tagged_fields: TaggedFields::default(),
             }
+        }
+    }
+
+    impl ProtocolEq for DescribeConfigsResource {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.resource_type, &other.resource_type)
+                && ProtocolEq::protocol_eq(&self.resource_name, &other.resource_name)
+                && ProtocolEq::protocol_eq(&self.configuration_keys, &other.configuration_keys)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
         }
     }
 
@@ -211,6 +223,21 @@ pub mod describe_configs_request {
         pub include_documentation: bool,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl ProtocolEq for DescribeConfigsRequest {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.resources, &other.resources)
+                && ProtocolEq::protocol_eq(&self.include_synonyms, &other.include_synonyms)
+                && ProtocolEq::protocol_eq(
+                    &self.include_documentation,
+                    &other.include_documentation,
+                )
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
+        }
     }
 
     impl KafkaMessage for DescribeConfigsRequest {
@@ -365,7 +392,7 @@ pub mod describe_configs_response {
         encoded_len_with,
     };
 
-    use crate::{KafkaMessage, KafkaResponse};
+    use crate::{KafkaMessage, KafkaResponse, ProtocolEq};
 
     /// `DescribeConfigsResult` as declared by the `DescribeConfigs` API.
     #[non_exhaustive]
@@ -432,6 +459,20 @@ pub mod describe_configs_response {
                 configs: ::std::vec::Vec::new(),
                 unknown_tagged_fields: TaggedFields::default(),
             }
+        }
+    }
+
+    impl ProtocolEq for DescribeConfigsResult {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.error_code, &other.error_code)
+                && ProtocolEq::protocol_eq(&self.error_message, &other.error_message)
+                && ProtocolEq::protocol_eq(&self.resource_type, &other.resource_type)
+                && ProtocolEq::protocol_eq(&self.resource_name, &other.resource_name)
+                && ProtocolEq::protocol_eq(&self.configs, &other.configs)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
         }
     }
 
@@ -627,6 +668,23 @@ pub mod describe_configs_response {
                 documentation: ::core::option::Option::Some(StrBytes::default()),
                 unknown_tagged_fields: TaggedFields::default(),
             }
+        }
+    }
+
+    impl ProtocolEq for DescribeConfigsResourceResult {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.name, &other.name)
+                && ProtocolEq::protocol_eq(&self.value, &other.value)
+                && ProtocolEq::protocol_eq(&self.read_only, &other.read_only)
+                && ProtocolEq::protocol_eq(&self.config_source, &other.config_source)
+                && ProtocolEq::protocol_eq(&self.is_sensitive, &other.is_sensitive)
+                && ProtocolEq::protocol_eq(&self.synonyms, &other.synonyms)
+                && ProtocolEq::protocol_eq(&self.config_type, &other.config_type)
+                && ProtocolEq::protocol_eq(&self.documentation, &other.documentation)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
         }
     }
 
@@ -836,6 +894,18 @@ pub mod describe_configs_response {
         }
     }
 
+    impl ProtocolEq for DescribeConfigsSynonym {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.name, &other.name)
+                && ProtocolEq::protocol_eq(&self.value, &other.value)
+                && ProtocolEq::protocol_eq(&self.source, &other.source)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
+        }
+    }
+
     impl KafkaDecode for DescribeConfigsSynonym {
         fn decode(
             decoder: &mut Decoder,
@@ -942,6 +1012,17 @@ pub mod describe_configs_response {
         pub results: ::std::vec::Vec<DescribeConfigsResult>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl ProtocolEq for DescribeConfigsResponse {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.throttle_time_ms, &other.throttle_time_ms)
+                && ProtocolEq::protocol_eq(&self.results, &other.results)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
+        }
     }
 
     impl KafkaMessage for DescribeConfigsResponse {

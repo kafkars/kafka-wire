@@ -16,7 +16,7 @@ pub mod add_offsets_to_txn_request {
         encoded_len_with,
     };
 
-    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, RequestResponsePair};
+    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, ProtocolEq, RequestResponsePair};
 
     /// Request body for the `AddOffsetsToTxn` API.
     #[non_exhaustive]
@@ -32,6 +32,19 @@ pub mod add_offsets_to_txn_request {
         pub group_id: StrBytes,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl ProtocolEq for AddOffsetsToTxnRequest {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.transactional_id, &other.transactional_id)
+                && ProtocolEq::protocol_eq(&self.producer_id, &other.producer_id)
+                && ProtocolEq::protocol_eq(&self.producer_epoch, &other.producer_epoch)
+                && ProtocolEq::protocol_eq(&self.group_id, &other.group_id)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
+        }
     }
 
     impl KafkaMessage for AddOffsetsToTxnRequest {
@@ -172,7 +185,7 @@ pub mod add_offsets_to_txn_response {
         KafkaDecode, KafkaEncode, TaggedFields, VersionRange, encode_into_with, encoded_len_with,
     };
 
-    use crate::{KafkaMessage, KafkaResponse};
+    use crate::{KafkaMessage, KafkaResponse, ProtocolEq};
 
     /// Response body for the `AddOffsetsToTxn` API.
     #[non_exhaustive]
@@ -184,6 +197,17 @@ pub mod add_offsets_to_txn_response {
         pub error_code: i16,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl ProtocolEq for AddOffsetsToTxnResponse {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.throttle_time_ms, &other.throttle_time_ms)
+                && ProtocolEq::protocol_eq(&self.error_code, &other.error_code)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
+        }
     }
 
     impl KafkaMessage for AddOffsetsToTxnResponse {

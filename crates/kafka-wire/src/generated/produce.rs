@@ -16,7 +16,7 @@ pub mod produce_request {
         encode_into_with, encoded_len_with,
     };
 
-    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, RequestResponsePair};
+    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, ProtocolEq, RequestResponsePair};
 
     /// `TopicProduceData` as declared by the `Produce` API.
     #[non_exhaustive]
@@ -66,6 +66,18 @@ pub mod produce_request {
             }
 
             ::core::result::Result::Ok(())
+        }
+    }
+
+    impl ProtocolEq for TopicProduceData {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.name, &other.name)
+                && ProtocolEq::protocol_eq(&self.topic_id, &other.topic_id)
+                && ProtocolEq::protocol_eq(&self.partition_data, &other.partition_data)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
         }
     }
 
@@ -231,6 +243,17 @@ pub mod produce_request {
         }
     }
 
+    impl ProtocolEq for PartitionProduceData {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.index, &other.index)
+                && ProtocolEq::protocol_eq(&self.records, &other.records)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
+        }
+    }
+
     impl KafkaDecode for PartitionProduceData {
         fn decode(
             decoder: &mut Decoder,
@@ -330,6 +353,19 @@ pub mod produce_request {
         pub topic_data: ::std::vec::Vec<TopicProduceData>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl ProtocolEq for ProduceRequest {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.transactional_id, &other.transactional_id)
+                && ProtocolEq::protocol_eq(&self.acks, &other.acks)
+                && ProtocolEq::protocol_eq(&self.timeout_ms, &other.timeout_ms)
+                && ProtocolEq::protocol_eq(&self.topic_data, &other.topic_data)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
+        }
     }
 
     impl KafkaMessage for ProduceRequest {
@@ -480,7 +516,7 @@ pub mod produce_response {
         VersionRange, encode_into_with, encoded_len_with,
     };
 
-    use crate::{KafkaMessage, KafkaResponse};
+    use crate::{KafkaMessage, KafkaResponse, ProtocolEq};
 
     /// `TopicProduceResponse` as declared by the `Produce` API.
     #[non_exhaustive]
@@ -530,6 +566,18 @@ pub mod produce_response {
             }
 
             ::core::result::Result::Ok(())
+        }
+    }
+
+    impl ProtocolEq for TopicProduceResponse {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.name, &other.name)
+                && ProtocolEq::protocol_eq(&self.topic_id, &other.topic_id)
+                && ProtocolEq::protocol_eq(&self.partition_responses, &other.partition_responses)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
         }
     }
 
@@ -696,7 +744,7 @@ pub mod produce_response {
                 });
             }
 
-            if version.value() < 10 && self.current_leader != LeaderIdAndEpoch::default() {
+            if version.value() < 10 && !ProtocolEq::is_protocol_default(&self.current_leader) {
                 return ::core::result::Result::Err(EncodeError::FieldNotRepresentable {
                     message: "PartitionProduceResponse",
                     field: "CurrentLeader",
@@ -735,6 +783,23 @@ pub mod produce_response {
                 current_leader: LeaderIdAndEpoch::default(),
                 unknown_tagged_fields: TaggedFields::default(),
             }
+        }
+    }
+
+    impl ProtocolEq for PartitionProduceResponse {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.index, &other.index)
+                && ProtocolEq::protocol_eq(&self.error_code, &other.error_code)
+                && ProtocolEq::protocol_eq(&self.base_offset, &other.base_offset)
+                && ProtocolEq::protocol_eq(&self.log_append_time_ms, &other.log_append_time_ms)
+                && ProtocolEq::protocol_eq(&self.log_start_offset, &other.log_start_offset)
+                && ProtocolEq::protocol_eq(&self.record_errors, &other.record_errors)
+                && ProtocolEq::protocol_eq(&self.error_message, &other.error_message)
+                && ProtocolEq::protocol_eq(&self.current_leader, &other.current_leader)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
         }
     }
 
@@ -809,6 +874,15 @@ pub mod produce_response {
     }
 
     impl PartitionProduceResponse {
+        fn __kw_encode_known_tag_0<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
+            self.current_leader.encode_validated(encoder, version)?;
+            ::core::result::Result::Ok(())
+        }
+
         fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
@@ -841,13 +915,19 @@ pub mod produce_response {
 
             if Self::is_flexible(version) {
                 let mut known = KnownTags::new();
-                if version.value() >= 10 && self.current_leader != LeaderIdAndEpoch::default() {
-                    known.write(0, |encoder| {
-                        self.current_leader.encode_validated(encoder, version)?;
-                        ::core::result::Result::Ok(())
+                if version.value() >= 10 && !ProtocolEq::is_protocol_default(&self.current_leader) {
+                    known.measure(0, |encoder| {
+                        Self::__kw_encode_known_tag_0(self, encoder, version)
                     })?;
                 }
-                encoder.write_merged_tagged_fields(known, &self.unknown_tagged_fields)?;
+                encoder.write_merged_tagged_fields(
+                    known,
+                    &self.unknown_tagged_fields,
+                    |tag, encoder| match tag {
+                        0 => Self::__kw_encode_known_tag_0(self, encoder, version),
+                        _ => unreachable!("KnownTags yielded an unmeasured tag"),
+                    },
+                )?;
             }
 
             ::core::result::Result::Ok(())
@@ -928,6 +1008,20 @@ pub mod produce_response {
             }
 
             ::core::result::Result::Ok(())
+        }
+    }
+
+    impl ProtocolEq for BatchIndexAndErrorMessage {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.batch_index, &other.batch_index)
+                && ProtocolEq::protocol_eq(
+                    &self.batch_index_error_message,
+                    &other.batch_index_error_message,
+                )
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
         }
     }
 
@@ -1072,6 +1166,17 @@ pub mod produce_response {
         }
     }
 
+    impl ProtocolEq for LeaderIdAndEpoch {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.leader_id, &other.leader_id)
+                && ProtocolEq::protocol_eq(&self.leader_epoch, &other.leader_epoch)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
+        }
+    }
+
     impl KafkaDecode for LeaderIdAndEpoch {
         fn decode(
             decoder: &mut Decoder,
@@ -1199,6 +1304,19 @@ pub mod produce_response {
         }
     }
 
+    impl ProtocolEq for NodeEndpoint {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.node_id, &other.node_id)
+                && ProtocolEq::protocol_eq(&self.host, &other.host)
+                && ProtocolEq::protocol_eq(&self.port, &other.port)
+                && ProtocolEq::protocol_eq(&self.rack, &other.rack)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
+        }
+    }
+
     impl KafkaDecode for NodeEndpoint {
         fn decode(
             decoder: &mut Decoder,
@@ -1296,6 +1414,18 @@ pub mod produce_response {
         pub unknown_tagged_fields: TaggedFields,
     }
 
+    impl ProtocolEq for ProduceResponse {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.responses, &other.responses)
+                && ProtocolEq::protocol_eq(&self.throttle_time_ms, &other.throttle_time_ms)
+                && ProtocolEq::protocol_eq(&self.node_endpoints, &other.node_endpoints)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
+        }
+    }
+
     impl KafkaMessage for ProduceResponse {
         const NAME: &'static str = "ProduceResponse";
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(3, 13);
@@ -1386,6 +1516,18 @@ pub mod produce_response {
     }
 
     impl ProduceResponse {
+        fn __kw_encode_known_tag_0<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
+            encoder.write_compact_array_len(self.node_endpoints.len())?;
+            for value in &self.node_endpoints {
+                value.encode_validated(encoder, version)?;
+            }
+            ::core::result::Result::Ok(())
+        }
+
         fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
@@ -1404,15 +1546,18 @@ pub mod produce_response {
             if Self::is_flexible(version) {
                 let mut known = KnownTags::new();
                 if version.value() >= 10 && !self.node_endpoints.is_empty() {
-                    known.write(0, |encoder| {
-                        encoder.write_compact_array_len(self.node_endpoints.len())?;
-                        for value in &self.node_endpoints {
-                            value.encode_validated(encoder, version)?;
-                        }
-                        ::core::result::Result::Ok(())
+                    known.measure(0, |encoder| {
+                        Self::__kw_encode_known_tag_0(self, encoder, version)
                     })?;
                 }
-                encoder.write_merged_tagged_fields(known, &self.unknown_tagged_fields)?;
+                encoder.write_merged_tagged_fields(
+                    known,
+                    &self.unknown_tagged_fields,
+                    |tag, encoder| match tag {
+                        0 => Self::__kw_encode_known_tag_0(self, encoder, version),
+                        _ => unreachable!("KnownTags yielded an unmeasured tag"),
+                    },
+                )?;
             }
 
             ::core::result::Result::Ok(())

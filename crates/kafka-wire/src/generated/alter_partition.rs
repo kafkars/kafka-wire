@@ -16,7 +16,7 @@ pub mod alter_partition_request {
         encoded_len_with,
     };
 
-    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, RequestResponsePair};
+    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, ProtocolEq, RequestResponsePair};
 
     /// `TopicData` as declared by the `AlterPartition` API.
     #[non_exhaustive]
@@ -64,6 +64,17 @@ pub mod alter_partition_request {
             }
 
             ::core::result::Result::Ok(())
+        }
+    }
+
+    impl ProtocolEq for TopicData {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.topic_id, &other.topic_id)
+                && ProtocolEq::protocol_eq(&self.partitions, &other.partitions)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
         }
     }
 
@@ -220,6 +231,24 @@ pub mod alter_partition_request {
             }
 
             ::core::result::Result::Ok(())
+        }
+    }
+
+    impl ProtocolEq for PartitionData {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.partition_index, &other.partition_index)
+                && ProtocolEq::protocol_eq(&self.leader_epoch, &other.leader_epoch)
+                && ProtocolEq::protocol_eq(&self.new_isr, &other.new_isr)
+                && ProtocolEq::protocol_eq(&self.new_isr_with_epochs, &other.new_isr_with_epochs)
+                && ProtocolEq::protocol_eq(
+                    &self.leader_recovery_state,
+                    &other.leader_recovery_state,
+                )
+                && ProtocolEq::protocol_eq(&self.partition_epoch, &other.partition_epoch)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
         }
     }
 
@@ -388,6 +417,17 @@ pub mod alter_partition_request {
         }
     }
 
+    impl ProtocolEq for BrokerState {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.broker_id, &other.broker_id)
+                && ProtocolEq::protocol_eq(&self.broker_epoch, &other.broker_epoch)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
+        }
+    }
+
     impl KafkaDecode for BrokerState {
         fn decode(
             decoder: &mut Decoder,
@@ -487,6 +527,18 @@ pub mod alter_partition_request {
                 topics: ::std::vec::Vec::new(),
                 unknown_tagged_fields: TaggedFields::default(),
             }
+        }
+    }
+
+    impl ProtocolEq for AlterPartitionRequest {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.broker_id, &other.broker_id)
+                && ProtocolEq::protocol_eq(&self.broker_epoch, &other.broker_epoch)
+                && ProtocolEq::protocol_eq(&self.topics, &other.topics)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
         }
     }
 
@@ -619,7 +671,7 @@ pub mod alter_partition_response {
         encoded_len_with,
     };
 
-    use crate::{KafkaMessage, KafkaResponse};
+    use crate::{KafkaMessage, KafkaResponse, ProtocolEq};
 
     /// `TopicData` as declared by the `AlterPartition` API.
     #[non_exhaustive]
@@ -667,6 +719,17 @@ pub mod alter_partition_response {
             }
 
             ::core::result::Result::Ok(())
+        }
+    }
+
+    impl ProtocolEq for TopicData {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.topic_id, &other.topic_id)
+                && ProtocolEq::protocol_eq(&self.partitions, &other.partitions)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
         }
     }
 
@@ -809,6 +872,25 @@ pub mod alter_partition_response {
         }
     }
 
+    impl ProtocolEq for PartitionData {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.partition_index, &other.partition_index)
+                && ProtocolEq::protocol_eq(&self.error_code, &other.error_code)
+                && ProtocolEq::protocol_eq(&self.leader_id, &other.leader_id)
+                && ProtocolEq::protocol_eq(&self.leader_epoch, &other.leader_epoch)
+                && ProtocolEq::protocol_eq(&self.isr, &other.isr)
+                && ProtocolEq::protocol_eq(
+                    &self.leader_recovery_state,
+                    &other.leader_recovery_state,
+                )
+                && ProtocolEq::protocol_eq(&self.partition_epoch, &other.partition_epoch)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
+        }
+    }
+
     impl KafkaDecode for PartitionData {
         fn decode(
             decoder: &mut Decoder,
@@ -919,6 +1001,18 @@ pub mod alter_partition_response {
         pub topics: ::std::vec::Vec<TopicData>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl ProtocolEq for AlterPartitionResponse {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.throttle_time_ms, &other.throttle_time_ms)
+                && ProtocolEq::protocol_eq(&self.error_code, &other.error_code)
+                && ProtocolEq::protocol_eq(&self.topics, &other.topics)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
+        }
     }
 
     impl KafkaMessage for AlterPartitionResponse {

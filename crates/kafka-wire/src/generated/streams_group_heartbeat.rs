@@ -16,7 +16,7 @@ pub mod streams_group_heartbeat_request {
         encoded_len_with,
     };
 
-    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, RequestResponsePair};
+    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, ProtocolEq, RequestResponsePair};
 
     /// `KeyValue` as declared by the `StreamsGroupHeartbeat` API.
     #[non_exhaustive]
@@ -61,6 +61,17 @@ pub mod streams_group_heartbeat_request {
             }
 
             ::core::result::Result::Ok(())
+        }
+    }
+
+    impl ProtocolEq for KeyValue {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.key, &other.key)
+                && ProtocolEq::protocol_eq(&self.value, &other.value)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
         }
     }
 
@@ -191,6 +202,19 @@ pub mod streams_group_heartbeat_request {
             }
 
             ::core::result::Result::Ok(())
+        }
+    }
+
+    impl ProtocolEq for TopicInfo {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.name, &other.name)
+                && ProtocolEq::protocol_eq(&self.partitions, &other.partitions)
+                && ProtocolEq::protocol_eq(&self.replication_factor, &other.replication_factor)
+                && ProtocolEq::protocol_eq(&self.topic_configs, &other.topic_configs)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
         }
     }
 
@@ -329,6 +353,17 @@ pub mod streams_group_heartbeat_request {
         }
     }
 
+    impl ProtocolEq for Endpoint {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.host, &other.host)
+                && ProtocolEq::protocol_eq(&self.port, &other.port)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
+        }
+    }
+
     impl KafkaDecode for Endpoint {
         fn decode(
             decoder: &mut Decoder,
@@ -451,6 +486,18 @@ pub mod streams_group_heartbeat_request {
             }
 
             ::core::result::Result::Ok(())
+        }
+    }
+
+    impl ProtocolEq for TaskOffset {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.subtopology_id, &other.subtopology_id)
+                && ProtocolEq::protocol_eq(&self.partition, &other.partition)
+                && ProtocolEq::protocol_eq(&self.offset, &other.offset)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
         }
     }
 
@@ -577,6 +624,17 @@ pub mod streams_group_heartbeat_request {
             }
 
             ::core::result::Result::Ok(())
+        }
+    }
+
+    impl ProtocolEq for TaskIds {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.subtopology_id, &other.subtopology_id)
+                && ProtocolEq::protocol_eq(&self.partitions, &other.partitions)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
         }
     }
 
@@ -709,6 +767,17 @@ pub mod streams_group_heartbeat_request {
             }
 
             ::core::result::Result::Ok(())
+        }
+    }
+
+    impl ProtocolEq for Topology {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.epoch, &other.epoch)
+                && ProtocolEq::protocol_eq(&self.subtopologies, &other.subtopologies)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
         }
     }
 
@@ -857,6 +926,31 @@ pub mod streams_group_heartbeat_request {
             }
 
             ::core::result::Result::Ok(())
+        }
+    }
+
+    impl ProtocolEq for Subtopology {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.subtopology_id, &other.subtopology_id)
+                && ProtocolEq::protocol_eq(&self.source_topics, &other.source_topics)
+                && ProtocolEq::protocol_eq(&self.source_topic_regex, &other.source_topic_regex)
+                && ProtocolEq::protocol_eq(
+                    &self.state_changelog_topics,
+                    &other.state_changelog_topics,
+                )
+                && ProtocolEq::protocol_eq(
+                    &self.repartition_sink_topics,
+                    &other.repartition_sink_topics,
+                )
+                && ProtocolEq::protocol_eq(
+                    &self.repartition_source_topics,
+                    &other.repartition_source_topics,
+                )
+                && ProtocolEq::protocol_eq(&self.copartition_groups, &other.copartition_groups)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
         }
     }
 
@@ -1036,6 +1130,21 @@ pub mod streams_group_heartbeat_request {
         }
     }
 
+    impl ProtocolEq for CopartitionGroup {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.source_topics, &other.source_topics)
+                && ProtocolEq::protocol_eq(&self.source_topic_regex, &other.source_topic_regex)
+                && ProtocolEq::protocol_eq(
+                    &self.repartition_source_topics,
+                    &other.repartition_source_topics,
+                )
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
+        }
+    }
+
     impl KafkaDecode for CopartitionGroup {
         fn decode(
             decoder: &mut Decoder,
@@ -1198,6 +1307,35 @@ pub mod streams_group_heartbeat_request {
                 shutdown_application: false,
                 unknown_tagged_fields: TaggedFields::default(),
             }
+        }
+    }
+
+    impl ProtocolEq for StreamsGroupHeartbeatRequest {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.group_id, &other.group_id)
+                && ProtocolEq::protocol_eq(&self.member_id, &other.member_id)
+                && ProtocolEq::protocol_eq(&self.member_epoch, &other.member_epoch)
+                && ProtocolEq::protocol_eq(
+                    &self.endpoint_information_epoch,
+                    &other.endpoint_information_epoch,
+                )
+                && ProtocolEq::protocol_eq(&self.instance_id, &other.instance_id)
+                && ProtocolEq::protocol_eq(&self.rack_id, &other.rack_id)
+                && ProtocolEq::protocol_eq(&self.rebalance_timeout_ms, &other.rebalance_timeout_ms)
+                && ProtocolEq::protocol_eq(&self.topology, &other.topology)
+                && ProtocolEq::protocol_eq(&self.active_tasks, &other.active_tasks)
+                && ProtocolEq::protocol_eq(&self.standby_tasks, &other.standby_tasks)
+                && ProtocolEq::protocol_eq(&self.warmup_tasks, &other.warmup_tasks)
+                && ProtocolEq::protocol_eq(&self.process_id, &other.process_id)
+                && ProtocolEq::protocol_eq(&self.user_endpoint, &other.user_endpoint)
+                && ProtocolEq::protocol_eq(&self.client_tags, &other.client_tags)
+                && ProtocolEq::protocol_eq(&self.task_offsets, &other.task_offsets)
+                && ProtocolEq::protocol_eq(&self.task_end_offsets, &other.task_end_offsets)
+                && ProtocolEq::protocol_eq(&self.shutdown_application, &other.shutdown_application)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
         }
     }
 
@@ -1502,7 +1640,7 @@ pub mod streams_group_heartbeat_response {
         encoded_len_with,
     };
 
-    use crate::{KafkaMessage, KafkaResponse};
+    use crate::{KafkaMessage, KafkaResponse, ProtocolEq};
 
     /// `Status` as declared by the `StreamsGroupHeartbeat` API.
     #[non_exhaustive]
@@ -1547,6 +1685,17 @@ pub mod streams_group_heartbeat_response {
             }
 
             ::core::result::Result::Ok(())
+        }
+    }
+
+    impl ProtocolEq for Status {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.status_code, &other.status_code)
+                && ProtocolEq::protocol_eq(&self.status_detail, &other.status_detail)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
         }
     }
 
@@ -1670,6 +1819,17 @@ pub mod streams_group_heartbeat_response {
             }
 
             ::core::result::Result::Ok(())
+        }
+    }
+
+    impl ProtocolEq for TopicPartition {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.topic, &other.topic)
+                && ProtocolEq::protocol_eq(&self.partitions, &other.partitions)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
         }
     }
 
@@ -1802,6 +1962,17 @@ pub mod streams_group_heartbeat_response {
         }
     }
 
+    impl ProtocolEq for TaskIds {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.subtopology_id, &other.subtopology_id)
+                && ProtocolEq::protocol_eq(&self.partitions, &other.partitions)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
+        }
+    }
+
     impl KafkaDecode for TaskIds {
         fn decode(
             decoder: &mut Decoder,
@@ -1928,6 +2099,17 @@ pub mod streams_group_heartbeat_response {
             }
 
             ::core::result::Result::Ok(())
+        }
+    }
+
+    impl ProtocolEq for Endpoint {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.host, &other.host)
+                && ProtocolEq::protocol_eq(&self.port, &other.port)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
         }
     }
 
@@ -2060,6 +2242,18 @@ pub mod streams_group_heartbeat_response {
             }
 
             ::core::result::Result::Ok(())
+        }
+    }
+
+    impl ProtocolEq for EndpointToPartitions {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.user_endpoint, &other.user_endpoint)
+                && ProtocolEq::protocol_eq(&self.active_partitions, &other.active_partitions)
+                && ProtocolEq::protocol_eq(&self.standby_partitions, &other.standby_partitions)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
         }
     }
 
@@ -2217,6 +2411,52 @@ pub mod streams_group_heartbeat_response {
                 partitions_by_user_endpoint: ::core::option::Option::None,
                 unknown_tagged_fields: TaggedFields::default(),
             }
+        }
+    }
+
+    impl ProtocolEq for StreamsGroupHeartbeatResponse {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.throttle_time_ms, &other.throttle_time_ms)
+                && ProtocolEq::protocol_eq(&self.error_code, &other.error_code)
+                && ProtocolEq::protocol_eq(&self.error_message, &other.error_message)
+                && ProtocolEq::protocol_eq(&self.member_id, &other.member_id)
+                && ProtocolEq::protocol_eq(&self.member_epoch, &other.member_epoch)
+                && ProtocolEq::protocol_eq(
+                    &self.heartbeat_interval_ms,
+                    &other.heartbeat_interval_ms,
+                )
+                && ProtocolEq::protocol_eq(
+                    &self.acceptable_recovery_lag_legacy,
+                    &other.acceptable_recovery_lag_legacy,
+                )
+                && ProtocolEq::protocol_eq(
+                    &self.task_offset_interval_ms,
+                    &other.task_offset_interval_ms,
+                )
+                && ProtocolEq::protocol_eq(
+                    &self.acceptable_recovery_lag,
+                    &other.acceptable_recovery_lag,
+                )
+                && ProtocolEq::protocol_eq(&self.status, &other.status)
+                && ProtocolEq::protocol_eq(&self.active_tasks, &other.active_tasks)
+                && ProtocolEq::protocol_eq(&self.standby_tasks, &other.standby_tasks)
+                && ProtocolEq::protocol_eq(&self.warmup_tasks, &other.warmup_tasks)
+                && ProtocolEq::protocol_eq(
+                    &self.topology_description_required,
+                    &other.topology_description_required,
+                )
+                && ProtocolEq::protocol_eq(
+                    &self.endpoint_information_epoch,
+                    &other.endpoint_information_epoch,
+                )
+                && ProtocolEq::protocol_eq(
+                    &self.partitions_by_user_endpoint,
+                    &other.partitions_by_user_endpoint,
+                )
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
         }
     }
 

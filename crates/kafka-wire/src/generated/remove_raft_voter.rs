@@ -16,7 +16,7 @@ pub mod remove_raft_voter_request {
         encoded_len_with,
     };
 
-    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, RequestResponsePair};
+    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, ProtocolEq, RequestResponsePair};
 
     /// Request body for the `RemoveRaftVoter` API.
     #[non_exhaustive]
@@ -40,6 +40,18 @@ pub mod remove_raft_voter_request {
                 voter_directory_id: Uuid::ZERO,
                 unknown_tagged_fields: TaggedFields::default(),
             }
+        }
+    }
+
+    impl ProtocolEq for RemoveRaftVoterRequest {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.cluster_id, &other.cluster_id)
+                && ProtocolEq::protocol_eq(&self.voter_id, &other.voter_id)
+                && ProtocolEq::protocol_eq(&self.voter_directory_id, &other.voter_directory_id)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
         }
     }
 
@@ -163,7 +175,7 @@ pub mod remove_raft_voter_response {
         encoded_len_with,
     };
 
-    use crate::{KafkaMessage, KafkaResponse};
+    use crate::{KafkaMessage, KafkaResponse, ProtocolEq};
 
     /// Response body for the `RemoveRaftVoter` API.
     #[non_exhaustive]
@@ -187,6 +199,18 @@ pub mod remove_raft_voter_response {
                 error_message: ::core::option::Option::Some(StrBytes::default()),
                 unknown_tagged_fields: TaggedFields::default(),
             }
+        }
+    }
+
+    impl ProtocolEq for RemoveRaftVoterResponse {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.throttle_time_ms, &other.throttle_time_ms)
+                && ProtocolEq::protocol_eq(&self.error_code, &other.error_code)
+                && ProtocolEq::protocol_eq(&self.error_message, &other.error_message)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
         }
     }
 

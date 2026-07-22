@@ -16,7 +16,7 @@ pub mod offset_for_leader_epoch_request {
         encoded_len_with,
     };
 
-    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, RequestResponsePair};
+    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, ProtocolEq, RequestResponsePair};
 
     /// `OffsetForLeaderTopic` as declared by the `OffsetForLeaderEpoch` API.
     #[non_exhaustive]
@@ -64,6 +64,17 @@ pub mod offset_for_leader_epoch_request {
             }
 
             ::core::result::Result::Ok(())
+        }
+    }
+
+    impl ProtocolEq for OffsetForLeaderTopic {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.topic, &other.topic)
+                && ProtocolEq::protocol_eq(&self.partitions, &other.partitions)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
         }
     }
 
@@ -227,6 +238,18 @@ pub mod offset_for_leader_epoch_request {
         }
     }
 
+    impl ProtocolEq for OffsetForLeaderPartition {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.partition, &other.partition)
+                && ProtocolEq::protocol_eq(&self.current_leader_epoch, &other.current_leader_epoch)
+                && ProtocolEq::protocol_eq(&self.leader_epoch, &other.leader_epoch)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
+        }
+    }
+
     impl KafkaDecode for OffsetForLeaderPartition {
         fn decode(
             decoder: &mut Decoder,
@@ -326,6 +349,17 @@ pub mod offset_for_leader_epoch_request {
                 topics: ::std::vec::Vec::new(),
                 unknown_tagged_fields: TaggedFields::default(),
             }
+        }
+    }
+
+    impl ProtocolEq for OffsetForLeaderEpochRequest {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.replica_id, &other.replica_id)
+                && ProtocolEq::protocol_eq(&self.topics, &other.topics)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
         }
     }
 
@@ -472,7 +506,7 @@ pub mod offset_for_leader_epoch_response {
         encoded_len_with,
     };
 
-    use crate::{KafkaMessage, KafkaResponse};
+    use crate::{KafkaMessage, KafkaResponse, ProtocolEq};
 
     /// `OffsetForLeaderTopicResult` as declared by the `OffsetForLeaderEpoch` API.
     #[non_exhaustive]
@@ -520,6 +554,17 @@ pub mod offset_for_leader_epoch_response {
             }
 
             ::core::result::Result::Ok(())
+        }
+    }
+
+    impl ProtocolEq for OffsetForLeaderTopicResult {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.topic, &other.topic)
+                && ProtocolEq::protocol_eq(&self.partitions, &other.partitions)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
         }
     }
 
@@ -684,6 +729,19 @@ pub mod offset_for_leader_epoch_response {
         }
     }
 
+    impl ProtocolEq for EpochEndOffset {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.error_code, &other.error_code)
+                && ProtocolEq::protocol_eq(&self.partition, &other.partition)
+                && ProtocolEq::protocol_eq(&self.leader_epoch, &other.leader_epoch)
+                && ProtocolEq::protocol_eq(&self.end_offset, &other.end_offset)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
+        }
+    }
+
     impl KafkaDecode for EpochEndOffset {
         fn decode(
             decoder: &mut Decoder,
@@ -777,6 +835,17 @@ pub mod offset_for_leader_epoch_response {
         pub topics: ::std::vec::Vec<OffsetForLeaderTopicResult>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl ProtocolEq for OffsetForLeaderEpochResponse {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.throttle_time_ms, &other.throttle_time_ms)
+                && ProtocolEq::protocol_eq(&self.topics, &other.topics)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
+        }
     }
 
     impl KafkaMessage for OffsetForLeaderEpochResponse {

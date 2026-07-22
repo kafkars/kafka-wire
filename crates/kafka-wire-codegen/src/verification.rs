@@ -49,6 +49,10 @@ pub fn render_adversarial_decode_fixture() -> Result<String, GenerationError> {
                 { "name": "Defaults", "type": "[]Default", "versions": "0",
                   "fields": [
                     { "name": "Value", "type": "int32", "versions": "0" }
+                  ] },
+                { "name": "ProtocolEqualities", "type": "[]ProtocolEq", "versions": "0",
+                  "fields": [
+                    { "name": "Value", "type": "int32", "versions": "0" }
                   ] }
             ]
         }"#,
@@ -59,6 +63,76 @@ pub fn render_adversarial_decode_fixture() -> Result<String, GenerationError> {
         .first()
         .ok_or_else(|| GenerationError::InternalInvariant {
             message: "AdversarialDecodeRequest".to_owned(),
+            invariant: "verification pair did not produce an API group".to_owned(),
+        })?;
+    render_api(group, "verification-fixture")
+}
+
+/// Renders nested float defaults that exercise recursive protocol semantics.
+pub fn render_adversarial_defaults_fixture() -> Result<String, GenerationError> {
+    let request = source(
+        "AdversarialDefaultsRequest.json",
+        r#"{
+            "apiKey": 1001,
+            "type": "request",
+            "name": "AdversarialDefaultsRequest",
+            "validVersions": "0-1",
+            "flexibleVersions": "1+",
+            "fields": [
+                { "name": "Version", "type": "int32", "versions": "0+" },
+                { "name": "VersionValue", "type": "int32", "versions": "0+" },
+                { "name": "GatedNan", "type": "GatedNan", "versions": "1+",
+                  "fields": [
+                    { "name": "Value", "type": "float64", "versions": "1+",
+                      "default": "NaN" }
+                  ] },
+                { "name": "GatedNegativeZero", "type": "GatedNegativeZero", "versions": "1+",
+                  "fields": [
+                    { "name": "Value", "type": "float64", "versions": "1+",
+                      "default": "-0.0" }
+                  ] },
+                { "name": "TaggedNan", "type": "TaggedNan", "versions": "1+",
+                  "taggedVersions": "1+", "tag": 0,
+                  "fields": [
+                    { "name": "Value", "type": "float64", "versions": "1+",
+                      "default": "NaN" }
+                  ] },
+                { "name": "TaggedNegativeZero", "type": "TaggedNegativeZero", "versions": "1+",
+                  "taggedVersions": "1+", "tag": 1,
+                  "fields": [
+                    { "name": "Value", "type": "float64", "versions": "1+",
+                      "default": "-0.0" }
+                  ] },
+                { "name": "Deep", "type": "DeepOuter", "versions": "1+" }
+            ],
+            "commonStructs": [
+                { "name": "DeepOuter", "versions": "1+", "fields": [
+                    { "name": "Inner", "type": "DeepInner", "versions": "1+",
+                      "fields": [
+                        { "name": "Value", "type": "float64", "versions": "1+",
+                          "default": "NaN" }
+                      ] }
+                ] }
+            ]
+        }"#,
+    )?;
+    let response = source(
+        "AdversarialDefaultsResponse.json",
+        r#"{
+            "apiKey": 1001,
+            "type": "response",
+            "name": "AdversarialDefaultsResponse",
+            "validVersions": "0-1",
+            "flexibleVersions": "1+",
+            "fields": []
+        }"#,
+    )?;
+    let grouped = group_sources(vec![request, response])?;
+    let group = grouped
+        .api
+        .first()
+        .ok_or_else(|| GenerationError::InternalInvariant {
+            message: "AdversarialDefaultsRequest".to_owned(),
             invariant: "verification pair did not produce an API group".to_owned(),
         })?;
     render_api(group, "verification-fixture")

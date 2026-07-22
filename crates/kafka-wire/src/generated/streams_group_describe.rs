@@ -16,7 +16,7 @@ pub mod streams_group_describe_request {
         encoded_len_with,
     };
 
-    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, RequestResponsePair};
+    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, ProtocolEq, RequestResponsePair};
 
     /// Request body for the `StreamsGroupDescribe` API.
     #[non_exhaustive]
@@ -30,6 +30,24 @@ pub mod streams_group_describe_request {
         pub include_topology_description: bool,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl ProtocolEq for StreamsGroupDescribeRequest {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.group_ids, &other.group_ids)
+                && ProtocolEq::protocol_eq(
+                    &self.include_authorized_operations,
+                    &other.include_authorized_operations,
+                )
+                && ProtocolEq::protocol_eq(
+                    &self.include_topology_description,
+                    &other.include_topology_description,
+                )
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
+        }
     }
 
     impl KafkaMessage for StreamsGroupDescribeRequest {
@@ -172,7 +190,7 @@ pub mod streams_group_describe_response {
         encoded_len_with,
     };
 
-    use crate::{KafkaMessage, KafkaResponse};
+    use crate::{KafkaMessage, KafkaResponse, ProtocolEq};
 
     /// `Endpoint` as declared by the `StreamsGroupDescribe` API.
     #[non_exhaustive]
@@ -217,6 +235,17 @@ pub mod streams_group_describe_response {
             }
 
             ::core::result::Result::Ok(())
+        }
+    }
+
+    impl ProtocolEq for Endpoint {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.host, &other.host)
+                && ProtocolEq::protocol_eq(&self.port, &other.port)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
         }
     }
 
@@ -342,6 +371,18 @@ pub mod streams_group_describe_response {
             }
 
             ::core::result::Result::Ok(())
+        }
+    }
+
+    impl ProtocolEq for TaskOffset {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.subtopology_id, &other.subtopology_id)
+                && ProtocolEq::protocol_eq(&self.partition, &other.partition)
+                && ProtocolEq::protocol_eq(&self.offset, &other.offset)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
         }
     }
 
@@ -479,6 +520,18 @@ pub mod streams_group_describe_response {
             }
 
             ::core::result::Result::Ok(())
+        }
+    }
+
+    impl ProtocolEq for Assignment {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.active_tasks, &other.active_tasks)
+                && ProtocolEq::protocol_eq(&self.standby_tasks, &other.standby_tasks)
+                && ProtocolEq::protocol_eq(&self.warmup_tasks, &other.warmup_tasks)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
         }
     }
 
@@ -626,6 +679,17 @@ pub mod streams_group_describe_response {
         }
     }
 
+    impl ProtocolEq for TaskIds {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.subtopology_id, &other.subtopology_id)
+                && ProtocolEq::protocol_eq(&self.partitions, &other.partitions)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
+        }
+    }
+
     impl KafkaDecode for TaskIds {
         fn decode(
             decoder: &mut Decoder,
@@ -752,6 +816,17 @@ pub mod streams_group_describe_response {
             }
 
             ::core::result::Result::Ok(())
+        }
+    }
+
+    impl ProtocolEq for KeyValue {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.key, &other.key)
+                && ProtocolEq::protocol_eq(&self.value, &other.value)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
         }
     }
 
@@ -882,6 +957,19 @@ pub mod streams_group_describe_response {
             }
 
             ::core::result::Result::Ok(())
+        }
+    }
+
+    impl ProtocolEq for TopicInfo {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.name, &other.name)
+                && ProtocolEq::protocol_eq(&self.partitions, &other.partitions)
+                && ProtocolEq::protocol_eq(&self.replication_factor, &other.replication_factor)
+                && ProtocolEq::protocol_eq(&self.topic_configs, &other.topic_configs)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
         }
     }
 
@@ -1023,6 +1111,17 @@ pub mod streams_group_describe_response {
             }
 
             ::core::result::Result::Ok(())
+        }
+    }
+
+    impl ProtocolEq for TopologyDescription {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.subtopologies, &other.subtopologies)
+                && ProtocolEq::protocol_eq(&self.global_stores, &other.global_stores)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
         }
     }
 
@@ -1168,6 +1267,17 @@ pub mod streams_group_describe_response {
         }
     }
 
+    impl ProtocolEq for TopologyDescriptionSubtopology {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.subtopology_id, &other.subtopology_id)
+                && ProtocolEq::protocol_eq(&self.nodes, &other.nodes)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
+        }
+    }
+
     impl KafkaDecode for TopologyDescriptionSubtopology {
         fn decode(
             decoder: &mut Decoder,
@@ -1304,6 +1414,21 @@ pub mod streams_group_describe_response {
             }
 
             ::core::result::Result::Ok(())
+        }
+    }
+
+    impl ProtocolEq for TopologyDescriptionNode {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.name, &other.name)
+                && ProtocolEq::protocol_eq(&self.node_type, &other.node_type)
+                && ProtocolEq::protocol_eq(&self.source_topics, &other.source_topics)
+                && ProtocolEq::protocol_eq(&self.sink_topic, &other.sink_topic)
+                && ProtocolEq::protocol_eq(&self.stores, &other.stores)
+                && ProtocolEq::protocol_eq(&self.successors, &other.successors)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
         }
     }
 
@@ -1459,6 +1584,17 @@ pub mod streams_group_describe_response {
             }
 
             ::core::result::Result::Ok(())
+        }
+    }
+
+    impl ProtocolEq for TopologyDescriptionGlobalStore {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.source, &other.source)
+                && ProtocolEq::protocol_eq(&self.processor, &other.processor)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
         }
     }
 
@@ -1644,6 +1780,32 @@ pub mod streams_group_describe_response {
                 topology_description_status: 0,
                 unknown_tagged_fields: TaggedFields::default(),
             }
+        }
+    }
+
+    impl ProtocolEq for DescribedGroup {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.error_code, &other.error_code)
+                && ProtocolEq::protocol_eq(&self.error_message, &other.error_message)
+                && ProtocolEq::protocol_eq(&self.group_id, &other.group_id)
+                && ProtocolEq::protocol_eq(&self.group_state, &other.group_state)
+                && ProtocolEq::protocol_eq(&self.group_epoch, &other.group_epoch)
+                && ProtocolEq::protocol_eq(&self.assignment_epoch, &other.assignment_epoch)
+                && ProtocolEq::protocol_eq(&self.topology, &other.topology)
+                && ProtocolEq::protocol_eq(&self.members, &other.members)
+                && ProtocolEq::protocol_eq(
+                    &self.authorized_operations,
+                    &other.authorized_operations,
+                )
+                && ProtocolEq::protocol_eq(&self.topology_description, &other.topology_description)
+                && ProtocolEq::protocol_eq(
+                    &self.topology_description_status,
+                    &other.topology_description_status,
+                )
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
         }
     }
 
@@ -1838,6 +2000,17 @@ pub mod streams_group_describe_response {
         }
     }
 
+    impl ProtocolEq for Topology {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.epoch, &other.epoch)
+                && ProtocolEq::protocol_eq(&self.subtopologies, &other.subtopologies)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
+        }
+    }
+
     impl KafkaDecode for Topology {
         fn decode(
             decoder: &mut Decoder,
@@ -1984,6 +2157,29 @@ pub mod streams_group_describe_response {
             }
 
             ::core::result::Result::Ok(())
+        }
+    }
+
+    impl ProtocolEq for Subtopology {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.subtopology_id, &other.subtopology_id)
+                && ProtocolEq::protocol_eq(&self.source_topics, &other.source_topics)
+                && ProtocolEq::protocol_eq(
+                    &self.repartition_sink_topics,
+                    &other.repartition_sink_topics,
+                )
+                && ProtocolEq::protocol_eq(
+                    &self.state_changelog_topics,
+                    &other.state_changelog_topics,
+                )
+                && ProtocolEq::protocol_eq(
+                    &self.repartition_source_topics,
+                    &other.repartition_source_topics,
+                )
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
         }
     }
 
@@ -2183,6 +2379,30 @@ pub mod streams_group_describe_response {
         }
     }
 
+    impl ProtocolEq for Member {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.member_id, &other.member_id)
+                && ProtocolEq::protocol_eq(&self.member_epoch, &other.member_epoch)
+                && ProtocolEq::protocol_eq(&self.instance_id, &other.instance_id)
+                && ProtocolEq::protocol_eq(&self.rack_id, &other.rack_id)
+                && ProtocolEq::protocol_eq(&self.client_id, &other.client_id)
+                && ProtocolEq::protocol_eq(&self.client_host, &other.client_host)
+                && ProtocolEq::protocol_eq(&self.topology_epoch, &other.topology_epoch)
+                && ProtocolEq::protocol_eq(&self.process_id, &other.process_id)
+                && ProtocolEq::protocol_eq(&self.user_endpoint, &other.user_endpoint)
+                && ProtocolEq::protocol_eq(&self.client_tags, &other.client_tags)
+                && ProtocolEq::protocol_eq(&self.task_offsets, &other.task_offsets)
+                && ProtocolEq::protocol_eq(&self.task_end_offsets, &other.task_end_offsets)
+                && ProtocolEq::protocol_eq(&self.assignment, &other.assignment)
+                && ProtocolEq::protocol_eq(&self.target_assignment, &other.target_assignment)
+                && ProtocolEq::protocol_eq(&self.is_classic, &other.is_classic)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
+        }
+    }
+
     impl KafkaDecode for Member {
         fn decode(
             decoder: &mut Decoder,
@@ -2336,6 +2556,17 @@ pub mod streams_group_describe_response {
         pub groups: ::std::vec::Vec<DescribedGroup>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl ProtocolEq for StreamsGroupDescribeResponse {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.throttle_time_ms, &other.throttle_time_ms)
+                && ProtocolEq::protocol_eq(&self.groups, &other.groups)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
+        }
     }
 
     impl KafkaMessage for StreamsGroupDescribeResponse {

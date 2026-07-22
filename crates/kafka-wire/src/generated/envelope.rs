@@ -16,7 +16,7 @@ pub mod envelope_request {
         encoded_len_with,
     };
 
-    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, RequestResponsePair};
+    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, ProtocolEq, RequestResponsePair};
 
     /// Request body for the `Envelope` API.
     #[non_exhaustive]
@@ -40,6 +40,18 @@ pub mod envelope_request {
                 client_host_address: Bytes::default(),
                 unknown_tagged_fields: TaggedFields::default(),
             }
+        }
+    }
+
+    impl ProtocolEq for EnvelopeRequest {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.request_data, &other.request_data)
+                && ProtocolEq::protocol_eq(&self.request_principal, &other.request_principal)
+                && ProtocolEq::protocol_eq(&self.client_host_address, &other.client_host_address)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
         }
     }
 
@@ -163,7 +175,7 @@ pub mod envelope_response {
         encoded_len_with,
     };
 
-    use crate::{KafkaMessage, KafkaResponse};
+    use crate::{KafkaMessage, KafkaResponse, ProtocolEq};
 
     /// Response body for the `Envelope` API.
     #[non_exhaustive]
@@ -175,6 +187,17 @@ pub mod envelope_response {
         pub error_code: i16,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl ProtocolEq for EnvelopeResponse {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.response_data, &other.response_data)
+                && ProtocolEq::protocol_eq(&self.error_code, &other.error_code)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
+        }
     }
 
     impl KafkaMessage for EnvelopeResponse {

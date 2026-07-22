@@ -16,7 +16,7 @@ pub mod alter_share_group_offsets_request {
         encoded_len_with,
     };
 
-    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, RequestResponsePair};
+    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, ProtocolEq, RequestResponsePair};
 
     /// `AlterShareGroupOffsetsRequestTopic` as declared by the `AlterShareGroupOffsets` API.
     #[non_exhaustive]
@@ -64,6 +64,17 @@ pub mod alter_share_group_offsets_request {
             }
 
             ::core::result::Result::Ok(())
+        }
+    }
+
+    impl ProtocolEq for AlterShareGroupOffsetsRequestTopic {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.topic_name, &other.topic_name)
+                && ProtocolEq::protocol_eq(&self.partitions, &other.partitions)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
         }
     }
 
@@ -204,6 +215,17 @@ pub mod alter_share_group_offsets_request {
         }
     }
 
+    impl ProtocolEq for AlterShareGroupOffsetsRequestPartition {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.partition_index, &other.partition_index)
+                && ProtocolEq::protocol_eq(&self.start_offset, &other.start_offset)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
+        }
+    }
+
     impl KafkaDecode for AlterShareGroupOffsetsRequestPartition {
         fn decode(
             decoder: &mut Decoder,
@@ -297,6 +319,17 @@ pub mod alter_share_group_offsets_request {
         pub topics: ::std::vec::Vec<AlterShareGroupOffsetsRequestTopic>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl ProtocolEq for AlterShareGroupOffsetsRequest {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.group_id, &other.group_id)
+                && ProtocolEq::protocol_eq(&self.topics, &other.topics)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
+        }
     }
 
     impl KafkaMessage for AlterShareGroupOffsetsRequest {
@@ -428,7 +461,7 @@ pub mod alter_share_group_offsets_response {
         encoded_len_with,
     };
 
-    use crate::{KafkaMessage, KafkaResponse};
+    use crate::{KafkaMessage, KafkaResponse, ProtocolEq};
 
     /// `AlterShareGroupOffsetsResponseTopic` as declared by the `AlterShareGroupOffsets` API.
     #[non_exhaustive]
@@ -478,6 +511,18 @@ pub mod alter_share_group_offsets_response {
             }
 
             ::core::result::Result::Ok(())
+        }
+    }
+
+    impl ProtocolEq for AlterShareGroupOffsetsResponseTopic {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.topic_name, &other.topic_name)
+                && ProtocolEq::protocol_eq(&self.topic_id, &other.topic_id)
+                && ProtocolEq::protocol_eq(&self.partitions, &other.partitions)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
         }
     }
 
@@ -623,6 +668,18 @@ pub mod alter_share_group_offsets_response {
         }
     }
 
+    impl ProtocolEq for AlterShareGroupOffsetsResponsePartition {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.partition_index, &other.partition_index)
+                && ProtocolEq::protocol_eq(&self.error_code, &other.error_code)
+                && ProtocolEq::protocol_eq(&self.error_message, &other.error_message)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
+        }
+    }
+
     impl KafkaDecode for AlterShareGroupOffsetsResponsePartition {
         fn decode(
             decoder: &mut Decoder,
@@ -729,6 +786,19 @@ pub mod alter_share_group_offsets_response {
         pub responses: ::std::vec::Vec<AlterShareGroupOffsetsResponseTopic>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl ProtocolEq for AlterShareGroupOffsetsResponse {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.throttle_time_ms, &other.throttle_time_ms)
+                && ProtocolEq::protocol_eq(&self.error_code, &other.error_code)
+                && ProtocolEq::protocol_eq(&self.error_message, &other.error_message)
+                && ProtocolEq::protocol_eq(&self.responses, &other.responses)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
+        }
     }
 
     impl KafkaMessage for AlterShareGroupOffsetsResponse {

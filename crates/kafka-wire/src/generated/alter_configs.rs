@@ -16,7 +16,7 @@ pub mod alter_configs_request {
         encoded_len_with,
     };
 
-    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, RequestResponsePair};
+    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, ProtocolEq, RequestResponsePair};
 
     /// `AlterConfigsResource` as declared by the `AlterConfigs` API.
     #[non_exhaustive]
@@ -66,6 +66,18 @@ pub mod alter_configs_request {
             }
 
             ::core::result::Result::Ok(())
+        }
+    }
+
+    impl ProtocolEq for AlterConfigsResource {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.resource_type, &other.resource_type)
+                && ProtocolEq::protocol_eq(&self.resource_name, &other.resource_name)
+                && ProtocolEq::protocol_eq(&self.configs, &other.configs)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
         }
     }
 
@@ -227,6 +239,17 @@ pub mod alter_configs_request {
         }
     }
 
+    impl ProtocolEq for AlterableConfig {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.name, &other.name)
+                && ProtocolEq::protocol_eq(&self.value, &other.value)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
+        }
+    }
+
     impl KafkaDecode for AlterableConfig {
         fn decode(
             decoder: &mut Decoder,
@@ -330,6 +353,17 @@ pub mod alter_configs_request {
         pub validate_only: bool,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl ProtocolEq for AlterConfigsRequest {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.resources, &other.resources)
+                && ProtocolEq::protocol_eq(&self.validate_only, &other.validate_only)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
+        }
     }
 
     impl KafkaMessage for AlterConfigsRequest {
@@ -468,7 +502,7 @@ pub mod alter_configs_response {
         encoded_len_with,
     };
 
-    use crate::{KafkaMessage, KafkaResponse};
+    use crate::{KafkaMessage, KafkaResponse, ProtocolEq};
 
     /// `AlterConfigsResourceResponse` as declared by the `AlterConfigs` API.
     #[non_exhaustive]
@@ -529,6 +563,19 @@ pub mod alter_configs_response {
                 resource_name: StrBytes::default(),
                 unknown_tagged_fields: TaggedFields::default(),
             }
+        }
+    }
+
+    impl ProtocolEq for AlterConfigsResourceResponse {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.error_code, &other.error_code)
+                && ProtocolEq::protocol_eq(&self.error_message, &other.error_message)
+                && ProtocolEq::protocol_eq(&self.resource_type, &other.resource_type)
+                && ProtocolEq::protocol_eq(&self.resource_name, &other.resource_name)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
         }
     }
 
@@ -641,6 +688,17 @@ pub mod alter_configs_response {
         pub responses: ::std::vec::Vec<AlterConfigsResourceResponse>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl ProtocolEq for AlterConfigsResponse {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.throttle_time_ms, &other.throttle_time_ms)
+                && ProtocolEq::protocol_eq(&self.responses, &other.responses)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
+        }
     }
 
     impl KafkaMessage for AlterConfigsResponse {

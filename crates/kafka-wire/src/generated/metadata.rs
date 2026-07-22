@@ -16,7 +16,7 @@ pub mod metadata_request {
         encoded_len_with,
     };
 
-    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, RequestResponsePair};
+    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, ProtocolEq, RequestResponsePair};
 
     /// `MetadataRequestTopic` as declared by the `Metadata` API.
     #[non_exhaustive]
@@ -78,6 +78,17 @@ pub mod metadata_request {
                 name: ::core::option::Option::Some(StrBytes::default()),
                 unknown_tagged_fields: TaggedFields::default(),
             }
+        }
+    }
+
+    impl ProtocolEq for MetadataRequestTopic {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.topic_id, &other.topic_id)
+                && ProtocolEq::protocol_eq(&self.name, &other.name)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
         }
     }
 
@@ -201,6 +212,28 @@ pub mod metadata_request {
                 include_topic_authorized_operations: false,
                 unknown_tagged_fields: TaggedFields::default(),
             }
+        }
+    }
+
+    impl ProtocolEq for MetadataRequest {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.topics, &other.topics)
+                && ProtocolEq::protocol_eq(
+                    &self.allow_auto_topic_creation,
+                    &other.allow_auto_topic_creation,
+                )
+                && ProtocolEq::protocol_eq(
+                    &self.include_cluster_authorized_operations,
+                    &other.include_cluster_authorized_operations,
+                )
+                && ProtocolEq::protocol_eq(
+                    &self.include_topic_authorized_operations,
+                    &other.include_topic_authorized_operations,
+                )
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
         }
     }
 
@@ -408,7 +441,7 @@ pub mod metadata_response {
         encoded_len_with,
     };
 
-    use crate::{KafkaMessage, KafkaResponse};
+    use crate::{KafkaMessage, KafkaResponse, ProtocolEq};
 
     /// `MetadataResponseBroker` as declared by the `Metadata` API.
     #[non_exhaustive]
@@ -457,6 +490,19 @@ pub mod metadata_response {
             }
 
             ::core::result::Result::Ok(())
+        }
+    }
+
+    impl ProtocolEq for MetadataResponseBroker {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.node_id, &other.node_id)
+                && ProtocolEq::protocol_eq(&self.host, &other.host)
+                && ProtocolEq::protocol_eq(&self.port, &other.port)
+                && ProtocolEq::protocol_eq(&self.rack, &other.rack)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
         }
     }
 
@@ -647,6 +693,24 @@ pub mod metadata_response {
                 topic_authorized_operations: -2_147_483_648,
                 unknown_tagged_fields: TaggedFields::default(),
             }
+        }
+    }
+
+    impl ProtocolEq for MetadataResponseTopic {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.error_code, &other.error_code)
+                && ProtocolEq::protocol_eq(&self.name, &other.name)
+                && ProtocolEq::protocol_eq(&self.topic_id, &other.topic_id)
+                && ProtocolEq::protocol_eq(&self.is_internal, &other.is_internal)
+                && ProtocolEq::protocol_eq(&self.partitions, &other.partitions)
+                && ProtocolEq::protocol_eq(
+                    &self.topic_authorized_operations,
+                    &other.topic_authorized_operations,
+                )
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
         }
     }
 
@@ -856,6 +920,22 @@ pub mod metadata_response {
         }
     }
 
+    impl ProtocolEq for MetadataResponsePartition {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.error_code, &other.error_code)
+                && ProtocolEq::protocol_eq(&self.partition_index, &other.partition_index)
+                && ProtocolEq::protocol_eq(&self.leader_id, &other.leader_id)
+                && ProtocolEq::protocol_eq(&self.leader_epoch, &other.leader_epoch)
+                && ProtocolEq::protocol_eq(&self.replica_nodes, &other.replica_nodes)
+                && ProtocolEq::protocol_eq(&self.isr_nodes, &other.isr_nodes)
+                && ProtocolEq::protocol_eq(&self.offline_replicas, &other.offline_replicas)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
+        }
+    }
+
     impl KafkaDecode for MetadataResponsePartition {
         fn decode(
             decoder: &mut Decoder,
@@ -1034,6 +1114,25 @@ pub mod metadata_response {
                 error_code: 0,
                 unknown_tagged_fields: TaggedFields::default(),
             }
+        }
+    }
+
+    impl ProtocolEq for MetadataResponse {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.throttle_time_ms, &other.throttle_time_ms)
+                && ProtocolEq::protocol_eq(&self.brokers, &other.brokers)
+                && ProtocolEq::protocol_eq(&self.cluster_id, &other.cluster_id)
+                && ProtocolEq::protocol_eq(&self.controller_id, &other.controller_id)
+                && ProtocolEq::protocol_eq(&self.topics, &other.topics)
+                && ProtocolEq::protocol_eq(
+                    &self.cluster_authorized_operations,
+                    &other.cluster_authorized_operations,
+                )
+                && ProtocolEq::protocol_eq(&self.error_code, &other.error_code)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
         }
     }
 

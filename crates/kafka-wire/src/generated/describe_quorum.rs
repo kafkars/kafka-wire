@@ -16,7 +16,7 @@ pub mod describe_quorum_request {
         encoded_len_with,
     };
 
-    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, RequestResponsePair};
+    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, ProtocolEq, RequestResponsePair};
 
     /// `TopicData` as declared by the `DescribeQuorum` API.
     #[non_exhaustive]
@@ -64,6 +64,17 @@ pub mod describe_quorum_request {
             }
 
             ::core::result::Result::Ok(())
+        }
+    }
+
+    impl ProtocolEq for TopicData {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.topic_name, &other.topic_name)
+                && ProtocolEq::protocol_eq(&self.partitions, &other.partitions)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
         }
     }
 
@@ -194,6 +205,16 @@ pub mod describe_quorum_request {
         }
     }
 
+    impl ProtocolEq for PartitionData {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.partition_index, &other.partition_index)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
+        }
+    }
+
     impl KafkaDecode for PartitionData {
         fn decode(
             decoder: &mut Decoder,
@@ -276,6 +297,16 @@ pub mod describe_quorum_request {
         pub topics: ::std::vec::Vec<TopicData>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl ProtocolEq for DescribeQuorumRequest {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.topics, &other.topics)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
+        }
     }
 
     impl KafkaMessage for DescribeQuorumRequest {
@@ -401,7 +432,7 @@ pub mod describe_quorum_response {
         encoded_len_with,
     };
 
-    use crate::{KafkaMessage, KafkaResponse};
+    use crate::{KafkaMessage, KafkaResponse, ProtocolEq};
 
     /// `ReplicaState` as declared by the `DescribeQuorum` API.
     #[non_exhaustive]
@@ -472,6 +503,23 @@ pub mod describe_quorum_response {
                 last_caught_up_timestamp: -1,
                 unknown_tagged_fields: TaggedFields::default(),
             }
+        }
+    }
+
+    impl ProtocolEq for ReplicaState {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.replica_id, &other.replica_id)
+                && ProtocolEq::protocol_eq(&self.replica_directory_id, &other.replica_directory_id)
+                && ProtocolEq::protocol_eq(&self.log_end_offset, &other.log_end_offset)
+                && ProtocolEq::protocol_eq(&self.last_fetch_timestamp, &other.last_fetch_timestamp)
+                && ProtocolEq::protocol_eq(
+                    &self.last_caught_up_timestamp,
+                    &other.last_caught_up_timestamp,
+                )
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
         }
     }
 
@@ -625,6 +673,17 @@ pub mod describe_quorum_response {
             }
 
             ::core::result::Result::Ok(())
+        }
+    }
+
+    impl ProtocolEq for TopicData {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.topic_name, &other.topic_name)
+                && ProtocolEq::protocol_eq(&self.partitions, &other.partitions)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
         }
     }
 
@@ -791,6 +850,23 @@ pub mod describe_quorum_response {
         }
     }
 
+    impl ProtocolEq for PartitionData {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.partition_index, &other.partition_index)
+                && ProtocolEq::protocol_eq(&self.error_code, &other.error_code)
+                && ProtocolEq::protocol_eq(&self.error_message, &other.error_message)
+                && ProtocolEq::protocol_eq(&self.leader_id, &other.leader_id)
+                && ProtocolEq::protocol_eq(&self.leader_epoch, &other.leader_epoch)
+                && ProtocolEq::protocol_eq(&self.high_watermark, &other.high_watermark)
+                && ProtocolEq::protocol_eq(&self.current_voters, &other.current_voters)
+                && ProtocolEq::protocol_eq(&self.observers, &other.observers)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
+        }
+    }
+
     impl KafkaDecode for PartitionData {
         fn decode(
             decoder: &mut Decoder,
@@ -953,6 +1029,17 @@ pub mod describe_quorum_response {
         }
     }
 
+    impl ProtocolEq for Node {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.node_id, &other.node_id)
+                && ProtocolEq::protocol_eq(&self.listeners, &other.listeners)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
+        }
+    }
+
     impl KafkaDecode for Node {
         fn decode(
             decoder: &mut Decoder,
@@ -1084,6 +1171,18 @@ pub mod describe_quorum_response {
         }
     }
 
+    impl ProtocolEq for Listener {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.name, &other.name)
+                && ProtocolEq::protocol_eq(&self.host, &other.host)
+                && ProtocolEq::protocol_eq(&self.port, &other.port)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
+        }
+    }
+
     impl KafkaDecode for Listener {
         fn decode(
             decoder: &mut Decoder,
@@ -1189,6 +1288,19 @@ pub mod describe_quorum_response {
                 nodes: ::std::vec::Vec::new(),
                 unknown_tagged_fields: TaggedFields::default(),
             }
+        }
+    }
+
+    impl ProtocolEq for DescribeQuorumResponse {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.error_code, &other.error_code)
+                && ProtocolEq::protocol_eq(&self.error_message, &other.error_message)
+                && ProtocolEq::protocol_eq(&self.topics, &other.topics)
+                && ProtocolEq::protocol_eq(&self.nodes, &other.nodes)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
         }
     }
 

@@ -16,7 +16,7 @@ pub mod alter_client_quotas_request {
         encoded_len_with,
     };
 
-    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, RequestResponsePair};
+    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, ProtocolEq, RequestResponsePair};
 
     /// `EntryData` as declared by the `AlterClientQuotas` API.
     #[non_exhaustive]
@@ -67,6 +67,17 @@ pub mod alter_client_quotas_request {
             }
 
             ::core::result::Result::Ok(())
+        }
+    }
+
+    impl ProtocolEq for EntryData {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.entity, &other.entity)
+                && ProtocolEq::protocol_eq(&self.ops, &other.ops)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
         }
     }
 
@@ -231,6 +242,17 @@ pub mod alter_client_quotas_request {
         }
     }
 
+    impl ProtocolEq for EntityData {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.entity_type, &other.entity_type)
+                && ProtocolEq::protocol_eq(&self.entity_name, &other.entity_name)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
+        }
+    }
+
     impl KafkaDecode for EntityData {
         fn decode(
             decoder: &mut Decoder,
@@ -383,6 +405,18 @@ pub mod alter_client_quotas_request {
         }
     }
 
+    impl ProtocolEq for OpData {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.key, &other.key)
+                && ProtocolEq::protocol_eq(&self.value, &other.value)
+                && ProtocolEq::protocol_eq(&self.remove, &other.remove)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
+        }
+    }
+
     impl KafkaDecode for OpData {
         fn decode(
             decoder: &mut Decoder,
@@ -481,6 +515,17 @@ pub mod alter_client_quotas_request {
         pub validate_only: bool,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl ProtocolEq for AlterClientQuotasRequest {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.entries, &other.entries)
+                && ProtocolEq::protocol_eq(&self.validate_only, &other.validate_only)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
+        }
     }
 
     impl KafkaMessage for AlterClientQuotasRequest {
@@ -617,7 +662,7 @@ pub mod alter_client_quotas_response {
         encoded_len_with,
     };
 
-    use crate::{KafkaMessage, KafkaResponse};
+    use crate::{KafkaMessage, KafkaResponse, ProtocolEq};
 
     /// `EntryData` as declared by the `AlterClientQuotas` API.
     #[non_exhaustive]
@@ -678,6 +723,18 @@ pub mod alter_client_quotas_response {
                 entity: ::std::vec::Vec::new(),
                 unknown_tagged_fields: TaggedFields::default(),
             }
+        }
+    }
+
+    impl ProtocolEq for EntryData {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.error_code, &other.error_code)
+                && ProtocolEq::protocol_eq(&self.error_message, &other.error_message)
+                && ProtocolEq::protocol_eq(&self.entity, &other.entity)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
         }
     }
 
@@ -839,6 +896,17 @@ pub mod alter_client_quotas_response {
         }
     }
 
+    impl ProtocolEq for EntityData {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.entity_type, &other.entity_type)
+                && ProtocolEq::protocol_eq(&self.entity_name, &other.entity_name)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
+        }
+    }
+
     impl KafkaDecode for EntityData {
         fn decode(
             decoder: &mut Decoder,
@@ -942,6 +1010,17 @@ pub mod alter_client_quotas_response {
         pub entries: ::std::vec::Vec<EntryData>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl ProtocolEq for AlterClientQuotasResponse {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.throttle_time_ms, &other.throttle_time_ms)
+                && ProtocolEq::protocol_eq(&self.entries, &other.entries)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
+        }
     }
 
     impl KafkaMessage for AlterClientQuotasResponse {

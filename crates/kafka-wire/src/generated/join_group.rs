@@ -16,7 +16,7 @@ pub mod join_group_request {
         encoded_len_with,
     };
 
-    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, RequestResponsePair};
+    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, ProtocolEq, RequestResponsePair};
 
     /// `JoinGroupRequestProtocol` as declared by the `JoinGroup` API.
     #[non_exhaustive]
@@ -61,6 +61,17 @@ pub mod join_group_request {
             }
 
             ::core::result::Result::Ok(())
+        }
+    }
+
+    impl ProtocolEq for JoinGroupRequestProtocol {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.name, &other.name)
+                && ProtocolEq::protocol_eq(&self.metadata, &other.metadata)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
         }
     }
 
@@ -194,6 +205,23 @@ pub mod join_group_request {
                 reason: ::core::option::Option::None,
                 unknown_tagged_fields: TaggedFields::default(),
             }
+        }
+    }
+
+    impl ProtocolEq for JoinGroupRequest {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.group_id, &other.group_id)
+                && ProtocolEq::protocol_eq(&self.session_timeout_ms, &other.session_timeout_ms)
+                && ProtocolEq::protocol_eq(&self.rebalance_timeout_ms, &other.rebalance_timeout_ms)
+                && ProtocolEq::protocol_eq(&self.member_id, &other.member_id)
+                && ProtocolEq::protocol_eq(&self.group_instance_id, &other.group_instance_id)
+                && ProtocolEq::protocol_eq(&self.protocol_type, &other.protocol_type)
+                && ProtocolEq::protocol_eq(&self.protocols, &other.protocols)
+                && ProtocolEq::protocol_eq(&self.reason, &other.reason)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
         }
     }
 
@@ -408,7 +436,7 @@ pub mod join_group_response {
         encoded_len_with,
     };
 
-    use crate::{KafkaMessage, KafkaResponse};
+    use crate::{KafkaMessage, KafkaResponse, ProtocolEq};
 
     /// `JoinGroupResponseMember` as declared by the `JoinGroup` API.
     #[non_exhaustive]
@@ -455,6 +483,18 @@ pub mod join_group_response {
             }
 
             ::core::result::Result::Ok(())
+        }
+    }
+
+    impl ProtocolEq for JoinGroupResponseMember {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.member_id, &other.member_id)
+                && ProtocolEq::protocol_eq(&self.group_instance_id, &other.group_instance_id)
+                && ProtocolEq::protocol_eq(&self.metadata, &other.metadata)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
         }
     }
 
@@ -608,6 +648,24 @@ pub mod join_group_response {
                 members: ::std::vec::Vec::new(),
                 unknown_tagged_fields: TaggedFields::default(),
             }
+        }
+    }
+
+    impl ProtocolEq for JoinGroupResponse {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.throttle_time_ms, &other.throttle_time_ms)
+                && ProtocolEq::protocol_eq(&self.error_code, &other.error_code)
+                && ProtocolEq::protocol_eq(&self.generation_id, &other.generation_id)
+                && ProtocolEq::protocol_eq(&self.protocol_type, &other.protocol_type)
+                && ProtocolEq::protocol_eq(&self.protocol_name, &other.protocol_name)
+                && ProtocolEq::protocol_eq(&self.leader, &other.leader)
+                && ProtocolEq::protocol_eq(&self.skip_assignment, &other.skip_assignment)
+                && ProtocolEq::protocol_eq(&self.member_id, &other.member_id)
+                && ProtocolEq::protocol_eq(&self.members, &other.members)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
         }
     }
 

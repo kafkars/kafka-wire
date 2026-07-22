@@ -16,7 +16,7 @@ pub mod sasl_authenticate_request {
         encoded_len_with,
     };
 
-    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, RequestResponsePair};
+    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, ProtocolEq, RequestResponsePair};
 
     /// Request body for the `SaslAuthenticate` API.
     #[non_exhaustive]
@@ -26,6 +26,16 @@ pub mod sasl_authenticate_request {
         pub auth_bytes: Bytes,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl ProtocolEq for SaslAuthenticateRequest {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.auth_bytes, &other.auth_bytes)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
+        }
     }
 
     impl KafkaMessage for SaslAuthenticateRequest {
@@ -150,7 +160,7 @@ pub mod sasl_authenticate_response {
         encoded_len_with,
     };
 
-    use crate::{KafkaMessage, KafkaResponse};
+    use crate::{KafkaMessage, KafkaResponse, ProtocolEq};
 
     /// Response body for the `SaslAuthenticate` API.
     #[non_exhaustive]
@@ -177,6 +187,19 @@ pub mod sasl_authenticate_response {
                 session_lifetime_ms: 0,
                 unknown_tagged_fields: TaggedFields::default(),
             }
+        }
+    }
+
+    impl ProtocolEq for SaslAuthenticateResponse {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.error_code, &other.error_code)
+                && ProtocolEq::protocol_eq(&self.error_message, &other.error_message)
+                && ProtocolEq::protocol_eq(&self.auth_bytes, &other.auth_bytes)
+                && ProtocolEq::protocol_eq(&self.session_lifetime_ms, &other.session_lifetime_ms)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
         }
     }
 

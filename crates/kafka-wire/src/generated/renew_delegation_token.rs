@@ -16,7 +16,7 @@ pub mod renew_delegation_token_request {
         encoded_len_with,
     };
 
-    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, RequestResponsePair};
+    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, ProtocolEq, RequestResponsePair};
 
     /// Request body for the `RenewDelegationToken` API.
     #[non_exhaustive]
@@ -28,6 +28,17 @@ pub mod renew_delegation_token_request {
         pub renew_period_ms: i64,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl ProtocolEq for RenewDelegationTokenRequest {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.hmac, &other.hmac)
+                && ProtocolEq::protocol_eq(&self.renew_period_ms, &other.renew_period_ms)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
+        }
     }
 
     impl KafkaMessage for RenewDelegationTokenRequest {
@@ -155,7 +166,7 @@ pub mod renew_delegation_token_response {
         KafkaDecode, KafkaEncode, TaggedFields, VersionRange, encode_into_with, encoded_len_with,
     };
 
-    use crate::{KafkaMessage, KafkaResponse};
+    use crate::{KafkaMessage, KafkaResponse, ProtocolEq};
 
     /// Response body for the `RenewDelegationToken` API.
     #[non_exhaustive]
@@ -169,6 +180,18 @@ pub mod renew_delegation_token_response {
         pub throttle_time_ms: i32,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl ProtocolEq for RenewDelegationTokenResponse {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.error_code, &other.error_code)
+                && ProtocolEq::protocol_eq(&self.expiry_timestamp_ms, &other.expiry_timestamp_ms)
+                && ProtocolEq::protocol_eq(&self.throttle_time_ms, &other.throttle_time_ms)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
+        }
     }
 
     impl KafkaMessage for RenewDelegationTokenResponse {

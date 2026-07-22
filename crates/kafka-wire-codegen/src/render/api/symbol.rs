@@ -31,6 +31,7 @@ pub(crate) enum ExternalSymbol {
     MessageDirection,
     KafkaRequest,
     KafkaResponse,
+    ProtocolEq,
     RequestResponsePair,
     Result,
     Option,
@@ -70,6 +71,7 @@ impl ExternalSymbol {
         Self::MessageDirection,
         Self::KafkaRequest,
         Self::KafkaResponse,
+        Self::ProtocolEq,
         Self::RequestResponsePair,
     ];
 
@@ -100,6 +102,7 @@ impl ExternalSymbol {
             Self::MessageDirection => "MessageDirection",
             Self::KafkaRequest => "KafkaRequest",
             Self::KafkaResponse => "KafkaResponse",
+            Self::ProtocolEq => "ProtocolEq",
             Self::RequestResponsePair => "RequestResponsePair",
             Self::Result => "Result",
             Self::Option => "Option",
@@ -120,6 +123,7 @@ impl ExternalSymbol {
             | Self::MessageDirection
             | Self::KafkaRequest
             | Self::KafkaResponse
+            | Self::ProtocolEq
             | Self::RequestResponsePair => Some("crate"),
             Self::ApiKey
             | Self::ApiVersion

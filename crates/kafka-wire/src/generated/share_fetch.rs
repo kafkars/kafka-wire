@@ -16,7 +16,7 @@ pub mod share_fetch_request {
         encoded_len_with,
     };
 
-    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, RequestResponsePair};
+    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, ProtocolEq, RequestResponsePair};
 
     /// `FetchTopic` as declared by the `ShareFetch` API.
     #[non_exhaustive]
@@ -64,6 +64,17 @@ pub mod share_fetch_request {
             }
 
             ::core::result::Result::Ok(())
+        }
+    }
+
+    impl ProtocolEq for FetchTopic {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.topic_id, &other.topic_id)
+                && ProtocolEq::protocol_eq(&self.partitions, &other.partitions)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
         }
     }
 
@@ -196,6 +207,20 @@ pub mod share_fetch_request {
             }
 
             ::core::result::Result::Ok(())
+        }
+    }
+
+    impl ProtocolEq for FetchPartition {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.partition_index, &other.partition_index)
+                && ProtocolEq::protocol_eq(
+                    &self.acknowledgement_batches,
+                    &other.acknowledgement_batches,
+                )
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
         }
     }
 
@@ -332,6 +357,18 @@ pub mod share_fetch_request {
         }
     }
 
+    impl ProtocolEq for AcknowledgementBatch {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.first_offset, &other.first_offset)
+                && ProtocolEq::protocol_eq(&self.last_offset, &other.last_offset)
+                && ProtocolEq::protocol_eq(&self.acknowledge_types, &other.acknowledge_types)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
+        }
+    }
+
     impl KafkaDecode for AcknowledgementBatch {
         fn decode(
             decoder: &mut Decoder,
@@ -461,6 +498,17 @@ pub mod share_fetch_request {
             }
 
             ::core::result::Result::Ok(())
+        }
+    }
+
+    impl ProtocolEq for ForgottenTopic {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.topic_id, &other.topic_id)
+                && ProtocolEq::protocol_eq(&self.partitions, &other.partitions)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
         }
     }
 
@@ -596,6 +644,30 @@ pub mod share_fetch_request {
                 forgotten_topics_data: ::std::vec::Vec::new(),
                 unknown_tagged_fields: TaggedFields::default(),
             }
+        }
+    }
+
+    impl ProtocolEq for ShareFetchRequest {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.group_id, &other.group_id)
+                && ProtocolEq::protocol_eq(&self.member_id, &other.member_id)
+                && ProtocolEq::protocol_eq(&self.share_session_epoch, &other.share_session_epoch)
+                && ProtocolEq::protocol_eq(&self.max_wait_ms, &other.max_wait_ms)
+                && ProtocolEq::protocol_eq(&self.min_bytes, &other.min_bytes)
+                && ProtocolEq::protocol_eq(&self.max_bytes, &other.max_bytes)
+                && ProtocolEq::protocol_eq(&self.max_records, &other.max_records)
+                && ProtocolEq::protocol_eq(&self.batch_size, &other.batch_size)
+                && ProtocolEq::protocol_eq(&self.share_acquire_mode, &other.share_acquire_mode)
+                && ProtocolEq::protocol_eq(&self.is_renew_ack, &other.is_renew_ack)
+                && ProtocolEq::protocol_eq(&self.topics, &other.topics)
+                && ProtocolEq::protocol_eq(
+                    &self.forgotten_topics_data,
+                    &other.forgotten_topics_data,
+                )
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
         }
     }
 
@@ -783,7 +855,7 @@ pub mod share_fetch_response {
         encode_into_with, encoded_len_with,
     };
 
-    use crate::{KafkaMessage, KafkaResponse};
+    use crate::{KafkaMessage, KafkaResponse, ProtocolEq};
 
     /// `ShareFetchableTopicResponse` as declared by the `ShareFetch` API.
     #[non_exhaustive]
@@ -831,6 +903,17 @@ pub mod share_fetch_response {
             }
 
             ::core::result::Result::Ok(())
+        }
+    }
+
+    impl ProtocolEq for ShareFetchableTopicResponse {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.topic_id, &other.topic_id)
+                && ProtocolEq::protocol_eq(&self.partitions, &other.partitions)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
         }
     }
 
@@ -976,6 +1059,29 @@ pub mod share_fetch_response {
             }
 
             ::core::result::Result::Ok(())
+        }
+    }
+
+    impl ProtocolEq for PartitionData {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.partition_index, &other.partition_index)
+                && ProtocolEq::protocol_eq(&self.error_code, &other.error_code)
+                && ProtocolEq::protocol_eq(&self.error_message, &other.error_message)
+                && ProtocolEq::protocol_eq(
+                    &self.acknowledge_error_code,
+                    &other.acknowledge_error_code,
+                )
+                && ProtocolEq::protocol_eq(
+                    &self.acknowledge_error_message,
+                    &other.acknowledge_error_message,
+                )
+                && ProtocolEq::protocol_eq(&self.current_leader, &other.current_leader)
+                && ProtocolEq::protocol_eq(&self.records, &other.records)
+                && ProtocolEq::protocol_eq(&self.acquired_records, &other.acquired_records)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
         }
     }
 
@@ -1126,6 +1232,17 @@ pub mod share_fetch_response {
         }
     }
 
+    impl ProtocolEq for LeaderIdAndEpoch {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.leader_id, &other.leader_id)
+                && ProtocolEq::protocol_eq(&self.leader_epoch, &other.leader_epoch)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
+        }
+    }
+
     impl KafkaDecode for LeaderIdAndEpoch {
         fn decode(
             decoder: &mut Decoder,
@@ -1248,6 +1365,18 @@ pub mod share_fetch_response {
             }
 
             ::core::result::Result::Ok(())
+        }
+    }
+
+    impl ProtocolEq for AcquiredRecords {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.first_offset, &other.first_offset)
+                && ProtocolEq::protocol_eq(&self.last_offset, &other.last_offset)
+                && ProtocolEq::protocol_eq(&self.delivery_count, &other.delivery_count)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
         }
     }
 
@@ -1381,6 +1510,19 @@ pub mod share_fetch_response {
         }
     }
 
+    impl ProtocolEq for NodeEndpoint {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.node_id, &other.node_id)
+                && ProtocolEq::protocol_eq(&self.host, &other.host)
+                && ProtocolEq::protocol_eq(&self.port, &other.port)
+                && ProtocolEq::protocol_eq(&self.rack, &other.rack)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
+        }
+    }
+
     impl KafkaDecode for NodeEndpoint {
         fn decode(
             decoder: &mut Decoder,
@@ -1482,6 +1624,24 @@ pub mod share_fetch_response {
         pub node_endpoints: ::std::vec::Vec<NodeEndpoint>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl ProtocolEq for ShareFetchResponse {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.throttle_time_ms, &other.throttle_time_ms)
+                && ProtocolEq::protocol_eq(&self.error_code, &other.error_code)
+                && ProtocolEq::protocol_eq(&self.error_message, &other.error_message)
+                && ProtocolEq::protocol_eq(
+                    &self.acquisition_lock_timeout_ms,
+                    &other.acquisition_lock_timeout_ms,
+                )
+                && ProtocolEq::protocol_eq(&self.responses, &other.responses)
+                && ProtocolEq::protocol_eq(&self.node_endpoints, &other.node_endpoints)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
+        }
     }
 
     impl KafkaMessage for ShareFetchResponse {

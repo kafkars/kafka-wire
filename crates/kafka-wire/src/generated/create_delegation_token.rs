@@ -16,7 +16,7 @@ pub mod create_delegation_token_request {
         encoded_len_with,
     };
 
-    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, RequestResponsePair};
+    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, ProtocolEq, RequestResponsePair};
 
     /// `CreatableRenewers` as declared by the `CreateDelegationToken` API.
     #[non_exhaustive]
@@ -61,6 +61,17 @@ pub mod create_delegation_token_request {
             }
 
             ::core::result::Result::Ok(())
+        }
+    }
+
+    impl ProtocolEq for CreatableRenewers {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.principal_type, &other.principal_type)
+                && ProtocolEq::protocol_eq(&self.principal_name, &other.principal_name)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
         }
     }
 
@@ -182,6 +193,19 @@ pub mod create_delegation_token_request {
                 max_lifetime_ms: 0,
                 unknown_tagged_fields: TaggedFields::default(),
             }
+        }
+    }
+
+    impl ProtocolEq for CreateDelegationTokenRequest {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.owner_principal_type, &other.owner_principal_type)
+                && ProtocolEq::protocol_eq(&self.owner_principal_name, &other.owner_principal_name)
+                && ProtocolEq::protocol_eq(&self.renewers, &other.renewers)
+                && ProtocolEq::protocol_eq(&self.max_lifetime_ms, &other.max_lifetime_ms)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
         }
     }
 
@@ -358,7 +382,7 @@ pub mod create_delegation_token_response {
         encoded_len_with,
     };
 
-    use crate::{KafkaMessage, KafkaResponse};
+    use crate::{KafkaMessage, KafkaResponse, ProtocolEq};
 
     /// Response body for the `CreateDelegationToken` API.
     #[non_exhaustive]
@@ -388,6 +412,32 @@ pub mod create_delegation_token_response {
         pub throttle_time_ms: i32,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl ProtocolEq for CreateDelegationTokenResponse {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.error_code, &other.error_code)
+                && ProtocolEq::protocol_eq(&self.principal_type, &other.principal_type)
+                && ProtocolEq::protocol_eq(&self.principal_name, &other.principal_name)
+                && ProtocolEq::protocol_eq(
+                    &self.token_requester_principal_type,
+                    &other.token_requester_principal_type,
+                )
+                && ProtocolEq::protocol_eq(
+                    &self.token_requester_principal_name,
+                    &other.token_requester_principal_name,
+                )
+                && ProtocolEq::protocol_eq(&self.issue_timestamp_ms, &other.issue_timestamp_ms)
+                && ProtocolEq::protocol_eq(&self.expiry_timestamp_ms, &other.expiry_timestamp_ms)
+                && ProtocolEq::protocol_eq(&self.max_timestamp_ms, &other.max_timestamp_ms)
+                && ProtocolEq::protocol_eq(&self.token_id, &other.token_id)
+                && ProtocolEq::protocol_eq(&self.hmac, &other.hmac)
+                && ProtocolEq::protocol_eq(&self.throttle_time_ms, &other.throttle_time_ms)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
+        }
     }
 
     impl KafkaMessage for CreateDelegationTokenResponse {

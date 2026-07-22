@@ -8,9 +8,11 @@ mod header;
 mod imports;
 mod message;
 mod prose;
+mod protocol_eq;
 mod structs;
 mod symbol;
 mod tagged;
+mod tagged_payload;
 mod validation;
 
 #[cfg(test)]

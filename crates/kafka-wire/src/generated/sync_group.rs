@@ -16,7 +16,7 @@ pub mod sync_group_request {
         encoded_len_with,
     };
 
-    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, RequestResponsePair};
+    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, ProtocolEq, RequestResponsePair};
 
     /// `SyncGroupRequestAssignment` as declared by the `SyncGroup` API.
     #[non_exhaustive]
@@ -61,6 +61,17 @@ pub mod sync_group_request {
             }
 
             ::core::result::Result::Ok(())
+        }
+    }
+
+    impl ProtocolEq for SyncGroupRequestAssignment {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.member_id, &other.member_id)
+                && ProtocolEq::protocol_eq(&self.assignment, &other.assignment)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
         }
     }
 
@@ -177,6 +188,22 @@ pub mod sync_group_request {
         pub assignments: ::std::vec::Vec<SyncGroupRequestAssignment>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl ProtocolEq for SyncGroupRequest {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.group_id, &other.group_id)
+                && ProtocolEq::protocol_eq(&self.generation_id, &other.generation_id)
+                && ProtocolEq::protocol_eq(&self.member_id, &other.member_id)
+                && ProtocolEq::protocol_eq(&self.group_instance_id, &other.group_instance_id)
+                && ProtocolEq::protocol_eq(&self.protocol_type, &other.protocol_type)
+                && ProtocolEq::protocol_eq(&self.protocol_name, &other.protocol_name)
+                && ProtocolEq::protocol_eq(&self.assignments, &other.assignments)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
+        }
     }
 
     impl KafkaMessage for SyncGroupRequest {
@@ -379,7 +406,7 @@ pub mod sync_group_response {
         encoded_len_with,
     };
 
-    use crate::{KafkaMessage, KafkaResponse};
+    use crate::{KafkaMessage, KafkaResponse, ProtocolEq};
 
     /// Response body for the `SyncGroup` API.
     #[non_exhaustive]
@@ -397,6 +424,20 @@ pub mod sync_group_response {
         pub assignment: Bytes,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl ProtocolEq for SyncGroupResponse {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.throttle_time_ms, &other.throttle_time_ms)
+                && ProtocolEq::protocol_eq(&self.error_code, &other.error_code)
+                && ProtocolEq::protocol_eq(&self.protocol_type, &other.protocol_type)
+                && ProtocolEq::protocol_eq(&self.protocol_name, &other.protocol_name)
+                && ProtocolEq::protocol_eq(&self.assignment, &other.assignment)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
+        }
     }
 
     impl KafkaMessage for SyncGroupResponse {

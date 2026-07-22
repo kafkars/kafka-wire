@@ -16,7 +16,7 @@ pub mod streams_group_topology_description_update_request {
         encoded_len_with,
     };
 
-    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, RequestResponsePair};
+    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, ProtocolEq, RequestResponsePair};
 
     /// `TopologyDescription` as declared by the `StreamsGroupTopologyDescriptionUpdate` API.
     #[non_exhaustive]
@@ -67,6 +67,17 @@ pub mod streams_group_topology_description_update_request {
             }
 
             ::core::result::Result::Ok(())
+        }
+    }
+
+    impl ProtocolEq for TopologyDescription {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.subtopologies, &other.subtopologies)
+                && ProtocolEq::protocol_eq(&self.global_stores, &other.global_stores)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
         }
     }
 
@@ -212,6 +223,17 @@ pub mod streams_group_topology_description_update_request {
         }
     }
 
+    impl ProtocolEq for TopologyDescriptionSubtopology {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.subtopology_id, &other.subtopology_id)
+                && ProtocolEq::protocol_eq(&self.nodes, &other.nodes)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
+        }
+    }
+
     impl KafkaDecode for TopologyDescriptionSubtopology {
         fn decode(
             decoder: &mut Decoder,
@@ -348,6 +370,21 @@ pub mod streams_group_topology_description_update_request {
             }
 
             ::core::result::Result::Ok(())
+        }
+    }
+
+    impl ProtocolEq for TopologyDescriptionNode {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.name, &other.name)
+                && ProtocolEq::protocol_eq(&self.node_type, &other.node_type)
+                && ProtocolEq::protocol_eq(&self.source_topics, &other.source_topics)
+                && ProtocolEq::protocol_eq(&self.sink_topic, &other.sink_topic)
+                && ProtocolEq::protocol_eq(&self.stores, &other.stores)
+                && ProtocolEq::protocol_eq(&self.successors, &other.successors)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
         }
     }
 
@@ -506,6 +543,17 @@ pub mod streams_group_topology_description_update_request {
         }
     }
 
+    impl ProtocolEq for TopologyDescriptionGlobalStore {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.source, &other.source)
+                && ProtocolEq::protocol_eq(&self.processor, &other.processor)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
+        }
+    }
+
     impl KafkaDecode for TopologyDescriptionGlobalStore {
         fn decode(
             decoder: &mut Decoder,
@@ -597,6 +645,19 @@ pub mod streams_group_topology_description_update_request {
         pub topology_description: TopologyDescription,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl ProtocolEq for StreamsGroupTopologyDescriptionUpdateRequest {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.group_id, &other.group_id)
+                && ProtocolEq::protocol_eq(&self.member_id, &other.member_id)
+                && ProtocolEq::protocol_eq(&self.topology_epoch, &other.topology_epoch)
+                && ProtocolEq::protocol_eq(&self.topology_description, &other.topology_description)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
+        }
     }
 
     impl KafkaMessage for StreamsGroupTopologyDescriptionUpdateRequest {
@@ -737,7 +798,7 @@ pub mod streams_group_topology_description_update_response {
         encoded_len_with,
     };
 
-    use crate::{KafkaMessage, KafkaResponse};
+    use crate::{KafkaMessage, KafkaResponse, ProtocolEq};
 
     /// Response body for the `StreamsGroupTopologyDescriptionUpdate` API.
     #[non_exhaustive]
@@ -751,6 +812,18 @@ pub mod streams_group_topology_description_update_response {
         pub error_message: ::core::option::Option<StrBytes>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl ProtocolEq for StreamsGroupTopologyDescriptionUpdateResponse {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.throttle_time_ms, &other.throttle_time_ms)
+                && ProtocolEq::protocol_eq(&self.error_code, &other.error_code)
+                && ProtocolEq::protocol_eq(&self.error_message, &other.error_message)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
+        }
     }
 
     impl KafkaMessage for StreamsGroupTopologyDescriptionUpdateResponse {

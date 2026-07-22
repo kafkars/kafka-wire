@@ -16,7 +16,7 @@ pub mod vote_request {
         encoded_len_with,
     };
 
-    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, RequestResponsePair};
+    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, ProtocolEq, RequestResponsePair};
 
     /// `TopicData` as declared by the `Vote` API.
     #[non_exhaustive]
@@ -64,6 +64,17 @@ pub mod vote_request {
             }
 
             ::core::result::Result::Ok(())
+        }
+    }
+
+    impl ProtocolEq for TopicData {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.topic_name, &other.topic_name)
+                && ProtocolEq::protocol_eq(&self.partitions, &other.partitions)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
         }
     }
 
@@ -215,6 +226,23 @@ pub mod vote_request {
         }
     }
 
+    impl ProtocolEq for PartitionData {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.partition_index, &other.partition_index)
+                && ProtocolEq::protocol_eq(&self.replica_epoch, &other.replica_epoch)
+                && ProtocolEq::protocol_eq(&self.replica_id, &other.replica_id)
+                && ProtocolEq::protocol_eq(&self.replica_directory_id, &other.replica_directory_id)
+                && ProtocolEq::protocol_eq(&self.voter_directory_id, &other.voter_directory_id)
+                && ProtocolEq::protocol_eq(&self.last_offset_epoch, &other.last_offset_epoch)
+                && ProtocolEq::protocol_eq(&self.last_offset, &other.last_offset)
+                && ProtocolEq::protocol_eq(&self.pre_vote, &other.pre_vote)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
+        }
+    }
+
     impl KafkaDecode for PartitionData {
         fn decode(
             decoder: &mut Decoder,
@@ -353,6 +381,18 @@ pub mod vote_request {
         }
     }
 
+    impl ProtocolEq for VoteRequest {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.cluster_id, &other.cluster_id)
+                && ProtocolEq::protocol_eq(&self.voter_id, &other.voter_id)
+                && ProtocolEq::protocol_eq(&self.topics, &other.topics)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
+        }
+    }
+
     impl KafkaMessage for VoteRequest {
         const NAME: &'static str = "VoteRequest";
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 2);
@@ -488,7 +528,7 @@ pub mod vote_response {
         encode_into_with, encoded_len_with,
     };
 
-    use crate::{KafkaMessage, KafkaResponse};
+    use crate::{KafkaMessage, KafkaResponse, ProtocolEq};
 
     /// `TopicData` as declared by the `Vote` API.
     #[non_exhaustive]
@@ -536,6 +576,17 @@ pub mod vote_response {
             }
 
             ::core::result::Result::Ok(())
+        }
+    }
+
+    impl ProtocolEq for TopicData {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.topic_name, &other.topic_name)
+                && ProtocolEq::protocol_eq(&self.partitions, &other.partitions)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
         }
     }
 
@@ -674,6 +725,20 @@ pub mod vote_response {
         }
     }
 
+    impl ProtocolEq for PartitionData {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.partition_index, &other.partition_index)
+                && ProtocolEq::protocol_eq(&self.error_code, &other.error_code)
+                && ProtocolEq::protocol_eq(&self.leader_id, &other.leader_id)
+                && ProtocolEq::protocol_eq(&self.leader_epoch, &other.leader_epoch)
+                && ProtocolEq::protocol_eq(&self.vote_granted, &other.vote_granted)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
+        }
+    }
+
     impl KafkaDecode for PartitionData {
         fn decode(
             decoder: &mut Decoder,
@@ -808,6 +873,18 @@ pub mod vote_response {
         }
     }
 
+    impl ProtocolEq for NodeEndpoint {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.node_id, &other.node_id)
+                && ProtocolEq::protocol_eq(&self.host, &other.host)
+                && ProtocolEq::protocol_eq(&self.port, &other.port)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
+        }
+    }
+
     impl KafkaDecode for NodeEndpoint {
         fn decode(
             decoder: &mut Decoder,
@@ -902,6 +979,18 @@ pub mod vote_response {
         pub unknown_tagged_fields: TaggedFields,
     }
 
+    impl ProtocolEq for VoteResponse {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.error_code, &other.error_code)
+                && ProtocolEq::protocol_eq(&self.topics, &other.topics)
+                && ProtocolEq::protocol_eq(&self.node_endpoints, &other.node_endpoints)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
+        }
+    }
+
     impl KafkaMessage for VoteResponse {
         const NAME: &'static str = "VoteResponse";
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 2);
@@ -986,6 +1075,18 @@ pub mod vote_response {
     }
 
     impl VoteResponse {
+        fn __kw_encode_known_tag_0<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
+            encoder.write_compact_array_len(self.node_endpoints.len())?;
+            for value in &self.node_endpoints {
+                value.encode_validated(encoder, version)?;
+            }
+            ::core::result::Result::Ok(())
+        }
+
         fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
@@ -1000,15 +1101,18 @@ pub mod vote_response {
             if Self::is_flexible(version) {
                 let mut known = KnownTags::new();
                 if version.value() >= 1 && !self.node_endpoints.is_empty() {
-                    known.write(0, |encoder| {
-                        encoder.write_compact_array_len(self.node_endpoints.len())?;
-                        for value in &self.node_endpoints {
-                            value.encode_validated(encoder, version)?;
-                        }
-                        ::core::result::Result::Ok(())
+                    known.measure(0, |encoder| {
+                        Self::__kw_encode_known_tag_0(self, encoder, version)
                     })?;
                 }
-                encoder.write_merged_tagged_fields(known, &self.unknown_tagged_fields)?;
+                encoder.write_merged_tagged_fields(
+                    known,
+                    &self.unknown_tagged_fields,
+                    |tag, encoder| match tag {
+                        0 => Self::__kw_encode_known_tag_0(self, encoder, version),
+                        _ => unreachable!("KnownTags yielded an unmeasured tag"),
+                    },
+                )?;
             }
 
             ::core::result::Result::Ok(())

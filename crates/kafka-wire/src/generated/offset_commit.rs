@@ -16,7 +16,7 @@ pub mod offset_commit_request {
         encoded_len_with,
     };
 
-    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, RequestResponsePair};
+    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, ProtocolEq, RequestResponsePair};
 
     /// `OffsetCommitRequestTopic` as declared by the `OffsetCommit` API.
     #[non_exhaustive]
@@ -66,6 +66,18 @@ pub mod offset_commit_request {
             }
 
             ::core::result::Result::Ok(())
+        }
+    }
+
+    impl ProtocolEq for OffsetCommitRequestTopic {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.name, &other.name)
+                && ProtocolEq::protocol_eq(&self.topic_id, &other.topic_id)
+                && ProtocolEq::protocol_eq(&self.partitions, &other.partitions)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
         }
     }
 
@@ -247,6 +259,22 @@ pub mod offset_commit_request {
         }
     }
 
+    impl ProtocolEq for OffsetCommitRequestPartition {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.partition_index, &other.partition_index)
+                && ProtocolEq::protocol_eq(&self.committed_offset, &other.committed_offset)
+                && ProtocolEq::protocol_eq(
+                    &self.committed_leader_epoch,
+                    &other.committed_leader_epoch,
+                )
+                && ProtocolEq::protocol_eq(&self.committed_metadata, &other.committed_metadata)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
+        }
+    }
+
     impl KafkaDecode for OffsetCommitRequestPartition {
         fn decode(
             decoder: &mut Decoder,
@@ -375,6 +403,24 @@ pub mod offset_commit_request {
                 topics: ::std::vec::Vec::new(),
                 unknown_tagged_fields: TaggedFields::default(),
             }
+        }
+    }
+
+    impl ProtocolEq for OffsetCommitRequest {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.group_id, &other.group_id)
+                && ProtocolEq::protocol_eq(
+                    &self.generation_id_or_member_epoch,
+                    &other.generation_id_or_member_epoch,
+                )
+                && ProtocolEq::protocol_eq(&self.member_id, &other.member_id)
+                && ProtocolEq::protocol_eq(&self.group_instance_id, &other.group_instance_id)
+                && ProtocolEq::protocol_eq(&self.retention_time_ms, &other.retention_time_ms)
+                && ProtocolEq::protocol_eq(&self.topics, &other.topics)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
         }
     }
 
@@ -569,7 +615,7 @@ pub mod offset_commit_response {
         encoded_len_with,
     };
 
-    use crate::{KafkaMessage, KafkaResponse};
+    use crate::{KafkaMessage, KafkaResponse, ProtocolEq};
 
     /// `OffsetCommitResponseTopic` as declared by the `OffsetCommit` API.
     #[non_exhaustive]
@@ -619,6 +665,18 @@ pub mod offset_commit_response {
             }
 
             ::core::result::Result::Ok(())
+        }
+    }
+
+    impl ProtocolEq for OffsetCommitResponseTopic {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.name, &other.name)
+                && ProtocolEq::protocol_eq(&self.topic_id, &other.topic_id)
+                && ProtocolEq::protocol_eq(&self.partitions, &other.partitions)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
         }
     }
 
@@ -784,6 +842,17 @@ pub mod offset_commit_response {
         }
     }
 
+    impl ProtocolEq for OffsetCommitResponsePartition {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.partition_index, &other.partition_index)
+                && ProtocolEq::protocol_eq(&self.error_code, &other.error_code)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
+        }
+    }
+
     impl KafkaDecode for OffsetCommitResponsePartition {
         fn decode(
             decoder: &mut Decoder,
@@ -871,6 +940,17 @@ pub mod offset_commit_response {
         pub topics: ::std::vec::Vec<OffsetCommitResponseTopic>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl ProtocolEq for OffsetCommitResponse {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.throttle_time_ms, &other.throttle_time_ms)
+                && ProtocolEq::protocol_eq(&self.topics, &other.topics)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
+        }
     }
 
     impl KafkaMessage for OffsetCommitResponse {

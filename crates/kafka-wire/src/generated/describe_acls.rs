@@ -16,7 +16,7 @@ pub mod describe_acls_request {
         encoded_len_with,
     };
 
-    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, RequestResponsePair};
+    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, ProtocolEq, RequestResponsePair};
 
     /// Request body for the `DescribeAcls` API.
     #[non_exhaustive]
@@ -52,6 +52,22 @@ pub mod describe_acls_request {
                 permission_type: 0,
                 unknown_tagged_fields: TaggedFields::default(),
             }
+        }
+    }
+
+    impl ProtocolEq for DescribeAclsRequest {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.resource_type_filter, &other.resource_type_filter)
+                && ProtocolEq::protocol_eq(&self.resource_name_filter, &other.resource_name_filter)
+                && ProtocolEq::protocol_eq(&self.pattern_type_filter, &other.pattern_type_filter)
+                && ProtocolEq::protocol_eq(&self.principal_filter, &other.principal_filter)
+                && ProtocolEq::protocol_eq(&self.host_filter, &other.host_filter)
+                && ProtocolEq::protocol_eq(&self.operation, &other.operation)
+                && ProtocolEq::protocol_eq(&self.permission_type, &other.permission_type)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
         }
     }
 
@@ -211,7 +227,7 @@ pub mod describe_acls_response {
         encoded_len_with,
     };
 
-    use crate::{KafkaMessage, KafkaResponse};
+    use crate::{KafkaMessage, KafkaResponse, ProtocolEq};
 
     /// `DescribeAclsResource` as declared by the `DescribeAcls` API.
     #[non_exhaustive]
@@ -275,6 +291,19 @@ pub mod describe_acls_response {
                 acls: ::std::vec::Vec::new(),
                 unknown_tagged_fields: TaggedFields::default(),
             }
+        }
+    }
+
+    impl ProtocolEq for DescribeAclsResource {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.resource_type, &other.resource_type)
+                && ProtocolEq::protocol_eq(&self.resource_name, &other.resource_name)
+                && ProtocolEq::protocol_eq(&self.pattern_type, &other.pattern_type)
+                && ProtocolEq::protocol_eq(&self.acls, &other.acls)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
         }
     }
 
@@ -433,6 +462,19 @@ pub mod describe_acls_response {
         }
     }
 
+    impl ProtocolEq for AclDescription {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.principal, &other.principal)
+                && ProtocolEq::protocol_eq(&self.host, &other.host)
+                && ProtocolEq::protocol_eq(&self.operation, &other.operation)
+                && ProtocolEq::protocol_eq(&self.permission_type, &other.permission_type)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
+        }
+    }
+
     impl KafkaDecode for AclDescription {
         fn decode(
             decoder: &mut Decoder,
@@ -557,6 +599,19 @@ pub mod describe_acls_response {
                 resources: ::std::vec::Vec::new(),
                 unknown_tagged_fields: TaggedFields::default(),
             }
+        }
+    }
+
+    impl ProtocolEq for DescribeAclsResponse {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.throttle_time_ms, &other.throttle_time_ms)
+                && ProtocolEq::protocol_eq(&self.error_code, &other.error_code)
+                && ProtocolEq::protocol_eq(&self.error_message, &other.error_message)
+                && ProtocolEq::protocol_eq(&self.resources, &other.resources)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
         }
     }
 

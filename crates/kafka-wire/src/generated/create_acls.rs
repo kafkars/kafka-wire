@@ -16,7 +16,7 @@ pub mod create_acls_request {
         encoded_len_with,
     };
 
-    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, RequestResponsePair};
+    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, ProtocolEq, RequestResponsePair};
 
     /// `AclCreation` as declared by the `CreateAcls` API.
     #[non_exhaustive]
@@ -86,6 +86,25 @@ pub mod create_acls_request {
                 permission_type: 0,
                 unknown_tagged_fields: TaggedFields::default(),
             }
+        }
+    }
+
+    impl ProtocolEq for AclCreation {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.resource_type, &other.resource_type)
+                && ProtocolEq::protocol_eq(&self.resource_name, &other.resource_name)
+                && ProtocolEq::protocol_eq(
+                    &self.resource_pattern_type,
+                    &other.resource_pattern_type,
+                )
+                && ProtocolEq::protocol_eq(&self.principal, &other.principal)
+                && ProtocolEq::protocol_eq(&self.host, &other.host)
+                && ProtocolEq::protocol_eq(&self.operation, &other.operation)
+                && ProtocolEq::protocol_eq(&self.permission_type, &other.permission_type)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
         }
     }
 
@@ -213,6 +232,16 @@ pub mod create_acls_request {
         pub creations: ::std::vec::Vec<AclCreation>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl ProtocolEq for CreateAclsRequest {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.creations, &other.creations)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
+        }
     }
 
     impl KafkaMessage for CreateAclsRequest {
@@ -346,7 +375,7 @@ pub mod create_acls_response {
         encoded_len_with,
     };
 
-    use crate::{KafkaMessage, KafkaResponse};
+    use crate::{KafkaMessage, KafkaResponse, ProtocolEq};
 
     /// `AclCreationResult` as declared by the `CreateAcls` API.
     #[non_exhaustive]
@@ -401,6 +430,17 @@ pub mod create_acls_response {
                 error_message: ::core::option::Option::Some(StrBytes::default()),
                 unknown_tagged_fields: TaggedFields::default(),
             }
+        }
+    }
+
+    impl ProtocolEq for AclCreationResult {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.error_code, &other.error_code)
+                && ProtocolEq::protocol_eq(&self.error_message, &other.error_message)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
         }
     }
 
@@ -499,6 +539,17 @@ pub mod create_acls_response {
         pub results: ::std::vec::Vec<AclCreationResult>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl ProtocolEq for CreateAclsResponse {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.throttle_time_ms, &other.throttle_time_ms)
+                && ProtocolEq::protocol_eq(&self.results, &other.results)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
+        }
     }
 
     impl KafkaMessage for CreateAclsResponse {

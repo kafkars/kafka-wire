@@ -15,7 +15,7 @@ pub mod offset_delete_request {
         KafkaDecode, KafkaEncode, StrBytes, VersionRange, encode_into_with, encoded_len_with,
     };
 
-    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, RequestResponsePair};
+    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, ProtocolEq, RequestResponsePair};
 
     /// `OffsetDeleteRequestTopic` as declared by the `OffsetDelete` API.
     #[non_exhaustive]
@@ -49,6 +49,13 @@ pub mod offset_delete_request {
             }
 
             ::core::result::Result::Ok(())
+        }
+    }
+
+    impl ProtocolEq for OffsetDeleteRequestTopic {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.name, &other.name)
+                && ProtocolEq::protocol_eq(&self.partitions, &other.partitions)
         }
     }
 
@@ -157,6 +164,12 @@ pub mod offset_delete_request {
         }
     }
 
+    impl ProtocolEq for OffsetDeleteRequestPartition {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.partition_index, &other.partition_index)
+        }
+    }
+
     impl KafkaDecode for OffsetDeleteRequestPartition {
         fn decode(
             decoder: &mut Decoder,
@@ -229,6 +242,13 @@ pub mod offset_delete_request {
         pub group_id: StrBytes,
         /// The topics to delete offsets for.
         pub topics: ::std::vec::Vec<OffsetDeleteRequestTopic>,
+    }
+
+    impl ProtocolEq for OffsetDeleteRequest {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.group_id, &other.group_id)
+                && ProtocolEq::protocol_eq(&self.topics, &other.topics)
+        }
     }
 
     impl KafkaMessage for OffsetDeleteRequest {
@@ -342,7 +362,7 @@ pub mod offset_delete_response {
         KafkaDecode, KafkaEncode, StrBytes, VersionRange, encode_into_with, encoded_len_with,
     };
 
-    use crate::{KafkaMessage, KafkaResponse};
+    use crate::{KafkaMessage, KafkaResponse, ProtocolEq};
 
     /// `OffsetDeleteResponseTopic` as declared by the `OffsetDelete` API.
     #[non_exhaustive]
@@ -376,6 +396,13 @@ pub mod offset_delete_response {
             }
 
             ::core::result::Result::Ok(())
+        }
+    }
+
+    impl ProtocolEq for OffsetDeleteResponseTopic {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.name, &other.name)
+                && ProtocolEq::protocol_eq(&self.partitions, &other.partitions)
         }
     }
 
@@ -486,6 +513,13 @@ pub mod offset_delete_response {
         }
     }
 
+    impl ProtocolEq for OffsetDeleteResponsePartition {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.partition_index, &other.partition_index)
+                && ProtocolEq::protocol_eq(&self.error_code, &other.error_code)
+        }
+    }
+
     impl KafkaDecode for OffsetDeleteResponsePartition {
         fn decode(
             decoder: &mut Decoder,
@@ -563,6 +597,14 @@ pub mod offset_delete_response {
         pub throttle_time_ms: i32,
         /// The responses for each topic.
         pub topics: ::std::vec::Vec<OffsetDeleteResponseTopic>,
+    }
+
+    impl ProtocolEq for OffsetDeleteResponse {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.error_code, &other.error_code)
+                && ProtocolEq::protocol_eq(&self.throttle_time_ms, &other.throttle_time_ms)
+                && ProtocolEq::protocol_eq(&self.topics, &other.topics)
+        }
     }
 
     impl KafkaMessage for OffsetDeleteResponse {

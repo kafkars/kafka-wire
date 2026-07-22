@@ -99,7 +99,7 @@ fn render_imports(rust: &mut RustText, message: &Message) {
     render_braced_use(
         rust,
         "crate",
-        &imports::importable(message, &[S::KafkaMessage]),
+        &imports::importable(message, &[S::KafkaMessage, S::ProtocolEq]),
     );
     rust.blank();
 }

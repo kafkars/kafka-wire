@@ -7,16 +7,75 @@
 //! fact. The body bytes below are quoted from the broker-authored vector for
 //! `ApiVersionsRequest` v3 rather than invented here.
 
+use std::sync::atomic::{AtomicUsize, Ordering};
+
 use bytes::BytesMut;
 use kafka_wire::{
-    ApiVersionsRequest, KafkaMessage, KafkaRequest, OutboundFrameLimits, encode_request,
-    response_header_version_for,
+    ApiDescriptor, ApiVersionsRequest, KafkaMessage, KafkaRequest, MessageDescriptor,
+    MessageDirection, OutboundFrameLimits, encode_request, response_header_version_for,
 };
-use kafka_wire_core::{ApiKey, ApiVersion, EncodeError, StrBytes};
+use kafka_wire_core::{
+    ApiKey, ApiVersion, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
+    KafkaEncode, StrBytes, VersionRange,
+};
 
 /// `ApiVersionsRequest` v3 `named_client`, as Apache Kafka encodes it.
 const BODY_V3: &[u8] = &[0x05, 0x61, 0x63, 0x6d, 0x65, 0x04, 0x31, 0x2e, 0x30, 0x00];
 const TEST_LIMITS: OutboundFrameLimits = OutboundFrameLimits::new(1024);
+static COUNTED_WRITES: AtomicUsize = AtomicUsize::new(0);
+
+static COUNTED_REQUEST_DESCRIPTOR: MessageDescriptor = MessageDescriptor::new(
+    1_000,
+    "CountedRequest",
+    MessageDirection::Request,
+    VersionRange::new(0, 0),
+    None,
+);
+static COUNTED_RESPONSE_DESCRIPTOR: MessageDescriptor = MessageDescriptor::new(
+    1_000,
+    "CountedResponse",
+    MessageDirection::Response,
+    VersionRange::new(0, 0),
+    None,
+);
+static COUNTED_API_DESCRIPTOR: ApiDescriptor = ApiDescriptor::new(
+    1_000,
+    &COUNTED_REQUEST_DESCRIPTOR,
+    &COUNTED_RESPONSE_DESCRIPTOR,
+    VersionRange::new(0, 0),
+    None,
+    false,
+);
+
+struct CountedRequest;
+
+impl KafkaDecode for CountedRequest {
+    fn decode(_decoder: &mut Decoder, _version: ApiVersion) -> Result<Self, DecodeError> {
+        Ok(Self)
+    }
+}
+
+impl KafkaEncode for CountedRequest {
+    fn encode<T: EncodeTarget>(
+        &self,
+        encoder: &mut Encoder<T>,
+        _version: ApiVersion,
+    ) -> Result<(), EncodeError> {
+        COUNTED_WRITES.fetch_add(1, Ordering::Relaxed);
+        encoder.write_i32(7)
+    }
+}
+
+impl KafkaMessage for CountedRequest {
+    const NAME: &'static str = "CountedRequest";
+    const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 0);
+    const FLEXIBLE_VERSIONS: Option<VersionRange> = None;
+}
+
+impl KafkaRequest for CountedRequest {
+    const API_KEY: ApiKey = ApiKey::new(1_000);
+    const API_DESCRIPTOR: &'static ApiDescriptor = &COUNTED_API_DESCRIPTOR;
+}
 
 fn request() -> ApiVersionsRequest {
     let mut request = ApiVersionsRequest::default();
@@ -164,4 +223,25 @@ fn an_outbound_budget_rejects_the_exact_size_before_writing() {
         })
     );
     assert_eq!(buffer, before, "preflight rejection wrote frame bytes");
+}
+
+#[test]
+fn frame_preflight_is_not_repeated_by_buffered_message_helpers() {
+    COUNTED_WRITES.store(0, Ordering::Relaxed);
+    let mut buffer = BytesMut::new();
+    encode_request(
+        &mut buffer,
+        7,
+        None,
+        &CountedRequest,
+        ApiVersion::new(0),
+        TEST_LIMITS,
+    )
+    .unwrap_or_else(|error| panic!("the counted request is valid: {error}"));
+
+    assert_eq!(
+        COUNTED_WRITES.load(Ordering::Relaxed),
+        2,
+        "one sizing pass and one direct write should encode the request"
+    );
 }

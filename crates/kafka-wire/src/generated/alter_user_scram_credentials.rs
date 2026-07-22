@@ -16,7 +16,7 @@ pub mod alter_user_scram_credentials_request {
         encoded_len_with,
     };
 
-    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, RequestResponsePair};
+    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, ProtocolEq, RequestResponsePair};
 
     /// `ScramCredentialDeletion` as declared by the `AlterUserScramCredentials` API.
     #[non_exhaustive]
@@ -61,6 +61,17 @@ pub mod alter_user_scram_credentials_request {
             }
 
             ::core::result::Result::Ok(())
+        }
+    }
+
+    impl ProtocolEq for ScramCredentialDeletion {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.name, &other.name)
+                && ProtocolEq::protocol_eq(&self.mechanism, &other.mechanism)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
         }
     }
 
@@ -193,6 +204,20 @@ pub mod alter_user_scram_credentials_request {
         }
     }
 
+    impl ProtocolEq for ScramCredentialUpsertion {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.name, &other.name)
+                && ProtocolEq::protocol_eq(&self.mechanism, &other.mechanism)
+                && ProtocolEq::protocol_eq(&self.iterations, &other.iterations)
+                && ProtocolEq::protocol_eq(&self.salt, &other.salt)
+                && ProtocolEq::protocol_eq(&self.salted_password, &other.salted_password)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
+        }
+    }
+
     impl KafkaDecode for ScramCredentialUpsertion {
         fn decode(
             decoder: &mut Decoder,
@@ -289,6 +314,17 @@ pub mod alter_user_scram_credentials_request {
         pub upsertions: ::std::vec::Vec<ScramCredentialUpsertion>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl ProtocolEq for AlterUserScramCredentialsRequest {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.deletions, &other.deletions)
+                && ProtocolEq::protocol_eq(&self.upsertions, &other.upsertions)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
+        }
     }
 
     impl KafkaMessage for AlterUserScramCredentialsRequest {
@@ -437,7 +473,7 @@ pub mod alter_user_scram_credentials_response {
         encoded_len_with,
     };
 
-    use crate::{KafkaMessage, KafkaResponse};
+    use crate::{KafkaMessage, KafkaResponse, ProtocolEq};
 
     /// `AlterUserScramCredentialsResult` as declared by the `AlterUserScramCredentials` API.
     #[non_exhaustive]
@@ -495,6 +531,18 @@ pub mod alter_user_scram_credentials_response {
                 error_message: ::core::option::Option::Some(StrBytes::default()),
                 unknown_tagged_fields: TaggedFields::default(),
             }
+        }
+    }
+
+    impl ProtocolEq for AlterUserScramCredentialsResult {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.user, &other.user)
+                && ProtocolEq::protocol_eq(&self.error_code, &other.error_code)
+                && ProtocolEq::protocol_eq(&self.error_message, &other.error_message)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
         }
     }
 
@@ -588,6 +636,17 @@ pub mod alter_user_scram_credentials_response {
         pub results: ::std::vec::Vec<AlterUserScramCredentialsResult>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl ProtocolEq for AlterUserScramCredentialsResponse {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.throttle_time_ms, &other.throttle_time_ms)
+                && ProtocolEq::protocol_eq(&self.results, &other.results)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
+        }
     }
 
     impl KafkaMessage for AlterUserScramCredentialsResponse {

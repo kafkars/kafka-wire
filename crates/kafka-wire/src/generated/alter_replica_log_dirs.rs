@@ -16,7 +16,7 @@ pub mod alter_replica_log_dirs_request {
         encoded_len_with,
     };
 
-    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, RequestResponsePair};
+    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, ProtocolEq, RequestResponsePair};
 
     /// `AlterReplicaLogDir` as declared by the `AlterReplicaLogDirs` API.
     #[non_exhaustive]
@@ -64,6 +64,17 @@ pub mod alter_replica_log_dirs_request {
             }
 
             ::core::result::Result::Ok(())
+        }
+    }
+
+    impl ProtocolEq for AlterReplicaLogDir {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.path, &other.path)
+                && ProtocolEq::protocol_eq(&self.topics, &other.topics)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
         }
     }
 
@@ -214,6 +225,17 @@ pub mod alter_replica_log_dirs_request {
         }
     }
 
+    impl ProtocolEq for AlterReplicaLogDirTopic {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.name, &other.name)
+                && ProtocolEq::protocol_eq(&self.partitions, &other.partitions)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
+        }
+    }
+
     impl KafkaDecode for AlterReplicaLogDirTopic {
         fn decode(
             decoder: &mut Decoder,
@@ -321,6 +343,16 @@ pub mod alter_replica_log_dirs_request {
         pub dirs: ::std::vec::Vec<AlterReplicaLogDir>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl ProtocolEq for AlterReplicaLogDirsRequest {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.dirs, &other.dirs)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
+        }
     }
 
     impl KafkaMessage for AlterReplicaLogDirsRequest {
@@ -457,7 +489,7 @@ pub mod alter_replica_log_dirs_response {
         encoded_len_with,
     };
 
-    use crate::{KafkaMessage, KafkaResponse};
+    use crate::{KafkaMessage, KafkaResponse, ProtocolEq};
 
     /// `AlterReplicaLogDirTopicResult` as declared by the `AlterReplicaLogDirs` API.
     #[non_exhaustive]
@@ -505,6 +537,17 @@ pub mod alter_replica_log_dirs_response {
             }
 
             ::core::result::Result::Ok(())
+        }
+    }
+
+    impl ProtocolEq for AlterReplicaLogDirTopicResult {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.topic_name, &other.topic_name)
+                && ProtocolEq::protocol_eq(&self.partitions, &other.partitions)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
         }
     }
 
@@ -655,6 +698,17 @@ pub mod alter_replica_log_dirs_response {
         }
     }
 
+    impl ProtocolEq for AlterReplicaLogDirPartitionResult {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.partition_index, &other.partition_index)
+                && ProtocolEq::protocol_eq(&self.error_code, &other.error_code)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
+        }
+    }
+
     impl KafkaDecode for AlterReplicaLogDirPartitionResult {
         fn decode(
             decoder: &mut Decoder,
@@ -748,6 +802,17 @@ pub mod alter_replica_log_dirs_response {
         pub results: ::std::vec::Vec<AlterReplicaLogDirTopicResult>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl ProtocolEq for AlterReplicaLogDirsResponse {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.throttle_time_ms, &other.throttle_time_ms)
+                && ProtocolEq::protocol_eq(&self.results, &other.results)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
+        }
     }
 
     impl KafkaMessage for AlterReplicaLogDirsResponse {

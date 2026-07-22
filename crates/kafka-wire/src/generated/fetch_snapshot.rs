@@ -16,7 +16,7 @@ pub mod fetch_snapshot_request {
         VersionRange, encode_into_with, encoded_len_with,
     };
 
-    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, RequestResponsePair};
+    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, ProtocolEq, RequestResponsePair};
 
     /// `TopicSnapshot` as declared by the `FetchSnapshot` API.
     #[non_exhaustive]
@@ -64,6 +64,17 @@ pub mod fetch_snapshot_request {
             }
 
             ::core::result::Result::Ok(())
+        }
+    }
+
+    impl ProtocolEq for TopicSnapshot {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.name, &other.name)
+                && ProtocolEq::protocol_eq(&self.partitions, &other.partitions)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
         }
     }
 
@@ -205,6 +216,20 @@ pub mod fetch_snapshot_request {
         }
     }
 
+    impl ProtocolEq for PartitionSnapshot {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.partition, &other.partition)
+                && ProtocolEq::protocol_eq(&self.current_leader_epoch, &other.current_leader_epoch)
+                && ProtocolEq::protocol_eq(&self.snapshot_id, &other.snapshot_id)
+                && ProtocolEq::protocol_eq(&self.position, &other.position)
+                && ProtocolEq::protocol_eq(&self.replica_directory_id, &other.replica_directory_id)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
+        }
+    }
+
     impl KafkaDecode for PartitionSnapshot {
         fn decode(
             decoder: &mut Decoder,
@@ -247,6 +272,15 @@ pub mod fetch_snapshot_request {
     }
 
     impl PartitionSnapshot {
+        fn __kw_encode_known_tag_0<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            _version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
+            encoder.write_uuid(self.replica_directory_id)?;
+            ::core::result::Result::Ok(())
+        }
+
         fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
@@ -260,12 +294,18 @@ pub mod fetch_snapshot_request {
             if Self::is_flexible(version) {
                 let mut known = KnownTags::new();
                 if version.value() >= 1 && self.replica_directory_id != Uuid::ZERO {
-                    known.write(0, |encoder| {
-                        encoder.write_uuid(self.replica_directory_id)?;
-                        ::core::result::Result::Ok(())
+                    known.measure(0, |encoder| {
+                        Self::__kw_encode_known_tag_0(self, encoder, version)
                     })?;
                 }
-                encoder.write_merged_tagged_fields(known, &self.unknown_tagged_fields)?;
+                encoder.write_merged_tagged_fields(
+                    known,
+                    &self.unknown_tagged_fields,
+                    |tag, encoder| match tag {
+                        0 => Self::__kw_encode_known_tag_0(self, encoder, version),
+                        _ => unreachable!("KnownTags yielded an unmeasured tag"),
+                    },
+                )?;
             }
 
             ::core::result::Result::Ok(())
@@ -346,6 +386,17 @@ pub mod fetch_snapshot_request {
             }
 
             ::core::result::Result::Ok(())
+        }
+    }
+
+    impl ProtocolEq for SnapshotId {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.end_offset, &other.end_offset)
+                && ProtocolEq::protocol_eq(&self.epoch, &other.epoch)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
         }
     }
 
@@ -454,6 +505,19 @@ pub mod fetch_snapshot_request {
         }
     }
 
+    impl ProtocolEq for FetchSnapshotRequest {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.cluster_id, &other.cluster_id)
+                && ProtocolEq::protocol_eq(&self.replica_id, &other.replica_id)
+                && ProtocolEq::protocol_eq(&self.max_bytes, &other.max_bytes)
+                && ProtocolEq::protocol_eq(&self.topics, &other.topics)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
+        }
+    }
+
     impl KafkaMessage for FetchSnapshotRequest {
         const NAME: &'static str = "FetchSnapshotRequest";
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 1);
@@ -528,6 +592,15 @@ pub mod fetch_snapshot_request {
     }
 
     impl FetchSnapshotRequest {
+        fn __kw_encode_known_tag_0<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            _version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
+            encoder.write_compact_nullable_string(self.cluster_id.as_ref())?;
+            ::core::result::Result::Ok(())
+        }
+
         fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
@@ -543,12 +616,18 @@ pub mod fetch_snapshot_request {
             if Self::is_flexible(version) {
                 let mut known = KnownTags::new();
                 if self.cluster_id.is_some() {
-                    known.write(0, |encoder| {
-                        encoder.write_compact_nullable_string(self.cluster_id.as_ref())?;
-                        ::core::result::Result::Ok(())
+                    known.measure(0, |encoder| {
+                        Self::__kw_encode_known_tag_0(self, encoder, version)
                     })?;
                 }
-                encoder.write_merged_tagged_fields(known, &self.unknown_tagged_fields)?;
+                encoder.write_merged_tagged_fields(
+                    known,
+                    &self.unknown_tagged_fields,
+                    |tag, encoder| match tag {
+                        0 => Self::__kw_encode_known_tag_0(self, encoder, version),
+                        _ => unreachable!("KnownTags yielded an unmeasured tag"),
+                    },
+                )?;
             }
 
             ::core::result::Result::Ok(())
@@ -598,7 +677,7 @@ pub mod fetch_snapshot_response {
         VersionRange, encode_into_with, encoded_len_with,
     };
 
-    use crate::{KafkaMessage, KafkaResponse};
+    use crate::{KafkaMessage, KafkaResponse, ProtocolEq};
 
     /// `TopicSnapshot` as declared by the `FetchSnapshot` API.
     #[non_exhaustive]
@@ -646,6 +725,17 @@ pub mod fetch_snapshot_response {
             }
 
             ::core::result::Result::Ok(())
+        }
+    }
+
+    impl ProtocolEq for TopicSnapshot {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.name, &other.name)
+                && ProtocolEq::protocol_eq(&self.partitions, &other.partitions)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
         }
     }
 
@@ -792,6 +882,22 @@ pub mod fetch_snapshot_response {
         }
     }
 
+    impl ProtocolEq for PartitionSnapshot {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.index, &other.index)
+                && ProtocolEq::protocol_eq(&self.error_code, &other.error_code)
+                && ProtocolEq::protocol_eq(&self.snapshot_id, &other.snapshot_id)
+                && ProtocolEq::protocol_eq(&self.current_leader, &other.current_leader)
+                && ProtocolEq::protocol_eq(&self.size, &other.size)
+                && ProtocolEq::protocol_eq(&self.position, &other.position)
+                && ProtocolEq::protocol_eq(&self.unaligned_records, &other.unaligned_records)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
+        }
+    }
+
     impl KafkaDecode for PartitionSnapshot {
         fn decode(
             decoder: &mut Decoder,
@@ -838,6 +944,15 @@ pub mod fetch_snapshot_response {
     }
 
     impl PartitionSnapshot {
+        fn __kw_encode_known_tag_0<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
+            self.current_leader.encode_validated(encoder, version)?;
+            ::core::result::Result::Ok(())
+        }
+
         fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
@@ -852,13 +967,19 @@ pub mod fetch_snapshot_response {
 
             if Self::is_flexible(version) {
                 let mut known = KnownTags::new();
-                if self.current_leader != LeaderIdAndEpoch::default() {
-                    known.write(0, |encoder| {
-                        self.current_leader.encode_validated(encoder, version)?;
-                        ::core::result::Result::Ok(())
+                if !ProtocolEq::is_protocol_default(&self.current_leader) {
+                    known.measure(0, |encoder| {
+                        Self::__kw_encode_known_tag_0(self, encoder, version)
                     })?;
                 }
-                encoder.write_merged_tagged_fields(known, &self.unknown_tagged_fields)?;
+                encoder.write_merged_tagged_fields(
+                    known,
+                    &self.unknown_tagged_fields,
+                    |tag, encoder| match tag {
+                        0 => Self::__kw_encode_known_tag_0(self, encoder, version),
+                        _ => unreachable!("KnownTags yielded an unmeasured tag"),
+                    },
+                )?;
             }
 
             ::core::result::Result::Ok(())
@@ -939,6 +1060,17 @@ pub mod fetch_snapshot_response {
             }
 
             ::core::result::Result::Ok(())
+        }
+    }
+
+    impl ProtocolEq for SnapshotId {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.end_offset, &other.end_offset)
+                && ProtocolEq::protocol_eq(&self.epoch, &other.epoch)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
         }
     }
 
@@ -1062,6 +1194,17 @@ pub mod fetch_snapshot_response {
             }
 
             ::core::result::Result::Ok(())
+        }
+    }
+
+    impl ProtocolEq for LeaderIdAndEpoch {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.leader_id, &other.leader_id)
+                && ProtocolEq::protocol_eq(&self.leader_epoch, &other.leader_epoch)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
         }
     }
 
@@ -1190,6 +1333,18 @@ pub mod fetch_snapshot_response {
         }
     }
 
+    impl ProtocolEq for NodeEndpoint {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.node_id, &other.node_id)
+                && ProtocolEq::protocol_eq(&self.host, &other.host)
+                && ProtocolEq::protocol_eq(&self.port, &other.port)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
+        }
+    }
+
     impl KafkaDecode for NodeEndpoint {
         fn decode(
             decoder: &mut Decoder,
@@ -1286,6 +1441,19 @@ pub mod fetch_snapshot_response {
         pub unknown_tagged_fields: TaggedFields,
     }
 
+    impl ProtocolEq for FetchSnapshotResponse {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.throttle_time_ms, &other.throttle_time_ms)
+                && ProtocolEq::protocol_eq(&self.error_code, &other.error_code)
+                && ProtocolEq::protocol_eq(&self.topics, &other.topics)
+                && ProtocolEq::protocol_eq(&self.node_endpoints, &other.node_endpoints)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
+        }
+    }
+
     impl KafkaMessage for FetchSnapshotResponse {
         const NAME: &'static str = "FetchSnapshotResponse";
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 1);
@@ -1372,6 +1540,18 @@ pub mod fetch_snapshot_response {
     }
 
     impl FetchSnapshotResponse {
+        fn __kw_encode_known_tag_0<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
+            encoder.write_compact_array_len(self.node_endpoints.len())?;
+            for value in &self.node_endpoints {
+                value.encode_validated(encoder, version)?;
+            }
+            ::core::result::Result::Ok(())
+        }
+
         fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
@@ -1387,15 +1567,18 @@ pub mod fetch_snapshot_response {
             if Self::is_flexible(version) {
                 let mut known = KnownTags::new();
                 if version.value() >= 1 && !self.node_endpoints.is_empty() {
-                    known.write(0, |encoder| {
-                        encoder.write_compact_array_len(self.node_endpoints.len())?;
-                        for value in &self.node_endpoints {
-                            value.encode_validated(encoder, version)?;
-                        }
-                        ::core::result::Result::Ok(())
+                    known.measure(0, |encoder| {
+                        Self::__kw_encode_known_tag_0(self, encoder, version)
                     })?;
                 }
-                encoder.write_merged_tagged_fields(known, &self.unknown_tagged_fields)?;
+                encoder.write_merged_tagged_fields(
+                    known,
+                    &self.unknown_tagged_fields,
+                    |tag, encoder| match tag {
+                        0 => Self::__kw_encode_known_tag_0(self, encoder, version),
+                        _ => unreachable!("KnownTags yielded an unmeasured tag"),
+                    },
+                )?;
             }
 
             ::core::result::Result::Ok(())

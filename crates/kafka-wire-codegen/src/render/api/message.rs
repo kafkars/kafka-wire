@@ -13,6 +13,7 @@ use super::{
     descriptor::api_descriptor_name,
     imports::{ExternalSymbol as S, spell},
     prose::sentence,
+    protocol_eq::render_protocol_eq,
     structs::render_declared_structs,
     validation::{Owner, render_validation},
 };
@@ -80,6 +81,13 @@ pub(super) fn render_message(
     if !derive_default {
         render_default(rust, message);
     }
+    render_protocol_eq(
+        rust,
+        message.name.rust_type(),
+        &message.fields,
+        message,
+        !message.effective_flexible_versions().is_empty(),
+    );
     render_metadata_impls(rust, message, group)?;
     render_validation(
         rust,

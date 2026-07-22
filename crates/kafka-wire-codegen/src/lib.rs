@@ -54,4 +54,4 @@ pub use lockfile::{
 pub use output::GenerationReport;
 pub use pair_error::PairError;
 pub use pipeline::generate;
-pub use verification::render_adversarial_decode_fixture;
+pub use verification::{render_adversarial_decode_fixture, render_adversarial_defaults_fixture};

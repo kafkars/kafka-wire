@@ -15,7 +15,7 @@ pub mod allocate_producer_ids_request {
         KafkaDecode, KafkaEncode, TaggedFields, VersionRange, encode_into_with, encoded_len_with,
     };
 
-    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, RequestResponsePair};
+    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, ProtocolEq, RequestResponsePair};
 
     /// Request body for the `AllocateProducerIds` API.
     #[non_exhaustive]
@@ -36,6 +36,17 @@ pub mod allocate_producer_ids_request {
                 broker_epoch: -1,
                 unknown_tagged_fields: TaggedFields::default(),
             }
+        }
+    }
+
+    impl ProtocolEq for AllocateProducerIdsRequest {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.broker_id, &other.broker_id)
+                && ProtocolEq::protocol_eq(&self.broker_epoch, &other.broker_epoch)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
         }
     }
 
@@ -155,7 +166,7 @@ pub mod allocate_producer_ids_response {
         KafkaDecode, KafkaEncode, TaggedFields, VersionRange, encode_into_with, encoded_len_with,
     };
 
-    use crate::{KafkaMessage, KafkaResponse};
+    use crate::{KafkaMessage, KafkaResponse, ProtocolEq};
 
     /// Response body for the `AllocateProducerIds` API.
     #[non_exhaustive]
@@ -171,6 +182,19 @@ pub mod allocate_producer_ids_response {
         pub producer_id_len: i32,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl ProtocolEq for AllocateProducerIdsResponse {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.throttle_time_ms, &other.throttle_time_ms)
+                && ProtocolEq::protocol_eq(&self.error_code, &other.error_code)
+                && ProtocolEq::protocol_eq(&self.producer_id_start, &other.producer_id_start)
+                && ProtocolEq::protocol_eq(&self.producer_id_len, &other.producer_id_len)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
+        }
     }
 
     impl KafkaMessage for AllocateProducerIdsResponse {

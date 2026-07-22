@@ -17,8 +17,9 @@ use crate::{
     render::{field, text::RustText},
 };
 
-use super::codec::{local, render_array_body, render_array_encode, render_nullable_array_encode};
+use super::codec::{local, render_array_body};
 use super::imports::{ExternalSymbol as S, spell};
+use super::tagged_payload::tag_helper;
 
 /// Whether this field travels in the tagged-field section rather than inline.
 pub(super) fn is_tagged(field: &Field) -> bool {
@@ -49,7 +50,7 @@ pub(super) fn declares_a_tag(message: &Message) -> bool {
 /// Sorted here rather than trusted from the schema: declaration order is not
 /// tag order, and the generated `match` and the writes both read better in the
 /// order the wire uses.
-fn known_tags(fields: &[Field]) -> Vec<(u32, usize, &Field)> {
+pub(super) fn known_tags(fields: &[Field]) -> Vec<(u32, usize, &Field)> {
     let mut tagged = fields
         .iter()
         .enumerate()
@@ -154,11 +155,7 @@ fn render_tag_arm(
 }
 
 /// Writes the tagged-field section, merging known tags with retained ones.
-pub(super) fn render_tagged_encode(
-    rust: &mut RustText,
-    fields: &[Field],
-    message: &Message,
-) -> Result<(), GenerationError> {
+pub(super) fn render_tagged_encode(rust: &mut RustText, fields: &[Field], message: &Message) {
     let tagged = known_tags(fields);
     rust.blank();
     rust.open("if Self::is_flexible(version)");
@@ -170,12 +167,23 @@ pub(super) fn render_tagged_encode(
             spell(message, S::KnownTags)
         ));
         for (tag, _, field) in &tagged {
-            render_tag_write(rust, *tag, field, message)?;
+            render_tag_measure(rust, *tag, field, message);
         }
-        rust.line("encoder.write_merged_tagged_fields(known, &self.unknown_tagged_fields)?;");
+        rust.line("encoder.write_merged_tagged_fields(");
+        rust.line("    known,");
+        rust.line("    &self.unknown_tagged_fields,");
+        rust.open("    |tag, encoder| match tag");
+        for (tag, _, _) in &tagged {
+            rust.line(format!(
+                "{tag} => Self::{}(self, encoder, version),",
+                tag_helper(*tag)
+            ));
+        }
+        rust.line("_ => unreachable!(\"KnownTags yielded an unmeasured tag\"),");
+        rust.close("");
+        rust.line(")?;");
     }
     rust.close("");
-    Ok(())
 }
 
 /// One known tag's contribution: written only when present and non-default.
@@ -184,33 +192,16 @@ pub(super) fn render_tagged_encode(
 /// section is sparse, and writing a tag that says nothing would inflate every
 /// message for no information — so this reuses the same non-default test that
 /// already decides whether a version-gated inline field is representable.
-fn render_tag_write(
-    rust: &mut RustText,
-    tag: u32,
-    field: &Field,
-    message: &Message,
-) -> Result<(), GenerationError> {
+fn render_tag_measure(rust: &mut RustText, tag: u32, field: &Field, message: &Message) {
     let non_default = field::non_default_condition(field, message);
     let condition = match field::tagged_presence_condition(field, message) {
         Some(presence) => format!("{} && {non_default}", field::as_conjunct(&presence)),
         None => non_default,
     };
     rust.open(format!("if {condition}"));
-    rust.open(format!("known.write({tag}, |encoder|"));
-    if let FieldType::Array(element) = &field.ty {
-        let (_, write) = field::element_codec(element, field, message)?;
-        let (_, length) = field::array_length_codec(field, message);
-        let name = field.name.rust_field();
-        if field::is_nullable(field, message) {
-            render_nullable_array_encode(rust, message, name, &length, &write);
-        } else {
-            render_array_encode(rust, name, &length, &write);
-        }
-    } else {
-        rust.line(field::write_statement(field, message)?);
-    }
-    rust.line(format!("{}(())", spell(message, S::Ok)));
-    rust.close(")?;");
+    rust.line(format!(
+        "known.measure({tag}, |encoder| Self::{}(self, encoder, version))?;",
+        tag_helper(tag)
+    ));
     rust.close("");
-    Ok(())
 }

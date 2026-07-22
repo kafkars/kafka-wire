@@ -3,6 +3,7 @@
 mod codec;
 mod regime;
 mod types;
+mod usage;
 mod validate;
 mod version;
 
@@ -16,6 +17,8 @@ mod float_defaults_test;
 #[cfg(test)]
 mod types_test;
 #[cfg(test)]
+mod usage_test;
+#[cfg(test)]
 mod validate_test;
 #[cfg(test)]
 mod version_test;
@@ -25,6 +28,7 @@ pub(crate) use regime::{is_nullable, null_forbidden_condition};
 pub(crate) use types::{
     default_expression, non_default_condition, rust_type, uses_bytes, uses_rust_default, uses_type,
 };
+pub(crate) use usage::{encoded_value_uses_version, inline_write_uses_version};
 pub(crate) use validate::validate_supported;
 pub(crate) use version::{
     absence_condition, as_conjunct, presence_condition, tagged_presence_condition,

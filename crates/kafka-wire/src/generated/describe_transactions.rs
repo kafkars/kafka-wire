@@ -16,7 +16,7 @@ pub mod describe_transactions_request {
         encoded_len_with,
     };
 
-    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, RequestResponsePair};
+    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, ProtocolEq, RequestResponsePair};
 
     /// Request body for the `DescribeTransactions` API.
     #[non_exhaustive]
@@ -26,6 +26,16 @@ pub mod describe_transactions_request {
         pub transactional_ids: ::std::vec::Vec<StrBytes>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl ProtocolEq for DescribeTransactionsRequest {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.transactional_ids, &other.transactional_ids)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
+        }
     }
 
     impl KafkaMessage for DescribeTransactionsRequest {
@@ -148,7 +158,7 @@ pub mod describe_transactions_response {
         encoded_len_with,
     };
 
-    use crate::{KafkaMessage, KafkaResponse};
+    use crate::{KafkaMessage, KafkaResponse, ProtocolEq};
 
     /// `TransactionState` as declared by the `DescribeTransactions` API.
     #[non_exhaustive]
@@ -208,6 +218,29 @@ pub mod describe_transactions_response {
             }
 
             ::core::result::Result::Ok(())
+        }
+    }
+
+    impl ProtocolEq for TransactionState {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.error_code, &other.error_code)
+                && ProtocolEq::protocol_eq(&self.transactional_id, &other.transactional_id)
+                && ProtocolEq::protocol_eq(&self.transaction_state, &other.transaction_state)
+                && ProtocolEq::protocol_eq(
+                    &self.transaction_timeout_ms,
+                    &other.transaction_timeout_ms,
+                )
+                && ProtocolEq::protocol_eq(
+                    &self.transaction_start_time_ms,
+                    &other.transaction_start_time_ms,
+                )
+                && ProtocolEq::protocol_eq(&self.producer_id, &other.producer_id)
+                && ProtocolEq::protocol_eq(&self.producer_epoch, &other.producer_epoch)
+                && ProtocolEq::protocol_eq(&self.topics, &other.topics)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
         }
     }
 
@@ -358,6 +391,17 @@ pub mod describe_transactions_response {
         }
     }
 
+    impl ProtocolEq for TopicData {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.topic, &other.topic)
+                && ProtocolEq::protocol_eq(&self.partitions, &other.partitions)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
+        }
+    }
+
     impl KafkaDecode for TopicData {
         fn decode(
             decoder: &mut Decoder,
@@ -451,6 +495,17 @@ pub mod describe_transactions_response {
         pub transaction_states: ::std::vec::Vec<TransactionState>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl ProtocolEq for DescribeTransactionsResponse {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.throttle_time_ms, &other.throttle_time_ms)
+                && ProtocolEq::protocol_eq(&self.transaction_states, &other.transaction_states)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
+        }
     }
 
     impl KafkaMessage for DescribeTransactionsResponse {

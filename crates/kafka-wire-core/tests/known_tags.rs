@@ -11,8 +11,8 @@
 
 use bytes::{Bytes, BytesMut};
 use kafka_wire_core::{
-    DecodeError, DecodeLimits, Decoder, EncodeError, Encoder, KnownTags, TagOutcome, TaggedField,
-    TaggedFields,
+    DecodeError, DecodeLimits, Decoder, EncodeError, EncodeTarget, Encoder, KnownTags, TagOutcome,
+    TaggedField, TaggedFields,
 };
 
 /// A section of one entry: tag 0, one byte of payload `0xaa`.
@@ -27,14 +27,20 @@ fn wire(known: impl Fn() -> KnownTags, unknown: &TaggedFields) -> Vec<u8> {
     let mut buffer = BytesMut::new();
     let mut encoder = Encoder::new(&mut buffer);
     encoder
-        .write_merged_tagged_fields(known(), unknown)
+        .write_merged_tagged_fields(known(), unknown, known_payload)
         .unwrap();
 
     let mut sizer = Encoder::sizing();
-    sizer.write_merged_tagged_fields(known(), unknown).unwrap();
+    sizer
+        .write_merged_tagged_fields(known(), unknown, known_payload)
+        .unwrap();
     assert_eq!(sizer.len(), buffer.len(), "merged sizing diverged");
 
     buffer.to_vec()
+}
+
+fn known_payload<T: EncodeTarget>(_tag: u32, encoder: &mut Encoder<T>) -> Result<(), EncodeError> {
+    encoder.write_i16(7)
 }
 
 fn decoder(bytes: &[u8]) -> Decoder {
@@ -48,7 +54,7 @@ fn a_known_tag_is_written_after_a_lower_unknown_one() {
     let bytes = wire(
         || {
             let mut known = KnownTags::new();
-            known.write(1, |encoder| encoder.write_i16(7)).unwrap();
+            known.measure(1, |encoder| encoder.write_i16(7)).unwrap();
             known
         },
         &unknown(0, &[0xaa]),
@@ -69,7 +75,7 @@ fn a_known_tag_is_written_before_a_higher_unknown_one() {
     let bytes = wire(
         || {
             let mut known = KnownTags::new();
-            known.write(1, |encoder| encoder.write_i16(7)).unwrap();
+            known.measure(1, |encoder| encoder.write_i16(7)).unwrap();
             known
         },
         &unknown(9, &[0xaa]),
@@ -97,16 +103,40 @@ fn a_section_of_only_unknown_tags_is_byte_identical_to_the_plain_writer() {
 #[test]
 fn a_known_tag_colliding_with_a_retained_one_is_named() {
     let mut known = KnownTags::new();
-    known.write(0, |encoder| encoder.write_i16(7)).unwrap();
+    known.measure(0, |encoder| encoder.write_i16(7)).unwrap();
 
     let mut buffer = BytesMut::new();
     let error = Encoder::new(&mut buffer)
-        .write_merged_tagged_fields(known, &unknown(0, &[0xaa]))
+        .write_merged_tagged_fields(known, &unknown(0, &[0xaa]), known_payload)
         .unwrap_err();
 
     assert!(
         matches!(error, EncodeError::TaggedFieldsInvalid(_)),
         "a tag claimed by both populations must be named: {error}"
+    );
+    assert!(
+        buffer.is_empty(),
+        "the collision must be rejected before output"
+    );
+}
+
+#[test]
+fn a_known_payload_must_write_the_length_preflight_measured() {
+    let mut known = KnownTags::new();
+    known.measure(1, |encoder| encoder.write_i16(7)).unwrap();
+    let mut buffer = BytesMut::new();
+    let error = Encoder::new(&mut buffer)
+        .write_merged_tagged_fields(known, &TaggedFields::default(), |_, encoder| {
+            encoder.write_i32(7)
+        })
+        .unwrap_err();
+
+    assert_eq!(
+        error,
+        EncodeError::SizeMismatch {
+            predicted: 2,
+            actual: 4,
+        }
     );
 }
 

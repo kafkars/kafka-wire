@@ -16,7 +16,7 @@ pub mod broker_registration_request {
         encoded_len_with,
     };
 
-    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, RequestResponsePair};
+    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, ProtocolEq, RequestResponsePair};
 
     /// `Listener` as declared by the `BrokerRegistration` API.
     #[non_exhaustive]
@@ -65,6 +65,19 @@ pub mod broker_registration_request {
             }
 
             ::core::result::Result::Ok(())
+        }
+    }
+
+    impl ProtocolEq for Listener {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.name, &other.name)
+                && ProtocolEq::protocol_eq(&self.host, &other.host)
+                && ProtocolEq::protocol_eq(&self.port, &other.port)
+                && ProtocolEq::protocol_eq(&self.security_protocol, &other.security_protocol)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
         }
     }
 
@@ -199,6 +212,24 @@ pub mod broker_registration_request {
         }
     }
 
+    impl ProtocolEq for Feature {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.name, &other.name)
+                && ProtocolEq::protocol_eq(
+                    &self.min_supported_version,
+                    &other.min_supported_version,
+                )
+                && ProtocolEq::protocol_eq(
+                    &self.max_supported_version,
+                    &other.max_supported_version,
+                )
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
+        }
+    }
+
     impl KafkaDecode for Feature {
         fn decode(
             decoder: &mut Decoder,
@@ -319,6 +350,30 @@ pub mod broker_registration_request {
                 previous_broker_epoch: -1,
                 unknown_tagged_fields: TaggedFields::default(),
             }
+        }
+    }
+
+    impl ProtocolEq for BrokerRegistrationRequest {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.broker_id, &other.broker_id)
+                && ProtocolEq::protocol_eq(&self.cluster_id, &other.cluster_id)
+                && ProtocolEq::protocol_eq(&self.incarnation_id, &other.incarnation_id)
+                && ProtocolEq::protocol_eq(&self.listeners, &other.listeners)
+                && ProtocolEq::protocol_eq(&self.features, &other.features)
+                && ProtocolEq::protocol_eq(&self.rack, &other.rack)
+                && ProtocolEq::protocol_eq(
+                    &self.is_migrating_zk_broker,
+                    &other.is_migrating_zk_broker,
+                )
+                && ProtocolEq::protocol_eq(&self.log_dirs, &other.log_dirs)
+                && ProtocolEq::protocol_eq(
+                    &self.previous_broker_epoch,
+                    &other.previous_broker_epoch,
+                )
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
         }
     }
 
@@ -506,7 +561,7 @@ pub mod broker_registration_response {
         KafkaDecode, KafkaEncode, TaggedFields, VersionRange, encode_into_with, encoded_len_with,
     };
 
-    use crate::{KafkaMessage, KafkaResponse};
+    use crate::{KafkaMessage, KafkaResponse, ProtocolEq};
 
     /// Response body for the `BrokerRegistration` API.
     #[non_exhaustive]
@@ -530,6 +585,18 @@ pub mod broker_registration_response {
                 broker_epoch: -1,
                 unknown_tagged_fields: TaggedFields::default(),
             }
+        }
+    }
+
+    impl ProtocolEq for BrokerRegistrationResponse {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.throttle_time_ms, &other.throttle_time_ms)
+                && ProtocolEq::protocol_eq(&self.error_code, &other.error_code)
+                && ProtocolEq::protocol_eq(&self.broker_epoch, &other.broker_epoch)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
         }
     }
 

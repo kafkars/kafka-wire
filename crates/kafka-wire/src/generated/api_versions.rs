@@ -16,7 +16,7 @@ pub mod api_versions_request {
         encoded_len_with,
     };
 
-    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, RequestResponsePair};
+    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, ProtocolEq, RequestResponsePair};
 
     /// Request body for the `ApiVersions` API.
     #[non_exhaustive]
@@ -43,6 +43,22 @@ pub mod api_versions_request {
                 node_id: -1,
                 unknown_tagged_fields: TaggedFields::default(),
             }
+        }
+    }
+
+    impl ProtocolEq for ApiVersionsRequest {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.client_software_name, &other.client_software_name)
+                && ProtocolEq::protocol_eq(
+                    &self.client_software_version,
+                    &other.client_software_version,
+                )
+                && ProtocolEq::protocol_eq(&self.cluster_id, &other.cluster_id)
+                && ProtocolEq::protocol_eq(&self.node_id, &other.node_id)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
         }
     }
 
@@ -193,7 +209,7 @@ pub mod api_versions_response {
         encoded_len_with,
     };
 
-    use crate::{KafkaMessage, KafkaResponse};
+    use crate::{KafkaMessage, KafkaResponse, ProtocolEq};
 
     /// `ApiVersion` as declared by the `ApiVersions` API.
     #[non_exhaustive]
@@ -240,6 +256,18 @@ pub mod api_versions_response {
             }
 
             ::core::result::Result::Ok(())
+        }
+    }
+
+    impl ProtocolEq for ApiVersion {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.api_key, &other.api_key)
+                && ProtocolEq::protocol_eq(&self.min_version, &other.min_version)
+                && ProtocolEq::protocol_eq(&self.max_version, &other.max_version)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
         }
     }
 
@@ -374,6 +402,18 @@ pub mod api_versions_response {
         }
     }
 
+    impl ProtocolEq for SupportedFeatureKey {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.name, &other.name)
+                && ProtocolEq::protocol_eq(&self.min_version, &other.min_version)
+                && ProtocolEq::protocol_eq(&self.max_version, &other.max_version)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
+        }
+    }
+
     impl KafkaDecode for SupportedFeatureKey {
         fn decode(
             decoder: &mut Decoder,
@@ -505,6 +545,18 @@ pub mod api_versions_response {
         }
     }
 
+    impl ProtocolEq for FinalizedFeatureKey {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.name, &other.name)
+                && ProtocolEq::protocol_eq(&self.max_version_level, &other.max_version_level)
+                && ProtocolEq::protocol_eq(&self.min_version_level, &other.min_version_level)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
+        }
+    }
+
     impl KafkaDecode for FinalizedFeatureKey {
         fn decode(
             decoder: &mut Decoder,
@@ -625,6 +677,25 @@ pub mod api_versions_response {
         }
     }
 
+    impl ProtocolEq for ApiVersionsResponse {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.error_code, &other.error_code)
+                && ProtocolEq::protocol_eq(&self.api_keys, &other.api_keys)
+                && ProtocolEq::protocol_eq(&self.throttle_time_ms, &other.throttle_time_ms)
+                && ProtocolEq::protocol_eq(&self.supported_features, &other.supported_features)
+                && ProtocolEq::protocol_eq(
+                    &self.finalized_features_epoch,
+                    &other.finalized_features_epoch,
+                )
+                && ProtocolEq::protocol_eq(&self.finalized_features, &other.finalized_features)
+                && ProtocolEq::protocol_eq(&self.zk_migration_ready, &other.zk_migration_ready)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
+        }
+    }
+
     impl KafkaMessage for ApiVersionsResponse {
         const NAME: &'static str = "ApiVersionsResponse";
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 5);
@@ -740,6 +811,48 @@ pub mod api_versions_response {
     }
 
     impl ApiVersionsResponse {
+        fn __kw_encode_known_tag_0<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: kafka_wire_core::ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
+            encoder.write_compact_array_len(self.supported_features.len())?;
+            for value in &self.supported_features {
+                value.encode_validated(encoder, version)?;
+            }
+            ::core::result::Result::Ok(())
+        }
+
+        fn __kw_encode_known_tag_1<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            _version: kafka_wire_core::ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
+            encoder.write_i64(self.finalized_features_epoch)?;
+            ::core::result::Result::Ok(())
+        }
+
+        fn __kw_encode_known_tag_2<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            version: kafka_wire_core::ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
+            encoder.write_compact_array_len(self.finalized_features.len())?;
+            for value in &self.finalized_features {
+                value.encode_validated(encoder, version)?;
+            }
+            ::core::result::Result::Ok(())
+        }
+
+        fn __kw_encode_known_tag_3<T: EncodeTarget>(
+            &self,
+            encoder: &mut Encoder<T>,
+            _version: kafka_wire_core::ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
+            encoder.write_bool(self.zk_migration_ready)?;
+            ::core::result::Result::Ok(())
+        }
+
         fn encode_validated<T: EncodeTarget>(
             &self,
             encoder: &mut Encoder<T>,
@@ -761,36 +874,36 @@ pub mod api_versions_response {
             if Self::is_flexible(version) {
                 let mut known = KnownTags::new();
                 if !self.supported_features.is_empty() {
-                    known.write(0, |encoder| {
-                        encoder.write_compact_array_len(self.supported_features.len())?;
-                        for value in &self.supported_features {
-                            value.encode_validated(encoder, version)?;
-                        }
-                        ::core::result::Result::Ok(())
+                    known.measure(0, |encoder| {
+                        Self::__kw_encode_known_tag_0(self, encoder, version)
                     })?;
                 }
                 if self.finalized_features_epoch != -1 {
-                    known.write(1, |encoder| {
-                        encoder.write_i64(self.finalized_features_epoch)?;
-                        ::core::result::Result::Ok(())
+                    known.measure(1, |encoder| {
+                        Self::__kw_encode_known_tag_1(self, encoder, version)
                     })?;
                 }
                 if !self.finalized_features.is_empty() {
-                    known.write(2, |encoder| {
-                        encoder.write_compact_array_len(self.finalized_features.len())?;
-                        for value in &self.finalized_features {
-                            value.encode_validated(encoder, version)?;
-                        }
-                        ::core::result::Result::Ok(())
+                    known.measure(2, |encoder| {
+                        Self::__kw_encode_known_tag_2(self, encoder, version)
                     })?;
                 }
                 if self.zk_migration_ready {
-                    known.write(3, |encoder| {
-                        encoder.write_bool(self.zk_migration_ready)?;
-                        ::core::result::Result::Ok(())
+                    known.measure(3, |encoder| {
+                        Self::__kw_encode_known_tag_3(self, encoder, version)
                     })?;
                 }
-                encoder.write_merged_tagged_fields(known, &self.unknown_tagged_fields)?;
+                encoder.write_merged_tagged_fields(
+                    known,
+                    &self.unknown_tagged_fields,
+                    |tag, encoder| match tag {
+                        0 => Self::__kw_encode_known_tag_0(self, encoder, version),
+                        1 => Self::__kw_encode_known_tag_1(self, encoder, version),
+                        2 => Self::__kw_encode_known_tag_2(self, encoder, version),
+                        3 => Self::__kw_encode_known_tag_3(self, encoder, version),
+                        _ => unreachable!("KnownTags yielded an unmeasured tag"),
+                    },
+                )?;
             }
 
             ::core::result::Result::Ok(())

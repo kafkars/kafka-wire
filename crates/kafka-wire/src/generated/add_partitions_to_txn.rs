@@ -16,7 +16,7 @@ pub mod add_partitions_to_txn_request {
         encoded_len_with,
     };
 
-    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, RequestResponsePair};
+    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, ProtocolEq, RequestResponsePair};
 
     /// `AddPartitionsToTxnTopic` as declared by the `AddPartitionsToTxn` API.
     #[non_exhaustive]
@@ -61,6 +61,17 @@ pub mod add_partitions_to_txn_request {
             }
 
             ::core::result::Result::Ok(())
+        }
+    }
+
+    impl ProtocolEq for AddPartitionsToTxnTopic {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.name, &other.name)
+                && ProtocolEq::protocol_eq(&self.partitions, &other.partitions)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
         }
     }
 
@@ -218,6 +229,20 @@ pub mod add_partitions_to_txn_request {
         }
     }
 
+    impl ProtocolEq for AddPartitionsToTxnTransaction {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.transactional_id, &other.transactional_id)
+                && ProtocolEq::protocol_eq(&self.producer_id, &other.producer_id)
+                && ProtocolEq::protocol_eq(&self.producer_epoch, &other.producer_epoch)
+                && ProtocolEq::protocol_eq(&self.verify_only, &other.verify_only)
+                && ProtocolEq::protocol_eq(&self.topics, &other.topics)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
+        }
+    }
+
     impl KafkaDecode for AddPartitionsToTxnTransaction {
         fn decode(
             decoder: &mut Decoder,
@@ -328,6 +353,29 @@ pub mod add_partitions_to_txn_request {
         pub v3_and_below_topics: ::std::vec::Vec<AddPartitionsToTxnTopic>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl ProtocolEq for AddPartitionsToTxnRequest {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.transactions, &other.transactions)
+                && ProtocolEq::protocol_eq(
+                    &self.v3_and_below_transactional_id,
+                    &other.v3_and_below_transactional_id,
+                )
+                && ProtocolEq::protocol_eq(
+                    &self.v3_and_below_producer_id,
+                    &other.v3_and_below_producer_id,
+                )
+                && ProtocolEq::protocol_eq(
+                    &self.v3_and_below_producer_epoch,
+                    &other.v3_and_below_producer_epoch,
+                )
+                && ProtocolEq::protocol_eq(&self.v3_and_below_topics, &other.v3_and_below_topics)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
+        }
     }
 
     impl KafkaMessage for AddPartitionsToTxnRequest {
@@ -559,7 +607,7 @@ pub mod add_partitions_to_txn_response {
         encoded_len_with,
     };
 
-    use crate::{KafkaMessage, KafkaResponse};
+    use crate::{KafkaMessage, KafkaResponse, ProtocolEq};
 
     /// `AddPartitionsToTxnTopicResult` as declared by the `AddPartitionsToTxn` API.
     #[non_exhaustive]
@@ -607,6 +655,17 @@ pub mod add_partitions_to_txn_response {
             }
 
             ::core::result::Result::Ok(())
+        }
+    }
+
+    impl ProtocolEq for AddPartitionsToTxnTopicResult {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.name, &other.name)
+                && ProtocolEq::protocol_eq(&self.results_by_partition, &other.results_by_partition)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
         }
     }
 
@@ -757,6 +816,17 @@ pub mod add_partitions_to_txn_response {
         }
     }
 
+    impl ProtocolEq for AddPartitionsToTxnPartitionResult {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.partition_index, &other.partition_index)
+                && ProtocolEq::protocol_eq(&self.partition_error_code, &other.partition_error_code)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
+        }
+    }
+
     impl KafkaDecode for AddPartitionsToTxnPartitionResult {
         fn decode(
             decoder: &mut Decoder,
@@ -889,6 +959,17 @@ pub mod add_partitions_to_txn_response {
         }
     }
 
+    impl ProtocolEq for AddPartitionsToTxnResult {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.transactional_id, &other.transactional_id)
+                && ProtocolEq::protocol_eq(&self.topic_results, &other.topic_results)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
+        }
+    }
+
     impl KafkaDecode for AddPartitionsToTxnResult {
         fn decode(
             decoder: &mut Decoder,
@@ -988,6 +1069,25 @@ pub mod add_partitions_to_txn_response {
         pub results_by_topic_v3_and_below: ::std::vec::Vec<AddPartitionsToTxnTopicResult>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl ProtocolEq for AddPartitionsToTxnResponse {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.throttle_time_ms, &other.throttle_time_ms)
+                && ProtocolEq::protocol_eq(&self.error_code, &other.error_code)
+                && ProtocolEq::protocol_eq(
+                    &self.results_by_transaction,
+                    &other.results_by_transaction,
+                )
+                && ProtocolEq::protocol_eq(
+                    &self.results_by_topic_v3_and_below,
+                    &other.results_by_topic_v3_and_below,
+                )
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
+        }
     }
 
     impl KafkaMessage for AddPartitionsToTxnResponse {

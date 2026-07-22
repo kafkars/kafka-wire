@@ -16,7 +16,7 @@ pub mod describe_topic_partitions_request {
         encoded_len_with,
     };
 
-    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, RequestResponsePair};
+    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, ProtocolEq, RequestResponsePair};
 
     /// `TopicRequest` as declared by the `DescribeTopicPartitions` API.
     #[non_exhaustive]
@@ -59,6 +59,16 @@ pub mod describe_topic_partitions_request {
             }
 
             ::core::result::Result::Ok(())
+        }
+    }
+
+    impl ProtocolEq for TopicRequest {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.name, &other.name)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
         }
     }
 
@@ -182,6 +192,17 @@ pub mod describe_topic_partitions_request {
         }
     }
 
+    impl ProtocolEq for Cursor {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.topic_name, &other.topic_name)
+                && ProtocolEq::protocol_eq(&self.partition_index, &other.partition_index)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
+        }
+    }
+
     impl KafkaDecode for Cursor {
         fn decode(
             decoder: &mut Decoder,
@@ -281,6 +302,21 @@ pub mod describe_topic_partitions_request {
                 cursor: ::core::option::Option::None,
                 unknown_tagged_fields: TaggedFields::default(),
             }
+        }
+    }
+
+    impl ProtocolEq for DescribeTopicPartitionsRequest {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.topics, &other.topics)
+                && ProtocolEq::protocol_eq(
+                    &self.response_partition_limit,
+                    &other.response_partition_limit,
+                )
+                && ProtocolEq::protocol_eq(&self.cursor, &other.cursor)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
         }
     }
 
@@ -426,7 +462,7 @@ pub mod describe_topic_partitions_response {
         encoded_len_with,
     };
 
-    use crate::{KafkaMessage, KafkaResponse};
+    use crate::{KafkaMessage, KafkaResponse, ProtocolEq};
 
     /// `DescribeTopicPartitionsResponseTopic` as declared by the `DescribeTopicPartitions` API.
     #[non_exhaustive]
@@ -496,6 +532,24 @@ pub mod describe_topic_partitions_response {
                 topic_authorized_operations: -2_147_483_648,
                 unknown_tagged_fields: TaggedFields::default(),
             }
+        }
+    }
+
+    impl ProtocolEq for DescribeTopicPartitionsResponseTopic {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.error_code, &other.error_code)
+                && ProtocolEq::protocol_eq(&self.name, &other.name)
+                && ProtocolEq::protocol_eq(&self.topic_id, &other.topic_id)
+                && ProtocolEq::protocol_eq(&self.is_internal, &other.is_internal)
+                && ProtocolEq::protocol_eq(&self.partitions, &other.partitions)
+                && ProtocolEq::protocol_eq(
+                    &self.topic_authorized_operations,
+                    &other.topic_authorized_operations,
+                )
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
         }
     }
 
@@ -676,6 +730,27 @@ pub mod describe_topic_partitions_response {
                 offline_replicas: ::std::vec::Vec::new(),
                 unknown_tagged_fields: TaggedFields::default(),
             }
+        }
+    }
+
+    impl ProtocolEq for DescribeTopicPartitionsResponsePartition {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.error_code, &other.error_code)
+                && ProtocolEq::protocol_eq(&self.partition_index, &other.partition_index)
+                && ProtocolEq::protocol_eq(&self.leader_id, &other.leader_id)
+                && ProtocolEq::protocol_eq(&self.leader_epoch, &other.leader_epoch)
+                && ProtocolEq::protocol_eq(&self.replica_nodes, &other.replica_nodes)
+                && ProtocolEq::protocol_eq(&self.isr_nodes, &other.isr_nodes)
+                && ProtocolEq::protocol_eq(
+                    &self.eligible_leader_replicas,
+                    &other.eligible_leader_replicas,
+                )
+                && ProtocolEq::protocol_eq(&self.last_known_elr, &other.last_known_elr)
+                && ProtocolEq::protocol_eq(&self.offline_replicas, &other.offline_replicas)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
         }
     }
 
@@ -879,6 +954,17 @@ pub mod describe_topic_partitions_response {
         }
     }
 
+    impl ProtocolEq for Cursor {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.topic_name, &other.topic_name)
+                && ProtocolEq::protocol_eq(&self.partition_index, &other.partition_index)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
+        }
+    }
+
     impl KafkaDecode for Cursor {
         fn decode(
             decoder: &mut Decoder,
@@ -968,6 +1054,18 @@ pub mod describe_topic_partitions_response {
         pub next_cursor: ::core::option::Option<Cursor>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
+    }
+
+    impl ProtocolEq for DescribeTopicPartitionsResponse {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.throttle_time_ms, &other.throttle_time_ms)
+                && ProtocolEq::protocol_eq(&self.topics, &other.topics)
+                && ProtocolEq::protocol_eq(&self.next_cursor, &other.next_cursor)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
+        }
     }
 
     impl KafkaMessage for DescribeTopicPartitionsResponse {

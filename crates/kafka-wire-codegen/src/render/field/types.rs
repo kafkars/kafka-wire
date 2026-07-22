@@ -157,6 +157,13 @@ pub(crate) fn non_default_condition(field: &Field, message: &Message) -> String 
     let name = field.name.rust_field();
     if !matches!(field.default, DefaultValue::Null) && is_nullable(field, message) {
         let value = default_value(field, message);
+        if matches!(field.default, DefaultValue::StructDefaults) {
+            return format!(
+                "!{}::protocol_eq(&self.{name}, &{}({value}))",
+                spell(message, S::ProtocolEq),
+                spell(message, S::Some),
+            );
+        }
         return format!("self.{name} != {}({value})", spell(message, S::Some));
     }
     match &field.default {
@@ -177,8 +184,8 @@ pub(crate) fn non_default_condition(field: &Field, message: &Message) -> String 
         ),
         DefaultValue::StructDefaults => {
             format!(
-                "self.{name} != {}::default()",
-                type_name(&field.ty, message)
+                "!{}::is_protocol_default(&self.{name})",
+                spell(message, S::ProtocolEq)
             )
         }
         DefaultValue::Empty => format!("!self.{name}.is_empty()"),

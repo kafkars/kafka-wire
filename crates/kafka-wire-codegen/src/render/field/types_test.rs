@@ -240,7 +240,7 @@ fn structured_defaults() -> Vec<DefaultCell> {
         ty: struct_type("TopicData"),
         default: DefaultValue::StructDefaults,
         initializer: "TopicData::default()",
-        non_default: "self.probe != TopicData::default()",
+        non_default: "!ProtocolEq::is_protocol_default(&self.probe)",
         derivable: true,
         nullable: false,
     }]

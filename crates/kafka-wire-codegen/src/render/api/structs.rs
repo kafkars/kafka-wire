@@ -17,6 +17,7 @@ use super::codec::{render_construction, render_reads, render_struct_encode};
 use super::declarations::{RenderableStruct, declared_structs};
 use super::imports::{ExternalSymbol as S, spell};
 use super::prose::sentence;
+use super::protocol_eq::render_protocol_eq;
 use super::tagged::render_tagged_decode;
 use super::validation::{Owner, render_validation};
 
@@ -197,6 +198,8 @@ fn render_struct_with(
         rust.close("");
         rust.blank();
     }
+
+    render_protocol_eq(rust, rust_type, fields, message, flexible);
 
     render_struct_decode(rust, rust_type, fields, message, identity, flexible)?;
     render_struct_encode(rust, rust_type, fields, message, flexible)?;

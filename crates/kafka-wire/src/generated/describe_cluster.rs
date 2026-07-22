@@ -15,7 +15,7 @@ pub mod describe_cluster_request {
         KafkaDecode, KafkaEncode, TaggedFields, VersionRange, encode_into_with, encoded_len_with,
     };
 
-    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, RequestResponsePair};
+    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, ProtocolEq, RequestResponsePair};
 
     /// Request body for the `DescribeCluster` API.
     #[non_exhaustive]
@@ -39,6 +39,23 @@ pub mod describe_cluster_request {
                 include_fenced_brokers: false,
                 unknown_tagged_fields: TaggedFields::default(),
             }
+        }
+    }
+
+    impl ProtocolEq for DescribeClusterRequest {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(
+                &self.include_cluster_authorized_operations,
+                &other.include_cluster_authorized_operations,
+            ) && ProtocolEq::protocol_eq(&self.endpoint_type, &other.endpoint_type)
+                && ProtocolEq::protocol_eq(
+                    &self.include_fenced_brokers,
+                    &other.include_fenced_brokers,
+                )
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
         }
     }
 
@@ -188,7 +205,7 @@ pub mod describe_cluster_response {
         encoded_len_with,
     };
 
-    use crate::{KafkaMessage, KafkaResponse};
+    use crate::{KafkaMessage, KafkaResponse, ProtocolEq};
 
     /// `DescribeClusterBroker` as declared by the `DescribeCluster` API.
     #[non_exhaustive]
@@ -246,6 +263,20 @@ pub mod describe_cluster_response {
             }
 
             ::core::result::Result::Ok(())
+        }
+    }
+
+    impl ProtocolEq for DescribeClusterBroker {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.broker_id, &other.broker_id)
+                && ProtocolEq::protocol_eq(&self.host, &other.host)
+                && ProtocolEq::protocol_eq(&self.port, &other.port)
+                && ProtocolEq::protocol_eq(&self.rack, &other.rack)
+                && ProtocolEq::protocol_eq(&self.is_fenced, &other.is_fenced)
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
         }
     }
 
@@ -378,6 +409,26 @@ pub mod describe_cluster_response {
                 cluster_authorized_operations: -2_147_483_648,
                 unknown_tagged_fields: TaggedFields::default(),
             }
+        }
+    }
+
+    impl ProtocolEq for DescribeClusterResponse {
+        fn protocol_eq(&self, other: &Self) -> bool {
+            ProtocolEq::protocol_eq(&self.throttle_time_ms, &other.throttle_time_ms)
+                && ProtocolEq::protocol_eq(&self.error_code, &other.error_code)
+                && ProtocolEq::protocol_eq(&self.error_message, &other.error_message)
+                && ProtocolEq::protocol_eq(&self.endpoint_type, &other.endpoint_type)
+                && ProtocolEq::protocol_eq(&self.cluster_id, &other.cluster_id)
+                && ProtocolEq::protocol_eq(&self.controller_id, &other.controller_id)
+                && ProtocolEq::protocol_eq(&self.brokers, &other.brokers)
+                && ProtocolEq::protocol_eq(
+                    &self.cluster_authorized_operations,
+                    &other.cluster_authorized_operations,
+                )
+                && ProtocolEq::protocol_eq(
+                    &self.unknown_tagged_fields,
+                    &other.unknown_tagged_fields,
+                )
         }
     }
 
