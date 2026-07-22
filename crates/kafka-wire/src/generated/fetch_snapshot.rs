@@ -12,8 +12,8 @@
 pub mod fetch_snapshot_request {
     use kafka_wire_core::{
         ApiKey, ApiVersion, BytesMut, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder,
-        KafkaDecode, KafkaEncode, KnownTags, StrBytes, TagOutcome, TaggedFields, TaggedFieldsError,
-        Uuid, VersionRange, encode_into_with, encoded_len_with,
+        KafkaDecode, KafkaEncode, KnownTags, StrBytes, TagOutcome, TaggedFields, Uuid,
+        VersionRange, encode_into_with, encoded_len_with,
     };
 
     use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, ProtocolEq, RequestResponsePair};
@@ -192,6 +192,20 @@ pub mod fetch_snapshot_request {
     }
 
     impl PartitionSnapshot {
+        pub(crate) fn validate_known_tag_ownership(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
+            if version.value() >= 1 && self.unknown_tagged_fields.contains_tag(0) {
+                return ::core::result::Result::Err(EncodeError::KnownTagConflict {
+                    message: "PartitionSnapshot",
+                    tag: 0,
+                    version,
+                });
+            }
+            ::core::result::Result::Ok(())
+        }
+
         fn validate_for_version(
             &self,
             version: ApiVersion,
@@ -204,12 +218,8 @@ pub mod fetch_snapshot_request {
                 });
             }
 
+            self.validate_known_tag_ownership(version)?;
             self.snapshot_id.validate_for_version(version)?;
-            if version.value() >= 1 && self.unknown_tagged_fields.contains_tag(0) {
-                return ::core::result::Result::Err(EncodeError::TaggedFieldsInvalid(
-                    TaggedFieldsError::Duplicate { tag: 0 },
-                ));
-            }
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
                 return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: "PartitionSnapshot",
@@ -297,7 +307,7 @@ pub mod fetch_snapshot_request {
             encoder.write_i64(self.position)?;
 
             if Self::is_flexible(version) {
-                let mut known = KnownTags::new();
+                let mut known = KnownTags::<1>::new();
                 if version.value() >= 1 {
                     known.claim(0)?;
                     if self.replica_directory_id != Uuid::ZERO {
@@ -543,19 +553,29 @@ pub mod fetch_snapshot_request {
     }
 
     impl FetchSnapshotRequest {
+        pub(crate) fn validate_known_tag_ownership(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
+            if self.unknown_tagged_fields.contains_tag(0) {
+                return ::core::result::Result::Err(EncodeError::KnownTagConflict {
+                    message: Self::NAME,
+                    tag: 0,
+                    version,
+                });
+            }
+            ::core::result::Result::Ok(())
+        }
+
         fn validate_for_version(
             &self,
             version: ApiVersion,
         ) -> ::core::result::Result<(), EncodeError> {
             crate::message::ensure_encode_version::<Self>(version)?;
 
+            self.validate_known_tag_ownership(version)?;
             for value in &self.topics {
                 value.validate_for_version(version)?;
-            }
-            if self.unknown_tagged_fields.contains_tag(0) {
-                return ::core::result::Result::Err(EncodeError::TaggedFieldsInvalid(
-                    TaggedFieldsError::Duplicate { tag: 0 },
-                ));
             }
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
                 return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
@@ -627,7 +647,7 @@ pub mod fetch_snapshot_request {
             }
 
             if Self::is_flexible(version) {
-                let mut known = KnownTags::new();
+                let mut known = KnownTags::<1>::new();
                 known.claim(0)?;
                 if self.cluster_id.is_some() {
                     known.measure(0, |encoder| {
@@ -688,7 +708,7 @@ pub mod fetch_snapshot_response {
     use kafka_wire_core::{
         ApiKey, ApiVersion, Bytes, BytesMut, DecodeError, Decoder, EncodeError, EncodeTarget,
         Encoder, KafkaDecode, KafkaEncode, KnownTags, StrBytes, TagOutcome, TaggedFields,
-        TaggedFieldsError, VersionRange, encode_into_with, encoded_len_with,
+        VersionRange, encode_into_with, encoded_len_with,
     };
 
     use crate::{KafkaMessage, KafkaResponse, ProtocolEq};
@@ -871,6 +891,20 @@ pub mod fetch_snapshot_response {
     }
 
     impl PartitionSnapshot {
+        pub(crate) fn validate_known_tag_ownership(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
+            if self.unknown_tagged_fields.contains_tag(0) {
+                return ::core::result::Result::Err(EncodeError::KnownTagConflict {
+                    message: "PartitionSnapshot",
+                    tag: 0,
+                    version,
+                });
+            }
+            ::core::result::Result::Ok(())
+        }
+
         fn validate_for_version(
             &self,
             version: ApiVersion,
@@ -883,13 +917,9 @@ pub mod fetch_snapshot_response {
                 });
             }
 
+            self.validate_known_tag_ownership(version)?;
             self.snapshot_id.validate_for_version(version)?;
             self.current_leader.validate_for_version(version)?;
-            if self.unknown_tagged_fields.contains_tag(0) {
-                return ::core::result::Result::Err(EncodeError::TaggedFieldsInvalid(
-                    TaggedFieldsError::Duplicate { tag: 0 },
-                ));
-            }
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
                 return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: "PartitionSnapshot",
@@ -985,7 +1015,7 @@ pub mod fetch_snapshot_response {
             encoder.write_compact_bytes(&self.unaligned_records)?;
 
             if Self::is_flexible(version) {
-                let mut known = KnownTags::new();
+                let mut known = KnownTags::<1>::new();
                 known.claim(0)?;
                 if !ProtocolEq::is_protocol_default(&self.current_leader) {
                     known.measure(0, |encoder| {
@@ -1486,12 +1516,27 @@ pub mod fetch_snapshot_response {
     }
 
     impl FetchSnapshotResponse {
+        pub(crate) fn validate_known_tag_ownership(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
+            if version.value() >= 1 && self.unknown_tagged_fields.contains_tag(0) {
+                return ::core::result::Result::Err(EncodeError::KnownTagConflict {
+                    message: Self::NAME,
+                    tag: 0,
+                    version,
+                });
+            }
+            ::core::result::Result::Ok(())
+        }
+
         fn validate_for_version(
             &self,
             version: ApiVersion,
         ) -> ::core::result::Result<(), EncodeError> {
             crate::message::ensure_encode_version::<Self>(version)?;
 
+            self.validate_known_tag_ownership(version)?;
             if version.value() < 1 && !self.node_endpoints.is_empty() {
                 return ::core::result::Result::Err(EncodeError::FieldNotRepresentable {
                     message: Self::NAME,
@@ -1506,11 +1551,6 @@ pub mod fetch_snapshot_response {
                 for value in &self.node_endpoints {
                     value.validate_for_version(version)?;
                 }
-            }
-            if version.value() >= 1 && self.unknown_tagged_fields.contains_tag(0) {
-                return ::core::result::Result::Err(EncodeError::TaggedFieldsInvalid(
-                    TaggedFieldsError::Duplicate { tag: 0 },
-                ));
             }
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
                 return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
@@ -1590,7 +1630,7 @@ pub mod fetch_snapshot_response {
             }
 
             if Self::is_flexible(version) {
-                let mut known = KnownTags::new();
+                let mut known = KnownTags::<1>::new();
                 if version.value() >= 1 {
                     known.claim(0)?;
                     if !self.node_endpoints.is_empty() {

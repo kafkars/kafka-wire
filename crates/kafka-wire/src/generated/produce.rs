@@ -512,8 +512,8 @@ pub mod produce_request {
 pub mod produce_response {
     use kafka_wire_core::{
         ApiKey, ApiVersion, BytesMut, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder,
-        KafkaDecode, KafkaEncode, KnownTags, StrBytes, TagOutcome, TaggedFields, TaggedFieldsError,
-        Uuid, VersionRange, encode_into_with, encoded_len_with,
+        KafkaDecode, KafkaEncode, KnownTags, StrBytes, TagOutcome, TaggedFields, Uuid,
+        VersionRange, encode_into_with, encoded_len_with,
     };
 
     use crate::{KafkaMessage, KafkaResponse, ProtocolEq};
@@ -732,6 +732,20 @@ pub mod produce_response {
     }
 
     impl PartitionProduceResponse {
+        pub(crate) fn validate_known_tag_ownership(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
+            if version.value() >= 10 && self.unknown_tagged_fields.contains_tag(0) {
+                return ::core::result::Result::Err(EncodeError::KnownTagConflict {
+                    message: "PartitionProduceResponse",
+                    tag: 0,
+                    version,
+                });
+            }
+            ::core::result::Result::Ok(())
+        }
+
         fn validate_for_version(
             &self,
             version: ApiVersion,
@@ -744,6 +758,7 @@ pub mod produce_response {
                 });
             }
 
+            self.validate_known_tag_ownership(version)?;
             if version.value() < 10 && !ProtocolEq::is_protocol_default(&self.current_leader) {
                 return ::core::result::Result::Err(EncodeError::FieldNotRepresentable {
                     message: "PartitionProduceResponse",
@@ -758,11 +773,6 @@ pub mod produce_response {
             }
             if version.value() >= 10 {
                 self.current_leader.validate_for_version(version)?;
-            }
-            if version.value() >= 10 && self.unknown_tagged_fields.contains_tag(0) {
-                return ::core::result::Result::Err(EncodeError::TaggedFieldsInvalid(
-                    TaggedFieldsError::Duplicate { tag: 0 },
-                ));
             }
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
                 return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
@@ -919,7 +929,7 @@ pub mod produce_response {
             }
 
             if Self::is_flexible(version) {
-                let mut known = KnownTags::new();
+                let mut known = KnownTags::<1>::new();
                 if version.value() >= 10 {
                     known.claim(0)?;
                     if !ProtocolEq::is_protocol_default(&self.current_leader) {
@@ -1446,12 +1456,27 @@ pub mod produce_response {
     }
 
     impl ProduceResponse {
+        pub(crate) fn validate_known_tag_ownership(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
+            if version.value() >= 10 && self.unknown_tagged_fields.contains_tag(0) {
+                return ::core::result::Result::Err(EncodeError::KnownTagConflict {
+                    message: Self::NAME,
+                    tag: 0,
+                    version,
+                });
+            }
+            ::core::result::Result::Ok(())
+        }
+
         fn validate_for_version(
             &self,
             version: ApiVersion,
         ) -> ::core::result::Result<(), EncodeError> {
             crate::message::ensure_encode_version::<Self>(version)?;
 
+            self.validate_known_tag_ownership(version)?;
             if version.value() < 10 && !self.node_endpoints.is_empty() {
                 return ::core::result::Result::Err(EncodeError::FieldNotRepresentable {
                     message: Self::NAME,
@@ -1466,11 +1491,6 @@ pub mod produce_response {
                 for value in &self.node_endpoints {
                     value.validate_for_version(version)?;
                 }
-            }
-            if version.value() >= 10 && self.unknown_tagged_fields.contains_tag(0) {
-                return ::core::result::Result::Err(EncodeError::TaggedFieldsInvalid(
-                    TaggedFieldsError::Duplicate { tag: 0 },
-                ));
             }
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
                 return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
@@ -1557,7 +1577,7 @@ pub mod produce_response {
             encoder.write_i32(self.throttle_time_ms)?;
 
             if Self::is_flexible(version) {
-                let mut known = KnownTags::new();
+                let mut known = KnownTags::<1>::new();
                 if version.value() >= 10 {
                     known.claim(0)?;
                     if !self.node_endpoints.is_empty() {

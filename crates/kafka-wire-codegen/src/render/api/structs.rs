@@ -19,6 +19,7 @@ use super::imports::{ExternalSymbol as S, spell};
 use super::prose::sentence;
 use super::protocol_eq::render_protocol_eq;
 use super::tagged::render_tagged_decode;
+use super::tagged_proof::verify_known_tag_rendering;
 use super::validation::{Owner, render_validation};
 
 /// Renders one whole schema as a standalone struct.
@@ -171,7 +172,7 @@ fn render_struct_with(
         Identity::Message => Owner::Message,
         Identity::Nested => Owner::Struct(rust_type),
     };
-    render_validation(rust, rust_type, fields, message, owner, flexible);
+    let validated_tags = render_validation(rust, rust_type, fields, message, owner, flexible);
 
     if !derive_default {
         rust.open(format!(
@@ -202,7 +203,8 @@ fn render_struct_with(
     render_protocol_eq(rust, rust_type, fields, message, flexible);
 
     render_struct_decode(rust, rust_type, fields, message, identity, flexible)?;
-    render_struct_encode(rust, rust_type, fields, message, flexible)?;
+    let claimed_tags = render_struct_encode(rust, rust_type, fields, message, flexible)?;
+    verify_known_tag_rendering(fields, message, rust_type, &validated_tags, &claimed_tags)?;
     Ok(())
 }
 

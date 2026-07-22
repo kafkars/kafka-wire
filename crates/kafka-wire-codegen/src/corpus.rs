@@ -169,10 +169,10 @@ pub fn render_corpus(workspace_root: impl AsRef<Path>) -> Result<CorpusRender, G
             render_header_version(&overrides, &lock.kafka.commit),
         ),
     ]);
-    if !emitted.is_empty() {
+    if !emitted.is_empty() || !grouped.unkeyed.is_empty() {
         facade_sources.insert(
             "fuzz_roundtrip.rs".to_owned(),
-            render_fuzz_dispatch(&emitted, &lock.kafka.commit)?,
+            render_fuzz_dispatch(&emitted, &grouped.unkeyed, &lock.kafka.commit)?,
         );
     }
     let facades = format_rendered_rust(facade_sources, workspace)?;

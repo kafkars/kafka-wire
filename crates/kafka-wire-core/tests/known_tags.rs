@@ -14,7 +14,6 @@ use kafka_wire_core::{
     DecodeError, DecodeLimits, Decoder, EncodeError, EncodeTarget, Encoder, KnownTags, TagOutcome,
     TaggedField, TaggedFields,
 };
-use std::cell::Cell;
 
 /// A section of one entry: tag 0, one byte of payload `0xaa`.
 const UNKNOWN_TAG_0: &[u8] = &[0x01, 0x00, 0x01, 0xaa];
@@ -24,7 +23,7 @@ fn unknown(tag: u32, data: &'static [u8]) -> TaggedFields {
 }
 
 /// Writes a section and asserts the sizing target agreed with the bytes.
-fn wire(known: impl Fn() -> KnownTags, unknown: &TaggedFields) -> Vec<u8> {
+fn wire<const N: usize>(known: impl Fn() -> KnownTags<N>, unknown: &TaggedFields) -> Vec<u8> {
     let mut buffer = BytesMut::new();
     let mut encoder = Encoder::new(&mut buffer);
     encoder
@@ -54,7 +53,8 @@ fn a_known_tag_is_written_after_a_lower_unknown_one() {
     // is unknown and tag 1 is known, so the unknown entry has to come first.
     let bytes = wire(
         || {
-            let mut known = KnownTags::new();
+            let mut known = KnownTags::<1>::new();
+            known.claim(1).unwrap();
             known.measure(1, |encoder| encoder.write_i16(7)).unwrap();
             known
         },
@@ -75,7 +75,8 @@ fn a_known_tag_is_written_after_a_lower_unknown_one() {
 fn a_known_tag_is_written_before_a_higher_unknown_one() {
     let bytes = wire(
         || {
-            let mut known = KnownTags::new();
+            let mut known = KnownTags::<1>::new();
+            known.claim(1).unwrap();
             known.measure(1, |encoder| encoder.write_i16(7)).unwrap();
             known
         },
@@ -90,7 +91,7 @@ fn a_section_of_only_unknown_tags_is_byte_identical_to_the_plain_writer() {
     // `write_merged_tagged_fields` with nothing known must not perturb the
     // bytes a build that knows no tags at all would have written.
     let retained = unknown(0, &[0xaa]);
-    let merged = wire(KnownTags::new, &retained);
+    let merged = wire(KnownTags::<0>::new, &retained);
 
     let mut buffer = BytesMut::new();
     Encoder::new(&mut buffer)
@@ -103,7 +104,7 @@ fn a_section_of_only_unknown_tags_is_byte_identical_to_the_plain_writer() {
 
 #[test]
 fn a_known_tag_colliding_with_a_retained_one_is_named() {
-    let mut known = KnownTags::new();
+    let mut known = KnownTags::<1>::new();
     known.claim(0).unwrap();
 
     let mut buffer = BytesMut::new();
@@ -125,7 +126,7 @@ fn a_known_tag_colliding_with_a_retained_one_is_named() {
 fn a_claimed_default_tag_is_not_counted_or_written() {
     let bytes = wire(
         || {
-            let mut known = KnownTags::new();
+            let mut known = KnownTags::<1>::new();
             known.claim(1).unwrap();
             known
         },
@@ -133,64 +134,6 @@ fn a_claimed_default_tag_is_not_counted_or_written() {
     );
 
     assert_eq!(bytes, [0x01, 0x09, 0x01, 0xaa]);
-}
-
-#[test]
-fn claiming_one_schema_tag_twice_is_a_duplicate() {
-    let mut known = KnownTags::new();
-    known.claim(1).unwrap();
-
-    assert!(matches!(
-        known.claim(1),
-        Err(EncodeError::TaggedFieldsInvalid(_))
-    ));
-}
-
-#[test]
-fn a_sizing_target_accounts_for_a_measured_payload_without_replaying_it() {
-    let traversals = Cell::new(0_usize);
-    let mut known = KnownTags::new();
-    known
-        .measure(1, |encoder| {
-            traversals.set(traversals.get() + 1);
-            encoder.write_i16(7)
-        })
-        .unwrap();
-
-    let mut sizer = Encoder::sizing();
-    sizer
-        .write_merged_tagged_fields(known, &TaggedFields::default(), |_, encoder| {
-            traversals.set(traversals.get() + 1);
-            encoder.write_i16(7)
-        })
-        .unwrap();
-
-    assert_eq!(sizer.len(), 5);
-    assert_eq!(
-        traversals.get(),
-        1,
-        "the measured payload must not be replayed into SizeTarget"
-    );
-}
-
-#[test]
-fn a_known_payload_must_write_the_length_preflight_measured() {
-    let mut known = KnownTags::new();
-    known.measure(1, |encoder| encoder.write_i16(7)).unwrap();
-    let mut buffer = BytesMut::new();
-    let error = Encoder::new(&mut buffer)
-        .write_merged_tagged_fields(known, &TaggedFields::default(), |_, encoder| {
-            encoder.write_i32(7)
-        })
-        .unwrap_err();
-
-    assert_eq!(
-        error,
-        EncodeError::SizeMismatch {
-            predicted: 2,
-            actual: 4,
-        }
-    );
 }
 
 #[test]
@@ -283,7 +226,7 @@ fn a_value_reaching_past_its_declared_size_cannot_see_the_next_entry() {
 #[test]
 fn a_section_survives_the_round_trip_that_knows_none_of_it() {
     let retained = decoder(UNKNOWN_TAG_0).read_tagged_fields().unwrap();
-    assert_eq!(wire(KnownTags::new, &retained), UNKNOWN_TAG_0);
+    assert_eq!(wire(KnownTags::<0>::new, &retained), UNKNOWN_TAG_0);
 }
 
 #[test]

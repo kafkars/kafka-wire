@@ -64,6 +64,31 @@ pub enum EncodeError {
         version: ApiVersion,
     },
 
+    /// A retained unknown field uses a tag the selected schema version owns.
+    #[error("{message} tag {tag} is known in version {version} and cannot also be retained")]
+    KnownTagConflict {
+        /// Protocol message or structure name.
+        message: &'static str,
+        /// Numeric tag claimed by both representations.
+        tag: u32,
+        /// Version in which the tag is known.
+        version: ApiVersion,
+    },
+
+    /// A known tagged value was measured without first claiming its numeric ID.
+    #[error("known tagged field {tag} was measured without an active claim")]
+    UnclaimedKnownTag {
+        /// Tag missing from the active claim set.
+        tag: u32,
+    },
+
+    /// More active known tags were claimed than the inline buffer can hold.
+    #[error("known tagged-field capacity {capacity} was exceeded")]
+    KnownTagCapacityExceeded {
+        /// Fixed capacity selected by the caller.
+        capacity: usize,
+    },
+
     /// Known and retained tagged fields could not be merged into one section.
     ///
     /// Reached when a field this build knows carries the same tag number as an

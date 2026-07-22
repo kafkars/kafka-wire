@@ -3,30 +3,27 @@
 //! This output belongs only to the fuzz harness. It deliberately adds no
 //! erased decoder or fuzz-specific entry point to the public runtime crate.
 
-use kafka_wire_schema::MessageKind;
-
-use crate::{GenerationError, group::ApiGroup, provenance::generated_banner};
+use crate::{
+    GenerationError, group::ApiGroup, provenance::generated_banner, source::MessageSource,
+};
 
 use super::{invariant, text::RustText};
 
 pub(crate) fn render_fuzz_dispatch(
     groups: &[ApiGroup],
+    unkeyed: &[MessageSource],
     commit: &str,
 ) -> Result<String, GenerationError> {
     let messages = groups
         .iter()
         .flat_map(ApiGroup::messages)
-        .filter(|source| {
-            matches!(
-                source.message.kind,
-                MessageKind::Request | MessageKind::Response
-            ) && !source.message.valid_versions.is_empty()
-        })
+        .chain(unkeyed.iter())
+        .filter(|source| !source.message.valid_versions.is_empty())
         .collect::<Vec<_>>();
     if messages.is_empty() {
         return Err(GenerationError::InternalInvariant {
             message: "<fuzz dispatch>".to_owned(),
-            invariant: "enabled corpus contains no versioned request or response".to_owned(),
+            invariant: "enabled corpus contains no versioned message".to_owned(),
         });
     }
 

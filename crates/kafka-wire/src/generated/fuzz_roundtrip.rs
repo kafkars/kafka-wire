@@ -8,7 +8,7 @@ use kafka_wire_core::ApiVersion;
 use super::round_trip;
 
 pub(super) fn dispatch(message_selector: u16, version_selector: u16, body: &[u8]) {
-    match usize::from(message_selector) % 180 {
+    match usize::from(message_selector) % 193 {
         0 => {
             if let Some(version) = select_version(version_selector, 3, 13) {
                 round_trip::<kafka_wire::ProduceRequest>(body, version);
@@ -911,6 +911,71 @@ pub(super) fn dispatch(message_selector: u16, version_selector: u16, body: &[u8]
                 round_trip::<kafka_wire::StreamsGroupTopologyDescriptionUpdateResponse>(
                     body, version,
                 );
+            }
+        }
+        180 => {
+            if let Some(version) = select_version(version_selector, 0, 0) {
+                round_trip::<kafka_wire::AbortedTxn>(body, version);
+            }
+        }
+        181 => {
+            if let Some(version) = select_version(version_selector, 0, 3) {
+                round_trip::<kafka_wire::ConsumerProtocolAssignment>(body, version);
+            }
+        }
+        182 => {
+            if let Some(version) = select_version(version_selector, 0, 3) {
+                round_trip::<kafka_wire::ConsumerProtocolSubscription>(body, version);
+            }
+        }
+        183 => {
+            if let Some(version) = select_version(version_selector, 0, 0) {
+                round_trip::<kafka_wire::ControlRecordTypeSchema>(body, version);
+            }
+        }
+        184 => {
+            if let Some(version) = select_version(version_selector, 0, 0) {
+                round_trip::<kafka_wire::DefaultPrincipalData>(body, version);
+            }
+        }
+        185 => {
+            if let Some(version) = select_version(version_selector, 0, 0) {
+                round_trip::<kafka_wire::EndTxnMarker>(body, version);
+            }
+        }
+        186 => {
+            if let Some(version) = select_version(version_selector, 0, 0) {
+                round_trip::<kafka_wire::KRaftVersionRecord>(body, version);
+            }
+        }
+        187 => {
+            if let Some(version) = select_version(version_selector, 0, 1) {
+                round_trip::<kafka_wire::LeaderChangeMessage>(body, version);
+            }
+        }
+        188 => {
+            if let Some(version) = select_version(version_selector, 1, 2) {
+                round_trip::<kafka_wire::RequestHeader>(body, version);
+            }
+        }
+        189 => {
+            if let Some(version) = select_version(version_selector, 0, 1) {
+                round_trip::<kafka_wire::ResponseHeader>(body, version);
+            }
+        }
+        190 => {
+            if let Some(version) = select_version(version_selector, 0, 0) {
+                round_trip::<kafka_wire::SnapshotFooterRecord>(body, version);
+            }
+        }
+        191 => {
+            if let Some(version) = select_version(version_selector, 0, 0) {
+                round_trip::<kafka_wire::SnapshotHeaderRecord>(body, version);
+            }
+        }
+        192 => {
+            if let Some(version) = select_version(version_selector, 0, 0) {
+                round_trip::<kafka_wire::VotersRecord>(body, version);
             }
         }
         _ => unreachable!("modulo result exceeded the generated dispatch table"),

@@ -20,6 +20,7 @@ use crate::{
 use super::codec::{local, render_array_body};
 use super::imports::{ExternalSymbol as S, spell};
 use super::tagged_payload::tag_helper;
+use super::tagged_proof::RenderedKnownTags;
 
 /// Whether this field travels in the tagged-field section rather than inline.
 pub(super) fn is_tagged(field: &Field) -> bool {
@@ -155,19 +156,26 @@ fn render_tag_arm(
 }
 
 /// Writes the tagged-field section, merging known tags with retained ones.
-pub(super) fn render_tagged_encode(rust: &mut RustText, fields: &[Field], message: &Message) {
+pub(super) fn render_tagged_encode(
+    rust: &mut RustText,
+    fields: &[Field],
+    message: &Message,
+) -> RenderedKnownTags {
     let tagged = known_tags(fields);
+    let mut rendered = RenderedKnownTags::default();
     rust.blank();
     rust.open("if Self::is_flexible(version)");
     if tagged.is_empty() {
         rust.line("encoder.write_tagged_fields(&self.unknown_tagged_fields)?;");
     } else {
         rust.line(format!(
-            "let mut known = {}::new();",
-            spell(message, S::KnownTags)
+            "let mut known = {}::<{}>::new();",
+            spell(message, S::KnownTags),
+            tagged.len()
         ));
         for (tag, _, field) in &tagged {
             render_tag_claim(rust, *tag, field, message);
+            rendered.record(*tag);
         }
         rust.line("encoder.write_merged_tagged_fields(");
         rust.line("    known,");
@@ -184,6 +192,7 @@ pub(super) fn render_tagged_encode(rust: &mut RustText, fields: &[Field], messag
         rust.line(")?;");
     }
     rust.close("");
+    rendered
 }
 
 /// Claims one active tag and measures it only when its value is non-default.

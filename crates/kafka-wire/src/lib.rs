@@ -8,6 +8,9 @@ mod frame;
 mod generated;
 mod message;
 
+#[cfg(test)]
+mod tagged_claims_test;
+
 pub use descriptor::{ApiDescriptor, MessageDescriptor, MessageDirection};
 pub use frame::{OutboundFrameLimits, encode_request, response_header_version_for};
 pub use message::{KafkaMessage, KafkaRequest, KafkaResponse, ProtocolEq, RequestResponsePair};

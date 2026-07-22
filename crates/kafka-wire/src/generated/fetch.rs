@@ -12,8 +12,8 @@
 pub mod fetch_request {
     use kafka_wire_core::{
         ApiKey, ApiVersion, BytesMut, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder,
-        KafkaDecode, KafkaEncode, KnownTags, StrBytes, TagOutcome, TaggedFields, TaggedFieldsError,
-        Uuid, VersionRange, encode_into_with, encoded_len_with,
+        KafkaDecode, KafkaEncode, KnownTags, StrBytes, TagOutcome, TaggedFields, Uuid,
+        VersionRange, encode_into_with, encoded_len_with,
     };
 
     use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, ProtocolEq, RequestResponsePair};
@@ -374,6 +374,27 @@ pub mod fetch_request {
     }
 
     impl FetchPartition {
+        pub(crate) fn validate_known_tag_ownership(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
+            if version.value() >= 17 && self.unknown_tagged_fields.contains_tag(0) {
+                return ::core::result::Result::Err(EncodeError::KnownTagConflict {
+                    message: "FetchPartition",
+                    tag: 0,
+                    version,
+                });
+            }
+            if version.value() >= 18 && self.unknown_tagged_fields.contains_tag(1) {
+                return ::core::result::Result::Err(EncodeError::KnownTagConflict {
+                    message: "FetchPartition",
+                    tag: 1,
+                    version,
+                });
+            }
+            ::core::result::Result::Ok(())
+        }
+
         fn validate_for_version(
             &self,
             version: ApiVersion,
@@ -386,22 +407,13 @@ pub mod fetch_request {
                 });
             }
 
+            self.validate_known_tag_ownership(version)?;
             if version.value() < 12 && self.last_fetched_epoch != -1 {
                 return ::core::result::Result::Err(EncodeError::FieldNotRepresentable {
                     message: "FetchPartition",
                     field: "LastFetchedEpoch",
                     version,
                 });
-            }
-            if version.value() >= 17 && self.unknown_tagged_fields.contains_tag(0) {
-                return ::core::result::Result::Err(EncodeError::TaggedFieldsInvalid(
-                    TaggedFieldsError::Duplicate { tag: 0 },
-                ));
-            }
-            if version.value() >= 18 && self.unknown_tagged_fields.contains_tag(1) {
-                return ::core::result::Result::Err(EncodeError::TaggedFieldsInvalid(
-                    TaggedFieldsError::Duplicate { tag: 1 },
-                ));
             }
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
                 return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
@@ -548,7 +560,7 @@ pub mod fetch_request {
             encoder.write_i32(self.partition_max_bytes)?;
 
             if Self::is_flexible(version) {
-                let mut known = KnownTags::new();
+                let mut known = KnownTags::<2>::new();
                 if version.value() >= 17 {
                     known.claim(0)?;
                     if self.replica_directory_id != Uuid::ZERO {
@@ -878,12 +890,34 @@ pub mod fetch_request {
     }
 
     impl FetchRequest {
+        pub(crate) fn validate_known_tag_ownership(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
+            if version.value() >= 12 && self.unknown_tagged_fields.contains_tag(0) {
+                return ::core::result::Result::Err(EncodeError::KnownTagConflict {
+                    message: Self::NAME,
+                    tag: 0,
+                    version,
+                });
+            }
+            if version.value() >= 15 && self.unknown_tagged_fields.contains_tag(1) {
+                return ::core::result::Result::Err(EncodeError::KnownTagConflict {
+                    message: Self::NAME,
+                    tag: 1,
+                    version,
+                });
+            }
+            ::core::result::Result::Ok(())
+        }
+
         fn validate_for_version(
             &self,
             version: ApiVersion,
         ) -> ::core::result::Result<(), EncodeError> {
             crate::message::ensure_encode_version::<Self>(version)?;
 
+            self.validate_known_tag_ownership(version)?;
             if version.value() > 14 && self.replica_id != -1 {
                 return ::core::result::Result::Err(EncodeError::FieldNotRepresentable {
                     message: Self::NAME,
@@ -915,16 +949,6 @@ pub mod fetch_request {
                 for value in &self.forgotten_topics_data {
                     value.validate_for_version(version)?;
                 }
-            }
-            if version.value() >= 12 && self.unknown_tagged_fields.contains_tag(0) {
-                return ::core::result::Result::Err(EncodeError::TaggedFieldsInvalid(
-                    TaggedFieldsError::Duplicate { tag: 0 },
-                ));
-            }
-            if version.value() >= 15 && self.unknown_tagged_fields.contains_tag(1) {
-                return ::core::result::Result::Err(EncodeError::TaggedFieldsInvalid(
-                    TaggedFieldsError::Duplicate { tag: 1 },
-                ));
             }
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
                 return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
@@ -1090,7 +1114,7 @@ pub mod fetch_request {
             }
 
             if Self::is_flexible(version) {
-                let mut known = KnownTags::new();
+                let mut known = KnownTags::<2>::new();
                 known.claim(0)?;
                 if self.cluster_id.is_some() {
                     known.measure(0, |encoder| {
@@ -1159,8 +1183,8 @@ pub mod fetch_request {
 pub mod fetch_response {
     use kafka_wire_core::{
         ApiKey, ApiVersion, Bytes, BytesMut, DecodeError, Decoder, EncodeError, EncodeTarget,
-        Encoder, KafkaDecode, KafkaEncode, KnownTags, StrBytes, TagOutcome, TaggedFields,
-        TaggedFieldsError, Uuid, VersionRange, encode_into_with, encoded_len_with,
+        Encoder, KafkaDecode, KafkaEncode, KnownTags, StrBytes, TagOutcome, TaggedFields, Uuid,
+        VersionRange, encode_into_with, encoded_len_with,
     };
 
     use crate::{KafkaMessage, KafkaResponse, ProtocolEq};
@@ -1383,6 +1407,34 @@ pub mod fetch_response {
     }
 
     impl PartitionData {
+        pub(crate) fn validate_known_tag_ownership(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
+            if version.value() >= 12 && self.unknown_tagged_fields.contains_tag(0) {
+                return ::core::result::Result::Err(EncodeError::KnownTagConflict {
+                    message: "PartitionData",
+                    tag: 0,
+                    version,
+                });
+            }
+            if version.value() >= 12 && self.unknown_tagged_fields.contains_tag(1) {
+                return ::core::result::Result::Err(EncodeError::KnownTagConflict {
+                    message: "PartitionData",
+                    tag: 1,
+                    version,
+                });
+            }
+            if version.value() >= 12 && self.unknown_tagged_fields.contains_tag(2) {
+                return ::core::result::Result::Err(EncodeError::KnownTagConflict {
+                    message: "PartitionData",
+                    tag: 2,
+                    version,
+                });
+            }
+            ::core::result::Result::Ok(())
+        }
+
         fn validate_for_version(
             &self,
             version: ApiVersion,
@@ -1395,6 +1447,7 @@ pub mod fetch_response {
                 });
             }
 
+            self.validate_known_tag_ownership(version)?;
             if version.value() < 12 && !ProtocolEq::is_protocol_default(&self.diverging_epoch) {
                 return ::core::result::Result::Err(EncodeError::FieldNotRepresentable {
                     message: "PartitionData",
@@ -1436,21 +1489,6 @@ pub mod fetch_response {
                 for value in values {
                     value.validate_for_version(version)?;
                 }
-            }
-            if version.value() >= 12 && self.unknown_tagged_fields.contains_tag(0) {
-                return ::core::result::Result::Err(EncodeError::TaggedFieldsInvalid(
-                    TaggedFieldsError::Duplicate { tag: 0 },
-                ));
-            }
-            if version.value() >= 12 && self.unknown_tagged_fields.contains_tag(1) {
-                return ::core::result::Result::Err(EncodeError::TaggedFieldsInvalid(
-                    TaggedFieldsError::Duplicate { tag: 1 },
-                ));
-            }
-            if version.value() >= 12 && self.unknown_tagged_fields.contains_tag(2) {
-                return ::core::result::Result::Err(EncodeError::TaggedFieldsInvalid(
-                    TaggedFieldsError::Duplicate { tag: 2 },
-                ));
             }
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
                 return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
@@ -1655,7 +1693,7 @@ pub mod fetch_response {
             }
 
             if Self::is_flexible(version) {
-                let mut known = KnownTags::new();
+                let mut known = KnownTags::<3>::new();
                 known.claim(0)?;
                 if !ProtocolEq::is_protocol_default(&self.diverging_epoch) {
                     known.measure(0, |encoder| {
@@ -2477,12 +2515,27 @@ pub mod fetch_response {
     }
 
     impl FetchResponse {
+        pub(crate) fn validate_known_tag_ownership(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
+            if version.value() >= 16 && self.unknown_tagged_fields.contains_tag(0) {
+                return ::core::result::Result::Err(EncodeError::KnownTagConflict {
+                    message: Self::NAME,
+                    tag: 0,
+                    version,
+                });
+            }
+            ::core::result::Result::Ok(())
+        }
+
         fn validate_for_version(
             &self,
             version: ApiVersion,
         ) -> ::core::result::Result<(), EncodeError> {
             crate::message::ensure_encode_version::<Self>(version)?;
 
+            self.validate_known_tag_ownership(version)?;
             if version.value() < 7 && self.session_id != 0 {
                 return ::core::result::Result::Err(EncodeError::FieldNotRepresentable {
                     message: Self::NAME,
@@ -2504,11 +2557,6 @@ pub mod fetch_response {
                 for value in &self.node_endpoints {
                     value.validate_for_version(version)?;
                 }
-            }
-            if version.value() >= 16 && self.unknown_tagged_fields.contains_tag(0) {
-                return ::core::result::Result::Err(EncodeError::TaggedFieldsInvalid(
-                    TaggedFieldsError::Duplicate { tag: 0 },
-                ));
             }
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
                 return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
@@ -2613,7 +2661,7 @@ pub mod fetch_response {
             }
 
             if Self::is_flexible(version) {
-                let mut known = KnownTags::new();
+                let mut known = KnownTags::<1>::new();
                 if version.value() >= 16 {
                     known.claim(0)?;
                     if !self.node_endpoints.is_empty() {

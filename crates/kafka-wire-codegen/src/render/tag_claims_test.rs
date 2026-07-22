@@ -56,15 +56,25 @@ fn every_known_tag_receives_one_active_runtime_assertion() {
         expected > 20,
         "tag census unexpectedly shrank to {expected}"
     );
-    assert_eq!(rendered.matches("assert_claim(").count(), expected);
+    assert_eq!(rendered.matches("assert_claim(\n").count(), expected);
     assert!(rendered.contains(
-        "kafka_wire::ApiVersionsResponse::default(),\n        \
-         |value, fields| value.unknown_tagged_fields = fields,\n        \
-         ApiVersion::new(3),\n        1,"
+        "let value = crate::ApiVersionsResponse {\n        \
+         unknown_tagged_fields: retained_tag(1),\n        ..Default::default()\n    };\n    \
+         assert_claim(\n        &value.validate_known_tag_ownership(ApiVersion::new(3)),"
     ));
     assert!(rendered.contains(
-        "kafka_wire::BrokerHeartbeatRequest::default(),\n        \
-         |value, fields| value.unknown_tagged_fields = fields,\n        \
-         ApiVersion::new(1),\n        0,"
+        "let value = crate::BrokerHeartbeatRequest {\n        \
+         unknown_tagged_fields: retained_tag(0),\n        ..Default::default()\n    };\n    \
+         assert_claim(\n        &value.validate_known_tag_ownership(ApiVersion::new(1)),"
     ));
+}
+
+#[test]
+fn an_empty_claim_census_emits_no_unused_verification_vocabulary() {
+    let rendered = render_tag_claims(&[], &[], "commit")
+        .unwrap_or_else(|error| panic!("render empty claims: {error}"));
+
+    assert!(!rendered.contains("use kafka_wire_core"));
+    assert!(!rendered.contains("fn retained_tag"));
+    assert!(rendered.contains("fn assert_all_active_tag_claims()"));
 }

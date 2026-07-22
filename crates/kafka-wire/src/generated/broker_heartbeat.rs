@@ -12,8 +12,8 @@
 pub mod broker_heartbeat_request {
     use kafka_wire_core::{
         ApiKey, ApiVersion, BytesMut, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder,
-        KafkaDecode, KafkaEncode, KnownTags, TagOutcome, TaggedFields, TaggedFieldsError, Uuid,
-        VersionRange, encode_into_with, encoded_len_with,
+        KafkaDecode, KafkaEncode, KnownTags, TagOutcome, TaggedFields, Uuid, VersionRange,
+        encode_into_with, encoded_len_with,
     };
 
     use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, ProtocolEq, RequestResponsePair};
@@ -91,12 +91,34 @@ pub mod broker_heartbeat_request {
     }
 
     impl BrokerHeartbeatRequest {
+        pub(crate) fn validate_known_tag_ownership(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
+            if version.value() >= 1 && self.unknown_tagged_fields.contains_tag(0) {
+                return ::core::result::Result::Err(EncodeError::KnownTagConflict {
+                    message: Self::NAME,
+                    tag: 0,
+                    version,
+                });
+            }
+            if version.value() >= 2 && self.unknown_tagged_fields.contains_tag(1) {
+                return ::core::result::Result::Err(EncodeError::KnownTagConflict {
+                    message: Self::NAME,
+                    tag: 1,
+                    version,
+                });
+            }
+            ::core::result::Result::Ok(())
+        }
+
         fn validate_for_version(
             &self,
             version: ApiVersion,
         ) -> ::core::result::Result<(), EncodeError> {
             crate::message::ensure_encode_version::<Self>(version)?;
 
+            self.validate_known_tag_ownership(version)?;
             if version.value() < 1 && !self.offline_log_dirs.is_empty() {
                 return ::core::result::Result::Err(EncodeError::FieldNotRepresentable {
                     message: Self::NAME,
@@ -110,16 +132,6 @@ pub mod broker_heartbeat_request {
                     field: "CordonedLogDirs",
                     version,
                 });
-            }
-            if version.value() >= 1 && self.unknown_tagged_fields.contains_tag(0) {
-                return ::core::result::Result::Err(EncodeError::TaggedFieldsInvalid(
-                    TaggedFieldsError::Duplicate { tag: 0 },
-                ));
-            }
-            if version.value() >= 2 && self.unknown_tagged_fields.contains_tag(1) {
-                return ::core::result::Result::Err(EncodeError::TaggedFieldsInvalid(
-                    TaggedFieldsError::Duplicate { tag: 1 },
-                ));
             }
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
                 return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
@@ -225,7 +237,7 @@ pub mod broker_heartbeat_request {
             encoder.write_bool(self.want_shut_down)?;
 
             if Self::is_flexible(version) {
-                let mut known = KnownTags::new();
+                let mut known = KnownTags::<2>::new();
                 if version.value() >= 1 {
                     known.claim(0)?;
                     if !self.offline_log_dirs.is_empty() {

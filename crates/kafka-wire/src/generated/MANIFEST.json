@@ -4,11 +4,11 @@
   "ir_version": 1,
   "upstream_repository": "https://github.com/apache/kafka",
   "upstream_commit": "678c0e07e4733c5a592e52046dc2c4e1625587f1",
-  "semantic_inputs_sha256": "9bfc6d8cd1e007550edb4ed0607aaa88c4fb489d705fffd00a05b113ce4e0685",
+  "semantic_inputs_sha256": "1df3236926cc4685cbcc756c4487ad44bca8ce0d8f7f8f726e4ee637565e44c3",
   "protocol_lock_sha256": "ba0a2510be56dbe225a9346c4fc6df5d3c48d33bec9ef92b4959f038659a0de2",
   "headers_override_sha256": "2831709c06549001fd4c59d3f58b33fcded5f7e0505d31a2777caa3657210c95",
   "schema_exceptions_sha256": "d10311cc6f570d1bfd13c6cf0194cf1f139f12226553d9a3ba2ac05c81d0583d",
-  "compiler_source_sha256": "424f1f7615813818f6175eeb68b2ac6152e9b4305377484c0ac9f867b83c2a1b",
+  "compiler_source_sha256": "a00573f08803f11c78230f546fbdf1a7402eebad32faca5ae55ea6b8d0f5f346",
   "rustfmt_sha256": "1d4b22e8a230b0627ce08efc3f2d5a0f7b4400ccc45d40f6fb95a7bc9ea46a82",
   "rustfmt_identity": "version=rustfmt 1.8.0-stable (6b00bc3880 2025-06-23); edition=2024",
   "files": [
@@ -58,7 +58,7 @@
     },
     {
       "path": "api_versions.rs",
-      "sha256": "de6d6259ae5964857a4e7c5ffd94345f1b30e659e955857f6a095360e6a24967"
+      "sha256": "d7bd6b7151b0f9f255bc135b5fed50a3c7b30732bd4a189b6f646f5cb4ca1244"
     },
     {
       "path": "assign_replicas_to_dirs.rs",
@@ -66,11 +66,11 @@
     },
     {
       "path": "begin_quorum_epoch.rs",
-      "sha256": "b2b998570a3768a27bb9ad2a31e0bed3151f973fd595975769573d73a65c4af1"
+      "sha256": "00618da3456896a53e06b20b735523b0004e472d2e7748c30087eb1da0a2167c"
     },
     {
       "path": "broker_heartbeat.rs",
-      "sha256": "6de29922002a4890f466bff5ceb3a550607e686c38999fc0126e001c9d6c0473"
+      "sha256": "171d2a475ff159b86b3219c657649981293a3157e3e3725ec08a2378493feb1c"
     },
     {
       "path": "broker_registration.rs",
@@ -102,7 +102,7 @@
     },
     {
       "path": "create_topics.rs",
-      "sha256": "ca09be2063ae8290d1c28c9fff01efa1051a5e0dd3cedf0e5c9079679924c895"
+      "sha256": "280de5cef59e8e7b9bf4fafc70935006b653d0e45470b6a22c8b1e396b769af8"
     },
     {
       "path": "delete_acls.rs",
@@ -186,7 +186,7 @@
     },
     {
       "path": "end_quorum_epoch.rs",
-      "sha256": "f47be968634fae3a5abf5439b5d3f8c30f8e2adaa2a7d52c6d14402fca2bb6b6"
+      "sha256": "1c06a0e5c6b565b2a2f74735157db3f6eaaebabacc083552165fb99a67e0fa25"
     },
     {
       "path": "end_txn.rs",
@@ -206,11 +206,11 @@
     },
     {
       "path": "fetch.rs",
-      "sha256": "b3a51544ce29208777cdc1142f857ab35c1f2d397371edf1a2a6e3846ca75b8d"
+      "sha256": "5d0ab44d8802b0c3f0b30497f87ac1324987d9beeb578da7cb845841aae5be38"
     },
     {
       "path": "fetch_snapshot.rs",
-      "sha256": "32f3a0b1ef34f401da9aeca9202f4e2a76ac66b9cb3dfdd67afb00cc58df9ac4"
+      "sha256": "4e32eec998b19fcd93f1910d7623ab520290104672c6607c2369bbe3ac5e134c"
     },
     {
       "path": "find_coordinator.rs",
@@ -222,7 +222,7 @@
     },
     {
       "path": "fuzz_roundtrip.rs",
-      "sha256": "8e0fcc119225bdbb25d1d95654e77947e4c5b713f6189d4a73cd7d2aa32df023"
+      "sha256": "fa3565bd14482a43c277ac465d44185a31af89a1a7b4ec123166152cea51ded2"
     },
     {
       "path": "get_telemetry_subscriptions.rs",
@@ -302,7 +302,7 @@
     },
     {
       "path": "produce.rs",
-      "sha256": "be26fe97b542b86fbab15ff356f04939342fd9f9e0e86071f4c1c787bf7ade9d"
+      "sha256": "5aaed7d263005bf30de96d2800e538647577385b8d041f2cadfcb4b4988dd246"
     },
     {
       "path": "push_telemetry.rs",
@@ -369,8 +369,12 @@
       "sha256": "045e0af1484ff21a6ee378540ecbb36f3b9eabfc62eecb206b88171508f0d6de"
     },
     {
+      "path": "tag_boundaries.rs",
+      "sha256": "cc950b5601e2276dfd6c83cdf0ed39bdfcd2d3617f037e8149b97ae622f4e9b7"
+    },
+    {
       "path": "tag_claims.rs",
-      "sha256": "9751ddb802fc90343a3ede2772f246318c06004c0e1f5c767ed38890a7530c8a"
+      "sha256": "24ad9c9df376573528ae51e9d63e94c5da2a633925093ba86b3999566997465e"
     },
     {
       "path": "txn_offset_commit.rs",
@@ -386,11 +390,11 @@
     },
     {
       "path": "update_raft_voter.rs",
-      "sha256": "43d4e065404e942cfba4ff25f52cc4be7e7787594183c02246f80ebe5ec55500"
+      "sha256": "de99beae14f30f1cca0dfb34bdec19ddae02c322cfb0a129fce22a1fc8f1e61b"
     },
     {
       "path": "vote.rs",
-      "sha256": "1dba57788f78f8e3d0a8fe2e1d3258685f8a83c33421c734fc4898453c4da00e"
+      "sha256": "668d87576cc673ec6f8f8dbb93c60c2b35cf756b26a3d41592dfad1b96d0cefb"
     },
     {
       "path": "write_share_group_state.rs",

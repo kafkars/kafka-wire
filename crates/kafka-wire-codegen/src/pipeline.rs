@@ -6,7 +6,7 @@ use crate::{
     GenerationError, GenerationReport, GeneratorConfig,
     corpus_validation::validate_source_corpus,
     format::format_rendered_rust_with_identity,
-    group::{ApiGroup, group_sources},
+    group::group_sources,
     lockfile::ProtocolLock,
     manifest::render_manifest,
     namespace::validate_generated_namespace,
@@ -14,10 +14,10 @@ use crate::{
     overrides::{HeaderOverrides, SchemaExceptionOverrides},
     provenance::semantic_inputs,
     render::{
-        render_api, render_exports_file, render_fuzz_dispatch, render_header_version,
-        render_module_file, render_registry, render_tag_claims, render_unkeyed,
+        render_api, render_exports_file, render_header_version, render_module_file,
+        render_registry, render_unkeyed, render_verification_files,
     },
-    source::{MessageSource, load_sources_with},
+    source::load_sources_with,
 };
 
 /// Generates or checks the pinned protocol Rust tree.
@@ -89,13 +89,15 @@ pub fn generate(config: &GeneratorConfig) -> Result<GenerationReport, Generation
         render_header_version(&overrides, &lock.kafka.commit),
         "fixed header-version policy",
     )?;
-    insert_verification_files(
-        &mut rendered,
-        &mut producers,
-        &groups,
-        &grouped.unkeyed,
-        &lock.kafka.commit,
-    )?;
+    for verification in render_verification_files(&groups, &grouped.unkeyed, &lock.kafka.commit)? {
+        insert_unique(
+            &mut rendered,
+            &mut producers,
+            verification.path.to_owned(),
+            verification.source,
+            verification.producer,
+        )?;
+    }
 
     // Layout belongs to rustfmt, so the manifest must hash formatted bytes.
     let formatted = format_rendered_rust_with_identity(rendered, config.workspace_root())?;
@@ -128,29 +130,6 @@ pub fn generate(config: &GeneratorConfig) -> Result<GenerationReport, Generation
     apply_tree(&output_root, &files, config.mode())
 }
 
-fn insert_verification_files(
-    rendered: &mut BTreeMap<String, String>,
-    producers: &mut BTreeMap<String, String>,
-    groups: &[ApiGroup],
-    unkeyed: &[MessageSource],
-    commit: &str,
-) -> Result<(), GenerationError> {
-    insert_unique(
-        rendered,
-        producers,
-        "fuzz_roundtrip.rs".to_owned(),
-        render_fuzz_dispatch(groups, commit)?,
-        "fixed fuzz dispatch",
-    )?;
-    insert_unique(
-        rendered,
-        producers,
-        "tag_claims.rs".to_owned(),
-        render_tag_claims(groups, unkeyed, commit)?,
-        "fixed known-tag claim assertions",
-    )
-}
-
 fn validate_output_paths(groups: &[crate::group::ApiGroup]) -> Result<(), GenerationError> {
     let mut claimed = BTreeMap::new();
     for (path, producer) in [
@@ -160,6 +139,7 @@ fn validate_output_paths(groups: &[crate::group::ApiGroup]) -> Result<(), Genera
         ("registry.rs", "fixed API registry"),
         ("header_version.rs", "fixed header-version policy"),
         ("fuzz_roundtrip.rs", "fixed fuzz dispatch"),
+        ("tag_boundaries.rs", "fixed known-tag boundary assertions"),
         ("tag_claims.rs", "fixed known-tag claim assertions"),
         ("MANIFEST.json", "generated-tree manifest"),
     ] {

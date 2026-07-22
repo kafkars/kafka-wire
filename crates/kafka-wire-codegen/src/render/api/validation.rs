@@ -8,7 +8,8 @@ use kafka_wire_schema::{Field, FieldType, Message};
 use crate::render::{field, text::RustText};
 
 use super::imports::{ExternalSymbol as S, spell};
-use super::tagged::known_tags;
+use super::tagged_proof::RenderedKnownTags;
+use super::tagged_validation::render_known_tag_ownership;
 
 /// How a structure names itself in an encode error.
 #[derive(Clone, Copy, Eq, PartialEq)]
@@ -36,8 +37,9 @@ pub(super) fn render_validation(
     message: &Message,
     owner: Owner<'_>,
     flexible: bool,
-) {
+) -> RenderedKnownTags {
     rust.open(format!("impl {rust_type}"));
+    let rendered = render_known_tag_ownership(rust, fields, message, &owner.name());
     if !validation_uses_self(fields, message, flexible) {
         rust.line("#[allow(clippy::unused_self)]");
     }
@@ -53,13 +55,16 @@ pub(super) fn render_validation(
     }
     rust.blank();
 
+    if !rendered.is_empty() {
+        rust.line("self.validate_known_tag_ownership(version)?;");
+    }
+
     render_representability_checks(rust, fields, message, owner);
     for field in fields {
         render_null_guard(rust, field, message, owner);
     }
     render_nested_validation(rust, fields, message);
     if flexible {
-        render_known_tag_collisions(rust, fields, message);
         rust.open("if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty()");
         rust.open(format!(
             "return {}({}::TaggedFieldsNotRepresentable",
@@ -76,29 +81,7 @@ pub(super) fn render_validation(
     rust.close("");
     rust.close("");
     rust.blank();
-}
-
-fn render_known_tag_collisions(rust: &mut RustText, fields: &[Field], message: &Message) {
-    for (tag, _, field) in known_tags(fields) {
-        let collision = format!("self.unknown_tagged_fields.contains_tag({tag})");
-        let condition = field::presence_condition(field, message)
-            .map_or(collision.clone(), |presence| {
-                format!("{} && {collision}", field::as_conjunct(&presence))
-            });
-        rust.open(format!("if {condition}"));
-        rust.line(format!(
-            "return {}({}::TaggedFieldsInvalid(",
-            spell(message, S::Err),
-            spell(message, S::EncodeError)
-        ));
-        rust.open(format!(
-            "{}::Duplicate",
-            spell(message, S::TaggedFieldsError)
-        ));
-        rust.line(format!("tag: {tag},"));
-        rust.close("));");
-        rust.close("");
-    }
+    rendered
 }
 
 fn validation_uses_self(fields: &[Field], message: &Message, flexible: bool) -> bool {

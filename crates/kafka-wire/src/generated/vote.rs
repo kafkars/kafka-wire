@@ -524,8 +524,8 @@ pub mod vote_request {
 pub mod vote_response {
     use kafka_wire_core::{
         ApiKey, ApiVersion, BytesMut, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder,
-        KafkaDecode, KafkaEncode, KnownTags, StrBytes, TagOutcome, TaggedFields, TaggedFieldsError,
-        VersionRange, encode_into_with, encoded_len_with,
+        KafkaDecode, KafkaEncode, KnownTags, StrBytes, TagOutcome, TaggedFields, VersionRange,
+        encode_into_with, encoded_len_with,
     };
 
     use crate::{KafkaMessage, KafkaResponse, ProtocolEq};
@@ -1003,12 +1003,27 @@ pub mod vote_response {
     }
 
     impl VoteResponse {
+        pub(crate) fn validate_known_tag_ownership(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
+            if version.value() >= 1 && self.unknown_tagged_fields.contains_tag(0) {
+                return ::core::result::Result::Err(EncodeError::KnownTagConflict {
+                    message: Self::NAME,
+                    tag: 0,
+                    version,
+                });
+            }
+            ::core::result::Result::Ok(())
+        }
+
         fn validate_for_version(
             &self,
             version: ApiVersion,
         ) -> ::core::result::Result<(), EncodeError> {
             crate::message::ensure_encode_version::<Self>(version)?;
 
+            self.validate_known_tag_ownership(version)?;
             if version.value() < 1 && !self.node_endpoints.is_empty() {
                 return ::core::result::Result::Err(EncodeError::FieldNotRepresentable {
                     message: Self::NAME,
@@ -1023,11 +1038,6 @@ pub mod vote_response {
                 for value in &self.node_endpoints {
                     value.validate_for_version(version)?;
                 }
-            }
-            if version.value() >= 1 && self.unknown_tagged_fields.contains_tag(0) {
-                return ::core::result::Result::Err(EncodeError::TaggedFieldsInvalid(
-                    TaggedFieldsError::Duplicate { tag: 0 },
-                ));
             }
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
                 return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
@@ -1104,7 +1114,7 @@ pub mod vote_response {
             }
 
             if Self::is_flexible(version) {
-                let mut known = KnownTags::new();
+                let mut known = KnownTags::<1>::new();
                 if version.value() >= 1 {
                     known.claim(0)?;
                     if !self.node_endpoints.is_empty() {

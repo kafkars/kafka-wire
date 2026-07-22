@@ -205,8 +205,8 @@ pub mod api_versions_request {
 pub mod api_versions_response {
     use kafka_wire_core::{
         ApiKey, BytesMut, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
-        KafkaEncode, KnownTags, StrBytes, TagOutcome, TaggedFields, TaggedFieldsError,
-        VersionRange, encode_into_with, encoded_len_with,
+        KafkaEncode, KnownTags, StrBytes, TagOutcome, TaggedFields, VersionRange, encode_into_with,
+        encoded_len_with,
     };
 
     use crate::{KafkaMessage, KafkaResponse, ProtocolEq};
@@ -708,12 +708,48 @@ pub mod api_versions_response {
     }
 
     impl ApiVersionsResponse {
+        pub(crate) fn validate_known_tag_ownership(
+            &self,
+            version: kafka_wire_core::ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
+            if version.value() >= 3 && self.unknown_tagged_fields.contains_tag(0) {
+                return ::core::result::Result::Err(EncodeError::KnownTagConflict {
+                    message: Self::NAME,
+                    tag: 0,
+                    version,
+                });
+            }
+            if version.value() >= 3 && self.unknown_tagged_fields.contains_tag(1) {
+                return ::core::result::Result::Err(EncodeError::KnownTagConflict {
+                    message: Self::NAME,
+                    tag: 1,
+                    version,
+                });
+            }
+            if version.value() >= 3 && self.unknown_tagged_fields.contains_tag(2) {
+                return ::core::result::Result::Err(EncodeError::KnownTagConflict {
+                    message: Self::NAME,
+                    tag: 2,
+                    version,
+                });
+            }
+            if version.value() >= 3 && self.unknown_tagged_fields.contains_tag(3) {
+                return ::core::result::Result::Err(EncodeError::KnownTagConflict {
+                    message: Self::NAME,
+                    tag: 3,
+                    version,
+                });
+            }
+            ::core::result::Result::Ok(())
+        }
+
         fn validate_for_version(
             &self,
             version: kafka_wire_core::ApiVersion,
         ) -> ::core::result::Result<(), EncodeError> {
             crate::message::ensure_encode_version::<Self>(version)?;
 
+            self.validate_known_tag_ownership(version)?;
             for value in &self.api_keys {
                 value.validate_for_version(version)?;
             }
@@ -726,26 +762,6 @@ pub mod api_versions_response {
                 for value in &self.finalized_features {
                     value.validate_for_version(version)?;
                 }
-            }
-            if version.value() >= 3 && self.unknown_tagged_fields.contains_tag(0) {
-                return ::core::result::Result::Err(EncodeError::TaggedFieldsInvalid(
-                    TaggedFieldsError::Duplicate { tag: 0 },
-                ));
-            }
-            if version.value() >= 3 && self.unknown_tagged_fields.contains_tag(1) {
-                return ::core::result::Result::Err(EncodeError::TaggedFieldsInvalid(
-                    TaggedFieldsError::Duplicate { tag: 1 },
-                ));
-            }
-            if version.value() >= 3 && self.unknown_tagged_fields.contains_tag(2) {
-                return ::core::result::Result::Err(EncodeError::TaggedFieldsInvalid(
-                    TaggedFieldsError::Duplicate { tag: 2 },
-                ));
-            }
-            if version.value() >= 3 && self.unknown_tagged_fields.contains_tag(3) {
-                return ::core::result::Result::Err(EncodeError::TaggedFieldsInvalid(
-                    TaggedFieldsError::Duplicate { tag: 3 },
-                ));
             }
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
                 return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
@@ -892,7 +908,7 @@ pub mod api_versions_response {
             }
 
             if Self::is_flexible(version) {
-                let mut known = KnownTags::new();
+                let mut known = KnownTags::<4>::new();
                 known.claim(0)?;
                 if !self.supported_features.is_empty() {
                     known.measure(0, |encoder| {

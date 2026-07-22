@@ -25,7 +25,7 @@ fn every_enabled_versioned_message_has_one_typed_dispatch_arm() {
         load_sources(&root, &lock).unwrap_or_else(|error| panic!("load pinned corpus: {error}")),
     )
     .unwrap_or_else(|error| panic!("group pinned corpus: {error}"));
-    let rendered = render_fuzz_dispatch(&grouped.api, &lock.kafka.commit)
+    let rendered = render_fuzz_dispatch(&grouped.api, &grouped.unkeyed, &lock.kafka.commit)
         .unwrap_or_else(|error| panic!("render fuzz dispatch: {error}"));
     let mut expected = 0_usize;
 
@@ -33,6 +33,7 @@ fn every_enabled_versioned_message_has_one_typed_dispatch_arm() {
         .api
         .iter()
         .flat_map(crate::group::ApiGroup::messages)
+        .chain(grouped.unkeyed.iter())
     {
         let message = &source.message;
         let Some((first, last)) = message.valid_versions.single_bounded() else {
@@ -63,10 +64,7 @@ fn every_enabled_versioned_message_has_one_typed_dispatch_arm() {
         expected += 1;
     }
 
-    assert!(
-        expected > 150,
-        "the dispatch covered only {expected} messages"
-    );
+    assert_eq!(expected, 193, "the pinned enabled-schema census changed");
     assert_eq!(
         rendered.matches("round_trip::<kafka_wire::").count(),
         expected
@@ -88,7 +86,7 @@ fn selector_arithmetic_represents_the_full_i16_version_domain() {
         load_sources(&root, &lock).unwrap_or_else(|error| panic!("load pinned corpus: {error}")),
     )
     .unwrap_or_else(|error| panic!("group pinned corpus: {error}"));
-    let rendered = render_fuzz_dispatch(&grouped.api, &lock.kafka.commit)
+    let rendered = render_fuzz_dispatch(&grouped.api, &grouped.unkeyed, &lock.kafka.commit)
         .unwrap_or_else(|error| panic!("render fuzz dispatch: {error}"));
 
     assert!(rendered.contains("i32::from(last).checked_sub(i32::from(first))"));

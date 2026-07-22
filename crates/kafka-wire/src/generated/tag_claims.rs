@@ -3,35 +3,24 @@
 //! Runtime ownership assertions for every known tagged field at
 //! Apache Kafka commit 678c0e07e4733c5a592e52046dc2c4e1625587f1.
 
-use kafka_wire_core::{
-    ApiVersion, Bytes, BytesMut, EncodeError, KafkaEncode, TaggedField, TaggedFields,
-    TaggedFieldsError,
-};
+use kafka_wire_core::{ApiVersion, Bytes, EncodeError, TaggedField, TaggedFields};
 
 fn retained_tag(tag: u32) -> TaggedFields {
     TaggedFields::from_sorted(vec![TaggedField::new(tag, Bytes::from_static(&[0xaa]))])
         .unwrap_or_else(|error| panic!("one retained tag must be valid: {error}"))
 }
 
-fn assert_claim<T: KafkaEncode>(
-    mut value: T,
-    assign: impl FnOnce(&mut T, TaggedFields),
-    version: ApiVersion,
-    tag: u32,
-) {
-    assign(&mut value, retained_tag(tag));
-    let mut output = BytesMut::from(&b"prior output"[..]);
-    let before = output.clone();
-    let outcome = value.encode_into(&mut output, version);
+fn assert_claim(outcome: &Result<(), EncodeError>, expected: (&'static str, ApiVersion, u32)) {
+    let (owner, version, tag) = expected;
     assert_eq!(
         outcome,
-        Err(EncodeError::TaggedFieldsInvalid(
-            TaggedFieldsError::Duplicate { tag }
-        )),
-        "{} did not claim active tag {tag}",
-        ::core::any::type_name::<T>(),
+        &Err(EncodeError::KnownTagConflict {
+            message: owner,
+            tag,
+            version
+        }),
+        "{owner} did not validate active tag {tag} in version {version}",
     );
-    assert_eq!(output, before, "tag conflict wrote partial output");
 }
 
 pub(super) fn assert_all_active_tag_claims() {
@@ -54,220 +43,270 @@ pub(super) fn assert_all_active_tag_claims() {
     assert_claim_group_16();
 }
 
-// kafka_wire::ApiVersionsResponse
+// crate::ApiVersionsResponse
 fn assert_claim_group_0() {
+    let value = crate::ApiVersionsResponse {
+        unknown_tagged_fields: retained_tag(0),
+        ..Default::default()
+    };
     assert_claim(
-        kafka_wire::ApiVersionsResponse::default(),
-        |value, fields| value.unknown_tagged_fields = fields,
-        ApiVersion::new(3),
-        0,
+        &value.validate_known_tag_ownership(ApiVersion::new(3)),
+        ("ApiVersionsResponse", ApiVersion::new(3), 0),
     );
+    let value = crate::ApiVersionsResponse {
+        unknown_tagged_fields: retained_tag(1),
+        ..Default::default()
+    };
     assert_claim(
-        kafka_wire::ApiVersionsResponse::default(),
-        |value, fields| value.unknown_tagged_fields = fields,
-        ApiVersion::new(3),
-        1,
+        &value.validate_known_tag_ownership(ApiVersion::new(3)),
+        ("ApiVersionsResponse", ApiVersion::new(3), 1),
     );
+    let value = crate::ApiVersionsResponse {
+        unknown_tagged_fields: retained_tag(2),
+        ..Default::default()
+    };
     assert_claim(
-        kafka_wire::ApiVersionsResponse::default(),
-        |value, fields| value.unknown_tagged_fields = fields,
-        ApiVersion::new(3),
-        2,
+        &value.validate_known_tag_ownership(ApiVersion::new(3)),
+        ("ApiVersionsResponse", ApiVersion::new(3), 2),
     );
+    let value = crate::ApiVersionsResponse {
+        unknown_tagged_fields: retained_tag(3),
+        ..Default::default()
+    };
     assert_claim(
-        kafka_wire::ApiVersionsResponse::default(),
-        |value, fields| value.unknown_tagged_fields = fields,
-        ApiVersion::new(3),
-        3,
+        &value.validate_known_tag_ownership(ApiVersion::new(3)),
+        ("ApiVersionsResponse", ApiVersion::new(3), 3),
     );
 }
 
-// kafka_wire::BeginQuorumEpochResponse
+// crate::BeginQuorumEpochResponse
 fn assert_claim_group_1() {
+    let value = crate::BeginQuorumEpochResponse {
+        unknown_tagged_fields: retained_tag(0),
+        ..Default::default()
+    };
     assert_claim(
-        kafka_wire::BeginQuorumEpochResponse::default(),
-        |value, fields| value.unknown_tagged_fields = fields,
-        ApiVersion::new(1),
-        0,
+        &value.validate_known_tag_ownership(ApiVersion::new(1)),
+        ("BeginQuorumEpochResponse", ApiVersion::new(1), 0),
     );
 }
 
-// kafka_wire::BrokerHeartbeatRequest
+// crate::BrokerHeartbeatRequest
 fn assert_claim_group_2() {
+    let value = crate::BrokerHeartbeatRequest {
+        unknown_tagged_fields: retained_tag(0),
+        ..Default::default()
+    };
     assert_claim(
-        kafka_wire::BrokerHeartbeatRequest::default(),
-        |value, fields| value.unknown_tagged_fields = fields,
-        ApiVersion::new(1),
-        0,
+        &value.validate_known_tag_ownership(ApiVersion::new(1)),
+        ("BrokerHeartbeatRequest", ApiVersion::new(1), 0),
     );
+    let value = crate::BrokerHeartbeatRequest {
+        unknown_tagged_fields: retained_tag(1),
+        ..Default::default()
+    };
     assert_claim(
-        kafka_wire::BrokerHeartbeatRequest::default(),
-        |value, fields| value.unknown_tagged_fields = fields,
-        ApiVersion::new(2),
-        1,
+        &value.validate_known_tag_ownership(ApiVersion::new(2)),
+        ("BrokerHeartbeatRequest", ApiVersion::new(2), 1),
     );
 }
 
-// kafka_wire::EndQuorumEpochResponse
+// crate::EndQuorumEpochResponse
 fn assert_claim_group_3() {
+    let value = crate::EndQuorumEpochResponse {
+        unknown_tagged_fields: retained_tag(0),
+        ..Default::default()
+    };
     assert_claim(
-        kafka_wire::EndQuorumEpochResponse::default(),
-        |value, fields| value.unknown_tagged_fields = fields,
-        ApiVersion::new(1),
-        0,
+        &value.validate_known_tag_ownership(ApiVersion::new(1)),
+        ("EndQuorumEpochResponse", ApiVersion::new(1), 0),
     );
 }
 
-// kafka_wire::FetchRequest
+// crate::FetchRequest
 fn assert_claim_group_4() {
+    let value = crate::FetchRequest {
+        unknown_tagged_fields: retained_tag(0),
+        ..Default::default()
+    };
     assert_claim(
-        kafka_wire::FetchRequest::default(),
-        |value, fields| value.unknown_tagged_fields = fields,
-        ApiVersion::new(12),
-        0,
+        &value.validate_known_tag_ownership(ApiVersion::new(12)),
+        ("FetchRequest", ApiVersion::new(12), 0),
     );
+    let value = crate::FetchRequest {
+        unknown_tagged_fields: retained_tag(1),
+        ..Default::default()
+    };
     assert_claim(
-        kafka_wire::FetchRequest::default(),
-        |value, fields| value.unknown_tagged_fields = fields,
-        ApiVersion::new(15),
-        1,
+        &value.validate_known_tag_ownership(ApiVersion::new(15)),
+        ("FetchRequest", ApiVersion::new(15), 1),
     );
 }
 
-// kafka_wire::FetchResponse
+// crate::FetchResponse
 fn assert_claim_group_5() {
+    let value = crate::FetchResponse {
+        unknown_tagged_fields: retained_tag(0),
+        ..Default::default()
+    };
     assert_claim(
-        kafka_wire::FetchResponse::default(),
-        |value, fields| value.unknown_tagged_fields = fields,
-        ApiVersion::new(16),
-        0,
+        &value.validate_known_tag_ownership(ApiVersion::new(16)),
+        ("FetchResponse", ApiVersion::new(16), 0),
     );
 }
 
-// kafka_wire::FetchSnapshotRequest
+// crate::FetchSnapshotRequest
 fn assert_claim_group_6() {
+    let value = crate::FetchSnapshotRequest {
+        unknown_tagged_fields: retained_tag(0),
+        ..Default::default()
+    };
     assert_claim(
-        kafka_wire::FetchSnapshotRequest::default(),
-        |value, fields| value.unknown_tagged_fields = fields,
-        ApiVersion::new(0),
-        0,
+        &value.validate_known_tag_ownership(ApiVersion::new(0)),
+        ("FetchSnapshotRequest", ApiVersion::new(0), 0),
     );
 }
 
-// kafka_wire::FetchSnapshotResponse
+// crate::FetchSnapshotResponse
 fn assert_claim_group_7() {
+    let value = crate::FetchSnapshotResponse {
+        unknown_tagged_fields: retained_tag(0),
+        ..Default::default()
+    };
     assert_claim(
-        kafka_wire::FetchSnapshotResponse::default(),
-        |value, fields| value.unknown_tagged_fields = fields,
-        ApiVersion::new(1),
-        0,
+        &value.validate_known_tag_ownership(ApiVersion::new(1)),
+        ("FetchSnapshotResponse", ApiVersion::new(1), 0),
     );
 }
 
-// kafka_wire::ProduceResponse
+// crate::ProduceResponse
 fn assert_claim_group_8() {
+    let value = crate::ProduceResponse {
+        unknown_tagged_fields: retained_tag(0),
+        ..Default::default()
+    };
     assert_claim(
-        kafka_wire::ProduceResponse::default(),
-        |value, fields| value.unknown_tagged_fields = fields,
-        ApiVersion::new(10),
-        0,
+        &value.validate_known_tag_ownership(ApiVersion::new(10)),
+        ("ProduceResponse", ApiVersion::new(10), 0),
     );
 }
 
-// kafka_wire::UpdateRaftVoterResponse
+// crate::UpdateRaftVoterResponse
 fn assert_claim_group_9() {
+    let value = crate::UpdateRaftVoterResponse {
+        unknown_tagged_fields: retained_tag(0),
+        ..Default::default()
+    };
     assert_claim(
-        kafka_wire::UpdateRaftVoterResponse::default(),
-        |value, fields| value.unknown_tagged_fields = fields,
-        ApiVersion::new(0),
-        0,
+        &value.validate_known_tag_ownership(ApiVersion::new(0)),
+        ("UpdateRaftVoterResponse", ApiVersion::new(0), 0),
     );
 }
 
-// kafka_wire::VoteResponse
+// crate::VoteResponse
 fn assert_claim_group_10() {
+    let value = crate::VoteResponse {
+        unknown_tagged_fields: retained_tag(0),
+        ..Default::default()
+    };
     assert_claim(
-        kafka_wire::VoteResponse::default(),
-        |value, fields| value.unknown_tagged_fields = fields,
-        ApiVersion::new(1),
-        0,
+        &value.validate_known_tag_ownership(ApiVersion::new(1)),
+        ("VoteResponse", ApiVersion::new(1), 0),
     );
 }
 
-// kafka_wire::create_topics_response::CreatableTopicResult
+// crate::create_topics_response::CreatableTopicResult
 fn assert_claim_group_11() {
+    let value = crate::create_topics_response::CreatableTopicResult {
+        unknown_tagged_fields: retained_tag(0),
+        ..Default::default()
+    };
     assert_claim(
-        kafka_wire::create_topics_response::CreatableTopicResult::default(),
-        |value, fields| value.unknown_tagged_fields = fields,
-        ApiVersion::new(5),
-        0,
+        &value.validate_known_tag_ownership(ApiVersion::new(5)),
+        ("CreatableTopicResult", ApiVersion::new(5), 0),
     );
 }
 
-// kafka_wire::fetch_request::FetchPartition
+// crate::fetch_request::FetchPartition
 fn assert_claim_group_12() {
+    let value = crate::fetch_request::FetchPartition {
+        unknown_tagged_fields: retained_tag(0),
+        ..Default::default()
+    };
     assert_claim(
-        kafka_wire::fetch_request::FetchPartition::default(),
-        |value, fields| value.unknown_tagged_fields = fields,
-        ApiVersion::new(17),
-        0,
+        &value.validate_known_tag_ownership(ApiVersion::new(17)),
+        ("FetchPartition", ApiVersion::new(17), 0),
     );
+    let value = crate::fetch_request::FetchPartition {
+        unknown_tagged_fields: retained_tag(1),
+        ..Default::default()
+    };
     assert_claim(
-        kafka_wire::fetch_request::FetchPartition::default(),
-        |value, fields| value.unknown_tagged_fields = fields,
-        ApiVersion::new(18),
-        1,
+        &value.validate_known_tag_ownership(ApiVersion::new(18)),
+        ("FetchPartition", ApiVersion::new(18), 1),
     );
 }
 
-// kafka_wire::fetch_response::PartitionData
+// crate::fetch_response::PartitionData
 fn assert_claim_group_13() {
+    let value = crate::fetch_response::PartitionData {
+        unknown_tagged_fields: retained_tag(0),
+        ..Default::default()
+    };
     assert_claim(
-        kafka_wire::fetch_response::PartitionData::default(),
-        |value, fields| value.unknown_tagged_fields = fields,
-        ApiVersion::new(12),
-        0,
+        &value.validate_known_tag_ownership(ApiVersion::new(12)),
+        ("PartitionData", ApiVersion::new(12), 0),
     );
+    let value = crate::fetch_response::PartitionData {
+        unknown_tagged_fields: retained_tag(1),
+        ..Default::default()
+    };
     assert_claim(
-        kafka_wire::fetch_response::PartitionData::default(),
-        |value, fields| value.unknown_tagged_fields = fields,
-        ApiVersion::new(12),
-        1,
+        &value.validate_known_tag_ownership(ApiVersion::new(12)),
+        ("PartitionData", ApiVersion::new(12), 1),
     );
+    let value = crate::fetch_response::PartitionData {
+        unknown_tagged_fields: retained_tag(2),
+        ..Default::default()
+    };
     assert_claim(
-        kafka_wire::fetch_response::PartitionData::default(),
-        |value, fields| value.unknown_tagged_fields = fields,
-        ApiVersion::new(12),
-        2,
+        &value.validate_known_tag_ownership(ApiVersion::new(12)),
+        ("PartitionData", ApiVersion::new(12), 2),
     );
 }
 
-// kafka_wire::fetch_snapshot_request::PartitionSnapshot
+// crate::fetch_snapshot_request::PartitionSnapshot
 fn assert_claim_group_14() {
+    let value = crate::fetch_snapshot_request::PartitionSnapshot {
+        unknown_tagged_fields: retained_tag(0),
+        ..Default::default()
+    };
     assert_claim(
-        kafka_wire::fetch_snapshot_request::PartitionSnapshot::default(),
-        |value, fields| value.unknown_tagged_fields = fields,
-        ApiVersion::new(1),
-        0,
+        &value.validate_known_tag_ownership(ApiVersion::new(1)),
+        ("PartitionSnapshot", ApiVersion::new(1), 0),
     );
 }
 
-// kafka_wire::fetch_snapshot_response::PartitionSnapshot
+// crate::fetch_snapshot_response::PartitionSnapshot
 fn assert_claim_group_15() {
+    let value = crate::fetch_snapshot_response::PartitionSnapshot {
+        unknown_tagged_fields: retained_tag(0),
+        ..Default::default()
+    };
     assert_claim(
-        kafka_wire::fetch_snapshot_response::PartitionSnapshot::default(),
-        |value, fields| value.unknown_tagged_fields = fields,
-        ApiVersion::new(0),
-        0,
+        &value.validate_known_tag_ownership(ApiVersion::new(0)),
+        ("PartitionSnapshot", ApiVersion::new(0), 0),
     );
 }
 
-// kafka_wire::produce_response::PartitionProduceResponse
+// crate::produce_response::PartitionProduceResponse
 fn assert_claim_group_16() {
+    let value = crate::produce_response::PartitionProduceResponse {
+        unknown_tagged_fields: retained_tag(0),
+        ..Default::default()
+    };
     assert_claim(
-        kafka_wire::produce_response::PartitionProduceResponse::default(),
-        |value, fields| value.unknown_tagged_fields = fields,
-        ApiVersion::new(10),
-        0,
+        &value.validate_known_tag_ownership(ApiVersion::new(10)),
+        ("PartitionProduceResponse", ApiVersion::new(10), 0),
     );
 }

@@ -13,6 +13,8 @@ mod structs;
 mod symbol;
 mod tagged;
 mod tagged_payload;
+mod tagged_proof;
+mod tagged_validation;
 mod validation;
 
 #[cfg(test)]
@@ -23,6 +25,8 @@ mod imports_test;
 mod metadata_test;
 #[cfg(test)]
 mod structs_test;
+#[cfg(test)]
+mod tagged_proof_test;
 
 pub(crate) use declarations::declared_structs;
 pub(crate) use descriptor::{api_descriptor_name, descriptor_name};

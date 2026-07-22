@@ -15,6 +15,7 @@ use super::{
     prose::sentence,
     protocol_eq::render_protocol_eq,
     structs::render_declared_structs,
+    tagged_proof::verify_known_tag_rendering,
     validation::{Owner, render_validation},
 };
 
@@ -89,7 +90,7 @@ pub(super) fn render_message(
         !message.effective_flexible_versions().is_empty(),
     );
     render_metadata_impls(rust, message, group)?;
-    render_validation(
+    let validated_tags = render_validation(
         rust,
         message.name.rust_type(),
         &message.fields,
@@ -98,7 +99,14 @@ pub(super) fn render_message(
         !message.effective_flexible_versions().is_empty(),
     );
     render_decode(rust, message)?;
-    render_encode(rust, message)?;
+    let claimed_tags = render_encode(rust, message)?;
+    verify_known_tag_rendering(
+        &message.fields,
+        message,
+        message.name.rust_type(),
+        &validated_tags,
+        &claimed_tags,
+    )?;
     Ok(())
 }
 

@@ -1,27 +1,18 @@
 //! Active known tag IDs remain schema-owned when their typed values are default.
 //!
-//! These scenarios exercise public construction, exhaustive generated claims,
-//! and a cross-version forward where the same number changes from unknown to
-//! known.
+//! These scenarios exercise public construction and a cross-version forward
+//! where the same number changes from unknown to known.
 
 use bytes::BytesMut;
 use kafka_wire::{ApiVersionsResponse, BrokerHeartbeatRequest, ProtocolEq};
 use kafka_wire_core::{
     ApiVersion, Bytes, DecodeLimits, EncodeError, KafkaDecode, KafkaEncode, TaggedField,
-    TaggedFields, TaggedFieldsError,
+    TaggedFields,
 };
-
-#[path = "../src/generated/tag_claims.rs"]
-mod generated_tag_claims;
 
 fn retained(tag: u32, payload: Bytes) -> TaggedFields {
     TaggedFields::from_sorted(vec![TaggedField::new(tag, payload)])
         .unwrap_or_else(|error| panic!("one retained tag is ordered: {error}"))
-}
-
-#[test]
-fn every_generated_known_tag_rejects_its_default_dual_representation() {
-    generated_tag_claims::assert_all_active_tag_claims();
 }
 
 #[test]
@@ -33,9 +24,11 @@ fn api_versions_default_epoch_still_owns_tag_one() {
 
     assert_eq!(
         value.encode_into(&mut output, ApiVersion::new(3)),
-        Err(EncodeError::TaggedFieldsInvalid(
-            TaggedFieldsError::Duplicate { tag: 1 }
-        ))
+        Err(EncodeError::KnownTagConflict {
+            message: "ApiVersionsResponse",
+            tag: 1,
+            version: ApiVersion::new(3),
+        })
     );
     assert_eq!(output, before, "tag conflict wrote partial frame bytes");
 }
@@ -58,9 +51,11 @@ fn broker_heartbeat_claims_tag_zero_only_after_it_becomes_known() {
     let before = output.clone();
     assert_eq!(
         value.encode_into(&mut output, ApiVersion::new(1)),
-        Err(EncodeError::TaggedFieldsInvalid(
-            TaggedFieldsError::Duplicate { tag: 0 }
-        ))
+        Err(EncodeError::KnownTagConflict {
+            message: "BrokerHeartbeatRequest",
+            tag: 0,
+            version: ApiVersion::new(1),
+        })
     );
     assert_eq!(output, before, "active tag conflict wrote frame bytes");
 }

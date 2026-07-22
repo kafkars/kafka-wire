@@ -1,8 +1,7 @@
-//! Exhaustive runtime assertions for active generated tagged-field ownership.
+//! Runtime assertions for every known tag that activates after flexibility begins.
 //!
-//! This renderer owns the claim census and nothing about message codecs. Each
-//! assertion constructs the invalid dual representation and directly exercises
-//! the crate-private ownership phase that ordinary decode paths cannot reach.
+//! These assertions isolate the generated ownership phase, so unrelated field
+//! defaults cannot hide whether a retained tag crosses its exact version edge.
 
 use kafka_wire_schema::{Field, Message};
 
@@ -12,96 +11,101 @@ use crate::{
 
 use super::{api::declared_structs, field, invariant, text::RustText};
 
-struct TagClaim {
+struct TagBoundary {
     rust_type: String,
     owner: String,
-    version: i16,
+    before: i16,
+    active: i16,
     tag: u32,
 }
 
-pub(crate) fn render_tag_claims(
+pub(crate) fn render_tag_boundaries(
     groups: &[ApiGroup],
     unkeyed: &[MessageSource],
     commit: &str,
 ) -> Result<String, GenerationError> {
-    let mut claims = Vec::new();
+    let mut boundaries = Vec::new();
     for source in groups
         .iter()
         .flat_map(ApiGroup::messages)
         .chain(unkeyed.iter())
     {
-        collect_message_claims(&source.message, &mut claims)?;
+        collect_message_boundaries(&source.message, &mut boundaries)?;
     }
-    claims.sort_unstable_by(|left, right| {
-        (&left.rust_type, left.version, left.tag).cmp(&(&right.rust_type, right.version, right.tag))
+    boundaries.sort_unstable_by(|left, right| {
+        (&left.rust_type, left.active, left.tag).cmp(&(&right.rust_type, right.active, right.tag))
     });
 
     let mut rust = RustText::default();
     rust.line(generated_banner());
     rust.line("//!");
-    rust.line("//! Runtime ownership assertions for every known tagged field at");
+    rust.line("//! Ownership boundaries for tags introduced after flexible encoding at");
     rust.line(format!("//! Apache Kafka commit {commit}."));
     rust.blank();
-    if claims.is_empty() {
-        rust.open("pub(super) fn assert_all_active_tag_claims()");
+    if boundaries.is_empty() {
+        rust.open("pub(super) fn assert_all_tag_activation_boundaries()");
         rust.close("");
         return Ok(rust.finish());
     }
     rust.line("use kafka_wire_core::{ApiVersion, Bytes, EncodeError, TaggedField, TaggedFields};");
     rust.blank();
     render_helpers(&mut rust);
-    rust.open("pub(super) fn assert_all_active_tag_claims()");
-    let owners = claims
+    rust.open("pub(super) fn assert_all_tag_activation_boundaries()");
+    let owners = boundaries
         .chunk_by(|left, right| left.rust_type == right.rust_type)
         .collect::<Vec<_>>();
     for index in 0..owners.len() {
-        rust.line(format!("assert_claim_group_{index}();"));
+        rust.line(format!("assert_boundary_group_{index}();"));
     }
     rust.close("");
     for (index, owner) in owners.into_iter().enumerate() {
         rust.blank();
         rust.line(format!("// {}", owner[0].rust_type));
-        rust.open(format!("fn assert_claim_group_{index}()"));
-        for claim in owner {
-            render_claim(&mut rust, claim);
+        rust.open(format!("fn assert_boundary_group_{index}()"));
+        for boundary in owner {
+            render_boundary(&mut rust, boundary);
         }
         rust.close("");
     }
     Ok(rust.finish())
 }
 
-fn render_claim(rust: &mut RustText, claim: &TagClaim) {
-    rust.open(format!("let value = {}", claim.rust_type));
+fn render_boundary(rust: &mut RustText, boundary: &TagBoundary) {
+    rust.open(format!("let value = {}", boundary.rust_type));
     rust.line(format!(
         "unknown_tagged_fields: retained_tag({}),",
-        claim.tag
+        boundary.tag
     ));
     rust.line("..Default::default()");
     rust.close(";");
-    rust.line("assert_claim(");
+    rust.line("assert_boundary(");
     rust.line(format!(
         "    &value.validate_known_tag_ownership(ApiVersion::new({})),",
-        claim.version
+        boundary.before
     ));
     rust.line(format!(
-        "    ({:?}, ApiVersion::new({}), {}),",
-        claim.owner, claim.version, claim.tag
+        "    &value.validate_known_tag_ownership(ApiVersion::new({})),",
+        boundary.active
     ));
+    rust.line(format!("    {:?},", boundary.owner));
+    rust.line(format!("    ApiVersion::new({}),", boundary.before));
+    rust.line(format!("    ApiVersion::new({}),", boundary.active));
+    rust.line(format!("    {},", boundary.tag));
     rust.line(");");
 }
 
-fn collect_message_claims(
+fn collect_message_boundaries(
     message: &Message,
-    claims: &mut Vec<TagClaim>,
+    boundaries: &mut Vec<TagBoundary>,
 ) -> Result<(), GenerationError> {
     field::validate_supported(message)?;
     let rust_type = format!("crate::{}", message.name.rust_type());
-    collect_owner_claims(
+    collect_owner_boundaries(
         &rust_type,
         message.name.protocol(),
         &message.fields,
         message,
-        claims,
+        boundaries,
     )?;
     for declaration in declared_structs(message)? {
         let mut context = message.clone();
@@ -112,24 +116,30 @@ fn collect_message_claims(
             message.name.rust_module(),
             declaration.name.rust_type()
         );
-        collect_owner_claims(
+        collect_owner_boundaries(
             &rust_type,
             declaration.name.rust_type(),
             declaration.fields,
             &context,
-            claims,
+            boundaries,
         )?;
     }
     Ok(())
 }
 
-fn collect_owner_claims(
+fn collect_owner_boundaries(
     rust_type: &str,
     owner: &str,
     fields: &[Field],
     message: &Message,
-    claims: &mut Vec<TagClaim>,
+    boundaries: &mut Vec<TagBoundary>,
 ) -> Result<(), GenerationError> {
+    let flexible = message.effective_flexible_versions();
+    let Some((flexible_start, _)) =
+        invariant::optional_bounded(message, &flexible, "flexible tag boundary")?
+    else {
+        return Ok(());
+    };
     for field in fields.iter().filter(|field| field.tag.is_some()) {
         let tag = field
             .tag
@@ -138,13 +148,16 @@ fn collect_owner_claims(
                 invariant: format!("tagged field {} lost its tag", field.name.protocol()),
             })?;
         let active = field.versions.intersection(&message.valid_versions);
-        let (version, _) = invariant::bounded(message, &active, "known tag versions")?;
-        claims.push(TagClaim {
-            rust_type: rust_type.to_owned(),
-            owner: owner.to_owned(),
-            version,
-            tag,
-        });
+        let (active_start, _) = invariant::bounded(message, &active, "known tag versions")?;
+        if active_start > flexible_start {
+            boundaries.push(TagBoundary {
+                rust_type: rust_type.to_owned(),
+                owner: owner.to_owned(),
+                before: active_start - 1,
+                active: active_start,
+                tag,
+            });
+        }
     }
     Ok(())
 }
@@ -158,14 +171,19 @@ fn render_helpers(rust: &mut RustText) {
     rust.close("");
     rust.blank();
     rust.open(
-        "fn assert_claim(\
-         outcome: &Result<(), EncodeError>, expected: (&'static str, ApiVersion, u32))",
+        "fn assert_boundary(\
+         before_outcome: &Result<(), EncodeError>, active_outcome: &Result<(), EncodeError>, \
+         owner: &'static str, before: ApiVersion, active: ApiVersion, tag: u32)",
     );
-    rust.line("let (owner, version, tag) = expected;");
+    rust.line("assert_eq!(before_outcome, &Ok(()), \"{owner} claimed tag {tag} in {before}\");");
     rust.line("assert_eq!(");
-    rust.line("    outcome,");
-    rust.line("    &Err(EncodeError::KnownTagConflict { message: owner, tag, version }),");
-    rust.line("    \"{owner} did not validate active tag {tag} in version {version}\",");
+    rust.line("    active_outcome,");
+    rust.line("    &Err(EncodeError::KnownTagConflict {");
+    rust.line("        message: owner,");
+    rust.line("        tag,");
+    rust.line("        version: active,");
+    rust.line("    }),");
+    rust.line("    \"{owner} did not claim tag {tag} at activation version {active}\",");
     rust.line(");");
     rust.close("");
     rust.blank();

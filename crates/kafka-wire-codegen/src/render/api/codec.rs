@@ -11,6 +11,7 @@ use super::imports::{ExternalSymbol as S, spell};
 use super::{
     tagged::{is_tagged, render_tagged_decode, render_tagged_encode},
     tagged_payload::render_known_tag_helpers,
+    tagged_proof::RenderedKnownTags,
 };
 
 pub(super) fn render_decode(rust: &mut RustText, message: &Message) -> Result<(), GenerationError> {
@@ -43,7 +44,10 @@ pub(super) fn render_decode(rust: &mut RustText, message: &Message) -> Result<()
     Ok(())
 }
 
-pub(super) fn render_encode(rust: &mut RustText, message: &Message) -> Result<(), GenerationError> {
+pub(super) fn render_encode(
+    rust: &mut RustText,
+    message: &Message,
+) -> Result<RenderedKnownTags, GenerationError> {
     render_struct_encode(
         rust,
         message.name.rust_type(),
@@ -60,8 +64,8 @@ pub(super) fn render_struct_encode(
     fields: &[kafka_wire_schema::Field],
     message: &Message,
     flexible: bool,
-) -> Result<(), GenerationError> {
-    render_validated_encode_body(rust, rust_type, fields, message, flexible)?;
+) -> Result<RenderedKnownTags, GenerationError> {
+    let rendered = render_validated_encode_body(rust, rust_type, fields, message, flexible)?;
     rust.open(format!(
         "impl {} for {}",
         spell(message, S::KafkaEncode),
@@ -120,7 +124,7 @@ pub(super) fn render_struct_encode(
     rust.close("");
     rust.close("");
     rust.blank();
-    Ok(())
+    Ok(rendered)
 }
 
 fn render_validated_encode_body(
@@ -129,7 +133,7 @@ fn render_validated_encode_body(
     fields: &[kafka_wire_schema::Field],
     message: &Message,
     flexible: bool,
-) -> Result<(), GenerationError> {
+) -> Result<RenderedKnownTags, GenerationError> {
     let uses_version = flexible
         || fields
             .iter()
@@ -137,9 +141,11 @@ fn render_validated_encode_body(
             .any(|field| field::inline_write_uses_version(field, message));
     let mut body = RustText::default();
     render_writes(&mut body, fields, message)?;
-    if flexible {
-        render_tagged_encode(&mut body, fields, message);
-    }
+    let rendered = if flexible {
+        render_tagged_encode(&mut body, fields, message)
+    } else {
+        RenderedKnownTags::default()
+    };
     body.blank();
     body.line(format!("{}(())", spell(message, S::Ok)));
     let body = body.finish();
@@ -172,7 +178,7 @@ fn render_validated_encode_body(
     rust.close("");
     rust.close("");
     rust.blank();
-    Ok(())
+    Ok(rendered)
 }
 
 /// The compiler-owned local one decoded field binds to.

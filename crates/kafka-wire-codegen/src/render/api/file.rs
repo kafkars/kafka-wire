@@ -118,7 +118,6 @@ fn render_imports(rust: &mut RustText, message: &kafka_wire_schema::Message) {
     if declares_a_tag(message) {
         wire.push(S::KnownTags);
         wire.push(S::TagOutcome);
-        wire.push(S::TaggedFieldsError);
     }
     if field::uses_bytes(message) {
         wire.push(S::Bytes);
