@@ -18,7 +18,7 @@ use serde::Deserialize;
 
 /// The measured shape of the transcript, asserted by the proof so it cannot pass
 /// on a truncated or empty file — the one failure mode a comparison like this
-/// hides. Independently equal to the module-scoped naming rule's separately measured 501 types.
+/// hides. Its 501 types independently match the module-scoped naming census.
 pub(crate) const MESSAGES: usize = 193;
 pub(crate) const STRUCTS: usize = 501;
 pub(crate) const FIELDS: usize = 1670;
@@ -41,7 +41,7 @@ pub(crate) struct MessageDefaults {
 }
 
 /// One struct's fields, keyed top-level by message name and nested by upstream's
-/// own struct spelling, as the module-scoped naming rule scopes them.
+/// own struct spelling within the module of the message that declares it.
 #[derive(Debug, Deserialize)]
 pub(crate) struct StructDefaults {
     #[serde(rename = "struct")]

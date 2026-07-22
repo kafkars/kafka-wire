@@ -1,8 +1,8 @@
 //! How many modules have to spell a wire type in full, and which.
 //!
 //! Scenario: walk the pinned corpus and ask, of every message, whether it
-//! declares a struct under a name its own module imports. the module-scoped naming rule calls this
-//! the third scope, and the one no measurement of the schemas alone can find,
+//! declares a struct under a name its own module imports. This emitter-owned
+//! namespace is the one scope no measurement of the schemas alone can find,
 //! because it depends on the emitter's import list as much as on upstream's
 //! spellings.
 //!
@@ -20,8 +20,8 @@ use crate::{lockfile::ProtocolLock, source::load_every_source};
 /// Every (module, name) pair the pinned corpus forces to be written in full.
 ///
 /// One. `ApiVersionsResponse` declares a struct upstream spells `ApiVersion`,
-/// which is exactly the collision the module-scoped naming rule reports finding by attempting the
-/// rename. Owner qualification hid it — the struct was
+/// which is exactly the collision exposed by attempting the rename. Owner
+/// qualification hid it — the struct was
 /// `ApiVersionsResponseApiVersion` — so nothing before this decision could have
 /// surfaced it.
 const QUALIFIED: &[(&str, &str)] = &[("api_versions_response", "ApiVersion")];
@@ -66,7 +66,7 @@ fn one_module_in_the_corpus_must_spell_a_wire_type_in_full() {
     assert_eq!(
         clashes, expected,
         "the set of modules that cannot import a wire type moved; if a schema \
-         changed, re-measure and update the module-scoped naming rule, and if `IMPORTABLE` changed, \
+         changed, re-measure this census, and if `IMPORTABLE` changed, \
          check that the new name is actually emitted through `spell`",
     );
 }
@@ -75,7 +75,7 @@ fn one_module_in_the_corpus_must_spell_a_wire_type_in_full() {
 fn a_module_that_declares_no_clashing_struct_writes_every_name_bare() {
     // The negative half. `spell` returning a path unconditionally would satisfy
     // the count above and make every generated signature longer, which is the
-    // resolution the module-scoped naming rule considered and rejected.
+    // fully-qualified alternative this design deliberately rejects.
     let corpus = corpus();
     let ordinary = corpus
         .iter()

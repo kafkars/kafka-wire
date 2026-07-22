@@ -1,4 +1,4 @@
-//! the module-scoped naming rule: what name does a nested struct get, and who owns it?
+//! Module-scoped naming: what name does a nested struct get, and who owns it?
 //!
 //! Scenario: lower one message, then read the identities its struct table and
 //! its field types now carry. Every case here fixes a generated type name, and
@@ -24,8 +24,8 @@ use kafka_wire_schema::{
 
 #[test]
 fn a_nested_struct_keeps_the_spelling_upstream_gave_it() {
-    // API key 0, the message the prior-art analysis makes the scope target. Upstream's field
-    // name `TopicData` and its struct name `TopicProduceData` are already
+    // API key 0, the message that makes the namespace boundary concrete.
+    // Upstream's field name `TopicData` and struct name `TopicProduceData` are already
     // distinct, and only the struct name participates: the emitted name is the
     // declared one, never the field that carries the reference.
     let message = lower(
@@ -58,9 +58,9 @@ fn a_nested_struct_keeps_the_spelling_upstream_gave_it() {
 #[test]
 fn a_name_upstream_already_qualified_is_left_exactly_as_written() {
     // Upstream hand-qualifies forty of the corpus's declarations, and this is
-    // the longest of them at 42 characters. the earlier flat naming rule had to detect and elide the
-    // repeat to keep it from becoming 75; the module-scoped naming rule has nothing to elide, so this
-    // spelling is simply the corpus's longest name.
+    // the longest of them at 42 characters. Flat owner qualification had to
+    // detect and elide repetition to keep it from becoming 75; module scoping
+    // has nothing to elide, so this is simply the corpus's longest spelling.
     let message = lower(
         r#"{ "apiKey": 90, "type": "response",
              "name": "DescribeShareGroupOffsetsResponse",
@@ -84,8 +84,8 @@ fn a_name_upstream_already_qualified_is_left_exactly_as_written() {
 #[test]
 fn a_name_that_merely_resembles_its_owner_is_not_touched_either() {
     // `VoteRequestor` begins with `VoteRequest` as bytes while naming something
-    // else. the earlier flat naming rule needed a camel-case boundary test to keep from eliding
-    // there and merging two types; no rule inspects the name at all now, so the
+    // else. Flat owner qualification needed a camel-case boundary test to avoid
+    // eliding there and merging two types; no rule inspects the name now, so the
     // hazard is gone rather than guarded. Both spellings pass through whole.
     let message = lower(
         r#"{ "apiKey": 52, "type": "request", "name": "VoteRequest",
@@ -134,9 +134,9 @@ fn nesting_depth_never_reaches_the_name() {
 #[test]
 fn the_two_directions_of_one_api_key_differ_by_module_not_by_spelling() {
     // API key 52, the canonical collision. Upstream declares `PartitionData` in
-    // both directions with genuinely different fields. Under the earlier flat naming rule they were
-    // two different type names in one module; under the module-scoped naming rule they are the *same*
-    // type name in two different modules — which is why the owner has to survive
+    // both directions with genuinely different fields. Flat qualification made
+    // them different type names in one module; module scoping makes them the
+    // *same* type name in two modules — which is why the owner has to survive
     // qualification, and why the module can never be per API key.
     let request = lower(
         r#"{ "apiKey": 52, "type": "request", "name": "VoteRequest",

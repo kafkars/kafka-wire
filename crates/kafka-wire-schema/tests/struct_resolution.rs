@@ -12,8 +12,8 @@
 //! the generated file, which is disposable output, with no path back to the
 //! schema that caused it.
 //!
-//! The scope is what these cases fix. the module-scoped naming rule makes the module the namespace,
-//! so two *messages* declaring one spelling is now correct and must pass, while
+//! The scope is what these cases fix. A message module is the namespace, so two
+//! *messages* declaring one spelling is correct and must pass, while
 //! one message declaring a name twice — counting its own type — must still fail.
 //! A guard that got those two backwards would pass every schema and emit code
 //! that does not compile.
@@ -102,8 +102,8 @@ fn a_reference_inside_its_declarations_effective_versions_is_valid() {
 
 #[test]
 fn two_messages_may_declare_one_struct_name() {
-    // The inversion the module-scoped naming rule makes. Under a flat namespace this pair was the
-    // canonical unexportable collision: both messages declare `PartitionData`
+    // The defining inversion. Under a flat namespace this pair was the canonical
+    // unexportable collision: both messages declare `PartitionData`
     // and something had to give. Each now renders into its own module, so
     // nothing collides and the guard must say so — a guard still scoped
     // globally would reject a corpus that generates cleanly, which is the

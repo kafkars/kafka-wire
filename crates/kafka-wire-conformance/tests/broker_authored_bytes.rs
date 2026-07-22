@@ -128,11 +128,11 @@ fn every_vector_encodes_from_its_canonical_json_value() {
 /// now proven directly by `broker_authored_defaults`, which compares every field
 /// of every message against Kafka's own generated classes. Their names are
 /// checked at mint time by the oracle refusing an unrecognised key, and their
-/// field order by `kafka-wire-schema`'s `field_order` test. So this list is not a debt
-/// meant to grow toward the whole corpus — the reading the JSON-shape census gave the old
-/// `WITHOUT_JSON_BUILDERS`, which named 190 messages as if unverified and was
-/// superseded by the broker-authored default proof. It is three messages carrying one extra, independent
-/// check, and it stays small on purpose.
+/// field order by `kafka-wire-schema`'s `field_order` test. So this list is not
+/// a debt meant to grow toward the whole corpus. The old `WITHOUT_JSON_BUILDERS`
+/// census named 190 messages as if unverified; broker-authored default proofs
+/// superseded that interpretation. These three messages carry one extra,
+/// independent check, and the list stays small on purpose.
 const WITH_JSON_BUILDERS: &[&str] = &[
     "ApiVersionsRequest",
     "SaslHandshakeRequest",

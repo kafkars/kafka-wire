@@ -1,4 +1,4 @@
-//! the module-scoped naming rule's claim, run against the whole pinned corpus rather than argued.
+//! Module-scoped naming claims, measured against the complete pinned corpus.
 //!
 //! Scenario: load every vendored message, then check the two properties the
 //! decision rests on. Every struct reference resolves to a declaration in its
@@ -25,30 +25,30 @@ use support::{exceptions, schema_files};
 
 /// Declarations the pinned corpus makes, across all 201 message files.
 ///
-/// the earlier flat naming rule counts 302 over the 188 request and response files; the six further
-/// declarations are in the 11 data schemas, which the front end also reads.
+/// The earlier flat-name census counted 302 declarations across the 188 request
+/// and response files; the six further declarations are in the 11 data schemas,
+/// which the front end also reads.
 const DECLARATIONS: usize = 308;
 
 /// Longest generated struct name this corpus produces.
 ///
 /// `DescribeShareGroupOffsetsResponsePartition`, which is upstream's own
 /// spelling: forty declarations hand-qualify themselves and this is the longest.
-/// the earlier flat naming rule bounded the same corpus at 74, and the 32 characters between the two
-/// numbers are the scope this decision bought.
+/// The flat-name census bounded the same corpus at 74 characters; module scoping
+/// removes the 32-character owner prefix.
 const NAME_LIMIT: usize = 42;
 
 /// Modules that would not compile if the module were the API key, not the
 /// message.
 ///
-/// the module-scoped naming rule rejects a per-API-key module, and this is the measurement behind the
-/// rejection rather than the argument for it. the earlier flat naming rule's table lists **8** API
-/// keys, counting those whose two directions declare a same-named struct with a
-/// *different shape*. This constant is 11 because rustc does not care about
-/// shape: two `struct Cursor` items in one module are `E0428` whether or not
-/// their fields agree.
+/// A per-API-key module is rejected by this measured collision set, not by
+/// assumption. The earlier census listed **8** API keys whose two directions
+/// declare a same-named struct with a *different shape*. This constant is 11
+/// because rustc does not care about shape: two `struct Cursor` items in one
+/// module are `E0428` whether or not their fields agree.
 ///
-/// The three further keys are exactly the ones the earlier flat naming rule's "trap in structural
-/// deduplication" section names — `ConsumerGroupHeartbeat` (68) on
+/// Three further keys expose the same structural-deduplication trap:
+/// `ConsumerGroupHeartbeat` (68) on
 /// `TopicPartitions`, `DescribeTopicPartitions` (75) on `Cursor`, and
 /// `StreamsGroupHeartbeat` (88) on `Endpoint` and `TaskIds`. They collide with
 /// identical shallow signatures, which is why a rule that deduplicated by
@@ -119,7 +119,7 @@ fn no_two_generated_struct_identities_collide_in_one_module() {
 
     // An emptiness assertion proves nothing on its own: a walk that reached no
     // struct at all would also report no collision. Replaying the same walk
-    // under the module the module-scoped naming rule rejected has to reproduce the compile failures
+    // under the rejected per-API-key module must reproduce the compile failures
     // the per-message module exists to prevent, or this test is not watching
     // anything — and it is the same corpus, so the only difference is the scope.
     let (modules, names) = collisions_when_grouped_by_api_key();
@@ -133,8 +133,8 @@ fn no_two_generated_struct_identities_collide_in_one_module() {
 
 /// Counts the modules and names a per-API-key module would clash on.
 ///
-/// A request and its response share an API key, so this is the scope the module-scoped naming rule
-/// considered and rejected: it keeps exactly the collisions the decision removes.
+/// A request and its response share an API key, so this rejected scope keeps
+/// exactly the collisions that per-message modules remove.
 fn collisions_when_grouped_by_api_key() -> (usize, usize) {
     let mut modules: BTreeMap<i16, BTreeSet<String>> = BTreeMap::new();
     let mut clashing_modules = BTreeSet::new();
@@ -208,7 +208,7 @@ fn the_naming_census_matches_the_decision_it_was_measured_from() {
         module_scoped, DECLARATIONS,
         "every declaration takes the one arm the rule has left",
     );
-    // Deliberately not distinct. the earlier flat naming rule asserted equality here, because a flat
+    // Deliberately not distinct. The flat-name census asserted equality here, because a flat
     // namespace had to carry every name at once; asserting it still would mean
     // the module scope was bought and never spent. The inequality is the
     // decision: `PartitionData` is one spelling naming 17 shapes, and each one
@@ -221,7 +221,7 @@ fn the_naming_census_matches_the_decision_it_was_measured_from() {
     );
     assert!(
         longest.len() <= NAME_LIMIT,
-        "the module-scoped naming rule bounds generated names at {NAME_LIMIT} characters, \
+        "module-scoped names must remain within {NAME_LIMIT} characters, \
          but `{longest}` is {}",
         longest.len(),
     );
