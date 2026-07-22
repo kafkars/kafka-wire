@@ -108,6 +108,15 @@ pub enum RecordError {
         offset: usize,
     },
 
+    /// A record declared a negative number of headers.
+    #[error("record declares negative header count {count} at byte {offset}")]
+    NegativeHeaderCount {
+        /// Signed count read from the record body.
+        count: i32,
+        /// Absolute byte offset of the count prefix.
+        offset: usize,
+    },
+
     /// A record's length prefix disagreed with what its fields consumed.
     #[error("record declares {declared} bytes but its fields used {consumed}")]
     RecordSizeMismatch {

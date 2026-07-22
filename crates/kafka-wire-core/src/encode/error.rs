@@ -92,4 +92,13 @@ pub enum EncodeError {
         /// Bytes the header and body occupied.
         bytes: usize,
     },
+
+    /// A frame's body exceeds the caller's configured outbound byte budget.
+    #[error("frame body of {actual} bytes exceeds the outbound limit of {limit} bytes")]
+    FrameLimitExceeded {
+        /// Exact encoded header-and-message length from the sizing preflight.
+        actual: usize,
+        /// Caller-supplied maximum frame body length.
+        limit: usize,
+    },
 }

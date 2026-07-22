@@ -22,6 +22,7 @@ mod compression_test;
 mod error;
 mod limits;
 mod record;
+mod record_set;
 
 pub use attributes::{Compression, TimestampType};
 pub use batch::{MAGIC_V2, RecordBatch};

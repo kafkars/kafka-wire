@@ -20,7 +20,7 @@ use crate::attributes::{Attributes, Compression, TimestampType};
 use crate::batch_prefix::exact_batch;
 use crate::error::RecordError;
 use crate::limits::RecordDecodeLimits;
-use crate::record::{self, Record};
+use crate::record::Record;
 
 /// The only magic byte this crate implements.
 pub const MAGIC_V2: i8 = 2;
@@ -123,7 +123,7 @@ impl RecordBatch {
             .compression
             .decompress(&payload, limits.max_decompressed_records_bytes)?;
         let payload_len = payload.len();
-        let records = record::decode_all(
+        let records = crate::record_set::decode_all(
             Bytes::from(payload),
             records_count,
             limits.wire_for_container(payload_len),
@@ -167,7 +167,7 @@ impl RecordBatch {
     /// a batch whose header lies about its payload.
     pub fn encode<T: EncodeTarget>(&self, encoder: &mut Encoder<T>) -> Result<(), RecordError> {
         let mut plain = BytesMut::new();
-        record::encode_all(&self.records, &mut plain)?;
+        crate::record_set::encode_all(&self.records, &mut plain)?;
         // A compressed payload is not a reproduction of what Java would emit for
         // the same records; see `compression`. What it is held to instead is
         // that Kafka's own reader recovers exactly these records from it.

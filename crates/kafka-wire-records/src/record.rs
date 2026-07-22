@@ -7,7 +7,7 @@
 //! value is a tombstone — so nothing here may collapse them.
 
 use bytes::{Bytes, BytesMut};
-use kafka_wire_core::{DecodeLimits, Decoder, EncodeError, EncodeTarget, Encoder, StrBytes};
+use kafka_wire_core::{Decoder, EncodeError, EncodeTarget, Encoder, StrBytes};
 
 use crate::error::RecordError;
 
@@ -68,11 +68,18 @@ impl Record {
 
         let header_count_offset = body.offset();
         let header_count = body.read_varint()?;
-        let header_count =
-            usize::try_from(header_count).map_err(|_| RecordError::RecordSizeMismatch {
-                declared,
-                consumed: declared - body.remaining(),
-            })?;
+        if header_count < 0 {
+            return Err(RecordError::NegativeHeaderCount {
+                count: header_count,
+                offset: header_count_offset,
+            });
+        }
+        let header_count = usize::try_from(header_count).map_err(|_| {
+            RecordError::Wire(kafka_wire_core::DecodeError::LengthOverflow {
+                kind: "record headers",
+                offset: header_count_offset,
+            })
+        })?;
         body.check_collection_limit("record headers", header_count, header_count_offset)?;
         let mut headers = Vec::with_capacity(header_count.min(body.remaining()));
         for _ in 0..header_count {
@@ -168,7 +175,12 @@ fn read_varint_length(decoder: &mut Decoder) -> Result<Option<(usize, usize)>, R
     if length < -1 {
         return Err(RecordError::InvalidRecordFieldLength { length });
     }
-    let length = usize::try_from(length).unwrap_or(usize::MAX);
+    let length = usize::try_from(length).map_err(|_| {
+        RecordError::Wire(kafka_wire_core::DecodeError::LengthOverflow {
+            kind: "record field",
+            offset: prefix_offset,
+        })
+    })?;
     Ok(Some((length, prefix_offset)))
 }
 
@@ -189,43 +201,4 @@ fn write_varint_bytes<T: EncodeTarget>(
             encoder.write_raw_slice(bytes)
         }
     }
-}
-
-/// Appends `count` records to `buffer`, for the batch encoder.
-pub(crate) fn encode_all(records: &[Record], buffer: &mut BytesMut) -> Result<(), EncodeError> {
-    let mut encoder = Encoder::new(buffer);
-    for record in records {
-        record.encode(&mut encoder)?;
-    }
-    Ok(())
-}
-
-/// Reads exactly `count` records, refusing a payload that holds a different
-/// number than the batch header promised.
-pub(crate) fn decode_all(
-    payload: Bytes,
-    count: usize,
-    limits: DecodeLimits,
-) -> Result<Vec<Record>, RecordError> {
-    let mut decoder = Decoder::new(payload, limits)?;
-    let mut records = Vec::with_capacity(count.min(decoder.remaining()));
-    for _ in 0..count {
-        if decoder.remaining() == 0 {
-            return Err(RecordError::RecordCountMismatch {
-                declared: count,
-                actual: records.len(),
-            });
-        }
-        records.push(Record::decode(&mut decoder)?);
-    }
-    if decoder.remaining() != 0 {
-        // Kafka's own reader stops at the declared count, so trailing bytes are
-        // a peer writing more records than it counted. Naming it keeps a
-        // truncated read from passing as a complete one.
-        return Err(RecordError::RecordCountMismatch {
-            declared: count,
-            actual: records.len() + 1,
-        });
-    }
-    Ok(records)
 }
