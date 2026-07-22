@@ -13,8 +13,8 @@
 //! * the CRC is CRC32C (Castagnoli, the `iSCSI` polynomial) over everything
 //!   *after* the CRC field, not over the batch and not over the records alone.
 
-use bytes::{Buf as _, Bytes, BytesMut};
-use kafka_wire_core::{Decoder, EncodeError, EncodeTarget, Encoder};
+use bytes::{Buf as _, Bytes};
+use kafka_wire_core::Decoder;
 
 use crate::attributes::{Attributes, Compression, TimestampType};
 use crate::batch_prefix::exact_batch;
@@ -29,7 +29,7 @@ pub const MAGIC_V2: i8 = 2;
 ///
 /// The CRC sits at offset 17 and is four bytes wide, so it covers everything
 /// from 21 to the end of the batch — not the batch, and not the records alone.
-const CRC_COVERAGE_START: usize = 21;
+pub(super) const CRC_COVERAGE_START: usize = 21;
 
 /// One Kafka record batch, magic v2.
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -147,73 +147,5 @@ impl RecordBatch {
         };
         bytes.advance(end);
         Ok(batch)
-    }
-
-    /// Writes this batch into bytes of its own, mirroring [`Self::decode`].
-    ///
-    /// The pair is what most callers want and is stated once here so that each
-    /// does not assemble the same buffer and encoder by hand.
-    pub fn encode_to_bytes(&self) -> Result<Bytes, RecordError> {
-        let mut buffer = BytesMut::new();
-        self.encode(&mut Encoder::new(&mut buffer))?;
-        Ok(buffer.freeze())
-    }
-
-    /// Writes this batch, computing the length and the CRC from what it wrote.
-    ///
-    /// Neither is carried on the struct. A length or a checksum a caller could
-    /// set is one that can disagree with the bytes beside it, and Kafka derives
-    /// both — so they are derived here too, and the type has no way to express
-    /// a batch whose header lies about its payload.
-    pub fn encode<T: EncodeTarget>(&self, encoder: &mut Encoder<T>) -> Result<(), RecordError> {
-        let mut plain = BytesMut::new();
-        crate::record_set::encode_all(&self.records, &mut plain)?;
-        // A compressed payload is not a reproduction of what Java would emit for
-        // the same records; see `compression`. What it is held to instead is
-        // that Kafka's own reader recovers exactly these records from it.
-        let payload = self.compression.compress(&plain)?;
-
-        let mut body = BytesMut::new();
-        let mut inner = Encoder::new(&mut body);
-        inner.write_i16(
-            Attributes {
-                compression: self.compression,
-                timestamp_type: self.timestamp_type,
-                is_transactional: self.is_transactional,
-                is_control: self.is_control,
-                has_delete_horizon: self.has_delete_horizon,
-            }
-            .encode(),
-        )?;
-        let record_count =
-            i32::try_from(self.records.len()).map_err(|_| EncodeError::LengthOverflow {
-                kind: "record count",
-                length: self.records.len(),
-                maximum: usize::try_from(i32::MAX).unwrap_or(usize::MAX),
-            })?;
-        inner.write_i32(self.last_offset_delta)?;
-        inner.write_i64(self.base_timestamp)?;
-        inner.write_i64(self.max_timestamp)?;
-        inner.write_i64(self.producer_id)?;
-        inner.write_i16(self.producer_epoch)?;
-        inner.write_i32(self.base_sequence)?;
-        inner.write_i32(record_count)?;
-        inner.write_raw_slice(&payload)?;
-
-        // partition_leader_epoch + magic + crc + everything the CRC covers.
-        let batch_length =
-            i32::try_from(4 + 1 + 4 + body.len()).map_err(|_| EncodeError::LengthOverflow {
-                kind: "record batch",
-                length: body.len(),
-                maximum: usize::try_from(i32::MAX).unwrap_or(usize::MAX),
-            })?;
-
-        encoder.write_i64(self.base_offset)?;
-        encoder.write_i32(batch_length)?;
-        encoder.write_i32(self.partition_leader_epoch)?;
-        encoder.write_i8(MAGIC_V2)?;
-        encoder.write_u32(crc32c::crc32c(&body))?;
-        encoder.write_raw_slice(&body)?;
-        Ok(())
     }
 }

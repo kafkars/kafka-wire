@@ -8,7 +8,8 @@
 use bytes::{Bytes, BytesMut};
 use kafka_wire_core::{DecodeError, StrBytes};
 use kafka_wire_records::{
-    Compression, Record, RecordBatch, RecordDecodeLimits, RecordError, RecordHeader, TimestampType,
+    Compression, Record, RecordBatch, RecordDecodeLimits, RecordEncodeLimits, RecordError,
+    RecordHeader, TimestampType,
 };
 
 const CRC_START: usize = 21;
@@ -50,8 +51,12 @@ fn rewrite_crc(bytes: &mut [u8]) {
 
 #[test]
 fn decoding_one_batch_leaves_the_next_batch_on_the_cursor() {
-    let first = batch(Compression::None, 10).encode_to_bytes().unwrap();
-    let second = batch(Compression::None, 20).encode_to_bytes().unwrap();
+    let first = batch(Compression::None, 10)
+        .encode_to_bytes(RecordEncodeLimits::default())
+        .unwrap();
+    let second = batch(Compression::None, 20)
+        .encode_to_bytes(RecordEncodeLimits::default())
+        .unwrap();
     let mut joined = BytesMut::new();
     joined.extend_from_slice(&first);
     joined.extend_from_slice(&second);
@@ -68,8 +73,12 @@ fn decoding_one_batch_leaves_the_next_batch_on_the_cursor() {
 
 #[test]
 fn concatenated_batches_do_not_share_one_wire_frame_budget() {
-    let first = batch(Compression::None, 10).encode_to_bytes().unwrap();
-    let second = batch(Compression::None, 20).encode_to_bytes().unwrap();
+    let first = batch(Compression::None, 10)
+        .encode_to_bytes(RecordEncodeLimits::default())
+        .unwrap();
+    let second = batch(Compression::None, 20)
+        .encode_to_bytes(RecordEncodeLimits::default())
+        .unwrap();
     let mut joined = BytesMut::new();
     joined.extend_from_slice(&first);
     joined.extend_from_slice(&second);
@@ -89,7 +98,9 @@ fn concatenated_batches_do_not_share_one_wire_frame_budget() {
 
 #[test]
 fn the_record_layer_outer_budgets_supersede_the_wire_frame_budget() {
-    let mut cursor = batch(Compression::None, 10).encode_to_bytes().unwrap();
+    let mut cursor = batch(Compression::None, 10)
+        .encode_to_bytes(RecordEncodeLimits::default())
+        .unwrap();
     let mut limits = RecordDecodeLimits::default();
     limits.wire.max_frame_bytes = 1;
 
@@ -104,7 +115,9 @@ fn the_record_layer_outer_budgets_supersede_the_wire_frame_budget() {
 
 #[test]
 fn a_failed_decode_does_not_advance_the_cursor() {
-    let mut cursor = batch(Compression::None, 10).encode_to_bytes().unwrap();
+    let mut cursor = batch(Compression::None, 10)
+        .encode_to_bytes(RecordEncodeLimits::default())
+        .unwrap();
     let original = cursor.clone();
     let mut limits = RecordDecodeLimits::default();
     limits.max_batch_bytes = cursor.len() - 1;
@@ -125,7 +138,9 @@ fn every_codec_obeys_the_decompressed_byte_limit() {
         Compression::Lz4,
         Compression::Zstd,
     ] {
-        let mut cursor = batch(compression, 10).encode_to_bytes().unwrap();
+        let mut cursor = batch(compression, 10)
+            .encode_to_bytes(RecordEncodeLimits::default())
+            .unwrap();
         let original = cursor.clone();
         let mut limits = RecordDecodeLimits::default();
         limits.max_decompressed_records_bytes = 32;
@@ -155,7 +170,7 @@ fn every_codec_obeys_the_decompressed_byte_limit() {
 #[test]
 fn a_negative_record_count_is_rejected() {
     let mut bytes = batch(Compression::None, 10)
-        .encode_to_bytes()
+        .encode_to_bytes(RecordEncodeLimits::default())
         .unwrap()
         .to_vec();
     bytes[RECORD_COUNT_RANGE].copy_from_slice(&(-1_i32).to_be_bytes());
@@ -176,7 +191,10 @@ fn a_null_record_header_key_is_rejected_instead_of_becoming_empty() {
         key: StrBytes::default(),
         value: None,
     }];
-    let mut bytes = source.encode_to_bytes().unwrap().to_vec();
+    let mut bytes = source
+        .encode_to_bytes(RecordEncodeLimits::default())
+        .unwrap()
+        .to_vec();
     assert_eq!(bytes[EMPTY_HEADER_KEY_OFFSET], 0);
     bytes[EMPTY_HEADER_KEY_OFFSET] = 1;
     rewrite_crc(&mut bytes);
@@ -192,7 +210,10 @@ fn a_null_record_header_key_is_rejected_instead_of_becoming_empty() {
 fn a_record_field_length_below_the_null_sentinel_is_rejected() {
     let mut source = batch(Compression::None, 10);
     source.records[0].value = None;
-    let mut bytes = source.encode_to_bytes().unwrap().to_vec();
+    let mut bytes = source
+        .encode_to_bytes(RecordEncodeLimits::default())
+        .unwrap()
+        .to_vec();
     assert_eq!(bytes[NULL_RECORD_KEY_OFFSET], 1);
     // Signed varints use zigzag encoding: wire value 3 represents -2.
     bytes[NULL_RECORD_KEY_OFFSET] = 3;
@@ -207,7 +228,9 @@ fn a_record_field_length_below_the_null_sentinel_is_rejected() {
 
 #[test]
 fn a_record_count_above_the_element_budget_is_rejected_before_allocation() {
-    let mut cursor = batch(Compression::None, 10).encode_to_bytes().unwrap();
+    let mut cursor = batch(Compression::None, 10)
+        .encode_to_bytes(RecordEncodeLimits::default())
+        .unwrap();
     let original = cursor.clone();
     let mut limits = RecordDecodeLimits::default();
     limits.wire.max_array_elements = 0;
@@ -237,7 +260,9 @@ fn a_header_count_above_the_element_budget_is_rejected_before_allocation() {
             value: None,
         },
     ];
-    let mut cursor = source.encode_to_bytes().unwrap();
+    let mut cursor = source
+        .encode_to_bytes(RecordEncodeLimits::default())
+        .unwrap();
     let original = cursor.clone();
     let mut limits = RecordDecodeLimits::default();
     limits.wire.max_array_elements = 1;

@@ -24,10 +24,7 @@
 //! compression *level* and internal choices are this crate's, so a payload here
 //! is legal and readable rather than identical to Java's.
 
-use std::{
-    fmt,
-    io::{Read as _, Write as _},
-};
+use std::{fmt, io::Read as _};
 
 use kafka_wire_core::EncodeError;
 
@@ -41,7 +38,7 @@ use crate::error::RecordError;
 /// formats around the same block codec, so reaching for the obvious API produces
 /// a payload no broker can read — and one that this crate would happily read
 /// back, which is exactly why the corpus decides it.
-const XERIAL_MAGIC: [u8; 8] = [0x82, b'S', b'N', b'A', b'P', b'P', b'Y', 0x00];
+pub(super) const XERIAL_MAGIC: [u8; 8] = [0x82, b'S', b'N', b'A', b'P', b'P', b'Y', 0x00];
 
 /// Zstd's supported streaming window range in the linked implementation.
 const ZSTD_MIN_WINDOW_LOG: u32 = 10;
@@ -66,39 +63,7 @@ impl Compression {
         }
     }
 
-    /// Compresses one records payload.
-    ///
-    /// The output is a payload Apache Kafka reads back unchanged, not a
-    /// reproduction of what Java would have emitted for the same input. See the
-    /// module note for which instrument establishes which.
-    pub(crate) fn compress(self, records: &[u8]) -> Result<Vec<u8>, RecordError> {
-        match self {
-            Self::None => Ok(records.to_vec()),
-            Self::Gzip => {
-                let mut encoder =
-                    flate2::write::GzEncoder::new(Vec::new(), flate2::Compression::default());
-                encoder
-                    .write_all(records)
-                    .and_then(|()| encoder.finish())
-                    .map_err(|error| Self::failed("gzip", &error))
-            }
-            Self::Snappy => compress_xerial(records),
-            Self::Lz4 => {
-                let mut encoder = lz4_flex::frame::FrameEncoder::new(Vec::new());
-                encoder
-                    .write_all(records)
-                    .map_err(|error| Self::failed("lz4", &error))?;
-                encoder
-                    .finish()
-                    .map_err(|error| Self::failed("lz4", &std::io::Error::other(error)))
-            }
-            Self::Zstd => {
-                zstd::stream::encode_all(records, 3).map_err(|error| Self::failed("zstd", &error))
-            }
-        }
-    }
-
-    fn failed(codec: &'static str, error: &dyn fmt::Display) -> RecordError {
+    pub(super) fn failed(codec: &'static str, error: &dyn fmt::Display) -> RecordError {
         RecordError::CompressionFailed {
             codec,
             detail: error.to_string(),
@@ -188,20 +153,6 @@ fn decompress_xerial(payload: &[u8], limit: usize) -> Result<Vec<u8>, RecordErro
         );
         rest = tail;
     }
-    Ok(out)
-}
-
-fn compress_xerial(records: &[u8]) -> Result<Vec<u8>, RecordError> {
-    let mut out = Vec::from(XERIAL_MAGIC);
-    // Version and compatible-version, both 1, exactly as Kafka writes them.
-    out.extend_from_slice(&1_i32.to_be_bytes());
-    out.extend_from_slice(&1_i32.to_be_bytes());
-    let block = snap::raw::Encoder::new()
-        .compress_vec(records)
-        .map_err(|error| Compression::failed("snappy", &error))?;
-    let length = xerial_block_length(block.len())?;
-    out.extend_from_slice(&length.to_be_bytes());
-    out.extend_from_slice(&block);
     Ok(out)
 }
 

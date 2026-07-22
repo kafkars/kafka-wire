@@ -36,6 +36,15 @@ pub enum RecordError {
         limit: usize,
     },
 
+    /// Records exceeded the outbound pre-compression byte budget.
+    #[error("uncompressed records length {length} exceeds configured limit {limit}")]
+    UncompressedRecordsLimitExceeded {
+        /// Exact encoded size of the uncompressed record run.
+        length: usize,
+        /// Configured maximum.
+        limit: usize,
+    },
+
     /// A compressed records payload expanded past the caller's budget.
     #[error("{codec} records payload exceeds decompressed-byte limit {limit}")]
     DecompressionLimitExceeded {
@@ -90,6 +99,13 @@ pub enum RecordError {
         declared: usize,
         /// Records the payload actually contained.
         actual: usize,
+    },
+
+    /// Bytes remained after the declared record count was decoded.
+    #[error("record batch payload has {bytes} trailing byte(s) after its declared records")]
+    TrailingRecordBytes {
+        /// Exact number of unclaimed payload bytes.
+        bytes: usize,
     },
 
     /// The batch header declared a negative record count.
@@ -154,5 +170,12 @@ pub enum RecordError {
     UnknownCompression {
         /// Codec number from attributes bits 0-2.
         codec: u8,
+    },
+
+    /// The attributes word used bits this implementation does not model.
+    #[error("record batch attributes contain unknown bits {bits:#06x}")]
+    UnknownBatchAttributes {
+        /// Unknown bits from the 16-bit attributes word.
+        bits: u16,
     },
 }

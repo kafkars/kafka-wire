@@ -20,7 +20,7 @@ use std::fmt::Write as _;
 use std::path::{Path, PathBuf};
 
 use bytes::Bytes;
-use kafka_wire_records::{Compression, RecordBatch, RecordDecodeLimits};
+use kafka_wire_records::{Compression, RecordBatch, RecordDecodeLimits, RecordEncodeLimits};
 use serde::{Deserialize, Serialize};
 
 use super::{Corpus, SCHEMA, read};
@@ -145,7 +145,7 @@ pub(super) fn refresh(workspace: &Path, corpus: &Corpus) -> Result<usize, String
             continue;
         }
         let rewritten = batch
-            .encode_to_bytes()
+            .encode_to_bytes(RecordEncodeLimits::default())
             .map_err(|error| format!("{}: re-encode: {error}", vector.name))?;
         let question = Question {
             name: vector.name.clone(),

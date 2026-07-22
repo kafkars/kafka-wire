@@ -23,7 +23,9 @@
 
 use bytes::Bytes;
 use kafka_wire_conformance::{from_hex, to_hex};
-use kafka_wire_records::{Compression, Record, RecordBatch, RecordDecodeLimits, RecordError};
+use kafka_wire_records::{
+    Compression, Record, RecordBatch, RecordDecodeLimits, RecordEncodeLimits, RecordError,
+};
 
 mod support;
 
@@ -55,7 +57,7 @@ fn every_codec_this_repository_writes_is_read_back_by_kafka() {
         // Kafka's answer is about specific bytes. If this build no longer writes
         // them, the answer is about nothing.
         let rewritten = authored
-            .encode_to_bytes()
+            .encode_to_bytes(RecordEncodeLimits::default())
             .unwrap_or_else(|error| panic!("{}: re-encode: {error}", entry.name));
         assert_eq!(
             to_hex(&rewritten),

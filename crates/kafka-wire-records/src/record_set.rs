@@ -9,6 +9,23 @@ use kafka_wire_core::{DecodeLimits, Decoder, EncodeError, Encoder};
 
 use crate::{Record, RecordError};
 
+/// Computes the exact uncompressed record run before any batch allocation.
+pub(crate) fn encoded_len_all(records: &[Record], limit: usize) -> Result<usize, RecordError> {
+    let mut length = 0_usize;
+    for record in records {
+        length = length.checked_add(record.encoded_length()?).ok_or(
+            RecordError::UncompressedRecordsLimitExceeded {
+                length: usize::MAX,
+                limit,
+            },
+        )?;
+        if length > limit {
+            return Err(RecordError::UncompressedRecordsLimitExceeded { length, limit });
+        }
+    }
+    Ok(length)
+}
+
 /// Appends all records to `buffer`, for the batch encoder.
 pub(crate) fn encode_all(records: &[Record], buffer: &mut BytesMut) -> Result<(), EncodeError> {
     let mut encoder = Encoder::new(buffer);
@@ -37,12 +54,8 @@ pub(crate) fn decode_all(
         records.push(Record::decode(&mut decoder)?);
     }
     if decoder.remaining() != 0 {
-        // Kafka's own reader stops at the declared count, so trailing bytes are
-        // a peer writing more records than it counted. Naming it keeps a
-        // truncated read from passing as a complete one.
-        return Err(RecordError::RecordCountMismatch {
-            declared: count,
-            actual: records.len() + 1,
+        return Err(RecordError::TrailingRecordBytes {
+            bytes: decoder.remaining(),
         });
     }
     Ok(records)

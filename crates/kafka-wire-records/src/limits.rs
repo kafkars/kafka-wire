@@ -56,3 +56,34 @@ impl Default for RecordDecodeLimits {
         )
     }
 }
+
+/// Resource limits applied while encoding one Kafka record batch.
+#[non_exhaustive]
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub struct RecordEncodeLimits {
+    /// Maximum byte length of the records before compression.
+    pub max_uncompressed_records_bytes: usize,
+    /// Maximum complete encoded batch length, including its 12-byte prefix.
+    pub max_encoded_batch_bytes: usize,
+}
+
+impl RecordEncodeLimits {
+    /// Creates explicit record-batch encoding limits.
+    pub const fn new(
+        max_uncompressed_records_bytes: usize,
+        max_encoded_batch_bytes: usize,
+    ) -> Self {
+        Self {
+            max_uncompressed_records_bytes,
+            max_encoded_batch_bytes,
+        }
+    }
+}
+
+impl Default for RecordEncodeLimits {
+    fn default() -> Self {
+        const DEFAULT_BATCH_BYTES: usize = 100 * 1024 * 1024;
+
+        Self::new(DEFAULT_BATCH_BYTES, DEFAULT_BATCH_BYTES)
+    }
+}

@@ -89,10 +89,19 @@ impl Attributes {
     const CONTROL: i16 = 0x20;
     const DELETE_HORIZON: i16 = 0x40;
     const CODEC: i16 = 0x07;
+    const KNOWN: u16 = 0x007f;
 
     pub(crate) fn decode(bits: i16) -> Result<Self, RecordError> {
+        let raw = u16::from_ne_bytes(bits.to_ne_bytes());
+        let unknown = raw & !Self::KNOWN;
+        if unknown != 0 {
+            return Err(RecordError::UnknownBatchAttributes { bits: unknown });
+        }
         Ok(Self {
-            compression: Compression::from_bits(u8::try_from(bits & Self::CODEC).unwrap_or(0))?,
+            compression: Compression::from_bits(
+                u8::try_from(bits & Self::CODEC)
+                    .map_err(|_| RecordError::UnknownBatchAttributes { bits: raw })?,
+            )?,
             timestamp_type: if bits & Self::TIMESTAMP_TYPE == 0 {
                 TimestampType::CreateTime
             } else {

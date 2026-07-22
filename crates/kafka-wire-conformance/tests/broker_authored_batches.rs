@@ -13,8 +13,9 @@
 
 use bytes::{Bytes, BytesMut};
 use kafka_wire_conformance::{from_hex, to_hex};
-use kafka_wire_core::Encoder;
-use kafka_wire_records::{Compression, RecordBatch, RecordDecodeLimits, RecordError};
+use kafka_wire_records::{
+    Compression, RecordBatch, RecordDecodeLimits, RecordEncodeLimits, RecordError,
+};
 
 mod support;
 
@@ -54,9 +55,9 @@ fn every_uncompressed_batch_decodes_and_re_encodes_to_the_same_bytes() {
         }
 
         let mut buffer = BytesMut::new();
-        match batch.encode(&mut Encoder::new(&mut buffer)) {
-            Ok(()) if buffer.as_ref() == expected.as_slice() => checked += 1,
-            Ok(()) => failures.push(format!(
+        match batch.encode_into(&mut buffer, RecordEncodeLimits::default()) {
+            Ok(_) if buffer.as_ref() == expected.as_slice() => checked += 1,
+            Ok(_) => failures.push(format!(
                 "{}: re-encoding changed the bytes\n  kafka: {}\n  rust:  {}\n  why:   {}",
                 vector.name,
                 vector.hex,
@@ -141,7 +142,7 @@ fn a_compressed_batch_round_trips_its_records_though_not_its_bytes() {
 
         let mut buffer = BytesMut::new();
         original
-            .encode(&mut Encoder::new(&mut buffer))
+            .encode_into(&mut buffer, RecordEncodeLimits::default())
             .unwrap_or_else(|error| panic!("{name}: re-encode: {error}"));
         let reread = decode_batch(buffer.freeze())
             .unwrap_or_else(|error| panic!("{name}: re-decode: {error}"));

@@ -6,7 +6,7 @@
 //! is `0`. Those two are different frames and mean different things — a null
 //! value is a tombstone — so nothing here may collapse them.
 
-use bytes::{Bytes, BytesMut};
+use bytes::Bytes;
 use kafka_wire_core::{Decoder, EncodeError, EncodeTarget, Encoder, StrBytes};
 
 use crate::error::RecordError;
@@ -102,18 +102,48 @@ impl Record {
 
     /// Writes this record, length prefix included.
     ///
-    /// The body is laid out first because the length prefix precedes it and is
-    /// itself a varint, so its width depends on what follows. This is the same
-    /// buffer-then-prefix shape a tagged field needs, and for the same reason.
+    /// A sizing target computes the body length first, then the same body writer
+    /// emits directly after its prefix. No body-sized temporary allocation is
+    /// needed.
     pub fn encode<T: EncodeTarget>(&self, encoder: &mut Encoder<T>) -> Result<(), EncodeError> {
-        let mut body = BytesMut::new();
-        let mut inner = Encoder::new(&mut body);
-        inner.write_i8(self.attributes)?;
-        inner.write_varlong(self.timestamp_delta)?;
-        inner.write_varint(self.offset_delta)?;
-        write_varint_bytes(&mut inner, self.key.as_deref())?;
-        write_varint_bytes(&mut inner, self.value.as_deref())?;
-        inner.write_varint(i32::try_from(self.headers.len()).map_err(|_| {
+        let body_length = self.body_length()?;
+        let length = i32::try_from(body_length).map_err(|_| EncodeError::LengthOverflow {
+            kind: "record",
+            length: body_length,
+            maximum: usize::try_from(i32::MAX).unwrap_or(usize::MAX),
+        })?;
+        encoder.write_varint(length)?;
+        let start = encoder.len();
+        self.encode_body(encoder)?;
+        let actual = encoder.len().saturating_sub(start);
+        if actual != body_length {
+            return Err(EncodeError::SizeMismatch {
+                predicted: body_length,
+                actual,
+            });
+        }
+        Ok(())
+    }
+
+    pub(crate) fn encoded_length(&self) -> Result<usize, EncodeError> {
+        let mut encoder = Encoder::sizing();
+        self.encode(&mut encoder)?;
+        Ok(encoder.len())
+    }
+
+    fn body_length(&self) -> Result<usize, EncodeError> {
+        let mut encoder = Encoder::sizing();
+        self.encode_body(&mut encoder)?;
+        Ok(encoder.len())
+    }
+
+    fn encode_body<T: EncodeTarget>(&self, encoder: &mut Encoder<T>) -> Result<(), EncodeError> {
+        encoder.write_i8(self.attributes)?;
+        encoder.write_varlong(self.timestamp_delta)?;
+        encoder.write_varint(self.offset_delta)?;
+        write_varint_bytes(encoder, self.key.as_deref())?;
+        write_varint_bytes(encoder, self.value.as_deref())?;
+        encoder.write_varint(i32::try_from(self.headers.len()).map_err(|_| {
             EncodeError::LengthOverflow {
                 kind: "record headers",
                 length: self.headers.len(),
@@ -121,16 +151,9 @@ impl Record {
             }
         })?)?;
         for header in &self.headers {
-            header.encode(&mut inner)?;
+            header.encode(encoder)?;
         }
-
-        let length = i32::try_from(body.len()).map_err(|_| EncodeError::LengthOverflow {
-            kind: "record",
-            length: body.len(),
-            maximum: usize::try_from(i32::MAX).unwrap_or(usize::MAX),
-        })?;
-        encoder.write_varint(length)?;
-        encoder.write_raw_slice(&body)
+        Ok(())
     }
 }
 
