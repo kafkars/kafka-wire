@@ -15,11 +15,15 @@ use kafka_wire_schema::{Field, FieldType, Message, VersionSet};
 
 use crate::{
     GenerationError,
-    render::field::{
-        regime::{
-            Encoding, Nullability, encoding_of, encoding_over, is_nullable, nullability_of, present,
+    render::{
+        api::{ExternalSymbol as S, spell},
+        field::{
+            regime::{
+                Encoding, Nullability, encoding_of, encoding_over, is_nullable, nullability_of,
+                present,
+            },
+            version,
         },
-        version,
     },
 };
 
@@ -38,7 +42,8 @@ pub(crate) fn read_expression(field: &Field, message: &Message) -> Result<String
             let null_read = read_over(&nullable, field, message, true)?;
             let plain_read = read_over(&plain, field, message, false)?;
             Ok(format!(
-                "if {condition} {{ {null_read} }} else {{ Some({plain_read}) }}"
+                "if {condition} {{ {null_read} }} else {{ {}({plain_read}) }}",
+                spell(message, S::Some)
             ))
         }
     }
@@ -110,7 +115,10 @@ pub(crate) fn array_length_codec(field: &Field, message: &Message) -> (String, S
             let null_read = array_len_read(&nullable, field, message, true);
             let plain_read = array_len_read(&plain, field, message, false);
             (
-                format!("if {condition} {{ {null_read} }} else {{ Some({plain_read}) }}"),
+                format!(
+                    "if {condition} {{ {null_read} }} else {{ {}({plain_read}) }}",
+                    spell(message, S::Some)
+                ),
                 // The write needs no gate. Every nullable writer delegates to
                 // its non-null counterpart for a present value, so `Some(n)`
                 // is byte-identical under both; only `None` differs, and that
@@ -153,12 +161,13 @@ fn array_len_write(
     nullable: bool,
 ) -> String {
     let name = field.name.rust_field();
+    let vector = spell(message, S::Vec);
     let (compact, legacy) = if nullable {
         (
             format!(
-                "encoder.write_compact_nullable_array_len(self.{name}.as_ref().map(Vec::len))?;"
+                "encoder.write_compact_nullable_array_len(self.{name}.as_ref().map({vector}::len))?;"
             ),
-            format!("encoder.write_nullable_array_len(self.{name}.as_ref().map(Vec::len))?;"),
+            format!("encoder.write_nullable_array_len(self.{name}.as_ref().map({vector}::len))?;"),
         )
     } else {
         (
@@ -292,9 +301,11 @@ fn read_method(
         // The presence marker is regime-independent, which is why `compact` is
         // not consulted here: it is a raw int8 in a flexible message too.
         FieldType::Struct(reference) if nullable => Ok(format!(
-            "if decoder.read_struct_presence()? {{ Some({}::decode(decoder, version)?) }} \
-             else {{ None }}",
-            reference.rust_type()
+            "if decoder.read_struct_presence()? {{ {}({}::decode(decoder, version)?) }} \
+             else {{ {} }}",
+            spell(message, S::Some),
+            reference.rust_type(),
+            spell(message, S::None)
         )),
         FieldType::Struct(reference) => Ok(format!(
             "{}::decode(decoder, version)?",
@@ -351,9 +362,10 @@ fn write_method(
         }
         FieldType::Bytes | FieldType::Records => Ok(format!("encoder.write_bytes(&self.{name})?;")),
         FieldType::Struct(_) if nullable => Ok(format!(
-            "if let Some(value) = &self.{name} {{ encoder.write_struct_presence(true)?; \
+            "if let {}(value) = &self.{name} {{ encoder.write_struct_presence(true)?; \
              value.encode_validated(encoder, version)?; }} \
-             else {{ encoder.write_struct_presence(false)?; }}"
+             else {{ encoder.write_struct_presence(false)?; }}",
+            spell(message, S::Some)
         )),
         FieldType::Struct(_) => Ok(format!("self.{name}.encode_validated(encoder, version)?;")),
         FieldType::Array(_) => Err(GenerationError::unsupported(

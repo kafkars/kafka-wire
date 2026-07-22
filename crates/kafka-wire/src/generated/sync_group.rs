@@ -20,7 +20,7 @@ pub mod sync_group_request {
 
     /// `SyncGroupRequestAssignment` as declared by the `SyncGroup` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct SyncGroupRequestAssignment {
         /// The ID of the member to assign.
         pub member_id: StrBytes,
@@ -32,7 +32,8 @@ pub mod sync_group_request {
 
     impl SyncGroupRequestAssignment {
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 5);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(4, 5));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(4, 5));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
@@ -40,9 +41,12 @@ pub mod sync_group_request {
     }
 
     impl SyncGroupRequestAssignment {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(EncodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(EncodeError::UnsupportedVersion {
                     message: "SyncGroupRequestAssignment",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
@@ -50,32 +54,35 @@ pub mod sync_group_request {
             }
 
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: "SyncGroupRequestAssignment",
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for SyncGroupRequestAssignment {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(DecodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(DecodeError::UnsupportedVersion {
                     message: "SyncGroupRequestAssignment",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
                 });
             }
 
-            let member_id = if Self::is_flexible(version) {
+            let __kw_field_0 = if Self::is_flexible(version) {
                 decoder.read_compact_string()?
             } else {
                 decoder.read_string()?
             };
-            let assignment = if Self::is_flexible(version) {
+            let __kw_field_1 = if Self::is_flexible(version) {
                 decoder.read_compact_bytes()?
             } else {
                 decoder.read_bytes()?
@@ -86,9 +93,9 @@ pub mod sync_group_request {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                member_id,
-                assignment,
+            ::core::result::Result::Ok(Self {
+                member_id: __kw_field_0,
+                assignment: __kw_field_1,
                 unknown_tagged_fields,
             })
         }
@@ -99,7 +106,7 @@ pub mod sync_group_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             if Self::is_flexible(version) {
                 encoder.write_compact_string(&self.member_id)?;
             } else {
@@ -115,7 +122,7 @@ pub mod sync_group_request {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -124,12 +131,12 @@ pub mod sync_group_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             SyncGroupRequestAssignment::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| SyncGroupRequestAssignment::encode_validated(self, encoder, version),
@@ -140,7 +147,7 @@ pub mod sync_group_request {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -152,7 +159,7 @@ pub mod sync_group_request {
 
     /// Request body for the `SyncGroup` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct SyncGroupRequest {
         /// The unique group identifier.
         pub group_id: StrBytes,
@@ -161,13 +168,13 @@ pub mod sync_group_request {
         /// The member ID assigned by the group.
         pub member_id: StrBytes,
         /// The unique identifier of the consumer instance provided by end user.
-        pub group_instance_id: Option<StrBytes>,
+        pub group_instance_id: ::core::option::Option<StrBytes>,
         /// The group protocol type.
-        pub protocol_type: Option<StrBytes>,
+        pub protocol_type: ::core::option::Option<StrBytes>,
         /// The group protocol name.
-        pub protocol_name: Option<StrBytes>,
+        pub protocol_name: ::core::option::Option<StrBytes>,
         /// Each assignment.
-        pub assignments: Vec<SyncGroupRequestAssignment>,
+        pub assignments: ::std::vec::Vec<SyncGroupRequestAssignment>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
     }
@@ -175,7 +182,8 @@ pub mod sync_group_request {
     impl KafkaMessage for SyncGroupRequest {
         const NAME: &'static str = "SyncGroupRequest";
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 5);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(4, 5));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(4, 5));
     }
 
     impl KafkaRequest for SyncGroupRequest {
@@ -188,11 +196,14 @@ pub mod sync_group_request {
     }
 
     impl SyncGroupRequest {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             crate::message::ensure_encode_version::<Self>(version)?;
 
             if version.value() < 3 && self.group_instance_id.is_some() {
-                return Err(EncodeError::FieldNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::FieldNotRepresentable {
                     message: Self::NAME,
                     field: "GroupInstanceId",
                     version,
@@ -202,51 +213,54 @@ pub mod sync_group_request {
                 value.validate_for_version(version)?;
             }
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: Self::NAME,
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for SyncGroupRequest {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             crate::message::ensure_decode_version::<Self>(version)?;
 
-            let group_id = if Self::is_flexible(version) {
+            let __kw_field_0 = if Self::is_flexible(version) {
                 decoder.read_compact_string()?
             } else {
                 decoder.read_string()?
             };
-            let generation_id = decoder.read_i32()?;
-            let member_id = if Self::is_flexible(version) {
+            let __kw_field_1 = decoder.read_i32()?;
+            let __kw_field_2 = if Self::is_flexible(version) {
                 decoder.read_compact_string()?
             } else {
                 decoder.read_string()?
             };
-            let group_instance_id = if version.value() >= 3 {
+            let __kw_field_3 = if version.value() >= 3 {
                 if Self::is_flexible(version) {
                     decoder.read_compact_nullable_string()?
                 } else {
                     decoder.read_nullable_string()?
                 }
             } else {
-                None
+                ::core::option::Option::None
             };
-            let protocol_type = if version.value() >= 5 {
+            let __kw_field_4 = if version.value() >= 5 {
                 decoder.read_compact_nullable_string()?
             } else {
-                None
+                ::core::option::Option::None
             };
-            let protocol_name = if version.value() >= 5 {
+            let __kw_field_5 = if version.value() >= 5 {
                 decoder.read_compact_nullable_string()?
             } else {
-                None
+                ::core::option::Option::None
             };
-            let assignments = {
+            let __kw_field_6 = {
                 let length = if Self::is_flexible(version) {
                     decoder.read_compact_array_len()?
                 } else {
@@ -262,14 +276,14 @@ pub mod sync_group_request {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                group_id,
-                generation_id,
-                member_id,
-                group_instance_id,
-                protocol_type,
-                protocol_name,
-                assignments,
+            ::core::result::Result::Ok(Self {
+                group_id: __kw_field_0,
+                generation_id: __kw_field_1,
+                member_id: __kw_field_2,
+                group_instance_id: __kw_field_3,
+                protocol_type: __kw_field_4,
+                protocol_name: __kw_field_5,
+                assignments: __kw_field_6,
                 unknown_tagged_fields,
             })
         }
@@ -280,7 +294,7 @@ pub mod sync_group_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             if Self::is_flexible(version) {
                 encoder.write_compact_string(&self.group_id)?;
             } else {
@@ -318,7 +332,7 @@ pub mod sync_group_request {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -327,12 +341,12 @@ pub mod sync_group_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             SyncGroupRequest::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| SyncGroupRequest::encode_validated(self, encoder, version),
@@ -343,7 +357,7 @@ pub mod sync_group_request {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -369,16 +383,16 @@ pub mod sync_group_response {
 
     /// Response body for the `SyncGroup` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct SyncGroupResponse {
         /// The duration in milliseconds for which the request was throttled due to a quota violation, or zero if the request did not violate any quota.
         pub throttle_time_ms: i32,
         /// The error code, or 0 if there was no error.
         pub error_code: i16,
         /// The group protocol type.
-        pub protocol_type: Option<StrBytes>,
+        pub protocol_type: ::core::option::Option<StrBytes>,
         /// The group protocol name.
-        pub protocol_name: Option<StrBytes>,
+        pub protocol_name: ::core::option::Option<StrBytes>,
         /// The member assignment.
         pub assignment: Bytes,
         /// Unknown flexible-version tagged fields retained for forwarding.
@@ -388,7 +402,8 @@ pub mod sync_group_response {
     impl KafkaMessage for SyncGroupResponse {
         const NAME: &'static str = "SyncGroupResponse";
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 5);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(4, 5));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(4, 5));
     }
 
     impl KafkaResponse for SyncGroupResponse {
@@ -396,41 +411,47 @@ pub mod sync_group_response {
     }
 
     impl SyncGroupResponse {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             crate::message::ensure_encode_version::<Self>(version)?;
 
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: Self::NAME,
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for SyncGroupResponse {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             crate::message::ensure_decode_version::<Self>(version)?;
 
-            let throttle_time_ms = if version.value() >= 1 {
+            let __kw_field_0 = if version.value() >= 1 {
                 decoder.read_i32()?
             } else {
                 0
             };
-            let error_code = decoder.read_i16()?;
-            let protocol_type = if version.value() >= 5 {
+            let __kw_field_1 = decoder.read_i16()?;
+            let __kw_field_2 = if version.value() >= 5 {
                 decoder.read_compact_nullable_string()?
             } else {
-                None
+                ::core::option::Option::None
             };
-            let protocol_name = if version.value() >= 5 {
+            let __kw_field_3 = if version.value() >= 5 {
                 decoder.read_compact_nullable_string()?
             } else {
-                None
+                ::core::option::Option::None
             };
-            let assignment = if Self::is_flexible(version) {
+            let __kw_field_4 = if Self::is_flexible(version) {
                 decoder.read_compact_bytes()?
             } else {
                 decoder.read_bytes()?
@@ -441,12 +462,12 @@ pub mod sync_group_response {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                throttle_time_ms,
-                error_code,
-                protocol_type,
-                protocol_name,
-                assignment,
+            ::core::result::Result::Ok(Self {
+                throttle_time_ms: __kw_field_0,
+                error_code: __kw_field_1,
+                protocol_type: __kw_field_2,
+                protocol_name: __kw_field_3,
+                assignment: __kw_field_4,
                 unknown_tagged_fields,
             })
         }
@@ -457,7 +478,7 @@ pub mod sync_group_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             if version.value() >= 1 {
                 encoder.write_i32(self.throttle_time_ms)?;
             }
@@ -478,7 +499,7 @@ pub mod sync_group_response {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -487,12 +508,12 @@ pub mod sync_group_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             SyncGroupResponse::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| SyncGroupResponse::encode_validated(self, encoder, version),
@@ -503,7 +524,7 @@ pub mod sync_group_response {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -527,7 +548,7 @@ pub const SYNC_GROUP_REQUEST_DESCRIPTOR: MessageDescriptor = MessageDescriptor::
     "SyncGroupRequest",
     MessageDirection::Request,
     VersionRange::new(0, 5),
-    Some(VersionRange::new(4, 5)),
+    ::core::option::Option::Some(VersionRange::new(4, 5)),
 );
 
 /// Static metadata for [`SyncGroupResponse`].
@@ -536,7 +557,7 @@ pub const SYNC_GROUP_RESPONSE_DESCRIPTOR: MessageDescriptor = MessageDescriptor:
     "SyncGroupResponse",
     MessageDirection::Response,
     VersionRange::new(0, 5),
-    Some(VersionRange::new(4, 5)),
+    ::core::option::Option::Some(VersionRange::new(4, 5)),
 );
 
 /// Static pair metadata for the `SyncGroup` API.
@@ -545,6 +566,6 @@ pub const SYNC_GROUP_API_DESCRIPTOR: ApiDescriptor = ApiDescriptor::new(
     &SYNC_GROUP_REQUEST_DESCRIPTOR,
     &SYNC_GROUP_RESPONSE_DESCRIPTOR,
     VersionRange::new(0, 5),
-    Some(VersionRange::new(4, 5)),
+    ::core::option::Option::Some(VersionRange::new(4, 5)),
     false,
 );

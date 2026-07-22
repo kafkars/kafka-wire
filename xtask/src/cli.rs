@@ -12,7 +12,7 @@ pub(crate) enum Command {
     Generate,
     /// Verify generated Rust without writing.
     GeneratedCheck,
-    /// Render every loadable schema into a scratch crate and compile it.
+    /// Render every loadable schema into a scratch crate and run its probes.
     GenerateAll(CorpusMode),
     /// Run generation verification and architecture guards.
     Verify,
@@ -38,7 +38,7 @@ pub(crate) enum Command {
 /// the checked-in tree is a decision no one has made yet.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub(crate) enum CorpusMode {
-    /// Render into `target/` and run `cargo check`. Nothing checked in changes.
+    /// Render into `target/` and run `cargo test`. Nothing checked in changes.
     CheckOnly,
 }
 

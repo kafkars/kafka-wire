@@ -20,7 +20,7 @@ pub mod create_topics_request {
 
     /// `CreatableTopic` as declared by the `CreateTopics` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct CreatableTopic {
         /// The topic name.
         pub name: StrBytes,
@@ -29,16 +29,17 @@ pub mod create_topics_request {
         /// The number of replicas to create for each partition in the topic, or -1 if we are either specifying a manual partition assignment or using the default replication factor.
         pub replication_factor: i16,
         /// The manual partition assignment, or the empty array if we are using automatic assignment.
-        pub assignments: Vec<CreatableReplicaAssignment>,
+        pub assignments: ::std::vec::Vec<CreatableReplicaAssignment>,
         /// The custom topic configurations to set.
-        pub configs: Vec<CreatableTopicConfig>,
+        pub configs: ::std::vec::Vec<CreatableTopicConfig>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
     }
 
     impl CreatableTopic {
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(2, 7);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(5, 7));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(5, 7));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
@@ -46,9 +47,12 @@ pub mod create_topics_request {
     }
 
     impl CreatableTopic {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(EncodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(EncodeError::UnsupportedVersion {
                     message: "CreatableTopic",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
@@ -62,34 +66,37 @@ pub mod create_topics_request {
                 value.validate_for_version(version)?;
             }
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: "CreatableTopic",
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for CreatableTopic {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(DecodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(DecodeError::UnsupportedVersion {
                     message: "CreatableTopic",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
                 });
             }
 
-            let name = if Self::is_flexible(version) {
+            let __kw_field_0 = if Self::is_flexible(version) {
                 decoder.read_compact_string()?
             } else {
                 decoder.read_string()?
             };
-            let num_partitions = decoder.read_i32()?;
-            let replication_factor = decoder.read_i16()?;
-            let assignments = {
+            let __kw_field_1 = decoder.read_i32()?;
+            let __kw_field_2 = decoder.read_i16()?;
+            let __kw_field_3 = {
                 let length = if Self::is_flexible(version) {
                     decoder.read_compact_array_len()?
                 } else {
@@ -99,7 +106,7 @@ pub mod create_topics_request {
                     CreatableReplicaAssignment::decode(decoder, version)
                 })?
             };
-            let configs = {
+            let __kw_field_4 = {
                 let length = if Self::is_flexible(version) {
                     decoder.read_compact_array_len()?
                 } else {
@@ -115,12 +122,12 @@ pub mod create_topics_request {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                name,
-                num_partitions,
-                replication_factor,
-                assignments,
-                configs,
+            ::core::result::Result::Ok(Self {
+                name: __kw_field_0,
+                num_partitions: __kw_field_1,
+                replication_factor: __kw_field_2,
+                assignments: __kw_field_3,
+                configs: __kw_field_4,
                 unknown_tagged_fields,
             })
         }
@@ -131,7 +138,7 @@ pub mod create_topics_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             if Self::is_flexible(version) {
                 encoder.write_compact_string(&self.name)?;
             } else {
@@ -160,7 +167,7 @@ pub mod create_topics_request {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -169,12 +176,12 @@ pub mod create_topics_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             CreatableTopic::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| CreatableTopic::encode_validated(self, encoder, version),
@@ -185,7 +192,7 @@ pub mod create_topics_request {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -197,19 +204,20 @@ pub mod create_topics_request {
 
     /// `CreatableReplicaAssignment` as declared by the `CreateTopics` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct CreatableReplicaAssignment {
         /// The partition index.
         pub partition_index: i32,
         /// The brokers to place the partition on.
-        pub broker_ids: Vec<i32>,
+        pub broker_ids: ::std::vec::Vec<i32>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
     }
 
     impl CreatableReplicaAssignment {
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(2, 7);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(5, 7));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(5, 7));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
@@ -217,9 +225,12 @@ pub mod create_topics_request {
     }
 
     impl CreatableReplicaAssignment {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(EncodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(EncodeError::UnsupportedVersion {
                     message: "CreatableReplicaAssignment",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
@@ -227,28 +238,31 @@ pub mod create_topics_request {
             }
 
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: "CreatableReplicaAssignment",
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for CreatableReplicaAssignment {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(DecodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(DecodeError::UnsupportedVersion {
                     message: "CreatableReplicaAssignment",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
                 });
             }
 
-            let partition_index = decoder.read_i32()?;
-            let broker_ids = {
+            let __kw_field_0 = decoder.read_i32()?;
+            let __kw_field_1 = {
                 let length = if Self::is_flexible(version) {
                     decoder.read_compact_array_len()?
                 } else {
@@ -262,9 +276,9 @@ pub mod create_topics_request {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                partition_index,
-                broker_ids,
+            ::core::result::Result::Ok(Self {
+                partition_index: __kw_field_0,
+                broker_ids: __kw_field_1,
                 unknown_tagged_fields,
             })
         }
@@ -275,7 +289,7 @@ pub mod create_topics_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_i32(self.partition_index)?;
             if Self::is_flexible(version) {
                 encoder.write_compact_array_len(self.broker_ids.len())?;
@@ -290,7 +304,7 @@ pub mod create_topics_request {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -299,12 +313,12 @@ pub mod create_topics_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             CreatableReplicaAssignment::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| CreatableReplicaAssignment::encode_validated(self, encoder, version),
@@ -315,7 +329,7 @@ pub mod create_topics_request {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -332,14 +346,15 @@ pub mod create_topics_request {
         /// The configuration name.
         pub name: StrBytes,
         /// The configuration value.
-        pub value: Option<StrBytes>,
+        pub value: ::core::option::Option<StrBytes>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
     }
 
     impl CreatableTopicConfig {
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(2, 7);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(5, 7));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(5, 7));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
@@ -347,9 +362,12 @@ pub mod create_topics_request {
     }
 
     impl CreatableTopicConfig {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(EncodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(EncodeError::UnsupportedVersion {
                     message: "CreatableTopicConfig",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
@@ -357,42 +375,45 @@ pub mod create_topics_request {
             }
 
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: "CreatableTopicConfig",
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
-    impl Default for CreatableTopicConfig {
+    impl ::core::default::Default for CreatableTopicConfig {
         fn default() -> Self {
             Self {
                 name: StrBytes::default(),
-                value: Some(StrBytes::default()),
+                value: ::core::option::Option::Some(StrBytes::default()),
                 unknown_tagged_fields: TaggedFields::default(),
             }
         }
     }
 
     impl KafkaDecode for CreatableTopicConfig {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(DecodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(DecodeError::UnsupportedVersion {
                     message: "CreatableTopicConfig",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
                 });
             }
 
-            let name = if Self::is_flexible(version) {
+            let __kw_field_0 = if Self::is_flexible(version) {
                 decoder.read_compact_string()?
             } else {
                 decoder.read_string()?
             };
-            let value = if Self::is_flexible(version) {
+            let __kw_field_1 = if Self::is_flexible(version) {
                 decoder.read_compact_nullable_string()?
             } else {
                 decoder.read_nullable_string()?
@@ -403,9 +424,9 @@ pub mod create_topics_request {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                name,
-                value,
+            ::core::result::Result::Ok(Self {
+                name: __kw_field_0,
+                value: __kw_field_1,
                 unknown_tagged_fields,
             })
         }
@@ -416,7 +437,7 @@ pub mod create_topics_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             if Self::is_flexible(version) {
                 encoder.write_compact_string(&self.name)?;
             } else {
@@ -432,7 +453,7 @@ pub mod create_topics_request {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -441,12 +462,12 @@ pub mod create_topics_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             CreatableTopicConfig::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| CreatableTopicConfig::encode_validated(self, encoder, version),
@@ -457,7 +478,7 @@ pub mod create_topics_request {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -472,7 +493,7 @@ pub mod create_topics_request {
     #[derive(Clone, Debug, Eq, PartialEq)]
     pub struct CreateTopicsRequest {
         /// The topics to create.
-        pub topics: Vec<CreatableTopic>,
+        pub topics: ::std::vec::Vec<CreatableTopic>,
         /// How long to wait in milliseconds before timing out the request.
         pub timeout_ms: i32,
         /// If true, check that the topics can be created as specified, but don't create anything.
@@ -481,10 +502,10 @@ pub mod create_topics_request {
         pub unknown_tagged_fields: TaggedFields,
     }
 
-    impl Default for CreateTopicsRequest {
+    impl ::core::default::Default for CreateTopicsRequest {
         fn default() -> Self {
             Self {
-                topics: Vec::new(),
+                topics: ::std::vec::Vec::new(),
                 timeout_ms: 60_000,
                 validate_only: false,
                 unknown_tagged_fields: TaggedFields::default(),
@@ -495,7 +516,8 @@ pub mod create_topics_request {
     impl KafkaMessage for CreateTopicsRequest {
         const NAME: &'static str = "CreateTopicsRequest";
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(2, 7);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(5, 7));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(5, 7));
     }
 
     impl KafkaRequest for CreateTopicsRequest {
@@ -508,28 +530,34 @@ pub mod create_topics_request {
     }
 
     impl CreateTopicsRequest {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             crate::message::ensure_encode_version::<Self>(version)?;
 
             for value in &self.topics {
                 value.validate_for_version(version)?;
             }
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: Self::NAME,
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for CreateTopicsRequest {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             crate::message::ensure_decode_version::<Self>(version)?;
 
-            let topics = {
+            let __kw_field_0 = {
                 let length = if Self::is_flexible(version) {
                     decoder.read_compact_array_len()?
                 } else {
@@ -537,18 +565,18 @@ pub mod create_topics_request {
                 };
                 decoder.read_vec(length, |decoder| CreatableTopic::decode(decoder, version))?
             };
-            let timeout_ms = decoder.read_i32()?;
-            let validate_only = decoder.read_bool()?;
+            let __kw_field_1 = decoder.read_i32()?;
+            let __kw_field_2 = decoder.read_bool()?;
             let unknown_tagged_fields = if Self::is_flexible(version) {
                 decoder.read_tagged_fields()?
             } else {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                topics,
-                timeout_ms,
-                validate_only,
+            ::core::result::Result::Ok(Self {
+                topics: __kw_field_0,
+                timeout_ms: __kw_field_1,
+                validate_only: __kw_field_2,
                 unknown_tagged_fields,
             })
         }
@@ -559,7 +587,7 @@ pub mod create_topics_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             if Self::is_flexible(version) {
                 encoder.write_compact_array_len(self.topics.len())?;
             } else {
@@ -575,7 +603,7 @@ pub mod create_topics_request {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -584,12 +612,12 @@ pub mod create_topics_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             CreateTopicsRequest::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| CreateTopicsRequest::encode_validated(self, encoder, version),
@@ -600,7 +628,7 @@ pub mod create_topics_request {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -635,7 +663,7 @@ pub mod create_topics_response {
         /// The error code, or 0 if there was no error.
         pub error_code: i16,
         /// The error message, or null if there was no error.
-        pub error_message: Option<StrBytes>,
+        pub error_message: ::core::option::Option<StrBytes>,
         /// Optional topic config error returned if configs are not returned in the response.
         pub topic_config_error_code: i16,
         /// Number of partitions of the topic.
@@ -643,14 +671,15 @@ pub mod create_topics_response {
         /// Replication factor of the topic.
         pub replication_factor: i16,
         /// Configuration of the topic.
-        pub configs: Option<Vec<CreatableTopicConfigs>>,
+        pub configs: ::core::option::Option<::std::vec::Vec<CreatableTopicConfigs>>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
     }
 
     impl CreatableTopicResult {
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(2, 7);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(5, 7));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(5, 7));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
@@ -658,9 +687,12 @@ pub mod create_topics_response {
     }
 
     impl CreatableTopicResult {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(EncodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(EncodeError::UnsupportedVersion {
                     message: "CreatableTopicResult",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
@@ -668,76 +700,79 @@ pub mod create_topics_response {
             }
 
             if version.value() >= 5 {
-                if let Some(values) = &self.configs {
+                if let ::core::option::Option::Some(values) = &self.configs {
                     for value in values {
                         value.validate_for_version(version)?;
                     }
                 }
             }
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: "CreatableTopicResult",
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
-    impl Default for CreatableTopicResult {
+    impl ::core::default::Default for CreatableTopicResult {
         fn default() -> Self {
             Self {
                 name: StrBytes::default(),
                 topic_id: Uuid::ZERO,
                 error_code: 0,
-                error_message: Some(StrBytes::default()),
+                error_message: ::core::option::Option::Some(StrBytes::default()),
                 topic_config_error_code: 0,
                 num_partitions: -1,
                 replication_factor: -1,
-                configs: Some(Vec::new()),
+                configs: ::core::option::Option::Some(::std::vec::Vec::new()),
                 unknown_tagged_fields: TaggedFields::default(),
             }
         }
     }
 
     impl KafkaDecode for CreatableTopicResult {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(DecodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(DecodeError::UnsupportedVersion {
                     message: "CreatableTopicResult",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
                 });
             }
 
-            let name = if Self::is_flexible(version) {
+            let __kw_field_0 = if Self::is_flexible(version) {
                 decoder.read_compact_string()?
             } else {
                 decoder.read_string()?
             };
-            let topic_id = if version.value() >= 7 {
+            let __kw_field_1 = if version.value() >= 7 {
                 decoder.read_uuid()?
             } else {
                 Uuid::ZERO
             };
-            let error_code = decoder.read_i16()?;
-            let error_message = if Self::is_flexible(version) {
+            let __kw_field_2 = decoder.read_i16()?;
+            let __kw_field_3 = if Self::is_flexible(version) {
                 decoder.read_compact_nullable_string()?
             } else {
                 decoder.read_nullable_string()?
             };
-            let num_partitions = if version.value() >= 5 {
+            let __kw_field_5 = if version.value() >= 5 {
                 decoder.read_i32()?
             } else {
                 -1
             };
-            let replication_factor = if version.value() >= 5 {
+            let __kw_field_6 = if version.value() >= 5 {
                 decoder.read_i16()?
             } else {
                 -1
             };
-            let configs = if version.value() >= 5 {
+            let __kw_field_7 = if version.value() >= 5 {
                 let length = decoder.read_compact_nullable_array_len()?;
                 length
                     .map(|length| {
@@ -747,30 +782,30 @@ pub mod create_topics_response {
                     })
                     .transpose()?
             } else {
-                Some(Vec::new())
+                ::core::option::Option::Some(::std::vec::Vec::new())
             };
-            let mut topic_config_error_code: i16 = 0;
+            let mut __kw_field_4: i16 = 0;
             let mut unknown_tagged_fields = TaggedFields::default();
             if Self::is_flexible(version) {
                 unknown_tagged_fields =
                     decoder.read_tagged_fields_with(|tag, decoder| match tag {
                         0 => {
-                            topic_config_error_code = decoder.read_i16()?;
-                            Ok(TagOutcome::Decoded)
+                            __kw_field_4 = decoder.read_i16()?;
+                            ::core::result::Result::Ok(TagOutcome::Decoded)
                         }
-                        _ => Ok(TagOutcome::Retained),
+                        _ => ::core::result::Result::Ok(TagOutcome::Retained),
                     })?;
             }
 
-            Ok(Self {
-                name,
-                topic_id,
-                error_code,
-                error_message,
-                topic_config_error_code,
-                num_partitions,
-                replication_factor,
-                configs,
+            ::core::result::Result::Ok(Self {
+                name: __kw_field_0,
+                topic_id: __kw_field_1,
+                error_code: __kw_field_2,
+                error_message: __kw_field_3,
+                topic_config_error_code: __kw_field_4,
+                num_partitions: __kw_field_5,
+                replication_factor: __kw_field_6,
+                configs: __kw_field_7,
                 unknown_tagged_fields,
             })
         }
@@ -781,7 +816,7 @@ pub mod create_topics_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             if Self::is_flexible(version) {
                 encoder.write_compact_string(&self.name)?;
             } else {
@@ -803,8 +838,10 @@ pub mod create_topics_response {
                 encoder.write_i16(self.replication_factor)?;
             }
             if version.value() >= 5 {
-                encoder.write_compact_nullable_array_len(self.configs.as_ref().map(Vec::len))?;
-                if let Some(values) = &self.configs {
+                encoder.write_compact_nullable_array_len(
+                    self.configs.as_ref().map(::std::vec::Vec::len),
+                )?;
+                if let ::core::option::Option::Some(values) = &self.configs {
                     for value in values {
                         value.encode_validated(encoder, version)?;
                     }
@@ -816,13 +853,13 @@ pub mod create_topics_response {
                 if self.topic_config_error_code != 0 {
                     known.write(0, |encoder| {
                         encoder.write_i16(self.topic_config_error_code)?;
-                        Ok(())
+                        ::core::result::Result::Ok(())
                     })?;
                 }
                 encoder.write_merged_tagged_fields(known, &self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -831,12 +868,12 @@ pub mod create_topics_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             CreatableTopicResult::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| CreatableTopicResult::encode_validated(self, encoder, version),
@@ -847,7 +884,7 @@ pub mod create_topics_response {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -864,7 +901,7 @@ pub mod create_topics_response {
         /// The configuration name.
         pub name: StrBytes,
         /// The configuration value.
-        pub value: Option<StrBytes>,
+        pub value: ::core::option::Option<StrBytes>,
         /// True if the configuration is read-only.
         pub read_only: bool,
         /// The configuration source.
@@ -877,7 +914,8 @@ pub mod create_topics_response {
 
     impl CreatableTopicConfigs {
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(5, 7);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(5, 7));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(5, 7));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
@@ -885,9 +923,12 @@ pub mod create_topics_response {
     }
 
     impl CreatableTopicConfigs {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(EncodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(EncodeError::UnsupportedVersion {
                     message: "CreatableTopicConfigs",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
@@ -895,21 +936,21 @@ pub mod create_topics_response {
             }
 
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: "CreatableTopicConfigs",
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
-    impl Default for CreatableTopicConfigs {
+    impl ::core::default::Default for CreatableTopicConfigs {
         fn default() -> Self {
             Self {
                 name: StrBytes::default(),
-                value: Some(StrBytes::default()),
+                value: ::core::option::Option::Some(StrBytes::default()),
                 read_only: false,
                 config_source: -1,
                 is_sensitive: false,
@@ -919,32 +960,35 @@ pub mod create_topics_response {
     }
 
     impl KafkaDecode for CreatableTopicConfigs {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(DecodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(DecodeError::UnsupportedVersion {
                     message: "CreatableTopicConfigs",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
                 });
             }
 
-            let name = decoder.read_compact_string()?;
-            let value = decoder.read_compact_nullable_string()?;
-            let read_only = decoder.read_bool()?;
-            let config_source = decoder.read_i8()?;
-            let is_sensitive = decoder.read_bool()?;
+            let __kw_field_0 = decoder.read_compact_string()?;
+            let __kw_field_1 = decoder.read_compact_nullable_string()?;
+            let __kw_field_2 = decoder.read_bool()?;
+            let __kw_field_3 = decoder.read_i8()?;
+            let __kw_field_4 = decoder.read_bool()?;
             let unknown_tagged_fields = if Self::is_flexible(version) {
                 decoder.read_tagged_fields()?
             } else {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                name,
-                value,
-                read_only,
-                config_source,
-                is_sensitive,
+            ::core::result::Result::Ok(Self {
+                name: __kw_field_0,
+                value: __kw_field_1,
+                read_only: __kw_field_2,
+                config_source: __kw_field_3,
+                is_sensitive: __kw_field_4,
                 unknown_tagged_fields,
             })
         }
@@ -955,7 +999,7 @@ pub mod create_topics_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_compact_string(&self.name)?;
             encoder.write_compact_nullable_string(self.value.as_ref())?;
             encoder.write_bool(self.read_only)?;
@@ -966,7 +1010,7 @@ pub mod create_topics_response {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -975,12 +1019,12 @@ pub mod create_topics_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             CreatableTopicConfigs::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| CreatableTopicConfigs::encode_validated(self, encoder, version),
@@ -991,7 +1035,7 @@ pub mod create_topics_response {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -1003,12 +1047,12 @@ pub mod create_topics_response {
 
     /// Response body for the `CreateTopics` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct CreateTopicsResponse {
         /// The duration in milliseconds for which the request was throttled due to a quota violation, or zero if the request did not violate any quota.
         pub throttle_time_ms: i32,
         /// Results for each topic we tried to create.
-        pub topics: Vec<CreatableTopicResult>,
+        pub topics: ::std::vec::Vec<CreatableTopicResult>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
     }
@@ -1016,7 +1060,8 @@ pub mod create_topics_response {
     impl KafkaMessage for CreateTopicsResponse {
         const NAME: &'static str = "CreateTopicsResponse";
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(2, 7);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(5, 7));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(5, 7));
     }
 
     impl KafkaResponse for CreateTopicsResponse {
@@ -1024,29 +1069,35 @@ pub mod create_topics_response {
     }
 
     impl CreateTopicsResponse {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             crate::message::ensure_encode_version::<Self>(version)?;
 
             for value in &self.topics {
                 value.validate_for_version(version)?;
             }
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: Self::NAME,
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for CreateTopicsResponse {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             crate::message::ensure_decode_version::<Self>(version)?;
 
-            let throttle_time_ms = decoder.read_i32()?;
-            let topics = {
+            let __kw_field_0 = decoder.read_i32()?;
+            let __kw_field_1 = {
                 let length = if Self::is_flexible(version) {
                     decoder.read_compact_array_len()?
                 } else {
@@ -1062,9 +1113,9 @@ pub mod create_topics_response {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                throttle_time_ms,
-                topics,
+            ::core::result::Result::Ok(Self {
+                throttle_time_ms: __kw_field_0,
+                topics: __kw_field_1,
                 unknown_tagged_fields,
             })
         }
@@ -1075,7 +1126,7 @@ pub mod create_topics_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_i32(self.throttle_time_ms)?;
             if Self::is_flexible(version) {
                 encoder.write_compact_array_len(self.topics.len())?;
@@ -1090,7 +1141,7 @@ pub mod create_topics_response {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -1099,12 +1150,12 @@ pub mod create_topics_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             CreateTopicsResponse::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| CreateTopicsResponse::encode_validated(self, encoder, version),
@@ -1115,7 +1166,7 @@ pub mod create_topics_response {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -1139,7 +1190,7 @@ pub const CREATE_TOPICS_REQUEST_DESCRIPTOR: MessageDescriptor = MessageDescripto
     "CreateTopicsRequest",
     MessageDirection::Request,
     VersionRange::new(2, 7),
-    Some(VersionRange::new(5, 7)),
+    ::core::option::Option::Some(VersionRange::new(5, 7)),
 );
 
 /// Static metadata for [`CreateTopicsResponse`].
@@ -1148,7 +1199,7 @@ pub const CREATE_TOPICS_RESPONSE_DESCRIPTOR: MessageDescriptor = MessageDescript
     "CreateTopicsResponse",
     MessageDirection::Response,
     VersionRange::new(2, 7),
-    Some(VersionRange::new(5, 7)),
+    ::core::option::Option::Some(VersionRange::new(5, 7)),
 );
 
 /// Static pair metadata for the `CreateTopics` API.
@@ -1157,6 +1208,6 @@ pub const CREATE_TOPICS_API_DESCRIPTOR: ApiDescriptor = ApiDescriptor::new(
     &CREATE_TOPICS_REQUEST_DESCRIPTOR,
     &CREATE_TOPICS_RESPONSE_DESCRIPTOR,
     VersionRange::new(2, 7),
-    Some(VersionRange::new(5, 7)),
+    ::core::option::Option::Some(VersionRange::new(5, 7)),
     false,
 );

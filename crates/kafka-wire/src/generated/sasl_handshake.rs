@@ -19,7 +19,7 @@ pub mod sasl_handshake_request {
 
     /// Request body for the `SaslHandshake` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct SaslHandshakeRequest {
         /// The SASL mechanism chosen by the client.
         pub mechanism: StrBytes,
@@ -28,7 +28,8 @@ pub mod sasl_handshake_request {
     impl KafkaMessage for SaslHandshakeRequest {
         const NAME: &'static str = "SaslHandshakeRequest";
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 1);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = None;
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::None;
     }
 
     impl KafkaRequest for SaslHandshakeRequest {
@@ -42,20 +43,28 @@ pub mod sasl_handshake_request {
 
     impl SaslHandshakeRequest {
         #[allow(clippy::unused_self)]
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             crate::message::ensure_encode_version::<Self>(version)?;
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for SaslHandshakeRequest {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             crate::message::ensure_decode_version::<Self>(version)?;
 
-            let mechanism = decoder.read_string()?;
+            let __kw_field_0 = decoder.read_string()?;
 
-            Ok(Self { mechanism })
+            ::core::result::Result::Ok(Self {
+                mechanism: __kw_field_0,
+            })
         }
     }
 
@@ -64,10 +73,10 @@ pub mod sasl_handshake_request {
             &self,
             encoder: &mut Encoder<T>,
             _version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_string(&self.mechanism)?;
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -76,12 +85,12 @@ pub mod sasl_handshake_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             SaslHandshakeRequest::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| SaslHandshakeRequest::encode_validated(self, encoder, version),
@@ -92,7 +101,7 @@ pub mod sasl_handshake_request {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -117,18 +126,19 @@ pub mod sasl_handshake_response {
 
     /// Response body for the `SaslHandshake` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct SaslHandshakeResponse {
         /// The error code, or 0 if there was no error.
         pub error_code: i16,
         /// The mechanisms enabled in the server.
-        pub mechanisms: Vec<StrBytes>,
+        pub mechanisms: ::std::vec::Vec<StrBytes>,
     }
 
     impl KafkaMessage for SaslHandshakeResponse {
         const NAME: &'static str = "SaslHandshakeResponse";
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 1);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = None;
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::None;
     }
 
     impl KafkaResponse for SaslHandshakeResponse {
@@ -137,26 +147,32 @@ pub mod sasl_handshake_response {
 
     impl SaslHandshakeResponse {
         #[allow(clippy::unused_self)]
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             crate::message::ensure_encode_version::<Self>(version)?;
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for SaslHandshakeResponse {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             crate::message::ensure_decode_version::<Self>(version)?;
 
-            let error_code = decoder.read_i16()?;
-            let mechanisms = {
+            let __kw_field_0 = decoder.read_i16()?;
+            let __kw_field_1 = {
                 let length = decoder.read_array_len()?;
                 decoder.read_vec(length, Decoder::read_string)?
             };
 
-            Ok(Self {
-                error_code,
-                mechanisms,
+            ::core::result::Result::Ok(Self {
+                error_code: __kw_field_0,
+                mechanisms: __kw_field_1,
             })
         }
     }
@@ -166,14 +182,14 @@ pub mod sasl_handshake_response {
             &self,
             encoder: &mut Encoder<T>,
             _version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_i16(self.error_code)?;
             encoder.write_array_len(self.mechanisms.len())?;
             for value in &self.mechanisms {
                 encoder.write_string(value)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -182,12 +198,12 @@ pub mod sasl_handshake_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             SaslHandshakeResponse::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| SaslHandshakeResponse::encode_validated(self, encoder, version),
@@ -198,7 +214,7 @@ pub mod sasl_handshake_response {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -222,7 +238,7 @@ pub const SASL_HANDSHAKE_REQUEST_DESCRIPTOR: MessageDescriptor = MessageDescript
     "SaslHandshakeRequest",
     MessageDirection::Request,
     VersionRange::new(0, 1),
-    None,
+    ::core::option::Option::None,
 );
 
 /// Static metadata for [`SaslHandshakeResponse`].
@@ -231,7 +247,7 @@ pub const SASL_HANDSHAKE_RESPONSE_DESCRIPTOR: MessageDescriptor = MessageDescrip
     "SaslHandshakeResponse",
     MessageDirection::Response,
     VersionRange::new(0, 1),
-    None,
+    ::core::option::Option::None,
 );
 
 /// Static pair metadata for the `SaslHandshake` API.
@@ -240,6 +256,6 @@ pub const SASL_HANDSHAKE_API_DESCRIPTOR: ApiDescriptor = ApiDescriptor::new(
     &SASL_HANDSHAKE_REQUEST_DESCRIPTOR,
     &SASL_HANDSHAKE_RESPONSE_DESCRIPTOR,
     VersionRange::new(0, 1),
-    None,
+    ::core::option::Option::None,
     false,
 );

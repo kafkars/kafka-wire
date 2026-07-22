@@ -60,9 +60,9 @@ fn generate(mode: GenerationMode) -> Result<(), String> {
     Ok(())
 }
 
-/// Renders the whole pinned corpus under `target/` and compiles it.
+/// Renders the whole pinned corpus under `target/`, compiles it, and runs probes.
 ///
-/// The report is printed before `cargo check` runs, because the two answers are
+/// The report is printed before `cargo test` runs, because the two answers are
 /// independent: a schema the backend cannot render never reaches the compiler,
 /// and a schema it renders may still emit Rust that does not build. Both are
 /// work queues, and a failure in the second must not hide the first.
@@ -84,10 +84,10 @@ fn generate_all() -> Result<(), String> {
     }
 
     println!(
-        "compiling the probe crate at {}",
+        "compiling and testing the probe crate at {}",
         probe.crate_root.display()
     );
-    cargo_in(&probe.crate_root, &["check", "--quiet", "--offline"])
+    cargo_in(&probe.crate_root, &["test", "--quiet", "--offline"])
 }
 
 fn cargo(arguments: &[&str]) -> Result<(), String> {

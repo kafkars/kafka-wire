@@ -20,7 +20,7 @@ pub mod share_group_heartbeat_request {
 
     /// Request body for the `ShareGroupHeartbeat` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct ShareGroupHeartbeatRequest {
         /// The group identifier.
         pub group_id: StrBytes,
@@ -29,9 +29,9 @@ pub mod share_group_heartbeat_request {
         /// The current member epoch; 0 to join the group; -1 to leave the group.
         pub member_epoch: i32,
         /// null if not provided or if it didn't change since the last heartbeat; the rack ID of consumer otherwise.
-        pub rack_id: Option<StrBytes>,
+        pub rack_id: ::core::option::Option<StrBytes>,
         /// null if it didn't change since the last heartbeat; the subscribed topic names otherwise.
-        pub subscribed_topic_names: Option<Vec<StrBytes>>,
+        pub subscribed_topic_names: ::core::option::Option<::std::vec::Vec<StrBytes>>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
     }
@@ -39,7 +39,8 @@ pub mod share_group_heartbeat_request {
     impl KafkaMessage for ShareGroupHeartbeatRequest {
         const NAME: &'static str = "ShareGroupHeartbeatRequest";
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(1, 1);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(1, 1));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(1, 1));
     }
 
     impl KafkaRequest for ShareGroupHeartbeatRequest {
@@ -52,29 +53,35 @@ pub mod share_group_heartbeat_request {
     }
 
     impl ShareGroupHeartbeatRequest {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             crate::message::ensure_encode_version::<Self>(version)?;
 
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: Self::NAME,
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for ShareGroupHeartbeatRequest {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             crate::message::ensure_decode_version::<Self>(version)?;
 
-            let group_id = decoder.read_compact_string()?;
-            let member_id = decoder.read_compact_string()?;
-            let member_epoch = decoder.read_i32()?;
-            let rack_id = decoder.read_compact_nullable_string()?;
-            let subscribed_topic_names = {
+            let __kw_field_0 = decoder.read_compact_string()?;
+            let __kw_field_1 = decoder.read_compact_string()?;
+            let __kw_field_2 = decoder.read_i32()?;
+            let __kw_field_3 = decoder.read_compact_nullable_string()?;
+            let __kw_field_4 = {
                 let length = decoder.read_compact_nullable_array_len()?;
                 length
                     .map(|length| decoder.read_vec(length, Decoder::read_compact_string))
@@ -86,12 +93,12 @@ pub mod share_group_heartbeat_request {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                group_id,
-                member_id,
-                member_epoch,
-                rack_id,
-                subscribed_topic_names,
+            ::core::result::Result::Ok(Self {
+                group_id: __kw_field_0,
+                member_id: __kw_field_1,
+                member_epoch: __kw_field_2,
+                rack_id: __kw_field_3,
+                subscribed_topic_names: __kw_field_4,
                 unknown_tagged_fields,
             })
         }
@@ -102,15 +109,17 @@ pub mod share_group_heartbeat_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_compact_string(&self.group_id)?;
             encoder.write_compact_string(&self.member_id)?;
             encoder.write_i32(self.member_epoch)?;
             encoder.write_compact_nullable_string(self.rack_id.as_ref())?;
             encoder.write_compact_nullable_array_len(
-                self.subscribed_topic_names.as_ref().map(Vec::len),
+                self.subscribed_topic_names
+                    .as_ref()
+                    .map(::std::vec::Vec::len),
             )?;
-            if let Some(values) = &self.subscribed_topic_names {
+            if let ::core::option::Option::Some(values) = &self.subscribed_topic_names {
                 for value in values {
                     encoder.write_compact_string(value)?;
                 }
@@ -120,7 +129,7 @@ pub mod share_group_heartbeat_request {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -129,12 +138,12 @@ pub mod share_group_heartbeat_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             ShareGroupHeartbeatRequest::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| ShareGroupHeartbeatRequest::encode_validated(self, encoder, version),
@@ -145,7 +154,7 @@ pub mod share_group_heartbeat_request {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -171,19 +180,20 @@ pub mod share_group_heartbeat_response {
 
     /// `TopicPartitions` as declared by the `ShareGroupHeartbeat` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct TopicPartitions {
         /// The topic ID.
         pub topic_id: Uuid,
         /// The partitions.
-        pub partitions: Vec<i32>,
+        pub partitions: ::std::vec::Vec<i32>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
     }
 
     impl TopicPartitions {
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(1, 1);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(1, 1));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(1, 1));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
@@ -191,9 +201,12 @@ pub mod share_group_heartbeat_response {
     }
 
     impl TopicPartitions {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(EncodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(EncodeError::UnsupportedVersion {
                     message: "TopicPartitions",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
@@ -201,28 +214,31 @@ pub mod share_group_heartbeat_response {
             }
 
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: "TopicPartitions",
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for TopicPartitions {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(DecodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(DecodeError::UnsupportedVersion {
                     message: "TopicPartitions",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
                 });
             }
 
-            let topic_id = decoder.read_uuid()?;
-            let partitions = {
+            let __kw_field_0 = decoder.read_uuid()?;
+            let __kw_field_1 = {
                 let length = decoder.read_compact_array_len()?;
                 decoder.read_vec(length, Decoder::read_i32)?
             };
@@ -232,9 +248,9 @@ pub mod share_group_heartbeat_response {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                topic_id,
-                partitions,
+            ::core::result::Result::Ok(Self {
+                topic_id: __kw_field_0,
+                partitions: __kw_field_1,
                 unknown_tagged_fields,
             })
         }
@@ -245,7 +261,7 @@ pub mod share_group_heartbeat_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_uuid(self.topic_id)?;
             encoder.write_compact_array_len(self.partitions.len())?;
             for value in &self.partitions {
@@ -256,7 +272,7 @@ pub mod share_group_heartbeat_response {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -265,12 +281,12 @@ pub mod share_group_heartbeat_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             TopicPartitions::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| TopicPartitions::encode_validated(self, encoder, version),
@@ -281,7 +297,7 @@ pub mod share_group_heartbeat_response {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -293,17 +309,18 @@ pub mod share_group_heartbeat_response {
 
     /// `Assignment` as declared by the `ShareGroupHeartbeat` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct Assignment {
         /// The partitions assigned to the member.
-        pub topic_partitions: Vec<TopicPartitions>,
+        pub topic_partitions: ::std::vec::Vec<TopicPartitions>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
     }
 
     impl Assignment {
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(1, 1);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(1, 1));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(1, 1));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
@@ -311,9 +328,12 @@ pub mod share_group_heartbeat_response {
     }
 
     impl Assignment {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(EncodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(EncodeError::UnsupportedVersion {
                     message: "Assignment",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
@@ -324,27 +344,30 @@ pub mod share_group_heartbeat_response {
                 value.validate_for_version(version)?;
             }
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: "Assignment",
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for Assignment {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(DecodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(DecodeError::UnsupportedVersion {
                     message: "Assignment",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
                 });
             }
 
-            let topic_partitions = {
+            let __kw_field_0 = {
                 let length = decoder.read_compact_array_len()?;
                 decoder.read_vec(length, |decoder| TopicPartitions::decode(decoder, version))?
             };
@@ -354,8 +377,8 @@ pub mod share_group_heartbeat_response {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                topic_partitions,
+            ::core::result::Result::Ok(Self {
+                topic_partitions: __kw_field_0,
                 unknown_tagged_fields,
             })
         }
@@ -366,7 +389,7 @@ pub mod share_group_heartbeat_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_compact_array_len(self.topic_partitions.len())?;
             for value in &self.topic_partitions {
                 value.encode_validated(encoder, version)?;
@@ -376,7 +399,7 @@ pub mod share_group_heartbeat_response {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -385,12 +408,12 @@ pub mod share_group_heartbeat_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             Assignment::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| Assignment::encode_validated(self, encoder, version),
@@ -401,7 +424,7 @@ pub mod share_group_heartbeat_response {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -413,22 +436,22 @@ pub mod share_group_heartbeat_response {
 
     /// Response body for the `ShareGroupHeartbeat` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct ShareGroupHeartbeatResponse {
         /// The duration in milliseconds for which the request was throttled due to a quota violation, or zero if the request did not violate any quota.
         pub throttle_time_ms: i32,
         /// The top-level error code, or 0 if there was no error.
         pub error_code: i16,
         /// The top-level error message, or null if there was no error.
-        pub error_message: Option<StrBytes>,
+        pub error_message: ::core::option::Option<StrBytes>,
         /// The member ID is generated by the consumer and provided by the consumer for all requests.
-        pub member_id: Option<StrBytes>,
+        pub member_id: ::core::option::Option<StrBytes>,
         /// The member epoch.
         pub member_epoch: i32,
         /// The heartbeat interval in milliseconds.
         pub heartbeat_interval_ms: i32,
         /// null if not provided; the assignment otherwise.
-        pub assignment: Option<Assignment>,
+        pub assignment: ::core::option::Option<Assignment>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
     }
@@ -436,7 +459,8 @@ pub mod share_group_heartbeat_response {
     impl KafkaMessage for ShareGroupHeartbeatResponse {
         const NAME: &'static str = "ShareGroupHeartbeatResponse";
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(1, 1);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(1, 1));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(1, 1));
     }
 
     impl KafkaResponse for ShareGroupHeartbeatResponse {
@@ -444,37 +468,43 @@ pub mod share_group_heartbeat_response {
     }
 
     impl ShareGroupHeartbeatResponse {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             crate::message::ensure_encode_version::<Self>(version)?;
 
-            if let Some(value) = &self.assignment {
+            if let ::core::option::Option::Some(value) = &self.assignment {
                 value.validate_for_version(version)?;
             }
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: Self::NAME,
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for ShareGroupHeartbeatResponse {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             crate::message::ensure_decode_version::<Self>(version)?;
 
-            let throttle_time_ms = decoder.read_i32()?;
-            let error_code = decoder.read_i16()?;
-            let error_message = decoder.read_compact_nullable_string()?;
-            let member_id = decoder.read_compact_nullable_string()?;
-            let member_epoch = decoder.read_i32()?;
-            let heartbeat_interval_ms = decoder.read_i32()?;
-            let assignment = if decoder.read_struct_presence()? {
-                Some(Assignment::decode(decoder, version)?)
+            let __kw_field_0 = decoder.read_i32()?;
+            let __kw_field_1 = decoder.read_i16()?;
+            let __kw_field_2 = decoder.read_compact_nullable_string()?;
+            let __kw_field_3 = decoder.read_compact_nullable_string()?;
+            let __kw_field_4 = decoder.read_i32()?;
+            let __kw_field_5 = decoder.read_i32()?;
+            let __kw_field_6 = if decoder.read_struct_presence()? {
+                ::core::option::Option::Some(Assignment::decode(decoder, version)?)
             } else {
-                None
+                ::core::option::Option::None
             };
             let unknown_tagged_fields = if Self::is_flexible(version) {
                 decoder.read_tagged_fields()?
@@ -482,14 +512,14 @@ pub mod share_group_heartbeat_response {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                throttle_time_ms,
-                error_code,
-                error_message,
-                member_id,
-                member_epoch,
-                heartbeat_interval_ms,
-                assignment,
+            ::core::result::Result::Ok(Self {
+                throttle_time_ms: __kw_field_0,
+                error_code: __kw_field_1,
+                error_message: __kw_field_2,
+                member_id: __kw_field_3,
+                member_epoch: __kw_field_4,
+                heartbeat_interval_ms: __kw_field_5,
+                assignment: __kw_field_6,
                 unknown_tagged_fields,
             })
         }
@@ -500,14 +530,14 @@ pub mod share_group_heartbeat_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_i32(self.throttle_time_ms)?;
             encoder.write_i16(self.error_code)?;
             encoder.write_compact_nullable_string(self.error_message.as_ref())?;
             encoder.write_compact_nullable_string(self.member_id.as_ref())?;
             encoder.write_i32(self.member_epoch)?;
             encoder.write_i32(self.heartbeat_interval_ms)?;
-            if let Some(value) = &self.assignment {
+            if let ::core::option::Option::Some(value) = &self.assignment {
                 encoder.write_struct_presence(true)?;
                 value.encode_validated(encoder, version)?;
             } else {
@@ -518,7 +548,7 @@ pub mod share_group_heartbeat_response {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -527,12 +557,12 @@ pub mod share_group_heartbeat_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             ShareGroupHeartbeatResponse::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| ShareGroupHeartbeatResponse::encode_validated(self, encoder, version),
@@ -543,7 +573,7 @@ pub mod share_group_heartbeat_response {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -567,7 +597,7 @@ pub const SHARE_GROUP_HEARTBEAT_REQUEST_DESCRIPTOR: MessageDescriptor = MessageD
     "ShareGroupHeartbeatRequest",
     MessageDirection::Request,
     VersionRange::new(1, 1),
-    Some(VersionRange::new(1, 1)),
+    ::core::option::Option::Some(VersionRange::new(1, 1)),
 );
 
 /// Static metadata for [`ShareGroupHeartbeatResponse`].
@@ -576,7 +606,7 @@ pub const SHARE_GROUP_HEARTBEAT_RESPONSE_DESCRIPTOR: MessageDescriptor = Message
     "ShareGroupHeartbeatResponse",
     MessageDirection::Response,
     VersionRange::new(1, 1),
-    Some(VersionRange::new(1, 1)),
+    ::core::option::Option::Some(VersionRange::new(1, 1)),
 );
 
 /// Static pair metadata for the `ShareGroupHeartbeat` API.
@@ -585,6 +615,6 @@ pub const SHARE_GROUP_HEARTBEAT_API_DESCRIPTOR: ApiDescriptor = ApiDescriptor::n
     &SHARE_GROUP_HEARTBEAT_REQUEST_DESCRIPTOR,
     &SHARE_GROUP_HEARTBEAT_RESPONSE_DESCRIPTOR,
     VersionRange::new(1, 1),
-    Some(VersionRange::new(1, 1)),
+    ::core::option::Option::Some(VersionRange::new(1, 1)),
     false,
 );

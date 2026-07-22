@@ -31,7 +31,7 @@ pub mod describe_cluster_request {
         pub unknown_tagged_fields: TaggedFields,
     }
 
-    impl Default for DescribeClusterRequest {
+    impl ::core::default::Default for DescribeClusterRequest {
         fn default() -> Self {
             Self {
                 include_cluster_authorized_operations: false,
@@ -45,7 +45,8 @@ pub mod describe_cluster_request {
     impl KafkaMessage for DescribeClusterRequest {
         const NAME: &'static str = "DescribeClusterRequest";
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 2);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 2));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(0, 2));
     }
 
     impl KafkaRequest for DescribeClusterRequest {
@@ -58,45 +59,51 @@ pub mod describe_cluster_request {
     }
 
     impl DescribeClusterRequest {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             crate::message::ensure_encode_version::<Self>(version)?;
 
             if version.value() < 1 && self.endpoint_type != 1 {
-                return Err(EncodeError::FieldNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::FieldNotRepresentable {
                     message: Self::NAME,
                     field: "EndpointType",
                     version,
                 });
             }
             if version.value() < 2 && self.include_fenced_brokers {
-                return Err(EncodeError::FieldNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::FieldNotRepresentable {
                     message: Self::NAME,
                     field: "IncludeFencedBrokers",
                     version,
                 });
             }
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: Self::NAME,
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for DescribeClusterRequest {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             crate::message::ensure_decode_version::<Self>(version)?;
 
-            let include_cluster_authorized_operations = decoder.read_bool()?;
-            let endpoint_type = if version.value() >= 1 {
+            let __kw_field_0 = decoder.read_bool()?;
+            let __kw_field_1 = if version.value() >= 1 {
                 decoder.read_i8()?
             } else {
                 1
             };
-            let include_fenced_brokers = if version.value() >= 2 {
+            let __kw_field_2 = if version.value() >= 2 {
                 decoder.read_bool()?
             } else {
                 false
@@ -107,10 +114,10 @@ pub mod describe_cluster_request {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                include_cluster_authorized_operations,
-                endpoint_type,
-                include_fenced_brokers,
+            ::core::result::Result::Ok(Self {
+                include_cluster_authorized_operations: __kw_field_0,
+                endpoint_type: __kw_field_1,
+                include_fenced_brokers: __kw_field_2,
                 unknown_tagged_fields,
             })
         }
@@ -121,7 +128,7 @@ pub mod describe_cluster_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_bool(self.include_cluster_authorized_operations)?;
             if version.value() >= 1 {
                 encoder.write_i8(self.endpoint_type)?;
@@ -134,7 +141,7 @@ pub mod describe_cluster_request {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -143,12 +150,12 @@ pub mod describe_cluster_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             DescribeClusterRequest::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| DescribeClusterRequest::encode_validated(self, encoder, version),
@@ -159,7 +166,7 @@ pub mod describe_cluster_request {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -185,7 +192,7 @@ pub mod describe_cluster_response {
 
     /// `DescribeClusterBroker` as declared by the `DescribeCluster` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct DescribeClusterBroker {
         /// The broker ID.
         pub broker_id: i32,
@@ -194,7 +201,7 @@ pub mod describe_cluster_response {
         /// The broker port.
         pub port: i32,
         /// The rack of the broker, or null if it has not been assigned to a rack.
-        pub rack: Option<StrBytes>,
+        pub rack: ::core::option::Option<StrBytes>,
         /// Whether the broker is fenced.
         pub is_fenced: bool,
         /// Unknown flexible-version tagged fields retained for forwarding.
@@ -203,7 +210,8 @@ pub mod describe_cluster_response {
 
     impl DescribeClusterBroker {
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 2);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 2));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(0, 2));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
@@ -211,9 +219,12 @@ pub mod describe_cluster_response {
     }
 
     impl DescribeClusterBroker {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(EncodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(EncodeError::UnsupportedVersion {
                     message: "DescribeClusterBroker",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
@@ -221,38 +232,41 @@ pub mod describe_cluster_response {
             }
 
             if version.value() < 2 && self.is_fenced {
-                return Err(EncodeError::FieldNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::FieldNotRepresentable {
                     message: "DescribeClusterBroker",
                     field: "IsFenced",
                     version,
                 });
             }
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: "DescribeClusterBroker",
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for DescribeClusterBroker {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(DecodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(DecodeError::UnsupportedVersion {
                     message: "DescribeClusterBroker",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
                 });
             }
 
-            let broker_id = decoder.read_i32()?;
-            let host = decoder.read_compact_string()?;
-            let port = decoder.read_i32()?;
-            let rack = decoder.read_compact_nullable_string()?;
-            let is_fenced = if version.value() >= 2 {
+            let __kw_field_0 = decoder.read_i32()?;
+            let __kw_field_1 = decoder.read_compact_string()?;
+            let __kw_field_2 = decoder.read_i32()?;
+            let __kw_field_3 = decoder.read_compact_nullable_string()?;
+            let __kw_field_4 = if version.value() >= 2 {
                 decoder.read_bool()?
             } else {
                 false
@@ -263,12 +277,12 @@ pub mod describe_cluster_response {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                broker_id,
-                host,
-                port,
-                rack,
-                is_fenced,
+            ::core::result::Result::Ok(Self {
+                broker_id: __kw_field_0,
+                host: __kw_field_1,
+                port: __kw_field_2,
+                rack: __kw_field_3,
+                is_fenced: __kw_field_4,
                 unknown_tagged_fields,
             })
         }
@@ -279,7 +293,7 @@ pub mod describe_cluster_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_i32(self.broker_id)?;
             encoder.write_compact_string(&self.host)?;
             encoder.write_i32(self.port)?;
@@ -292,7 +306,7 @@ pub mod describe_cluster_response {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -301,12 +315,12 @@ pub mod describe_cluster_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             DescribeClusterBroker::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| DescribeClusterBroker::encode_validated(self, encoder, version),
@@ -317,7 +331,7 @@ pub mod describe_cluster_response {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -336,7 +350,7 @@ pub mod describe_cluster_response {
         /// The top-level error code, or 0 if there was no error.
         pub error_code: i16,
         /// The top-level error message, or null if there was no error.
-        pub error_message: Option<StrBytes>,
+        pub error_message: ::core::option::Option<StrBytes>,
         /// The endpoint type that was described. 1=brokers, 2=controllers.
         pub endpoint_type: i8,
         /// The cluster ID that responding broker belongs to.
@@ -344,23 +358,23 @@ pub mod describe_cluster_response {
         /// The ID of the controller. When handled by a controller, returns the current voter leader ID. When handled by a broker, returns a random alive broker ID as a fallback.
         pub controller_id: i32,
         /// Each broker in the response.
-        pub brokers: Vec<DescribeClusterBroker>,
+        pub brokers: ::std::vec::Vec<DescribeClusterBroker>,
         /// 32-bit bitfield to represent authorized operations for this cluster.
         pub cluster_authorized_operations: i32,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
     }
 
-    impl Default for DescribeClusterResponse {
+    impl ::core::default::Default for DescribeClusterResponse {
         fn default() -> Self {
             Self {
                 throttle_time_ms: 0,
                 error_code: 0,
-                error_message: None,
+                error_message: ::core::option::Option::None,
                 endpoint_type: 1,
                 cluster_id: StrBytes::default(),
                 controller_id: -1,
-                brokers: Vec::new(),
+                brokers: ::std::vec::Vec::new(),
                 cluster_authorized_operations: -2_147_483_648,
                 unknown_tagged_fields: TaggedFields::default(),
             }
@@ -370,7 +384,8 @@ pub mod describe_cluster_response {
     impl KafkaMessage for DescribeClusterResponse {
         const NAME: &'static str = "DescribeClusterResponse";
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 2);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 2));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(0, 2));
     }
 
     impl KafkaResponse for DescribeClusterResponse {
@@ -378,11 +393,14 @@ pub mod describe_cluster_response {
     }
 
     impl DescribeClusterResponse {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             crate::message::ensure_encode_version::<Self>(version)?;
 
             if version.value() < 1 && self.endpoint_type != 1 {
-                return Err(EncodeError::FieldNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::FieldNotRepresentable {
                     message: Self::NAME,
                     field: "EndpointType",
                     version,
@@ -392,52 +410,55 @@ pub mod describe_cluster_response {
                 value.validate_for_version(version)?;
             }
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: Self::NAME,
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for DescribeClusterResponse {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             crate::message::ensure_decode_version::<Self>(version)?;
 
-            let throttle_time_ms = decoder.read_i32()?;
-            let error_code = decoder.read_i16()?;
-            let error_message = decoder.read_compact_nullable_string()?;
-            let endpoint_type = if version.value() >= 1 {
+            let __kw_field_0 = decoder.read_i32()?;
+            let __kw_field_1 = decoder.read_i16()?;
+            let __kw_field_2 = decoder.read_compact_nullable_string()?;
+            let __kw_field_3 = if version.value() >= 1 {
                 decoder.read_i8()?
             } else {
                 1
             };
-            let cluster_id = decoder.read_compact_string()?;
-            let controller_id = decoder.read_i32()?;
-            let brokers = {
+            let __kw_field_4 = decoder.read_compact_string()?;
+            let __kw_field_5 = decoder.read_i32()?;
+            let __kw_field_6 = {
                 let length = decoder.read_compact_array_len()?;
                 decoder.read_vec(length, |decoder| {
                     DescribeClusterBroker::decode(decoder, version)
                 })?
             };
-            let cluster_authorized_operations = decoder.read_i32()?;
+            let __kw_field_7 = decoder.read_i32()?;
             let unknown_tagged_fields = if Self::is_flexible(version) {
                 decoder.read_tagged_fields()?
             } else {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                throttle_time_ms,
-                error_code,
-                error_message,
-                endpoint_type,
-                cluster_id,
-                controller_id,
-                brokers,
-                cluster_authorized_operations,
+            ::core::result::Result::Ok(Self {
+                throttle_time_ms: __kw_field_0,
+                error_code: __kw_field_1,
+                error_message: __kw_field_2,
+                endpoint_type: __kw_field_3,
+                cluster_id: __kw_field_4,
+                controller_id: __kw_field_5,
+                brokers: __kw_field_6,
+                cluster_authorized_operations: __kw_field_7,
                 unknown_tagged_fields,
             })
         }
@@ -448,7 +469,7 @@ pub mod describe_cluster_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_i32(self.throttle_time_ms)?;
             encoder.write_i16(self.error_code)?;
             encoder.write_compact_nullable_string(self.error_message.as_ref())?;
@@ -467,7 +488,7 @@ pub mod describe_cluster_response {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -476,12 +497,12 @@ pub mod describe_cluster_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             DescribeClusterResponse::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| DescribeClusterResponse::encode_validated(self, encoder, version),
@@ -492,7 +513,7 @@ pub mod describe_cluster_response {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -516,7 +537,7 @@ pub const DESCRIBE_CLUSTER_REQUEST_DESCRIPTOR: MessageDescriptor = MessageDescri
     "DescribeClusterRequest",
     MessageDirection::Request,
     VersionRange::new(0, 2),
-    Some(VersionRange::new(0, 2)),
+    ::core::option::Option::Some(VersionRange::new(0, 2)),
 );
 
 /// Static metadata for [`DescribeClusterResponse`].
@@ -525,7 +546,7 @@ pub const DESCRIBE_CLUSTER_RESPONSE_DESCRIPTOR: MessageDescriptor = MessageDescr
     "DescribeClusterResponse",
     MessageDirection::Response,
     VersionRange::new(0, 2),
-    Some(VersionRange::new(0, 2)),
+    ::core::option::Option::Some(VersionRange::new(0, 2)),
 );
 
 /// Static pair metadata for the `DescribeCluster` API.
@@ -534,6 +555,6 @@ pub const DESCRIBE_CLUSTER_API_DESCRIPTOR: ApiDescriptor = ApiDescriptor::new(
     &DESCRIBE_CLUSTER_REQUEST_DESCRIPTOR,
     &DESCRIBE_CLUSTER_RESPONSE_DESCRIPTOR,
     VersionRange::new(0, 2),
-    Some(VersionRange::new(0, 2)),
+    ::core::option::Option::Some(VersionRange::new(0, 2)),
     false,
 );

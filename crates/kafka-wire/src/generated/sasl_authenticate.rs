@@ -20,7 +20,7 @@ pub mod sasl_authenticate_request {
 
     /// Request body for the `SaslAuthenticate` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct SaslAuthenticateRequest {
         /// The SASL authentication bytes from the client, as defined by the SASL mechanism.
         pub auth_bytes: Bytes,
@@ -31,7 +31,8 @@ pub mod sasl_authenticate_request {
     impl KafkaMessage for SaslAuthenticateRequest {
         const NAME: &'static str = "SaslAuthenticateRequest";
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 2);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(2, 2));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(2, 2));
     }
 
     impl KafkaRequest for SaslAuthenticateRequest {
@@ -44,25 +45,31 @@ pub mod sasl_authenticate_request {
     }
 
     impl SaslAuthenticateRequest {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             crate::message::ensure_encode_version::<Self>(version)?;
 
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: Self::NAME,
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for SaslAuthenticateRequest {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             crate::message::ensure_decode_version::<Self>(version)?;
 
-            let auth_bytes = if Self::is_flexible(version) {
+            let __kw_field_0 = if Self::is_flexible(version) {
                 decoder.read_compact_bytes()?
             } else {
                 decoder.read_bytes()?
@@ -73,8 +80,8 @@ pub mod sasl_authenticate_request {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                auth_bytes,
+            ::core::result::Result::Ok(Self {
+                auth_bytes: __kw_field_0,
                 unknown_tagged_fields,
             })
         }
@@ -85,7 +92,7 @@ pub mod sasl_authenticate_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             if Self::is_flexible(version) {
                 encoder.write_compact_bytes(&self.auth_bytes)?;
             } else {
@@ -96,7 +103,7 @@ pub mod sasl_authenticate_request {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -105,12 +112,12 @@ pub mod sasl_authenticate_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             SaslAuthenticateRequest::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| SaslAuthenticateRequest::encode_validated(self, encoder, version),
@@ -121,7 +128,7 @@ pub mod sasl_authenticate_request {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -152,7 +159,7 @@ pub mod sasl_authenticate_response {
         /// The error code, or 0 if there was no error.
         pub error_code: i16,
         /// The error message, or null if there was no error.
-        pub error_message: Option<StrBytes>,
+        pub error_message: ::core::option::Option<StrBytes>,
         /// The SASL authentication bytes from the server, as defined by the SASL mechanism.
         pub auth_bytes: Bytes,
         /// Number of milliseconds after which only re-authentication over the existing connection to create a new session can occur.
@@ -161,11 +168,11 @@ pub mod sasl_authenticate_response {
         pub unknown_tagged_fields: TaggedFields,
     }
 
-    impl Default for SaslAuthenticateResponse {
+    impl ::core::default::Default for SaslAuthenticateResponse {
         fn default() -> Self {
             Self {
                 error_code: 0,
-                error_message: Some(StrBytes::default()),
+                error_message: ::core::option::Option::Some(StrBytes::default()),
                 auth_bytes: Bytes::default(),
                 session_lifetime_ms: 0,
                 unknown_tagged_fields: TaggedFields::default(),
@@ -176,7 +183,8 @@ pub mod sasl_authenticate_response {
     impl KafkaMessage for SaslAuthenticateResponse {
         const NAME: &'static str = "SaslAuthenticateResponse";
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 2);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(2, 2));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(2, 2));
     }
 
     impl KafkaResponse for SaslAuthenticateResponse {
@@ -184,36 +192,42 @@ pub mod sasl_authenticate_response {
     }
 
     impl SaslAuthenticateResponse {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             crate::message::ensure_encode_version::<Self>(version)?;
 
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: Self::NAME,
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for SaslAuthenticateResponse {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             crate::message::ensure_decode_version::<Self>(version)?;
 
-            let error_code = decoder.read_i16()?;
-            let error_message = if Self::is_flexible(version) {
+            let __kw_field_0 = decoder.read_i16()?;
+            let __kw_field_1 = if Self::is_flexible(version) {
                 decoder.read_compact_nullable_string()?
             } else {
                 decoder.read_nullable_string()?
             };
-            let auth_bytes = if Self::is_flexible(version) {
+            let __kw_field_2 = if Self::is_flexible(version) {
                 decoder.read_compact_bytes()?
             } else {
                 decoder.read_bytes()?
             };
-            let session_lifetime_ms = if version.value() >= 1 {
+            let __kw_field_3 = if version.value() >= 1 {
                 decoder.read_i64()?
             } else {
                 0
@@ -224,11 +238,11 @@ pub mod sasl_authenticate_response {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                error_code,
-                error_message,
-                auth_bytes,
-                session_lifetime_ms,
+            ::core::result::Result::Ok(Self {
+                error_code: __kw_field_0,
+                error_message: __kw_field_1,
+                auth_bytes: __kw_field_2,
+                session_lifetime_ms: __kw_field_3,
                 unknown_tagged_fields,
             })
         }
@@ -239,7 +253,7 @@ pub mod sasl_authenticate_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_i16(self.error_code)?;
             if Self::is_flexible(version) {
                 encoder.write_compact_nullable_string(self.error_message.as_ref())?;
@@ -259,7 +273,7 @@ pub mod sasl_authenticate_response {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -268,12 +282,12 @@ pub mod sasl_authenticate_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             SaslAuthenticateResponse::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| SaslAuthenticateResponse::encode_validated(self, encoder, version),
@@ -284,7 +298,7 @@ pub mod sasl_authenticate_response {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -308,7 +322,7 @@ pub const SASL_AUTHENTICATE_REQUEST_DESCRIPTOR: MessageDescriptor = MessageDescr
     "SaslAuthenticateRequest",
     MessageDirection::Request,
     VersionRange::new(0, 2),
-    Some(VersionRange::new(2, 2)),
+    ::core::option::Option::Some(VersionRange::new(2, 2)),
 );
 
 /// Static metadata for [`SaslAuthenticateResponse`].
@@ -317,7 +331,7 @@ pub const SASL_AUTHENTICATE_RESPONSE_DESCRIPTOR: MessageDescriptor = MessageDesc
     "SaslAuthenticateResponse",
     MessageDirection::Response,
     VersionRange::new(0, 2),
-    Some(VersionRange::new(2, 2)),
+    ::core::option::Option::Some(VersionRange::new(2, 2)),
 );
 
 /// Static pair metadata for the `SaslAuthenticate` API.
@@ -326,6 +340,6 @@ pub const SASL_AUTHENTICATE_API_DESCRIPTOR: ApiDescriptor = ApiDescriptor::new(
     &SASL_AUTHENTICATE_REQUEST_DESCRIPTOR,
     &SASL_AUTHENTICATE_RESPONSE_DESCRIPTOR,
     VersionRange::new(0, 2),
-    Some(VersionRange::new(2, 2)),
+    ::core::option::Option::Some(VersionRange::new(2, 2)),
     false,
 );

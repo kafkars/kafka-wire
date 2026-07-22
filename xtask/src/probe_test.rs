@@ -18,7 +18,7 @@ use std::{
 
 use kafka_wire_codegen::CorpusRender;
 
-use crate::probe::{LIB, MESSAGE_SHIM, write_crate};
+use crate::probe::{ADVERSARIAL_DECODE_TEST, LIB, MESSAGE_SHIM, write_crate};
 
 fn repository_root() -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR"))
@@ -89,6 +89,12 @@ fn the_scaffolding_stands_outside_the_repository_workspace() {
     assert!(
         root.join("src/lib.rs").is_file() && root.join("src/message.rs").is_file(),
         "the probe crate is missing its root or its version-gate shim"
+    );
+    assert!(
+        root.join("src/adversarial_decode.rs").is_file()
+            && root.join("tests/adversarial_decode.rs").is_file()
+            && ADVERSARIAL_DECODE_TEST.contains("decoded.version_value, 22"),
+        "the behavioral decode fixture is absent from the scratch crate"
     );
 }
 

@@ -20,7 +20,7 @@ pub mod update_raft_voter_request {
 
     /// `Listener` as declared by the `UpdateRaftVoter` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct Listener {
         /// The name of the endpoint.
         pub name: StrBytes,
@@ -34,7 +34,8 @@ pub mod update_raft_voter_request {
 
     impl Listener {
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 0);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 0));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(0, 0));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
@@ -42,9 +43,12 @@ pub mod update_raft_voter_request {
     }
 
     impl Listener {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(EncodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(EncodeError::UnsupportedVersion {
                     message: "Listener",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
@@ -52,39 +56,42 @@ pub mod update_raft_voter_request {
             }
 
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: "Listener",
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for Listener {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(DecodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(DecodeError::UnsupportedVersion {
                     message: "Listener",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
                 });
             }
 
-            let name = decoder.read_compact_string()?;
-            let host = decoder.read_compact_string()?;
-            let port = decoder.read_u16()?;
+            let __kw_field_0 = decoder.read_compact_string()?;
+            let __kw_field_1 = decoder.read_compact_string()?;
+            let __kw_field_2 = decoder.read_u16()?;
             let unknown_tagged_fields = if Self::is_flexible(version) {
                 decoder.read_tagged_fields()?
             } else {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                name,
-                host,
-                port,
+            ::core::result::Result::Ok(Self {
+                name: __kw_field_0,
+                host: __kw_field_1,
+                port: __kw_field_2,
                 unknown_tagged_fields,
             })
         }
@@ -95,7 +102,7 @@ pub mod update_raft_voter_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_compact_string(&self.name)?;
             encoder.write_compact_string(&self.host)?;
             encoder.write_u16(self.port)?;
@@ -104,7 +111,7 @@ pub mod update_raft_voter_request {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -113,12 +120,12 @@ pub mod update_raft_voter_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             Listener::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| Listener::encode_validated(self, encoder, version),
@@ -129,7 +136,7 @@ pub mod update_raft_voter_request {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -141,7 +148,7 @@ pub mod update_raft_voter_request {
 
     /// `KRaftVersionFeature` as declared by the `UpdateRaftVoter` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct KRaftVersionFeature {
         /// The minimum supported `KRaft` protocol version.
         pub min_supported_version: i16,
@@ -153,7 +160,8 @@ pub mod update_raft_voter_request {
 
     impl KRaftVersionFeature {
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 0);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 0));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(0, 0));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
@@ -161,9 +169,12 @@ pub mod update_raft_voter_request {
     }
 
     impl KRaftVersionFeature {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(EncodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(EncodeError::UnsupportedVersion {
                     message: "KRaftVersionFeature",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
@@ -171,37 +182,40 @@ pub mod update_raft_voter_request {
             }
 
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: "KRaftVersionFeature",
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for KRaftVersionFeature {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(DecodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(DecodeError::UnsupportedVersion {
                     message: "KRaftVersionFeature",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
                 });
             }
 
-            let min_supported_version = decoder.read_i16()?;
-            let max_supported_version = decoder.read_i16()?;
+            let __kw_field_0 = decoder.read_i16()?;
+            let __kw_field_1 = decoder.read_i16()?;
             let unknown_tagged_fields = if Self::is_flexible(version) {
                 decoder.read_tagged_fields()?
             } else {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                min_supported_version,
-                max_supported_version,
+            ::core::result::Result::Ok(Self {
+                min_supported_version: __kw_field_0,
+                max_supported_version: __kw_field_1,
                 unknown_tagged_fields,
             })
         }
@@ -212,7 +226,7 @@ pub mod update_raft_voter_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_i16(self.min_supported_version)?;
             encoder.write_i16(self.max_supported_version)?;
 
@@ -220,7 +234,7 @@ pub mod update_raft_voter_request {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -229,12 +243,12 @@ pub mod update_raft_voter_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             KRaftVersionFeature::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| KRaftVersionFeature::encode_validated(self, encoder, version),
@@ -245,7 +259,7 @@ pub mod update_raft_voter_request {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -260,7 +274,7 @@ pub mod update_raft_voter_request {
     #[derive(Clone, Debug, Eq, PartialEq)]
     pub struct UpdateRaftVoterRequest {
         /// The cluster id.
-        pub cluster_id: Option<StrBytes>,
+        pub cluster_id: ::core::option::Option<StrBytes>,
         /// The current leader epoch of the partition, -1 for unknown leader epoch.
         pub current_leader_epoch: i32,
         /// The replica id of the voter getting updated in the topic partition.
@@ -268,21 +282,21 @@ pub mod update_raft_voter_request {
         /// The directory id of the voter getting updated in the topic partition.
         pub voter_directory_id: Uuid,
         /// The endpoint that can be used to communicate with the leader.
-        pub listeners: Vec<Listener>,
+        pub listeners: ::std::vec::Vec<Listener>,
         /// The range of versions of the protocol that the replica supports.
         pub k_raft_version_feature: KRaftVersionFeature,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
     }
 
-    impl Default for UpdateRaftVoterRequest {
+    impl ::core::default::Default for UpdateRaftVoterRequest {
         fn default() -> Self {
             Self {
-                cluster_id: Some(StrBytes::default()),
+                cluster_id: ::core::option::Option::Some(StrBytes::default()),
                 current_leader_epoch: 0,
                 voter_id: 0,
                 voter_directory_id: Uuid::ZERO,
-                listeners: Vec::new(),
+                listeners: ::std::vec::Vec::new(),
                 k_raft_version_feature: KRaftVersionFeature::default(),
                 unknown_tagged_fields: TaggedFields::default(),
             }
@@ -292,7 +306,8 @@ pub mod update_raft_voter_request {
     impl KafkaMessage for UpdateRaftVoterRequest {
         const NAME: &'static str = "UpdateRaftVoterRequest";
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 0);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 0));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(0, 0));
     }
 
     impl KafkaRequest for UpdateRaftVoterRequest {
@@ -305,7 +320,10 @@ pub mod update_raft_voter_request {
     }
 
     impl UpdateRaftVoterRequest {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             crate::message::ensure_encode_version::<Self>(version)?;
 
             for value in &self.listeners {
@@ -313,42 +331,45 @@ pub mod update_raft_voter_request {
             }
             self.k_raft_version_feature.validate_for_version(version)?;
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: Self::NAME,
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for UpdateRaftVoterRequest {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             crate::message::ensure_decode_version::<Self>(version)?;
 
-            let cluster_id = decoder.read_compact_nullable_string()?;
-            let current_leader_epoch = decoder.read_i32()?;
-            let voter_id = decoder.read_i32()?;
-            let voter_directory_id = decoder.read_uuid()?;
-            let listeners = {
+            let __kw_field_0 = decoder.read_compact_nullable_string()?;
+            let __kw_field_1 = decoder.read_i32()?;
+            let __kw_field_2 = decoder.read_i32()?;
+            let __kw_field_3 = decoder.read_uuid()?;
+            let __kw_field_4 = {
                 let length = decoder.read_compact_array_len()?;
                 decoder.read_vec(length, |decoder| Listener::decode(decoder, version))?
             };
-            let k_raft_version_feature = KRaftVersionFeature::decode(decoder, version)?;
+            let __kw_field_5 = KRaftVersionFeature::decode(decoder, version)?;
             let unknown_tagged_fields = if Self::is_flexible(version) {
                 decoder.read_tagged_fields()?
             } else {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                cluster_id,
-                current_leader_epoch,
-                voter_id,
-                voter_directory_id,
-                listeners,
-                k_raft_version_feature,
+            ::core::result::Result::Ok(Self {
+                cluster_id: __kw_field_0,
+                current_leader_epoch: __kw_field_1,
+                voter_id: __kw_field_2,
+                voter_directory_id: __kw_field_3,
+                listeners: __kw_field_4,
+                k_raft_version_feature: __kw_field_5,
                 unknown_tagged_fields,
             })
         }
@@ -359,7 +380,7 @@ pub mod update_raft_voter_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_compact_nullable_string(self.cluster_id.as_ref())?;
             encoder.write_i32(self.current_leader_epoch)?;
             encoder.write_i32(self.voter_id)?;
@@ -375,7 +396,7 @@ pub mod update_raft_voter_request {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -384,12 +405,12 @@ pub mod update_raft_voter_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             UpdateRaftVoterRequest::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| UpdateRaftVoterRequest::encode_validated(self, encoder, version),
@@ -400,7 +421,7 @@ pub mod update_raft_voter_request {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -442,7 +463,8 @@ pub mod update_raft_voter_response {
 
     impl CurrentLeader {
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 0);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 0));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(0, 0));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
@@ -450,9 +472,12 @@ pub mod update_raft_voter_response {
     }
 
     impl CurrentLeader {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(EncodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(EncodeError::UnsupportedVersion {
                     message: "CurrentLeader",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
@@ -460,17 +485,17 @@ pub mod update_raft_voter_response {
             }
 
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: "CurrentLeader",
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
-    impl Default for CurrentLeader {
+    impl ::core::default::Default for CurrentLeader {
         fn default() -> Self {
             Self {
                 leader_id: -1,
@@ -483,30 +508,33 @@ pub mod update_raft_voter_response {
     }
 
     impl KafkaDecode for CurrentLeader {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(DecodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(DecodeError::UnsupportedVersion {
                     message: "CurrentLeader",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
                 });
             }
 
-            let leader_id = decoder.read_i32()?;
-            let leader_epoch = decoder.read_i32()?;
-            let host = decoder.read_compact_string()?;
-            let port = decoder.read_i32()?;
+            let __kw_field_0 = decoder.read_i32()?;
+            let __kw_field_1 = decoder.read_i32()?;
+            let __kw_field_2 = decoder.read_compact_string()?;
+            let __kw_field_3 = decoder.read_i32()?;
             let unknown_tagged_fields = if Self::is_flexible(version) {
                 decoder.read_tagged_fields()?
             } else {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                leader_id,
-                leader_epoch,
-                host,
-                port,
+            ::core::result::Result::Ok(Self {
+                leader_id: __kw_field_0,
+                leader_epoch: __kw_field_1,
+                host: __kw_field_2,
+                port: __kw_field_3,
                 unknown_tagged_fields,
             })
         }
@@ -517,7 +545,7 @@ pub mod update_raft_voter_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_i32(self.leader_id)?;
             encoder.write_i32(self.leader_epoch)?;
             encoder.write_compact_string(&self.host)?;
@@ -527,7 +555,7 @@ pub mod update_raft_voter_response {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -536,12 +564,12 @@ pub mod update_raft_voter_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             CurrentLeader::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| CurrentLeader::encode_validated(self, encoder, version),
@@ -552,7 +580,7 @@ pub mod update_raft_voter_response {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -564,7 +592,7 @@ pub mod update_raft_voter_response {
 
     /// Response body for the `UpdateRaftVoter` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct UpdateRaftVoterResponse {
         /// The duration in milliseconds for which the request was throttled due to a quota violation, or zero if the request did not violate any quota.
         pub throttle_time_ms: i32,
@@ -579,7 +607,8 @@ pub mod update_raft_voter_response {
     impl KafkaMessage for UpdateRaftVoterResponse {
         const NAME: &'static str = "UpdateRaftVoterResponse";
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 0);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 0));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(0, 0));
     }
 
     impl KafkaResponse for UpdateRaftVoterResponse {
@@ -587,44 +616,50 @@ pub mod update_raft_voter_response {
     }
 
     impl UpdateRaftVoterResponse {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             crate::message::ensure_encode_version::<Self>(version)?;
 
             self.current_leader.validate_for_version(version)?;
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: Self::NAME,
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for UpdateRaftVoterResponse {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             crate::message::ensure_decode_version::<Self>(version)?;
 
-            let throttle_time_ms = decoder.read_i32()?;
-            let error_code = decoder.read_i16()?;
-            let mut current_leader: CurrentLeader = CurrentLeader::default();
+            let __kw_field_0 = decoder.read_i32()?;
+            let __kw_field_1 = decoder.read_i16()?;
+            let mut __kw_field_2: CurrentLeader = CurrentLeader::default();
             let mut unknown_tagged_fields = TaggedFields::default();
             if Self::is_flexible(version) {
                 unknown_tagged_fields =
                     decoder.read_tagged_fields_with(|tag, decoder| match tag {
                         0 => {
-                            current_leader = CurrentLeader::decode(decoder, version)?;
-                            Ok(TagOutcome::Decoded)
+                            __kw_field_2 = CurrentLeader::decode(decoder, version)?;
+                            ::core::result::Result::Ok(TagOutcome::Decoded)
                         }
-                        _ => Ok(TagOutcome::Retained),
+                        _ => ::core::result::Result::Ok(TagOutcome::Retained),
                     })?;
             }
 
-            Ok(Self {
-                throttle_time_ms,
-                error_code,
-                current_leader,
+            ::core::result::Result::Ok(Self {
+                throttle_time_ms: __kw_field_0,
+                error_code: __kw_field_1,
+                current_leader: __kw_field_2,
                 unknown_tagged_fields,
             })
         }
@@ -635,7 +670,7 @@ pub mod update_raft_voter_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_i32(self.throttle_time_ms)?;
             encoder.write_i16(self.error_code)?;
 
@@ -644,13 +679,13 @@ pub mod update_raft_voter_response {
                 if self.current_leader != CurrentLeader::default() {
                     known.write(0, |encoder| {
                         self.current_leader.encode_validated(encoder, version)?;
-                        Ok(())
+                        ::core::result::Result::Ok(())
                     })?;
                 }
                 encoder.write_merged_tagged_fields(known, &self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -659,12 +694,12 @@ pub mod update_raft_voter_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             UpdateRaftVoterResponse::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| UpdateRaftVoterResponse::encode_validated(self, encoder, version),
@@ -675,7 +710,7 @@ pub mod update_raft_voter_response {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -699,7 +734,7 @@ pub const UPDATE_RAFT_VOTER_REQUEST_DESCRIPTOR: MessageDescriptor = MessageDescr
     "UpdateRaftVoterRequest",
     MessageDirection::Request,
     VersionRange::new(0, 0),
-    Some(VersionRange::new(0, 0)),
+    ::core::option::Option::Some(VersionRange::new(0, 0)),
 );
 
 /// Static metadata for [`UpdateRaftVoterResponse`].
@@ -708,7 +743,7 @@ pub const UPDATE_RAFT_VOTER_RESPONSE_DESCRIPTOR: MessageDescriptor = MessageDesc
     "UpdateRaftVoterResponse",
     MessageDirection::Response,
     VersionRange::new(0, 0),
-    Some(VersionRange::new(0, 0)),
+    ::core::option::Option::Some(VersionRange::new(0, 0)),
 );
 
 /// Static pair metadata for the `UpdateRaftVoter` API.
@@ -717,6 +752,6 @@ pub const UPDATE_RAFT_VOTER_API_DESCRIPTOR: ApiDescriptor = ApiDescriptor::new(
     &UPDATE_RAFT_VOTER_REQUEST_DESCRIPTOR,
     &UPDATE_RAFT_VOTER_RESPONSE_DESCRIPTOR,
     VersionRange::new(0, 0),
-    Some(VersionRange::new(0, 0)),
+    ::core::option::Option::Some(VersionRange::new(0, 0)),
     false,
 );

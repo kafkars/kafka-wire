@@ -20,19 +20,20 @@ pub mod end_quorum_epoch_request {
 
     /// `TopicData` as declared by the `EndQuorumEpoch` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct TopicData {
         /// The topic name.
         pub topic_name: StrBytes,
         /// The partitions.
-        pub partitions: Vec<PartitionData>,
+        pub partitions: ::std::vec::Vec<PartitionData>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
     }
 
     impl TopicData {
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 1);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(1, 1));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(1, 1));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
@@ -40,9 +41,12 @@ pub mod end_quorum_epoch_request {
     }
 
     impl TopicData {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(EncodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(EncodeError::UnsupportedVersion {
                     message: "TopicData",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
@@ -53,32 +57,35 @@ pub mod end_quorum_epoch_request {
                 value.validate_for_version(version)?;
             }
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: "TopicData",
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for TopicData {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(DecodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(DecodeError::UnsupportedVersion {
                     message: "TopicData",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
                 });
             }
 
-            let topic_name = if Self::is_flexible(version) {
+            let __kw_field_0 = if Self::is_flexible(version) {
                 decoder.read_compact_string()?
             } else {
                 decoder.read_string()?
             };
-            let partitions = {
+            let __kw_field_1 = {
                 let length = if Self::is_flexible(version) {
                     decoder.read_compact_array_len()?
                 } else {
@@ -92,9 +99,9 @@ pub mod end_quorum_epoch_request {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                topic_name,
-                partitions,
+            ::core::result::Result::Ok(Self {
+                topic_name: __kw_field_0,
+                partitions: __kw_field_1,
                 unknown_tagged_fields,
             })
         }
@@ -105,7 +112,7 @@ pub mod end_quorum_epoch_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             if Self::is_flexible(version) {
                 encoder.write_compact_string(&self.topic_name)?;
             } else {
@@ -124,7 +131,7 @@ pub mod end_quorum_epoch_request {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -133,12 +140,12 @@ pub mod end_quorum_epoch_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             TopicData::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| TopicData::encode_validated(self, encoder, version),
@@ -149,7 +156,7 @@ pub mod end_quorum_epoch_request {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -161,7 +168,7 @@ pub mod end_quorum_epoch_request {
 
     /// `PartitionData` as declared by the `EndQuorumEpoch` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct PartitionData {
         /// The partition index.
         pub partition_index: i32,
@@ -170,16 +177,17 @@ pub mod end_quorum_epoch_request {
         /// The current epoch.
         pub leader_epoch: i32,
         /// A sorted list of preferred successors to start the election.
-        pub preferred_successors: Vec<i32>,
+        pub preferred_successors: ::std::vec::Vec<i32>,
         /// A sorted list of preferred candidates to start the election.
-        pub preferred_candidates: Vec<ReplicaInfo>,
+        pub preferred_candidates: ::std::vec::Vec<ReplicaInfo>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
     }
 
     impl PartitionData {
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 1);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(1, 1));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(1, 1));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
@@ -187,9 +195,12 @@ pub mod end_quorum_epoch_request {
     }
 
     impl PartitionData {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(EncodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(EncodeError::UnsupportedVersion {
                     message: "PartitionData",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
@@ -202,40 +213,43 @@ pub mod end_quorum_epoch_request {
                 }
             }
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: "PartitionData",
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for PartitionData {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(DecodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(DecodeError::UnsupportedVersion {
                     message: "PartitionData",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
                 });
             }
 
-            let partition_index = decoder.read_i32()?;
-            let leader_id = decoder.read_i32()?;
-            let leader_epoch = decoder.read_i32()?;
-            let preferred_successors = if version.value() <= 0 {
+            let __kw_field_0 = decoder.read_i32()?;
+            let __kw_field_1 = decoder.read_i32()?;
+            let __kw_field_2 = decoder.read_i32()?;
+            let __kw_field_3 = if version.value() <= 0 {
                 let length = decoder.read_array_len()?;
                 decoder.read_vec(length, Decoder::read_i32)?
             } else {
-                Vec::new()
+                ::std::vec::Vec::new()
             };
-            let preferred_candidates = if version.value() >= 1 {
+            let __kw_field_4 = if version.value() >= 1 {
                 let length = decoder.read_compact_array_len()?;
                 decoder.read_vec(length, |decoder| ReplicaInfo::decode(decoder, version))?
             } else {
-                Vec::new()
+                ::std::vec::Vec::new()
             };
             let unknown_tagged_fields = if Self::is_flexible(version) {
                 decoder.read_tagged_fields()?
@@ -243,12 +257,12 @@ pub mod end_quorum_epoch_request {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                partition_index,
-                leader_id,
-                leader_epoch,
-                preferred_successors,
-                preferred_candidates,
+            ::core::result::Result::Ok(Self {
+                partition_index: __kw_field_0,
+                leader_id: __kw_field_1,
+                leader_epoch: __kw_field_2,
+                preferred_successors: __kw_field_3,
+                preferred_candidates: __kw_field_4,
                 unknown_tagged_fields,
             })
         }
@@ -259,7 +273,7 @@ pub mod end_quorum_epoch_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_i32(self.partition_index)?;
             encoder.write_i32(self.leader_id)?;
             encoder.write_i32(self.leader_epoch)?;
@@ -280,7 +294,7 @@ pub mod end_quorum_epoch_request {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -289,12 +303,12 @@ pub mod end_quorum_epoch_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             PartitionData::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| PartitionData::encode_validated(self, encoder, version),
@@ -305,7 +319,7 @@ pub mod end_quorum_epoch_request {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -317,7 +331,7 @@ pub mod end_quorum_epoch_request {
 
     /// `ReplicaInfo` as declared by the `EndQuorumEpoch` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct ReplicaInfo {
         /// The ID of the candidate replica.
         pub candidate_id: i32,
@@ -329,7 +343,8 @@ pub mod end_quorum_epoch_request {
 
     impl ReplicaInfo {
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(1, 1);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(1, 1));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(1, 1));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
@@ -337,9 +352,12 @@ pub mod end_quorum_epoch_request {
     }
 
     impl ReplicaInfo {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(EncodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(EncodeError::UnsupportedVersion {
                     message: "ReplicaInfo",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
@@ -347,37 +365,40 @@ pub mod end_quorum_epoch_request {
             }
 
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: "ReplicaInfo",
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for ReplicaInfo {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(DecodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(DecodeError::UnsupportedVersion {
                     message: "ReplicaInfo",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
                 });
             }
 
-            let candidate_id = decoder.read_i32()?;
-            let candidate_directory_id = decoder.read_uuid()?;
+            let __kw_field_0 = decoder.read_i32()?;
+            let __kw_field_1 = decoder.read_uuid()?;
             let unknown_tagged_fields = if Self::is_flexible(version) {
                 decoder.read_tagged_fields()?
             } else {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                candidate_id,
-                candidate_directory_id,
+            ::core::result::Result::Ok(Self {
+                candidate_id: __kw_field_0,
+                candidate_directory_id: __kw_field_1,
                 unknown_tagged_fields,
             })
         }
@@ -388,7 +409,7 @@ pub mod end_quorum_epoch_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_i32(self.candidate_id)?;
             encoder.write_uuid(self.candidate_directory_id)?;
 
@@ -396,7 +417,7 @@ pub mod end_quorum_epoch_request {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -405,12 +426,12 @@ pub mod end_quorum_epoch_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             ReplicaInfo::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| ReplicaInfo::encode_validated(self, encoder, version),
@@ -421,7 +442,7 @@ pub mod end_quorum_epoch_request {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -433,7 +454,7 @@ pub mod end_quorum_epoch_request {
 
     /// `LeaderEndpoint` as declared by the `EndQuorumEpoch` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct LeaderEndpoint {
         /// The name of the endpoint.
         pub name: StrBytes,
@@ -447,7 +468,8 @@ pub mod end_quorum_epoch_request {
 
     impl LeaderEndpoint {
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(1, 1);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(1, 1));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(1, 1));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
@@ -455,9 +477,12 @@ pub mod end_quorum_epoch_request {
     }
 
     impl LeaderEndpoint {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(EncodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(EncodeError::UnsupportedVersion {
                     message: "LeaderEndpoint",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
@@ -465,39 +490,42 @@ pub mod end_quorum_epoch_request {
             }
 
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: "LeaderEndpoint",
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for LeaderEndpoint {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(DecodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(DecodeError::UnsupportedVersion {
                     message: "LeaderEndpoint",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
                 });
             }
 
-            let name = decoder.read_compact_string()?;
-            let host = decoder.read_compact_string()?;
-            let port = decoder.read_u16()?;
+            let __kw_field_0 = decoder.read_compact_string()?;
+            let __kw_field_1 = decoder.read_compact_string()?;
+            let __kw_field_2 = decoder.read_u16()?;
             let unknown_tagged_fields = if Self::is_flexible(version) {
                 decoder.read_tagged_fields()?
             } else {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                name,
-                host,
-                port,
+            ::core::result::Result::Ok(Self {
+                name: __kw_field_0,
+                host: __kw_field_1,
+                port: __kw_field_2,
                 unknown_tagged_fields,
             })
         }
@@ -508,7 +536,7 @@ pub mod end_quorum_epoch_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_compact_string(&self.name)?;
             encoder.write_compact_string(&self.host)?;
             encoder.write_u16(self.port)?;
@@ -517,7 +545,7 @@ pub mod end_quorum_epoch_request {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -526,12 +554,12 @@ pub mod end_quorum_epoch_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             LeaderEndpoint::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| LeaderEndpoint::encode_validated(self, encoder, version),
@@ -542,7 +570,7 @@ pub mod end_quorum_epoch_request {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -554,14 +582,14 @@ pub mod end_quorum_epoch_request {
 
     /// Request body for the `EndQuorumEpoch` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct EndQuorumEpochRequest {
         /// The cluster id.
-        pub cluster_id: Option<StrBytes>,
+        pub cluster_id: ::core::option::Option<StrBytes>,
         /// The topics.
-        pub topics: Vec<TopicData>,
+        pub topics: ::std::vec::Vec<TopicData>,
         /// Endpoints for the leader.
-        pub leader_endpoints: Vec<LeaderEndpoint>,
+        pub leader_endpoints: ::std::vec::Vec<LeaderEndpoint>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
     }
@@ -569,7 +597,8 @@ pub mod end_quorum_epoch_request {
     impl KafkaMessage for EndQuorumEpochRequest {
         const NAME: &'static str = "EndQuorumEpochRequest";
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 1);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(1, 1));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(1, 1));
     }
 
     impl KafkaRequest for EndQuorumEpochRequest {
@@ -582,7 +611,10 @@ pub mod end_quorum_epoch_request {
     }
 
     impl EndQuorumEpochRequest {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             crate::message::ensure_encode_version::<Self>(version)?;
 
             for value in &self.topics {
@@ -594,26 +626,29 @@ pub mod end_quorum_epoch_request {
                 }
             }
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: Self::NAME,
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for EndQuorumEpochRequest {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             crate::message::ensure_decode_version::<Self>(version)?;
 
-            let cluster_id = if Self::is_flexible(version) {
+            let __kw_field_0 = if Self::is_flexible(version) {
                 decoder.read_compact_nullable_string()?
             } else {
                 decoder.read_nullable_string()?
             };
-            let topics = {
+            let __kw_field_1 = {
                 let length = if Self::is_flexible(version) {
                     decoder.read_compact_array_len()?
                 } else {
@@ -621,11 +656,11 @@ pub mod end_quorum_epoch_request {
                 };
                 decoder.read_vec(length, |decoder| TopicData::decode(decoder, version))?
             };
-            let leader_endpoints = if version.value() >= 1 {
+            let __kw_field_2 = if version.value() >= 1 {
                 let length = decoder.read_compact_array_len()?;
                 decoder.read_vec(length, |decoder| LeaderEndpoint::decode(decoder, version))?
             } else {
-                Vec::new()
+                ::std::vec::Vec::new()
             };
             let unknown_tagged_fields = if Self::is_flexible(version) {
                 decoder.read_tagged_fields()?
@@ -633,10 +668,10 @@ pub mod end_quorum_epoch_request {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                cluster_id,
-                topics,
-                leader_endpoints,
+            ::core::result::Result::Ok(Self {
+                cluster_id: __kw_field_0,
+                topics: __kw_field_1,
+                leader_endpoints: __kw_field_2,
                 unknown_tagged_fields,
             })
         }
@@ -647,7 +682,7 @@ pub mod end_quorum_epoch_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             if Self::is_flexible(version) {
                 encoder.write_compact_nullable_string(self.cluster_id.as_ref())?;
             } else {
@@ -672,7 +707,7 @@ pub mod end_quorum_epoch_request {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -681,12 +716,12 @@ pub mod end_quorum_epoch_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             EndQuorumEpochRequest::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| EndQuorumEpochRequest::encode_validated(self, encoder, version),
@@ -697,7 +732,7 @@ pub mod end_quorum_epoch_request {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -723,19 +758,20 @@ pub mod end_quorum_epoch_response {
 
     /// `TopicData` as declared by the `EndQuorumEpoch` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct TopicData {
         /// The topic name.
         pub topic_name: StrBytes,
         /// The partition data.
-        pub partitions: Vec<PartitionData>,
+        pub partitions: ::std::vec::Vec<PartitionData>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
     }
 
     impl TopicData {
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 1);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(1, 1));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(1, 1));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
@@ -743,9 +779,12 @@ pub mod end_quorum_epoch_response {
     }
 
     impl TopicData {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(EncodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(EncodeError::UnsupportedVersion {
                     message: "TopicData",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
@@ -756,32 +795,35 @@ pub mod end_quorum_epoch_response {
                 value.validate_for_version(version)?;
             }
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: "TopicData",
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for TopicData {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(DecodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(DecodeError::UnsupportedVersion {
                     message: "TopicData",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
                 });
             }
 
-            let topic_name = if Self::is_flexible(version) {
+            let __kw_field_0 = if Self::is_flexible(version) {
                 decoder.read_compact_string()?
             } else {
                 decoder.read_string()?
             };
-            let partitions = {
+            let __kw_field_1 = {
                 let length = if Self::is_flexible(version) {
                     decoder.read_compact_array_len()?
                 } else {
@@ -795,9 +837,9 @@ pub mod end_quorum_epoch_response {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                topic_name,
-                partitions,
+            ::core::result::Result::Ok(Self {
+                topic_name: __kw_field_0,
+                partitions: __kw_field_1,
                 unknown_tagged_fields,
             })
         }
@@ -808,7 +850,7 @@ pub mod end_quorum_epoch_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             if Self::is_flexible(version) {
                 encoder.write_compact_string(&self.topic_name)?;
             } else {
@@ -827,7 +869,7 @@ pub mod end_quorum_epoch_response {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -836,12 +878,12 @@ pub mod end_quorum_epoch_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             TopicData::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| TopicData::encode_validated(self, encoder, version),
@@ -852,7 +894,7 @@ pub mod end_quorum_epoch_response {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -864,7 +906,7 @@ pub mod end_quorum_epoch_response {
 
     /// `PartitionData` as declared by the `EndQuorumEpoch` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct PartitionData {
         /// The partition index.
         pub partition_index: i32,
@@ -880,7 +922,8 @@ pub mod end_quorum_epoch_response {
 
     impl PartitionData {
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 1);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(1, 1));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(1, 1));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
@@ -888,9 +931,12 @@ pub mod end_quorum_epoch_response {
     }
 
     impl PartitionData {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(EncodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(EncodeError::UnsupportedVersion {
                     message: "PartitionData",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
@@ -898,41 +944,44 @@ pub mod end_quorum_epoch_response {
             }
 
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: "PartitionData",
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for PartitionData {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(DecodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(DecodeError::UnsupportedVersion {
                     message: "PartitionData",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
                 });
             }
 
-            let partition_index = decoder.read_i32()?;
-            let error_code = decoder.read_i16()?;
-            let leader_id = decoder.read_i32()?;
-            let leader_epoch = decoder.read_i32()?;
+            let __kw_field_0 = decoder.read_i32()?;
+            let __kw_field_1 = decoder.read_i16()?;
+            let __kw_field_2 = decoder.read_i32()?;
+            let __kw_field_3 = decoder.read_i32()?;
             let unknown_tagged_fields = if Self::is_flexible(version) {
                 decoder.read_tagged_fields()?
             } else {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                partition_index,
-                error_code,
-                leader_id,
-                leader_epoch,
+            ::core::result::Result::Ok(Self {
+                partition_index: __kw_field_0,
+                error_code: __kw_field_1,
+                leader_id: __kw_field_2,
+                leader_epoch: __kw_field_3,
                 unknown_tagged_fields,
             })
         }
@@ -943,7 +992,7 @@ pub mod end_quorum_epoch_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_i32(self.partition_index)?;
             encoder.write_i16(self.error_code)?;
             encoder.write_i32(self.leader_id)?;
@@ -953,7 +1002,7 @@ pub mod end_quorum_epoch_response {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -962,12 +1011,12 @@ pub mod end_quorum_epoch_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             PartitionData::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| PartitionData::encode_validated(self, encoder, version),
@@ -978,7 +1027,7 @@ pub mod end_quorum_epoch_response {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -990,7 +1039,7 @@ pub mod end_quorum_epoch_response {
 
     /// `NodeEndpoint` as declared by the `EndQuorumEpoch` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct NodeEndpoint {
         /// The ID of the associated node.
         pub node_id: i32,
@@ -1004,7 +1053,8 @@ pub mod end_quorum_epoch_response {
 
     impl NodeEndpoint {
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(1, 1);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(1, 1));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(1, 1));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
@@ -1012,9 +1062,12 @@ pub mod end_quorum_epoch_response {
     }
 
     impl NodeEndpoint {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(EncodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(EncodeError::UnsupportedVersion {
                     message: "NodeEndpoint",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
@@ -1022,39 +1075,42 @@ pub mod end_quorum_epoch_response {
             }
 
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: "NodeEndpoint",
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for NodeEndpoint {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(DecodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(DecodeError::UnsupportedVersion {
                     message: "NodeEndpoint",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
                 });
             }
 
-            let node_id = decoder.read_i32()?;
-            let host = decoder.read_compact_string()?;
-            let port = decoder.read_u16()?;
+            let __kw_field_0 = decoder.read_i32()?;
+            let __kw_field_1 = decoder.read_compact_string()?;
+            let __kw_field_2 = decoder.read_u16()?;
             let unknown_tagged_fields = if Self::is_flexible(version) {
                 decoder.read_tagged_fields()?
             } else {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                node_id,
-                host,
-                port,
+            ::core::result::Result::Ok(Self {
+                node_id: __kw_field_0,
+                host: __kw_field_1,
+                port: __kw_field_2,
                 unknown_tagged_fields,
             })
         }
@@ -1065,7 +1121,7 @@ pub mod end_quorum_epoch_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_i32(self.node_id)?;
             encoder.write_compact_string(&self.host)?;
             encoder.write_u16(self.port)?;
@@ -1074,7 +1130,7 @@ pub mod end_quorum_epoch_response {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -1083,12 +1139,12 @@ pub mod end_quorum_epoch_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             NodeEndpoint::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| NodeEndpoint::encode_validated(self, encoder, version),
@@ -1099,7 +1155,7 @@ pub mod end_quorum_epoch_response {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -1111,14 +1167,14 @@ pub mod end_quorum_epoch_response {
 
     /// Response body for the `EndQuorumEpoch` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct EndQuorumEpochResponse {
         /// The top level error code.
         pub error_code: i16,
         /// The topic data.
-        pub topics: Vec<TopicData>,
+        pub topics: ::std::vec::Vec<TopicData>,
         /// Endpoints for all leaders enumerated in `PartitionData`.
-        pub node_endpoints: Vec<NodeEndpoint>,
+        pub node_endpoints: ::std::vec::Vec<NodeEndpoint>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
     }
@@ -1126,7 +1182,8 @@ pub mod end_quorum_epoch_response {
     impl KafkaMessage for EndQuorumEpochResponse {
         const NAME: &'static str = "EndQuorumEpochResponse";
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 1);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(1, 1));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(1, 1));
     }
 
     impl KafkaResponse for EndQuorumEpochResponse {
@@ -1134,11 +1191,14 @@ pub mod end_quorum_epoch_response {
     }
 
     impl EndQuorumEpochResponse {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             crate::message::ensure_encode_version::<Self>(version)?;
 
             if version.value() < 1 && !self.node_endpoints.is_empty() {
-                return Err(EncodeError::FieldNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::FieldNotRepresentable {
                     message: Self::NAME,
                     field: "NodeEndpoints",
                     version,
@@ -1153,22 +1213,25 @@ pub mod end_quorum_epoch_response {
                 }
             }
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: Self::NAME,
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for EndQuorumEpochResponse {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             crate::message::ensure_decode_version::<Self>(version)?;
 
-            let error_code = decoder.read_i16()?;
-            let topics = {
+            let __kw_field_0 = decoder.read_i16()?;
+            let __kw_field_1 = {
                 let length = if Self::is_flexible(version) {
                     decoder.read_compact_array_len()?
                 } else {
@@ -1176,28 +1239,28 @@ pub mod end_quorum_epoch_response {
                 };
                 decoder.read_vec(length, |decoder| TopicData::decode(decoder, version))?
             };
-            let mut node_endpoints: Vec<NodeEndpoint> = Vec::new();
+            let mut __kw_field_2: ::std::vec::Vec<NodeEndpoint> = ::std::vec::Vec::new();
             let mut unknown_tagged_fields = TaggedFields::default();
             if Self::is_flexible(version) {
                 unknown_tagged_fields =
                     decoder.read_tagged_fields_with(|tag, decoder| match tag {
                         0 => {
-                            node_endpoints = {
+                            __kw_field_2 = {
                                 let length = decoder.read_compact_array_len()?;
                                 decoder.read_vec(length, |decoder| {
                                     NodeEndpoint::decode(decoder, version)
                                 })?
                             };
-                            Ok(TagOutcome::Decoded)
+                            ::core::result::Result::Ok(TagOutcome::Decoded)
                         }
-                        _ => Ok(TagOutcome::Retained),
+                        _ => ::core::result::Result::Ok(TagOutcome::Retained),
                     })?;
             }
 
-            Ok(Self {
-                error_code,
-                topics,
-                node_endpoints,
+            ::core::result::Result::Ok(Self {
+                error_code: __kw_field_0,
+                topics: __kw_field_1,
+                node_endpoints: __kw_field_2,
                 unknown_tagged_fields,
             })
         }
@@ -1208,7 +1271,7 @@ pub mod end_quorum_epoch_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_i16(self.error_code)?;
             if Self::is_flexible(version) {
                 encoder.write_compact_array_len(self.topics.len())?;
@@ -1227,13 +1290,13 @@ pub mod end_quorum_epoch_response {
                         for value in &self.node_endpoints {
                             value.encode_validated(encoder, version)?;
                         }
-                        Ok(())
+                        ::core::result::Result::Ok(())
                     })?;
                 }
                 encoder.write_merged_tagged_fields(known, &self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -1242,12 +1305,12 @@ pub mod end_quorum_epoch_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             EndQuorumEpochResponse::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| EndQuorumEpochResponse::encode_validated(self, encoder, version),
@@ -1258,7 +1321,7 @@ pub mod end_quorum_epoch_response {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -1282,7 +1345,7 @@ pub const END_QUORUM_EPOCH_REQUEST_DESCRIPTOR: MessageDescriptor = MessageDescri
     "EndQuorumEpochRequest",
     MessageDirection::Request,
     VersionRange::new(0, 1),
-    Some(VersionRange::new(1, 1)),
+    ::core::option::Option::Some(VersionRange::new(1, 1)),
 );
 
 /// Static metadata for [`EndQuorumEpochResponse`].
@@ -1291,7 +1354,7 @@ pub const END_QUORUM_EPOCH_RESPONSE_DESCRIPTOR: MessageDescriptor = MessageDescr
     "EndQuorumEpochResponse",
     MessageDirection::Response,
     VersionRange::new(0, 1),
-    Some(VersionRange::new(1, 1)),
+    ::core::option::Option::Some(VersionRange::new(1, 1)),
 );
 
 /// Static pair metadata for the `EndQuorumEpoch` API.
@@ -1300,6 +1363,6 @@ pub const END_QUORUM_EPOCH_API_DESCRIPTOR: ApiDescriptor = ApiDescriptor::new(
     &END_QUORUM_EPOCH_REQUEST_DESCRIPTOR,
     &END_QUORUM_EPOCH_RESPONSE_DESCRIPTOR,
     VersionRange::new(0, 1),
-    Some(VersionRange::new(1, 1)),
+    ::core::option::Option::Some(VersionRange::new(1, 1)),
     false,
 );

@@ -20,7 +20,7 @@ pub mod aborted_txn {
 
     /// `AbortedTxn` as declared by the `AbortedTxn` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct AbortedTxn {
         /// The producer id associated with the aborted transaction.
         pub producer_id: i64,
@@ -35,32 +35,39 @@ pub mod aborted_txn {
     impl KafkaMessage for AbortedTxn {
         const NAME: &'static str = "AbortedTxn";
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 0);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = None;
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::None;
     }
 
     impl AbortedTxn {
         #[allow(clippy::unused_self)]
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             crate::message::ensure_encode_version::<Self>(version)?;
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for AbortedTxn {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             crate::message::ensure_decode_version::<Self>(version)?;
 
-            let producer_id = decoder.read_i64()?;
-            let first_offset = decoder.read_i64()?;
-            let last_offset = decoder.read_i64()?;
-            let last_stable_offset = decoder.read_i64()?;
+            let __kw_field_0 = decoder.read_i64()?;
+            let __kw_field_1 = decoder.read_i64()?;
+            let __kw_field_2 = decoder.read_i64()?;
+            let __kw_field_3 = decoder.read_i64()?;
 
-            Ok(Self {
-                producer_id,
-                first_offset,
-                last_offset,
-                last_stable_offset,
+            ::core::result::Result::Ok(Self {
+                producer_id: __kw_field_0,
+                first_offset: __kw_field_1,
+                last_offset: __kw_field_2,
+                last_stable_offset: __kw_field_3,
             })
         }
     }
@@ -70,13 +77,13 @@ pub mod aborted_txn {
             &self,
             encoder: &mut Encoder<T>,
             _version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_i64(self.producer_id)?;
             encoder.write_i64(self.first_offset)?;
             encoder.write_i64(self.last_offset)?;
             encoder.write_i64(self.last_stable_offset)?;
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -85,12 +92,12 @@ pub mod aborted_txn {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             AbortedTxn::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| AbortedTxn::encode_validated(self, encoder, version),
@@ -101,7 +108,7 @@ pub mod aborted_txn {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -126,12 +133,12 @@ pub mod consumer_protocol_assignment {
 
     /// `TopicPartition` as declared by the `ConsumerProtocolAssignment` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct TopicPartition {
         /// The topic name.
         pub topic: StrBytes,
         /// The list of partitions assigned to this consumer.
-        pub partitions: Vec<i32>,
+        pub partitions: ::std::vec::Vec<i32>,
     }
 
     impl TopicPartition {
@@ -140,36 +147,45 @@ pub mod consumer_protocol_assignment {
 
     impl TopicPartition {
         #[allow(clippy::unused_self)]
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(EncodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(EncodeError::UnsupportedVersion {
                     message: "TopicPartition",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for TopicPartition {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(DecodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(DecodeError::UnsupportedVersion {
                     message: "TopicPartition",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
                 });
             }
 
-            let topic = decoder.read_string()?;
-            let partitions = {
+            let __kw_field_0 = decoder.read_string()?;
+            let __kw_field_1 = {
                 let length = decoder.read_array_len()?;
                 decoder.read_vec(length, Decoder::read_i32)?
             };
 
-            Ok(Self { topic, partitions })
+            ::core::result::Result::Ok(Self {
+                topic: __kw_field_0,
+                partitions: __kw_field_1,
+            })
         }
     }
 
@@ -178,14 +194,14 @@ pub mod consumer_protocol_assignment {
             &self,
             encoder: &mut Encoder<T>,
             _version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_string(&self.topic)?;
             encoder.write_array_len(self.partitions.len())?;
             for value in &self.partitions {
                 encoder.write_i32(*value)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -194,12 +210,12 @@ pub mod consumer_protocol_assignment {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             TopicPartition::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| TopicPartition::encode_validated(self, encoder, version),
@@ -210,7 +226,7 @@ pub mod consumer_protocol_assignment {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -222,45 +238,52 @@ pub mod consumer_protocol_assignment {
 
     /// `ConsumerProtocolAssignment` as declared by the `ConsumerProtocolAssignment` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct ConsumerProtocolAssignment {
         /// The list of topics and partitions assigned to this consumer.
-        pub assigned_partitions: Vec<TopicPartition>,
+        pub assigned_partitions: ::std::vec::Vec<TopicPartition>,
         /// User data.
-        pub user_data: Option<Bytes>,
+        pub user_data: ::core::option::Option<Bytes>,
     }
 
     impl KafkaMessage for ConsumerProtocolAssignment {
         const NAME: &'static str = "ConsumerProtocolAssignment";
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 3);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = None;
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::None;
     }
 
     impl ConsumerProtocolAssignment {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             crate::message::ensure_encode_version::<Self>(version)?;
 
             for value in &self.assigned_partitions {
                 value.validate_for_version(version)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for ConsumerProtocolAssignment {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             crate::message::ensure_decode_version::<Self>(version)?;
 
-            let assigned_partitions = {
+            let __kw_field_0 = {
                 let length = decoder.read_array_len()?;
                 decoder.read_vec(length, |decoder| TopicPartition::decode(decoder, version))?
             };
-            let user_data = decoder.read_nullable_bytes()?;
+            let __kw_field_1 = decoder.read_nullable_bytes()?;
 
-            Ok(Self {
-                assigned_partitions,
-                user_data,
+            ::core::result::Result::Ok(Self {
+                assigned_partitions: __kw_field_0,
+                user_data: __kw_field_1,
             })
         }
     }
@@ -270,14 +293,14 @@ pub mod consumer_protocol_assignment {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_array_len(self.assigned_partitions.len())?;
             for value in &self.assigned_partitions {
                 value.encode_validated(encoder, version)?;
             }
             encoder.write_nullable_bytes(self.user_data.as_deref())?;
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -286,12 +309,12 @@ pub mod consumer_protocol_assignment {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             ConsumerProtocolAssignment::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| ConsumerProtocolAssignment::encode_validated(self, encoder, version),
@@ -302,7 +325,7 @@ pub mod consumer_protocol_assignment {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -327,12 +350,12 @@ pub mod consumer_protocol_subscription {
 
     /// `TopicPartition` as declared by the `ConsumerProtocolSubscription` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct TopicPartition {
         /// The topic name.
         pub topic: StrBytes,
         /// The partition ids.
-        pub partitions: Vec<i32>,
+        pub partitions: ::std::vec::Vec<i32>,
     }
 
     impl TopicPartition {
@@ -341,36 +364,45 @@ pub mod consumer_protocol_subscription {
 
     impl TopicPartition {
         #[allow(clippy::unused_self)]
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(EncodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(EncodeError::UnsupportedVersion {
                     message: "TopicPartition",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for TopicPartition {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(DecodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(DecodeError::UnsupportedVersion {
                     message: "TopicPartition",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
                 });
             }
 
-            let topic = decoder.read_string()?;
-            let partitions = {
+            let __kw_field_0 = decoder.read_string()?;
+            let __kw_field_1 = {
                 let length = decoder.read_array_len()?;
                 decoder.read_vec(length, Decoder::read_i32)?
             };
 
-            Ok(Self { topic, partitions })
+            ::core::result::Result::Ok(Self {
+                topic: __kw_field_0,
+                partitions: __kw_field_1,
+            })
         }
     }
 
@@ -379,14 +411,14 @@ pub mod consumer_protocol_subscription {
             &self,
             encoder: &mut Encoder<T>,
             _version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_string(&self.topic)?;
             encoder.write_array_len(self.partitions.len())?;
             for value in &self.partitions {
                 encoder.write_i32(*value)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -395,12 +427,12 @@ pub mod consumer_protocol_subscription {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             TopicPartition::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| TopicPartition::encode_validated(self, encoder, version),
@@ -411,7 +443,7 @@ pub mod consumer_protocol_subscription {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -426,25 +458,29 @@ pub mod consumer_protocol_subscription {
     #[derive(Clone, Debug, Eq, PartialEq)]
     pub struct ConsumerProtocolSubscription {
         /// The topics that the member wants to consume.
-        pub topics: Vec<StrBytes>,
+        pub topics: ::std::vec::Vec<StrBytes>,
         /// User data that will be passed back to the consumer.
-        pub user_data: Option<Bytes>,
+        pub user_data: ::core::option::Option<Bytes>,
         /// The partitions that the member owns.
-        pub owned_partitions: Vec<TopicPartition>,
+        pub owned_partitions: ::std::vec::Vec<TopicPartition>,
         /// The generation id of the member.
         pub generation_id: i32,
         /// The rack id of the member.
-        pub rack_id: Option<StrBytes>,
+        pub rack_id: ::core::option::Option<StrBytes>,
     }
 
     impl KafkaMessage for ConsumerProtocolSubscription {
         const NAME: &'static str = "ConsumerProtocolSubscription";
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 3);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = None;
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::None;
     }
 
     impl ConsumerProtocolSubscription {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             crate::message::ensure_encode_version::<Self>(version)?;
 
             if version.value() >= 1 {
@@ -453,54 +489,57 @@ pub mod consumer_protocol_subscription {
                 }
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
-    impl Default for ConsumerProtocolSubscription {
+    impl ::core::default::Default for ConsumerProtocolSubscription {
         fn default() -> Self {
             Self {
-                topics: Vec::new(),
-                user_data: None,
-                owned_partitions: Vec::new(),
+                topics: ::std::vec::Vec::new(),
+                user_data: ::core::option::Option::None,
+                owned_partitions: ::std::vec::Vec::new(),
                 generation_id: -1,
-                rack_id: None,
+                rack_id: ::core::option::Option::None,
             }
         }
     }
 
     impl KafkaDecode for ConsumerProtocolSubscription {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             crate::message::ensure_decode_version::<Self>(version)?;
 
-            let topics = {
+            let __kw_field_0 = {
                 let length = decoder.read_array_len()?;
                 decoder.read_vec(length, Decoder::read_string)?
             };
-            let user_data = decoder.read_nullable_bytes()?;
-            let owned_partitions = if version.value() >= 1 {
+            let __kw_field_1 = decoder.read_nullable_bytes()?;
+            let __kw_field_2 = if version.value() >= 1 {
                 let length = decoder.read_array_len()?;
                 decoder.read_vec(length, |decoder| TopicPartition::decode(decoder, version))?
             } else {
-                Vec::new()
+                ::std::vec::Vec::new()
             };
-            let generation_id = if version.value() >= 2 {
+            let __kw_field_3 = if version.value() >= 2 {
                 decoder.read_i32()?
             } else {
                 -1
             };
-            let rack_id = if version.value() >= 3 {
+            let __kw_field_4 = if version.value() >= 3 {
                 decoder.read_nullable_string()?
             } else {
-                None
+                ::core::option::Option::None
             };
 
-            Ok(Self {
-                topics,
-                user_data,
-                owned_partitions,
-                generation_id,
-                rack_id,
+            ::core::result::Result::Ok(Self {
+                topics: __kw_field_0,
+                user_data: __kw_field_1,
+                owned_partitions: __kw_field_2,
+                generation_id: __kw_field_3,
+                rack_id: __kw_field_4,
             })
         }
     }
@@ -510,7 +549,7 @@ pub mod consumer_protocol_subscription {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_array_len(self.topics.len())?;
             for value in &self.topics {
                 encoder.write_string(value)?;
@@ -529,7 +568,7 @@ pub mod consumer_protocol_subscription {
                 encoder.write_nullable_string(self.rack_id.as_ref())?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -538,12 +577,12 @@ pub mod consumer_protocol_subscription {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             ConsumerProtocolSubscription::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| ConsumerProtocolSubscription::encode_validated(self, encoder, version),
@@ -554,7 +593,7 @@ pub mod consumer_protocol_subscription {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -579,7 +618,7 @@ pub mod control_record_type_schema {
 
     /// `ControlRecordTypeSchema` as declared by the `ControlRecordTypeSchema` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct ControlRecordTypeSchema {
         /// The type of the control record, such as commit or abort.
         pub type_: i16,
@@ -588,25 +627,34 @@ pub mod control_record_type_schema {
     impl KafkaMessage for ControlRecordTypeSchema {
         const NAME: &'static str = "ControlRecordTypeSchema";
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 0);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = None;
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::None;
     }
 
     impl ControlRecordTypeSchema {
         #[allow(clippy::unused_self)]
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             crate::message::ensure_encode_version::<Self>(version)?;
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for ControlRecordTypeSchema {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             crate::message::ensure_decode_version::<Self>(version)?;
 
-            let type_ = decoder.read_i16()?;
+            let __kw_field_0 = decoder.read_i16()?;
 
-            Ok(Self { type_ })
+            ::core::result::Result::Ok(Self {
+                type_: __kw_field_0,
+            })
         }
     }
 
@@ -615,10 +663,10 @@ pub mod control_record_type_schema {
             &self,
             encoder: &mut Encoder<T>,
             _version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_i16(self.type_)?;
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -627,12 +675,12 @@ pub mod control_record_type_schema {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             ControlRecordTypeSchema::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| ControlRecordTypeSchema::encode_validated(self, encoder, version),
@@ -643,7 +691,7 @@ pub mod control_record_type_schema {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -669,7 +717,7 @@ pub mod default_principal_data {
 
     /// `DefaultPrincipalData` as declared by the `DefaultPrincipalData` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct DefaultPrincipalData {
         /// The principal type.
         pub type_: StrBytes,
@@ -684,41 +732,48 @@ pub mod default_principal_data {
     impl KafkaMessage for DefaultPrincipalData {
         const NAME: &'static str = "DefaultPrincipalData";
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 0);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 0));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(0, 0));
     }
 
     impl DefaultPrincipalData {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             crate::message::ensure_encode_version::<Self>(version)?;
 
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: Self::NAME,
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for DefaultPrincipalData {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             crate::message::ensure_decode_version::<Self>(version)?;
 
-            let type_ = decoder.read_compact_string()?;
-            let name = decoder.read_compact_string()?;
-            let token_authenticated = decoder.read_bool()?;
+            let __kw_field_0 = decoder.read_compact_string()?;
+            let __kw_field_1 = decoder.read_compact_string()?;
+            let __kw_field_2 = decoder.read_bool()?;
             let unknown_tagged_fields = if Self::is_flexible(version) {
                 decoder.read_tagged_fields()?
             } else {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                type_,
-                name,
-                token_authenticated,
+            ::core::result::Result::Ok(Self {
+                type_: __kw_field_0,
+                name: __kw_field_1,
+                token_authenticated: __kw_field_2,
                 unknown_tagged_fields,
             })
         }
@@ -729,7 +784,7 @@ pub mod default_principal_data {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_compact_string(&self.type_)?;
             encoder.write_compact_string(&self.name)?;
             encoder.write_bool(self.token_authenticated)?;
@@ -738,7 +793,7 @@ pub mod default_principal_data {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -747,12 +802,12 @@ pub mod default_principal_data {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             DefaultPrincipalData::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| DefaultPrincipalData::encode_validated(self, encoder, version),
@@ -763,7 +818,7 @@ pub mod default_principal_data {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -788,7 +843,7 @@ pub mod end_txn_marker {
 
     /// `EndTxnMarker` as declared by the `EndTxnMarker` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct EndTxnMarker {
         /// The coordinator epoch when appending the record.
         pub coordinator_epoch: i32,
@@ -797,25 +852,34 @@ pub mod end_txn_marker {
     impl KafkaMessage for EndTxnMarker {
         const NAME: &'static str = "EndTxnMarker";
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 0);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = None;
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::None;
     }
 
     impl EndTxnMarker {
         #[allow(clippy::unused_self)]
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             crate::message::ensure_encode_version::<Self>(version)?;
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for EndTxnMarker {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             crate::message::ensure_decode_version::<Self>(version)?;
 
-            let coordinator_epoch = decoder.read_i32()?;
+            let __kw_field_0 = decoder.read_i32()?;
 
-            Ok(Self { coordinator_epoch })
+            ::core::result::Result::Ok(Self {
+                coordinator_epoch: __kw_field_0,
+            })
         }
     }
 
@@ -824,10 +888,10 @@ pub mod end_txn_marker {
             &self,
             encoder: &mut Encoder<T>,
             _version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_i32(self.coordinator_epoch)?;
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -836,12 +900,12 @@ pub mod end_txn_marker {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             EndTxnMarker::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| EndTxnMarker::encode_validated(self, encoder, version),
@@ -852,7 +916,7 @@ pub mod end_txn_marker {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -877,7 +941,7 @@ pub mod k_raft_version_record {
 
     /// `KRaftVersionRecord` as declared by the `KRaftVersionRecord` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct KRaftVersionRecord {
         /// The version of the kraft version record.
         pub version: i16,
@@ -890,39 +954,46 @@ pub mod k_raft_version_record {
     impl KafkaMessage for KRaftVersionRecord {
         const NAME: &'static str = "KRaftVersionRecord";
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 0);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 0));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(0, 0));
     }
 
     impl KRaftVersionRecord {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             crate::message::ensure_encode_version::<Self>(version)?;
 
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: Self::NAME,
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for KRaftVersionRecord {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             crate::message::ensure_decode_version::<Self>(version)?;
 
-            let version_value = decoder.read_i16()?;
-            let k_raft_version = decoder.read_i16()?;
+            let __kw_field_0 = decoder.read_i16()?;
+            let __kw_field_1 = decoder.read_i16()?;
             let unknown_tagged_fields = if Self::is_flexible(version) {
                 decoder.read_tagged_fields()?
             } else {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                version: version_value,
-                k_raft_version,
+            ::core::result::Result::Ok(Self {
+                version: __kw_field_0,
+                k_raft_version: __kw_field_1,
                 unknown_tagged_fields,
             })
         }
@@ -933,7 +1004,7 @@ pub mod k_raft_version_record {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_i16(self.version)?;
             encoder.write_i16(self.k_raft_version)?;
 
@@ -941,7 +1012,7 @@ pub mod k_raft_version_record {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -950,12 +1021,12 @@ pub mod k_raft_version_record {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             KRaftVersionRecord::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| KRaftVersionRecord::encode_validated(self, encoder, version),
@@ -966,7 +1037,7 @@ pub mod k_raft_version_record {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -992,7 +1063,7 @@ pub mod leader_change_message {
 
     /// `Voter` as declared by the `LeaderChangeMessage` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct Voter {
         /// The ID of the voter.
         pub voter_id: i32,
@@ -1004,7 +1075,8 @@ pub mod leader_change_message {
 
     impl Voter {
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 1);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 1));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(0, 1));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
@@ -1012,9 +1084,12 @@ pub mod leader_change_message {
     }
 
     impl Voter {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(EncodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(EncodeError::UnsupportedVersion {
                     message: "Voter",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
@@ -1022,35 +1097,38 @@ pub mod leader_change_message {
             }
 
             if version.value() < 1 && self.voter_directory_id != Uuid::ZERO {
-                return Err(EncodeError::FieldNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::FieldNotRepresentable {
                     message: "Voter",
                     field: "VoterDirectoryId",
                     version,
                 });
             }
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: "Voter",
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for Voter {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(DecodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(DecodeError::UnsupportedVersion {
                     message: "Voter",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
                 });
             }
 
-            let voter_id = decoder.read_i32()?;
-            let voter_directory_id = if version.value() >= 1 {
+            let __kw_field_0 = decoder.read_i32()?;
+            let __kw_field_1 = if version.value() >= 1 {
                 decoder.read_uuid()?
             } else {
                 Uuid::ZERO
@@ -1061,9 +1139,9 @@ pub mod leader_change_message {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                voter_id,
-                voter_directory_id,
+            ::core::result::Result::Ok(Self {
+                voter_id: __kw_field_0,
+                voter_directory_id: __kw_field_1,
                 unknown_tagged_fields,
             })
         }
@@ -1074,7 +1152,7 @@ pub mod leader_change_message {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_i32(self.voter_id)?;
             if version.value() >= 1 {
                 encoder.write_uuid(self.voter_directory_id)?;
@@ -1084,7 +1162,7 @@ pub mod leader_change_message {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -1093,12 +1171,12 @@ pub mod leader_change_message {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             Voter::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| Voter::encode_validated(self, encoder, version),
@@ -1109,7 +1187,7 @@ pub mod leader_change_message {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -1121,16 +1199,16 @@ pub mod leader_change_message {
 
     /// `LeaderChangeMessage` as declared by the `LeaderChangeMessage` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct LeaderChangeMessage {
         /// The version of the leader change message.
         pub version: i16,
         /// The ID of the newly elected leader.
         pub leader_id: i32,
         /// The set of voters in the quorum for this epoch.
-        pub voters: Vec<Voter>,
+        pub voters: ::std::vec::Vec<Voter>,
         /// The voters who voted for the leader at the time of election.
-        pub granting_voters: Vec<Voter>,
+        pub granting_voters: ::std::vec::Vec<Voter>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
     }
@@ -1138,11 +1216,15 @@ pub mod leader_change_message {
     impl KafkaMessage for LeaderChangeMessage {
         const NAME: &'static str = "LeaderChangeMessage";
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 1);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 1));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(0, 1));
     }
 
     impl LeaderChangeMessage {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             crate::message::ensure_encode_version::<Self>(version)?;
 
             for value in &self.voters {
@@ -1152,27 +1234,30 @@ pub mod leader_change_message {
                 value.validate_for_version(version)?;
             }
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: Self::NAME,
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for LeaderChangeMessage {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             crate::message::ensure_decode_version::<Self>(version)?;
 
-            let version_value = decoder.read_i16()?;
-            let leader_id = decoder.read_i32()?;
-            let voters = {
+            let __kw_field_0 = decoder.read_i16()?;
+            let __kw_field_1 = decoder.read_i32()?;
+            let __kw_field_2 = {
                 let length = decoder.read_compact_array_len()?;
                 decoder.read_vec(length, |decoder| Voter::decode(decoder, version))?
             };
-            let granting_voters = {
+            let __kw_field_3 = {
                 let length = decoder.read_compact_array_len()?;
                 decoder.read_vec(length, |decoder| Voter::decode(decoder, version))?
             };
@@ -1182,11 +1267,11 @@ pub mod leader_change_message {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                version: version_value,
-                leader_id,
-                voters,
-                granting_voters,
+            ::core::result::Result::Ok(Self {
+                version: __kw_field_0,
+                leader_id: __kw_field_1,
+                voters: __kw_field_2,
+                granting_voters: __kw_field_3,
                 unknown_tagged_fields,
             })
         }
@@ -1197,7 +1282,7 @@ pub mod leader_change_message {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_i16(self.version)?;
             encoder.write_i32(self.leader_id)?;
             encoder.write_compact_array_len(self.voters.len())?;
@@ -1213,7 +1298,7 @@ pub mod leader_change_message {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -1222,12 +1307,12 @@ pub mod leader_change_message {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             LeaderChangeMessage::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| LeaderChangeMessage::encode_validated(self, encoder, version),
@@ -1238,7 +1323,7 @@ pub mod leader_change_message {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -1273,7 +1358,7 @@ pub mod request_header {
         /// The correlation ID of this request.
         pub correlation_id: i32,
         /// The client ID string.
-        pub client_id: Option<StrBytes>,
+        pub client_id: ::core::option::Option<StrBytes>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
     }
@@ -1281,55 +1366,62 @@ pub mod request_header {
     impl KafkaMessage for RequestHeader {
         const NAME: &'static str = "RequestHeader";
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(1, 2);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(2, 2));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(2, 2));
     }
 
     impl RequestHeader {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             crate::message::ensure_encode_version::<Self>(version)?;
 
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: Self::NAME,
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
-    impl Default for RequestHeader {
+    impl ::core::default::Default for RequestHeader {
         fn default() -> Self {
             Self {
                 request_api_key: 0,
                 request_api_version: 0,
                 correlation_id: 0,
-                client_id: Some(StrBytes::default()),
+                client_id: ::core::option::Option::Some(StrBytes::default()),
                 unknown_tagged_fields: TaggedFields::default(),
             }
         }
     }
 
     impl KafkaDecode for RequestHeader {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             crate::message::ensure_decode_version::<Self>(version)?;
 
-            let request_api_key = decoder.read_i16()?;
-            let request_api_version = decoder.read_i16()?;
-            let correlation_id = decoder.read_i32()?;
-            let client_id = decoder.read_nullable_string()?;
+            let __kw_field_0 = decoder.read_i16()?;
+            let __kw_field_1 = decoder.read_i16()?;
+            let __kw_field_2 = decoder.read_i32()?;
+            let __kw_field_3 = decoder.read_nullable_string()?;
             let unknown_tagged_fields = if Self::is_flexible(version) {
                 decoder.read_tagged_fields()?
             } else {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                request_api_key,
-                request_api_version,
-                correlation_id,
-                client_id,
+            ::core::result::Result::Ok(Self {
+                request_api_key: __kw_field_0,
+                request_api_version: __kw_field_1,
+                correlation_id: __kw_field_2,
+                client_id: __kw_field_3,
                 unknown_tagged_fields,
             })
         }
@@ -1340,7 +1432,7 @@ pub mod request_header {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_i16(self.request_api_key)?;
             encoder.write_i16(self.request_api_version)?;
             encoder.write_i32(self.correlation_id)?;
@@ -1350,7 +1442,7 @@ pub mod request_header {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -1359,12 +1451,12 @@ pub mod request_header {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             RequestHeader::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| RequestHeader::encode_validated(self, encoder, version),
@@ -1375,7 +1467,7 @@ pub mod request_header {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -1400,7 +1492,7 @@ pub mod response_header {
 
     /// `ResponseHeader` as declared by the `ResponseHeader` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct ResponseHeader {
         /// The correlation ID of this response.
         pub correlation_id: i32,
@@ -1411,37 +1503,44 @@ pub mod response_header {
     impl KafkaMessage for ResponseHeader {
         const NAME: &'static str = "ResponseHeader";
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 1);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(1, 1));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(1, 1));
     }
 
     impl ResponseHeader {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             crate::message::ensure_encode_version::<Self>(version)?;
 
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: Self::NAME,
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for ResponseHeader {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             crate::message::ensure_decode_version::<Self>(version)?;
 
-            let correlation_id = decoder.read_i32()?;
+            let __kw_field_0 = decoder.read_i32()?;
             let unknown_tagged_fields = if Self::is_flexible(version) {
                 decoder.read_tagged_fields()?
             } else {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                correlation_id,
+            ::core::result::Result::Ok(Self {
+                correlation_id: __kw_field_0,
                 unknown_tagged_fields,
             })
         }
@@ -1452,14 +1551,14 @@ pub mod response_header {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_i32(self.correlation_id)?;
 
             if Self::is_flexible(version) {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -1468,12 +1567,12 @@ pub mod response_header {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             ResponseHeader::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| ResponseHeader::encode_validated(self, encoder, version),
@@ -1484,7 +1583,7 @@ pub mod response_header {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -1509,7 +1608,7 @@ pub mod snapshot_footer_record {
 
     /// `SnapshotFooterRecord` as declared by the `SnapshotFooterRecord` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct SnapshotFooterRecord {
         /// The version of the snapshot footer record.
         pub version: i16,
@@ -1520,37 +1619,44 @@ pub mod snapshot_footer_record {
     impl KafkaMessage for SnapshotFooterRecord {
         const NAME: &'static str = "SnapshotFooterRecord";
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 0);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 0));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(0, 0));
     }
 
     impl SnapshotFooterRecord {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             crate::message::ensure_encode_version::<Self>(version)?;
 
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: Self::NAME,
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for SnapshotFooterRecord {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             crate::message::ensure_decode_version::<Self>(version)?;
 
-            let version_value = decoder.read_i16()?;
+            let __kw_field_0 = decoder.read_i16()?;
             let unknown_tagged_fields = if Self::is_flexible(version) {
                 decoder.read_tagged_fields()?
             } else {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                version: version_value,
+            ::core::result::Result::Ok(Self {
+                version: __kw_field_0,
                 unknown_tagged_fields,
             })
         }
@@ -1561,14 +1667,14 @@ pub mod snapshot_footer_record {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_i16(self.version)?;
 
             if Self::is_flexible(version) {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -1577,12 +1683,12 @@ pub mod snapshot_footer_record {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             SnapshotFooterRecord::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| SnapshotFooterRecord::encode_validated(self, encoder, version),
@@ -1593,7 +1699,7 @@ pub mod snapshot_footer_record {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -1618,7 +1724,7 @@ pub mod snapshot_header_record {
 
     /// `SnapshotHeaderRecord` as declared by the `SnapshotHeaderRecord` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct SnapshotHeaderRecord {
         /// The version of the snapshot header record.
         pub version: i16,
@@ -1631,39 +1737,46 @@ pub mod snapshot_header_record {
     impl KafkaMessage for SnapshotHeaderRecord {
         const NAME: &'static str = "SnapshotHeaderRecord";
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 0);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 0));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(0, 0));
     }
 
     impl SnapshotHeaderRecord {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             crate::message::ensure_encode_version::<Self>(version)?;
 
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: Self::NAME,
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for SnapshotHeaderRecord {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             crate::message::ensure_decode_version::<Self>(version)?;
 
-            let version_value = decoder.read_i16()?;
-            let last_contained_log_timestamp = decoder.read_i64()?;
+            let __kw_field_0 = decoder.read_i16()?;
+            let __kw_field_1 = decoder.read_i64()?;
             let unknown_tagged_fields = if Self::is_flexible(version) {
                 decoder.read_tagged_fields()?
             } else {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                version: version_value,
-                last_contained_log_timestamp,
+            ::core::result::Result::Ok(Self {
+                version: __kw_field_0,
+                last_contained_log_timestamp: __kw_field_1,
                 unknown_tagged_fields,
             })
         }
@@ -1674,7 +1787,7 @@ pub mod snapshot_header_record {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_i16(self.version)?;
             encoder.write_i64(self.last_contained_log_timestamp)?;
 
@@ -1682,7 +1795,7 @@ pub mod snapshot_header_record {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -1691,12 +1804,12 @@ pub mod snapshot_header_record {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             SnapshotHeaderRecord::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| SnapshotHeaderRecord::encode_validated(self, encoder, version),
@@ -1707,7 +1820,7 @@ pub mod snapshot_header_record {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -1733,14 +1846,14 @@ pub mod voters_record {
 
     /// `Voter` as declared by the `VotersRecord` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct Voter {
         /// The replica id of the voter in the topic partition.
         pub voter_id: i32,
         /// The directory id of the voter in the topic partition.
         pub voter_directory_id: Uuid,
         /// The endpoint that can be used to communicate with the voter.
-        pub endpoints: Vec<Endpoint>,
+        pub endpoints: ::std::vec::Vec<Endpoint>,
         /// The range of versions of the protocol that the replica supports.
         pub k_raft_version_feature: KRaftVersionFeature,
         /// Unknown flexible-version tagged fields retained for forwarding.
@@ -1749,7 +1862,8 @@ pub mod voters_record {
 
     impl Voter {
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 0);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 0));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(0, 0));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
@@ -1757,9 +1871,12 @@ pub mod voters_record {
     }
 
     impl Voter {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(EncodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(EncodeError::UnsupportedVersion {
                     message: "Voter",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
@@ -1771,44 +1888,47 @@ pub mod voters_record {
             }
             self.k_raft_version_feature.validate_for_version(version)?;
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: "Voter",
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for Voter {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(DecodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(DecodeError::UnsupportedVersion {
                     message: "Voter",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
                 });
             }
 
-            let voter_id = decoder.read_i32()?;
-            let voter_directory_id = decoder.read_uuid()?;
-            let endpoints = {
+            let __kw_field_0 = decoder.read_i32()?;
+            let __kw_field_1 = decoder.read_uuid()?;
+            let __kw_field_2 = {
                 let length = decoder.read_compact_array_len()?;
                 decoder.read_vec(length, |decoder| Endpoint::decode(decoder, version))?
             };
-            let k_raft_version_feature = KRaftVersionFeature::decode(decoder, version)?;
+            let __kw_field_3 = KRaftVersionFeature::decode(decoder, version)?;
             let unknown_tagged_fields = if Self::is_flexible(version) {
                 decoder.read_tagged_fields()?
             } else {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                voter_id,
-                voter_directory_id,
-                endpoints,
-                k_raft_version_feature,
+            ::core::result::Result::Ok(Self {
+                voter_id: __kw_field_0,
+                voter_directory_id: __kw_field_1,
+                endpoints: __kw_field_2,
+                k_raft_version_feature: __kw_field_3,
                 unknown_tagged_fields,
             })
         }
@@ -1819,7 +1939,7 @@ pub mod voters_record {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_i32(self.voter_id)?;
             encoder.write_uuid(self.voter_directory_id)?;
             encoder.write_compact_array_len(self.endpoints.len())?;
@@ -1833,7 +1953,7 @@ pub mod voters_record {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -1842,12 +1962,12 @@ pub mod voters_record {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             Voter::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| Voter::encode_validated(self, encoder, version),
@@ -1858,7 +1978,7 @@ pub mod voters_record {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -1870,7 +1990,7 @@ pub mod voters_record {
 
     /// `Endpoint` as declared by the `VotersRecord` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct Endpoint {
         /// The name of the endpoint.
         pub name: StrBytes,
@@ -1884,7 +2004,8 @@ pub mod voters_record {
 
     impl Endpoint {
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 0);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 0));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(0, 0));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
@@ -1892,9 +2013,12 @@ pub mod voters_record {
     }
 
     impl Endpoint {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(EncodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(EncodeError::UnsupportedVersion {
                     message: "Endpoint",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
@@ -1902,39 +2026,42 @@ pub mod voters_record {
             }
 
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: "Endpoint",
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for Endpoint {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(DecodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(DecodeError::UnsupportedVersion {
                     message: "Endpoint",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
                 });
             }
 
-            let name = decoder.read_compact_string()?;
-            let host = decoder.read_compact_string()?;
-            let port = decoder.read_u16()?;
+            let __kw_field_0 = decoder.read_compact_string()?;
+            let __kw_field_1 = decoder.read_compact_string()?;
+            let __kw_field_2 = decoder.read_u16()?;
             let unknown_tagged_fields = if Self::is_flexible(version) {
                 decoder.read_tagged_fields()?
             } else {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                name,
-                host,
-                port,
+            ::core::result::Result::Ok(Self {
+                name: __kw_field_0,
+                host: __kw_field_1,
+                port: __kw_field_2,
                 unknown_tagged_fields,
             })
         }
@@ -1945,7 +2072,7 @@ pub mod voters_record {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_compact_string(&self.name)?;
             encoder.write_compact_string(&self.host)?;
             encoder.write_u16(self.port)?;
@@ -1954,7 +2081,7 @@ pub mod voters_record {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -1963,12 +2090,12 @@ pub mod voters_record {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             Endpoint::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| Endpoint::encode_validated(self, encoder, version),
@@ -1979,7 +2106,7 @@ pub mod voters_record {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -1991,7 +2118,7 @@ pub mod voters_record {
 
     /// `KRaftVersionFeature` as declared by the `VotersRecord` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct KRaftVersionFeature {
         /// The minimum supported `KRaft` protocol version.
         pub min_supported_version: i16,
@@ -2003,7 +2130,8 @@ pub mod voters_record {
 
     impl KRaftVersionFeature {
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 0);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 0));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(0, 0));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
@@ -2011,9 +2139,12 @@ pub mod voters_record {
     }
 
     impl KRaftVersionFeature {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(EncodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(EncodeError::UnsupportedVersion {
                     message: "KRaftVersionFeature",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
@@ -2021,37 +2152,40 @@ pub mod voters_record {
             }
 
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: "KRaftVersionFeature",
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for KRaftVersionFeature {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(DecodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(DecodeError::UnsupportedVersion {
                     message: "KRaftVersionFeature",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
                 });
             }
 
-            let min_supported_version = decoder.read_i16()?;
-            let max_supported_version = decoder.read_i16()?;
+            let __kw_field_0 = decoder.read_i16()?;
+            let __kw_field_1 = decoder.read_i16()?;
             let unknown_tagged_fields = if Self::is_flexible(version) {
                 decoder.read_tagged_fields()?
             } else {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                min_supported_version,
-                max_supported_version,
+            ::core::result::Result::Ok(Self {
+                min_supported_version: __kw_field_0,
+                max_supported_version: __kw_field_1,
                 unknown_tagged_fields,
             })
         }
@@ -2062,7 +2196,7 @@ pub mod voters_record {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_i16(self.min_supported_version)?;
             encoder.write_i16(self.max_supported_version)?;
 
@@ -2070,7 +2204,7 @@ pub mod voters_record {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -2079,12 +2213,12 @@ pub mod voters_record {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             KRaftVersionFeature::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| KRaftVersionFeature::encode_validated(self, encoder, version),
@@ -2095,7 +2229,7 @@ pub mod voters_record {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -2107,12 +2241,12 @@ pub mod voters_record {
 
     /// `VotersRecord` as declared by the `VotersRecord` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct VotersRecord {
         /// The version of the voters record.
         pub version: i16,
         /// The set of voters in the quorum for this epoch.
-        pub voters: Vec<Voter>,
+        pub voters: ::std::vec::Vec<Voter>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
     }
@@ -2120,33 +2254,40 @@ pub mod voters_record {
     impl KafkaMessage for VotersRecord {
         const NAME: &'static str = "VotersRecord";
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 0);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 0));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(0, 0));
     }
 
     impl VotersRecord {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             crate::message::ensure_encode_version::<Self>(version)?;
 
             for value in &self.voters {
                 value.validate_for_version(version)?;
             }
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: Self::NAME,
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for VotersRecord {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             crate::message::ensure_decode_version::<Self>(version)?;
 
-            let version_value = decoder.read_i16()?;
-            let voters = {
+            let __kw_field_0 = decoder.read_i16()?;
+            let __kw_field_1 = {
                 let length = decoder.read_compact_array_len()?;
                 decoder.read_vec(length, |decoder| Voter::decode(decoder, version))?
             };
@@ -2156,9 +2297,9 @@ pub mod voters_record {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                version: version_value,
-                voters,
+            ::core::result::Result::Ok(Self {
+                version: __kw_field_0,
+                voters: __kw_field_1,
                 unknown_tagged_fields,
             })
         }
@@ -2169,7 +2310,7 @@ pub mod voters_record {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_i16(self.version)?;
             encoder.write_compact_array_len(self.voters.len())?;
             for value in &self.voters {
@@ -2180,7 +2321,7 @@ pub mod voters_record {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -2189,12 +2330,12 @@ pub mod voters_record {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             VotersRecord::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| VotersRecord::encode_validated(self, encoder, version),
@@ -2205,7 +2346,7 @@ pub mod voters_record {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),

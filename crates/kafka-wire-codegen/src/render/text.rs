@@ -16,6 +16,24 @@ impl RustText {
         self.output.push('\n');
     }
 
+    /// Emits untrusted prose as Rust doc lines without allowing a line escape.
+    pub(crate) fn doc_line(&mut self, prose: impl AsRef<str>) {
+        let mut physical = String::new();
+        let mut characters = prose.as_ref().chars().peekable();
+        while let Some(character) = characters.next() {
+            if matches!(character, '\r' | '\n' | '\u{2028}' | '\u{2029}') {
+                self.line(format!("/// {physical}"));
+                physical.clear();
+                if character == '\r' && characters.peek() == Some(&'\n') {
+                    characters.next();
+                }
+            } else {
+                physical.push(character);
+            }
+        }
+        self.line(format!("/// {physical}"));
+    }
+
     pub(crate) fn blank(&mut self) {
         self.output.push('\n');
     }

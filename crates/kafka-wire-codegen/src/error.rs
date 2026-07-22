@@ -133,6 +133,16 @@ pub enum GenerationError {
         /// Later phase or API that attempted the same path.
         second: String,
     },
+    /// A generated path cannot be created portably on supported hosts.
+    #[error("non-portable generated path {path} from `{producer}`: {reason}")]
+    NonPortableGeneratedPath {
+        /// Rejected repository-relative output path.
+        path: String,
+        /// Compiler phase or API that selected the path.
+        producer: String,
+        /// Host-independent portability rule that was violated.
+        reason: &'static str,
+    },
     /// The initial backend does not yet implement one normalized construct.
     #[error("cannot render {message}.{field}: {reason}")]
     UnsupportedSchema {

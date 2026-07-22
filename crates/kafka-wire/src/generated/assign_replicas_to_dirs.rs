@@ -20,19 +20,20 @@ pub mod assign_replicas_to_dirs_request {
 
     /// `DirectoryData` as declared by the `AssignReplicasToDirs` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct DirectoryData {
         /// The ID of the directory.
         pub id: Uuid,
         /// The topics assigned to the directory.
-        pub topics: Vec<TopicData>,
+        pub topics: ::std::vec::Vec<TopicData>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
     }
 
     impl DirectoryData {
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 0);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 0));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(0, 0));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
@@ -40,9 +41,12 @@ pub mod assign_replicas_to_dirs_request {
     }
 
     impl DirectoryData {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(EncodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(EncodeError::UnsupportedVersion {
                     message: "DirectoryData",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
@@ -53,28 +57,31 @@ pub mod assign_replicas_to_dirs_request {
                 value.validate_for_version(version)?;
             }
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: "DirectoryData",
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for DirectoryData {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(DecodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(DecodeError::UnsupportedVersion {
                     message: "DirectoryData",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
                 });
             }
 
-            let id = decoder.read_uuid()?;
-            let topics = {
+            let __kw_field_0 = decoder.read_uuid()?;
+            let __kw_field_1 = {
                 let length = decoder.read_compact_array_len()?;
                 decoder.read_vec(length, |decoder| TopicData::decode(decoder, version))?
             };
@@ -84,9 +91,9 @@ pub mod assign_replicas_to_dirs_request {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                id,
-                topics,
+            ::core::result::Result::Ok(Self {
+                id: __kw_field_0,
+                topics: __kw_field_1,
                 unknown_tagged_fields,
             })
         }
@@ -97,7 +104,7 @@ pub mod assign_replicas_to_dirs_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_uuid(self.id)?;
             encoder.write_compact_array_len(self.topics.len())?;
             for value in &self.topics {
@@ -108,7 +115,7 @@ pub mod assign_replicas_to_dirs_request {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -117,12 +124,12 @@ pub mod assign_replicas_to_dirs_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             DirectoryData::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| DirectoryData::encode_validated(self, encoder, version),
@@ -133,7 +140,7 @@ pub mod assign_replicas_to_dirs_request {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -145,19 +152,20 @@ pub mod assign_replicas_to_dirs_request {
 
     /// `TopicData` as declared by the `AssignReplicasToDirs` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct TopicData {
         /// The ID of the assigned topic.
         pub topic_id: Uuid,
         /// The partitions assigned to the directory.
-        pub partitions: Vec<PartitionData>,
+        pub partitions: ::std::vec::Vec<PartitionData>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
     }
 
     impl TopicData {
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 0);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 0));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(0, 0));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
@@ -165,9 +173,12 @@ pub mod assign_replicas_to_dirs_request {
     }
 
     impl TopicData {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(EncodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(EncodeError::UnsupportedVersion {
                     message: "TopicData",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
@@ -178,28 +189,31 @@ pub mod assign_replicas_to_dirs_request {
                 value.validate_for_version(version)?;
             }
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: "TopicData",
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for TopicData {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(DecodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(DecodeError::UnsupportedVersion {
                     message: "TopicData",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
                 });
             }
 
-            let topic_id = decoder.read_uuid()?;
-            let partitions = {
+            let __kw_field_0 = decoder.read_uuid()?;
+            let __kw_field_1 = {
                 let length = decoder.read_compact_array_len()?;
                 decoder.read_vec(length, |decoder| PartitionData::decode(decoder, version))?
             };
@@ -209,9 +223,9 @@ pub mod assign_replicas_to_dirs_request {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                topic_id,
-                partitions,
+            ::core::result::Result::Ok(Self {
+                topic_id: __kw_field_0,
+                partitions: __kw_field_1,
                 unknown_tagged_fields,
             })
         }
@@ -222,7 +236,7 @@ pub mod assign_replicas_to_dirs_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_uuid(self.topic_id)?;
             encoder.write_compact_array_len(self.partitions.len())?;
             for value in &self.partitions {
@@ -233,7 +247,7 @@ pub mod assign_replicas_to_dirs_request {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -242,12 +256,12 @@ pub mod assign_replicas_to_dirs_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             TopicData::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| TopicData::encode_validated(self, encoder, version),
@@ -258,7 +272,7 @@ pub mod assign_replicas_to_dirs_request {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -270,7 +284,7 @@ pub mod assign_replicas_to_dirs_request {
 
     /// `PartitionData` as declared by the `AssignReplicasToDirs` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct PartitionData {
         /// The partition index.
         pub partition_index: i32,
@@ -280,7 +294,8 @@ pub mod assign_replicas_to_dirs_request {
 
     impl PartitionData {
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 0);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 0));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(0, 0));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
@@ -288,9 +303,12 @@ pub mod assign_replicas_to_dirs_request {
     }
 
     impl PartitionData {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(EncodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(EncodeError::UnsupportedVersion {
                     message: "PartitionData",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
@@ -298,35 +316,38 @@ pub mod assign_replicas_to_dirs_request {
             }
 
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: "PartitionData",
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for PartitionData {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(DecodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(DecodeError::UnsupportedVersion {
                     message: "PartitionData",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
                 });
             }
 
-            let partition_index = decoder.read_i32()?;
+            let __kw_field_0 = decoder.read_i32()?;
             let unknown_tagged_fields = if Self::is_flexible(version) {
                 decoder.read_tagged_fields()?
             } else {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                partition_index,
+            ::core::result::Result::Ok(Self {
+                partition_index: __kw_field_0,
                 unknown_tagged_fields,
             })
         }
@@ -337,14 +358,14 @@ pub mod assign_replicas_to_dirs_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_i32(self.partition_index)?;
 
             if Self::is_flexible(version) {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -353,12 +374,12 @@ pub mod assign_replicas_to_dirs_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             PartitionData::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| PartitionData::encode_validated(self, encoder, version),
@@ -369,7 +390,7 @@ pub mod assign_replicas_to_dirs_request {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -388,17 +409,17 @@ pub mod assign_replicas_to_dirs_request {
         /// The epoch of the requesting broker.
         pub broker_epoch: i64,
         /// The directories to which replicas should be assigned.
-        pub directories: Vec<DirectoryData>,
+        pub directories: ::std::vec::Vec<DirectoryData>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
     }
 
-    impl Default for AssignReplicasToDirsRequest {
+    impl ::core::default::Default for AssignReplicasToDirsRequest {
         fn default() -> Self {
             Self {
                 broker_id: 0,
                 broker_epoch: -1,
-                directories: Vec::new(),
+                directories: ::std::vec::Vec::new(),
                 unknown_tagged_fields: TaggedFields::default(),
             }
         }
@@ -407,7 +428,8 @@ pub mod assign_replicas_to_dirs_request {
     impl KafkaMessage for AssignReplicasToDirsRequest {
         const NAME: &'static str = "AssignReplicasToDirsRequest";
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 0);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 0));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(0, 0));
     }
 
     impl KafkaRequest for AssignReplicasToDirsRequest {
@@ -421,30 +443,36 @@ pub mod assign_replicas_to_dirs_request {
     }
 
     impl AssignReplicasToDirsRequest {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             crate::message::ensure_encode_version::<Self>(version)?;
 
             for value in &self.directories {
                 value.validate_for_version(version)?;
             }
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: Self::NAME,
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for AssignReplicasToDirsRequest {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             crate::message::ensure_decode_version::<Self>(version)?;
 
-            let broker_id = decoder.read_i32()?;
-            let broker_epoch = decoder.read_i64()?;
-            let directories = {
+            let __kw_field_0 = decoder.read_i32()?;
+            let __kw_field_1 = decoder.read_i64()?;
+            let __kw_field_2 = {
                 let length = decoder.read_compact_array_len()?;
                 decoder.read_vec(length, |decoder| DirectoryData::decode(decoder, version))?
             };
@@ -454,10 +482,10 @@ pub mod assign_replicas_to_dirs_request {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                broker_id,
-                broker_epoch,
-                directories,
+            ::core::result::Result::Ok(Self {
+                broker_id: __kw_field_0,
+                broker_epoch: __kw_field_1,
+                directories: __kw_field_2,
                 unknown_tagged_fields,
             })
         }
@@ -468,7 +496,7 @@ pub mod assign_replicas_to_dirs_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_i32(self.broker_id)?;
             encoder.write_i64(self.broker_epoch)?;
             encoder.write_compact_array_len(self.directories.len())?;
@@ -480,7 +508,7 @@ pub mod assign_replicas_to_dirs_request {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -489,12 +517,12 @@ pub mod assign_replicas_to_dirs_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             AssignReplicasToDirsRequest::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| AssignReplicasToDirsRequest::encode_validated(self, encoder, version),
@@ -505,7 +533,7 @@ pub mod assign_replicas_to_dirs_request {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -531,19 +559,20 @@ pub mod assign_replicas_to_dirs_response {
 
     /// `DirectoryData` as declared by the `AssignReplicasToDirs` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct DirectoryData {
         /// The ID of the directory.
         pub id: Uuid,
         /// The list of topics and their assigned partitions.
-        pub topics: Vec<TopicData>,
+        pub topics: ::std::vec::Vec<TopicData>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
     }
 
     impl DirectoryData {
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 0);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 0));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(0, 0));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
@@ -551,9 +580,12 @@ pub mod assign_replicas_to_dirs_response {
     }
 
     impl DirectoryData {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(EncodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(EncodeError::UnsupportedVersion {
                     message: "DirectoryData",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
@@ -564,28 +596,31 @@ pub mod assign_replicas_to_dirs_response {
                 value.validate_for_version(version)?;
             }
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: "DirectoryData",
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for DirectoryData {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(DecodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(DecodeError::UnsupportedVersion {
                     message: "DirectoryData",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
                 });
             }
 
-            let id = decoder.read_uuid()?;
-            let topics = {
+            let __kw_field_0 = decoder.read_uuid()?;
+            let __kw_field_1 = {
                 let length = decoder.read_compact_array_len()?;
                 decoder.read_vec(length, |decoder| TopicData::decode(decoder, version))?
             };
@@ -595,9 +630,9 @@ pub mod assign_replicas_to_dirs_response {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                id,
-                topics,
+            ::core::result::Result::Ok(Self {
+                id: __kw_field_0,
+                topics: __kw_field_1,
                 unknown_tagged_fields,
             })
         }
@@ -608,7 +643,7 @@ pub mod assign_replicas_to_dirs_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_uuid(self.id)?;
             encoder.write_compact_array_len(self.topics.len())?;
             for value in &self.topics {
@@ -619,7 +654,7 @@ pub mod assign_replicas_to_dirs_response {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -628,12 +663,12 @@ pub mod assign_replicas_to_dirs_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             DirectoryData::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| DirectoryData::encode_validated(self, encoder, version),
@@ -644,7 +679,7 @@ pub mod assign_replicas_to_dirs_response {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -656,19 +691,20 @@ pub mod assign_replicas_to_dirs_response {
 
     /// `TopicData` as declared by the `AssignReplicasToDirs` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct TopicData {
         /// The ID of the assigned topic.
         pub topic_id: Uuid,
         /// The list of assigned partitions.
-        pub partitions: Vec<PartitionData>,
+        pub partitions: ::std::vec::Vec<PartitionData>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
     }
 
     impl TopicData {
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 0);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 0));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(0, 0));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
@@ -676,9 +712,12 @@ pub mod assign_replicas_to_dirs_response {
     }
 
     impl TopicData {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(EncodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(EncodeError::UnsupportedVersion {
                     message: "TopicData",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
@@ -689,28 +728,31 @@ pub mod assign_replicas_to_dirs_response {
                 value.validate_for_version(version)?;
             }
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: "TopicData",
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for TopicData {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(DecodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(DecodeError::UnsupportedVersion {
                     message: "TopicData",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
                 });
             }
 
-            let topic_id = decoder.read_uuid()?;
-            let partitions = {
+            let __kw_field_0 = decoder.read_uuid()?;
+            let __kw_field_1 = {
                 let length = decoder.read_compact_array_len()?;
                 decoder.read_vec(length, |decoder| PartitionData::decode(decoder, version))?
             };
@@ -720,9 +762,9 @@ pub mod assign_replicas_to_dirs_response {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                topic_id,
-                partitions,
+            ::core::result::Result::Ok(Self {
+                topic_id: __kw_field_0,
+                partitions: __kw_field_1,
                 unknown_tagged_fields,
             })
         }
@@ -733,7 +775,7 @@ pub mod assign_replicas_to_dirs_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_uuid(self.topic_id)?;
             encoder.write_compact_array_len(self.partitions.len())?;
             for value in &self.partitions {
@@ -744,7 +786,7 @@ pub mod assign_replicas_to_dirs_response {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -753,12 +795,12 @@ pub mod assign_replicas_to_dirs_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             TopicData::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| TopicData::encode_validated(self, encoder, version),
@@ -769,7 +811,7 @@ pub mod assign_replicas_to_dirs_response {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -781,7 +823,7 @@ pub mod assign_replicas_to_dirs_response {
 
     /// `PartitionData` as declared by the `AssignReplicasToDirs` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct PartitionData {
         /// The partition index.
         pub partition_index: i32,
@@ -793,7 +835,8 @@ pub mod assign_replicas_to_dirs_response {
 
     impl PartitionData {
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 0);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 0));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(0, 0));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
@@ -801,9 +844,12 @@ pub mod assign_replicas_to_dirs_response {
     }
 
     impl PartitionData {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(EncodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(EncodeError::UnsupportedVersion {
                     message: "PartitionData",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
@@ -811,37 +857,40 @@ pub mod assign_replicas_to_dirs_response {
             }
 
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: "PartitionData",
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for PartitionData {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(DecodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(DecodeError::UnsupportedVersion {
                     message: "PartitionData",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
                 });
             }
 
-            let partition_index = decoder.read_i32()?;
-            let error_code = decoder.read_i16()?;
+            let __kw_field_0 = decoder.read_i32()?;
+            let __kw_field_1 = decoder.read_i16()?;
             let unknown_tagged_fields = if Self::is_flexible(version) {
                 decoder.read_tagged_fields()?
             } else {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                partition_index,
-                error_code,
+            ::core::result::Result::Ok(Self {
+                partition_index: __kw_field_0,
+                error_code: __kw_field_1,
                 unknown_tagged_fields,
             })
         }
@@ -852,7 +901,7 @@ pub mod assign_replicas_to_dirs_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_i32(self.partition_index)?;
             encoder.write_i16(self.error_code)?;
 
@@ -860,7 +909,7 @@ pub mod assign_replicas_to_dirs_response {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -869,12 +918,12 @@ pub mod assign_replicas_to_dirs_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             PartitionData::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| PartitionData::encode_validated(self, encoder, version),
@@ -885,7 +934,7 @@ pub mod assign_replicas_to_dirs_response {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -897,14 +946,14 @@ pub mod assign_replicas_to_dirs_response {
 
     /// Response body for the `AssignReplicasToDirs` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct AssignReplicasToDirsResponse {
         /// The duration in milliseconds for which the request was throttled due to a quota violation, or zero if the request did not violate any quota.
         pub throttle_time_ms: i32,
         /// The top level response error code.
         pub error_code: i16,
         /// The list of directories and their assigned partitions.
-        pub directories: Vec<DirectoryData>,
+        pub directories: ::std::vec::Vec<DirectoryData>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
     }
@@ -912,7 +961,8 @@ pub mod assign_replicas_to_dirs_response {
     impl KafkaMessage for AssignReplicasToDirsResponse {
         const NAME: &'static str = "AssignReplicasToDirsResponse";
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 0);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 0));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(0, 0));
     }
 
     impl KafkaResponse for AssignReplicasToDirsResponse {
@@ -920,30 +970,36 @@ pub mod assign_replicas_to_dirs_response {
     }
 
     impl AssignReplicasToDirsResponse {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             crate::message::ensure_encode_version::<Self>(version)?;
 
             for value in &self.directories {
                 value.validate_for_version(version)?;
             }
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: Self::NAME,
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for AssignReplicasToDirsResponse {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             crate::message::ensure_decode_version::<Self>(version)?;
 
-            let throttle_time_ms = decoder.read_i32()?;
-            let error_code = decoder.read_i16()?;
-            let directories = {
+            let __kw_field_0 = decoder.read_i32()?;
+            let __kw_field_1 = decoder.read_i16()?;
+            let __kw_field_2 = {
                 let length = decoder.read_compact_array_len()?;
                 decoder.read_vec(length, |decoder| DirectoryData::decode(decoder, version))?
             };
@@ -953,10 +1009,10 @@ pub mod assign_replicas_to_dirs_response {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                throttle_time_ms,
-                error_code,
-                directories,
+            ::core::result::Result::Ok(Self {
+                throttle_time_ms: __kw_field_0,
+                error_code: __kw_field_1,
+                directories: __kw_field_2,
                 unknown_tagged_fields,
             })
         }
@@ -967,7 +1023,7 @@ pub mod assign_replicas_to_dirs_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_i32(self.throttle_time_ms)?;
             encoder.write_i16(self.error_code)?;
             encoder.write_compact_array_len(self.directories.len())?;
@@ -979,7 +1035,7 @@ pub mod assign_replicas_to_dirs_response {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -988,12 +1044,12 @@ pub mod assign_replicas_to_dirs_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             AssignReplicasToDirsResponse::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| AssignReplicasToDirsResponse::encode_validated(self, encoder, version),
@@ -1004,7 +1060,7 @@ pub mod assign_replicas_to_dirs_response {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -1028,7 +1084,7 @@ pub const ASSIGN_REPLICAS_TO_DIRS_REQUEST_DESCRIPTOR: MessageDescriptor = Messag
     "AssignReplicasToDirsRequest",
     MessageDirection::Request,
     VersionRange::new(0, 0),
-    Some(VersionRange::new(0, 0)),
+    ::core::option::Option::Some(VersionRange::new(0, 0)),
 );
 
 /// Static metadata for [`AssignReplicasToDirsResponse`].
@@ -1037,7 +1093,7 @@ pub const ASSIGN_REPLICAS_TO_DIRS_RESPONSE_DESCRIPTOR: MessageDescriptor = Messa
     "AssignReplicasToDirsResponse",
     MessageDirection::Response,
     VersionRange::new(0, 0),
-    Some(VersionRange::new(0, 0)),
+    ::core::option::Option::Some(VersionRange::new(0, 0)),
 );
 
 /// Static pair metadata for the `AssignReplicasToDirs` API.
@@ -1046,6 +1102,6 @@ pub const ASSIGN_REPLICAS_TO_DIRS_API_DESCRIPTOR: ApiDescriptor = ApiDescriptor:
     &ASSIGN_REPLICAS_TO_DIRS_REQUEST_DESCRIPTOR,
     &ASSIGN_REPLICAS_TO_DIRS_RESPONSE_DESCRIPTOR,
     VersionRange::new(0, 0),
-    Some(VersionRange::new(0, 0)),
+    ::core::option::Option::Some(VersionRange::new(0, 0)),
     false,
 );

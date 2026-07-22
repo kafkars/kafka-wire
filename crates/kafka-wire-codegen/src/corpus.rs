@@ -15,12 +15,10 @@ use std::{collections::BTreeMap, path::Path};
 
 use crate::{
     GenerationError,
+    corpus_classify::classify_semantics,
     corpus_output::{insert_probe_file, refusal_cause, render_group},
-    corpus_validation::validate_source_corpus,
     format::format_rendered_rust,
-    group::group_sources,
     lockfile::ProtocolLock,
-    namespace::validate_generated_namespace,
     overrides::HeaderOverrides,
     render::{
         render_fuzz_dispatch, render_header_version, render_module_file, render_registry,
@@ -95,7 +93,6 @@ pub fn render_corpus(workspace_root: impl AsRef<Path>) -> Result<CorpusRender, G
     let workspace = workspace_root.as_ref();
     let lock = ProtocolLock::read(&workspace.join("spec/protocol.lock"))?;
     let corpus = load_every_source(workspace, &lock)?;
-    validate_source_corpus(&corpus.sources)?;
 
     let mut probe = CorpusRender::default();
     let mut producers = BTreeMap::new();
@@ -105,8 +102,7 @@ pub fn render_corpus(workspace_root: impl AsRef<Path>) -> Result<CorpusRender, G
             .insert(filename, CorpusOutcome::NotLoaded { reason });
     }
 
-    let grouped = group_sources(corpus.sources)?;
-    validate_generated_namespace(&grouped.api, &grouped.unkeyed)?;
+    let grouped = classify_semantics(corpus.sources, &mut probe.outcomes)?;
     let overrides = HeaderOverrides::read(workspace, &lock, &grouped.api, &grouped.unkeyed)?;
 
     // Headers and data schemas answer to no API key and render into one module
@@ -159,27 +155,27 @@ pub fn render_corpus(workspace_root: impl AsRef<Path>) -> Result<CorpusRender, G
     // and so cannot answer the one question it exists to ask. `header_version`
     // is not keyed by a schema and has no outcome to record, but it is a module
     // the facade names, which is enough.
-    let facades = format_rendered_rust(
-        BTreeMap::from([
-            (
-                "mod.rs".to_owned(),
-                render_module_file(&emitted, &grouped.unkeyed, &lock.kafka.commit),
-            ),
-            (
-                "registry.rs".to_owned(),
-                render_registry(&emitted, &lock.kafka.commit),
-            ),
-            (
-                "header_version.rs".to_owned(),
-                render_header_version(&overrides, &lock.kafka.commit),
-            ),
-            (
-                "fuzz_roundtrip.rs".to_owned(),
-                render_fuzz_dispatch(&emitted, &lock.kafka.commit)?,
-            ),
-        ]),
-        workspace,
-    )?;
+    let mut facade_sources = BTreeMap::from([
+        (
+            "mod.rs".to_owned(),
+            render_module_file(&emitted, &grouped.unkeyed, &lock.kafka.commit),
+        ),
+        (
+            "registry.rs".to_owned(),
+            render_registry(&emitted, &lock.kafka.commit),
+        ),
+        (
+            "header_version.rs".to_owned(),
+            render_header_version(&overrides, &lock.kafka.commit),
+        ),
+    ]);
+    if !emitted.is_empty() {
+        facade_sources.insert(
+            "fuzz_roundtrip.rs".to_owned(),
+            render_fuzz_dispatch(&emitted, &lock.kafka.commit)?,
+        );
+    }
+    let facades = format_rendered_rust(facade_sources, workspace)?;
     for (path, source) in facades {
         let producer = match path.as_str() {
             "mod.rs" => "fixed module facade",

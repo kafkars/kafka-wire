@@ -18,7 +18,7 @@ use crate::{
 };
 
 use super::codec::{local, render_array_body, render_array_encode, render_nullable_array_encode};
-use super::imports::spell;
+use super::imports::{ExternalSymbol as S, spell};
 
 /// Whether this field travels in the tagged-field section rather than inline.
 pub(super) fn is_tagged(field: &Field) -> bool {
@@ -49,12 +49,13 @@ pub(super) fn declares_a_tag(message: &Message) -> bool {
 /// Sorted here rather than trusted from the schema: declaration order is not
 /// tag order, and the generated `match` and the writes both read better in the
 /// order the wire uses.
-fn known_tags(fields: &[Field]) -> Vec<(u32, &Field)> {
+fn known_tags(fields: &[Field]) -> Vec<(u32, usize, &Field)> {
     let mut tagged = fields
         .iter()
-        .filter_map(|field| field.tag.map(|tag| (tag, field)))
+        .enumerate()
+        .filter_map(|(index, field)| field.tag.map(|tag| (tag, index, field)))
         .collect::<Vec<_>>();
-    tagged.sort_by_key(|(tag, _)| *tag);
+    tagged.sort_by_key(|(tag, _, _)| *tag);
     tagged
 }
 
@@ -73,37 +74,38 @@ pub(super) fn render_tagged_decode(
         rust.open("let unknown_tagged_fields = if Self::is_flexible(version)");
         rust.line("decoder.read_tagged_fields()?");
         rust.reopen("} else {");
-        rust.line(format!("{}::default()", spell(message, "TaggedFields")));
+        rust.line(format!("{}::default()", spell(message, S::TaggedFields)));
         rust.close(";");
         return Ok(());
     }
 
-    for (_, field) in &tagged {
+    for (_, index, field) in &tagged {
         // Spelled with its type because there is no read branch to infer from:
         // a bare `-1` in a `let mut` is an `i32` whatever the field says.
         rust.line(format!(
             "let mut {}: {} = {};",
-            local(field),
+            local(*index),
             field::rust_type(field, message),
             field::default_expression(field, message)
         ));
     }
     rust.line(format!(
         "let mut unknown_tagged_fields = {}::default();",
-        spell(message, "TaggedFields")
+        spell(message, S::TaggedFields)
     ));
     rust.open("if Self::is_flexible(version)");
     rust.open("unknown_tagged_fields = decoder.read_tagged_fields_with(|tag, decoder| match tag");
-    for (tag, field) in &tagged {
-        render_tag_arm(rust, *tag, field, message)?;
+    for (tag, index, field) in &tagged {
+        render_tag_arm(rust, *tag, *index, field, message)?;
     }
     // A tag this build has no arm for — or one arriving at a version where its
     // field does not exist — is kept verbatim rather than refused. That is
     // exactly what the section is for: an entry it cannot interpret survives
     // the round trip untouched, and "cannot interpret" includes "not here yet".
     rust.line(format!(
-        "_ => Ok({}::Retained),",
-        spell(message, "TagOutcome")
+        "_ => {}({}::Retained),",
+        spell(message, S::Ok),
+        spell(message, S::TagOutcome)
     ));
     rust.close(")?;");
     rust.close("");
@@ -114,6 +116,7 @@ pub(super) fn render_tagged_decode(
 fn render_tag_arm(
     rust: &mut RustText,
     tag: u32,
+    index: usize,
     field: &Field,
     message: &Message,
 ) -> Result<(), GenerationError> {
@@ -122,7 +125,7 @@ fn render_tag_arm(
         None => format!("{tag} =>"),
     };
     rust.open(arm);
-    let name = local(field);
+    let name = local(index);
     if let FieldType::Array(element) = &field.ty {
         let (read, _) = field::element_codec(element, field, message)?;
         let (length, _) = field::array_length_codec(field, message);
@@ -141,7 +144,11 @@ fn render_tag_arm(
             field::read_expression(field, message)?
         ));
     }
-    rust.line(format!("Ok({}::Decoded)", spell(message, "TagOutcome")));
+    rust.line(format!(
+        "{}({}::Decoded)",
+        spell(message, S::Ok),
+        spell(message, S::TagOutcome)
+    ));
     rust.close("");
     Ok(())
 }
@@ -160,9 +167,9 @@ pub(super) fn render_tagged_encode(
     } else {
         rust.line(format!(
             "let mut known = {}::new();",
-            spell(message, "KnownTags")
+            spell(message, S::KnownTags)
         ));
-        for (tag, field) in &tagged {
+        for (tag, _, field) in &tagged {
             render_tag_write(rust, *tag, field, message)?;
         }
         rust.line("encoder.write_merged_tagged_fields(known, &self.unknown_tagged_fields)?;");
@@ -195,14 +202,14 @@ fn render_tag_write(
         let (_, length) = field::array_length_codec(field, message);
         let name = field.name.rust_field();
         if field::is_nullable(field, message) {
-            render_nullable_array_encode(rust, name, &length, &write);
+            render_nullable_array_encode(rust, message, name, &length, &write);
         } else {
             render_array_encode(rust, name, &length, &write);
         }
     } else {
         rust.line(field::write_statement(field, message)?);
     }
-    rust.line("Ok(())");
+    rust.line(format!("{}(())", spell(message, S::Ok)));
     rust.close(")?;");
     rust.close("");
     Ok(())

@@ -20,19 +20,20 @@ pub mod fetch_snapshot_request {
 
     /// `TopicSnapshot` as declared by the `FetchSnapshot` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct TopicSnapshot {
         /// The name of the topic to fetch.
         pub name: StrBytes,
         /// The partitions to fetch.
-        pub partitions: Vec<PartitionSnapshot>,
+        pub partitions: ::std::vec::Vec<PartitionSnapshot>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
     }
 
     impl TopicSnapshot {
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 1);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 1));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(0, 1));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
@@ -40,9 +41,12 @@ pub mod fetch_snapshot_request {
     }
 
     impl TopicSnapshot {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(EncodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(EncodeError::UnsupportedVersion {
                     message: "TopicSnapshot",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
@@ -53,28 +57,31 @@ pub mod fetch_snapshot_request {
                 value.validate_for_version(version)?;
             }
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: "TopicSnapshot",
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for TopicSnapshot {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(DecodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(DecodeError::UnsupportedVersion {
                     message: "TopicSnapshot",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
                 });
             }
 
-            let name = decoder.read_compact_string()?;
-            let partitions = {
+            let __kw_field_0 = decoder.read_compact_string()?;
+            let __kw_field_1 = {
                 let length = decoder.read_compact_array_len()?;
                 decoder.read_vec(length, |decoder| {
                     PartitionSnapshot::decode(decoder, version)
@@ -86,9 +93,9 @@ pub mod fetch_snapshot_request {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                name,
-                partitions,
+            ::core::result::Result::Ok(Self {
+                name: __kw_field_0,
+                partitions: __kw_field_1,
                 unknown_tagged_fields,
             })
         }
@@ -99,7 +106,7 @@ pub mod fetch_snapshot_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_compact_string(&self.name)?;
             encoder.write_compact_array_len(self.partitions.len())?;
             for value in &self.partitions {
@@ -110,7 +117,7 @@ pub mod fetch_snapshot_request {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -119,12 +126,12 @@ pub mod fetch_snapshot_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             TopicSnapshot::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| TopicSnapshot::encode_validated(self, encoder, version),
@@ -135,7 +142,7 @@ pub mod fetch_snapshot_request {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -147,7 +154,7 @@ pub mod fetch_snapshot_request {
 
     /// `PartitionSnapshot` as declared by the `FetchSnapshot` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct PartitionSnapshot {
         /// The partition index.
         pub partition: i32,
@@ -165,7 +172,8 @@ pub mod fetch_snapshot_request {
 
     impl PartitionSnapshot {
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 1);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 1));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(0, 1));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
@@ -173,9 +181,12 @@ pub mod fetch_snapshot_request {
     }
 
     impl PartitionSnapshot {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(EncodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(EncodeError::UnsupportedVersion {
                     message: "PartitionSnapshot",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
@@ -184,49 +195,52 @@ pub mod fetch_snapshot_request {
 
             self.snapshot_id.validate_for_version(version)?;
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: "PartitionSnapshot",
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for PartitionSnapshot {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(DecodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(DecodeError::UnsupportedVersion {
                     message: "PartitionSnapshot",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
                 });
             }
 
-            let partition = decoder.read_i32()?;
-            let current_leader_epoch = decoder.read_i32()?;
-            let snapshot_id = SnapshotId::decode(decoder, version)?;
-            let position = decoder.read_i64()?;
-            let mut replica_directory_id: Uuid = Uuid::ZERO;
+            let __kw_field_0 = decoder.read_i32()?;
+            let __kw_field_1 = decoder.read_i32()?;
+            let __kw_field_2 = SnapshotId::decode(decoder, version)?;
+            let __kw_field_3 = decoder.read_i64()?;
+            let mut __kw_field_4: Uuid = Uuid::ZERO;
             let mut unknown_tagged_fields = TaggedFields::default();
             if Self::is_flexible(version) {
                 unknown_tagged_fields =
                     decoder.read_tagged_fields_with(|tag, decoder| match tag {
                         0 if version.value() >= 1 => {
-                            replica_directory_id = decoder.read_uuid()?;
-                            Ok(TagOutcome::Decoded)
+                            __kw_field_4 = decoder.read_uuid()?;
+                            ::core::result::Result::Ok(TagOutcome::Decoded)
                         }
-                        _ => Ok(TagOutcome::Retained),
+                        _ => ::core::result::Result::Ok(TagOutcome::Retained),
                     })?;
             }
 
-            Ok(Self {
-                partition,
-                current_leader_epoch,
-                snapshot_id,
-                position,
-                replica_directory_id,
+            ::core::result::Result::Ok(Self {
+                partition: __kw_field_0,
+                current_leader_epoch: __kw_field_1,
+                snapshot_id: __kw_field_2,
+                position: __kw_field_3,
+                replica_directory_id: __kw_field_4,
                 unknown_tagged_fields,
             })
         }
@@ -237,7 +251,7 @@ pub mod fetch_snapshot_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_i32(self.partition)?;
             encoder.write_i32(self.current_leader_epoch)?;
             self.snapshot_id.encode_validated(encoder, version)?;
@@ -248,13 +262,13 @@ pub mod fetch_snapshot_request {
                 if version.value() >= 1 && self.replica_directory_id != Uuid::ZERO {
                     known.write(0, |encoder| {
                         encoder.write_uuid(self.replica_directory_id)?;
-                        Ok(())
+                        ::core::result::Result::Ok(())
                     })?;
                 }
                 encoder.write_merged_tagged_fields(known, &self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -263,12 +277,12 @@ pub mod fetch_snapshot_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             PartitionSnapshot::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| PartitionSnapshot::encode_validated(self, encoder, version),
@@ -279,7 +293,7 @@ pub mod fetch_snapshot_request {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -291,7 +305,7 @@ pub mod fetch_snapshot_request {
 
     /// `SnapshotId` as declared by the `FetchSnapshot` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct SnapshotId {
         /// The end offset of the snapshot.
         pub end_offset: i64,
@@ -303,7 +317,8 @@ pub mod fetch_snapshot_request {
 
     impl SnapshotId {
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 1);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 1));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(0, 1));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
@@ -311,9 +326,12 @@ pub mod fetch_snapshot_request {
     }
 
     impl SnapshotId {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(EncodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(EncodeError::UnsupportedVersion {
                     message: "SnapshotId",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
@@ -321,37 +339,40 @@ pub mod fetch_snapshot_request {
             }
 
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: "SnapshotId",
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for SnapshotId {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(DecodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(DecodeError::UnsupportedVersion {
                     message: "SnapshotId",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
                 });
             }
 
-            let end_offset = decoder.read_i64()?;
-            let epoch = decoder.read_i32()?;
+            let __kw_field_0 = decoder.read_i64()?;
+            let __kw_field_1 = decoder.read_i32()?;
             let unknown_tagged_fields = if Self::is_flexible(version) {
                 decoder.read_tagged_fields()?
             } else {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                end_offset,
-                epoch,
+            ::core::result::Result::Ok(Self {
+                end_offset: __kw_field_0,
+                epoch: __kw_field_1,
                 unknown_tagged_fields,
             })
         }
@@ -362,7 +383,7 @@ pub mod fetch_snapshot_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_i64(self.end_offset)?;
             encoder.write_i32(self.epoch)?;
 
@@ -370,7 +391,7 @@ pub mod fetch_snapshot_request {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -379,12 +400,12 @@ pub mod fetch_snapshot_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             SnapshotId::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| SnapshotId::encode_validated(self, encoder, version),
@@ -395,7 +416,7 @@ pub mod fetch_snapshot_request {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -410,24 +431,24 @@ pub mod fetch_snapshot_request {
     #[derive(Clone, Debug, Eq, PartialEq)]
     pub struct FetchSnapshotRequest {
         /// The `clusterId` if known, this is used to validate metadata fetches prior to broker registration.
-        pub cluster_id: Option<StrBytes>,
+        pub cluster_id: ::core::option::Option<StrBytes>,
         /// The broker ID of the follower.
         pub replica_id: i32,
         /// The maximum bytes to fetch from all of the snapshots.
         pub max_bytes: i32,
         /// The topics to fetch.
-        pub topics: Vec<TopicSnapshot>,
+        pub topics: ::std::vec::Vec<TopicSnapshot>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
     }
 
-    impl Default for FetchSnapshotRequest {
+    impl ::core::default::Default for FetchSnapshotRequest {
         fn default() -> Self {
             Self {
-                cluster_id: None,
+                cluster_id: ::core::option::Option::None,
                 replica_id: -1,
                 max_bytes: 2_147_483_647,
-                topics: Vec::new(),
+                topics: ::std::vec::Vec::new(),
                 unknown_tagged_fields: TaggedFields::default(),
             }
         }
@@ -436,7 +457,8 @@ pub mod fetch_snapshot_request {
     impl KafkaMessage for FetchSnapshotRequest {
         const NAME: &'static str = "FetchSnapshotRequest";
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 1);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 1));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(0, 1));
     }
 
     impl KafkaRequest for FetchSnapshotRequest {
@@ -449,51 +471,57 @@ pub mod fetch_snapshot_request {
     }
 
     impl FetchSnapshotRequest {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             crate::message::ensure_encode_version::<Self>(version)?;
 
             for value in &self.topics {
                 value.validate_for_version(version)?;
             }
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: Self::NAME,
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for FetchSnapshotRequest {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             crate::message::ensure_decode_version::<Self>(version)?;
 
-            let replica_id = decoder.read_i32()?;
-            let max_bytes = decoder.read_i32()?;
-            let topics = {
+            let __kw_field_1 = decoder.read_i32()?;
+            let __kw_field_2 = decoder.read_i32()?;
+            let __kw_field_3 = {
                 let length = decoder.read_compact_array_len()?;
                 decoder.read_vec(length, |decoder| TopicSnapshot::decode(decoder, version))?
             };
-            let mut cluster_id: Option<StrBytes> = None;
+            let mut __kw_field_0: ::core::option::Option<StrBytes> = ::core::option::Option::None;
             let mut unknown_tagged_fields = TaggedFields::default();
             if Self::is_flexible(version) {
                 unknown_tagged_fields =
                     decoder.read_tagged_fields_with(|tag, decoder| match tag {
                         0 => {
-                            cluster_id = decoder.read_compact_nullable_string()?;
-                            Ok(TagOutcome::Decoded)
+                            __kw_field_0 = decoder.read_compact_nullable_string()?;
+                            ::core::result::Result::Ok(TagOutcome::Decoded)
                         }
-                        _ => Ok(TagOutcome::Retained),
+                        _ => ::core::result::Result::Ok(TagOutcome::Retained),
                     })?;
             }
 
-            Ok(Self {
-                cluster_id,
-                replica_id,
-                max_bytes,
-                topics,
+            ::core::result::Result::Ok(Self {
+                cluster_id: __kw_field_0,
+                replica_id: __kw_field_1,
+                max_bytes: __kw_field_2,
+                topics: __kw_field_3,
                 unknown_tagged_fields,
             })
         }
@@ -504,7 +532,7 @@ pub mod fetch_snapshot_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_i32(self.replica_id)?;
             encoder.write_i32(self.max_bytes)?;
             encoder.write_compact_array_len(self.topics.len())?;
@@ -517,13 +545,13 @@ pub mod fetch_snapshot_request {
                 if self.cluster_id.is_some() {
                     known.write(0, |encoder| {
                         encoder.write_compact_nullable_string(self.cluster_id.as_ref())?;
-                        Ok(())
+                        ::core::result::Result::Ok(())
                     })?;
                 }
                 encoder.write_merged_tagged_fields(known, &self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -532,12 +560,12 @@ pub mod fetch_snapshot_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             FetchSnapshotRequest::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| FetchSnapshotRequest::encode_validated(self, encoder, version),
@@ -548,7 +576,7 @@ pub mod fetch_snapshot_request {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -574,19 +602,20 @@ pub mod fetch_snapshot_response {
 
     /// `TopicSnapshot` as declared by the `FetchSnapshot` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct TopicSnapshot {
         /// The name of the topic to fetch.
         pub name: StrBytes,
         /// The partitions to fetch.
-        pub partitions: Vec<PartitionSnapshot>,
+        pub partitions: ::std::vec::Vec<PartitionSnapshot>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
     }
 
     impl TopicSnapshot {
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 1);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 1));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(0, 1));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
@@ -594,9 +623,12 @@ pub mod fetch_snapshot_response {
     }
 
     impl TopicSnapshot {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(EncodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(EncodeError::UnsupportedVersion {
                     message: "TopicSnapshot",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
@@ -607,28 +639,31 @@ pub mod fetch_snapshot_response {
                 value.validate_for_version(version)?;
             }
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: "TopicSnapshot",
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for TopicSnapshot {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(DecodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(DecodeError::UnsupportedVersion {
                     message: "TopicSnapshot",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
                 });
             }
 
-            let name = decoder.read_compact_string()?;
-            let partitions = {
+            let __kw_field_0 = decoder.read_compact_string()?;
+            let __kw_field_1 = {
                 let length = decoder.read_compact_array_len()?;
                 decoder.read_vec(length, |decoder| {
                     PartitionSnapshot::decode(decoder, version)
@@ -640,9 +675,9 @@ pub mod fetch_snapshot_response {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                name,
-                partitions,
+            ::core::result::Result::Ok(Self {
+                name: __kw_field_0,
+                partitions: __kw_field_1,
                 unknown_tagged_fields,
             })
         }
@@ -653,7 +688,7 @@ pub mod fetch_snapshot_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_compact_string(&self.name)?;
             encoder.write_compact_array_len(self.partitions.len())?;
             for value in &self.partitions {
@@ -664,7 +699,7 @@ pub mod fetch_snapshot_response {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -673,12 +708,12 @@ pub mod fetch_snapshot_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             TopicSnapshot::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| TopicSnapshot::encode_validated(self, encoder, version),
@@ -689,7 +724,7 @@ pub mod fetch_snapshot_response {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -701,7 +736,7 @@ pub mod fetch_snapshot_response {
 
     /// `PartitionSnapshot` as declared by the `FetchSnapshot` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct PartitionSnapshot {
         /// The partition index.
         pub index: i32,
@@ -723,7 +758,8 @@ pub mod fetch_snapshot_response {
 
     impl PartitionSnapshot {
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 1);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 1));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(0, 1));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
@@ -731,9 +767,12 @@ pub mod fetch_snapshot_response {
     }
 
     impl PartitionSnapshot {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(EncodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(EncodeError::UnsupportedVersion {
                     message: "PartitionSnapshot",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
@@ -743,53 +782,56 @@ pub mod fetch_snapshot_response {
             self.snapshot_id.validate_for_version(version)?;
             self.current_leader.validate_for_version(version)?;
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: "PartitionSnapshot",
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for PartitionSnapshot {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(DecodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(DecodeError::UnsupportedVersion {
                     message: "PartitionSnapshot",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
                 });
             }
 
-            let index = decoder.read_i32()?;
-            let error_code = decoder.read_i16()?;
-            let snapshot_id = SnapshotId::decode(decoder, version)?;
-            let size = decoder.read_i64()?;
-            let position = decoder.read_i64()?;
-            let unaligned_records = decoder.read_compact_bytes()?;
-            let mut current_leader: LeaderIdAndEpoch = LeaderIdAndEpoch::default();
+            let __kw_field_0 = decoder.read_i32()?;
+            let __kw_field_1 = decoder.read_i16()?;
+            let __kw_field_2 = SnapshotId::decode(decoder, version)?;
+            let __kw_field_4 = decoder.read_i64()?;
+            let __kw_field_5 = decoder.read_i64()?;
+            let __kw_field_6 = decoder.read_compact_bytes()?;
+            let mut __kw_field_3: LeaderIdAndEpoch = LeaderIdAndEpoch::default();
             let mut unknown_tagged_fields = TaggedFields::default();
             if Self::is_flexible(version) {
                 unknown_tagged_fields =
                     decoder.read_tagged_fields_with(|tag, decoder| match tag {
                         0 => {
-                            current_leader = LeaderIdAndEpoch::decode(decoder, version)?;
-                            Ok(TagOutcome::Decoded)
+                            __kw_field_3 = LeaderIdAndEpoch::decode(decoder, version)?;
+                            ::core::result::Result::Ok(TagOutcome::Decoded)
                         }
-                        _ => Ok(TagOutcome::Retained),
+                        _ => ::core::result::Result::Ok(TagOutcome::Retained),
                     })?;
             }
 
-            Ok(Self {
-                index,
-                error_code,
-                snapshot_id,
-                current_leader,
-                size,
-                position,
-                unaligned_records,
+            ::core::result::Result::Ok(Self {
+                index: __kw_field_0,
+                error_code: __kw_field_1,
+                snapshot_id: __kw_field_2,
+                current_leader: __kw_field_3,
+                size: __kw_field_4,
+                position: __kw_field_5,
+                unaligned_records: __kw_field_6,
                 unknown_tagged_fields,
             })
         }
@@ -800,7 +842,7 @@ pub mod fetch_snapshot_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_i32(self.index)?;
             encoder.write_i16(self.error_code)?;
             self.snapshot_id.encode_validated(encoder, version)?;
@@ -813,13 +855,13 @@ pub mod fetch_snapshot_response {
                 if self.current_leader != LeaderIdAndEpoch::default() {
                     known.write(0, |encoder| {
                         self.current_leader.encode_validated(encoder, version)?;
-                        Ok(())
+                        ::core::result::Result::Ok(())
                     })?;
                 }
                 encoder.write_merged_tagged_fields(known, &self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -828,12 +870,12 @@ pub mod fetch_snapshot_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             PartitionSnapshot::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| PartitionSnapshot::encode_validated(self, encoder, version),
@@ -844,7 +886,7 @@ pub mod fetch_snapshot_response {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -856,7 +898,7 @@ pub mod fetch_snapshot_response {
 
     /// `SnapshotId` as declared by the `FetchSnapshot` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct SnapshotId {
         /// The snapshot end offset.
         pub end_offset: i64,
@@ -868,7 +910,8 @@ pub mod fetch_snapshot_response {
 
     impl SnapshotId {
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 1);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 1));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(0, 1));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
@@ -876,9 +919,12 @@ pub mod fetch_snapshot_response {
     }
 
     impl SnapshotId {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(EncodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(EncodeError::UnsupportedVersion {
                     message: "SnapshotId",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
@@ -886,37 +932,40 @@ pub mod fetch_snapshot_response {
             }
 
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: "SnapshotId",
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for SnapshotId {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(DecodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(DecodeError::UnsupportedVersion {
                     message: "SnapshotId",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
                 });
             }
 
-            let end_offset = decoder.read_i64()?;
-            let epoch = decoder.read_i32()?;
+            let __kw_field_0 = decoder.read_i64()?;
+            let __kw_field_1 = decoder.read_i32()?;
             let unknown_tagged_fields = if Self::is_flexible(version) {
                 decoder.read_tagged_fields()?
             } else {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                end_offset,
-                epoch,
+            ::core::result::Result::Ok(Self {
+                end_offset: __kw_field_0,
+                epoch: __kw_field_1,
                 unknown_tagged_fields,
             })
         }
@@ -927,7 +976,7 @@ pub mod fetch_snapshot_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_i64(self.end_offset)?;
             encoder.write_i32(self.epoch)?;
 
@@ -935,7 +984,7 @@ pub mod fetch_snapshot_response {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -944,12 +993,12 @@ pub mod fetch_snapshot_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             SnapshotId::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| SnapshotId::encode_validated(self, encoder, version),
@@ -960,7 +1009,7 @@ pub mod fetch_snapshot_response {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -972,7 +1021,7 @@ pub mod fetch_snapshot_response {
 
     /// `LeaderIdAndEpoch` as declared by the `FetchSnapshot` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct LeaderIdAndEpoch {
         /// The ID of the current leader or -1 if the leader is unknown.
         pub leader_id: i32,
@@ -984,7 +1033,8 @@ pub mod fetch_snapshot_response {
 
     impl LeaderIdAndEpoch {
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 1);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 1));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(0, 1));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
@@ -992,9 +1042,12 @@ pub mod fetch_snapshot_response {
     }
 
     impl LeaderIdAndEpoch {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(EncodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(EncodeError::UnsupportedVersion {
                     message: "LeaderIdAndEpoch",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
@@ -1002,37 +1055,40 @@ pub mod fetch_snapshot_response {
             }
 
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: "LeaderIdAndEpoch",
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for LeaderIdAndEpoch {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(DecodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(DecodeError::UnsupportedVersion {
                     message: "LeaderIdAndEpoch",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
                 });
             }
 
-            let leader_id = decoder.read_i32()?;
-            let leader_epoch = decoder.read_i32()?;
+            let __kw_field_0 = decoder.read_i32()?;
+            let __kw_field_1 = decoder.read_i32()?;
             let unknown_tagged_fields = if Self::is_flexible(version) {
                 decoder.read_tagged_fields()?
             } else {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                leader_id,
-                leader_epoch,
+            ::core::result::Result::Ok(Self {
+                leader_id: __kw_field_0,
+                leader_epoch: __kw_field_1,
                 unknown_tagged_fields,
             })
         }
@@ -1043,7 +1099,7 @@ pub mod fetch_snapshot_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_i32(self.leader_id)?;
             encoder.write_i32(self.leader_epoch)?;
 
@@ -1051,7 +1107,7 @@ pub mod fetch_snapshot_response {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -1060,12 +1116,12 @@ pub mod fetch_snapshot_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             LeaderIdAndEpoch::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| LeaderIdAndEpoch::encode_validated(self, encoder, version),
@@ -1076,7 +1132,7 @@ pub mod fetch_snapshot_response {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -1088,7 +1144,7 @@ pub mod fetch_snapshot_response {
 
     /// `NodeEndpoint` as declared by the `FetchSnapshot` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct NodeEndpoint {
         /// The ID of the associated node.
         pub node_id: i32,
@@ -1102,7 +1158,8 @@ pub mod fetch_snapshot_response {
 
     impl NodeEndpoint {
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(1, 1);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(1, 1));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(1, 1));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
@@ -1110,9 +1167,12 @@ pub mod fetch_snapshot_response {
     }
 
     impl NodeEndpoint {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(EncodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(EncodeError::UnsupportedVersion {
                     message: "NodeEndpoint",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
@@ -1120,39 +1180,42 @@ pub mod fetch_snapshot_response {
             }
 
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: "NodeEndpoint",
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for NodeEndpoint {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(DecodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(DecodeError::UnsupportedVersion {
                     message: "NodeEndpoint",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
                 });
             }
 
-            let node_id = decoder.read_i32()?;
-            let host = decoder.read_compact_string()?;
-            let port = decoder.read_u16()?;
+            let __kw_field_0 = decoder.read_i32()?;
+            let __kw_field_1 = decoder.read_compact_string()?;
+            let __kw_field_2 = decoder.read_u16()?;
             let unknown_tagged_fields = if Self::is_flexible(version) {
                 decoder.read_tagged_fields()?
             } else {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                node_id,
-                host,
-                port,
+            ::core::result::Result::Ok(Self {
+                node_id: __kw_field_0,
+                host: __kw_field_1,
+                port: __kw_field_2,
                 unknown_tagged_fields,
             })
         }
@@ -1163,7 +1226,7 @@ pub mod fetch_snapshot_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_i32(self.node_id)?;
             encoder.write_compact_string(&self.host)?;
             encoder.write_u16(self.port)?;
@@ -1172,7 +1235,7 @@ pub mod fetch_snapshot_response {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -1181,12 +1244,12 @@ pub mod fetch_snapshot_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             NodeEndpoint::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| NodeEndpoint::encode_validated(self, encoder, version),
@@ -1197,7 +1260,7 @@ pub mod fetch_snapshot_response {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -1209,16 +1272,16 @@ pub mod fetch_snapshot_response {
 
     /// Response body for the `FetchSnapshot` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct FetchSnapshotResponse {
         /// The duration in milliseconds for which the request was throttled due to a quota violation, or zero if the request did not violate any quota.
         pub throttle_time_ms: i32,
         /// The top level response error code.
         pub error_code: i16,
         /// The topics to fetch.
-        pub topics: Vec<TopicSnapshot>,
+        pub topics: ::std::vec::Vec<TopicSnapshot>,
         /// Endpoints for all current-leaders enumerated in `PartitionSnapshot`.
-        pub node_endpoints: Vec<NodeEndpoint>,
+        pub node_endpoints: ::std::vec::Vec<NodeEndpoint>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
     }
@@ -1226,7 +1289,8 @@ pub mod fetch_snapshot_response {
     impl KafkaMessage for FetchSnapshotResponse {
         const NAME: &'static str = "FetchSnapshotResponse";
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 1);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 1));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(0, 1));
     }
 
     impl KafkaResponse for FetchSnapshotResponse {
@@ -1234,11 +1298,14 @@ pub mod fetch_snapshot_response {
     }
 
     impl FetchSnapshotResponse {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             crate::message::ensure_encode_version::<Self>(version)?;
 
             if version.value() < 1 && !self.node_endpoints.is_empty() {
-                return Err(EncodeError::FieldNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::FieldNotRepresentable {
                     message: Self::NAME,
                     field: "NodeEndpoints",
                     version,
@@ -1253,49 +1320,52 @@ pub mod fetch_snapshot_response {
                 }
             }
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: Self::NAME,
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for FetchSnapshotResponse {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             crate::message::ensure_decode_version::<Self>(version)?;
 
-            let throttle_time_ms = decoder.read_i32()?;
-            let error_code = decoder.read_i16()?;
-            let topics = {
+            let __kw_field_0 = decoder.read_i32()?;
+            let __kw_field_1 = decoder.read_i16()?;
+            let __kw_field_2 = {
                 let length = decoder.read_compact_array_len()?;
                 decoder.read_vec(length, |decoder| TopicSnapshot::decode(decoder, version))?
             };
-            let mut node_endpoints: Vec<NodeEndpoint> = Vec::new();
+            let mut __kw_field_3: ::std::vec::Vec<NodeEndpoint> = ::std::vec::Vec::new();
             let mut unknown_tagged_fields = TaggedFields::default();
             if Self::is_flexible(version) {
                 unknown_tagged_fields =
                     decoder.read_tagged_fields_with(|tag, decoder| match tag {
                         0 if version.value() >= 1 => {
-                            node_endpoints = {
+                            __kw_field_3 = {
                                 let length = decoder.read_compact_array_len()?;
                                 decoder.read_vec(length, |decoder| {
                                     NodeEndpoint::decode(decoder, version)
                                 })?
                             };
-                            Ok(TagOutcome::Decoded)
+                            ::core::result::Result::Ok(TagOutcome::Decoded)
                         }
-                        _ => Ok(TagOutcome::Retained),
+                        _ => ::core::result::Result::Ok(TagOutcome::Retained),
                     })?;
             }
 
-            Ok(Self {
-                throttle_time_ms,
-                error_code,
-                topics,
-                node_endpoints,
+            ::core::result::Result::Ok(Self {
+                throttle_time_ms: __kw_field_0,
+                error_code: __kw_field_1,
+                topics: __kw_field_2,
+                node_endpoints: __kw_field_3,
                 unknown_tagged_fields,
             })
         }
@@ -1306,7 +1376,7 @@ pub mod fetch_snapshot_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_i32(self.throttle_time_ms)?;
             encoder.write_i16(self.error_code)?;
             encoder.write_compact_array_len(self.topics.len())?;
@@ -1322,13 +1392,13 @@ pub mod fetch_snapshot_response {
                         for value in &self.node_endpoints {
                             value.encode_validated(encoder, version)?;
                         }
-                        Ok(())
+                        ::core::result::Result::Ok(())
                     })?;
                 }
                 encoder.write_merged_tagged_fields(known, &self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -1337,12 +1407,12 @@ pub mod fetch_snapshot_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             FetchSnapshotResponse::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| FetchSnapshotResponse::encode_validated(self, encoder, version),
@@ -1353,7 +1423,7 @@ pub mod fetch_snapshot_response {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -1377,7 +1447,7 @@ pub const FETCH_SNAPSHOT_REQUEST_DESCRIPTOR: MessageDescriptor = MessageDescript
     "FetchSnapshotRequest",
     MessageDirection::Request,
     VersionRange::new(0, 1),
-    Some(VersionRange::new(0, 1)),
+    ::core::option::Option::Some(VersionRange::new(0, 1)),
 );
 
 /// Static metadata for [`FetchSnapshotResponse`].
@@ -1386,7 +1456,7 @@ pub const FETCH_SNAPSHOT_RESPONSE_DESCRIPTOR: MessageDescriptor = MessageDescrip
     "FetchSnapshotResponse",
     MessageDirection::Response,
     VersionRange::new(0, 1),
-    Some(VersionRange::new(0, 1)),
+    ::core::option::Option::Some(VersionRange::new(0, 1)),
 );
 
 /// Static pair metadata for the `FetchSnapshot` API.
@@ -1395,6 +1465,6 @@ pub const FETCH_SNAPSHOT_API_DESCRIPTOR: ApiDescriptor = ApiDescriptor::new(
     &FETCH_SNAPSHOT_REQUEST_DESCRIPTOR,
     &FETCH_SNAPSHOT_RESPONSE_DESCRIPTOR,
     VersionRange::new(0, 1),
-    Some(VersionRange::new(0, 1)),
+    ::core::option::Option::Some(VersionRange::new(0, 1)),
     false,
 );

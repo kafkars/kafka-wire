@@ -20,7 +20,7 @@ pub mod renew_delegation_token_request {
 
     /// Request body for the `RenewDelegationToken` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct RenewDelegationTokenRequest {
         /// The HMAC of the delegation token to be renewed.
         pub hmac: Bytes,
@@ -33,7 +33,8 @@ pub mod renew_delegation_token_request {
     impl KafkaMessage for RenewDelegationTokenRequest {
         const NAME: &'static str = "RenewDelegationTokenRequest";
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(1, 2);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(2, 2));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(2, 2));
     }
 
     impl KafkaRequest for RenewDelegationTokenRequest {
@@ -47,39 +48,45 @@ pub mod renew_delegation_token_request {
     }
 
     impl RenewDelegationTokenRequest {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             crate::message::ensure_encode_version::<Self>(version)?;
 
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: Self::NAME,
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for RenewDelegationTokenRequest {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             crate::message::ensure_decode_version::<Self>(version)?;
 
-            let hmac = if Self::is_flexible(version) {
+            let __kw_field_0 = if Self::is_flexible(version) {
                 decoder.read_compact_bytes()?
             } else {
                 decoder.read_bytes()?
             };
-            let renew_period_ms = decoder.read_i64()?;
+            let __kw_field_1 = decoder.read_i64()?;
             let unknown_tagged_fields = if Self::is_flexible(version) {
                 decoder.read_tagged_fields()?
             } else {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                hmac,
-                renew_period_ms,
+            ::core::result::Result::Ok(Self {
+                hmac: __kw_field_0,
+                renew_period_ms: __kw_field_1,
                 unknown_tagged_fields,
             })
         }
@@ -90,7 +97,7 @@ pub mod renew_delegation_token_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             if Self::is_flexible(version) {
                 encoder.write_compact_bytes(&self.hmac)?;
             } else {
@@ -102,7 +109,7 @@ pub mod renew_delegation_token_request {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -111,12 +118,12 @@ pub mod renew_delegation_token_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             RenewDelegationTokenRequest::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| RenewDelegationTokenRequest::encode_validated(self, encoder, version),
@@ -127,7 +134,7 @@ pub mod renew_delegation_token_request {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -152,7 +159,7 @@ pub mod renew_delegation_token_response {
 
     /// Response body for the `RenewDelegationToken` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct RenewDelegationTokenResponse {
         /// The error code, or 0 if there was no error.
         pub error_code: i16,
@@ -167,7 +174,8 @@ pub mod renew_delegation_token_response {
     impl KafkaMessage for RenewDelegationTokenResponse {
         const NAME: &'static str = "RenewDelegationTokenResponse";
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(1, 2);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(2, 2));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(2, 2));
     }
 
     impl KafkaResponse for RenewDelegationTokenResponse {
@@ -175,37 +183,43 @@ pub mod renew_delegation_token_response {
     }
 
     impl RenewDelegationTokenResponse {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             crate::message::ensure_encode_version::<Self>(version)?;
 
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: Self::NAME,
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for RenewDelegationTokenResponse {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             crate::message::ensure_decode_version::<Self>(version)?;
 
-            let error_code = decoder.read_i16()?;
-            let expiry_timestamp_ms = decoder.read_i64()?;
-            let throttle_time_ms = decoder.read_i32()?;
+            let __kw_field_0 = decoder.read_i16()?;
+            let __kw_field_1 = decoder.read_i64()?;
+            let __kw_field_2 = decoder.read_i32()?;
             let unknown_tagged_fields = if Self::is_flexible(version) {
                 decoder.read_tagged_fields()?
             } else {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                error_code,
-                expiry_timestamp_ms,
-                throttle_time_ms,
+            ::core::result::Result::Ok(Self {
+                error_code: __kw_field_0,
+                expiry_timestamp_ms: __kw_field_1,
+                throttle_time_ms: __kw_field_2,
                 unknown_tagged_fields,
             })
         }
@@ -216,7 +230,7 @@ pub mod renew_delegation_token_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_i16(self.error_code)?;
             encoder.write_i64(self.expiry_timestamp_ms)?;
             encoder.write_i32(self.throttle_time_ms)?;
@@ -225,7 +239,7 @@ pub mod renew_delegation_token_response {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -234,12 +248,12 @@ pub mod renew_delegation_token_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             RenewDelegationTokenResponse::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| RenewDelegationTokenResponse::encode_validated(self, encoder, version),
@@ -250,7 +264,7 @@ pub mod renew_delegation_token_response {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -274,7 +288,7 @@ pub const RENEW_DELEGATION_TOKEN_REQUEST_DESCRIPTOR: MessageDescriptor = Message
     "RenewDelegationTokenRequest",
     MessageDirection::Request,
     VersionRange::new(1, 2),
-    Some(VersionRange::new(2, 2)),
+    ::core::option::Option::Some(VersionRange::new(2, 2)),
 );
 
 /// Static metadata for [`RenewDelegationTokenResponse`].
@@ -283,7 +297,7 @@ pub const RENEW_DELEGATION_TOKEN_RESPONSE_DESCRIPTOR: MessageDescriptor = Messag
     "RenewDelegationTokenResponse",
     MessageDirection::Response,
     VersionRange::new(1, 2),
-    Some(VersionRange::new(2, 2)),
+    ::core::option::Option::Some(VersionRange::new(2, 2)),
 );
 
 /// Static pair metadata for the `RenewDelegationToken` API.
@@ -292,6 +306,6 @@ pub const RENEW_DELEGATION_TOKEN_API_DESCRIPTOR: ApiDescriptor = ApiDescriptor::
     &RENEW_DELEGATION_TOKEN_REQUEST_DESCRIPTOR,
     &RENEW_DELEGATION_TOKEN_RESPONSE_DESCRIPTOR,
     VersionRange::new(1, 2),
-    Some(VersionRange::new(2, 2)),
+    ::core::option::Option::Some(VersionRange::new(2, 2)),
     false,
 );

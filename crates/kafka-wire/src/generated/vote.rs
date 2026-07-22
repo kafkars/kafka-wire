@@ -20,19 +20,20 @@ pub mod vote_request {
 
     /// `TopicData` as declared by the `Vote` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct TopicData {
         /// The topic name.
         pub topic_name: StrBytes,
         /// The partition data.
-        pub partitions: Vec<PartitionData>,
+        pub partitions: ::std::vec::Vec<PartitionData>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
     }
 
     impl TopicData {
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 2);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 2));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(0, 2));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
@@ -40,9 +41,12 @@ pub mod vote_request {
     }
 
     impl TopicData {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(EncodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(EncodeError::UnsupportedVersion {
                     message: "TopicData",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
@@ -53,28 +57,31 @@ pub mod vote_request {
                 value.validate_for_version(version)?;
             }
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: "TopicData",
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for TopicData {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(DecodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(DecodeError::UnsupportedVersion {
                     message: "TopicData",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
                 });
             }
 
-            let topic_name = decoder.read_compact_string()?;
-            let partitions = {
+            let __kw_field_0 = decoder.read_compact_string()?;
+            let __kw_field_1 = {
                 let length = decoder.read_compact_array_len()?;
                 decoder.read_vec(length, |decoder| PartitionData::decode(decoder, version))?
             };
@@ -84,9 +91,9 @@ pub mod vote_request {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                topic_name,
-                partitions,
+            ::core::result::Result::Ok(Self {
+                topic_name: __kw_field_0,
+                partitions: __kw_field_1,
                 unknown_tagged_fields,
             })
         }
@@ -97,7 +104,7 @@ pub mod vote_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_compact_string(&self.topic_name)?;
             encoder.write_compact_array_len(self.partitions.len())?;
             for value in &self.partitions {
@@ -108,7 +115,7 @@ pub mod vote_request {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -117,12 +124,12 @@ pub mod vote_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             TopicData::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| TopicData::encode_validated(self, encoder, version),
@@ -133,7 +140,7 @@ pub mod vote_request {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -145,7 +152,7 @@ pub mod vote_request {
 
     /// `PartitionData` as declared by the `Vote` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct PartitionData {
         /// The partition index.
         pub partition_index: i32,
@@ -169,7 +176,8 @@ pub mod vote_request {
 
     impl PartitionData {
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 2);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 2));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(0, 2));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
@@ -177,9 +185,12 @@ pub mod vote_request {
     }
 
     impl PartitionData {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(EncodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(EncodeError::UnsupportedVersion {
                     message: "PartitionData",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
@@ -187,49 +198,52 @@ pub mod vote_request {
             }
 
             if version.value() < 2 && self.pre_vote {
-                return Err(EncodeError::FieldNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::FieldNotRepresentable {
                     message: "PartitionData",
                     field: "PreVote",
                     version,
                 });
             }
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: "PartitionData",
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for PartitionData {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(DecodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(DecodeError::UnsupportedVersion {
                     message: "PartitionData",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
                 });
             }
 
-            let partition_index = decoder.read_i32()?;
-            let replica_epoch = decoder.read_i32()?;
-            let replica_id = decoder.read_i32()?;
-            let replica_directory_id = if version.value() >= 1 {
+            let __kw_field_0 = decoder.read_i32()?;
+            let __kw_field_1 = decoder.read_i32()?;
+            let __kw_field_2 = decoder.read_i32()?;
+            let __kw_field_3 = if version.value() >= 1 {
                 decoder.read_uuid()?
             } else {
                 Uuid::ZERO
             };
-            let voter_directory_id = if version.value() >= 1 {
+            let __kw_field_4 = if version.value() >= 1 {
                 decoder.read_uuid()?
             } else {
                 Uuid::ZERO
             };
-            let last_offset_epoch = decoder.read_i32()?;
-            let last_offset = decoder.read_i64()?;
-            let pre_vote = if version.value() >= 2 {
+            let __kw_field_5 = decoder.read_i32()?;
+            let __kw_field_6 = decoder.read_i64()?;
+            let __kw_field_7 = if version.value() >= 2 {
                 decoder.read_bool()?
             } else {
                 false
@@ -240,15 +254,15 @@ pub mod vote_request {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                partition_index,
-                replica_epoch,
-                replica_id,
-                replica_directory_id,
-                voter_directory_id,
-                last_offset_epoch,
-                last_offset,
-                pre_vote,
+            ::core::result::Result::Ok(Self {
+                partition_index: __kw_field_0,
+                replica_epoch: __kw_field_1,
+                replica_id: __kw_field_2,
+                replica_directory_id: __kw_field_3,
+                voter_directory_id: __kw_field_4,
+                last_offset_epoch: __kw_field_5,
+                last_offset: __kw_field_6,
+                pre_vote: __kw_field_7,
                 unknown_tagged_fields,
             })
         }
@@ -259,7 +273,7 @@ pub mod vote_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_i32(self.partition_index)?;
             encoder.write_i32(self.replica_epoch)?;
             encoder.write_i32(self.replica_id)?;
@@ -279,7 +293,7 @@ pub mod vote_request {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -288,12 +302,12 @@ pub mod vote_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             PartitionData::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| PartitionData::encode_validated(self, encoder, version),
@@ -304,7 +318,7 @@ pub mod vote_request {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -319,21 +333,21 @@ pub mod vote_request {
     #[derive(Clone, Debug, Eq, PartialEq)]
     pub struct VoteRequest {
         /// The cluster id.
-        pub cluster_id: Option<StrBytes>,
+        pub cluster_id: ::core::option::Option<StrBytes>,
         /// The replica id of the voter receiving the request.
         pub voter_id: i32,
         /// The topic data.
-        pub topics: Vec<TopicData>,
+        pub topics: ::std::vec::Vec<TopicData>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
     }
 
-    impl Default for VoteRequest {
+    impl ::core::default::Default for VoteRequest {
         fn default() -> Self {
             Self {
-                cluster_id: None,
+                cluster_id: ::core::option::Option::None,
                 voter_id: -1,
-                topics: Vec::new(),
+                topics: ::std::vec::Vec::new(),
                 unknown_tagged_fields: TaggedFields::default(),
             }
         }
@@ -342,7 +356,8 @@ pub mod vote_request {
     impl KafkaMessage for VoteRequest {
         const NAME: &'static str = "VoteRequest";
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 2);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 2));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(0, 2));
     }
 
     impl KafkaRequest for VoteRequest {
@@ -355,34 +370,40 @@ pub mod vote_request {
     }
 
     impl VoteRequest {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             crate::message::ensure_encode_version::<Self>(version)?;
 
             for value in &self.topics {
                 value.validate_for_version(version)?;
             }
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: Self::NAME,
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for VoteRequest {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             crate::message::ensure_decode_version::<Self>(version)?;
 
-            let cluster_id = decoder.read_compact_nullable_string()?;
-            let voter_id = if version.value() >= 1 {
+            let __kw_field_0 = decoder.read_compact_nullable_string()?;
+            let __kw_field_1 = if version.value() >= 1 {
                 decoder.read_i32()?
             } else {
                 -1
             };
-            let topics = {
+            let __kw_field_2 = {
                 let length = decoder.read_compact_array_len()?;
                 decoder.read_vec(length, |decoder| TopicData::decode(decoder, version))?
             };
@@ -392,10 +413,10 @@ pub mod vote_request {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                cluster_id,
-                voter_id,
-                topics,
+            ::core::result::Result::Ok(Self {
+                cluster_id: __kw_field_0,
+                voter_id: __kw_field_1,
+                topics: __kw_field_2,
                 unknown_tagged_fields,
             })
         }
@@ -406,7 +427,7 @@ pub mod vote_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_compact_nullable_string(self.cluster_id.as_ref())?;
             if version.value() >= 1 {
                 encoder.write_i32(self.voter_id)?;
@@ -420,7 +441,7 @@ pub mod vote_request {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -429,12 +450,12 @@ pub mod vote_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             VoteRequest::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| VoteRequest::encode_validated(self, encoder, version),
@@ -445,7 +466,7 @@ pub mod vote_request {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -471,19 +492,20 @@ pub mod vote_response {
 
     /// `TopicData` as declared by the `Vote` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct TopicData {
         /// The topic name.
         pub topic_name: StrBytes,
         /// The results for each partition.
-        pub partitions: Vec<PartitionData>,
+        pub partitions: ::std::vec::Vec<PartitionData>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
     }
 
     impl TopicData {
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 2);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 2));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(0, 2));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
@@ -491,9 +513,12 @@ pub mod vote_response {
     }
 
     impl TopicData {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(EncodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(EncodeError::UnsupportedVersion {
                     message: "TopicData",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
@@ -504,28 +529,31 @@ pub mod vote_response {
                 value.validate_for_version(version)?;
             }
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: "TopicData",
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for TopicData {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(DecodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(DecodeError::UnsupportedVersion {
                     message: "TopicData",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
                 });
             }
 
-            let topic_name = decoder.read_compact_string()?;
-            let partitions = {
+            let __kw_field_0 = decoder.read_compact_string()?;
+            let __kw_field_1 = {
                 let length = decoder.read_compact_array_len()?;
                 decoder.read_vec(length, |decoder| PartitionData::decode(decoder, version))?
             };
@@ -535,9 +563,9 @@ pub mod vote_response {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                topic_name,
-                partitions,
+            ::core::result::Result::Ok(Self {
+                topic_name: __kw_field_0,
+                partitions: __kw_field_1,
                 unknown_tagged_fields,
             })
         }
@@ -548,7 +576,7 @@ pub mod vote_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_compact_string(&self.topic_name)?;
             encoder.write_compact_array_len(self.partitions.len())?;
             for value in &self.partitions {
@@ -559,7 +587,7 @@ pub mod vote_response {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -568,12 +596,12 @@ pub mod vote_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             TopicData::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| TopicData::encode_validated(self, encoder, version),
@@ -584,7 +612,7 @@ pub mod vote_response {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -596,7 +624,7 @@ pub mod vote_response {
 
     /// `PartitionData` as declared by the `Vote` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct PartitionData {
         /// The partition index.
         pub partition_index: i32,
@@ -614,7 +642,8 @@ pub mod vote_response {
 
     impl PartitionData {
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 2);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 2));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(0, 2));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
@@ -622,9 +651,12 @@ pub mod vote_response {
     }
 
     impl PartitionData {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(EncodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(EncodeError::UnsupportedVersion {
                     message: "PartitionData",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
@@ -632,43 +664,46 @@ pub mod vote_response {
             }
 
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: "PartitionData",
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for PartitionData {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(DecodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(DecodeError::UnsupportedVersion {
                     message: "PartitionData",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
                 });
             }
 
-            let partition_index = decoder.read_i32()?;
-            let error_code = decoder.read_i16()?;
-            let leader_id = decoder.read_i32()?;
-            let leader_epoch = decoder.read_i32()?;
-            let vote_granted = decoder.read_bool()?;
+            let __kw_field_0 = decoder.read_i32()?;
+            let __kw_field_1 = decoder.read_i16()?;
+            let __kw_field_2 = decoder.read_i32()?;
+            let __kw_field_3 = decoder.read_i32()?;
+            let __kw_field_4 = decoder.read_bool()?;
             let unknown_tagged_fields = if Self::is_flexible(version) {
                 decoder.read_tagged_fields()?
             } else {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                partition_index,
-                error_code,
-                leader_id,
-                leader_epoch,
-                vote_granted,
+            ::core::result::Result::Ok(Self {
+                partition_index: __kw_field_0,
+                error_code: __kw_field_1,
+                leader_id: __kw_field_2,
+                leader_epoch: __kw_field_3,
+                vote_granted: __kw_field_4,
                 unknown_tagged_fields,
             })
         }
@@ -679,7 +714,7 @@ pub mod vote_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_i32(self.partition_index)?;
             encoder.write_i16(self.error_code)?;
             encoder.write_i32(self.leader_id)?;
@@ -690,7 +725,7 @@ pub mod vote_response {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -699,12 +734,12 @@ pub mod vote_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             PartitionData::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| PartitionData::encode_validated(self, encoder, version),
@@ -715,7 +750,7 @@ pub mod vote_response {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -727,7 +762,7 @@ pub mod vote_response {
 
     /// `NodeEndpoint` as declared by the `Vote` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct NodeEndpoint {
         /// The ID of the associated node.
         pub node_id: i32,
@@ -741,7 +776,8 @@ pub mod vote_response {
 
     impl NodeEndpoint {
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(1, 2);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(1, 2));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(1, 2));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
@@ -749,9 +785,12 @@ pub mod vote_response {
     }
 
     impl NodeEndpoint {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(EncodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(EncodeError::UnsupportedVersion {
                     message: "NodeEndpoint",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
@@ -759,39 +798,42 @@ pub mod vote_response {
             }
 
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: "NodeEndpoint",
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for NodeEndpoint {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(DecodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(DecodeError::UnsupportedVersion {
                     message: "NodeEndpoint",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
                 });
             }
 
-            let node_id = decoder.read_i32()?;
-            let host = decoder.read_compact_string()?;
-            let port = decoder.read_u16()?;
+            let __kw_field_0 = decoder.read_i32()?;
+            let __kw_field_1 = decoder.read_compact_string()?;
+            let __kw_field_2 = decoder.read_u16()?;
             let unknown_tagged_fields = if Self::is_flexible(version) {
                 decoder.read_tagged_fields()?
             } else {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                node_id,
-                host,
-                port,
+            ::core::result::Result::Ok(Self {
+                node_id: __kw_field_0,
+                host: __kw_field_1,
+                port: __kw_field_2,
                 unknown_tagged_fields,
             })
         }
@@ -802,7 +844,7 @@ pub mod vote_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_i32(self.node_id)?;
             encoder.write_compact_string(&self.host)?;
             encoder.write_u16(self.port)?;
@@ -811,7 +853,7 @@ pub mod vote_response {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -820,12 +862,12 @@ pub mod vote_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             NodeEndpoint::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| NodeEndpoint::encode_validated(self, encoder, version),
@@ -836,7 +878,7 @@ pub mod vote_response {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -848,14 +890,14 @@ pub mod vote_response {
 
     /// Response body for the `Vote` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct VoteResponse {
         /// The top level error code.
         pub error_code: i16,
         /// The results for each topic.
-        pub topics: Vec<TopicData>,
+        pub topics: ::std::vec::Vec<TopicData>,
         /// Endpoints for all current-leaders enumerated in `PartitionData`.
-        pub node_endpoints: Vec<NodeEndpoint>,
+        pub node_endpoints: ::std::vec::Vec<NodeEndpoint>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
     }
@@ -863,7 +905,8 @@ pub mod vote_response {
     impl KafkaMessage for VoteResponse {
         const NAME: &'static str = "VoteResponse";
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 2);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 2));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(0, 2));
     }
 
     impl KafkaResponse for VoteResponse {
@@ -871,11 +914,14 @@ pub mod vote_response {
     }
 
     impl VoteResponse {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             crate::message::ensure_encode_version::<Self>(version)?;
 
             if version.value() < 1 && !self.node_endpoints.is_empty() {
-                return Err(EncodeError::FieldNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::FieldNotRepresentable {
                     message: Self::NAME,
                     field: "NodeEndpoints",
                     version,
@@ -890,47 +936,50 @@ pub mod vote_response {
                 }
             }
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: Self::NAME,
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for VoteResponse {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             crate::message::ensure_decode_version::<Self>(version)?;
 
-            let error_code = decoder.read_i16()?;
-            let topics = {
+            let __kw_field_0 = decoder.read_i16()?;
+            let __kw_field_1 = {
                 let length = decoder.read_compact_array_len()?;
                 decoder.read_vec(length, |decoder| TopicData::decode(decoder, version))?
             };
-            let mut node_endpoints: Vec<NodeEndpoint> = Vec::new();
+            let mut __kw_field_2: ::std::vec::Vec<NodeEndpoint> = ::std::vec::Vec::new();
             let mut unknown_tagged_fields = TaggedFields::default();
             if Self::is_flexible(version) {
                 unknown_tagged_fields =
                     decoder.read_tagged_fields_with(|tag, decoder| match tag {
                         0 if version.value() >= 1 => {
-                            node_endpoints = {
+                            __kw_field_2 = {
                                 let length = decoder.read_compact_array_len()?;
                                 decoder.read_vec(length, |decoder| {
                                     NodeEndpoint::decode(decoder, version)
                                 })?
                             };
-                            Ok(TagOutcome::Decoded)
+                            ::core::result::Result::Ok(TagOutcome::Decoded)
                         }
-                        _ => Ok(TagOutcome::Retained),
+                        _ => ::core::result::Result::Ok(TagOutcome::Retained),
                     })?;
             }
 
-            Ok(Self {
-                error_code,
-                topics,
-                node_endpoints,
+            ::core::result::Result::Ok(Self {
+                error_code: __kw_field_0,
+                topics: __kw_field_1,
+                node_endpoints: __kw_field_2,
                 unknown_tagged_fields,
             })
         }
@@ -941,7 +990,7 @@ pub mod vote_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_i16(self.error_code)?;
             encoder.write_compact_array_len(self.topics.len())?;
             for value in &self.topics {
@@ -956,13 +1005,13 @@ pub mod vote_response {
                         for value in &self.node_endpoints {
                             value.encode_validated(encoder, version)?;
                         }
-                        Ok(())
+                        ::core::result::Result::Ok(())
                     })?;
                 }
                 encoder.write_merged_tagged_fields(known, &self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -971,12 +1020,12 @@ pub mod vote_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             VoteResponse::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| VoteResponse::encode_validated(self, encoder, version),
@@ -987,7 +1036,7 @@ pub mod vote_response {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -1011,7 +1060,7 @@ pub const VOTE_REQUEST_DESCRIPTOR: MessageDescriptor = MessageDescriptor::new(
     "VoteRequest",
     MessageDirection::Request,
     VersionRange::new(0, 2),
-    Some(VersionRange::new(0, 2)),
+    ::core::option::Option::Some(VersionRange::new(0, 2)),
 );
 
 /// Static metadata for [`VoteResponse`].
@@ -1020,7 +1069,7 @@ pub const VOTE_RESPONSE_DESCRIPTOR: MessageDescriptor = MessageDescriptor::new(
     "VoteResponse",
     MessageDirection::Response,
     VersionRange::new(0, 2),
-    Some(VersionRange::new(0, 2)),
+    ::core::option::Option::Some(VersionRange::new(0, 2)),
 );
 
 /// Static pair metadata for the `Vote` API.
@@ -1029,6 +1078,6 @@ pub const VOTE_API_DESCRIPTOR: ApiDescriptor = ApiDescriptor::new(
     &VOTE_REQUEST_DESCRIPTOR,
     &VOTE_RESPONSE_DESCRIPTOR,
     VersionRange::new(0, 2),
-    Some(VersionRange::new(0, 2)),
+    ::core::option::Option::Some(VersionRange::new(0, 2)),
     false,
 );

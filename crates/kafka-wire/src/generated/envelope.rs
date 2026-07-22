@@ -25,18 +25,18 @@ pub mod envelope_request {
         /// The embedded request header and data.
         pub request_data: Bytes,
         /// Value of the initial client principal when the request is redirected by a broker.
-        pub request_principal: Option<Bytes>,
+        pub request_principal: ::core::option::Option<Bytes>,
         /// The original client's address in bytes.
         pub client_host_address: Bytes,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
     }
 
-    impl Default for EnvelopeRequest {
+    impl ::core::default::Default for EnvelopeRequest {
         fn default() -> Self {
             Self {
                 request_data: Bytes::default(),
-                request_principal: Some(Bytes::default()),
+                request_principal: ::core::option::Option::Some(Bytes::default()),
                 client_host_address: Bytes::default(),
                 unknown_tagged_fields: TaggedFields::default(),
             }
@@ -46,7 +46,8 @@ pub mod envelope_request {
     impl KafkaMessage for EnvelopeRequest {
         const NAME: &'static str = "EnvelopeRequest";
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 0);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 0));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(0, 0));
     }
 
     impl KafkaRequest for EnvelopeRequest {
@@ -59,37 +60,43 @@ pub mod envelope_request {
     }
 
     impl EnvelopeRequest {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             crate::message::ensure_encode_version::<Self>(version)?;
 
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: Self::NAME,
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for EnvelopeRequest {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             crate::message::ensure_decode_version::<Self>(version)?;
 
-            let request_data = decoder.read_compact_bytes()?;
-            let request_principal = decoder.read_compact_nullable_bytes()?;
-            let client_host_address = decoder.read_compact_bytes()?;
+            let __kw_field_0 = decoder.read_compact_bytes()?;
+            let __kw_field_1 = decoder.read_compact_nullable_bytes()?;
+            let __kw_field_2 = decoder.read_compact_bytes()?;
             let unknown_tagged_fields = if Self::is_flexible(version) {
                 decoder.read_tagged_fields()?
             } else {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                request_data,
-                request_principal,
-                client_host_address,
+            ::core::result::Result::Ok(Self {
+                request_data: __kw_field_0,
+                request_principal: __kw_field_1,
+                client_host_address: __kw_field_2,
                 unknown_tagged_fields,
             })
         }
@@ -100,7 +107,7 @@ pub mod envelope_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_compact_bytes(&self.request_data)?;
             encoder.write_compact_nullable_bytes(self.request_principal.as_deref())?;
             encoder.write_compact_bytes(&self.client_host_address)?;
@@ -109,7 +116,7 @@ pub mod envelope_request {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -118,12 +125,12 @@ pub mod envelope_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             EnvelopeRequest::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| EnvelopeRequest::encode_validated(self, encoder, version),
@@ -134,7 +141,7 @@ pub mod envelope_request {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -160,10 +167,10 @@ pub mod envelope_response {
 
     /// Response body for the `Envelope` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct EnvelopeResponse {
         /// The embedded response header and data.
-        pub response_data: Option<Bytes>,
+        pub response_data: ::core::option::Option<Bytes>,
         /// The error code, or 0 if there was no error.
         pub error_code: i16,
         /// Unknown flexible-version tagged fields retained for forwarding.
@@ -173,7 +180,8 @@ pub mod envelope_response {
     impl KafkaMessage for EnvelopeResponse {
         const NAME: &'static str = "EnvelopeResponse";
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 0);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 0));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(0, 0));
     }
 
     impl KafkaResponse for EnvelopeResponse {
@@ -181,35 +189,41 @@ pub mod envelope_response {
     }
 
     impl EnvelopeResponse {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             crate::message::ensure_encode_version::<Self>(version)?;
 
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: Self::NAME,
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for EnvelopeResponse {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             crate::message::ensure_decode_version::<Self>(version)?;
 
-            let response_data = decoder.read_compact_nullable_bytes()?;
-            let error_code = decoder.read_i16()?;
+            let __kw_field_0 = decoder.read_compact_nullable_bytes()?;
+            let __kw_field_1 = decoder.read_i16()?;
             let unknown_tagged_fields = if Self::is_flexible(version) {
                 decoder.read_tagged_fields()?
             } else {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                response_data,
-                error_code,
+            ::core::result::Result::Ok(Self {
+                response_data: __kw_field_0,
+                error_code: __kw_field_1,
                 unknown_tagged_fields,
             })
         }
@@ -220,7 +234,7 @@ pub mod envelope_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_compact_nullable_bytes(self.response_data.as_deref())?;
             encoder.write_i16(self.error_code)?;
 
@@ -228,7 +242,7 @@ pub mod envelope_response {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -237,12 +251,12 @@ pub mod envelope_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             EnvelopeResponse::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| EnvelopeResponse::encode_validated(self, encoder, version),
@@ -253,7 +267,7 @@ pub mod envelope_response {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -277,7 +291,7 @@ pub const ENVELOPE_REQUEST_DESCRIPTOR: MessageDescriptor = MessageDescriptor::ne
     "EnvelopeRequest",
     MessageDirection::Request,
     VersionRange::new(0, 0),
-    Some(VersionRange::new(0, 0)),
+    ::core::option::Option::Some(VersionRange::new(0, 0)),
 );
 
 /// Static metadata for [`EnvelopeResponse`].
@@ -286,7 +300,7 @@ pub const ENVELOPE_RESPONSE_DESCRIPTOR: MessageDescriptor = MessageDescriptor::n
     "EnvelopeResponse",
     MessageDirection::Response,
     VersionRange::new(0, 0),
-    Some(VersionRange::new(0, 0)),
+    ::core::option::Option::Some(VersionRange::new(0, 0)),
 );
 
 /// Static pair metadata for the `Envelope` API.
@@ -295,6 +309,6 @@ pub const ENVELOPE_API_DESCRIPTOR: ApiDescriptor = ApiDescriptor::new(
     &ENVELOPE_REQUEST_DESCRIPTOR,
     &ENVELOPE_RESPONSE_DESCRIPTOR,
     VersionRange::new(0, 0),
-    Some(VersionRange::new(0, 0)),
+    ::core::option::Option::Some(VersionRange::new(0, 0)),
     false,
 );

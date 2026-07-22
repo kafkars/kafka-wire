@@ -20,19 +20,20 @@ pub mod describe_log_dirs_request {
 
     /// `DescribableLogDirTopic` as declared by the `DescribeLogDirs` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct DescribableLogDirTopic {
         /// The topic name.
         pub topic: StrBytes,
         /// The partition indexes.
-        pub partitions: Vec<i32>,
+        pub partitions: ::std::vec::Vec<i32>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
     }
 
     impl DescribableLogDirTopic {
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(1, 5);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(2, 5));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(2, 5));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
@@ -40,9 +41,12 @@ pub mod describe_log_dirs_request {
     }
 
     impl DescribableLogDirTopic {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(EncodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(EncodeError::UnsupportedVersion {
                     message: "DescribableLogDirTopic",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
@@ -50,32 +54,35 @@ pub mod describe_log_dirs_request {
             }
 
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: "DescribableLogDirTopic",
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for DescribableLogDirTopic {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(DecodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(DecodeError::UnsupportedVersion {
                     message: "DescribableLogDirTopic",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
                 });
             }
 
-            let topic = if Self::is_flexible(version) {
+            let __kw_field_0 = if Self::is_flexible(version) {
                 decoder.read_compact_string()?
             } else {
                 decoder.read_string()?
             };
-            let partitions = {
+            let __kw_field_1 = {
                 let length = if Self::is_flexible(version) {
                     decoder.read_compact_array_len()?
                 } else {
@@ -89,9 +96,9 @@ pub mod describe_log_dirs_request {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                topic,
-                partitions,
+            ::core::result::Result::Ok(Self {
+                topic: __kw_field_0,
+                partitions: __kw_field_1,
                 unknown_tagged_fields,
             })
         }
@@ -102,7 +109,7 @@ pub mod describe_log_dirs_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             if Self::is_flexible(version) {
                 encoder.write_compact_string(&self.topic)?;
             } else {
@@ -121,7 +128,7 @@ pub mod describe_log_dirs_request {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -130,12 +137,12 @@ pub mod describe_log_dirs_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             DescribableLogDirTopic::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| DescribableLogDirTopic::encode_validated(self, encoder, version),
@@ -146,7 +153,7 @@ pub mod describe_log_dirs_request {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -161,15 +168,15 @@ pub mod describe_log_dirs_request {
     #[derive(Clone, Debug, Eq, PartialEq)]
     pub struct DescribeLogDirsRequest {
         /// Each topic that we want to describe log directories for, or null for all topics.
-        pub topics: Option<Vec<DescribableLogDirTopic>>,
+        pub topics: ::core::option::Option<::std::vec::Vec<DescribableLogDirTopic>>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
     }
 
-    impl Default for DescribeLogDirsRequest {
+    impl ::core::default::Default for DescribeLogDirsRequest {
         fn default() -> Self {
             Self {
-                topics: Some(Vec::new()),
+                topics: ::core::option::Option::Some(::std::vec::Vec::new()),
                 unknown_tagged_fields: TaggedFields::default(),
             }
         }
@@ -178,7 +185,8 @@ pub mod describe_log_dirs_request {
     impl KafkaMessage for DescribeLogDirsRequest {
         const NAME: &'static str = "DescribeLogDirsRequest";
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(1, 5);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(2, 5));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(2, 5));
     }
 
     impl KafkaRequest for DescribeLogDirsRequest {
@@ -191,30 +199,36 @@ pub mod describe_log_dirs_request {
     }
 
     impl DescribeLogDirsRequest {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             crate::message::ensure_encode_version::<Self>(version)?;
 
-            if let Some(values) = &self.topics {
+            if let ::core::option::Option::Some(values) = &self.topics {
                 for value in values {
                     value.validate_for_version(version)?;
                 }
             }
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: Self::NAME,
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for DescribeLogDirsRequest {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             crate::message::ensure_decode_version::<Self>(version)?;
 
-            let topics = {
+            let __kw_field_0 = {
                 let length = if Self::is_flexible(version) {
                     decoder.read_compact_nullable_array_len()?
                 } else {
@@ -234,8 +248,8 @@ pub mod describe_log_dirs_request {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                topics,
+            ::core::result::Result::Ok(Self {
+                topics: __kw_field_0,
                 unknown_tagged_fields,
             })
         }
@@ -246,13 +260,15 @@ pub mod describe_log_dirs_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             if Self::is_flexible(version) {
-                encoder.write_compact_nullable_array_len(self.topics.as_ref().map(Vec::len))?;
+                encoder.write_compact_nullable_array_len(
+                    self.topics.as_ref().map(::std::vec::Vec::len),
+                )?;
             } else {
-                encoder.write_nullable_array_len(self.topics.as_ref().map(Vec::len))?;
+                encoder.write_nullable_array_len(self.topics.as_ref().map(::std::vec::Vec::len))?;
             }
-            if let Some(values) = &self.topics {
+            if let ::core::option::Option::Some(values) = &self.topics {
                 for value in values {
                     value.encode_validated(encoder, version)?;
                 }
@@ -262,7 +278,7 @@ pub mod describe_log_dirs_request {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -271,12 +287,12 @@ pub mod describe_log_dirs_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             DescribeLogDirsRequest::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| DescribeLogDirsRequest::encode_validated(self, encoder, version),
@@ -287,7 +303,7 @@ pub mod describe_log_dirs_request {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -320,7 +336,7 @@ pub mod describe_log_dirs_response {
         /// The absolute log directory path.
         pub log_dir: StrBytes,
         /// The topics.
-        pub topics: Vec<DescribeLogDirsTopic>,
+        pub topics: ::std::vec::Vec<DescribeLogDirsTopic>,
         /// The total size in bytes of the volume the log directory is in. This value does not include the size of data stored in remote storage.
         pub total_bytes: i64,
         /// The usable size in bytes of the volume the log directory is in. This value does not include the size of data stored in remote storage.
@@ -333,7 +349,8 @@ pub mod describe_log_dirs_response {
 
     impl DescribeLogDirsResult {
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(1, 5);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(2, 5));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(2, 5));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
@@ -341,9 +358,12 @@ pub mod describe_log_dirs_response {
     }
 
     impl DescribeLogDirsResult {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(EncodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(EncodeError::UnsupportedVersion {
                     message: "DescribeLogDirsResult",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
@@ -354,22 +374,22 @@ pub mod describe_log_dirs_response {
                 value.validate_for_version(version)?;
             }
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: "DescribeLogDirsResult",
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
-    impl Default for DescribeLogDirsResult {
+    impl ::core::default::Default for DescribeLogDirsResult {
         fn default() -> Self {
             Self {
                 error_code: 0,
                 log_dir: StrBytes::default(),
-                topics: Vec::new(),
+                topics: ::std::vec::Vec::new(),
                 total_bytes: -1,
                 usable_bytes: -1,
                 is_cordoned: false,
@@ -379,22 +399,25 @@ pub mod describe_log_dirs_response {
     }
 
     impl KafkaDecode for DescribeLogDirsResult {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(DecodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(DecodeError::UnsupportedVersion {
                     message: "DescribeLogDirsResult",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
                 });
             }
 
-            let error_code = decoder.read_i16()?;
-            let log_dir = if Self::is_flexible(version) {
+            let __kw_field_0 = decoder.read_i16()?;
+            let __kw_field_1 = if Self::is_flexible(version) {
                 decoder.read_compact_string()?
             } else {
                 decoder.read_string()?
             };
-            let topics = {
+            let __kw_field_2 = {
                 let length = if Self::is_flexible(version) {
                     decoder.read_compact_array_len()?
                 } else {
@@ -404,17 +427,17 @@ pub mod describe_log_dirs_response {
                     DescribeLogDirsTopic::decode(decoder, version)
                 })?
             };
-            let total_bytes = if version.value() >= 4 {
+            let __kw_field_3 = if version.value() >= 4 {
                 decoder.read_i64()?
             } else {
                 -1
             };
-            let usable_bytes = if version.value() >= 4 {
+            let __kw_field_4 = if version.value() >= 4 {
                 decoder.read_i64()?
             } else {
                 -1
             };
-            let is_cordoned = if version.value() >= 5 {
+            let __kw_field_5 = if version.value() >= 5 {
                 decoder.read_bool()?
             } else {
                 false
@@ -425,13 +448,13 @@ pub mod describe_log_dirs_response {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                error_code,
-                log_dir,
-                topics,
-                total_bytes,
-                usable_bytes,
-                is_cordoned,
+            ::core::result::Result::Ok(Self {
+                error_code: __kw_field_0,
+                log_dir: __kw_field_1,
+                topics: __kw_field_2,
+                total_bytes: __kw_field_3,
+                usable_bytes: __kw_field_4,
+                is_cordoned: __kw_field_5,
                 unknown_tagged_fields,
             })
         }
@@ -442,7 +465,7 @@ pub mod describe_log_dirs_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_i16(self.error_code)?;
             if Self::is_flexible(version) {
                 encoder.write_compact_string(&self.log_dir)?;
@@ -471,7 +494,7 @@ pub mod describe_log_dirs_response {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -480,12 +503,12 @@ pub mod describe_log_dirs_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             DescribeLogDirsResult::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| DescribeLogDirsResult::encode_validated(self, encoder, version),
@@ -496,7 +519,7 @@ pub mod describe_log_dirs_response {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -508,19 +531,20 @@ pub mod describe_log_dirs_response {
 
     /// `DescribeLogDirsTopic` as declared by the `DescribeLogDirs` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct DescribeLogDirsTopic {
         /// The topic name.
         pub name: StrBytes,
         /// The partitions.
-        pub partitions: Vec<DescribeLogDirsPartition>,
+        pub partitions: ::std::vec::Vec<DescribeLogDirsPartition>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
     }
 
     impl DescribeLogDirsTopic {
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(1, 5);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(2, 5));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(2, 5));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
@@ -528,9 +552,12 @@ pub mod describe_log_dirs_response {
     }
 
     impl DescribeLogDirsTopic {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(EncodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(EncodeError::UnsupportedVersion {
                     message: "DescribeLogDirsTopic",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
@@ -541,32 +568,35 @@ pub mod describe_log_dirs_response {
                 value.validate_for_version(version)?;
             }
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: "DescribeLogDirsTopic",
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for DescribeLogDirsTopic {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(DecodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(DecodeError::UnsupportedVersion {
                     message: "DescribeLogDirsTopic",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
                 });
             }
 
-            let name = if Self::is_flexible(version) {
+            let __kw_field_0 = if Self::is_flexible(version) {
                 decoder.read_compact_string()?
             } else {
                 decoder.read_string()?
             };
-            let partitions = {
+            let __kw_field_1 = {
                 let length = if Self::is_flexible(version) {
                     decoder.read_compact_array_len()?
                 } else {
@@ -582,9 +612,9 @@ pub mod describe_log_dirs_response {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                name,
-                partitions,
+            ::core::result::Result::Ok(Self {
+                name: __kw_field_0,
+                partitions: __kw_field_1,
                 unknown_tagged_fields,
             })
         }
@@ -595,7 +625,7 @@ pub mod describe_log_dirs_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             if Self::is_flexible(version) {
                 encoder.write_compact_string(&self.name)?;
             } else {
@@ -614,7 +644,7 @@ pub mod describe_log_dirs_response {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -623,12 +653,12 @@ pub mod describe_log_dirs_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             DescribeLogDirsTopic::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| DescribeLogDirsTopic::encode_validated(self, encoder, version),
@@ -639,7 +669,7 @@ pub mod describe_log_dirs_response {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -651,7 +681,7 @@ pub mod describe_log_dirs_response {
 
     /// `DescribeLogDirsPartition` as declared by the `DescribeLogDirs` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct DescribeLogDirsPartition {
         /// The partition index.
         pub partition_index: i32,
@@ -667,7 +697,8 @@ pub mod describe_log_dirs_response {
 
     impl DescribeLogDirsPartition {
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(1, 5);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(2, 5));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(2, 5));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
@@ -675,9 +706,12 @@ pub mod describe_log_dirs_response {
     }
 
     impl DescribeLogDirsPartition {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(EncodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(EncodeError::UnsupportedVersion {
                     message: "DescribeLogDirsPartition",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
@@ -685,41 +719,44 @@ pub mod describe_log_dirs_response {
             }
 
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: "DescribeLogDirsPartition",
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for DescribeLogDirsPartition {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(DecodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(DecodeError::UnsupportedVersion {
                     message: "DescribeLogDirsPartition",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
                 });
             }
 
-            let partition_index = decoder.read_i32()?;
-            let partition_size = decoder.read_i64()?;
-            let offset_lag = decoder.read_i64()?;
-            let is_future_key = decoder.read_bool()?;
+            let __kw_field_0 = decoder.read_i32()?;
+            let __kw_field_1 = decoder.read_i64()?;
+            let __kw_field_2 = decoder.read_i64()?;
+            let __kw_field_3 = decoder.read_bool()?;
             let unknown_tagged_fields = if Self::is_flexible(version) {
                 decoder.read_tagged_fields()?
             } else {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                partition_index,
-                partition_size,
-                offset_lag,
-                is_future_key,
+            ::core::result::Result::Ok(Self {
+                partition_index: __kw_field_0,
+                partition_size: __kw_field_1,
+                offset_lag: __kw_field_2,
+                is_future_key: __kw_field_3,
                 unknown_tagged_fields,
             })
         }
@@ -730,7 +767,7 @@ pub mod describe_log_dirs_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_i32(self.partition_index)?;
             encoder.write_i64(self.partition_size)?;
             encoder.write_i64(self.offset_lag)?;
@@ -740,7 +777,7 @@ pub mod describe_log_dirs_response {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -749,12 +786,12 @@ pub mod describe_log_dirs_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             DescribeLogDirsPartition::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| DescribeLogDirsPartition::encode_validated(self, encoder, version),
@@ -765,7 +802,7 @@ pub mod describe_log_dirs_response {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -777,14 +814,14 @@ pub mod describe_log_dirs_response {
 
     /// Response body for the `DescribeLogDirs` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct DescribeLogDirsResponse {
         /// The duration in milliseconds for which the request was throttled due to a quota violation, or zero if the request did not violate any quota.
         pub throttle_time_ms: i32,
         /// The error code, or 0 if there was no error.
         pub error_code: i16,
         /// The log directories.
-        pub results: Vec<DescribeLogDirsResult>,
+        pub results: ::std::vec::Vec<DescribeLogDirsResult>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
     }
@@ -792,7 +829,8 @@ pub mod describe_log_dirs_response {
     impl KafkaMessage for DescribeLogDirsResponse {
         const NAME: &'static str = "DescribeLogDirsResponse";
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(1, 5);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(2, 5));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(2, 5));
     }
 
     impl KafkaResponse for DescribeLogDirsResponse {
@@ -800,34 +838,40 @@ pub mod describe_log_dirs_response {
     }
 
     impl DescribeLogDirsResponse {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             crate::message::ensure_encode_version::<Self>(version)?;
 
             for value in &self.results {
                 value.validate_for_version(version)?;
             }
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: Self::NAME,
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for DescribeLogDirsResponse {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             crate::message::ensure_decode_version::<Self>(version)?;
 
-            let throttle_time_ms = decoder.read_i32()?;
-            let error_code = if version.value() >= 3 {
+            let __kw_field_0 = decoder.read_i32()?;
+            let __kw_field_1 = if version.value() >= 3 {
                 decoder.read_i16()?
             } else {
                 0
             };
-            let results = {
+            let __kw_field_2 = {
                 let length = if Self::is_flexible(version) {
                     decoder.read_compact_array_len()?
                 } else {
@@ -843,10 +887,10 @@ pub mod describe_log_dirs_response {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                throttle_time_ms,
-                error_code,
-                results,
+            ::core::result::Result::Ok(Self {
+                throttle_time_ms: __kw_field_0,
+                error_code: __kw_field_1,
+                results: __kw_field_2,
                 unknown_tagged_fields,
             })
         }
@@ -857,7 +901,7 @@ pub mod describe_log_dirs_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_i32(self.throttle_time_ms)?;
             if version.value() >= 3 {
                 encoder.write_i16(self.error_code)?;
@@ -875,7 +919,7 @@ pub mod describe_log_dirs_response {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -884,12 +928,12 @@ pub mod describe_log_dirs_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             DescribeLogDirsResponse::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| DescribeLogDirsResponse::encode_validated(self, encoder, version),
@@ -900,7 +944,7 @@ pub mod describe_log_dirs_response {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -924,7 +968,7 @@ pub const DESCRIBE_LOG_DIRS_REQUEST_DESCRIPTOR: MessageDescriptor = MessageDescr
     "DescribeLogDirsRequest",
     MessageDirection::Request,
     VersionRange::new(1, 5),
-    Some(VersionRange::new(2, 5)),
+    ::core::option::Option::Some(VersionRange::new(2, 5)),
 );
 
 /// Static metadata for [`DescribeLogDirsResponse`].
@@ -933,7 +977,7 @@ pub const DESCRIBE_LOG_DIRS_RESPONSE_DESCRIPTOR: MessageDescriptor = MessageDesc
     "DescribeLogDirsResponse",
     MessageDirection::Response,
     VersionRange::new(1, 5),
-    Some(VersionRange::new(2, 5)),
+    ::core::option::Option::Some(VersionRange::new(2, 5)),
 );
 
 /// Static pair metadata for the `DescribeLogDirs` API.
@@ -942,6 +986,6 @@ pub const DESCRIBE_LOG_DIRS_API_DESCRIPTOR: ApiDescriptor = ApiDescriptor::new(
     &DESCRIBE_LOG_DIRS_REQUEST_DESCRIPTOR,
     &DESCRIBE_LOG_DIRS_RESPONSE_DESCRIPTOR,
     VersionRange::new(1, 5),
-    Some(VersionRange::new(2, 5)),
+    ::core::option::Option::Some(VersionRange::new(2, 5)),
     false,
 );

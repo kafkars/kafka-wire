@@ -25,14 +25,15 @@ pub mod describe_share_group_offsets_request {
         /// The group identifier.
         pub group_id: StrBytes,
         /// The topics to describe offsets for, or null for all topic-partitions.
-        pub topics: Option<Vec<DescribeShareGroupOffsetsRequestTopic>>,
+        pub topics: ::core::option::Option<::std::vec::Vec<DescribeShareGroupOffsetsRequestTopic>>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
     }
 
     impl DescribeShareGroupOffsetsRequestGroup {
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 1);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 1));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(0, 1));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
@@ -40,53 +41,59 @@ pub mod describe_share_group_offsets_request {
     }
 
     impl DescribeShareGroupOffsetsRequestGroup {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(EncodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(EncodeError::UnsupportedVersion {
                     message: "DescribeShareGroupOffsetsRequestGroup",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
                 });
             }
 
-            if let Some(values) = &self.topics {
+            if let ::core::option::Option::Some(values) = &self.topics {
                 for value in values {
                     value.validate_for_version(version)?;
                 }
             }
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: "DescribeShareGroupOffsetsRequestGroup",
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
-    impl Default for DescribeShareGroupOffsetsRequestGroup {
+    impl ::core::default::Default for DescribeShareGroupOffsetsRequestGroup {
         fn default() -> Self {
             Self {
                 group_id: StrBytes::default(),
-                topics: Some(Vec::new()),
+                topics: ::core::option::Option::Some(::std::vec::Vec::new()),
                 unknown_tagged_fields: TaggedFields::default(),
             }
         }
     }
 
     impl KafkaDecode for DescribeShareGroupOffsetsRequestGroup {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(DecodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(DecodeError::UnsupportedVersion {
                     message: "DescribeShareGroupOffsetsRequestGroup",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
                 });
             }
 
-            let group_id = decoder.read_compact_string()?;
-            let topics = {
+            let __kw_field_0 = decoder.read_compact_string()?;
+            let __kw_field_1 = {
                 let length = decoder.read_compact_nullable_array_len()?;
                 length
                     .map(|length| {
@@ -102,9 +109,9 @@ pub mod describe_share_group_offsets_request {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                group_id,
-                topics,
+            ::core::result::Result::Ok(Self {
+                group_id: __kw_field_0,
+                topics: __kw_field_1,
                 unknown_tagged_fields,
             })
         }
@@ -115,10 +122,11 @@ pub mod describe_share_group_offsets_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_compact_string(&self.group_id)?;
-            encoder.write_compact_nullable_array_len(self.topics.as_ref().map(Vec::len))?;
-            if let Some(values) = &self.topics {
+            encoder
+                .write_compact_nullable_array_len(self.topics.as_ref().map(::std::vec::Vec::len))?;
+            if let ::core::option::Option::Some(values) = &self.topics {
                 for value in values {
                     value.encode_validated(encoder, version)?;
                 }
@@ -128,7 +136,7 @@ pub mod describe_share_group_offsets_request {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -137,12 +145,12 @@ pub mod describe_share_group_offsets_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             DescribeShareGroupOffsetsRequestGroup::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| {
@@ -155,7 +163,7 @@ pub mod describe_share_group_offsets_request {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -171,19 +179,20 @@ pub mod describe_share_group_offsets_request {
 
     /// `DescribeShareGroupOffsetsRequestTopic` as declared by the `DescribeShareGroupOffsets` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct DescribeShareGroupOffsetsRequestTopic {
         /// The topic name.
         pub topic_name: StrBytes,
         /// The partitions.
-        pub partitions: Vec<i32>,
+        pub partitions: ::std::vec::Vec<i32>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
     }
 
     impl DescribeShareGroupOffsetsRequestTopic {
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 1);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 1));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(0, 1));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
@@ -191,9 +200,12 @@ pub mod describe_share_group_offsets_request {
     }
 
     impl DescribeShareGroupOffsetsRequestTopic {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(EncodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(EncodeError::UnsupportedVersion {
                     message: "DescribeShareGroupOffsetsRequestTopic",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
@@ -201,28 +213,31 @@ pub mod describe_share_group_offsets_request {
             }
 
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: "DescribeShareGroupOffsetsRequestTopic",
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for DescribeShareGroupOffsetsRequestTopic {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(DecodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(DecodeError::UnsupportedVersion {
                     message: "DescribeShareGroupOffsetsRequestTopic",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
                 });
             }
 
-            let topic_name = decoder.read_compact_string()?;
-            let partitions = {
+            let __kw_field_0 = decoder.read_compact_string()?;
+            let __kw_field_1 = {
                 let length = decoder.read_compact_array_len()?;
                 decoder.read_vec(length, Decoder::read_i32)?
             };
@@ -232,9 +247,9 @@ pub mod describe_share_group_offsets_request {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                topic_name,
-                partitions,
+            ::core::result::Result::Ok(Self {
+                topic_name: __kw_field_0,
+                partitions: __kw_field_1,
                 unknown_tagged_fields,
             })
         }
@@ -245,7 +260,7 @@ pub mod describe_share_group_offsets_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_compact_string(&self.topic_name)?;
             encoder.write_compact_array_len(self.partitions.len())?;
             for value in &self.partitions {
@@ -256,7 +271,7 @@ pub mod describe_share_group_offsets_request {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -265,12 +280,12 @@ pub mod describe_share_group_offsets_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             DescribeShareGroupOffsetsRequestTopic::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| {
@@ -283,7 +298,7 @@ pub mod describe_share_group_offsets_request {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -299,10 +314,10 @@ pub mod describe_share_group_offsets_request {
 
     /// Request body for the `DescribeShareGroupOffsets` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct DescribeShareGroupOffsetsRequest {
         /// The groups to describe offsets for.
-        pub groups: Vec<DescribeShareGroupOffsetsRequestGroup>,
+        pub groups: ::std::vec::Vec<DescribeShareGroupOffsetsRequestGroup>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
     }
@@ -310,7 +325,8 @@ pub mod describe_share_group_offsets_request {
     impl KafkaMessage for DescribeShareGroupOffsetsRequest {
         const NAME: &'static str = "DescribeShareGroupOffsetsRequest";
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 1);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 1));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(0, 1));
     }
 
     impl KafkaRequest for DescribeShareGroupOffsetsRequest {
@@ -324,28 +340,34 @@ pub mod describe_share_group_offsets_request {
     }
 
     impl DescribeShareGroupOffsetsRequest {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             crate::message::ensure_encode_version::<Self>(version)?;
 
             for value in &self.groups {
                 value.validate_for_version(version)?;
             }
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: Self::NAME,
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for DescribeShareGroupOffsetsRequest {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             crate::message::ensure_decode_version::<Self>(version)?;
 
-            let groups = {
+            let __kw_field_0 = {
                 let length = decoder.read_compact_array_len()?;
                 decoder.read_vec(length, |decoder| {
                     DescribeShareGroupOffsetsRequestGroup::decode(decoder, version)
@@ -357,8 +379,8 @@ pub mod describe_share_group_offsets_request {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                groups,
+            ::core::result::Result::Ok(Self {
+                groups: __kw_field_0,
                 unknown_tagged_fields,
             })
         }
@@ -369,7 +391,7 @@ pub mod describe_share_group_offsets_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_compact_array_len(self.groups.len())?;
             for value in &self.groups {
                 value.encode_validated(encoder, version)?;
@@ -379,7 +401,7 @@ pub mod describe_share_group_offsets_request {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -388,12 +410,12 @@ pub mod describe_share_group_offsets_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             DescribeShareGroupOffsetsRequest::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| {
@@ -406,7 +428,7 @@ pub mod describe_share_group_offsets_request {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -436,23 +458,24 @@ pub mod describe_share_group_offsets_response {
 
     /// `DescribeShareGroupOffsetsResponseGroup` as declared by the `DescribeShareGroupOffsets` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct DescribeShareGroupOffsetsResponseGroup {
         /// The group identifier.
         pub group_id: StrBytes,
         /// The results for each topic.
-        pub topics: Vec<DescribeShareGroupOffsetsResponseTopic>,
+        pub topics: ::std::vec::Vec<DescribeShareGroupOffsetsResponseTopic>,
         /// The group-level error code, or 0 if there was no error.
         pub error_code: i16,
         /// The group-level error message, or null if there was no error.
-        pub error_message: Option<StrBytes>,
+        pub error_message: ::core::option::Option<StrBytes>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
     }
 
     impl DescribeShareGroupOffsetsResponseGroup {
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 1);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 1));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(0, 1));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
@@ -460,9 +483,12 @@ pub mod describe_share_group_offsets_response {
     }
 
     impl DescribeShareGroupOffsetsResponseGroup {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(EncodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(EncodeError::UnsupportedVersion {
                     message: "DescribeShareGroupOffsetsResponseGroup",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
@@ -473,46 +499,49 @@ pub mod describe_share_group_offsets_response {
                 value.validate_for_version(version)?;
             }
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: "DescribeShareGroupOffsetsResponseGroup",
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for DescribeShareGroupOffsetsResponseGroup {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(DecodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(DecodeError::UnsupportedVersion {
                     message: "DescribeShareGroupOffsetsResponseGroup",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
                 });
             }
 
-            let group_id = decoder.read_compact_string()?;
-            let topics = {
+            let __kw_field_0 = decoder.read_compact_string()?;
+            let __kw_field_1 = {
                 let length = decoder.read_compact_array_len()?;
                 decoder.read_vec(length, |decoder| {
                     DescribeShareGroupOffsetsResponseTopic::decode(decoder, version)
                 })?
             };
-            let error_code = decoder.read_i16()?;
-            let error_message = decoder.read_compact_nullable_string()?;
+            let __kw_field_2 = decoder.read_i16()?;
+            let __kw_field_3 = decoder.read_compact_nullable_string()?;
             let unknown_tagged_fields = if Self::is_flexible(version) {
                 decoder.read_tagged_fields()?
             } else {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                group_id,
-                topics,
-                error_code,
-                error_message,
+            ::core::result::Result::Ok(Self {
+                group_id: __kw_field_0,
+                topics: __kw_field_1,
+                error_code: __kw_field_2,
+                error_message: __kw_field_3,
                 unknown_tagged_fields,
             })
         }
@@ -523,7 +552,7 @@ pub mod describe_share_group_offsets_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_compact_string(&self.group_id)?;
             encoder.write_compact_array_len(self.topics.len())?;
             for value in &self.topics {
@@ -536,7 +565,7 @@ pub mod describe_share_group_offsets_response {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -545,12 +574,12 @@ pub mod describe_share_group_offsets_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             DescribeShareGroupOffsetsResponseGroup::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| {
@@ -563,7 +592,7 @@ pub mod describe_share_group_offsets_response {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -579,21 +608,22 @@ pub mod describe_share_group_offsets_response {
 
     /// `DescribeShareGroupOffsetsResponseTopic` as declared by the `DescribeShareGroupOffsets` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct DescribeShareGroupOffsetsResponseTopic {
         /// The topic name.
         pub topic_name: StrBytes,
         /// The unique topic ID.
         pub topic_id: Uuid,
         /// .
-        pub partitions: Vec<DescribeShareGroupOffsetsResponsePartition>,
+        pub partitions: ::std::vec::Vec<DescribeShareGroupOffsetsResponsePartition>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
     }
 
     impl DescribeShareGroupOffsetsResponseTopic {
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 1);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 1));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(0, 1));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
@@ -601,9 +631,12 @@ pub mod describe_share_group_offsets_response {
     }
 
     impl DescribeShareGroupOffsetsResponseTopic {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(EncodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(EncodeError::UnsupportedVersion {
                     message: "DescribeShareGroupOffsetsResponseTopic",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
@@ -614,29 +647,32 @@ pub mod describe_share_group_offsets_response {
                 value.validate_for_version(version)?;
             }
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: "DescribeShareGroupOffsetsResponseTopic",
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for DescribeShareGroupOffsetsResponseTopic {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(DecodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(DecodeError::UnsupportedVersion {
                     message: "DescribeShareGroupOffsetsResponseTopic",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
                 });
             }
 
-            let topic_name = decoder.read_compact_string()?;
-            let topic_id = decoder.read_uuid()?;
-            let partitions = {
+            let __kw_field_0 = decoder.read_compact_string()?;
+            let __kw_field_1 = decoder.read_uuid()?;
+            let __kw_field_2 = {
                 let length = decoder.read_compact_array_len()?;
                 decoder.read_vec(length, |decoder| {
                     DescribeShareGroupOffsetsResponsePartition::decode(decoder, version)
@@ -648,10 +684,10 @@ pub mod describe_share_group_offsets_response {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                topic_name,
-                topic_id,
-                partitions,
+            ::core::result::Result::Ok(Self {
+                topic_name: __kw_field_0,
+                topic_id: __kw_field_1,
+                partitions: __kw_field_2,
                 unknown_tagged_fields,
             })
         }
@@ -662,7 +698,7 @@ pub mod describe_share_group_offsets_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_compact_string(&self.topic_name)?;
             encoder.write_uuid(self.topic_id)?;
             encoder.write_compact_array_len(self.partitions.len())?;
@@ -674,7 +710,7 @@ pub mod describe_share_group_offsets_response {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -683,12 +719,12 @@ pub mod describe_share_group_offsets_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             DescribeShareGroupOffsetsResponseTopic::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| {
@@ -701,7 +737,7 @@ pub mod describe_share_group_offsets_response {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -730,14 +766,15 @@ pub mod describe_share_group_offsets_response {
         /// The partition-level error code, or 0 if there was no error.
         pub error_code: i16,
         /// The partition-level error message, or null if there was no error.
-        pub error_message: Option<StrBytes>,
+        pub error_message: ::core::option::Option<StrBytes>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
     }
 
     impl DescribeShareGroupOffsetsResponsePartition {
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 1);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 1));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(0, 1));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
@@ -745,9 +782,12 @@ pub mod describe_share_group_offsets_response {
     }
 
     impl DescribeShareGroupOffsetsResponsePartition {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(EncodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(EncodeError::UnsupportedVersion {
                     message: "DescribeShareGroupOffsetsResponsePartition",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
@@ -755,17 +795,17 @@ pub mod describe_share_group_offsets_response {
             }
 
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: "DescribeShareGroupOffsetsResponsePartition",
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
-    impl Default for DescribeShareGroupOffsetsResponsePartition {
+    impl ::core::default::Default for DescribeShareGroupOffsetsResponsePartition {
         fn default() -> Self {
             Self {
                 partition_index: 0,
@@ -773,45 +813,48 @@ pub mod describe_share_group_offsets_response {
                 leader_epoch: 0,
                 lag: -1,
                 error_code: 0,
-                error_message: None,
+                error_message: ::core::option::Option::None,
                 unknown_tagged_fields: TaggedFields::default(),
             }
         }
     }
 
     impl KafkaDecode for DescribeShareGroupOffsetsResponsePartition {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(DecodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(DecodeError::UnsupportedVersion {
                     message: "DescribeShareGroupOffsetsResponsePartition",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
                 });
             }
 
-            let partition_index = decoder.read_i32()?;
-            let start_offset = decoder.read_i64()?;
-            let leader_epoch = decoder.read_i32()?;
-            let lag = if version.value() >= 1 {
+            let __kw_field_0 = decoder.read_i32()?;
+            let __kw_field_1 = decoder.read_i64()?;
+            let __kw_field_2 = decoder.read_i32()?;
+            let __kw_field_3 = if version.value() >= 1 {
                 decoder.read_i64()?
             } else {
                 -1
             };
-            let error_code = decoder.read_i16()?;
-            let error_message = decoder.read_compact_nullable_string()?;
+            let __kw_field_4 = decoder.read_i16()?;
+            let __kw_field_5 = decoder.read_compact_nullable_string()?;
             let unknown_tagged_fields = if Self::is_flexible(version) {
                 decoder.read_tagged_fields()?
             } else {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                partition_index,
-                start_offset,
-                leader_epoch,
-                lag,
-                error_code,
-                error_message,
+            ::core::result::Result::Ok(Self {
+                partition_index: __kw_field_0,
+                start_offset: __kw_field_1,
+                leader_epoch: __kw_field_2,
+                lag: __kw_field_3,
+                error_code: __kw_field_4,
+                error_message: __kw_field_5,
                 unknown_tagged_fields,
             })
         }
@@ -822,7 +865,7 @@ pub mod describe_share_group_offsets_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_i32(self.partition_index)?;
             encoder.write_i64(self.start_offset)?;
             encoder.write_i32(self.leader_epoch)?;
@@ -836,7 +879,7 @@ pub mod describe_share_group_offsets_response {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -845,12 +888,12 @@ pub mod describe_share_group_offsets_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             DescribeShareGroupOffsetsResponsePartition::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| {
@@ -865,7 +908,7 @@ pub mod describe_share_group_offsets_response {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -885,12 +928,12 @@ pub mod describe_share_group_offsets_response {
 
     /// Response body for the `DescribeShareGroupOffsets` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct DescribeShareGroupOffsetsResponse {
         /// The duration in milliseconds for which the request was throttled due to a quota violation, or zero if the request did not violate any quota.
         pub throttle_time_ms: i32,
         /// The results for each group.
-        pub groups: Vec<DescribeShareGroupOffsetsResponseGroup>,
+        pub groups: ::std::vec::Vec<DescribeShareGroupOffsetsResponseGroup>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
     }
@@ -898,7 +941,8 @@ pub mod describe_share_group_offsets_response {
     impl KafkaMessage for DescribeShareGroupOffsetsResponse {
         const NAME: &'static str = "DescribeShareGroupOffsetsResponse";
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 1);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 1));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(0, 1));
     }
 
     impl KafkaResponse for DescribeShareGroupOffsetsResponse {
@@ -906,29 +950,35 @@ pub mod describe_share_group_offsets_response {
     }
 
     impl DescribeShareGroupOffsetsResponse {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             crate::message::ensure_encode_version::<Self>(version)?;
 
             for value in &self.groups {
                 value.validate_for_version(version)?;
             }
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: Self::NAME,
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for DescribeShareGroupOffsetsResponse {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             crate::message::ensure_decode_version::<Self>(version)?;
 
-            let throttle_time_ms = decoder.read_i32()?;
-            let groups = {
+            let __kw_field_0 = decoder.read_i32()?;
+            let __kw_field_1 = {
                 let length = decoder.read_compact_array_len()?;
                 decoder.read_vec(length, |decoder| {
                     DescribeShareGroupOffsetsResponseGroup::decode(decoder, version)
@@ -940,9 +990,9 @@ pub mod describe_share_group_offsets_response {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                throttle_time_ms,
-                groups,
+            ::core::result::Result::Ok(Self {
+                throttle_time_ms: __kw_field_0,
+                groups: __kw_field_1,
                 unknown_tagged_fields,
             })
         }
@@ -953,7 +1003,7 @@ pub mod describe_share_group_offsets_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_i32(self.throttle_time_ms)?;
             encoder.write_compact_array_len(self.groups.len())?;
             for value in &self.groups {
@@ -964,7 +1014,7 @@ pub mod describe_share_group_offsets_response {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -973,12 +1023,12 @@ pub mod describe_share_group_offsets_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             DescribeShareGroupOffsetsResponse::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| {
@@ -991,7 +1041,7 @@ pub mod describe_share_group_offsets_response {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -1020,7 +1070,7 @@ pub const DESCRIBE_SHARE_GROUP_OFFSETS_REQUEST_DESCRIPTOR: MessageDescriptor =
         "DescribeShareGroupOffsetsRequest",
         MessageDirection::Request,
         VersionRange::new(0, 1),
-        Some(VersionRange::new(0, 1)),
+        ::core::option::Option::Some(VersionRange::new(0, 1)),
     );
 
 /// Static metadata for [`DescribeShareGroupOffsetsResponse`].
@@ -1030,7 +1080,7 @@ pub const DESCRIBE_SHARE_GROUP_OFFSETS_RESPONSE_DESCRIPTOR: MessageDescriptor =
         "DescribeShareGroupOffsetsResponse",
         MessageDirection::Response,
         VersionRange::new(0, 1),
-        Some(VersionRange::new(0, 1)),
+        ::core::option::Option::Some(VersionRange::new(0, 1)),
     );
 
 /// Static pair metadata for the `DescribeShareGroupOffsets` API.
@@ -1039,6 +1089,6 @@ pub const DESCRIBE_SHARE_GROUP_OFFSETS_API_DESCRIPTOR: ApiDescriptor = ApiDescri
     &DESCRIBE_SHARE_GROUP_OFFSETS_REQUEST_DESCRIPTOR,
     &DESCRIBE_SHARE_GROUP_OFFSETS_RESPONSE_DESCRIPTOR,
     VersionRange::new(0, 1),
-    Some(VersionRange::new(0, 1)),
+    ::core::option::Option::Some(VersionRange::new(0, 1)),
     false,
 );

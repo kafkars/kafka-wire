@@ -20,19 +20,20 @@ pub mod streams_group_topology_description_update_request {
 
     /// `TopologyDescription` as declared by the `StreamsGroupTopologyDescriptionUpdate` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct TopologyDescription {
         /// The subtopologies that make up this topology.
-        pub subtopologies: Vec<TopologyDescriptionSubtopology>,
+        pub subtopologies: ::std::vec::Vec<TopologyDescriptionSubtopology>,
         /// Global state stores used by this topology.
-        pub global_stores: Vec<TopologyDescriptionGlobalStore>,
+        pub global_stores: ::std::vec::Vec<TopologyDescriptionGlobalStore>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
     }
 
     impl TopologyDescription {
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 0);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 0));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(0, 0));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
@@ -40,9 +41,12 @@ pub mod streams_group_topology_description_update_request {
     }
 
     impl TopologyDescription {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(EncodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(EncodeError::UnsupportedVersion {
                     message: "TopologyDescription",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
@@ -56,33 +60,36 @@ pub mod streams_group_topology_description_update_request {
                 value.validate_for_version(version)?;
             }
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: "TopologyDescription",
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for TopologyDescription {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(DecodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(DecodeError::UnsupportedVersion {
                     message: "TopologyDescription",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
                 });
             }
 
-            let subtopologies = {
+            let __kw_field_0 = {
                 let length = decoder.read_compact_array_len()?;
                 decoder.read_vec(length, |decoder| {
                     TopologyDescriptionSubtopology::decode(decoder, version)
                 })?
             };
-            let global_stores = {
+            let __kw_field_1 = {
                 let length = decoder.read_compact_array_len()?;
                 decoder.read_vec(length, |decoder| {
                     TopologyDescriptionGlobalStore::decode(decoder, version)
@@ -94,9 +101,9 @@ pub mod streams_group_topology_description_update_request {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                subtopologies,
-                global_stores,
+            ::core::result::Result::Ok(Self {
+                subtopologies: __kw_field_0,
+                global_stores: __kw_field_1,
                 unknown_tagged_fields,
             })
         }
@@ -107,7 +114,7 @@ pub mod streams_group_topology_description_update_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_compact_array_len(self.subtopologies.len())?;
             for value in &self.subtopologies {
                 value.encode_validated(encoder, version)?;
@@ -121,7 +128,7 @@ pub mod streams_group_topology_description_update_request {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -130,12 +137,12 @@ pub mod streams_group_topology_description_update_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             TopologyDescription::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| TopologyDescription::encode_validated(self, encoder, version),
@@ -146,7 +153,7 @@ pub mod streams_group_topology_description_update_request {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -158,19 +165,20 @@ pub mod streams_group_topology_description_update_request {
 
     /// `TopologyDescriptionSubtopology` as declared by the `StreamsGroupTopologyDescriptionUpdate` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct TopologyDescriptionSubtopology {
         /// The subtopology identifier, unique within the topology.
         pub subtopology_id: StrBytes,
         /// The processing nodes in this subtopology.
-        pub nodes: Vec<TopologyDescriptionNode>,
+        pub nodes: ::std::vec::Vec<TopologyDescriptionNode>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
     }
 
     impl TopologyDescriptionSubtopology {
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 0);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 0));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(0, 0));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
@@ -178,9 +186,12 @@ pub mod streams_group_topology_description_update_request {
     }
 
     impl TopologyDescriptionSubtopology {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(EncodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(EncodeError::UnsupportedVersion {
                     message: "TopologyDescriptionSubtopology",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
@@ -191,28 +202,31 @@ pub mod streams_group_topology_description_update_request {
                 value.validate_for_version(version)?;
             }
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: "TopologyDescriptionSubtopology",
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for TopologyDescriptionSubtopology {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(DecodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(DecodeError::UnsupportedVersion {
                     message: "TopologyDescriptionSubtopology",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
                 });
             }
 
-            let subtopology_id = decoder.read_compact_string()?;
-            let nodes = {
+            let __kw_field_0 = decoder.read_compact_string()?;
+            let __kw_field_1 = {
                 let length = decoder.read_compact_array_len()?;
                 decoder.read_vec(length, |decoder| {
                     TopologyDescriptionNode::decode(decoder, version)
@@ -224,9 +238,9 @@ pub mod streams_group_topology_description_update_request {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                subtopology_id,
-                nodes,
+            ::core::result::Result::Ok(Self {
+                subtopology_id: __kw_field_0,
+                nodes: __kw_field_1,
                 unknown_tagged_fields,
             })
         }
@@ -237,7 +251,7 @@ pub mod streams_group_topology_description_update_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_compact_string(&self.subtopology_id)?;
             encoder.write_compact_array_len(self.nodes.len())?;
             for value in &self.nodes {
@@ -248,7 +262,7 @@ pub mod streams_group_topology_description_update_request {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -257,12 +271,12 @@ pub mod streams_group_topology_description_update_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             TopologyDescriptionSubtopology::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| TopologyDescriptionSubtopology::encode_validated(self, encoder, version),
@@ -273,7 +287,7 @@ pub mod streams_group_topology_description_update_request {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -285,27 +299,28 @@ pub mod streams_group_topology_description_update_request {
 
     /// `TopologyDescriptionNode` as declared by the `StreamsGroupTopologyDescriptionUpdate` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct TopologyDescriptionNode {
         /// The name of this node (e.g., KSTREAM-SOURCE-0000000000).
         pub name: StrBytes,
         /// The type of this node: 1=SOURCE, 2=PROCESSOR, 3=SINK.
         pub node_type: i8,
         /// The source topics this node reads from. Defined only for source nodes, may be empty if source topics are dynamically determined.
-        pub source_topics: Vec<StrBytes>,
+        pub source_topics: ::std::vec::Vec<StrBytes>,
         /// The topic this node writes to. Defined only for sink nodes, may be null if sink topic is dynamically determined.
-        pub sink_topic: Option<StrBytes>,
+        pub sink_topic: ::core::option::Option<StrBytes>,
         /// The state store names accessed by this node. Defined only for processor nodes.
-        pub stores: Vec<StrBytes>,
+        pub stores: ::std::vec::Vec<StrBytes>,
         /// The names of successor nodes in the processing graph. Predecessor relationships are reconstructed from this field.
-        pub successors: Vec<StrBytes>,
+        pub successors: ::std::vec::Vec<StrBytes>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
     }
 
     impl TopologyDescriptionNode {
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 0);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 0));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(0, 0));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
@@ -313,9 +328,12 @@ pub mod streams_group_topology_description_update_request {
     }
 
     impl TopologyDescriptionNode {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(EncodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(EncodeError::UnsupportedVersion {
                     message: "TopologyDescriptionNode",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
@@ -323,38 +341,41 @@ pub mod streams_group_topology_description_update_request {
             }
 
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: "TopologyDescriptionNode",
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for TopologyDescriptionNode {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(DecodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(DecodeError::UnsupportedVersion {
                     message: "TopologyDescriptionNode",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
                 });
             }
 
-            let name = decoder.read_compact_string()?;
-            let node_type = decoder.read_i8()?;
-            let source_topics = {
+            let __kw_field_0 = decoder.read_compact_string()?;
+            let __kw_field_1 = decoder.read_i8()?;
+            let __kw_field_2 = {
                 let length = decoder.read_compact_array_len()?;
                 decoder.read_vec(length, Decoder::read_compact_string)?
             };
-            let sink_topic = decoder.read_compact_nullable_string()?;
-            let stores = {
+            let __kw_field_3 = decoder.read_compact_nullable_string()?;
+            let __kw_field_4 = {
                 let length = decoder.read_compact_array_len()?;
                 decoder.read_vec(length, Decoder::read_compact_string)?
             };
-            let successors = {
+            let __kw_field_5 = {
                 let length = decoder.read_compact_array_len()?;
                 decoder.read_vec(length, Decoder::read_compact_string)?
             };
@@ -364,13 +385,13 @@ pub mod streams_group_topology_description_update_request {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                name,
-                node_type,
-                source_topics,
-                sink_topic,
-                stores,
-                successors,
+            ::core::result::Result::Ok(Self {
+                name: __kw_field_0,
+                node_type: __kw_field_1,
+                source_topics: __kw_field_2,
+                sink_topic: __kw_field_3,
+                stores: __kw_field_4,
+                successors: __kw_field_5,
                 unknown_tagged_fields,
             })
         }
@@ -381,7 +402,7 @@ pub mod streams_group_topology_description_update_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_compact_string(&self.name)?;
             encoder.write_i8(self.node_type)?;
             encoder.write_compact_array_len(self.source_topics.len())?;
@@ -402,7 +423,7 @@ pub mod streams_group_topology_description_update_request {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -411,12 +432,12 @@ pub mod streams_group_topology_description_update_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             TopologyDescriptionNode::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| TopologyDescriptionNode::encode_validated(self, encoder, version),
@@ -427,7 +448,7 @@ pub mod streams_group_topology_description_update_request {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -439,7 +460,7 @@ pub mod streams_group_topology_description_update_request {
 
     /// `TopologyDescriptionGlobalStore` as declared by the `StreamsGroupTopologyDescriptionUpdate` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct TopologyDescriptionGlobalStore {
         /// The source node providing data to the global store.
         pub source: TopologyDescriptionNode,
@@ -451,7 +472,8 @@ pub mod streams_group_topology_description_update_request {
 
     impl TopologyDescriptionGlobalStore {
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 0);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 0));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(0, 0));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
@@ -459,9 +481,12 @@ pub mod streams_group_topology_description_update_request {
     }
 
     impl TopologyDescriptionGlobalStore {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(EncodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(EncodeError::UnsupportedVersion {
                     message: "TopologyDescriptionGlobalStore",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
@@ -471,37 +496,40 @@ pub mod streams_group_topology_description_update_request {
             self.source.validate_for_version(version)?;
             self.processor.validate_for_version(version)?;
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: "TopologyDescriptionGlobalStore",
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for TopologyDescriptionGlobalStore {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(DecodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(DecodeError::UnsupportedVersion {
                     message: "TopologyDescriptionGlobalStore",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
                 });
             }
 
-            let source = TopologyDescriptionNode::decode(decoder, version)?;
-            let processor = TopologyDescriptionNode::decode(decoder, version)?;
+            let __kw_field_0 = TopologyDescriptionNode::decode(decoder, version)?;
+            let __kw_field_1 = TopologyDescriptionNode::decode(decoder, version)?;
             let unknown_tagged_fields = if Self::is_flexible(version) {
                 decoder.read_tagged_fields()?
             } else {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                source,
-                processor,
+            ::core::result::Result::Ok(Self {
+                source: __kw_field_0,
+                processor: __kw_field_1,
                 unknown_tagged_fields,
             })
         }
@@ -512,7 +540,7 @@ pub mod streams_group_topology_description_update_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.source.encode_validated(encoder, version)?;
             self.processor.encode_validated(encoder, version)?;
 
@@ -520,7 +548,7 @@ pub mod streams_group_topology_description_update_request {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -529,12 +557,12 @@ pub mod streams_group_topology_description_update_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             TopologyDescriptionGlobalStore::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| TopologyDescriptionGlobalStore::encode_validated(self, encoder, version),
@@ -545,7 +573,7 @@ pub mod streams_group_topology_description_update_request {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -557,7 +585,7 @@ pub mod streams_group_topology_description_update_request {
 
     /// Request body for the `StreamsGroupTopologyDescriptionUpdate` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct StreamsGroupTopologyDescriptionUpdateRequest {
         /// The streams group identifier.
         pub group_id: StrBytes,
@@ -574,7 +602,8 @@ pub mod streams_group_topology_description_update_request {
     impl KafkaMessage for StreamsGroupTopologyDescriptionUpdateRequest {
         const NAME: &'static str = "StreamsGroupTopologyDescriptionUpdateRequest";
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 0);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 0));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(0, 0));
     }
 
     impl KafkaRequest for StreamsGroupTopologyDescriptionUpdateRequest {
@@ -588,40 +617,46 @@ pub mod streams_group_topology_description_update_request {
     }
 
     impl StreamsGroupTopologyDescriptionUpdateRequest {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             crate::message::ensure_encode_version::<Self>(version)?;
 
             self.topology_description.validate_for_version(version)?;
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: Self::NAME,
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for StreamsGroupTopologyDescriptionUpdateRequest {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             crate::message::ensure_decode_version::<Self>(version)?;
 
-            let group_id = decoder.read_compact_string()?;
-            let member_id = decoder.read_compact_string()?;
-            let topology_epoch = decoder.read_i32()?;
-            let topology_description = TopologyDescription::decode(decoder, version)?;
+            let __kw_field_0 = decoder.read_compact_string()?;
+            let __kw_field_1 = decoder.read_compact_string()?;
+            let __kw_field_2 = decoder.read_i32()?;
+            let __kw_field_3 = TopologyDescription::decode(decoder, version)?;
             let unknown_tagged_fields = if Self::is_flexible(version) {
                 decoder.read_tagged_fields()?
             } else {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                group_id,
-                member_id,
-                topology_epoch,
-                topology_description,
+            ::core::result::Result::Ok(Self {
+                group_id: __kw_field_0,
+                member_id: __kw_field_1,
+                topology_epoch: __kw_field_2,
+                topology_description: __kw_field_3,
                 unknown_tagged_fields,
             })
         }
@@ -632,7 +667,7 @@ pub mod streams_group_topology_description_update_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_compact_string(&self.group_id)?;
             encoder.write_compact_string(&self.member_id)?;
             encoder.write_i32(self.topology_epoch)?;
@@ -643,7 +678,7 @@ pub mod streams_group_topology_description_update_request {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -652,12 +687,12 @@ pub mod streams_group_topology_description_update_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             StreamsGroupTopologyDescriptionUpdateRequest::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| {
@@ -672,7 +707,7 @@ pub mod streams_group_topology_description_update_request {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -706,14 +741,14 @@ pub mod streams_group_topology_description_update_response {
 
     /// Response body for the `StreamsGroupTopologyDescriptionUpdate` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct StreamsGroupTopologyDescriptionUpdateResponse {
         /// The duration in milliseconds for which the request was throttled due to a quota violation, or zero if the request did not violate any quota.
         pub throttle_time_ms: i32,
         /// The top-level error code, or 0 if there was no error.
         pub error_code: i16,
         /// The top-level error message, or null if there was no error.
-        pub error_message: Option<StrBytes>,
+        pub error_message: ::core::option::Option<StrBytes>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
     }
@@ -721,7 +756,8 @@ pub mod streams_group_topology_description_update_response {
     impl KafkaMessage for StreamsGroupTopologyDescriptionUpdateResponse {
         const NAME: &'static str = "StreamsGroupTopologyDescriptionUpdateResponse";
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 0);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 0));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(0, 0));
     }
 
     impl KafkaResponse for StreamsGroupTopologyDescriptionUpdateResponse {
@@ -729,37 +765,43 @@ pub mod streams_group_topology_description_update_response {
     }
 
     impl StreamsGroupTopologyDescriptionUpdateResponse {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             crate::message::ensure_encode_version::<Self>(version)?;
 
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: Self::NAME,
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for StreamsGroupTopologyDescriptionUpdateResponse {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             crate::message::ensure_decode_version::<Self>(version)?;
 
-            let throttle_time_ms = decoder.read_i32()?;
-            let error_code = decoder.read_i16()?;
-            let error_message = decoder.read_compact_nullable_string()?;
+            let __kw_field_0 = decoder.read_i32()?;
+            let __kw_field_1 = decoder.read_i16()?;
+            let __kw_field_2 = decoder.read_compact_nullable_string()?;
             let unknown_tagged_fields = if Self::is_flexible(version) {
                 decoder.read_tagged_fields()?
             } else {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                throttle_time_ms,
-                error_code,
-                error_message,
+            ::core::result::Result::Ok(Self {
+                throttle_time_ms: __kw_field_0,
+                error_code: __kw_field_1,
+                error_message: __kw_field_2,
                 unknown_tagged_fields,
             })
         }
@@ -770,7 +812,7 @@ pub mod streams_group_topology_description_update_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_i32(self.throttle_time_ms)?;
             encoder.write_i16(self.error_code)?;
             encoder.write_compact_nullable_string(self.error_message.as_ref())?;
@@ -779,7 +821,7 @@ pub mod streams_group_topology_description_update_response {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -788,12 +830,12 @@ pub mod streams_group_topology_description_update_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             StreamsGroupTopologyDescriptionUpdateResponse::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| {
@@ -808,7 +850,7 @@ pub mod streams_group_topology_description_update_response {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -841,7 +883,7 @@ pub const STREAMS_GROUP_TOPOLOGY_DESCRIPTION_UPDATE_REQUEST_DESCRIPTOR: MessageD
         "StreamsGroupTopologyDescriptionUpdateRequest",
         MessageDirection::Request,
         VersionRange::new(0, 0),
-        Some(VersionRange::new(0, 0)),
+        ::core::option::Option::Some(VersionRange::new(0, 0)),
     );
 
 /// Static metadata for [`StreamsGroupTopologyDescriptionUpdateResponse`].
@@ -851,7 +893,7 @@ pub const STREAMS_GROUP_TOPOLOGY_DESCRIPTION_UPDATE_RESPONSE_DESCRIPTOR: Message
         "StreamsGroupTopologyDescriptionUpdateResponse",
         MessageDirection::Response,
         VersionRange::new(0, 0),
-        Some(VersionRange::new(0, 0)),
+        ::core::option::Option::Some(VersionRange::new(0, 0)),
     );
 
 /// Static pair metadata for the `StreamsGroupTopologyDescriptionUpdate` API.
@@ -861,6 +903,6 @@ pub const STREAMS_GROUP_TOPOLOGY_DESCRIPTION_UPDATE_API_DESCRIPTOR: ApiDescripto
         &STREAMS_GROUP_TOPOLOGY_DESCRIPTION_UPDATE_REQUEST_DESCRIPTOR,
         &STREAMS_GROUP_TOPOLOGY_DESCRIPTION_UPDATE_RESPONSE_DESCRIPTOR,
         VersionRange::new(0, 0),
-        Some(VersionRange::new(0, 0)),
+        ::core::option::Option::Some(VersionRange::new(0, 0)),
         false,
     );

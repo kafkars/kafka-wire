@@ -5,6 +5,7 @@
 
 mod config;
 mod corpus;
+mod corpus_classify;
 mod corpus_output;
 mod corpus_validation;
 mod error;
@@ -15,6 +16,7 @@ mod lock_path;
 mod lockfile;
 mod manifest;
 mod namespace;
+mod namespace_members;
 mod output;
 mod output_ownership;
 mod output_staging;
@@ -24,7 +26,10 @@ mod pipeline;
 mod provenance;
 mod render;
 mod source;
+mod verification;
 
+#[cfg(test)]
+mod corpus_classify_test;
 #[cfg(test)]
 mod format_test;
 #[cfg(test)]
@@ -49,3 +54,4 @@ pub use lockfile::{
 pub use output::GenerationReport;
 pub use pair_error::PairError;
 pub use pipeline::generate;
+pub use verification::render_adversarial_decode_fixture;

@@ -5,7 +5,11 @@ use kafka_wire_schema::{Message, MessageKind};
 use crate::{
     GenerationError,
     group::ApiGroup,
-    render::{invariant, text::RustText},
+    render::{
+        api::{ExternalSymbol as S, spell},
+        invariant,
+        text::RustText,
+    },
 };
 
 pub(super) fn render_descriptor(
@@ -54,8 +58,8 @@ pub(super) fn render_api_descriptor(
         &group.supported_versions,
         "pair supported versions",
     )?;
-    rust.line(format!(
-        "/// Static pair metadata for the `{}` API.",
+    rust.doc_line(format!(
+        "Static pair metadata for the `{}` API.",
         group.name.protocol_stem()
     ));
     rust.line(format!(
@@ -89,8 +93,14 @@ fn option_range(
 ) -> Result<String, GenerationError> {
     Ok(
         invariant::optional_bounded(message, versions, "effective flexible versions")?.map_or_else(
-            || "None".to_owned(),
-            |(start, end)| format!("Some(VersionRange::new({start}, {end}))"),
+            || spell(message, S::None),
+            |(start, end)| {
+                format!(
+                    "{}({}::new({start}, {end}))",
+                    spell(message, S::Some),
+                    spell(message, S::VersionRange)
+                )
+            },
         ),
     )
 }

@@ -20,7 +20,7 @@ pub mod alter_user_scram_credentials_request {
 
     /// `ScramCredentialDeletion` as declared by the `AlterUserScramCredentials` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct ScramCredentialDeletion {
         /// The user name.
         pub name: StrBytes,
@@ -32,7 +32,8 @@ pub mod alter_user_scram_credentials_request {
 
     impl ScramCredentialDeletion {
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 0);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 0));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(0, 0));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
@@ -40,9 +41,12 @@ pub mod alter_user_scram_credentials_request {
     }
 
     impl ScramCredentialDeletion {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(EncodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(EncodeError::UnsupportedVersion {
                     message: "ScramCredentialDeletion",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
@@ -50,37 +54,40 @@ pub mod alter_user_scram_credentials_request {
             }
 
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: "ScramCredentialDeletion",
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for ScramCredentialDeletion {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(DecodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(DecodeError::UnsupportedVersion {
                     message: "ScramCredentialDeletion",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
                 });
             }
 
-            let name = decoder.read_compact_string()?;
-            let mechanism = decoder.read_i8()?;
+            let __kw_field_0 = decoder.read_compact_string()?;
+            let __kw_field_1 = decoder.read_i8()?;
             let unknown_tagged_fields = if Self::is_flexible(version) {
                 decoder.read_tagged_fields()?
             } else {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                name,
-                mechanism,
+            ::core::result::Result::Ok(Self {
+                name: __kw_field_0,
+                mechanism: __kw_field_1,
                 unknown_tagged_fields,
             })
         }
@@ -91,7 +98,7 @@ pub mod alter_user_scram_credentials_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_compact_string(&self.name)?;
             encoder.write_i8(self.mechanism)?;
 
@@ -99,7 +106,7 @@ pub mod alter_user_scram_credentials_request {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -108,12 +115,12 @@ pub mod alter_user_scram_credentials_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             ScramCredentialDeletion::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| ScramCredentialDeletion::encode_validated(self, encoder, version),
@@ -124,7 +131,7 @@ pub mod alter_user_scram_credentials_request {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -136,7 +143,7 @@ pub mod alter_user_scram_credentials_request {
 
     /// `ScramCredentialUpsertion` as declared by the `AlterUserScramCredentials` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct ScramCredentialUpsertion {
         /// The user name.
         pub name: StrBytes,
@@ -154,7 +161,8 @@ pub mod alter_user_scram_credentials_request {
 
     impl ScramCredentialUpsertion {
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 0);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 0));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(0, 0));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
@@ -162,9 +170,12 @@ pub mod alter_user_scram_credentials_request {
     }
 
     impl ScramCredentialUpsertion {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(EncodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(EncodeError::UnsupportedVersion {
                     message: "ScramCredentialUpsertion",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
@@ -172,43 +183,46 @@ pub mod alter_user_scram_credentials_request {
             }
 
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: "ScramCredentialUpsertion",
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for ScramCredentialUpsertion {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(DecodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(DecodeError::UnsupportedVersion {
                     message: "ScramCredentialUpsertion",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
                 });
             }
 
-            let name = decoder.read_compact_string()?;
-            let mechanism = decoder.read_i8()?;
-            let iterations = decoder.read_i32()?;
-            let salt = decoder.read_compact_bytes()?;
-            let salted_password = decoder.read_compact_bytes()?;
+            let __kw_field_0 = decoder.read_compact_string()?;
+            let __kw_field_1 = decoder.read_i8()?;
+            let __kw_field_2 = decoder.read_i32()?;
+            let __kw_field_3 = decoder.read_compact_bytes()?;
+            let __kw_field_4 = decoder.read_compact_bytes()?;
             let unknown_tagged_fields = if Self::is_flexible(version) {
                 decoder.read_tagged_fields()?
             } else {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                name,
-                mechanism,
-                iterations,
-                salt,
-                salted_password,
+            ::core::result::Result::Ok(Self {
+                name: __kw_field_0,
+                mechanism: __kw_field_1,
+                iterations: __kw_field_2,
+                salt: __kw_field_3,
+                salted_password: __kw_field_4,
                 unknown_tagged_fields,
             })
         }
@@ -219,7 +233,7 @@ pub mod alter_user_scram_credentials_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_compact_string(&self.name)?;
             encoder.write_i8(self.mechanism)?;
             encoder.write_i32(self.iterations)?;
@@ -230,7 +244,7 @@ pub mod alter_user_scram_credentials_request {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -239,12 +253,12 @@ pub mod alter_user_scram_credentials_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             ScramCredentialUpsertion::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| ScramCredentialUpsertion::encode_validated(self, encoder, version),
@@ -255,7 +269,7 @@ pub mod alter_user_scram_credentials_request {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -267,12 +281,12 @@ pub mod alter_user_scram_credentials_request {
 
     /// Request body for the `AlterUserScramCredentials` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct AlterUserScramCredentialsRequest {
         /// The SCRAM credentials to remove.
-        pub deletions: Vec<ScramCredentialDeletion>,
+        pub deletions: ::std::vec::Vec<ScramCredentialDeletion>,
         /// The SCRAM credentials to update/insert.
-        pub upsertions: Vec<ScramCredentialUpsertion>,
+        pub upsertions: ::std::vec::Vec<ScramCredentialUpsertion>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
     }
@@ -280,7 +294,8 @@ pub mod alter_user_scram_credentials_request {
     impl KafkaMessage for AlterUserScramCredentialsRequest {
         const NAME: &'static str = "AlterUserScramCredentialsRequest";
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 0);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 0));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(0, 0));
     }
 
     impl KafkaRequest for AlterUserScramCredentialsRequest {
@@ -294,7 +309,10 @@ pub mod alter_user_scram_credentials_request {
     }
 
     impl AlterUserScramCredentialsRequest {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             crate::message::ensure_encode_version::<Self>(version)?;
 
             for value in &self.deletions {
@@ -304,27 +322,30 @@ pub mod alter_user_scram_credentials_request {
                 value.validate_for_version(version)?;
             }
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: Self::NAME,
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for AlterUserScramCredentialsRequest {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             crate::message::ensure_decode_version::<Self>(version)?;
 
-            let deletions = {
+            let __kw_field_0 = {
                 let length = decoder.read_compact_array_len()?;
                 decoder.read_vec(length, |decoder| {
                     ScramCredentialDeletion::decode(decoder, version)
                 })?
             };
-            let upsertions = {
+            let __kw_field_1 = {
                 let length = decoder.read_compact_array_len()?;
                 decoder.read_vec(length, |decoder| {
                     ScramCredentialUpsertion::decode(decoder, version)
@@ -336,9 +357,9 @@ pub mod alter_user_scram_credentials_request {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                deletions,
-                upsertions,
+            ::core::result::Result::Ok(Self {
+                deletions: __kw_field_0,
+                upsertions: __kw_field_1,
                 unknown_tagged_fields,
             })
         }
@@ -349,7 +370,7 @@ pub mod alter_user_scram_credentials_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_compact_array_len(self.deletions.len())?;
             for value in &self.deletions {
                 value.encode_validated(encoder, version)?;
@@ -363,7 +384,7 @@ pub mod alter_user_scram_credentials_request {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -372,12 +393,12 @@ pub mod alter_user_scram_credentials_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             AlterUserScramCredentialsRequest::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| {
@@ -390,7 +411,7 @@ pub mod alter_user_scram_credentials_request {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -427,14 +448,15 @@ pub mod alter_user_scram_credentials_response {
         /// The error code.
         pub error_code: i16,
         /// The error message, if any.
-        pub error_message: Option<StrBytes>,
+        pub error_message: ::core::option::Option<StrBytes>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
     }
 
     impl AlterUserScramCredentialsResult {
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 0);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 0));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(0, 0));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
@@ -442,9 +464,12 @@ pub mod alter_user_scram_credentials_response {
     }
 
     impl AlterUserScramCredentialsResult {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(EncodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(EncodeError::UnsupportedVersion {
                     message: "AlterUserScramCredentialsResult",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
@@ -452,50 +477,53 @@ pub mod alter_user_scram_credentials_response {
             }
 
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: "AlterUserScramCredentialsResult",
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
-    impl Default for AlterUserScramCredentialsResult {
+    impl ::core::default::Default for AlterUserScramCredentialsResult {
         fn default() -> Self {
             Self {
                 user: StrBytes::default(),
                 error_code: 0,
-                error_message: Some(StrBytes::default()),
+                error_message: ::core::option::Option::Some(StrBytes::default()),
                 unknown_tagged_fields: TaggedFields::default(),
             }
         }
     }
 
     impl KafkaDecode for AlterUserScramCredentialsResult {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(DecodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(DecodeError::UnsupportedVersion {
                     message: "AlterUserScramCredentialsResult",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
                 });
             }
 
-            let user = decoder.read_compact_string()?;
-            let error_code = decoder.read_i16()?;
-            let error_message = decoder.read_compact_nullable_string()?;
+            let __kw_field_0 = decoder.read_compact_string()?;
+            let __kw_field_1 = decoder.read_i16()?;
+            let __kw_field_2 = decoder.read_compact_nullable_string()?;
             let unknown_tagged_fields = if Self::is_flexible(version) {
                 decoder.read_tagged_fields()?
             } else {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                user,
-                error_code,
-                error_message,
+            ::core::result::Result::Ok(Self {
+                user: __kw_field_0,
+                error_code: __kw_field_1,
+                error_message: __kw_field_2,
                 unknown_tagged_fields,
             })
         }
@@ -506,7 +534,7 @@ pub mod alter_user_scram_credentials_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_compact_string(&self.user)?;
             encoder.write_i16(self.error_code)?;
             encoder.write_compact_nullable_string(self.error_message.as_ref())?;
@@ -515,7 +543,7 @@ pub mod alter_user_scram_credentials_response {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -524,12 +552,12 @@ pub mod alter_user_scram_credentials_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             AlterUserScramCredentialsResult::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| AlterUserScramCredentialsResult::encode_validated(self, encoder, version),
@@ -540,7 +568,7 @@ pub mod alter_user_scram_credentials_response {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -552,12 +580,12 @@ pub mod alter_user_scram_credentials_response {
 
     /// Response body for the `AlterUserScramCredentials` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct AlterUserScramCredentialsResponse {
         /// The duration in milliseconds for which the request was throttled due to a quota violation, or zero if the request did not violate any quota.
         pub throttle_time_ms: i32,
         /// The results for deletions and alterations, one per affected user.
-        pub results: Vec<AlterUserScramCredentialsResult>,
+        pub results: ::std::vec::Vec<AlterUserScramCredentialsResult>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
     }
@@ -565,7 +593,8 @@ pub mod alter_user_scram_credentials_response {
     impl KafkaMessage for AlterUserScramCredentialsResponse {
         const NAME: &'static str = "AlterUserScramCredentialsResponse";
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 0);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 0));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(0, 0));
     }
 
     impl KafkaResponse for AlterUserScramCredentialsResponse {
@@ -573,29 +602,35 @@ pub mod alter_user_scram_credentials_response {
     }
 
     impl AlterUserScramCredentialsResponse {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             crate::message::ensure_encode_version::<Self>(version)?;
 
             for value in &self.results {
                 value.validate_for_version(version)?;
             }
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: Self::NAME,
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for AlterUserScramCredentialsResponse {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             crate::message::ensure_decode_version::<Self>(version)?;
 
-            let throttle_time_ms = decoder.read_i32()?;
-            let results = {
+            let __kw_field_0 = decoder.read_i32()?;
+            let __kw_field_1 = {
                 let length = decoder.read_compact_array_len()?;
                 decoder.read_vec(length, |decoder| {
                     AlterUserScramCredentialsResult::decode(decoder, version)
@@ -607,9 +642,9 @@ pub mod alter_user_scram_credentials_response {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                throttle_time_ms,
-                results,
+            ::core::result::Result::Ok(Self {
+                throttle_time_ms: __kw_field_0,
+                results: __kw_field_1,
                 unknown_tagged_fields,
             })
         }
@@ -620,7 +655,7 @@ pub mod alter_user_scram_credentials_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_i32(self.throttle_time_ms)?;
             encoder.write_compact_array_len(self.results.len())?;
             for value in &self.results {
@@ -631,7 +666,7 @@ pub mod alter_user_scram_credentials_response {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -640,12 +675,12 @@ pub mod alter_user_scram_credentials_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             AlterUserScramCredentialsResponse::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| {
@@ -658,7 +693,7 @@ pub mod alter_user_scram_credentials_response {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -687,7 +722,7 @@ pub const ALTER_USER_SCRAM_CREDENTIALS_REQUEST_DESCRIPTOR: MessageDescriptor =
         "AlterUserScramCredentialsRequest",
         MessageDirection::Request,
         VersionRange::new(0, 0),
-        Some(VersionRange::new(0, 0)),
+        ::core::option::Option::Some(VersionRange::new(0, 0)),
     );
 
 /// Static metadata for [`AlterUserScramCredentialsResponse`].
@@ -697,7 +732,7 @@ pub const ALTER_USER_SCRAM_CREDENTIALS_RESPONSE_DESCRIPTOR: MessageDescriptor =
         "AlterUserScramCredentialsResponse",
         MessageDirection::Response,
         VersionRange::new(0, 0),
-        Some(VersionRange::new(0, 0)),
+        ::core::option::Option::Some(VersionRange::new(0, 0)),
     );
 
 /// Static pair metadata for the `AlterUserScramCredentials` API.
@@ -706,6 +741,6 @@ pub const ALTER_USER_SCRAM_CREDENTIALS_API_DESCRIPTOR: ApiDescriptor = ApiDescri
     &ALTER_USER_SCRAM_CREDENTIALS_REQUEST_DESCRIPTOR,
     &ALTER_USER_SCRAM_CREDENTIALS_RESPONSE_DESCRIPTOR,
     VersionRange::new(0, 0),
-    Some(VersionRange::new(0, 0)),
+    ::core::option::Option::Some(VersionRange::new(0, 0)),
     false,
 );

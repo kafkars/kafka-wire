@@ -20,12 +20,12 @@ pub mod list_groups_request {
 
     /// Request body for the `ListGroups` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct ListGroupsRequest {
         /// The states of the groups we want to list. If empty, all groups are returned with their state.
-        pub states_filter: Vec<StrBytes>,
+        pub states_filter: ::std::vec::Vec<StrBytes>,
         /// The types of the groups we want to list. If empty, all groups are returned with their type.
-        pub types_filter: Vec<StrBytes>,
+        pub types_filter: ::std::vec::Vec<StrBytes>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
     }
@@ -33,7 +33,8 @@ pub mod list_groups_request {
     impl KafkaMessage for ListGroupsRequest {
         const NAME: &'static str = "ListGroupsRequest";
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 5);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(3, 5));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(3, 5));
     }
 
     impl KafkaRequest for ListGroupsRequest {
@@ -46,49 +47,55 @@ pub mod list_groups_request {
     }
 
     impl ListGroupsRequest {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             crate::message::ensure_encode_version::<Self>(version)?;
 
             if version.value() < 4 && !self.states_filter.is_empty() {
-                return Err(EncodeError::FieldNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::FieldNotRepresentable {
                     message: Self::NAME,
                     field: "StatesFilter",
                     version,
                 });
             }
             if version.value() < 5 && !self.types_filter.is_empty() {
-                return Err(EncodeError::FieldNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::FieldNotRepresentable {
                     message: Self::NAME,
                     field: "TypesFilter",
                     version,
                 });
             }
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: Self::NAME,
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for ListGroupsRequest {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             crate::message::ensure_decode_version::<Self>(version)?;
 
-            let states_filter = if version.value() >= 4 {
+            let __kw_field_0 = if version.value() >= 4 {
                 let length = decoder.read_compact_array_len()?;
                 decoder.read_vec(length, Decoder::read_compact_string)?
             } else {
-                Vec::new()
+                ::std::vec::Vec::new()
             };
-            let types_filter = if version.value() >= 5 {
+            let __kw_field_1 = if version.value() >= 5 {
                 let length = decoder.read_compact_array_len()?;
                 decoder.read_vec(length, Decoder::read_compact_string)?
             } else {
-                Vec::new()
+                ::std::vec::Vec::new()
             };
             let unknown_tagged_fields = if Self::is_flexible(version) {
                 decoder.read_tagged_fields()?
@@ -96,9 +103,9 @@ pub mod list_groups_request {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                states_filter,
-                types_filter,
+            ::core::result::Result::Ok(Self {
+                states_filter: __kw_field_0,
+                types_filter: __kw_field_1,
                 unknown_tagged_fields,
             })
         }
@@ -109,7 +116,7 @@ pub mod list_groups_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             if version.value() >= 4 {
                 encoder.write_compact_array_len(self.states_filter.len())?;
                 for value in &self.states_filter {
@@ -127,7 +134,7 @@ pub mod list_groups_request {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -136,12 +143,12 @@ pub mod list_groups_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             ListGroupsRequest::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| ListGroupsRequest::encode_validated(self, encoder, version),
@@ -152,7 +159,7 @@ pub mod list_groups_request {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -178,7 +185,7 @@ pub mod list_groups_response {
 
     /// `ListedGroup` as declared by the `ListGroups` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct ListedGroup {
         /// The group ID.
         pub group_id: StrBytes,
@@ -194,7 +201,8 @@ pub mod list_groups_response {
 
     impl ListedGroup {
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 5);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(3, 5));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(3, 5));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
@@ -202,9 +210,12 @@ pub mod list_groups_response {
     }
 
     impl ListedGroup {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(EncodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(EncodeError::UnsupportedVersion {
                     message: "ListedGroup",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
@@ -212,42 +223,45 @@ pub mod list_groups_response {
             }
 
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: "ListedGroup",
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for ListedGroup {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(DecodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(DecodeError::UnsupportedVersion {
                     message: "ListedGroup",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
                 });
             }
 
-            let group_id = if Self::is_flexible(version) {
+            let __kw_field_0 = if Self::is_flexible(version) {
                 decoder.read_compact_string()?
             } else {
                 decoder.read_string()?
             };
-            let protocol_type = if Self::is_flexible(version) {
+            let __kw_field_1 = if Self::is_flexible(version) {
                 decoder.read_compact_string()?
             } else {
                 decoder.read_string()?
             };
-            let group_state = if version.value() >= 4 {
+            let __kw_field_2 = if version.value() >= 4 {
                 decoder.read_compact_string()?
             } else {
                 StrBytes::default()
             };
-            let group_type = if version.value() >= 5 {
+            let __kw_field_3 = if version.value() >= 5 {
                 decoder.read_compact_string()?
             } else {
                 StrBytes::default()
@@ -258,11 +272,11 @@ pub mod list_groups_response {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                group_id,
-                protocol_type,
-                group_state,
-                group_type,
+            ::core::result::Result::Ok(Self {
+                group_id: __kw_field_0,
+                protocol_type: __kw_field_1,
+                group_state: __kw_field_2,
+                group_type: __kw_field_3,
                 unknown_tagged_fields,
             })
         }
@@ -273,7 +287,7 @@ pub mod list_groups_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             if Self::is_flexible(version) {
                 encoder.write_compact_string(&self.group_id)?;
             } else {
@@ -295,7 +309,7 @@ pub mod list_groups_response {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -304,12 +318,12 @@ pub mod list_groups_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             ListedGroup::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| ListedGroup::encode_validated(self, encoder, version),
@@ -320,7 +334,7 @@ pub mod list_groups_response {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -332,14 +346,14 @@ pub mod list_groups_response {
 
     /// Response body for the `ListGroups` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct ListGroupsResponse {
         /// The duration in milliseconds for which the request was throttled due to a quota violation, or zero if the request did not violate any quota.
         pub throttle_time_ms: i32,
         /// The error code, or 0 if there was no error.
         pub error_code: i16,
         /// Each group in the response.
-        pub groups: Vec<ListedGroup>,
+        pub groups: ::std::vec::Vec<ListedGroup>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
     }
@@ -347,7 +361,8 @@ pub mod list_groups_response {
     impl KafkaMessage for ListGroupsResponse {
         const NAME: &'static str = "ListGroupsResponse";
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 5);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(3, 5));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(3, 5));
     }
 
     impl KafkaResponse for ListGroupsResponse {
@@ -355,34 +370,40 @@ pub mod list_groups_response {
     }
 
     impl ListGroupsResponse {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             crate::message::ensure_encode_version::<Self>(version)?;
 
             for value in &self.groups {
                 value.validate_for_version(version)?;
             }
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: Self::NAME,
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for ListGroupsResponse {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             crate::message::ensure_decode_version::<Self>(version)?;
 
-            let throttle_time_ms = if version.value() >= 1 {
+            let __kw_field_0 = if version.value() >= 1 {
                 decoder.read_i32()?
             } else {
                 0
             };
-            let error_code = decoder.read_i16()?;
-            let groups = {
+            let __kw_field_1 = decoder.read_i16()?;
+            let __kw_field_2 = {
                 let length = if Self::is_flexible(version) {
                     decoder.read_compact_array_len()?
                 } else {
@@ -396,10 +417,10 @@ pub mod list_groups_response {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                throttle_time_ms,
-                error_code,
-                groups,
+            ::core::result::Result::Ok(Self {
+                throttle_time_ms: __kw_field_0,
+                error_code: __kw_field_1,
+                groups: __kw_field_2,
                 unknown_tagged_fields,
             })
         }
@@ -410,7 +431,7 @@ pub mod list_groups_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             if version.value() >= 1 {
                 encoder.write_i32(self.throttle_time_ms)?;
             }
@@ -428,7 +449,7 @@ pub mod list_groups_response {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -437,12 +458,12 @@ pub mod list_groups_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             ListGroupsResponse::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| ListGroupsResponse::encode_validated(self, encoder, version),
@@ -453,7 +474,7 @@ pub mod list_groups_response {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -477,7 +498,7 @@ pub const LIST_GROUPS_REQUEST_DESCRIPTOR: MessageDescriptor = MessageDescriptor:
     "ListGroupsRequest",
     MessageDirection::Request,
     VersionRange::new(0, 5),
-    Some(VersionRange::new(3, 5)),
+    ::core::option::Option::Some(VersionRange::new(3, 5)),
 );
 
 /// Static metadata for [`ListGroupsResponse`].
@@ -486,7 +507,7 @@ pub const LIST_GROUPS_RESPONSE_DESCRIPTOR: MessageDescriptor = MessageDescriptor
     "ListGroupsResponse",
     MessageDirection::Response,
     VersionRange::new(0, 5),
-    Some(VersionRange::new(3, 5)),
+    ::core::option::Option::Some(VersionRange::new(3, 5)),
 );
 
 /// Static pair metadata for the `ListGroups` API.
@@ -495,6 +516,6 @@ pub const LIST_GROUPS_API_DESCRIPTOR: ApiDescriptor = ApiDescriptor::new(
     &LIST_GROUPS_REQUEST_DESCRIPTOR,
     &LIST_GROUPS_RESPONSE_DESCRIPTOR,
     VersionRange::new(0, 5),
-    Some(VersionRange::new(3, 5)),
+    ::core::option::Option::Some(VersionRange::new(3, 5)),
     false,
 );

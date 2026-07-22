@@ -20,10 +20,10 @@ pub mod share_group_describe_request {
 
     /// Request body for the `ShareGroupDescribe` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct ShareGroupDescribeRequest {
         /// The ids of the groups to describe.
-        pub group_ids: Vec<StrBytes>,
+        pub group_ids: ::std::vec::Vec<StrBytes>,
         /// Whether to include authorized operations.
         pub include_authorized_operations: bool,
         /// Unknown flexible-version tagged fields retained for forwarding.
@@ -33,7 +33,8 @@ pub mod share_group_describe_request {
     impl KafkaMessage for ShareGroupDescribeRequest {
         const NAME: &'static str = "ShareGroupDescribeRequest";
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(1, 1);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(1, 1));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(1, 1));
     }
 
     impl KafkaRequest for ShareGroupDescribeRequest {
@@ -46,38 +47,44 @@ pub mod share_group_describe_request {
     }
 
     impl ShareGroupDescribeRequest {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             crate::message::ensure_encode_version::<Self>(version)?;
 
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: Self::NAME,
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for ShareGroupDescribeRequest {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             crate::message::ensure_decode_version::<Self>(version)?;
 
-            let group_ids = {
+            let __kw_field_0 = {
                 let length = decoder.read_compact_array_len()?;
                 decoder.read_vec(length, Decoder::read_compact_string)?
             };
-            let include_authorized_operations = decoder.read_bool()?;
+            let __kw_field_1 = decoder.read_bool()?;
             let unknown_tagged_fields = if Self::is_flexible(version) {
                 decoder.read_tagged_fields()?
             } else {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                group_ids,
-                include_authorized_operations,
+            ::core::result::Result::Ok(Self {
+                group_ids: __kw_field_0,
+                include_authorized_operations: __kw_field_1,
                 unknown_tagged_fields,
             })
         }
@@ -88,7 +95,7 @@ pub mod share_group_describe_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_compact_array_len(self.group_ids.len())?;
             for value in &self.group_ids {
                 encoder.write_compact_string(value)?;
@@ -99,7 +106,7 @@ pub mod share_group_describe_request {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -108,12 +115,12 @@ pub mod share_group_describe_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             ShareGroupDescribeRequest::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| ShareGroupDescribeRequest::encode_validated(self, encoder, version),
@@ -124,7 +131,7 @@ pub mod share_group_describe_request {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -150,21 +157,22 @@ pub mod share_group_describe_response {
 
     /// `TopicPartitions` as declared by the `ShareGroupDescribe` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct TopicPartitions {
         /// The topic ID.
         pub topic_id: Uuid,
         /// The topic name.
         pub topic_name: StrBytes,
         /// The partitions.
-        pub partitions: Vec<i32>,
+        pub partitions: ::std::vec::Vec<i32>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
     }
 
     impl TopicPartitions {
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(1, 1);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(1, 1));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(1, 1));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
@@ -172,9 +180,12 @@ pub mod share_group_describe_response {
     }
 
     impl TopicPartitions {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(EncodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(EncodeError::UnsupportedVersion {
                     message: "TopicPartitions",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
@@ -182,29 +193,32 @@ pub mod share_group_describe_response {
             }
 
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: "TopicPartitions",
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for TopicPartitions {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(DecodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(DecodeError::UnsupportedVersion {
                     message: "TopicPartitions",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
                 });
             }
 
-            let topic_id = decoder.read_uuid()?;
-            let topic_name = decoder.read_compact_string()?;
-            let partitions = {
+            let __kw_field_0 = decoder.read_uuid()?;
+            let __kw_field_1 = decoder.read_compact_string()?;
+            let __kw_field_2 = {
                 let length = decoder.read_compact_array_len()?;
                 decoder.read_vec(length, Decoder::read_i32)?
             };
@@ -214,10 +228,10 @@ pub mod share_group_describe_response {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                topic_id,
-                topic_name,
-                partitions,
+            ::core::result::Result::Ok(Self {
+                topic_id: __kw_field_0,
+                topic_name: __kw_field_1,
+                partitions: __kw_field_2,
                 unknown_tagged_fields,
             })
         }
@@ -228,7 +242,7 @@ pub mod share_group_describe_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_uuid(self.topic_id)?;
             encoder.write_compact_string(&self.topic_name)?;
             encoder.write_compact_array_len(self.partitions.len())?;
@@ -240,7 +254,7 @@ pub mod share_group_describe_response {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -249,12 +263,12 @@ pub mod share_group_describe_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             TopicPartitions::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| TopicPartitions::encode_validated(self, encoder, version),
@@ -265,7 +279,7 @@ pub mod share_group_describe_response {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -277,17 +291,18 @@ pub mod share_group_describe_response {
 
     /// `Assignment` as declared by the `ShareGroupDescribe` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct Assignment {
         /// The assigned topic-partitions to the member.
-        pub topic_partitions: Vec<TopicPartitions>,
+        pub topic_partitions: ::std::vec::Vec<TopicPartitions>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
     }
 
     impl Assignment {
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(1, 1);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(1, 1));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(1, 1));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
@@ -295,9 +310,12 @@ pub mod share_group_describe_response {
     }
 
     impl Assignment {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(EncodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(EncodeError::UnsupportedVersion {
                     message: "Assignment",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
@@ -308,27 +326,30 @@ pub mod share_group_describe_response {
                 value.validate_for_version(version)?;
             }
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: "Assignment",
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for Assignment {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(DecodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(DecodeError::UnsupportedVersion {
                     message: "Assignment",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
                 });
             }
 
-            let topic_partitions = {
+            let __kw_field_0 = {
                 let length = decoder.read_compact_array_len()?;
                 decoder.read_vec(length, |decoder| TopicPartitions::decode(decoder, version))?
             };
@@ -338,8 +359,8 @@ pub mod share_group_describe_response {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                topic_partitions,
+            ::core::result::Result::Ok(Self {
+                topic_partitions: __kw_field_0,
                 unknown_tagged_fields,
             })
         }
@@ -350,7 +371,7 @@ pub mod share_group_describe_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_compact_array_len(self.topic_partitions.len())?;
             for value in &self.topic_partitions {
                 value.encode_validated(encoder, version)?;
@@ -360,7 +381,7 @@ pub mod share_group_describe_response {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -369,12 +390,12 @@ pub mod share_group_describe_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             Assignment::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| Assignment::encode_validated(self, encoder, version),
@@ -385,7 +406,7 @@ pub mod share_group_describe_response {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -402,7 +423,7 @@ pub mod share_group_describe_response {
         /// The describe error, or 0 if there was no error.
         pub error_code: i16,
         /// The top-level error message, or null if there was no error.
-        pub error_message: Option<StrBytes>,
+        pub error_message: ::core::option::Option<StrBytes>,
         /// The group ID string.
         pub group_id: StrBytes,
         /// The group state string, or the empty string.
@@ -414,7 +435,7 @@ pub mod share_group_describe_response {
         /// The selected assignor.
         pub assignor_name: StrBytes,
         /// The members.
-        pub members: Vec<Member>,
+        pub members: ::std::vec::Vec<Member>,
         /// 32-bit bitfield to represent authorized operations for this group.
         pub authorized_operations: i32,
         /// Unknown flexible-version tagged fields retained for forwarding.
@@ -423,7 +444,8 @@ pub mod share_group_describe_response {
 
     impl DescribedGroup {
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(1, 1);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(1, 1));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(1, 1));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
@@ -431,9 +453,12 @@ pub mod share_group_describe_response {
     }
 
     impl DescribedGroup {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(EncodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(EncodeError::UnsupportedVersion {
                     message: "DescribedGroup",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
@@ -444,27 +469,27 @@ pub mod share_group_describe_response {
                 value.validate_for_version(version)?;
             }
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: "DescribedGroup",
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
-    impl Default for DescribedGroup {
+    impl ::core::default::Default for DescribedGroup {
         fn default() -> Self {
             Self {
                 error_code: 0,
-                error_message: None,
+                error_message: ::core::option::Option::None,
                 group_id: StrBytes::default(),
                 group_state: StrBytes::default(),
                 group_epoch: 0,
                 assignment_epoch: 0,
                 assignor_name: StrBytes::default(),
-                members: Vec::new(),
+                members: ::std::vec::Vec::new(),
                 authorized_operations: -2_147_483_648,
                 unknown_tagged_fields: TaggedFields::default(),
             }
@@ -472,43 +497,46 @@ pub mod share_group_describe_response {
     }
 
     impl KafkaDecode for DescribedGroup {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(DecodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(DecodeError::UnsupportedVersion {
                     message: "DescribedGroup",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
                 });
             }
 
-            let error_code = decoder.read_i16()?;
-            let error_message = decoder.read_compact_nullable_string()?;
-            let group_id = decoder.read_compact_string()?;
-            let group_state = decoder.read_compact_string()?;
-            let group_epoch = decoder.read_i32()?;
-            let assignment_epoch = decoder.read_i32()?;
-            let assignor_name = decoder.read_compact_string()?;
-            let members = {
+            let __kw_field_0 = decoder.read_i16()?;
+            let __kw_field_1 = decoder.read_compact_nullable_string()?;
+            let __kw_field_2 = decoder.read_compact_string()?;
+            let __kw_field_3 = decoder.read_compact_string()?;
+            let __kw_field_4 = decoder.read_i32()?;
+            let __kw_field_5 = decoder.read_i32()?;
+            let __kw_field_6 = decoder.read_compact_string()?;
+            let __kw_field_7 = {
                 let length = decoder.read_compact_array_len()?;
                 decoder.read_vec(length, |decoder| Member::decode(decoder, version))?
             };
-            let authorized_operations = decoder.read_i32()?;
+            let __kw_field_8 = decoder.read_i32()?;
             let unknown_tagged_fields = if Self::is_flexible(version) {
                 decoder.read_tagged_fields()?
             } else {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                error_code,
-                error_message,
-                group_id,
-                group_state,
-                group_epoch,
-                assignment_epoch,
-                assignor_name,
-                members,
-                authorized_operations,
+            ::core::result::Result::Ok(Self {
+                error_code: __kw_field_0,
+                error_message: __kw_field_1,
+                group_id: __kw_field_2,
+                group_state: __kw_field_3,
+                group_epoch: __kw_field_4,
+                assignment_epoch: __kw_field_5,
+                assignor_name: __kw_field_6,
+                members: __kw_field_7,
+                authorized_operations: __kw_field_8,
                 unknown_tagged_fields,
             })
         }
@@ -519,7 +547,7 @@ pub mod share_group_describe_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_i16(self.error_code)?;
             encoder.write_compact_nullable_string(self.error_message.as_ref())?;
             encoder.write_compact_string(&self.group_id)?;
@@ -537,7 +565,7 @@ pub mod share_group_describe_response {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -546,12 +574,12 @@ pub mod share_group_describe_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             DescribedGroup::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| DescribedGroup::encode_validated(self, encoder, version),
@@ -562,7 +590,7 @@ pub mod share_group_describe_response {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -574,12 +602,12 @@ pub mod share_group_describe_response {
 
     /// `Member` as declared by the `ShareGroupDescribe` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct Member {
         /// The member ID.
         pub member_id: StrBytes,
         /// The member rack ID.
-        pub rack_id: Option<StrBytes>,
+        pub rack_id: ::core::option::Option<StrBytes>,
         /// The current member epoch.
         pub member_epoch: i32,
         /// The client ID.
@@ -587,7 +615,7 @@ pub mod share_group_describe_response {
         /// The client host.
         pub client_host: StrBytes,
         /// The subscribed topic names.
-        pub subscribed_topic_names: Vec<StrBytes>,
+        pub subscribed_topic_names: ::std::vec::Vec<StrBytes>,
         /// The current assignment.
         pub assignment: Assignment,
         /// Unknown flexible-version tagged fields retained for forwarding.
@@ -596,7 +624,8 @@ pub mod share_group_describe_response {
 
     impl Member {
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(1, 1);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(1, 1));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(1, 1));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
@@ -604,9 +633,12 @@ pub mod share_group_describe_response {
     }
 
     impl Member {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(EncodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(EncodeError::UnsupportedVersion {
                     message: "Member",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
@@ -615,50 +647,53 @@ pub mod share_group_describe_response {
 
             self.assignment.validate_for_version(version)?;
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: "Member",
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for Member {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(DecodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(DecodeError::UnsupportedVersion {
                     message: "Member",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
                 });
             }
 
-            let member_id = decoder.read_compact_string()?;
-            let rack_id = decoder.read_compact_nullable_string()?;
-            let member_epoch = decoder.read_i32()?;
-            let client_id = decoder.read_compact_string()?;
-            let client_host = decoder.read_compact_string()?;
-            let subscribed_topic_names = {
+            let __kw_field_0 = decoder.read_compact_string()?;
+            let __kw_field_1 = decoder.read_compact_nullable_string()?;
+            let __kw_field_2 = decoder.read_i32()?;
+            let __kw_field_3 = decoder.read_compact_string()?;
+            let __kw_field_4 = decoder.read_compact_string()?;
+            let __kw_field_5 = {
                 let length = decoder.read_compact_array_len()?;
                 decoder.read_vec(length, Decoder::read_compact_string)?
             };
-            let assignment = Assignment::decode(decoder, version)?;
+            let __kw_field_6 = Assignment::decode(decoder, version)?;
             let unknown_tagged_fields = if Self::is_flexible(version) {
                 decoder.read_tagged_fields()?
             } else {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                member_id,
-                rack_id,
-                member_epoch,
-                client_id,
-                client_host,
-                subscribed_topic_names,
-                assignment,
+            ::core::result::Result::Ok(Self {
+                member_id: __kw_field_0,
+                rack_id: __kw_field_1,
+                member_epoch: __kw_field_2,
+                client_id: __kw_field_3,
+                client_host: __kw_field_4,
+                subscribed_topic_names: __kw_field_5,
+                assignment: __kw_field_6,
                 unknown_tagged_fields,
             })
         }
@@ -669,7 +704,7 @@ pub mod share_group_describe_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_compact_string(&self.member_id)?;
             encoder.write_compact_nullable_string(self.rack_id.as_ref())?;
             encoder.write_i32(self.member_epoch)?;
@@ -685,7 +720,7 @@ pub mod share_group_describe_response {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -694,12 +729,12 @@ pub mod share_group_describe_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             Member::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| Member::encode_validated(self, encoder, version),
@@ -710,7 +745,7 @@ pub mod share_group_describe_response {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -722,12 +757,12 @@ pub mod share_group_describe_response {
 
     /// Response body for the `ShareGroupDescribe` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct ShareGroupDescribeResponse {
         /// The duration in milliseconds for which the request was throttled due to a quota violation, or zero if the request did not violate any quota.
         pub throttle_time_ms: i32,
         /// Each described group.
-        pub groups: Vec<DescribedGroup>,
+        pub groups: ::std::vec::Vec<DescribedGroup>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
     }
@@ -735,7 +770,8 @@ pub mod share_group_describe_response {
     impl KafkaMessage for ShareGroupDescribeResponse {
         const NAME: &'static str = "ShareGroupDescribeResponse";
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(1, 1);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(1, 1));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(1, 1));
     }
 
     impl KafkaResponse for ShareGroupDescribeResponse {
@@ -743,29 +779,35 @@ pub mod share_group_describe_response {
     }
 
     impl ShareGroupDescribeResponse {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             crate::message::ensure_encode_version::<Self>(version)?;
 
             for value in &self.groups {
                 value.validate_for_version(version)?;
             }
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: Self::NAME,
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for ShareGroupDescribeResponse {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             crate::message::ensure_decode_version::<Self>(version)?;
 
-            let throttle_time_ms = decoder.read_i32()?;
-            let groups = {
+            let __kw_field_0 = decoder.read_i32()?;
+            let __kw_field_1 = {
                 let length = decoder.read_compact_array_len()?;
                 decoder.read_vec(length, |decoder| DescribedGroup::decode(decoder, version))?
             };
@@ -775,9 +817,9 @@ pub mod share_group_describe_response {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                throttle_time_ms,
-                groups,
+            ::core::result::Result::Ok(Self {
+                throttle_time_ms: __kw_field_0,
+                groups: __kw_field_1,
                 unknown_tagged_fields,
             })
         }
@@ -788,7 +830,7 @@ pub mod share_group_describe_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_i32(self.throttle_time_ms)?;
             encoder.write_compact_array_len(self.groups.len())?;
             for value in &self.groups {
@@ -799,7 +841,7 @@ pub mod share_group_describe_response {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -808,12 +850,12 @@ pub mod share_group_describe_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             ShareGroupDescribeResponse::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| ShareGroupDescribeResponse::encode_validated(self, encoder, version),
@@ -824,7 +866,7 @@ pub mod share_group_describe_response {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -848,7 +890,7 @@ pub const SHARE_GROUP_DESCRIBE_REQUEST_DESCRIPTOR: MessageDescriptor = MessageDe
     "ShareGroupDescribeRequest",
     MessageDirection::Request,
     VersionRange::new(1, 1),
-    Some(VersionRange::new(1, 1)),
+    ::core::option::Option::Some(VersionRange::new(1, 1)),
 );
 
 /// Static metadata for [`ShareGroupDescribeResponse`].
@@ -857,7 +899,7 @@ pub const SHARE_GROUP_DESCRIBE_RESPONSE_DESCRIPTOR: MessageDescriptor = MessageD
     "ShareGroupDescribeResponse",
     MessageDirection::Response,
     VersionRange::new(1, 1),
-    Some(VersionRange::new(1, 1)),
+    ::core::option::Option::Some(VersionRange::new(1, 1)),
 );
 
 /// Static pair metadata for the `ShareGroupDescribe` API.
@@ -866,6 +908,6 @@ pub const SHARE_GROUP_DESCRIBE_API_DESCRIPTOR: ApiDescriptor = ApiDescriptor::ne
     &SHARE_GROUP_DESCRIBE_REQUEST_DESCRIPTOR,
     &SHARE_GROUP_DESCRIBE_RESPONSE_DESCRIPTOR,
     VersionRange::new(1, 1),
-    Some(VersionRange::new(1, 1)),
+    ::core::option::Option::Some(VersionRange::new(1, 1)),
     false,
 );

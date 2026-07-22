@@ -20,7 +20,7 @@ pub mod describe_topic_partitions_request {
 
     /// `TopicRequest` as declared by the `DescribeTopicPartitions` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct TopicRequest {
         /// The topic name.
         pub name: StrBytes,
@@ -30,7 +30,8 @@ pub mod describe_topic_partitions_request {
 
     impl TopicRequest {
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 0);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 0));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(0, 0));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
@@ -38,9 +39,12 @@ pub mod describe_topic_partitions_request {
     }
 
     impl TopicRequest {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(EncodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(EncodeError::UnsupportedVersion {
                     message: "TopicRequest",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
@@ -48,35 +52,38 @@ pub mod describe_topic_partitions_request {
             }
 
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: "TopicRequest",
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for TopicRequest {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(DecodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(DecodeError::UnsupportedVersion {
                     message: "TopicRequest",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
                 });
             }
 
-            let name = decoder.read_compact_string()?;
+            let __kw_field_0 = decoder.read_compact_string()?;
             let unknown_tagged_fields = if Self::is_flexible(version) {
                 decoder.read_tagged_fields()?
             } else {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                name,
+            ::core::result::Result::Ok(Self {
+                name: __kw_field_0,
                 unknown_tagged_fields,
             })
         }
@@ -87,14 +94,14 @@ pub mod describe_topic_partitions_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_compact_string(&self.name)?;
 
             if Self::is_flexible(version) {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -103,12 +110,12 @@ pub mod describe_topic_partitions_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             TopicRequest::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| TopicRequest::encode_validated(self, encoder, version),
@@ -119,7 +126,7 @@ pub mod describe_topic_partitions_request {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -131,7 +138,7 @@ pub mod describe_topic_partitions_request {
 
     /// `Cursor` as declared by the `DescribeTopicPartitions` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct Cursor {
         /// The name for the first topic to process.
         pub topic_name: StrBytes,
@@ -143,7 +150,8 @@ pub mod describe_topic_partitions_request {
 
     impl Cursor {
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 0);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 0));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(0, 0));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
@@ -151,9 +159,12 @@ pub mod describe_topic_partitions_request {
     }
 
     impl Cursor {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(EncodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(EncodeError::UnsupportedVersion {
                     message: "Cursor",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
@@ -161,37 +172,40 @@ pub mod describe_topic_partitions_request {
             }
 
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: "Cursor",
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for Cursor {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(DecodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(DecodeError::UnsupportedVersion {
                     message: "Cursor",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
                 });
             }
 
-            let topic_name = decoder.read_compact_string()?;
-            let partition_index = decoder.read_i32()?;
+            let __kw_field_0 = decoder.read_compact_string()?;
+            let __kw_field_1 = decoder.read_i32()?;
             let unknown_tagged_fields = if Self::is_flexible(version) {
                 decoder.read_tagged_fields()?
             } else {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                topic_name,
-                partition_index,
+            ::core::result::Result::Ok(Self {
+                topic_name: __kw_field_0,
+                partition_index: __kw_field_1,
                 unknown_tagged_fields,
             })
         }
@@ -202,7 +216,7 @@ pub mod describe_topic_partitions_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_compact_string(&self.topic_name)?;
             encoder.write_i32(self.partition_index)?;
 
@@ -210,7 +224,7 @@ pub mod describe_topic_partitions_request {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -219,12 +233,12 @@ pub mod describe_topic_partitions_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             Cursor::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| Cursor::encode_validated(self, encoder, version),
@@ -235,7 +249,7 @@ pub mod describe_topic_partitions_request {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -250,21 +264,21 @@ pub mod describe_topic_partitions_request {
     #[derive(Clone, Debug, Eq, PartialEq)]
     pub struct DescribeTopicPartitionsRequest {
         /// The topics to fetch details for.
-        pub topics: Vec<TopicRequest>,
+        pub topics: ::std::vec::Vec<TopicRequest>,
         /// The maximum number of partitions included in the response.
         pub response_partition_limit: i32,
         /// The first topic and partition index to fetch details for.
-        pub cursor: Option<Cursor>,
+        pub cursor: ::core::option::Option<Cursor>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
     }
 
-    impl Default for DescribeTopicPartitionsRequest {
+    impl ::core::default::Default for DescribeTopicPartitionsRequest {
         fn default() -> Self {
             Self {
-                topics: Vec::new(),
+                topics: ::std::vec::Vec::new(),
                 response_partition_limit: 2_000,
-                cursor: None,
+                cursor: ::core::option::Option::None,
                 unknown_tagged_fields: TaggedFields::default(),
             }
         }
@@ -273,7 +287,8 @@ pub mod describe_topic_partitions_request {
     impl KafkaMessage for DescribeTopicPartitionsRequest {
         const NAME: &'static str = "DescribeTopicPartitionsRequest";
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 0);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 0));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(0, 0));
     }
 
     impl KafkaRequest for DescribeTopicPartitionsRequest {
@@ -287,39 +302,45 @@ pub mod describe_topic_partitions_request {
     }
 
     impl DescribeTopicPartitionsRequest {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             crate::message::ensure_encode_version::<Self>(version)?;
 
             for value in &self.topics {
                 value.validate_for_version(version)?;
             }
-            if let Some(value) = &self.cursor {
+            if let ::core::option::Option::Some(value) = &self.cursor {
                 value.validate_for_version(version)?;
             }
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: Self::NAME,
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for DescribeTopicPartitionsRequest {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             crate::message::ensure_decode_version::<Self>(version)?;
 
-            let topics = {
+            let __kw_field_0 = {
                 let length = decoder.read_compact_array_len()?;
                 decoder.read_vec(length, |decoder| TopicRequest::decode(decoder, version))?
             };
-            let response_partition_limit = decoder.read_i32()?;
-            let cursor = if decoder.read_struct_presence()? {
-                Some(Cursor::decode(decoder, version)?)
+            let __kw_field_1 = decoder.read_i32()?;
+            let __kw_field_2 = if decoder.read_struct_presence()? {
+                ::core::option::Option::Some(Cursor::decode(decoder, version)?)
             } else {
-                None
+                ::core::option::Option::None
             };
             let unknown_tagged_fields = if Self::is_flexible(version) {
                 decoder.read_tagged_fields()?
@@ -327,10 +348,10 @@ pub mod describe_topic_partitions_request {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                topics,
-                response_partition_limit,
-                cursor,
+            ::core::result::Result::Ok(Self {
+                topics: __kw_field_0,
+                response_partition_limit: __kw_field_1,
+                cursor: __kw_field_2,
                 unknown_tagged_fields,
             })
         }
@@ -341,13 +362,13 @@ pub mod describe_topic_partitions_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_compact_array_len(self.topics.len())?;
             for value in &self.topics {
                 value.encode_validated(encoder, version)?;
             }
             encoder.write_i32(self.response_partition_limit)?;
-            if let Some(value) = &self.cursor {
+            if let ::core::option::Option::Some(value) = &self.cursor {
                 encoder.write_struct_presence(true)?;
                 value.encode_validated(encoder, version)?;
             } else {
@@ -358,7 +379,7 @@ pub mod describe_topic_partitions_request {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -367,12 +388,12 @@ pub mod describe_topic_partitions_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             DescribeTopicPartitionsRequest::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| DescribeTopicPartitionsRequest::encode_validated(self, encoder, version),
@@ -383,7 +404,7 @@ pub mod describe_topic_partitions_request {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -414,13 +435,13 @@ pub mod describe_topic_partitions_response {
         /// The topic error, or 0 if there was no error.
         pub error_code: i16,
         /// The topic name.
-        pub name: Option<StrBytes>,
+        pub name: ::core::option::Option<StrBytes>,
         /// The topic id.
         pub topic_id: Uuid,
         /// True if the topic is internal.
         pub is_internal: bool,
         /// Each partition in the topic.
-        pub partitions: Vec<DescribeTopicPartitionsResponsePartition>,
+        pub partitions: ::std::vec::Vec<DescribeTopicPartitionsResponsePartition>,
         /// 32-bit bitfield to represent authorized operations for this topic.
         pub topic_authorized_operations: i32,
         /// Unknown flexible-version tagged fields retained for forwarding.
@@ -429,7 +450,8 @@ pub mod describe_topic_partitions_response {
 
     impl DescribeTopicPartitionsResponseTopic {
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 0);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 0));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(0, 0));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
@@ -437,9 +459,12 @@ pub mod describe_topic_partitions_response {
     }
 
     impl DescribeTopicPartitionsResponseTopic {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(EncodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(EncodeError::UnsupportedVersion {
                     message: "DescribeTopicPartitionsResponseTopic",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
@@ -450,24 +475,24 @@ pub mod describe_topic_partitions_response {
                 value.validate_for_version(version)?;
             }
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: "DescribeTopicPartitionsResponseTopic",
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
-    impl Default for DescribeTopicPartitionsResponseTopic {
+    impl ::core::default::Default for DescribeTopicPartitionsResponseTopic {
         fn default() -> Self {
             Self {
                 error_code: 0,
-                name: Some(StrBytes::default()),
+                name: ::core::option::Option::Some(StrBytes::default()),
                 topic_id: Uuid::ZERO,
                 is_internal: false,
-                partitions: Vec::new(),
+                partitions: ::std::vec::Vec::new(),
                 topic_authorized_operations: -2_147_483_648,
                 unknown_tagged_fields: TaggedFields::default(),
             }
@@ -475,39 +500,42 @@ pub mod describe_topic_partitions_response {
     }
 
     impl KafkaDecode for DescribeTopicPartitionsResponseTopic {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(DecodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(DecodeError::UnsupportedVersion {
                     message: "DescribeTopicPartitionsResponseTopic",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
                 });
             }
 
-            let error_code = decoder.read_i16()?;
-            let name = decoder.read_compact_nullable_string()?;
-            let topic_id = decoder.read_uuid()?;
-            let is_internal = decoder.read_bool()?;
-            let partitions = {
+            let __kw_field_0 = decoder.read_i16()?;
+            let __kw_field_1 = decoder.read_compact_nullable_string()?;
+            let __kw_field_2 = decoder.read_uuid()?;
+            let __kw_field_3 = decoder.read_bool()?;
+            let __kw_field_4 = {
                 let length = decoder.read_compact_array_len()?;
                 decoder.read_vec(length, |decoder| {
                     DescribeTopicPartitionsResponsePartition::decode(decoder, version)
                 })?
             };
-            let topic_authorized_operations = decoder.read_i32()?;
+            let __kw_field_5 = decoder.read_i32()?;
             let unknown_tagged_fields = if Self::is_flexible(version) {
                 decoder.read_tagged_fields()?
             } else {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                error_code,
-                name,
-                topic_id,
-                is_internal,
-                partitions,
-                topic_authorized_operations,
+            ::core::result::Result::Ok(Self {
+                error_code: __kw_field_0,
+                name: __kw_field_1,
+                topic_id: __kw_field_2,
+                is_internal: __kw_field_3,
+                partitions: __kw_field_4,
+                topic_authorized_operations: __kw_field_5,
                 unknown_tagged_fields,
             })
         }
@@ -518,7 +546,7 @@ pub mod describe_topic_partitions_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_i16(self.error_code)?;
             encoder.write_compact_nullable_string(self.name.as_ref())?;
             encoder.write_uuid(self.topic_id)?;
@@ -533,7 +561,7 @@ pub mod describe_topic_partitions_response {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -542,12 +570,12 @@ pub mod describe_topic_partitions_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             DescribeTopicPartitionsResponseTopic::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| {
@@ -560,7 +588,7 @@ pub mod describe_topic_partitions_response {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -587,22 +615,23 @@ pub mod describe_topic_partitions_response {
         /// The leader epoch of this partition.
         pub leader_epoch: i32,
         /// The set of all nodes that host this partition.
-        pub replica_nodes: Vec<i32>,
+        pub replica_nodes: ::std::vec::Vec<i32>,
         /// The set of nodes that are in sync with the leader for this partition.
-        pub isr_nodes: Vec<i32>,
+        pub isr_nodes: ::std::vec::Vec<i32>,
         /// The new eligible leader replicas otherwise.
-        pub eligible_leader_replicas: Option<Vec<i32>>,
+        pub eligible_leader_replicas: ::core::option::Option<::std::vec::Vec<i32>>,
         /// The last known ELR.
-        pub last_known_elr: Option<Vec<i32>>,
+        pub last_known_elr: ::core::option::Option<::std::vec::Vec<i32>>,
         /// The set of offline replicas of this partition.
-        pub offline_replicas: Vec<i32>,
+        pub offline_replicas: ::std::vec::Vec<i32>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
     }
 
     impl DescribeTopicPartitionsResponsePartition {
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 0);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 0));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(0, 0));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
@@ -610,9 +639,12 @@ pub mod describe_topic_partitions_response {
     }
 
     impl DescribeTopicPartitionsResponsePartition {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(EncodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(EncodeError::UnsupportedVersion {
                     message: "DescribeTopicPartitionsResponsePartition",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
@@ -620,68 +652,71 @@ pub mod describe_topic_partitions_response {
             }
 
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: "DescribeTopicPartitionsResponsePartition",
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
-    impl Default for DescribeTopicPartitionsResponsePartition {
+    impl ::core::default::Default for DescribeTopicPartitionsResponsePartition {
         fn default() -> Self {
             Self {
                 error_code: 0,
                 partition_index: 0,
                 leader_id: 0,
                 leader_epoch: -1,
-                replica_nodes: Vec::new(),
-                isr_nodes: Vec::new(),
-                eligible_leader_replicas: None,
-                last_known_elr: None,
-                offline_replicas: Vec::new(),
+                replica_nodes: ::std::vec::Vec::new(),
+                isr_nodes: ::std::vec::Vec::new(),
+                eligible_leader_replicas: ::core::option::Option::None,
+                last_known_elr: ::core::option::Option::None,
+                offline_replicas: ::std::vec::Vec::new(),
                 unknown_tagged_fields: TaggedFields::default(),
             }
         }
     }
 
     impl KafkaDecode for DescribeTopicPartitionsResponsePartition {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(DecodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(DecodeError::UnsupportedVersion {
                     message: "DescribeTopicPartitionsResponsePartition",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
                 });
             }
 
-            let error_code = decoder.read_i16()?;
-            let partition_index = decoder.read_i32()?;
-            let leader_id = decoder.read_i32()?;
-            let leader_epoch = decoder.read_i32()?;
-            let replica_nodes = {
+            let __kw_field_0 = decoder.read_i16()?;
+            let __kw_field_1 = decoder.read_i32()?;
+            let __kw_field_2 = decoder.read_i32()?;
+            let __kw_field_3 = decoder.read_i32()?;
+            let __kw_field_4 = {
                 let length = decoder.read_compact_array_len()?;
                 decoder.read_vec(length, Decoder::read_i32)?
             };
-            let isr_nodes = {
+            let __kw_field_5 = {
                 let length = decoder.read_compact_array_len()?;
                 decoder.read_vec(length, Decoder::read_i32)?
             };
-            let eligible_leader_replicas = {
+            let __kw_field_6 = {
                 let length = decoder.read_compact_nullable_array_len()?;
                 length
                     .map(|length| decoder.read_vec(length, Decoder::read_i32))
                     .transpose()?
             };
-            let last_known_elr = {
+            let __kw_field_7 = {
                 let length = decoder.read_compact_nullable_array_len()?;
                 length
                     .map(|length| decoder.read_vec(length, Decoder::read_i32))
                     .transpose()?
             };
-            let offline_replicas = {
+            let __kw_field_8 = {
                 let length = decoder.read_compact_array_len()?;
                 decoder.read_vec(length, Decoder::read_i32)?
             };
@@ -691,16 +726,16 @@ pub mod describe_topic_partitions_response {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                error_code,
-                partition_index,
-                leader_id,
-                leader_epoch,
-                replica_nodes,
-                isr_nodes,
-                eligible_leader_replicas,
-                last_known_elr,
-                offline_replicas,
+            ::core::result::Result::Ok(Self {
+                error_code: __kw_field_0,
+                partition_index: __kw_field_1,
+                leader_id: __kw_field_2,
+                leader_epoch: __kw_field_3,
+                replica_nodes: __kw_field_4,
+                isr_nodes: __kw_field_5,
+                eligible_leader_replicas: __kw_field_6,
+                last_known_elr: __kw_field_7,
+                offline_replicas: __kw_field_8,
                 unknown_tagged_fields,
             })
         }
@@ -711,7 +746,7 @@ pub mod describe_topic_partitions_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_i16(self.error_code)?;
             encoder.write_i32(self.partition_index)?;
             encoder.write_i32(self.leader_id)?;
@@ -725,15 +760,19 @@ pub mod describe_topic_partitions_response {
                 encoder.write_i32(*value)?;
             }
             encoder.write_compact_nullable_array_len(
-                self.eligible_leader_replicas.as_ref().map(Vec::len),
+                self.eligible_leader_replicas
+                    .as_ref()
+                    .map(::std::vec::Vec::len),
             )?;
-            if let Some(values) = &self.eligible_leader_replicas {
+            if let ::core::option::Option::Some(values) = &self.eligible_leader_replicas {
                 for value in values {
                     encoder.write_i32(*value)?;
                 }
             }
-            encoder.write_compact_nullable_array_len(self.last_known_elr.as_ref().map(Vec::len))?;
-            if let Some(values) = &self.last_known_elr {
+            encoder.write_compact_nullable_array_len(
+                self.last_known_elr.as_ref().map(::std::vec::Vec::len),
+            )?;
+            if let ::core::option::Option::Some(values) = &self.last_known_elr {
                 for value in values {
                     encoder.write_i32(*value)?;
                 }
@@ -747,7 +786,7 @@ pub mod describe_topic_partitions_response {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -756,12 +795,12 @@ pub mod describe_topic_partitions_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             DescribeTopicPartitionsResponsePartition::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| {
@@ -776,7 +815,7 @@ pub mod describe_topic_partitions_response {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -796,7 +835,7 @@ pub mod describe_topic_partitions_response {
 
     /// `Cursor` as declared by the `DescribeTopicPartitions` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct Cursor {
         /// The name for the first topic to process.
         pub topic_name: StrBytes,
@@ -808,7 +847,8 @@ pub mod describe_topic_partitions_response {
 
     impl Cursor {
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 0);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 0));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(0, 0));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
@@ -816,9 +856,12 @@ pub mod describe_topic_partitions_response {
     }
 
     impl Cursor {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(EncodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(EncodeError::UnsupportedVersion {
                     message: "Cursor",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
@@ -826,37 +869,40 @@ pub mod describe_topic_partitions_response {
             }
 
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: "Cursor",
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for Cursor {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(DecodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(DecodeError::UnsupportedVersion {
                     message: "Cursor",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
                 });
             }
 
-            let topic_name = decoder.read_compact_string()?;
-            let partition_index = decoder.read_i32()?;
+            let __kw_field_0 = decoder.read_compact_string()?;
+            let __kw_field_1 = decoder.read_i32()?;
             let unknown_tagged_fields = if Self::is_flexible(version) {
                 decoder.read_tagged_fields()?
             } else {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                topic_name,
-                partition_index,
+            ::core::result::Result::Ok(Self {
+                topic_name: __kw_field_0,
+                partition_index: __kw_field_1,
                 unknown_tagged_fields,
             })
         }
@@ -867,7 +913,7 @@ pub mod describe_topic_partitions_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_compact_string(&self.topic_name)?;
             encoder.write_i32(self.partition_index)?;
 
@@ -875,7 +921,7 @@ pub mod describe_topic_partitions_response {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -884,12 +930,12 @@ pub mod describe_topic_partitions_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             Cursor::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| Cursor::encode_validated(self, encoder, version),
@@ -900,7 +946,7 @@ pub mod describe_topic_partitions_response {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -912,14 +958,14 @@ pub mod describe_topic_partitions_response {
 
     /// Response body for the `DescribeTopicPartitions` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct DescribeTopicPartitionsResponse {
         /// The duration in milliseconds for which the request was throttled due to a quota violation, or zero if the request did not violate any quota.
         pub throttle_time_ms: i32,
         /// Each topic in the response.
-        pub topics: Vec<DescribeTopicPartitionsResponseTopic>,
+        pub topics: ::std::vec::Vec<DescribeTopicPartitionsResponseTopic>,
         /// The next topic and partition index to fetch details for.
-        pub next_cursor: Option<Cursor>,
+        pub next_cursor: ::core::option::Option<Cursor>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
     }
@@ -927,7 +973,8 @@ pub mod describe_topic_partitions_response {
     impl KafkaMessage for DescribeTopicPartitionsResponse {
         const NAME: &'static str = "DescribeTopicPartitionsResponse";
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 0);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 0));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(0, 0));
     }
 
     impl KafkaResponse for DescribeTopicPartitionsResponse {
@@ -935,41 +982,47 @@ pub mod describe_topic_partitions_response {
     }
 
     impl DescribeTopicPartitionsResponse {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             crate::message::ensure_encode_version::<Self>(version)?;
 
             for value in &self.topics {
                 value.validate_for_version(version)?;
             }
-            if let Some(value) = &self.next_cursor {
+            if let ::core::option::Option::Some(value) = &self.next_cursor {
                 value.validate_for_version(version)?;
             }
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: Self::NAME,
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for DescribeTopicPartitionsResponse {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             crate::message::ensure_decode_version::<Self>(version)?;
 
-            let throttle_time_ms = decoder.read_i32()?;
-            let topics = {
+            let __kw_field_0 = decoder.read_i32()?;
+            let __kw_field_1 = {
                 let length = decoder.read_compact_array_len()?;
                 decoder.read_vec(length, |decoder| {
                     DescribeTopicPartitionsResponseTopic::decode(decoder, version)
                 })?
             };
-            let next_cursor = if decoder.read_struct_presence()? {
-                Some(Cursor::decode(decoder, version)?)
+            let __kw_field_2 = if decoder.read_struct_presence()? {
+                ::core::option::Option::Some(Cursor::decode(decoder, version)?)
             } else {
-                None
+                ::core::option::Option::None
             };
             let unknown_tagged_fields = if Self::is_flexible(version) {
                 decoder.read_tagged_fields()?
@@ -977,10 +1030,10 @@ pub mod describe_topic_partitions_response {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                throttle_time_ms,
-                topics,
-                next_cursor,
+            ::core::result::Result::Ok(Self {
+                throttle_time_ms: __kw_field_0,
+                topics: __kw_field_1,
+                next_cursor: __kw_field_2,
                 unknown_tagged_fields,
             })
         }
@@ -991,13 +1044,13 @@ pub mod describe_topic_partitions_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_i32(self.throttle_time_ms)?;
             encoder.write_compact_array_len(self.topics.len())?;
             for value in &self.topics {
                 value.encode_validated(encoder, version)?;
             }
-            if let Some(value) = &self.next_cursor {
+            if let ::core::option::Option::Some(value) = &self.next_cursor {
                 encoder.write_struct_presence(true)?;
                 value.encode_validated(encoder, version)?;
             } else {
@@ -1008,7 +1061,7 @@ pub mod describe_topic_partitions_response {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -1017,12 +1070,12 @@ pub mod describe_topic_partitions_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             DescribeTopicPartitionsResponse::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| DescribeTopicPartitionsResponse::encode_validated(self, encoder, version),
@@ -1033,7 +1086,7 @@ pub mod describe_topic_partitions_response {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -1057,7 +1110,7 @@ pub const DESCRIBE_TOPIC_PARTITIONS_REQUEST_DESCRIPTOR: MessageDescriptor = Mess
     "DescribeTopicPartitionsRequest",
     MessageDirection::Request,
     VersionRange::new(0, 0),
-    Some(VersionRange::new(0, 0)),
+    ::core::option::Option::Some(VersionRange::new(0, 0)),
 );
 
 /// Static metadata for [`DescribeTopicPartitionsResponse`].
@@ -1066,7 +1119,7 @@ pub const DESCRIBE_TOPIC_PARTITIONS_RESPONSE_DESCRIPTOR: MessageDescriptor = Mes
     "DescribeTopicPartitionsResponse",
     MessageDirection::Response,
     VersionRange::new(0, 0),
-    Some(VersionRange::new(0, 0)),
+    ::core::option::Option::Some(VersionRange::new(0, 0)),
 );
 
 /// Static pair metadata for the `DescribeTopicPartitions` API.
@@ -1075,6 +1128,6 @@ pub const DESCRIBE_TOPIC_PARTITIONS_API_DESCRIPTOR: ApiDescriptor = ApiDescripto
     &DESCRIBE_TOPIC_PARTITIONS_REQUEST_DESCRIPTOR,
     &DESCRIBE_TOPIC_PARTITIONS_RESPONSE_DESCRIPTOR,
     VersionRange::new(0, 0),
-    Some(VersionRange::new(0, 0)),
+    ::core::option::Option::Some(VersionRange::new(0, 0)),
     false,
 );

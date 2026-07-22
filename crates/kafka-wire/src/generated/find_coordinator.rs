@@ -20,14 +20,14 @@ pub mod find_coordinator_request {
 
     /// Request body for the `FindCoordinator` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct FindCoordinatorRequest {
         /// The coordinator key.
         pub key: StrBytes,
         /// The coordinator key type. (group, transaction, share).
         pub key_type: i8,
         /// The coordinator keys.
-        pub coordinator_keys: Vec<StrBytes>,
+        pub coordinator_keys: ::std::vec::Vec<StrBytes>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
     }
@@ -35,7 +35,8 @@ pub mod find_coordinator_request {
     impl KafkaMessage for FindCoordinatorRequest {
         const NAME: &'static str = "FindCoordinatorRequest";
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 6);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(3, 6));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(3, 6));
     }
 
     impl KafkaRequest for FindCoordinatorRequest {
@@ -48,46 +49,52 @@ pub mod find_coordinator_request {
     }
 
     impl FindCoordinatorRequest {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             crate::message::ensure_encode_version::<Self>(version)?;
 
             if version.value() > 3 && !self.key.is_empty() {
-                return Err(EncodeError::FieldNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::FieldNotRepresentable {
                     message: Self::NAME,
                     field: "Key",
                     version,
                 });
             }
             if version.value() < 1 && self.key_type != 0 {
-                return Err(EncodeError::FieldNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::FieldNotRepresentable {
                     message: Self::NAME,
                     field: "KeyType",
                     version,
                 });
             }
             if version.value() < 4 && !self.coordinator_keys.is_empty() {
-                return Err(EncodeError::FieldNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::FieldNotRepresentable {
                     message: Self::NAME,
                     field: "CoordinatorKeys",
                     version,
                 });
             }
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: Self::NAME,
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for FindCoordinatorRequest {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             crate::message::ensure_decode_version::<Self>(version)?;
 
-            let key = if version.value() <= 3 {
+            let __kw_field_0 = if version.value() <= 3 {
                 if Self::is_flexible(version) {
                     decoder.read_compact_string()?
                 } else {
@@ -96,16 +103,16 @@ pub mod find_coordinator_request {
             } else {
                 StrBytes::default()
             };
-            let key_type = if version.value() >= 1 {
+            let __kw_field_1 = if version.value() >= 1 {
                 decoder.read_i8()?
             } else {
                 0
             };
-            let coordinator_keys = if version.value() >= 4 {
+            let __kw_field_2 = if version.value() >= 4 {
                 let length = decoder.read_compact_array_len()?;
                 decoder.read_vec(length, Decoder::read_compact_string)?
             } else {
-                Vec::new()
+                ::std::vec::Vec::new()
             };
             let unknown_tagged_fields = if Self::is_flexible(version) {
                 decoder.read_tagged_fields()?
@@ -113,10 +120,10 @@ pub mod find_coordinator_request {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                key,
-                key_type,
-                coordinator_keys,
+            ::core::result::Result::Ok(Self {
+                key: __kw_field_0,
+                key_type: __kw_field_1,
+                coordinator_keys: __kw_field_2,
                 unknown_tagged_fields,
             })
         }
@@ -127,7 +134,7 @@ pub mod find_coordinator_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             if version.value() <= 3 {
                 if Self::is_flexible(version) {
                     encoder.write_compact_string(&self.key)?;
@@ -149,7 +156,7 @@ pub mod find_coordinator_request {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -158,12 +165,12 @@ pub mod find_coordinator_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             FindCoordinatorRequest::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| FindCoordinatorRequest::encode_validated(self, encoder, version),
@@ -174,7 +181,7 @@ pub mod find_coordinator_request {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -213,14 +220,15 @@ pub mod find_coordinator_response {
         /// The error code, or 0 if there was no error.
         pub error_code: i16,
         /// The error message, or null if there was no error.
-        pub error_message: Option<StrBytes>,
+        pub error_message: ::core::option::Option<StrBytes>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
     }
 
     impl Coordinator {
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(4, 6);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(4, 6));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(4, 6));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
@@ -228,9 +236,12 @@ pub mod find_coordinator_response {
     }
 
     impl Coordinator {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(EncodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(EncodeError::UnsupportedVersion {
                     message: "Coordinator",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
@@ -238,17 +249,17 @@ pub mod find_coordinator_response {
             }
 
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: "Coordinator",
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
-    impl Default for Coordinator {
+    impl ::core::default::Default for Coordinator {
         fn default() -> Self {
             Self {
                 key: StrBytes::default(),
@@ -256,41 +267,44 @@ pub mod find_coordinator_response {
                 host: StrBytes::default(),
                 port: 0,
                 error_code: 0,
-                error_message: Some(StrBytes::default()),
+                error_message: ::core::option::Option::Some(StrBytes::default()),
                 unknown_tagged_fields: TaggedFields::default(),
             }
         }
     }
 
     impl KafkaDecode for Coordinator {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(DecodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(DecodeError::UnsupportedVersion {
                     message: "Coordinator",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
                 });
             }
 
-            let key = decoder.read_compact_string()?;
-            let node_id = decoder.read_i32()?;
-            let host = decoder.read_compact_string()?;
-            let port = decoder.read_i32()?;
-            let error_code = decoder.read_i16()?;
-            let error_message = decoder.read_compact_nullable_string()?;
+            let __kw_field_0 = decoder.read_compact_string()?;
+            let __kw_field_1 = decoder.read_i32()?;
+            let __kw_field_2 = decoder.read_compact_string()?;
+            let __kw_field_3 = decoder.read_i32()?;
+            let __kw_field_4 = decoder.read_i16()?;
+            let __kw_field_5 = decoder.read_compact_nullable_string()?;
             let unknown_tagged_fields = if Self::is_flexible(version) {
                 decoder.read_tagged_fields()?
             } else {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                key,
-                node_id,
-                host,
-                port,
-                error_code,
-                error_message,
+            ::core::result::Result::Ok(Self {
+                key: __kw_field_0,
+                node_id: __kw_field_1,
+                host: __kw_field_2,
+                port: __kw_field_3,
+                error_code: __kw_field_4,
+                error_message: __kw_field_5,
                 unknown_tagged_fields,
             })
         }
@@ -301,7 +315,7 @@ pub mod find_coordinator_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_compact_string(&self.key)?;
             encoder.write_i32(self.node_id)?;
             encoder.write_compact_string(&self.host)?;
@@ -313,7 +327,7 @@ pub mod find_coordinator_response {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -322,12 +336,12 @@ pub mod find_coordinator_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             Coordinator::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| Coordinator::encode_validated(self, encoder, version),
@@ -338,7 +352,7 @@ pub mod find_coordinator_response {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -357,7 +371,7 @@ pub mod find_coordinator_response {
         /// The error code, or 0 if there was no error.
         pub error_code: i16,
         /// The error message, or null if there was no error.
-        pub error_message: Option<StrBytes>,
+        pub error_message: ::core::option::Option<StrBytes>,
         /// The node id.
         pub node_id: i32,
         /// The host name.
@@ -365,21 +379,21 @@ pub mod find_coordinator_response {
         /// The port.
         pub port: i32,
         /// Each coordinator result in the response.
-        pub coordinators: Vec<Coordinator>,
+        pub coordinators: ::std::vec::Vec<Coordinator>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
     }
 
-    impl Default for FindCoordinatorResponse {
+    impl ::core::default::Default for FindCoordinatorResponse {
         fn default() -> Self {
             Self {
                 throttle_time_ms: 0,
                 error_code: 0,
-                error_message: Some(StrBytes::default()),
+                error_message: ::core::option::Option::Some(StrBytes::default()),
                 node_id: 0,
                 host: StrBytes::default(),
                 port: 0,
-                coordinators: Vec::new(),
+                coordinators: ::std::vec::Vec::new(),
                 unknown_tagged_fields: TaggedFields::default(),
             }
         }
@@ -388,7 +402,8 @@ pub mod find_coordinator_response {
     impl KafkaMessage for FindCoordinatorResponse {
         const NAME: &'static str = "FindCoordinatorResponse";
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 6);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(3, 6));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(3, 6));
     }
 
     impl KafkaResponse for FindCoordinatorResponse {
@@ -396,39 +411,42 @@ pub mod find_coordinator_response {
     }
 
     impl FindCoordinatorResponse {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             crate::message::ensure_encode_version::<Self>(version)?;
 
             if version.value() > 3 && self.error_code != 0 {
-                return Err(EncodeError::FieldNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::FieldNotRepresentable {
                     message: Self::NAME,
                     field: "ErrorCode",
                     version,
                 });
             }
             if version.value() > 3 && self.node_id != 0 {
-                return Err(EncodeError::FieldNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::FieldNotRepresentable {
                     message: Self::NAME,
                     field: "NodeId",
                     version,
                 });
             }
             if version.value() > 3 && !self.host.is_empty() {
-                return Err(EncodeError::FieldNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::FieldNotRepresentable {
                     message: Self::NAME,
                     field: "Host",
                     version,
                 });
             }
             if version.value() > 3 && self.port != 0 {
-                return Err(EncodeError::FieldNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::FieldNotRepresentable {
                     message: Self::NAME,
                     field: "Port",
                     version,
                 });
             }
             if version.value() < 4 && !self.coordinators.is_empty() {
-                return Err(EncodeError::FieldNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::FieldNotRepresentable {
                     message: Self::NAME,
                     field: "Coordinators",
                     version,
@@ -440,45 +458,48 @@ pub mod find_coordinator_response {
                 }
             }
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: Self::NAME,
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for FindCoordinatorResponse {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             crate::message::ensure_decode_version::<Self>(version)?;
 
-            let throttle_time_ms = if version.value() >= 1 {
+            let __kw_field_0 = if version.value() >= 1 {
                 decoder.read_i32()?
             } else {
                 0
             };
-            let error_code = if version.value() <= 3 {
+            let __kw_field_1 = if version.value() <= 3 {
                 decoder.read_i16()?
             } else {
                 0
             };
-            let error_message = if version.value() >= 1 && version.value() <= 3 {
+            let __kw_field_2 = if version.value() >= 1 && version.value() <= 3 {
                 if Self::is_flexible(version) {
                     decoder.read_compact_nullable_string()?
                 } else {
                     decoder.read_nullable_string()?
                 }
             } else {
-                Some(StrBytes::default())
+                ::core::option::Option::Some(StrBytes::default())
             };
-            let node_id = if version.value() <= 3 {
+            let __kw_field_3 = if version.value() <= 3 {
                 decoder.read_i32()?
             } else {
                 0
             };
-            let host = if version.value() <= 3 {
+            let __kw_field_4 = if version.value() <= 3 {
                 if Self::is_flexible(version) {
                     decoder.read_compact_string()?
                 } else {
@@ -487,16 +508,16 @@ pub mod find_coordinator_response {
             } else {
                 StrBytes::default()
             };
-            let port = if version.value() <= 3 {
+            let __kw_field_5 = if version.value() <= 3 {
                 decoder.read_i32()?
             } else {
                 0
             };
-            let coordinators = if version.value() >= 4 {
+            let __kw_field_6 = if version.value() >= 4 {
                 let length = decoder.read_compact_array_len()?;
                 decoder.read_vec(length, |decoder| Coordinator::decode(decoder, version))?
             } else {
-                Vec::new()
+                ::std::vec::Vec::new()
             };
             let unknown_tagged_fields = if Self::is_flexible(version) {
                 decoder.read_tagged_fields()?
@@ -504,14 +525,14 @@ pub mod find_coordinator_response {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                throttle_time_ms,
-                error_code,
-                error_message,
-                node_id,
-                host,
-                port,
-                coordinators,
+            ::core::result::Result::Ok(Self {
+                throttle_time_ms: __kw_field_0,
+                error_code: __kw_field_1,
+                error_message: __kw_field_2,
+                node_id: __kw_field_3,
+                host: __kw_field_4,
+                port: __kw_field_5,
+                coordinators: __kw_field_6,
                 unknown_tagged_fields,
             })
         }
@@ -522,7 +543,7 @@ pub mod find_coordinator_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             if version.value() >= 1 {
                 encoder.write_i32(self.throttle_time_ms)?;
             }
@@ -560,7 +581,7 @@ pub mod find_coordinator_response {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -569,12 +590,12 @@ pub mod find_coordinator_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             FindCoordinatorResponse::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| FindCoordinatorResponse::encode_validated(self, encoder, version),
@@ -585,7 +606,7 @@ pub mod find_coordinator_response {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -609,7 +630,7 @@ pub const FIND_COORDINATOR_REQUEST_DESCRIPTOR: MessageDescriptor = MessageDescri
     "FindCoordinatorRequest",
     MessageDirection::Request,
     VersionRange::new(0, 6),
-    Some(VersionRange::new(3, 6)),
+    ::core::option::Option::Some(VersionRange::new(3, 6)),
 );
 
 /// Static metadata for [`FindCoordinatorResponse`].
@@ -618,7 +639,7 @@ pub const FIND_COORDINATOR_RESPONSE_DESCRIPTOR: MessageDescriptor = MessageDescr
     "FindCoordinatorResponse",
     MessageDirection::Response,
     VersionRange::new(0, 6),
-    Some(VersionRange::new(3, 6)),
+    ::core::option::Option::Some(VersionRange::new(3, 6)),
 );
 
 /// Static pair metadata for the `FindCoordinator` API.
@@ -627,6 +648,6 @@ pub const FIND_COORDINATOR_API_DESCRIPTOR: ApiDescriptor = ApiDescriptor::new(
     &FIND_COORDINATOR_REQUEST_DESCRIPTOR,
     &FIND_COORDINATOR_RESPONSE_DESCRIPTOR,
     VersionRange::new(0, 6),
-    Some(VersionRange::new(3, 6)),
+    ::core::option::Option::Some(VersionRange::new(3, 6)),
     false,
 );

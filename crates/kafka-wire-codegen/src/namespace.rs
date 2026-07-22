@@ -1,14 +1,13 @@
-//! Complete generated and public Rust namespace claims.
-//!
-//! This phase owns collisions among actual emitted modules, re-exports,
-//! descriptor constants, fixed generated vocabulary, and the handwritten crate
-//! facade. Per-message struct collisions remain schema-front-end invariants.
+//! Complete generated and public Rust namespace claims: modules, re-exports,
+//! descriptors, fixed vocabulary, and the handwritten crate facade.
+//! Per-message struct collisions remain schema-front-end invariants.
 
 use std::collections::BTreeMap;
 
 use crate::{
     GenerationError,
     group::ApiGroup,
+    namespace_members::validate_synthesized_members,
     render::{api_descriptor_name, descriptor_name},
     source::MessageSource,
 };
@@ -140,6 +139,7 @@ fn validate_message_module(source: &MessageSource) -> Result<(), GenerationError
             ),
         )?;
     }
+    validate_synthesized_members(source)?;
     Ok(())
 }
 
@@ -210,7 +210,7 @@ fn claim(
 }
 
 fn handwritten_public_types() -> BTreeMap<String, String> {
-    [
+    let mut claimed = [
         "ApiDescriptor",
         "KafkaMessage",
         "KafkaRequest",
@@ -222,7 +222,14 @@ fn handwritten_public_types() -> BTreeMap<String, String> {
     ]
     .into_iter()
     .map(|symbol| (symbol.to_owned(), "handwritten crate facade".to_owned()))
-    .collect()
+    .collect::<BTreeMap<_, _>>();
+    for module in ["descriptor", "frame", "generated", "message"] {
+        claimed.insert(
+            module.to_owned(),
+            "handwritten private crate-root module".to_owned(),
+        );
+    }
+    claimed
 }
 
 fn handwritten_public_values() -> BTreeMap<String, String> {

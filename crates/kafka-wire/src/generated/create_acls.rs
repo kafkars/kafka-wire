@@ -42,7 +42,8 @@ pub mod create_acls_request {
 
     impl AclCreation {
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(1, 3);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(2, 3));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(2, 3));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
@@ -50,9 +51,12 @@ pub mod create_acls_request {
     }
 
     impl AclCreation {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(EncodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(EncodeError::UnsupportedVersion {
                     message: "AclCreation",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
@@ -60,17 +64,17 @@ pub mod create_acls_request {
             }
 
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: "AclCreation",
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
-    impl Default for AclCreation {
+    impl ::core::default::Default for AclCreation {
         fn default() -> Self {
             Self {
                 resource_type: 0,
@@ -86,48 +90,51 @@ pub mod create_acls_request {
     }
 
     impl KafkaDecode for AclCreation {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(DecodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(DecodeError::UnsupportedVersion {
                     message: "AclCreation",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
                 });
             }
 
-            let resource_type = decoder.read_i8()?;
-            let resource_name = if Self::is_flexible(version) {
+            let __kw_field_0 = decoder.read_i8()?;
+            let __kw_field_1 = if Self::is_flexible(version) {
                 decoder.read_compact_string()?
             } else {
                 decoder.read_string()?
             };
-            let resource_pattern_type = decoder.read_i8()?;
-            let principal = if Self::is_flexible(version) {
+            let __kw_field_2 = decoder.read_i8()?;
+            let __kw_field_3 = if Self::is_flexible(version) {
                 decoder.read_compact_string()?
             } else {
                 decoder.read_string()?
             };
-            let host = if Self::is_flexible(version) {
+            let __kw_field_4 = if Self::is_flexible(version) {
                 decoder.read_compact_string()?
             } else {
                 decoder.read_string()?
             };
-            let operation = decoder.read_i8()?;
-            let permission_type = decoder.read_i8()?;
+            let __kw_field_5 = decoder.read_i8()?;
+            let __kw_field_6 = decoder.read_i8()?;
             let unknown_tagged_fields = if Self::is_flexible(version) {
                 decoder.read_tagged_fields()?
             } else {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                resource_type,
-                resource_name,
-                resource_pattern_type,
-                principal,
-                host,
-                operation,
-                permission_type,
+            ::core::result::Result::Ok(Self {
+                resource_type: __kw_field_0,
+                resource_name: __kw_field_1,
+                resource_pattern_type: __kw_field_2,
+                principal: __kw_field_3,
+                host: __kw_field_4,
+                operation: __kw_field_5,
+                permission_type: __kw_field_6,
                 unknown_tagged_fields,
             })
         }
@@ -138,7 +145,7 @@ pub mod create_acls_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_i8(self.resource_type)?;
             if Self::is_flexible(version) {
                 encoder.write_compact_string(&self.resource_name)?;
@@ -163,7 +170,7 @@ pub mod create_acls_request {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -172,12 +179,12 @@ pub mod create_acls_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             AclCreation::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| AclCreation::encode_validated(self, encoder, version),
@@ -188,7 +195,7 @@ pub mod create_acls_request {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -200,10 +207,10 @@ pub mod create_acls_request {
 
     /// Request body for the `CreateAcls` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct CreateAclsRequest {
         /// The `ACLs` that we want to create.
-        pub creations: Vec<AclCreation>,
+        pub creations: ::std::vec::Vec<AclCreation>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
     }
@@ -211,7 +218,8 @@ pub mod create_acls_request {
     impl KafkaMessage for CreateAclsRequest {
         const NAME: &'static str = "CreateAclsRequest";
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(1, 3);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(2, 3));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(2, 3));
     }
 
     impl KafkaRequest for CreateAclsRequest {
@@ -224,28 +232,34 @@ pub mod create_acls_request {
     }
 
     impl CreateAclsRequest {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             crate::message::ensure_encode_version::<Self>(version)?;
 
             for value in &self.creations {
                 value.validate_for_version(version)?;
             }
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: Self::NAME,
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for CreateAclsRequest {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             crate::message::ensure_decode_version::<Self>(version)?;
 
-            let creations = {
+            let __kw_field_0 = {
                 let length = if Self::is_flexible(version) {
                     decoder.read_compact_array_len()?
                 } else {
@@ -259,8 +273,8 @@ pub mod create_acls_request {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                creations,
+            ::core::result::Result::Ok(Self {
+                creations: __kw_field_0,
                 unknown_tagged_fields,
             })
         }
@@ -271,7 +285,7 @@ pub mod create_acls_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             if Self::is_flexible(version) {
                 encoder.write_compact_array_len(self.creations.len())?;
             } else {
@@ -285,7 +299,7 @@ pub mod create_acls_request {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -294,12 +308,12 @@ pub mod create_acls_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             CreateAclsRequest::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| CreateAclsRequest::encode_validated(self, encoder, version),
@@ -310,7 +324,7 @@ pub mod create_acls_request {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -341,14 +355,15 @@ pub mod create_acls_response {
         /// The result error, or zero if there was no error.
         pub error_code: i16,
         /// The result message, or null if there was no error.
-        pub error_message: Option<StrBytes>,
+        pub error_message: ::core::option::Option<StrBytes>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
     }
 
     impl AclCreationResult {
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(1, 3);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(2, 3));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(2, 3));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
@@ -356,9 +371,12 @@ pub mod create_acls_response {
     }
 
     impl AclCreationResult {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(EncodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(EncodeError::UnsupportedVersion {
                     message: "AclCreationResult",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
@@ -366,38 +384,41 @@ pub mod create_acls_response {
             }
 
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: "AclCreationResult",
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
-    impl Default for AclCreationResult {
+    impl ::core::default::Default for AclCreationResult {
         fn default() -> Self {
             Self {
                 error_code: 0,
-                error_message: Some(StrBytes::default()),
+                error_message: ::core::option::Option::Some(StrBytes::default()),
                 unknown_tagged_fields: TaggedFields::default(),
             }
         }
     }
 
     impl KafkaDecode for AclCreationResult {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(DecodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(DecodeError::UnsupportedVersion {
                     message: "AclCreationResult",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
                 });
             }
 
-            let error_code = decoder.read_i16()?;
-            let error_message = if Self::is_flexible(version) {
+            let __kw_field_0 = decoder.read_i16()?;
+            let __kw_field_1 = if Self::is_flexible(version) {
                 decoder.read_compact_nullable_string()?
             } else {
                 decoder.read_nullable_string()?
@@ -408,9 +429,9 @@ pub mod create_acls_response {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                error_code,
-                error_message,
+            ::core::result::Result::Ok(Self {
+                error_code: __kw_field_0,
+                error_message: __kw_field_1,
                 unknown_tagged_fields,
             })
         }
@@ -421,7 +442,7 @@ pub mod create_acls_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_i16(self.error_code)?;
             if Self::is_flexible(version) {
                 encoder.write_compact_nullable_string(self.error_message.as_ref())?;
@@ -433,7 +454,7 @@ pub mod create_acls_response {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -442,12 +463,12 @@ pub mod create_acls_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             AclCreationResult::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| AclCreationResult::encode_validated(self, encoder, version),
@@ -458,7 +479,7 @@ pub mod create_acls_response {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -470,12 +491,12 @@ pub mod create_acls_response {
 
     /// Response body for the `CreateAcls` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct CreateAclsResponse {
         /// The duration in milliseconds for which the request was throttled due to a quota violation, or zero if the request did not violate any quota.
         pub throttle_time_ms: i32,
         /// The results for each ACL creation.
-        pub results: Vec<AclCreationResult>,
+        pub results: ::std::vec::Vec<AclCreationResult>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
     }
@@ -483,7 +504,8 @@ pub mod create_acls_response {
     impl KafkaMessage for CreateAclsResponse {
         const NAME: &'static str = "CreateAclsResponse";
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(1, 3);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(2, 3));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(2, 3));
     }
 
     impl KafkaResponse for CreateAclsResponse {
@@ -491,29 +513,35 @@ pub mod create_acls_response {
     }
 
     impl CreateAclsResponse {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             crate::message::ensure_encode_version::<Self>(version)?;
 
             for value in &self.results {
                 value.validate_for_version(version)?;
             }
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: Self::NAME,
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for CreateAclsResponse {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             crate::message::ensure_decode_version::<Self>(version)?;
 
-            let throttle_time_ms = decoder.read_i32()?;
-            let results = {
+            let __kw_field_0 = decoder.read_i32()?;
+            let __kw_field_1 = {
                 let length = if Self::is_flexible(version) {
                     decoder.read_compact_array_len()?
                 } else {
@@ -529,9 +557,9 @@ pub mod create_acls_response {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                throttle_time_ms,
-                results,
+            ::core::result::Result::Ok(Self {
+                throttle_time_ms: __kw_field_0,
+                results: __kw_field_1,
                 unknown_tagged_fields,
             })
         }
@@ -542,7 +570,7 @@ pub mod create_acls_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_i32(self.throttle_time_ms)?;
             if Self::is_flexible(version) {
                 encoder.write_compact_array_len(self.results.len())?;
@@ -557,7 +585,7 @@ pub mod create_acls_response {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -566,12 +594,12 @@ pub mod create_acls_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             CreateAclsResponse::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| CreateAclsResponse::encode_validated(self, encoder, version),
@@ -582,7 +610,7 @@ pub mod create_acls_response {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -606,7 +634,7 @@ pub const CREATE_ACLS_REQUEST_DESCRIPTOR: MessageDescriptor = MessageDescriptor:
     "CreateAclsRequest",
     MessageDirection::Request,
     VersionRange::new(1, 3),
-    Some(VersionRange::new(2, 3)),
+    ::core::option::Option::Some(VersionRange::new(2, 3)),
 );
 
 /// Static metadata for [`CreateAclsResponse`].
@@ -615,7 +643,7 @@ pub const CREATE_ACLS_RESPONSE_DESCRIPTOR: MessageDescriptor = MessageDescriptor
     "CreateAclsResponse",
     MessageDirection::Response,
     VersionRange::new(1, 3),
-    Some(VersionRange::new(2, 3)),
+    ::core::option::Option::Some(VersionRange::new(2, 3)),
 );
 
 /// Static pair metadata for the `CreateAcls` API.
@@ -624,6 +652,6 @@ pub const CREATE_ACLS_API_DESCRIPTOR: ApiDescriptor = ApiDescriptor::new(
     &CREATE_ACLS_REQUEST_DESCRIPTOR,
     &CREATE_ACLS_RESPONSE_DESCRIPTOR,
     VersionRange::new(1, 3),
-    Some(VersionRange::new(2, 3)),
+    ::core::option::Option::Some(VersionRange::new(2, 3)),
     false,
 );

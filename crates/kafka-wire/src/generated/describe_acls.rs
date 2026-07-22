@@ -25,13 +25,13 @@ pub mod describe_acls_request {
         /// The resource type.
         pub resource_type_filter: i8,
         /// The resource name, or null to match any resource name.
-        pub resource_name_filter: Option<StrBytes>,
+        pub resource_name_filter: ::core::option::Option<StrBytes>,
         /// The resource pattern to match.
         pub pattern_type_filter: i8,
         /// The principal to match, or null to match any principal.
-        pub principal_filter: Option<StrBytes>,
+        pub principal_filter: ::core::option::Option<StrBytes>,
         /// The host to match, or null to match any host.
-        pub host_filter: Option<StrBytes>,
+        pub host_filter: ::core::option::Option<StrBytes>,
         /// The operation to match.
         pub operation: i8,
         /// The permission type to match.
@@ -40,14 +40,14 @@ pub mod describe_acls_request {
         pub unknown_tagged_fields: TaggedFields,
     }
 
-    impl Default for DescribeAclsRequest {
+    impl ::core::default::Default for DescribeAclsRequest {
         fn default() -> Self {
             Self {
                 resource_type_filter: 0,
-                resource_name_filter: Some(StrBytes::default()),
+                resource_name_filter: ::core::option::Option::Some(StrBytes::default()),
                 pattern_type_filter: 3,
-                principal_filter: Some(StrBytes::default()),
-                host_filter: Some(StrBytes::default()),
+                principal_filter: ::core::option::Option::Some(StrBytes::default()),
+                host_filter: ::core::option::Option::Some(StrBytes::default()),
                 operation: 0,
                 permission_type: 0,
                 unknown_tagged_fields: TaggedFields::default(),
@@ -58,7 +58,8 @@ pub mod describe_acls_request {
     impl KafkaMessage for DescribeAclsRequest {
         const NAME: &'static str = "DescribeAclsRequest";
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(1, 3);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(2, 3));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(2, 3));
     }
 
     impl KafkaRequest for DescribeAclsRequest {
@@ -71,57 +72,63 @@ pub mod describe_acls_request {
     }
 
     impl DescribeAclsRequest {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             crate::message::ensure_encode_version::<Self>(version)?;
 
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: Self::NAME,
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for DescribeAclsRequest {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             crate::message::ensure_decode_version::<Self>(version)?;
 
-            let resource_type_filter = decoder.read_i8()?;
-            let resource_name_filter = if Self::is_flexible(version) {
+            let __kw_field_0 = decoder.read_i8()?;
+            let __kw_field_1 = if Self::is_flexible(version) {
                 decoder.read_compact_nullable_string()?
             } else {
                 decoder.read_nullable_string()?
             };
-            let pattern_type_filter = decoder.read_i8()?;
-            let principal_filter = if Self::is_flexible(version) {
+            let __kw_field_2 = decoder.read_i8()?;
+            let __kw_field_3 = if Self::is_flexible(version) {
                 decoder.read_compact_nullable_string()?
             } else {
                 decoder.read_nullable_string()?
             };
-            let host_filter = if Self::is_flexible(version) {
+            let __kw_field_4 = if Self::is_flexible(version) {
                 decoder.read_compact_nullable_string()?
             } else {
                 decoder.read_nullable_string()?
             };
-            let operation = decoder.read_i8()?;
-            let permission_type = decoder.read_i8()?;
+            let __kw_field_5 = decoder.read_i8()?;
+            let __kw_field_6 = decoder.read_i8()?;
             let unknown_tagged_fields = if Self::is_flexible(version) {
                 decoder.read_tagged_fields()?
             } else {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                resource_type_filter,
-                resource_name_filter,
-                pattern_type_filter,
-                principal_filter,
-                host_filter,
-                operation,
-                permission_type,
+            ::core::result::Result::Ok(Self {
+                resource_type_filter: __kw_field_0,
+                resource_name_filter: __kw_field_1,
+                pattern_type_filter: __kw_field_2,
+                principal_filter: __kw_field_3,
+                host_filter: __kw_field_4,
+                operation: __kw_field_5,
+                permission_type: __kw_field_6,
                 unknown_tagged_fields,
             })
         }
@@ -132,7 +139,7 @@ pub mod describe_acls_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_i8(self.resource_type_filter)?;
             if Self::is_flexible(version) {
                 encoder.write_compact_nullable_string(self.resource_name_filter.as_ref())?;
@@ -157,7 +164,7 @@ pub mod describe_acls_request {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -166,12 +173,12 @@ pub mod describe_acls_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             DescribeAclsRequest::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| DescribeAclsRequest::encode_validated(self, encoder, version),
@@ -182,7 +189,7 @@ pub mod describe_acls_request {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -217,14 +224,15 @@ pub mod describe_acls_response {
         /// The resource pattern type.
         pub pattern_type: i8,
         /// The `ACLs`.
-        pub acls: Vec<AclDescription>,
+        pub acls: ::std::vec::Vec<AclDescription>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
     }
 
     impl DescribeAclsResource {
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(1, 3);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(2, 3));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(2, 3));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
@@ -232,9 +240,12 @@ pub mod describe_acls_response {
     }
 
     impl DescribeAclsResource {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(EncodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(EncodeError::UnsupportedVersion {
                     message: "DescribeAclsResource",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
@@ -245,46 +256,49 @@ pub mod describe_acls_response {
                 value.validate_for_version(version)?;
             }
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: "DescribeAclsResource",
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
-    impl Default for DescribeAclsResource {
+    impl ::core::default::Default for DescribeAclsResource {
         fn default() -> Self {
             Self {
                 resource_type: 0,
                 resource_name: StrBytes::default(),
                 pattern_type: 3,
-                acls: Vec::new(),
+                acls: ::std::vec::Vec::new(),
                 unknown_tagged_fields: TaggedFields::default(),
             }
         }
     }
 
     impl KafkaDecode for DescribeAclsResource {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(DecodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(DecodeError::UnsupportedVersion {
                     message: "DescribeAclsResource",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
                 });
             }
 
-            let resource_type = decoder.read_i8()?;
-            let resource_name = if Self::is_flexible(version) {
+            let __kw_field_0 = decoder.read_i8()?;
+            let __kw_field_1 = if Self::is_flexible(version) {
                 decoder.read_compact_string()?
             } else {
                 decoder.read_string()?
             };
-            let pattern_type = decoder.read_i8()?;
-            let acls = {
+            let __kw_field_2 = decoder.read_i8()?;
+            let __kw_field_3 = {
                 let length = if Self::is_flexible(version) {
                     decoder.read_compact_array_len()?
                 } else {
@@ -298,11 +312,11 @@ pub mod describe_acls_response {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                resource_type,
-                resource_name,
-                pattern_type,
-                acls,
+            ::core::result::Result::Ok(Self {
+                resource_type: __kw_field_0,
+                resource_name: __kw_field_1,
+                pattern_type: __kw_field_2,
+                acls: __kw_field_3,
                 unknown_tagged_fields,
             })
         }
@@ -313,7 +327,7 @@ pub mod describe_acls_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_i8(self.resource_type)?;
             if Self::is_flexible(version) {
                 encoder.write_compact_string(&self.resource_name)?;
@@ -334,7 +348,7 @@ pub mod describe_acls_response {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -343,12 +357,12 @@ pub mod describe_acls_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             DescribeAclsResource::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| DescribeAclsResource::encode_validated(self, encoder, version),
@@ -359,7 +373,7 @@ pub mod describe_acls_response {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -371,7 +385,7 @@ pub mod describe_acls_response {
 
     /// `AclDescription` as declared by the `DescribeAcls` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct AclDescription {
         /// The ACL principal.
         pub principal: StrBytes,
@@ -387,7 +401,8 @@ pub mod describe_acls_response {
 
     impl AclDescription {
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(1, 3);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(2, 3));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(2, 3));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
@@ -395,9 +410,12 @@ pub mod describe_acls_response {
     }
 
     impl AclDescription {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(EncodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(EncodeError::UnsupportedVersion {
                     message: "AclDescription",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
@@ -405,49 +423,52 @@ pub mod describe_acls_response {
             }
 
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: "AclDescription",
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for AclDescription {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(DecodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(DecodeError::UnsupportedVersion {
                     message: "AclDescription",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
                 });
             }
 
-            let principal = if Self::is_flexible(version) {
+            let __kw_field_0 = if Self::is_flexible(version) {
                 decoder.read_compact_string()?
             } else {
                 decoder.read_string()?
             };
-            let host = if Self::is_flexible(version) {
+            let __kw_field_1 = if Self::is_flexible(version) {
                 decoder.read_compact_string()?
             } else {
                 decoder.read_string()?
             };
-            let operation = decoder.read_i8()?;
-            let permission_type = decoder.read_i8()?;
+            let __kw_field_2 = decoder.read_i8()?;
+            let __kw_field_3 = decoder.read_i8()?;
             let unknown_tagged_fields = if Self::is_flexible(version) {
                 decoder.read_tagged_fields()?
             } else {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                principal,
-                host,
-                operation,
-                permission_type,
+            ::core::result::Result::Ok(Self {
+                principal: __kw_field_0,
+                host: __kw_field_1,
+                operation: __kw_field_2,
+                permission_type: __kw_field_3,
                 unknown_tagged_fields,
             })
         }
@@ -458,7 +479,7 @@ pub mod describe_acls_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             if Self::is_flexible(version) {
                 encoder.write_compact_string(&self.principal)?;
             } else {
@@ -476,7 +497,7 @@ pub mod describe_acls_response {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -485,12 +506,12 @@ pub mod describe_acls_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             AclDescription::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| AclDescription::encode_validated(self, encoder, version),
@@ -501,7 +522,7 @@ pub mod describe_acls_response {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -520,20 +541,20 @@ pub mod describe_acls_response {
         /// The error code, or 0 if there was no error.
         pub error_code: i16,
         /// The error message, or null if there was no error.
-        pub error_message: Option<StrBytes>,
+        pub error_message: ::core::option::Option<StrBytes>,
         /// Each Resource that is referenced in an ACL.
-        pub resources: Vec<DescribeAclsResource>,
+        pub resources: ::std::vec::Vec<DescribeAclsResource>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
     }
 
-    impl Default for DescribeAclsResponse {
+    impl ::core::default::Default for DescribeAclsResponse {
         fn default() -> Self {
             Self {
                 throttle_time_ms: 0,
                 error_code: 0,
-                error_message: Some(StrBytes::default()),
-                resources: Vec::new(),
+                error_message: ::core::option::Option::Some(StrBytes::default()),
+                resources: ::std::vec::Vec::new(),
                 unknown_tagged_fields: TaggedFields::default(),
             }
         }
@@ -542,7 +563,8 @@ pub mod describe_acls_response {
     impl KafkaMessage for DescribeAclsResponse {
         const NAME: &'static str = "DescribeAclsResponse";
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(1, 3);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(2, 3));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(2, 3));
     }
 
     impl KafkaResponse for DescribeAclsResponse {
@@ -550,35 +572,41 @@ pub mod describe_acls_response {
     }
 
     impl DescribeAclsResponse {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             crate::message::ensure_encode_version::<Self>(version)?;
 
             for value in &self.resources {
                 value.validate_for_version(version)?;
             }
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: Self::NAME,
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for DescribeAclsResponse {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             crate::message::ensure_decode_version::<Self>(version)?;
 
-            let throttle_time_ms = decoder.read_i32()?;
-            let error_code = decoder.read_i16()?;
-            let error_message = if Self::is_flexible(version) {
+            let __kw_field_0 = decoder.read_i32()?;
+            let __kw_field_1 = decoder.read_i16()?;
+            let __kw_field_2 = if Self::is_flexible(version) {
                 decoder.read_compact_nullable_string()?
             } else {
                 decoder.read_nullable_string()?
             };
-            let resources = {
+            let __kw_field_3 = {
                 let length = if Self::is_flexible(version) {
                     decoder.read_compact_array_len()?
                 } else {
@@ -594,11 +622,11 @@ pub mod describe_acls_response {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                throttle_time_ms,
-                error_code,
-                error_message,
-                resources,
+            ::core::result::Result::Ok(Self {
+                throttle_time_ms: __kw_field_0,
+                error_code: __kw_field_1,
+                error_message: __kw_field_2,
+                resources: __kw_field_3,
                 unknown_tagged_fields,
             })
         }
@@ -609,7 +637,7 @@ pub mod describe_acls_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_i32(self.throttle_time_ms)?;
             encoder.write_i16(self.error_code)?;
             if Self::is_flexible(version) {
@@ -630,7 +658,7 @@ pub mod describe_acls_response {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -639,12 +667,12 @@ pub mod describe_acls_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             DescribeAclsResponse::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| DescribeAclsResponse::encode_validated(self, encoder, version),
@@ -655,7 +683,7 @@ pub mod describe_acls_response {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -679,7 +707,7 @@ pub const DESCRIBE_ACLS_REQUEST_DESCRIPTOR: MessageDescriptor = MessageDescripto
     "DescribeAclsRequest",
     MessageDirection::Request,
     VersionRange::new(1, 3),
-    Some(VersionRange::new(2, 3)),
+    ::core::option::Option::Some(VersionRange::new(2, 3)),
 );
 
 /// Static metadata for [`DescribeAclsResponse`].
@@ -688,7 +716,7 @@ pub const DESCRIBE_ACLS_RESPONSE_DESCRIPTOR: MessageDescriptor = MessageDescript
     "DescribeAclsResponse",
     MessageDirection::Response,
     VersionRange::new(1, 3),
-    Some(VersionRange::new(2, 3)),
+    ::core::option::Option::Some(VersionRange::new(2, 3)),
 );
 
 /// Static pair metadata for the `DescribeAcls` API.
@@ -697,6 +725,6 @@ pub const DESCRIBE_ACLS_API_DESCRIPTOR: ApiDescriptor = ApiDescriptor::new(
     &DESCRIBE_ACLS_REQUEST_DESCRIPTOR,
     &DESCRIBE_ACLS_RESPONSE_DESCRIPTOR,
     VersionRange::new(1, 3),
-    Some(VersionRange::new(2, 3)),
+    ::core::option::Option::Some(VersionRange::new(2, 3)),
     false,
 );

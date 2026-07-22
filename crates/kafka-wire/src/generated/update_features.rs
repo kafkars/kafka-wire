@@ -36,7 +36,8 @@ pub mod update_features_request {
 
     impl FeatureUpdateKey {
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 2);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 2));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(0, 2));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
@@ -44,9 +45,12 @@ pub mod update_features_request {
     }
 
     impl FeatureUpdateKey {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(EncodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(EncodeError::UnsupportedVersion {
                     message: "FeatureUpdateKey",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
@@ -54,31 +58,31 @@ pub mod update_features_request {
             }
 
             if version.value() > 0 && self.allow_downgrade {
-                return Err(EncodeError::FieldNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::FieldNotRepresentable {
                     message: "FeatureUpdateKey",
                     field: "AllowDowngrade",
                     version,
                 });
             }
             if version.value() < 1 && self.upgrade_type != 1 {
-                return Err(EncodeError::FieldNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::FieldNotRepresentable {
                     message: "FeatureUpdateKey",
                     field: "UpgradeType",
                     version,
                 });
             }
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: "FeatureUpdateKey",
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
-    impl Default for FeatureUpdateKey {
+    impl ::core::default::Default for FeatureUpdateKey {
         fn default() -> Self {
             Self {
                 feature: StrBytes::default(),
@@ -91,23 +95,26 @@ pub mod update_features_request {
     }
 
     impl KafkaDecode for FeatureUpdateKey {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(DecodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(DecodeError::UnsupportedVersion {
                     message: "FeatureUpdateKey",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
                 });
             }
 
-            let feature = decoder.read_compact_string()?;
-            let max_version_level = decoder.read_i16()?;
-            let allow_downgrade = if version.value() <= 0 {
+            let __kw_field_0 = decoder.read_compact_string()?;
+            let __kw_field_1 = decoder.read_i16()?;
+            let __kw_field_2 = if version.value() <= 0 {
                 decoder.read_bool()?
             } else {
                 false
             };
-            let upgrade_type = if version.value() >= 1 {
+            let __kw_field_3 = if version.value() >= 1 {
                 decoder.read_i8()?
             } else {
                 1
@@ -118,11 +125,11 @@ pub mod update_features_request {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                feature,
-                max_version_level,
-                allow_downgrade,
-                upgrade_type,
+            ::core::result::Result::Ok(Self {
+                feature: __kw_field_0,
+                max_version_level: __kw_field_1,
+                allow_downgrade: __kw_field_2,
+                upgrade_type: __kw_field_3,
                 unknown_tagged_fields,
             })
         }
@@ -133,7 +140,7 @@ pub mod update_features_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_compact_string(&self.feature)?;
             encoder.write_i16(self.max_version_level)?;
             if version.value() <= 0 {
@@ -147,7 +154,7 @@ pub mod update_features_request {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -156,12 +163,12 @@ pub mod update_features_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             FeatureUpdateKey::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| FeatureUpdateKey::encode_validated(self, encoder, version),
@@ -172,7 +179,7 @@ pub mod update_features_request {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -189,18 +196,18 @@ pub mod update_features_request {
         /// How long to wait in milliseconds before timing out the request.
         pub timeout_ms: i32,
         /// The list of updates to finalized features.
-        pub feature_updates: Vec<FeatureUpdateKey>,
+        pub feature_updates: ::std::vec::Vec<FeatureUpdateKey>,
         /// True if we should validate the request, but not perform the upgrade or downgrade.
         pub validate_only: bool,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
     }
 
-    impl Default for UpdateFeaturesRequest {
+    impl ::core::default::Default for UpdateFeaturesRequest {
         fn default() -> Self {
             Self {
                 timeout_ms: 60_000,
-                feature_updates: Vec::new(),
+                feature_updates: ::std::vec::Vec::new(),
                 validate_only: false,
                 unknown_tagged_fields: TaggedFields::default(),
             }
@@ -210,7 +217,8 @@ pub mod update_features_request {
     impl KafkaMessage for UpdateFeaturesRequest {
         const NAME: &'static str = "UpdateFeaturesRequest";
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 2);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 2));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(0, 2));
     }
 
     impl KafkaRequest for UpdateFeaturesRequest {
@@ -223,11 +231,14 @@ pub mod update_features_request {
     }
 
     impl UpdateFeaturesRequest {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             crate::message::ensure_encode_version::<Self>(version)?;
 
             if version.value() < 1 && self.validate_only {
-                return Err(EncodeError::FieldNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::FieldNotRepresentable {
                     message: Self::NAME,
                     field: "ValidateOnly",
                     version,
@@ -237,26 +248,29 @@ pub mod update_features_request {
                 value.validate_for_version(version)?;
             }
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: Self::NAME,
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for UpdateFeaturesRequest {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             crate::message::ensure_decode_version::<Self>(version)?;
 
-            let timeout_ms = decoder.read_i32()?;
-            let feature_updates = {
+            let __kw_field_0 = decoder.read_i32()?;
+            let __kw_field_1 = {
                 let length = decoder.read_compact_array_len()?;
                 decoder.read_vec(length, |decoder| FeatureUpdateKey::decode(decoder, version))?
             };
-            let validate_only = if version.value() >= 1 {
+            let __kw_field_2 = if version.value() >= 1 {
                 decoder.read_bool()?
             } else {
                 false
@@ -267,10 +281,10 @@ pub mod update_features_request {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                timeout_ms,
-                feature_updates,
-                validate_only,
+            ::core::result::Result::Ok(Self {
+                timeout_ms: __kw_field_0,
+                feature_updates: __kw_field_1,
+                validate_only: __kw_field_2,
                 unknown_tagged_fields,
             })
         }
@@ -281,7 +295,7 @@ pub mod update_features_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_i32(self.timeout_ms)?;
             encoder.write_compact_array_len(self.feature_updates.len())?;
             for value in &self.feature_updates {
@@ -295,7 +309,7 @@ pub mod update_features_request {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -304,12 +318,12 @@ pub mod update_features_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             UpdateFeaturesRequest::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| UpdateFeaturesRequest::encode_validated(self, encoder, version),
@@ -320,7 +334,7 @@ pub mod update_features_request {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -353,14 +367,15 @@ pub mod update_features_response {
         /// The feature update error code or `0` if the feature update succeeded.
         pub error_code: i16,
         /// The feature update error, or `null` if the feature update succeeded.
-        pub error_message: Option<StrBytes>,
+        pub error_message: ::core::option::Option<StrBytes>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
     }
 
     impl UpdatableFeatureResult {
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 1);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 1));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(0, 1));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
@@ -368,9 +383,12 @@ pub mod update_features_response {
     }
 
     impl UpdatableFeatureResult {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(EncodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(EncodeError::UnsupportedVersion {
                     message: "UpdatableFeatureResult",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
@@ -378,50 +396,53 @@ pub mod update_features_response {
             }
 
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: "UpdatableFeatureResult",
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
-    impl Default for UpdatableFeatureResult {
+    impl ::core::default::Default for UpdatableFeatureResult {
         fn default() -> Self {
             Self {
                 feature: StrBytes::default(),
                 error_code: 0,
-                error_message: Some(StrBytes::default()),
+                error_message: ::core::option::Option::Some(StrBytes::default()),
                 unknown_tagged_fields: TaggedFields::default(),
             }
         }
     }
 
     impl KafkaDecode for UpdatableFeatureResult {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(DecodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(DecodeError::UnsupportedVersion {
                     message: "UpdatableFeatureResult",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
                 });
             }
 
-            let feature = decoder.read_compact_string()?;
-            let error_code = decoder.read_i16()?;
-            let error_message = decoder.read_compact_nullable_string()?;
+            let __kw_field_0 = decoder.read_compact_string()?;
+            let __kw_field_1 = decoder.read_i16()?;
+            let __kw_field_2 = decoder.read_compact_nullable_string()?;
             let unknown_tagged_fields = if Self::is_flexible(version) {
                 decoder.read_tagged_fields()?
             } else {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                feature,
-                error_code,
-                error_message,
+            ::core::result::Result::Ok(Self {
+                feature: __kw_field_0,
+                error_code: __kw_field_1,
+                error_message: __kw_field_2,
                 unknown_tagged_fields,
             })
         }
@@ -432,7 +453,7 @@ pub mod update_features_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_compact_string(&self.feature)?;
             encoder.write_i16(self.error_code)?;
             encoder.write_compact_nullable_string(self.error_message.as_ref())?;
@@ -441,7 +462,7 @@ pub mod update_features_response {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -450,12 +471,12 @@ pub mod update_features_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             UpdatableFeatureResult::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| UpdatableFeatureResult::encode_validated(self, encoder, version),
@@ -466,7 +487,7 @@ pub mod update_features_response {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -485,20 +506,20 @@ pub mod update_features_response {
         /// The top-level error code, or `0` if there was no top-level error.
         pub error_code: i16,
         /// The top-level error message, or `null` if there was no top-level error.
-        pub error_message: Option<StrBytes>,
+        pub error_message: ::core::option::Option<StrBytes>,
         /// Results for each feature update.
-        pub results: Vec<UpdatableFeatureResult>,
+        pub results: ::std::vec::Vec<UpdatableFeatureResult>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
     }
 
-    impl Default for UpdateFeaturesResponse {
+    impl ::core::default::Default for UpdateFeaturesResponse {
         fn default() -> Self {
             Self {
                 throttle_time_ms: 0,
                 error_code: 0,
-                error_message: Some(StrBytes::default()),
-                results: Vec::new(),
+                error_message: ::core::option::Option::Some(StrBytes::default()),
+                results: ::std::vec::Vec::new(),
                 unknown_tagged_fields: TaggedFields::default(),
             }
         }
@@ -507,7 +528,8 @@ pub mod update_features_response {
     impl KafkaMessage for UpdateFeaturesResponse {
         const NAME: &'static str = "UpdateFeaturesResponse";
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 2);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 2));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(0, 2));
     }
 
     impl KafkaResponse for UpdateFeaturesResponse {
@@ -515,7 +537,10 @@ pub mod update_features_response {
     }
 
     impl UpdateFeaturesResponse {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             crate::message::ensure_encode_version::<Self>(version)?;
 
             if version.value() <= 1 {
@@ -524,30 +549,33 @@ pub mod update_features_response {
                 }
             }
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: Self::NAME,
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for UpdateFeaturesResponse {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             crate::message::ensure_decode_version::<Self>(version)?;
 
-            let throttle_time_ms = decoder.read_i32()?;
-            let error_code = decoder.read_i16()?;
-            let error_message = decoder.read_compact_nullable_string()?;
-            let results = if version.value() <= 1 {
+            let __kw_field_0 = decoder.read_i32()?;
+            let __kw_field_1 = decoder.read_i16()?;
+            let __kw_field_2 = decoder.read_compact_nullable_string()?;
+            let __kw_field_3 = if version.value() <= 1 {
                 let length = decoder.read_compact_array_len()?;
                 decoder.read_vec(length, |decoder| {
                     UpdatableFeatureResult::decode(decoder, version)
                 })?
             } else {
-                Vec::new()
+                ::std::vec::Vec::new()
             };
             let unknown_tagged_fields = if Self::is_flexible(version) {
                 decoder.read_tagged_fields()?
@@ -555,11 +583,11 @@ pub mod update_features_response {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                throttle_time_ms,
-                error_code,
-                error_message,
-                results,
+            ::core::result::Result::Ok(Self {
+                throttle_time_ms: __kw_field_0,
+                error_code: __kw_field_1,
+                error_message: __kw_field_2,
+                results: __kw_field_3,
                 unknown_tagged_fields,
             })
         }
@@ -570,7 +598,7 @@ pub mod update_features_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_i32(self.throttle_time_ms)?;
             encoder.write_i16(self.error_code)?;
             encoder.write_compact_nullable_string(self.error_message.as_ref())?;
@@ -585,7 +613,7 @@ pub mod update_features_response {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -594,12 +622,12 @@ pub mod update_features_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             UpdateFeaturesResponse::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| UpdateFeaturesResponse::encode_validated(self, encoder, version),
@@ -610,7 +638,7 @@ pub mod update_features_response {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -634,7 +662,7 @@ pub const UPDATE_FEATURES_REQUEST_DESCRIPTOR: MessageDescriptor = MessageDescrip
     "UpdateFeaturesRequest",
     MessageDirection::Request,
     VersionRange::new(0, 2),
-    Some(VersionRange::new(0, 2)),
+    ::core::option::Option::Some(VersionRange::new(0, 2)),
 );
 
 /// Static metadata for [`UpdateFeaturesResponse`].
@@ -643,7 +671,7 @@ pub const UPDATE_FEATURES_RESPONSE_DESCRIPTOR: MessageDescriptor = MessageDescri
     "UpdateFeaturesResponse",
     MessageDirection::Response,
     VersionRange::new(0, 2),
-    Some(VersionRange::new(0, 2)),
+    ::core::option::Option::Some(VersionRange::new(0, 2)),
 );
 
 /// Static pair metadata for the `UpdateFeatures` API.
@@ -652,6 +680,6 @@ pub const UPDATE_FEATURES_API_DESCRIPTOR: ApiDescriptor = ApiDescriptor::new(
     &UPDATE_FEATURES_REQUEST_DESCRIPTOR,
     &UPDATE_FEATURES_RESPONSE_DESCRIPTOR,
     VersionRange::new(0, 2),
-    Some(VersionRange::new(0, 2)),
+    ::core::option::Option::Some(VersionRange::new(0, 2)),
     false,
 );

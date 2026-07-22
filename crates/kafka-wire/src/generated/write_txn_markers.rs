@@ -20,7 +20,7 @@ pub mod write_txn_markers_request {
 
     /// `WritableTxnMarker` as declared by the `WriteTxnMarkers` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct WritableTxnMarker {
         /// The current producer ID.
         pub producer_id: i64,
@@ -29,7 +29,7 @@ pub mod write_txn_markers_request {
         /// The result of the transaction to write to the partitions (false = ABORT, true = COMMIT).
         pub transaction_result: bool,
         /// Each topic that we want to write transaction marker(s) for.
-        pub topics: Vec<WritableTxnMarkerTopic>,
+        pub topics: ::std::vec::Vec<WritableTxnMarkerTopic>,
         /// Epoch associated with the transaction state partition hosted by this transaction coordinator.
         pub coordinator_epoch: i32,
         /// Transaction version of the marker. Ex: 0/1 = legacy (TV0/TV1), 2 = TV2 etc.
@@ -40,7 +40,8 @@ pub mod write_txn_markers_request {
 
     impl WritableTxnMarker {
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(1, 2);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(1, 2));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(1, 2));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
@@ -48,9 +49,12 @@ pub mod write_txn_markers_request {
     }
 
     impl WritableTxnMarker {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(EncodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(EncodeError::UnsupportedVersion {
                     message: "WritableTxnMarker",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
@@ -61,37 +65,40 @@ pub mod write_txn_markers_request {
                 value.validate_for_version(version)?;
             }
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: "WritableTxnMarker",
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for WritableTxnMarker {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(DecodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(DecodeError::UnsupportedVersion {
                     message: "WritableTxnMarker",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
                 });
             }
 
-            let producer_id = decoder.read_i64()?;
-            let producer_epoch = decoder.read_i16()?;
-            let transaction_result = decoder.read_bool()?;
-            let topics = {
+            let __kw_field_0 = decoder.read_i64()?;
+            let __kw_field_1 = decoder.read_i16()?;
+            let __kw_field_2 = decoder.read_bool()?;
+            let __kw_field_3 = {
                 let length = decoder.read_compact_array_len()?;
                 decoder.read_vec(length, |decoder| {
                     WritableTxnMarkerTopic::decode(decoder, version)
                 })?
             };
-            let coordinator_epoch = decoder.read_i32()?;
-            let transaction_version = if version.value() >= 2 {
+            let __kw_field_4 = decoder.read_i32()?;
+            let __kw_field_5 = if version.value() >= 2 {
                 decoder.read_i8()?
             } else {
                 0
@@ -102,13 +109,13 @@ pub mod write_txn_markers_request {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                producer_id,
-                producer_epoch,
-                transaction_result,
-                topics,
-                coordinator_epoch,
-                transaction_version,
+            ::core::result::Result::Ok(Self {
+                producer_id: __kw_field_0,
+                producer_epoch: __kw_field_1,
+                transaction_result: __kw_field_2,
+                topics: __kw_field_3,
+                coordinator_epoch: __kw_field_4,
+                transaction_version: __kw_field_5,
                 unknown_tagged_fields,
             })
         }
@@ -119,7 +126,7 @@ pub mod write_txn_markers_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_i64(self.producer_id)?;
             encoder.write_i16(self.producer_epoch)?;
             encoder.write_bool(self.transaction_result)?;
@@ -136,7 +143,7 @@ pub mod write_txn_markers_request {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -145,12 +152,12 @@ pub mod write_txn_markers_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             WritableTxnMarker::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| WritableTxnMarker::encode_validated(self, encoder, version),
@@ -161,7 +168,7 @@ pub mod write_txn_markers_request {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -173,19 +180,20 @@ pub mod write_txn_markers_request {
 
     /// `WritableTxnMarkerTopic` as declared by the `WriteTxnMarkers` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct WritableTxnMarkerTopic {
         /// The topic name.
         pub name: StrBytes,
         /// The indexes of the partitions to write transaction markers for.
-        pub partition_indexes: Vec<i32>,
+        pub partition_indexes: ::std::vec::Vec<i32>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
     }
 
     impl WritableTxnMarkerTopic {
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(1, 2);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(1, 2));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(1, 2));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
@@ -193,9 +201,12 @@ pub mod write_txn_markers_request {
     }
 
     impl WritableTxnMarkerTopic {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(EncodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(EncodeError::UnsupportedVersion {
                     message: "WritableTxnMarkerTopic",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
@@ -203,28 +214,31 @@ pub mod write_txn_markers_request {
             }
 
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: "WritableTxnMarkerTopic",
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for WritableTxnMarkerTopic {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(DecodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(DecodeError::UnsupportedVersion {
                     message: "WritableTxnMarkerTopic",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
                 });
             }
 
-            let name = decoder.read_compact_string()?;
-            let partition_indexes = {
+            let __kw_field_0 = decoder.read_compact_string()?;
+            let __kw_field_1 = {
                 let length = decoder.read_compact_array_len()?;
                 decoder.read_vec(length, Decoder::read_i32)?
             };
@@ -234,9 +248,9 @@ pub mod write_txn_markers_request {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                name,
-                partition_indexes,
+            ::core::result::Result::Ok(Self {
+                name: __kw_field_0,
+                partition_indexes: __kw_field_1,
                 unknown_tagged_fields,
             })
         }
@@ -247,7 +261,7 @@ pub mod write_txn_markers_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_compact_string(&self.name)?;
             encoder.write_compact_array_len(self.partition_indexes.len())?;
             for value in &self.partition_indexes {
@@ -258,7 +272,7 @@ pub mod write_txn_markers_request {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -267,12 +281,12 @@ pub mod write_txn_markers_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             WritableTxnMarkerTopic::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| WritableTxnMarkerTopic::encode_validated(self, encoder, version),
@@ -283,7 +297,7 @@ pub mod write_txn_markers_request {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -295,10 +309,10 @@ pub mod write_txn_markers_request {
 
     /// Request body for the `WriteTxnMarkers` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct WriteTxnMarkersRequest {
         /// The transaction markers to be written.
-        pub markers: Vec<WritableTxnMarker>,
+        pub markers: ::std::vec::Vec<WritableTxnMarker>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
     }
@@ -306,7 +320,8 @@ pub mod write_txn_markers_request {
     impl KafkaMessage for WriteTxnMarkersRequest {
         const NAME: &'static str = "WriteTxnMarkersRequest";
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(1, 2);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(1, 2));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(1, 2));
     }
 
     impl KafkaRequest for WriteTxnMarkersRequest {
@@ -319,28 +334,34 @@ pub mod write_txn_markers_request {
     }
 
     impl WriteTxnMarkersRequest {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             crate::message::ensure_encode_version::<Self>(version)?;
 
             for value in &self.markers {
                 value.validate_for_version(version)?;
             }
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: Self::NAME,
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for WriteTxnMarkersRequest {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             crate::message::ensure_decode_version::<Self>(version)?;
 
-            let markers = {
+            let __kw_field_0 = {
                 let length = decoder.read_compact_array_len()?;
                 decoder.read_vec(length, |decoder| {
                     WritableTxnMarker::decode(decoder, version)
@@ -352,8 +373,8 @@ pub mod write_txn_markers_request {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                markers,
+            ::core::result::Result::Ok(Self {
+                markers: __kw_field_0,
                 unknown_tagged_fields,
             })
         }
@@ -364,7 +385,7 @@ pub mod write_txn_markers_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_compact_array_len(self.markers.len())?;
             for value in &self.markers {
                 value.encode_validated(encoder, version)?;
@@ -374,7 +395,7 @@ pub mod write_txn_markers_request {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -383,12 +404,12 @@ pub mod write_txn_markers_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             WriteTxnMarkersRequest::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| WriteTxnMarkersRequest::encode_validated(self, encoder, version),
@@ -399,7 +420,7 @@ pub mod write_txn_markers_request {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -425,19 +446,20 @@ pub mod write_txn_markers_response {
 
     /// `WritableTxnMarkerResult` as declared by the `WriteTxnMarkers` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct WritableTxnMarkerResult {
         /// The current producer ID in use by the transactional ID.
         pub producer_id: i64,
         /// The results by topic.
-        pub topics: Vec<WritableTxnMarkerTopicResult>,
+        pub topics: ::std::vec::Vec<WritableTxnMarkerTopicResult>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
     }
 
     impl WritableTxnMarkerResult {
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(1, 2);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(1, 2));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(1, 2));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
@@ -445,9 +467,12 @@ pub mod write_txn_markers_response {
     }
 
     impl WritableTxnMarkerResult {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(EncodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(EncodeError::UnsupportedVersion {
                     message: "WritableTxnMarkerResult",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
@@ -458,28 +483,31 @@ pub mod write_txn_markers_response {
                 value.validate_for_version(version)?;
             }
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: "WritableTxnMarkerResult",
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for WritableTxnMarkerResult {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(DecodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(DecodeError::UnsupportedVersion {
                     message: "WritableTxnMarkerResult",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
                 });
             }
 
-            let producer_id = decoder.read_i64()?;
-            let topics = {
+            let __kw_field_0 = decoder.read_i64()?;
+            let __kw_field_1 = {
                 let length = decoder.read_compact_array_len()?;
                 decoder.read_vec(length, |decoder| {
                     WritableTxnMarkerTopicResult::decode(decoder, version)
@@ -491,9 +519,9 @@ pub mod write_txn_markers_response {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                producer_id,
-                topics,
+            ::core::result::Result::Ok(Self {
+                producer_id: __kw_field_0,
+                topics: __kw_field_1,
                 unknown_tagged_fields,
             })
         }
@@ -504,7 +532,7 @@ pub mod write_txn_markers_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_i64(self.producer_id)?;
             encoder.write_compact_array_len(self.topics.len())?;
             for value in &self.topics {
@@ -515,7 +543,7 @@ pub mod write_txn_markers_response {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -524,12 +552,12 @@ pub mod write_txn_markers_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             WritableTxnMarkerResult::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| WritableTxnMarkerResult::encode_validated(self, encoder, version),
@@ -540,7 +568,7 @@ pub mod write_txn_markers_response {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -552,19 +580,20 @@ pub mod write_txn_markers_response {
 
     /// `WritableTxnMarkerTopicResult` as declared by the `WriteTxnMarkers` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct WritableTxnMarkerTopicResult {
         /// The topic name.
         pub name: StrBytes,
         /// The results by partition.
-        pub partitions: Vec<WritableTxnMarkerPartitionResult>,
+        pub partitions: ::std::vec::Vec<WritableTxnMarkerPartitionResult>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
     }
 
     impl WritableTxnMarkerTopicResult {
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(1, 2);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(1, 2));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(1, 2));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
@@ -572,9 +601,12 @@ pub mod write_txn_markers_response {
     }
 
     impl WritableTxnMarkerTopicResult {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(EncodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(EncodeError::UnsupportedVersion {
                     message: "WritableTxnMarkerTopicResult",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
@@ -585,28 +617,31 @@ pub mod write_txn_markers_response {
                 value.validate_for_version(version)?;
             }
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: "WritableTxnMarkerTopicResult",
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for WritableTxnMarkerTopicResult {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(DecodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(DecodeError::UnsupportedVersion {
                     message: "WritableTxnMarkerTopicResult",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
                 });
             }
 
-            let name = decoder.read_compact_string()?;
-            let partitions = {
+            let __kw_field_0 = decoder.read_compact_string()?;
+            let __kw_field_1 = {
                 let length = decoder.read_compact_array_len()?;
                 decoder.read_vec(length, |decoder| {
                     WritableTxnMarkerPartitionResult::decode(decoder, version)
@@ -618,9 +653,9 @@ pub mod write_txn_markers_response {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                name,
-                partitions,
+            ::core::result::Result::Ok(Self {
+                name: __kw_field_0,
+                partitions: __kw_field_1,
                 unknown_tagged_fields,
             })
         }
@@ -631,7 +666,7 @@ pub mod write_txn_markers_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_compact_string(&self.name)?;
             encoder.write_compact_array_len(self.partitions.len())?;
             for value in &self.partitions {
@@ -642,7 +677,7 @@ pub mod write_txn_markers_response {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -651,12 +686,12 @@ pub mod write_txn_markers_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             WritableTxnMarkerTopicResult::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| WritableTxnMarkerTopicResult::encode_validated(self, encoder, version),
@@ -667,7 +702,7 @@ pub mod write_txn_markers_response {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -679,7 +714,7 @@ pub mod write_txn_markers_response {
 
     /// `WritableTxnMarkerPartitionResult` as declared by the `WriteTxnMarkers` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct WritableTxnMarkerPartitionResult {
         /// The partition index.
         pub partition_index: i32,
@@ -691,7 +726,8 @@ pub mod write_txn_markers_response {
 
     impl WritableTxnMarkerPartitionResult {
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(1, 2);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(1, 2));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(1, 2));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
@@ -699,9 +735,12 @@ pub mod write_txn_markers_response {
     }
 
     impl WritableTxnMarkerPartitionResult {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(EncodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(EncodeError::UnsupportedVersion {
                     message: "WritableTxnMarkerPartitionResult",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
@@ -709,37 +748,40 @@ pub mod write_txn_markers_response {
             }
 
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: "WritableTxnMarkerPartitionResult",
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for WritableTxnMarkerPartitionResult {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(DecodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(DecodeError::UnsupportedVersion {
                     message: "WritableTxnMarkerPartitionResult",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
                 });
             }
 
-            let partition_index = decoder.read_i32()?;
-            let error_code = decoder.read_i16()?;
+            let __kw_field_0 = decoder.read_i32()?;
+            let __kw_field_1 = decoder.read_i16()?;
             let unknown_tagged_fields = if Self::is_flexible(version) {
                 decoder.read_tagged_fields()?
             } else {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                partition_index,
-                error_code,
+            ::core::result::Result::Ok(Self {
+                partition_index: __kw_field_0,
+                error_code: __kw_field_1,
                 unknown_tagged_fields,
             })
         }
@@ -750,7 +792,7 @@ pub mod write_txn_markers_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_i32(self.partition_index)?;
             encoder.write_i16(self.error_code)?;
 
@@ -758,7 +800,7 @@ pub mod write_txn_markers_response {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -767,12 +809,12 @@ pub mod write_txn_markers_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             WritableTxnMarkerPartitionResult::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| {
@@ -785,7 +827,7 @@ pub mod write_txn_markers_response {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -801,10 +843,10 @@ pub mod write_txn_markers_response {
 
     /// Response body for the `WriteTxnMarkers` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct WriteTxnMarkersResponse {
         /// The results for writing makers.
-        pub markers: Vec<WritableTxnMarkerResult>,
+        pub markers: ::std::vec::Vec<WritableTxnMarkerResult>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
     }
@@ -812,7 +854,8 @@ pub mod write_txn_markers_response {
     impl KafkaMessage for WriteTxnMarkersResponse {
         const NAME: &'static str = "WriteTxnMarkersResponse";
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(1, 2);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(1, 2));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(1, 2));
     }
 
     impl KafkaResponse for WriteTxnMarkersResponse {
@@ -820,28 +863,34 @@ pub mod write_txn_markers_response {
     }
 
     impl WriteTxnMarkersResponse {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             crate::message::ensure_encode_version::<Self>(version)?;
 
             for value in &self.markers {
                 value.validate_for_version(version)?;
             }
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: Self::NAME,
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for WriteTxnMarkersResponse {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             crate::message::ensure_decode_version::<Self>(version)?;
 
-            let markers = {
+            let __kw_field_0 = {
                 let length = decoder.read_compact_array_len()?;
                 decoder.read_vec(length, |decoder| {
                     WritableTxnMarkerResult::decode(decoder, version)
@@ -853,8 +902,8 @@ pub mod write_txn_markers_response {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                markers,
+            ::core::result::Result::Ok(Self {
+                markers: __kw_field_0,
                 unknown_tagged_fields,
             })
         }
@@ -865,7 +914,7 @@ pub mod write_txn_markers_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_compact_array_len(self.markers.len())?;
             for value in &self.markers {
                 value.encode_validated(encoder, version)?;
@@ -875,7 +924,7 @@ pub mod write_txn_markers_response {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -884,12 +933,12 @@ pub mod write_txn_markers_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             WriteTxnMarkersResponse::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| WriteTxnMarkersResponse::encode_validated(self, encoder, version),
@@ -900,7 +949,7 @@ pub mod write_txn_markers_response {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -924,7 +973,7 @@ pub const WRITE_TXN_MARKERS_REQUEST_DESCRIPTOR: MessageDescriptor = MessageDescr
     "WriteTxnMarkersRequest",
     MessageDirection::Request,
     VersionRange::new(1, 2),
-    Some(VersionRange::new(1, 2)),
+    ::core::option::Option::Some(VersionRange::new(1, 2)),
 );
 
 /// Static metadata for [`WriteTxnMarkersResponse`].
@@ -933,7 +982,7 @@ pub const WRITE_TXN_MARKERS_RESPONSE_DESCRIPTOR: MessageDescriptor = MessageDesc
     "WriteTxnMarkersResponse",
     MessageDirection::Response,
     VersionRange::new(1, 2),
-    Some(VersionRange::new(1, 2)),
+    ::core::option::Option::Some(VersionRange::new(1, 2)),
 );
 
 /// Static pair metadata for the `WriteTxnMarkers` API.
@@ -942,6 +991,6 @@ pub const WRITE_TXN_MARKERS_API_DESCRIPTOR: ApiDescriptor = ApiDescriptor::new(
     &WRITE_TXN_MARKERS_REQUEST_DESCRIPTOR,
     &WRITE_TXN_MARKERS_RESPONSE_DESCRIPTOR,
     VersionRange::new(1, 2),
-    Some(VersionRange::new(1, 2)),
+    ::core::option::Option::Some(VersionRange::new(1, 2)),
     false,
 );

@@ -27,14 +27,15 @@ pub mod describe_configs_request {
         /// The resource name.
         pub resource_name: StrBytes,
         /// The configuration keys to list, or null to list all configuration keys.
-        pub configuration_keys: Option<Vec<StrBytes>>,
+        pub configuration_keys: ::core::option::Option<::std::vec::Vec<StrBytes>>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
     }
 
     impl DescribeConfigsResource {
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(1, 4);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(4, 4));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(4, 4));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
@@ -42,9 +43,12 @@ pub mod describe_configs_request {
     }
 
     impl DescribeConfigsResource {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(EncodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(EncodeError::UnsupportedVersion {
                     message: "DescribeConfigsResource",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
@@ -52,44 +56,47 @@ pub mod describe_configs_request {
             }
 
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: "DescribeConfigsResource",
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
-    impl Default for DescribeConfigsResource {
+    impl ::core::default::Default for DescribeConfigsResource {
         fn default() -> Self {
             Self {
                 resource_type: 0,
                 resource_name: StrBytes::default(),
-                configuration_keys: Some(Vec::new()),
+                configuration_keys: ::core::option::Option::Some(::std::vec::Vec::new()),
                 unknown_tagged_fields: TaggedFields::default(),
             }
         }
     }
 
     impl KafkaDecode for DescribeConfigsResource {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(DecodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(DecodeError::UnsupportedVersion {
                     message: "DescribeConfigsResource",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
                 });
             }
 
-            let resource_type = decoder.read_i8()?;
-            let resource_name = if Self::is_flexible(version) {
+            let __kw_field_0 = decoder.read_i8()?;
+            let __kw_field_1 = if Self::is_flexible(version) {
                 decoder.read_compact_string()?
             } else {
                 decoder.read_string()?
             };
-            let configuration_keys = {
+            let __kw_field_2 = {
                 let length = if Self::is_flexible(version) {
                     decoder.read_compact_nullable_array_len()?
                 } else {
@@ -98,7 +105,7 @@ pub mod describe_configs_request {
                 length
                     .map(|length| {
                         decoder.read_vec(length, |decoder| {
-                            Ok(if Self::is_flexible(version) {
+                            ::core::result::Result::Ok(if Self::is_flexible(version) {
                                 decoder.read_compact_string()?
                             } else {
                                 decoder.read_string()?
@@ -113,10 +120,10 @@ pub mod describe_configs_request {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                resource_type,
-                resource_name,
-                configuration_keys,
+            ::core::result::Result::Ok(Self {
+                resource_type: __kw_field_0,
+                resource_name: __kw_field_1,
+                configuration_keys: __kw_field_2,
                 unknown_tagged_fields,
             })
         }
@@ -127,7 +134,7 @@ pub mod describe_configs_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_i8(self.resource_type)?;
             if Self::is_flexible(version) {
                 encoder.write_compact_string(&self.resource_name)?;
@@ -136,12 +143,14 @@ pub mod describe_configs_request {
             }
             if Self::is_flexible(version) {
                 encoder.write_compact_nullable_array_len(
-                    self.configuration_keys.as_ref().map(Vec::len),
+                    self.configuration_keys.as_ref().map(::std::vec::Vec::len),
                 )?;
             } else {
-                encoder.write_nullable_array_len(self.configuration_keys.as_ref().map(Vec::len))?;
+                encoder.write_nullable_array_len(
+                    self.configuration_keys.as_ref().map(::std::vec::Vec::len),
+                )?;
             }
-            if let Some(values) = &self.configuration_keys {
+            if let ::core::option::Option::Some(values) = &self.configuration_keys {
                 for value in values {
                     if Self::is_flexible(version) {
                         encoder.write_compact_string(value)?;
@@ -155,7 +164,7 @@ pub mod describe_configs_request {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -164,12 +173,12 @@ pub mod describe_configs_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             DescribeConfigsResource::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| DescribeConfigsResource::encode_validated(self, encoder, version),
@@ -180,7 +189,7 @@ pub mod describe_configs_request {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -192,10 +201,10 @@ pub mod describe_configs_request {
 
     /// Request body for the `DescribeConfigs` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct DescribeConfigsRequest {
         /// The resources whose configurations we want to describe.
-        pub resources: Vec<DescribeConfigsResource>,
+        pub resources: ::std::vec::Vec<DescribeConfigsResource>,
         /// True if we should include all synonyms.
         pub include_synonyms: bool,
         /// True if we should include configuration documentation.
@@ -207,7 +216,8 @@ pub mod describe_configs_request {
     impl KafkaMessage for DescribeConfigsRequest {
         const NAME: &'static str = "DescribeConfigsRequest";
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(1, 4);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(4, 4));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(4, 4));
     }
 
     impl KafkaRequest for DescribeConfigsRequest {
@@ -220,11 +230,14 @@ pub mod describe_configs_request {
     }
 
     impl DescribeConfigsRequest {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             crate::message::ensure_encode_version::<Self>(version)?;
 
             if version.value() < 3 && self.include_documentation {
-                return Err(EncodeError::FieldNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::FieldNotRepresentable {
                     message: Self::NAME,
                     field: "IncludeDocumentation",
                     version,
@@ -234,21 +247,24 @@ pub mod describe_configs_request {
                 value.validate_for_version(version)?;
             }
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: Self::NAME,
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for DescribeConfigsRequest {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             crate::message::ensure_decode_version::<Self>(version)?;
 
-            let resources = {
+            let __kw_field_0 = {
                 let length = if Self::is_flexible(version) {
                     decoder.read_compact_array_len()?
                 } else {
@@ -258,8 +274,8 @@ pub mod describe_configs_request {
                     DescribeConfigsResource::decode(decoder, version)
                 })?
             };
-            let include_synonyms = decoder.read_bool()?;
-            let include_documentation = if version.value() >= 3 {
+            let __kw_field_1 = decoder.read_bool()?;
+            let __kw_field_2 = if version.value() >= 3 {
                 decoder.read_bool()?
             } else {
                 false
@@ -270,10 +286,10 @@ pub mod describe_configs_request {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                resources,
-                include_synonyms,
-                include_documentation,
+            ::core::result::Result::Ok(Self {
+                resources: __kw_field_0,
+                include_synonyms: __kw_field_1,
+                include_documentation: __kw_field_2,
                 unknown_tagged_fields,
             })
         }
@@ -284,7 +300,7 @@ pub mod describe_configs_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             if Self::is_flexible(version) {
                 encoder.write_compact_array_len(self.resources.len())?;
             } else {
@@ -302,7 +318,7 @@ pub mod describe_configs_request {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -311,12 +327,12 @@ pub mod describe_configs_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             DescribeConfigsRequest::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| DescribeConfigsRequest::encode_validated(self, encoder, version),
@@ -327,7 +343,7 @@ pub mod describe_configs_request {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -358,20 +374,21 @@ pub mod describe_configs_response {
         /// The error code, or 0 if we were able to successfully describe the configurations.
         pub error_code: i16,
         /// The error message, or null if we were able to successfully describe the configurations.
-        pub error_message: Option<StrBytes>,
+        pub error_message: ::core::option::Option<StrBytes>,
         /// The resource type.
         pub resource_type: i8,
         /// The resource name.
         pub resource_name: StrBytes,
         /// Each listed configuration.
-        pub configs: Vec<DescribeConfigsResourceResult>,
+        pub configs: ::std::vec::Vec<DescribeConfigsResourceResult>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
     }
 
     impl DescribeConfigsResult {
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(1, 4);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(4, 4));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(4, 4));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
@@ -379,9 +396,12 @@ pub mod describe_configs_response {
     }
 
     impl DescribeConfigsResult {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(EncodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(EncodeError::UnsupportedVersion {
                     message: "DescribeConfigsResult",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
@@ -392,52 +412,55 @@ pub mod describe_configs_response {
                 value.validate_for_version(version)?;
             }
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: "DescribeConfigsResult",
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
-    impl Default for DescribeConfigsResult {
+    impl ::core::default::Default for DescribeConfigsResult {
         fn default() -> Self {
             Self {
                 error_code: 0,
-                error_message: Some(StrBytes::default()),
+                error_message: ::core::option::Option::Some(StrBytes::default()),
                 resource_type: 0,
                 resource_name: StrBytes::default(),
-                configs: Vec::new(),
+                configs: ::std::vec::Vec::new(),
                 unknown_tagged_fields: TaggedFields::default(),
             }
         }
     }
 
     impl KafkaDecode for DescribeConfigsResult {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(DecodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(DecodeError::UnsupportedVersion {
                     message: "DescribeConfigsResult",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
                 });
             }
 
-            let error_code = decoder.read_i16()?;
-            let error_message = if Self::is_flexible(version) {
+            let __kw_field_0 = decoder.read_i16()?;
+            let __kw_field_1 = if Self::is_flexible(version) {
                 decoder.read_compact_nullable_string()?
             } else {
                 decoder.read_nullable_string()?
             };
-            let resource_type = decoder.read_i8()?;
-            let resource_name = if Self::is_flexible(version) {
+            let __kw_field_2 = decoder.read_i8()?;
+            let __kw_field_3 = if Self::is_flexible(version) {
                 decoder.read_compact_string()?
             } else {
                 decoder.read_string()?
             };
-            let configs = {
+            let __kw_field_4 = {
                 let length = if Self::is_flexible(version) {
                     decoder.read_compact_array_len()?
                 } else {
@@ -453,12 +476,12 @@ pub mod describe_configs_response {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                error_code,
-                error_message,
-                resource_type,
-                resource_name,
-                configs,
+            ::core::result::Result::Ok(Self {
+                error_code: __kw_field_0,
+                error_message: __kw_field_1,
+                resource_type: __kw_field_2,
+                resource_name: __kw_field_3,
+                configs: __kw_field_4,
                 unknown_tagged_fields,
             })
         }
@@ -469,7 +492,7 @@ pub mod describe_configs_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_i16(self.error_code)?;
             if Self::is_flexible(version) {
                 encoder.write_compact_nullable_string(self.error_message.as_ref())?;
@@ -495,7 +518,7 @@ pub mod describe_configs_response {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -504,12 +527,12 @@ pub mod describe_configs_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             DescribeConfigsResult::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| DescribeConfigsResult::encode_validated(self, encoder, version),
@@ -520,7 +543,7 @@ pub mod describe_configs_response {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -537,7 +560,7 @@ pub mod describe_configs_response {
         /// The configuration name.
         pub name: StrBytes,
         /// The configuration value.
-        pub value: Option<StrBytes>,
+        pub value: ::core::option::Option<StrBytes>,
         /// True if the configuration is read-only.
         pub read_only: bool,
         /// The configuration source.
@@ -545,18 +568,19 @@ pub mod describe_configs_response {
         /// True if this configuration is sensitive.
         pub is_sensitive: bool,
         /// The synonyms for this configuration key.
-        pub synonyms: Vec<DescribeConfigsSynonym>,
+        pub synonyms: ::std::vec::Vec<DescribeConfigsSynonym>,
         /// The configuration data type. Type can be one of the following values - BOOLEAN, STRING, INT, SHORT, LONG, DOUBLE, LIST, CLASS, PASSWORD.
         pub config_type: i8,
         /// The configuration documentation.
-        pub documentation: Option<StrBytes>,
+        pub documentation: ::core::option::Option<StrBytes>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
     }
 
     impl DescribeConfigsResourceResult {
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(1, 4);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(4, 4));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(4, 4));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
@@ -564,9 +588,12 @@ pub mod describe_configs_response {
     }
 
     impl DescribeConfigsResourceResult {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(EncodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(EncodeError::UnsupportedVersion {
                     message: "DescribeConfigsResourceResult",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
@@ -577,56 +604,59 @@ pub mod describe_configs_response {
                 value.validate_for_version(version)?;
             }
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: "DescribeConfigsResourceResult",
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
-    impl Default for DescribeConfigsResourceResult {
+    impl ::core::default::Default for DescribeConfigsResourceResult {
         fn default() -> Self {
             Self {
                 name: StrBytes::default(),
-                value: Some(StrBytes::default()),
+                value: ::core::option::Option::Some(StrBytes::default()),
                 read_only: false,
                 config_source: -1,
                 is_sensitive: false,
-                synonyms: Vec::new(),
+                synonyms: ::std::vec::Vec::new(),
                 config_type: 0,
-                documentation: Some(StrBytes::default()),
+                documentation: ::core::option::Option::Some(StrBytes::default()),
                 unknown_tagged_fields: TaggedFields::default(),
             }
         }
     }
 
     impl KafkaDecode for DescribeConfigsResourceResult {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(DecodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(DecodeError::UnsupportedVersion {
                     message: "DescribeConfigsResourceResult",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
                 });
             }
 
-            let name = if Self::is_flexible(version) {
+            let __kw_field_0 = if Self::is_flexible(version) {
                 decoder.read_compact_string()?
             } else {
                 decoder.read_string()?
             };
-            let value = if Self::is_flexible(version) {
+            let __kw_field_1 = if Self::is_flexible(version) {
                 decoder.read_compact_nullable_string()?
             } else {
                 decoder.read_nullable_string()?
             };
-            let read_only = decoder.read_bool()?;
-            let config_source = decoder.read_i8()?;
-            let is_sensitive = decoder.read_bool()?;
-            let synonyms = {
+            let __kw_field_2 = decoder.read_bool()?;
+            let __kw_field_3 = decoder.read_i8()?;
+            let __kw_field_4 = decoder.read_bool()?;
+            let __kw_field_5 = {
                 let length = if Self::is_flexible(version) {
                     decoder.read_compact_array_len()?
                 } else {
@@ -636,19 +666,19 @@ pub mod describe_configs_response {
                     DescribeConfigsSynonym::decode(decoder, version)
                 })?
             };
-            let config_type = if version.value() >= 3 {
+            let __kw_field_6 = if version.value() >= 3 {
                 decoder.read_i8()?
             } else {
                 0
             };
-            let documentation = if version.value() >= 3 {
+            let __kw_field_7 = if version.value() >= 3 {
                 if Self::is_flexible(version) {
                     decoder.read_compact_nullable_string()?
                 } else {
                     decoder.read_nullable_string()?
                 }
             } else {
-                Some(StrBytes::default())
+                ::core::option::Option::Some(StrBytes::default())
             };
             let unknown_tagged_fields = if Self::is_flexible(version) {
                 decoder.read_tagged_fields()?
@@ -656,15 +686,15 @@ pub mod describe_configs_response {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                name,
-                value,
-                read_only,
-                config_source,
-                is_sensitive,
-                synonyms,
-                config_type,
-                documentation,
+            ::core::result::Result::Ok(Self {
+                name: __kw_field_0,
+                value: __kw_field_1,
+                read_only: __kw_field_2,
+                config_source: __kw_field_3,
+                is_sensitive: __kw_field_4,
+                synonyms: __kw_field_5,
+                config_type: __kw_field_6,
+                documentation: __kw_field_7,
                 unknown_tagged_fields,
             })
         }
@@ -675,7 +705,7 @@ pub mod describe_configs_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             if Self::is_flexible(version) {
                 encoder.write_compact_string(&self.name)?;
             } else {
@@ -712,7 +742,7 @@ pub mod describe_configs_response {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -721,12 +751,12 @@ pub mod describe_configs_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             DescribeConfigsResourceResult::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| DescribeConfigsResourceResult::encode_validated(self, encoder, version),
@@ -737,7 +767,7 @@ pub mod describe_configs_response {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -754,7 +784,7 @@ pub mod describe_configs_response {
         /// The synonym name.
         pub name: StrBytes,
         /// The synonym value.
-        pub value: Option<StrBytes>,
+        pub value: ::core::option::Option<StrBytes>,
         /// The synonym source.
         pub source: i8,
         /// Unknown flexible-version tagged fields retained for forwarding.
@@ -763,7 +793,8 @@ pub mod describe_configs_response {
 
     impl DescribeConfigsSynonym {
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(1, 4);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(4, 4));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(4, 4));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
@@ -771,9 +802,12 @@ pub mod describe_configs_response {
     }
 
     impl DescribeConfigsSynonym {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(EncodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(EncodeError::UnsupportedVersion {
                     message: "DescribeConfigsSynonym",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
@@ -781,21 +815,21 @@ pub mod describe_configs_response {
             }
 
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: "DescribeConfigsSynonym",
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
-    impl Default for DescribeConfigsSynonym {
+    impl ::core::default::Default for DescribeConfigsSynonym {
         fn default() -> Self {
             Self {
                 name: StrBytes::default(),
-                value: Some(StrBytes::default()),
+                value: ::core::option::Option::Some(StrBytes::default()),
                 source: 0,
                 unknown_tagged_fields: TaggedFields::default(),
             }
@@ -803,36 +837,39 @@ pub mod describe_configs_response {
     }
 
     impl KafkaDecode for DescribeConfigsSynonym {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(DecodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(DecodeError::UnsupportedVersion {
                     message: "DescribeConfigsSynonym",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
                 });
             }
 
-            let name = if Self::is_flexible(version) {
+            let __kw_field_0 = if Self::is_flexible(version) {
                 decoder.read_compact_string()?
             } else {
                 decoder.read_string()?
             };
-            let value = if Self::is_flexible(version) {
+            let __kw_field_1 = if Self::is_flexible(version) {
                 decoder.read_compact_nullable_string()?
             } else {
                 decoder.read_nullable_string()?
             };
-            let source = decoder.read_i8()?;
+            let __kw_field_2 = decoder.read_i8()?;
             let unknown_tagged_fields = if Self::is_flexible(version) {
                 decoder.read_tagged_fields()?
             } else {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                name,
-                value,
-                source,
+            ::core::result::Result::Ok(Self {
+                name: __kw_field_0,
+                value: __kw_field_1,
+                source: __kw_field_2,
                 unknown_tagged_fields,
             })
         }
@@ -843,7 +880,7 @@ pub mod describe_configs_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             if Self::is_flexible(version) {
                 encoder.write_compact_string(&self.name)?;
             } else {
@@ -860,7 +897,7 @@ pub mod describe_configs_response {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -869,12 +906,12 @@ pub mod describe_configs_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             DescribeConfigsSynonym::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| DescribeConfigsSynonym::encode_validated(self, encoder, version),
@@ -885,7 +922,7 @@ pub mod describe_configs_response {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -897,12 +934,12 @@ pub mod describe_configs_response {
 
     /// Response body for the `DescribeConfigs` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct DescribeConfigsResponse {
         /// The duration in milliseconds for which the request was throttled due to a quota violation, or zero if the request did not violate any quota.
         pub throttle_time_ms: i32,
         /// The results for each resource.
-        pub results: Vec<DescribeConfigsResult>,
+        pub results: ::std::vec::Vec<DescribeConfigsResult>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
     }
@@ -910,7 +947,8 @@ pub mod describe_configs_response {
     impl KafkaMessage for DescribeConfigsResponse {
         const NAME: &'static str = "DescribeConfigsResponse";
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(1, 4);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(4, 4));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(4, 4));
     }
 
     impl KafkaResponse for DescribeConfigsResponse {
@@ -918,29 +956,35 @@ pub mod describe_configs_response {
     }
 
     impl DescribeConfigsResponse {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             crate::message::ensure_encode_version::<Self>(version)?;
 
             for value in &self.results {
                 value.validate_for_version(version)?;
             }
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: Self::NAME,
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for DescribeConfigsResponse {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             crate::message::ensure_decode_version::<Self>(version)?;
 
-            let throttle_time_ms = decoder.read_i32()?;
-            let results = {
+            let __kw_field_0 = decoder.read_i32()?;
+            let __kw_field_1 = {
                 let length = if Self::is_flexible(version) {
                     decoder.read_compact_array_len()?
                 } else {
@@ -956,9 +1000,9 @@ pub mod describe_configs_response {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                throttle_time_ms,
-                results,
+            ::core::result::Result::Ok(Self {
+                throttle_time_ms: __kw_field_0,
+                results: __kw_field_1,
                 unknown_tagged_fields,
             })
         }
@@ -969,7 +1013,7 @@ pub mod describe_configs_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_i32(self.throttle_time_ms)?;
             if Self::is_flexible(version) {
                 encoder.write_compact_array_len(self.results.len())?;
@@ -984,7 +1028,7 @@ pub mod describe_configs_response {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -993,12 +1037,12 @@ pub mod describe_configs_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             DescribeConfigsResponse::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| DescribeConfigsResponse::encode_validated(self, encoder, version),
@@ -1009,7 +1053,7 @@ pub mod describe_configs_response {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -1033,7 +1077,7 @@ pub const DESCRIBE_CONFIGS_REQUEST_DESCRIPTOR: MessageDescriptor = MessageDescri
     "DescribeConfigsRequest",
     MessageDirection::Request,
     VersionRange::new(1, 4),
-    Some(VersionRange::new(4, 4)),
+    ::core::option::Option::Some(VersionRange::new(4, 4)),
 );
 
 /// Static metadata for [`DescribeConfigsResponse`].
@@ -1042,7 +1086,7 @@ pub const DESCRIBE_CONFIGS_RESPONSE_DESCRIPTOR: MessageDescriptor = MessageDescr
     "DescribeConfigsResponse",
     MessageDirection::Response,
     VersionRange::new(1, 4),
-    Some(VersionRange::new(4, 4)),
+    ::core::option::Option::Some(VersionRange::new(4, 4)),
 );
 
 /// Static pair metadata for the `DescribeConfigs` API.
@@ -1051,6 +1095,6 @@ pub const DESCRIBE_CONFIGS_API_DESCRIPTOR: ApiDescriptor = ApiDescriptor::new(
     &DESCRIBE_CONFIGS_REQUEST_DESCRIPTOR,
     &DESCRIBE_CONFIGS_RESPONSE_DESCRIPTOR,
     VersionRange::new(1, 4),
-    Some(VersionRange::new(4, 4)),
+    ::core::option::Option::Some(VersionRange::new(4, 4)),
     false,
 );

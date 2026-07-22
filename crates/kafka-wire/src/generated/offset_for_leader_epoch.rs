@@ -20,19 +20,20 @@ pub mod offset_for_leader_epoch_request {
 
     /// `OffsetForLeaderTopic` as declared by the `OffsetForLeaderEpoch` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct OffsetForLeaderTopic {
         /// The topic name.
         pub topic: StrBytes,
         /// Each partition to get offsets for.
-        pub partitions: Vec<OffsetForLeaderPartition>,
+        pub partitions: ::std::vec::Vec<OffsetForLeaderPartition>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
     }
 
     impl OffsetForLeaderTopic {
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(2, 4);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(4, 4));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(4, 4));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
@@ -40,9 +41,12 @@ pub mod offset_for_leader_epoch_request {
     }
 
     impl OffsetForLeaderTopic {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(EncodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(EncodeError::UnsupportedVersion {
                     message: "OffsetForLeaderTopic",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
@@ -53,32 +57,35 @@ pub mod offset_for_leader_epoch_request {
                 value.validate_for_version(version)?;
             }
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: "OffsetForLeaderTopic",
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for OffsetForLeaderTopic {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(DecodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(DecodeError::UnsupportedVersion {
                     message: "OffsetForLeaderTopic",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
                 });
             }
 
-            let topic = if Self::is_flexible(version) {
+            let __kw_field_0 = if Self::is_flexible(version) {
                 decoder.read_compact_string()?
             } else {
                 decoder.read_string()?
             };
-            let partitions = {
+            let __kw_field_1 = {
                 let length = if Self::is_flexible(version) {
                     decoder.read_compact_array_len()?
                 } else {
@@ -94,9 +101,9 @@ pub mod offset_for_leader_epoch_request {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                topic,
-                partitions,
+            ::core::result::Result::Ok(Self {
+                topic: __kw_field_0,
+                partitions: __kw_field_1,
                 unknown_tagged_fields,
             })
         }
@@ -107,7 +114,7 @@ pub mod offset_for_leader_epoch_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             if Self::is_flexible(version) {
                 encoder.write_compact_string(&self.topic)?;
             } else {
@@ -126,7 +133,7 @@ pub mod offset_for_leader_epoch_request {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -135,12 +142,12 @@ pub mod offset_for_leader_epoch_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             OffsetForLeaderTopic::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| OffsetForLeaderTopic::encode_validated(self, encoder, version),
@@ -151,7 +158,7 @@ pub mod offset_for_leader_epoch_request {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -177,7 +184,8 @@ pub mod offset_for_leader_epoch_request {
 
     impl OffsetForLeaderPartition {
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(2, 4);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(4, 4));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(4, 4));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
@@ -185,9 +193,12 @@ pub mod offset_for_leader_epoch_request {
     }
 
     impl OffsetForLeaderPartition {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(EncodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(EncodeError::UnsupportedVersion {
                     message: "OffsetForLeaderPartition",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
@@ -195,17 +206,17 @@ pub mod offset_for_leader_epoch_request {
             }
 
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: "OffsetForLeaderPartition",
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
-    impl Default for OffsetForLeaderPartition {
+    impl ::core::default::Default for OffsetForLeaderPartition {
         fn default() -> Self {
             Self {
                 partition: 0,
@@ -217,28 +228,31 @@ pub mod offset_for_leader_epoch_request {
     }
 
     impl KafkaDecode for OffsetForLeaderPartition {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(DecodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(DecodeError::UnsupportedVersion {
                     message: "OffsetForLeaderPartition",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
                 });
             }
 
-            let partition = decoder.read_i32()?;
-            let current_leader_epoch = decoder.read_i32()?;
-            let leader_epoch = decoder.read_i32()?;
+            let __kw_field_0 = decoder.read_i32()?;
+            let __kw_field_1 = decoder.read_i32()?;
+            let __kw_field_2 = decoder.read_i32()?;
             let unknown_tagged_fields = if Self::is_flexible(version) {
                 decoder.read_tagged_fields()?
             } else {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                partition,
-                current_leader_epoch,
-                leader_epoch,
+            ::core::result::Result::Ok(Self {
+                partition: __kw_field_0,
+                current_leader_epoch: __kw_field_1,
+                leader_epoch: __kw_field_2,
                 unknown_tagged_fields,
             })
         }
@@ -249,7 +263,7 @@ pub mod offset_for_leader_epoch_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_i32(self.partition)?;
             encoder.write_i32(self.current_leader_epoch)?;
             encoder.write_i32(self.leader_epoch)?;
@@ -258,7 +272,7 @@ pub mod offset_for_leader_epoch_request {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -267,12 +281,12 @@ pub mod offset_for_leader_epoch_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             OffsetForLeaderPartition::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| OffsetForLeaderPartition::encode_validated(self, encoder, version),
@@ -283,7 +297,7 @@ pub mod offset_for_leader_epoch_request {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -300,16 +314,16 @@ pub mod offset_for_leader_epoch_request {
         /// The broker ID of the follower, of -1 if this request is from a consumer.
         pub replica_id: i32,
         /// Each topic to get offsets for.
-        pub topics: Vec<OffsetForLeaderTopic>,
+        pub topics: ::std::vec::Vec<OffsetForLeaderTopic>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
     }
 
-    impl Default for OffsetForLeaderEpochRequest {
+    impl ::core::default::Default for OffsetForLeaderEpochRequest {
         fn default() -> Self {
             Self {
                 replica_id: -2,
-                topics: Vec::new(),
+                topics: ::std::vec::Vec::new(),
                 unknown_tagged_fields: TaggedFields::default(),
             }
         }
@@ -318,7 +332,8 @@ pub mod offset_for_leader_epoch_request {
     impl KafkaMessage for OffsetForLeaderEpochRequest {
         const NAME: &'static str = "OffsetForLeaderEpochRequest";
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(2, 4);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(4, 4));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(4, 4));
     }
 
     impl KafkaRequest for OffsetForLeaderEpochRequest {
@@ -332,33 +347,39 @@ pub mod offset_for_leader_epoch_request {
     }
 
     impl OffsetForLeaderEpochRequest {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             crate::message::ensure_encode_version::<Self>(version)?;
 
             for value in &self.topics {
                 value.validate_for_version(version)?;
             }
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: Self::NAME,
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for OffsetForLeaderEpochRequest {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             crate::message::ensure_decode_version::<Self>(version)?;
 
-            let replica_id = if version.value() >= 3 {
+            let __kw_field_0 = if version.value() >= 3 {
                 decoder.read_i32()?
             } else {
                 -2
             };
-            let topics = {
+            let __kw_field_1 = {
                 let length = if Self::is_flexible(version) {
                     decoder.read_compact_array_len()?
                 } else {
@@ -374,9 +395,9 @@ pub mod offset_for_leader_epoch_request {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                replica_id,
-                topics,
+            ::core::result::Result::Ok(Self {
+                replica_id: __kw_field_0,
+                topics: __kw_field_1,
                 unknown_tagged_fields,
             })
         }
@@ -387,7 +408,7 @@ pub mod offset_for_leader_epoch_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             if version.value() >= 3 {
                 encoder.write_i32(self.replica_id)?;
             }
@@ -404,7 +425,7 @@ pub mod offset_for_leader_epoch_request {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -413,12 +434,12 @@ pub mod offset_for_leader_epoch_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             OffsetForLeaderEpochRequest::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| OffsetForLeaderEpochRequest::encode_validated(self, encoder, version),
@@ -429,7 +450,7 @@ pub mod offset_for_leader_epoch_request {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -455,19 +476,20 @@ pub mod offset_for_leader_epoch_response {
 
     /// `OffsetForLeaderTopicResult` as declared by the `OffsetForLeaderEpoch` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct OffsetForLeaderTopicResult {
         /// The topic name.
         pub topic: StrBytes,
         /// Each partition in the topic we fetched offsets for.
-        pub partitions: Vec<EpochEndOffset>,
+        pub partitions: ::std::vec::Vec<EpochEndOffset>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
     }
 
     impl OffsetForLeaderTopicResult {
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(2, 4);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(4, 4));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(4, 4));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
@@ -475,9 +497,12 @@ pub mod offset_for_leader_epoch_response {
     }
 
     impl OffsetForLeaderTopicResult {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(EncodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(EncodeError::UnsupportedVersion {
                     message: "OffsetForLeaderTopicResult",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
@@ -488,32 +513,35 @@ pub mod offset_for_leader_epoch_response {
                 value.validate_for_version(version)?;
             }
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: "OffsetForLeaderTopicResult",
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for OffsetForLeaderTopicResult {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(DecodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(DecodeError::UnsupportedVersion {
                     message: "OffsetForLeaderTopicResult",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
                 });
             }
 
-            let topic = if Self::is_flexible(version) {
+            let __kw_field_0 = if Self::is_flexible(version) {
                 decoder.read_compact_string()?
             } else {
                 decoder.read_string()?
             };
-            let partitions = {
+            let __kw_field_1 = {
                 let length = if Self::is_flexible(version) {
                     decoder.read_compact_array_len()?
                 } else {
@@ -527,9 +555,9 @@ pub mod offset_for_leader_epoch_response {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                topic,
-                partitions,
+            ::core::result::Result::Ok(Self {
+                topic: __kw_field_0,
+                partitions: __kw_field_1,
                 unknown_tagged_fields,
             })
         }
@@ -540,7 +568,7 @@ pub mod offset_for_leader_epoch_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             if Self::is_flexible(version) {
                 encoder.write_compact_string(&self.topic)?;
             } else {
@@ -559,7 +587,7 @@ pub mod offset_for_leader_epoch_response {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -568,12 +596,12 @@ pub mod offset_for_leader_epoch_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             OffsetForLeaderTopicResult::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| OffsetForLeaderTopicResult::encode_validated(self, encoder, version),
@@ -584,7 +612,7 @@ pub mod offset_for_leader_epoch_response {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -612,7 +640,8 @@ pub mod offset_for_leader_epoch_response {
 
     impl EpochEndOffset {
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(2, 4);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(4, 4));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(4, 4));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
@@ -620,9 +649,12 @@ pub mod offset_for_leader_epoch_response {
     }
 
     impl EpochEndOffset {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(EncodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(EncodeError::UnsupportedVersion {
                     message: "EpochEndOffset",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
@@ -630,17 +662,17 @@ pub mod offset_for_leader_epoch_response {
             }
 
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: "EpochEndOffset",
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
-    impl Default for EpochEndOffset {
+    impl ::core::default::Default for EpochEndOffset {
         fn default() -> Self {
             Self {
                 error_code: 0,
@@ -653,30 +685,33 @@ pub mod offset_for_leader_epoch_response {
     }
 
     impl KafkaDecode for EpochEndOffset {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(DecodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(DecodeError::UnsupportedVersion {
                     message: "EpochEndOffset",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
                 });
             }
 
-            let error_code = decoder.read_i16()?;
-            let partition = decoder.read_i32()?;
-            let leader_epoch = decoder.read_i32()?;
-            let end_offset = decoder.read_i64()?;
+            let __kw_field_0 = decoder.read_i16()?;
+            let __kw_field_1 = decoder.read_i32()?;
+            let __kw_field_2 = decoder.read_i32()?;
+            let __kw_field_3 = decoder.read_i64()?;
             let unknown_tagged_fields = if Self::is_flexible(version) {
                 decoder.read_tagged_fields()?
             } else {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                error_code,
-                partition,
-                leader_epoch,
-                end_offset,
+            ::core::result::Result::Ok(Self {
+                error_code: __kw_field_0,
+                partition: __kw_field_1,
+                leader_epoch: __kw_field_2,
+                end_offset: __kw_field_3,
                 unknown_tagged_fields,
             })
         }
@@ -687,7 +722,7 @@ pub mod offset_for_leader_epoch_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_i16(self.error_code)?;
             encoder.write_i32(self.partition)?;
             encoder.write_i32(self.leader_epoch)?;
@@ -697,7 +732,7 @@ pub mod offset_for_leader_epoch_response {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -706,12 +741,12 @@ pub mod offset_for_leader_epoch_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             EpochEndOffset::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| EpochEndOffset::encode_validated(self, encoder, version),
@@ -722,7 +757,7 @@ pub mod offset_for_leader_epoch_response {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -734,12 +769,12 @@ pub mod offset_for_leader_epoch_response {
 
     /// Response body for the `OffsetForLeaderEpoch` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct OffsetForLeaderEpochResponse {
         /// The duration in milliseconds for which the request was throttled due to a quota violation, or zero if the request did not violate any quota.
         pub throttle_time_ms: i32,
         /// Each topic we fetched offsets for.
-        pub topics: Vec<OffsetForLeaderTopicResult>,
+        pub topics: ::std::vec::Vec<OffsetForLeaderTopicResult>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
     }
@@ -747,7 +782,8 @@ pub mod offset_for_leader_epoch_response {
     impl KafkaMessage for OffsetForLeaderEpochResponse {
         const NAME: &'static str = "OffsetForLeaderEpochResponse";
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(2, 4);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(4, 4));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(4, 4));
     }
 
     impl KafkaResponse for OffsetForLeaderEpochResponse {
@@ -755,29 +791,35 @@ pub mod offset_for_leader_epoch_response {
     }
 
     impl OffsetForLeaderEpochResponse {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             crate::message::ensure_encode_version::<Self>(version)?;
 
             for value in &self.topics {
                 value.validate_for_version(version)?;
             }
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: Self::NAME,
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for OffsetForLeaderEpochResponse {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             crate::message::ensure_decode_version::<Self>(version)?;
 
-            let throttle_time_ms = decoder.read_i32()?;
-            let topics = {
+            let __kw_field_0 = decoder.read_i32()?;
+            let __kw_field_1 = {
                 let length = if Self::is_flexible(version) {
                     decoder.read_compact_array_len()?
                 } else {
@@ -793,9 +835,9 @@ pub mod offset_for_leader_epoch_response {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                throttle_time_ms,
-                topics,
+            ::core::result::Result::Ok(Self {
+                throttle_time_ms: __kw_field_0,
+                topics: __kw_field_1,
                 unknown_tagged_fields,
             })
         }
@@ -806,7 +848,7 @@ pub mod offset_for_leader_epoch_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_i32(self.throttle_time_ms)?;
             if Self::is_flexible(version) {
                 encoder.write_compact_array_len(self.topics.len())?;
@@ -821,7 +863,7 @@ pub mod offset_for_leader_epoch_response {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -830,12 +872,12 @@ pub mod offset_for_leader_epoch_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             OffsetForLeaderEpochResponse::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| OffsetForLeaderEpochResponse::encode_validated(self, encoder, version),
@@ -846,7 +888,7 @@ pub mod offset_for_leader_epoch_response {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -870,7 +912,7 @@ pub const OFFSET_FOR_LEADER_EPOCH_REQUEST_DESCRIPTOR: MessageDescriptor = Messag
     "OffsetForLeaderEpochRequest",
     MessageDirection::Request,
     VersionRange::new(2, 4),
-    Some(VersionRange::new(4, 4)),
+    ::core::option::Option::Some(VersionRange::new(4, 4)),
 );
 
 /// Static metadata for [`OffsetForLeaderEpochResponse`].
@@ -879,7 +921,7 @@ pub const OFFSET_FOR_LEADER_EPOCH_RESPONSE_DESCRIPTOR: MessageDescriptor = Messa
     "OffsetForLeaderEpochResponse",
     MessageDirection::Response,
     VersionRange::new(2, 4),
-    Some(VersionRange::new(4, 4)),
+    ::core::option::Option::Some(VersionRange::new(4, 4)),
 );
 
 /// Static pair metadata for the `OffsetForLeaderEpoch` API.
@@ -888,6 +930,6 @@ pub const OFFSET_FOR_LEADER_EPOCH_API_DESCRIPTOR: ApiDescriptor = ApiDescriptor:
     &OFFSET_FOR_LEADER_EPOCH_REQUEST_DESCRIPTOR,
     &OFFSET_FOR_LEADER_EPOCH_RESPONSE_DESCRIPTOR,
     VersionRange::new(2, 4),
-    Some(VersionRange::new(4, 4)),
+    ::core::option::Option::Some(VersionRange::new(4, 4)),
     false,
 );

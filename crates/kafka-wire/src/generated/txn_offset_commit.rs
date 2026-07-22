@@ -20,21 +20,22 @@ pub mod txn_offset_commit_request {
 
     /// `TxnOffsetCommitRequestTopic` as declared by the `TxnOffsetCommit` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct TxnOffsetCommitRequestTopic {
         /// The topic name.
         pub name: StrBytes,
         /// The topic ID.
         pub topic_id: Uuid,
         /// The partitions inside the topic that we want to commit offsets for.
-        pub partitions: Vec<TxnOffsetCommitRequestPartition>,
+        pub partitions: ::std::vec::Vec<TxnOffsetCommitRequestPartition>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
     }
 
     impl TxnOffsetCommitRequestTopic {
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 6);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(3, 6));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(3, 6));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
@@ -42,9 +43,12 @@ pub mod txn_offset_commit_request {
     }
 
     impl TxnOffsetCommitRequestTopic {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(EncodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(EncodeError::UnsupportedVersion {
                     message: "TxnOffsetCommitRequestTopic",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
@@ -55,27 +59,30 @@ pub mod txn_offset_commit_request {
                 value.validate_for_version(version)?;
             }
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: "TxnOffsetCommitRequestTopic",
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for TxnOffsetCommitRequestTopic {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(DecodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(DecodeError::UnsupportedVersion {
                     message: "TxnOffsetCommitRequestTopic",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
                 });
             }
 
-            let name = if version.value() <= 5 {
+            let __kw_field_0 = if version.value() <= 5 {
                 if Self::is_flexible(version) {
                     decoder.read_compact_string()?
                 } else {
@@ -84,12 +91,12 @@ pub mod txn_offset_commit_request {
             } else {
                 StrBytes::default()
             };
-            let topic_id = if version.value() >= 6 {
+            let __kw_field_1 = if version.value() >= 6 {
                 decoder.read_uuid()?
             } else {
                 Uuid::ZERO
             };
-            let partitions = {
+            let __kw_field_2 = {
                 let length = if Self::is_flexible(version) {
                     decoder.read_compact_array_len()?
                 } else {
@@ -105,10 +112,10 @@ pub mod txn_offset_commit_request {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                name,
-                topic_id,
-                partitions,
+            ::core::result::Result::Ok(Self {
+                name: __kw_field_0,
+                topic_id: __kw_field_1,
+                partitions: __kw_field_2,
                 unknown_tagged_fields,
             })
         }
@@ -119,7 +126,7 @@ pub mod txn_offset_commit_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             if version.value() <= 5 {
                 if Self::is_flexible(version) {
                     encoder.write_compact_string(&self.name)?;
@@ -143,7 +150,7 @@ pub mod txn_offset_commit_request {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -152,12 +159,12 @@ pub mod txn_offset_commit_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             TxnOffsetCommitRequestTopic::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| TxnOffsetCommitRequestTopic::encode_validated(self, encoder, version),
@@ -168,7 +175,7 @@ pub mod txn_offset_commit_request {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -189,14 +196,15 @@ pub mod txn_offset_commit_request {
         /// The leader epoch of the last consumed record.
         pub committed_leader_epoch: i32,
         /// Any associated metadata the client wants to keep.
-        pub committed_metadata: Option<StrBytes>,
+        pub committed_metadata: ::core::option::Option<StrBytes>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
     }
 
     impl TxnOffsetCommitRequestPartition {
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 6);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(3, 6));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(3, 6));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
@@ -204,9 +212,12 @@ pub mod txn_offset_commit_request {
     }
 
     impl TxnOffsetCommitRequestPartition {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(EncodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(EncodeError::UnsupportedVersion {
                     message: "TxnOffsetCommitRequestPartition",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
@@ -214,46 +225,49 @@ pub mod txn_offset_commit_request {
             }
 
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: "TxnOffsetCommitRequestPartition",
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
-    impl Default for TxnOffsetCommitRequestPartition {
+    impl ::core::default::Default for TxnOffsetCommitRequestPartition {
         fn default() -> Self {
             Self {
                 partition_index: 0,
                 committed_offset: 0,
                 committed_leader_epoch: -1,
-                committed_metadata: Some(StrBytes::default()),
+                committed_metadata: ::core::option::Option::Some(StrBytes::default()),
                 unknown_tagged_fields: TaggedFields::default(),
             }
         }
     }
 
     impl KafkaDecode for TxnOffsetCommitRequestPartition {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(DecodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(DecodeError::UnsupportedVersion {
                     message: "TxnOffsetCommitRequestPartition",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
                 });
             }
 
-            let partition_index = decoder.read_i32()?;
-            let committed_offset = decoder.read_i64()?;
-            let committed_leader_epoch = if version.value() >= 2 {
+            let __kw_field_0 = decoder.read_i32()?;
+            let __kw_field_1 = decoder.read_i64()?;
+            let __kw_field_2 = if version.value() >= 2 {
                 decoder.read_i32()?
             } else {
                 -1
             };
-            let committed_metadata = if Self::is_flexible(version) {
+            let __kw_field_3 = if Self::is_flexible(version) {
                 decoder.read_compact_nullable_string()?
             } else {
                 decoder.read_nullable_string()?
@@ -264,11 +278,11 @@ pub mod txn_offset_commit_request {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                partition_index,
-                committed_offset,
-                committed_leader_epoch,
-                committed_metadata,
+            ::core::result::Result::Ok(Self {
+                partition_index: __kw_field_0,
+                committed_offset: __kw_field_1,
+                committed_leader_epoch: __kw_field_2,
+                committed_metadata: __kw_field_3,
                 unknown_tagged_fields,
             })
         }
@@ -279,7 +293,7 @@ pub mod txn_offset_commit_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_i32(self.partition_index)?;
             encoder.write_i64(self.committed_offset)?;
             if version.value() >= 2 {
@@ -295,7 +309,7 @@ pub mod txn_offset_commit_request {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -304,12 +318,12 @@ pub mod txn_offset_commit_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             TxnOffsetCommitRequestPartition::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| TxnOffsetCommitRequestPartition::encode_validated(self, encoder, version),
@@ -320,7 +334,7 @@ pub mod txn_offset_commit_request {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -347,14 +361,14 @@ pub mod txn_offset_commit_request {
         /// The member ID assigned by the group coordinator.
         pub member_id: StrBytes,
         /// The unique identifier of the consumer instance provided by end user.
-        pub group_instance_id: Option<StrBytes>,
+        pub group_instance_id: ::core::option::Option<StrBytes>,
         /// Each topic that we want to commit offsets for.
-        pub topics: Vec<TxnOffsetCommitRequestTopic>,
+        pub topics: ::std::vec::Vec<TxnOffsetCommitRequestTopic>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
     }
 
-    impl Default for TxnOffsetCommitRequest {
+    impl ::core::default::Default for TxnOffsetCommitRequest {
         fn default() -> Self {
             Self {
                 transactional_id: StrBytes::default(),
@@ -363,8 +377,8 @@ pub mod txn_offset_commit_request {
                 producer_epoch: 0,
                 generation_id_or_member_epoch: -1,
                 member_id: StrBytes::default(),
-                group_instance_id: None,
-                topics: Vec::new(),
+                group_instance_id: ::core::option::Option::None,
+                topics: ::std::vec::Vec::new(),
                 unknown_tagged_fields: TaggedFields::default(),
             }
         }
@@ -373,7 +387,8 @@ pub mod txn_offset_commit_request {
     impl KafkaMessage for TxnOffsetCommitRequest {
         const NAME: &'static str = "TxnOffsetCommitRequest";
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 6);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(3, 6));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(3, 6));
     }
 
     impl KafkaRequest for TxnOffsetCommitRequest {
@@ -386,25 +401,28 @@ pub mod txn_offset_commit_request {
     }
 
     impl TxnOffsetCommitRequest {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             crate::message::ensure_encode_version::<Self>(version)?;
 
             if version.value() < 3 && self.generation_id_or_member_epoch != -1 {
-                return Err(EncodeError::FieldNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::FieldNotRepresentable {
                     message: Self::NAME,
                     field: "GenerationIdOrMemberEpoch",
                     version,
                 });
             }
             if version.value() < 3 && !self.member_id.is_empty() {
-                return Err(EncodeError::FieldNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::FieldNotRepresentable {
                     message: Self::NAME,
                     field: "MemberId",
                     version,
                 });
             }
             if version.value() < 3 && self.group_instance_id.is_some() {
-                return Err(EncodeError::FieldNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::FieldNotRepresentable {
                     message: Self::NAME,
                     field: "GroupInstanceId",
                     version,
@@ -414,48 +432,51 @@ pub mod txn_offset_commit_request {
                 value.validate_for_version(version)?;
             }
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: Self::NAME,
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for TxnOffsetCommitRequest {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             crate::message::ensure_decode_version::<Self>(version)?;
 
-            let transactional_id = if Self::is_flexible(version) {
+            let __kw_field_0 = if Self::is_flexible(version) {
                 decoder.read_compact_string()?
             } else {
                 decoder.read_string()?
             };
-            let group_id = if Self::is_flexible(version) {
+            let __kw_field_1 = if Self::is_flexible(version) {
                 decoder.read_compact_string()?
             } else {
                 decoder.read_string()?
             };
-            let producer_id = decoder.read_i64()?;
-            let producer_epoch = decoder.read_i16()?;
-            let generation_id_or_member_epoch = if version.value() >= 3 {
+            let __kw_field_2 = decoder.read_i64()?;
+            let __kw_field_3 = decoder.read_i16()?;
+            let __kw_field_4 = if version.value() >= 3 {
                 decoder.read_i32()?
             } else {
                 -1
             };
-            let member_id = if version.value() >= 3 {
+            let __kw_field_5 = if version.value() >= 3 {
                 decoder.read_compact_string()?
             } else {
                 StrBytes::default()
             };
-            let group_instance_id = if version.value() >= 3 {
+            let __kw_field_6 = if version.value() >= 3 {
                 decoder.read_compact_nullable_string()?
             } else {
-                None
+                ::core::option::Option::None
             };
-            let topics = {
+            let __kw_field_7 = {
                 let length = if Self::is_flexible(version) {
                     decoder.read_compact_array_len()?
                 } else {
@@ -471,15 +492,15 @@ pub mod txn_offset_commit_request {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                transactional_id,
-                group_id,
-                producer_id,
-                producer_epoch,
-                generation_id_or_member_epoch,
-                member_id,
-                group_instance_id,
-                topics,
+            ::core::result::Result::Ok(Self {
+                transactional_id: __kw_field_0,
+                group_id: __kw_field_1,
+                producer_id: __kw_field_2,
+                producer_epoch: __kw_field_3,
+                generation_id_or_member_epoch: __kw_field_4,
+                member_id: __kw_field_5,
+                group_instance_id: __kw_field_6,
+                topics: __kw_field_7,
                 unknown_tagged_fields,
             })
         }
@@ -490,7 +511,7 @@ pub mod txn_offset_commit_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             if Self::is_flexible(version) {
                 encoder.write_compact_string(&self.transactional_id)?;
             } else {
@@ -525,7 +546,7 @@ pub mod txn_offset_commit_request {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -534,12 +555,12 @@ pub mod txn_offset_commit_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             TxnOffsetCommitRequest::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| TxnOffsetCommitRequest::encode_validated(self, encoder, version),
@@ -550,7 +571,7 @@ pub mod txn_offset_commit_request {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -576,21 +597,22 @@ pub mod txn_offset_commit_response {
 
     /// `TxnOffsetCommitResponseTopic` as declared by the `TxnOffsetCommit` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct TxnOffsetCommitResponseTopic {
         /// The topic name.
         pub name: StrBytes,
         /// The topic ID.
         pub topic_id: Uuid,
         /// The responses for each partition in the topic.
-        pub partitions: Vec<TxnOffsetCommitResponsePartition>,
+        pub partitions: ::std::vec::Vec<TxnOffsetCommitResponsePartition>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
     }
 
     impl TxnOffsetCommitResponseTopic {
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 6);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(3, 6));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(3, 6));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
@@ -598,9 +620,12 @@ pub mod txn_offset_commit_response {
     }
 
     impl TxnOffsetCommitResponseTopic {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(EncodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(EncodeError::UnsupportedVersion {
                     message: "TxnOffsetCommitResponseTopic",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
@@ -611,27 +636,30 @@ pub mod txn_offset_commit_response {
                 value.validate_for_version(version)?;
             }
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: "TxnOffsetCommitResponseTopic",
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for TxnOffsetCommitResponseTopic {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(DecodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(DecodeError::UnsupportedVersion {
                     message: "TxnOffsetCommitResponseTopic",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
                 });
             }
 
-            let name = if version.value() <= 5 {
+            let __kw_field_0 = if version.value() <= 5 {
                 if Self::is_flexible(version) {
                     decoder.read_compact_string()?
                 } else {
@@ -640,12 +668,12 @@ pub mod txn_offset_commit_response {
             } else {
                 StrBytes::default()
             };
-            let topic_id = if version.value() >= 6 {
+            let __kw_field_1 = if version.value() >= 6 {
                 decoder.read_uuid()?
             } else {
                 Uuid::ZERO
             };
-            let partitions = {
+            let __kw_field_2 = {
                 let length = if Self::is_flexible(version) {
                     decoder.read_compact_array_len()?
                 } else {
@@ -661,10 +689,10 @@ pub mod txn_offset_commit_response {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                name,
-                topic_id,
-                partitions,
+            ::core::result::Result::Ok(Self {
+                name: __kw_field_0,
+                topic_id: __kw_field_1,
+                partitions: __kw_field_2,
                 unknown_tagged_fields,
             })
         }
@@ -675,7 +703,7 @@ pub mod txn_offset_commit_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             if version.value() <= 5 {
                 if Self::is_flexible(version) {
                     encoder.write_compact_string(&self.name)?;
@@ -699,7 +727,7 @@ pub mod txn_offset_commit_response {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -708,12 +736,12 @@ pub mod txn_offset_commit_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             TxnOffsetCommitResponseTopic::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| TxnOffsetCommitResponseTopic::encode_validated(self, encoder, version),
@@ -724,7 +752,7 @@ pub mod txn_offset_commit_response {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -736,7 +764,7 @@ pub mod txn_offset_commit_response {
 
     /// `TxnOffsetCommitResponsePartition` as declared by the `TxnOffsetCommit` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct TxnOffsetCommitResponsePartition {
         /// The partition index.
         pub partition_index: i32,
@@ -748,7 +776,8 @@ pub mod txn_offset_commit_response {
 
     impl TxnOffsetCommitResponsePartition {
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 6);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(3, 6));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(3, 6));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
@@ -756,9 +785,12 @@ pub mod txn_offset_commit_response {
     }
 
     impl TxnOffsetCommitResponsePartition {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(EncodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(EncodeError::UnsupportedVersion {
                     message: "TxnOffsetCommitResponsePartition",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
@@ -766,37 +798,40 @@ pub mod txn_offset_commit_response {
             }
 
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: "TxnOffsetCommitResponsePartition",
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for TxnOffsetCommitResponsePartition {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(DecodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(DecodeError::UnsupportedVersion {
                     message: "TxnOffsetCommitResponsePartition",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
                 });
             }
 
-            let partition_index = decoder.read_i32()?;
-            let error_code = decoder.read_i16()?;
+            let __kw_field_0 = decoder.read_i32()?;
+            let __kw_field_1 = decoder.read_i16()?;
             let unknown_tagged_fields = if Self::is_flexible(version) {
                 decoder.read_tagged_fields()?
             } else {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                partition_index,
-                error_code,
+            ::core::result::Result::Ok(Self {
+                partition_index: __kw_field_0,
+                error_code: __kw_field_1,
                 unknown_tagged_fields,
             })
         }
@@ -807,7 +842,7 @@ pub mod txn_offset_commit_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_i32(self.partition_index)?;
             encoder.write_i16(self.error_code)?;
 
@@ -815,7 +850,7 @@ pub mod txn_offset_commit_response {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -824,12 +859,12 @@ pub mod txn_offset_commit_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             TxnOffsetCommitResponsePartition::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| {
@@ -842,7 +877,7 @@ pub mod txn_offset_commit_response {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -858,12 +893,12 @@ pub mod txn_offset_commit_response {
 
     /// Response body for the `TxnOffsetCommit` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct TxnOffsetCommitResponse {
         /// The duration in milliseconds for which the request was throttled due to a quota violation, or zero if the request did not violate any quota.
         pub throttle_time_ms: i32,
         /// The responses for each topic.
-        pub topics: Vec<TxnOffsetCommitResponseTopic>,
+        pub topics: ::std::vec::Vec<TxnOffsetCommitResponseTopic>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
     }
@@ -871,7 +906,8 @@ pub mod txn_offset_commit_response {
     impl KafkaMessage for TxnOffsetCommitResponse {
         const NAME: &'static str = "TxnOffsetCommitResponse";
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 6);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(3, 6));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(3, 6));
     }
 
     impl KafkaResponse for TxnOffsetCommitResponse {
@@ -879,29 +915,35 @@ pub mod txn_offset_commit_response {
     }
 
     impl TxnOffsetCommitResponse {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             crate::message::ensure_encode_version::<Self>(version)?;
 
             for value in &self.topics {
                 value.validate_for_version(version)?;
             }
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: Self::NAME,
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for TxnOffsetCommitResponse {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             crate::message::ensure_decode_version::<Self>(version)?;
 
-            let throttle_time_ms = decoder.read_i32()?;
-            let topics = {
+            let __kw_field_0 = decoder.read_i32()?;
+            let __kw_field_1 = {
                 let length = if Self::is_flexible(version) {
                     decoder.read_compact_array_len()?
                 } else {
@@ -917,9 +959,9 @@ pub mod txn_offset_commit_response {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                throttle_time_ms,
-                topics,
+            ::core::result::Result::Ok(Self {
+                throttle_time_ms: __kw_field_0,
+                topics: __kw_field_1,
                 unknown_tagged_fields,
             })
         }
@@ -930,7 +972,7 @@ pub mod txn_offset_commit_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_i32(self.throttle_time_ms)?;
             if Self::is_flexible(version) {
                 encoder.write_compact_array_len(self.topics.len())?;
@@ -945,7 +987,7 @@ pub mod txn_offset_commit_response {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -954,12 +996,12 @@ pub mod txn_offset_commit_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             TxnOffsetCommitResponse::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| TxnOffsetCommitResponse::encode_validated(self, encoder, version),
@@ -970,7 +1012,7 @@ pub mod txn_offset_commit_response {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -994,7 +1036,7 @@ pub const TXN_OFFSET_COMMIT_REQUEST_DESCRIPTOR: MessageDescriptor = MessageDescr
     "TxnOffsetCommitRequest",
     MessageDirection::Request,
     VersionRange::new(0, 6),
-    Some(VersionRange::new(3, 6)),
+    ::core::option::Option::Some(VersionRange::new(3, 6)),
 );
 
 /// Static metadata for [`TxnOffsetCommitResponse`].
@@ -1003,7 +1045,7 @@ pub const TXN_OFFSET_COMMIT_RESPONSE_DESCRIPTOR: MessageDescriptor = MessageDesc
     "TxnOffsetCommitResponse",
     MessageDirection::Response,
     VersionRange::new(0, 6),
-    Some(VersionRange::new(3, 6)),
+    ::core::option::Option::Some(VersionRange::new(3, 6)),
 );
 
 /// Static pair metadata for the `TxnOffsetCommit` API.
@@ -1012,6 +1054,6 @@ pub const TXN_OFFSET_COMMIT_API_DESCRIPTOR: ApiDescriptor = ApiDescriptor::new(
     &TXN_OFFSET_COMMIT_REQUEST_DESCRIPTOR,
     &TXN_OFFSET_COMMIT_RESPONSE_DESCRIPTOR,
     VersionRange::new(0, 6),
-    Some(VersionRange::new(3, 6)),
+    ::core::option::Option::Some(VersionRange::new(3, 6)),
     false,
 );

@@ -20,21 +20,22 @@ pub mod offset_commit_request {
 
     /// `OffsetCommitRequestTopic` as declared by the `OffsetCommit` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct OffsetCommitRequestTopic {
         /// The topic name.
         pub name: StrBytes,
         /// The topic ID.
         pub topic_id: Uuid,
         /// Each partition to commit offsets for.
-        pub partitions: Vec<OffsetCommitRequestPartition>,
+        pub partitions: ::std::vec::Vec<OffsetCommitRequestPartition>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
     }
 
     impl OffsetCommitRequestTopic {
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(2, 10);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(8, 10));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(8, 10));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
@@ -42,9 +43,12 @@ pub mod offset_commit_request {
     }
 
     impl OffsetCommitRequestTopic {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(EncodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(EncodeError::UnsupportedVersion {
                     message: "OffsetCommitRequestTopic",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
@@ -55,27 +59,30 @@ pub mod offset_commit_request {
                 value.validate_for_version(version)?;
             }
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: "OffsetCommitRequestTopic",
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for OffsetCommitRequestTopic {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(DecodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(DecodeError::UnsupportedVersion {
                     message: "OffsetCommitRequestTopic",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
                 });
             }
 
-            let name = if version.value() <= 9 {
+            let __kw_field_0 = if version.value() <= 9 {
                 if Self::is_flexible(version) {
                     decoder.read_compact_string()?
                 } else {
@@ -84,12 +91,12 @@ pub mod offset_commit_request {
             } else {
                 StrBytes::default()
             };
-            let topic_id = if version.value() >= 10 {
+            let __kw_field_1 = if version.value() >= 10 {
                 decoder.read_uuid()?
             } else {
                 Uuid::ZERO
             };
-            let partitions = {
+            let __kw_field_2 = {
                 let length = if Self::is_flexible(version) {
                     decoder.read_compact_array_len()?
                 } else {
@@ -105,10 +112,10 @@ pub mod offset_commit_request {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                name,
-                topic_id,
-                partitions,
+            ::core::result::Result::Ok(Self {
+                name: __kw_field_0,
+                topic_id: __kw_field_1,
+                partitions: __kw_field_2,
                 unknown_tagged_fields,
             })
         }
@@ -119,7 +126,7 @@ pub mod offset_commit_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             if version.value() <= 9 {
                 if Self::is_flexible(version) {
                     encoder.write_compact_string(&self.name)?;
@@ -143,7 +150,7 @@ pub mod offset_commit_request {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -152,12 +159,12 @@ pub mod offset_commit_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             OffsetCommitRequestTopic::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| OffsetCommitRequestTopic::encode_validated(self, encoder, version),
@@ -168,7 +175,7 @@ pub mod offset_commit_request {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -189,14 +196,15 @@ pub mod offset_commit_request {
         /// The leader epoch of this partition.
         pub committed_leader_epoch: i32,
         /// Any associated metadata the client wants to keep.
-        pub committed_metadata: Option<StrBytes>,
+        pub committed_metadata: ::core::option::Option<StrBytes>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
     }
 
     impl OffsetCommitRequestPartition {
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(2, 10);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(8, 10));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(8, 10));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
@@ -204,9 +212,12 @@ pub mod offset_commit_request {
     }
 
     impl OffsetCommitRequestPartition {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(EncodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(EncodeError::UnsupportedVersion {
                     message: "OffsetCommitRequestPartition",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
@@ -214,46 +225,49 @@ pub mod offset_commit_request {
             }
 
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: "OffsetCommitRequestPartition",
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
-    impl Default for OffsetCommitRequestPartition {
+    impl ::core::default::Default for OffsetCommitRequestPartition {
         fn default() -> Self {
             Self {
                 partition_index: 0,
                 committed_offset: 0,
                 committed_leader_epoch: -1,
-                committed_metadata: Some(StrBytes::default()),
+                committed_metadata: ::core::option::Option::Some(StrBytes::default()),
                 unknown_tagged_fields: TaggedFields::default(),
             }
         }
     }
 
     impl KafkaDecode for OffsetCommitRequestPartition {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(DecodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(DecodeError::UnsupportedVersion {
                     message: "OffsetCommitRequestPartition",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
                 });
             }
 
-            let partition_index = decoder.read_i32()?;
-            let committed_offset = decoder.read_i64()?;
-            let committed_leader_epoch = if version.value() >= 6 {
+            let __kw_field_0 = decoder.read_i32()?;
+            let __kw_field_1 = decoder.read_i64()?;
+            let __kw_field_2 = if version.value() >= 6 {
                 decoder.read_i32()?
             } else {
                 -1
             };
-            let committed_metadata = if Self::is_flexible(version) {
+            let __kw_field_3 = if Self::is_flexible(version) {
                 decoder.read_compact_nullable_string()?
             } else {
                 decoder.read_nullable_string()?
@@ -264,11 +278,11 @@ pub mod offset_commit_request {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                partition_index,
-                committed_offset,
-                committed_leader_epoch,
-                committed_metadata,
+            ::core::result::Result::Ok(Self {
+                partition_index: __kw_field_0,
+                committed_offset: __kw_field_1,
+                committed_leader_epoch: __kw_field_2,
+                committed_metadata: __kw_field_3,
                 unknown_tagged_fields,
             })
         }
@@ -279,7 +293,7 @@ pub mod offset_commit_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_i32(self.partition_index)?;
             encoder.write_i64(self.committed_offset)?;
             if version.value() >= 6 {
@@ -295,7 +309,7 @@ pub mod offset_commit_request {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -304,12 +318,12 @@ pub mod offset_commit_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             OffsetCommitRequestPartition::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| OffsetCommitRequestPartition::encode_validated(self, encoder, version),
@@ -320,7 +334,7 @@ pub mod offset_commit_request {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -341,24 +355,24 @@ pub mod offset_commit_request {
         /// The member ID assigned by the group coordinator.
         pub member_id: StrBytes,
         /// The unique identifier of the consumer instance provided by end user.
-        pub group_instance_id: Option<StrBytes>,
+        pub group_instance_id: ::core::option::Option<StrBytes>,
         /// The time period in ms to retain the offset.
         pub retention_time_ms: i64,
         /// The topics to commit offsets for.
-        pub topics: Vec<OffsetCommitRequestTopic>,
+        pub topics: ::std::vec::Vec<OffsetCommitRequestTopic>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
     }
 
-    impl Default for OffsetCommitRequest {
+    impl ::core::default::Default for OffsetCommitRequest {
         fn default() -> Self {
             Self {
                 group_id: StrBytes::default(),
                 generation_id_or_member_epoch: -1,
                 member_id: StrBytes::default(),
-                group_instance_id: None,
+                group_instance_id: ::core::option::Option::None,
                 retention_time_ms: -1,
-                topics: Vec::new(),
+                topics: ::std::vec::Vec::new(),
                 unknown_tagged_fields: TaggedFields::default(),
             }
         }
@@ -367,7 +381,8 @@ pub mod offset_commit_request {
     impl KafkaMessage for OffsetCommitRequest {
         const NAME: &'static str = "OffsetCommitRequest";
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(2, 10);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(8, 10));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(8, 10));
     }
 
     impl KafkaRequest for OffsetCommitRequest {
@@ -380,11 +395,14 @@ pub mod offset_commit_request {
     }
 
     impl OffsetCommitRequest {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             crate::message::ensure_encode_version::<Self>(version)?;
 
             if version.value() < 7 && self.group_instance_id.is_some() {
-                return Err(EncodeError::FieldNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::FieldNotRepresentable {
                     message: Self::NAME,
                     field: "GroupInstanceId",
                     version,
@@ -394,46 +412,49 @@ pub mod offset_commit_request {
                 value.validate_for_version(version)?;
             }
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: Self::NAME,
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for OffsetCommitRequest {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             crate::message::ensure_decode_version::<Self>(version)?;
 
-            let group_id = if Self::is_flexible(version) {
+            let __kw_field_0 = if Self::is_flexible(version) {
                 decoder.read_compact_string()?
             } else {
                 decoder.read_string()?
             };
-            let generation_id_or_member_epoch = decoder.read_i32()?;
-            let member_id = if Self::is_flexible(version) {
+            let __kw_field_1 = decoder.read_i32()?;
+            let __kw_field_2 = if Self::is_flexible(version) {
                 decoder.read_compact_string()?
             } else {
                 decoder.read_string()?
             };
-            let group_instance_id = if version.value() >= 7 {
+            let __kw_field_3 = if version.value() >= 7 {
                 if Self::is_flexible(version) {
                     decoder.read_compact_nullable_string()?
                 } else {
                     decoder.read_nullable_string()?
                 }
             } else {
-                None
+                ::core::option::Option::None
             };
-            let retention_time_ms = if version.value() <= 4 {
+            let __kw_field_4 = if version.value() <= 4 {
                 decoder.read_i64()?
             } else {
                 -1
             };
-            let topics = {
+            let __kw_field_5 = {
                 let length = if Self::is_flexible(version) {
                     decoder.read_compact_array_len()?
                 } else {
@@ -449,13 +470,13 @@ pub mod offset_commit_request {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                group_id,
-                generation_id_or_member_epoch,
-                member_id,
-                group_instance_id,
-                retention_time_ms,
-                topics,
+            ::core::result::Result::Ok(Self {
+                group_id: __kw_field_0,
+                generation_id_or_member_epoch: __kw_field_1,
+                member_id: __kw_field_2,
+                group_instance_id: __kw_field_3,
+                retention_time_ms: __kw_field_4,
+                topics: __kw_field_5,
                 unknown_tagged_fields,
             })
         }
@@ -466,7 +487,7 @@ pub mod offset_commit_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             if Self::is_flexible(version) {
                 encoder.write_compact_string(&self.group_id)?;
             } else {
@@ -501,7 +522,7 @@ pub mod offset_commit_request {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -510,12 +531,12 @@ pub mod offset_commit_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             OffsetCommitRequest::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| OffsetCommitRequest::encode_validated(self, encoder, version),
@@ -526,7 +547,7 @@ pub mod offset_commit_request {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -552,21 +573,22 @@ pub mod offset_commit_response {
 
     /// `OffsetCommitResponseTopic` as declared by the `OffsetCommit` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct OffsetCommitResponseTopic {
         /// The topic name.
         pub name: StrBytes,
         /// The topic ID.
         pub topic_id: Uuid,
         /// The responses for each partition in the topic.
-        pub partitions: Vec<OffsetCommitResponsePartition>,
+        pub partitions: ::std::vec::Vec<OffsetCommitResponsePartition>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
     }
 
     impl OffsetCommitResponseTopic {
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(2, 10);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(8, 10));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(8, 10));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
@@ -574,9 +596,12 @@ pub mod offset_commit_response {
     }
 
     impl OffsetCommitResponseTopic {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(EncodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(EncodeError::UnsupportedVersion {
                     message: "OffsetCommitResponseTopic",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
@@ -587,27 +612,30 @@ pub mod offset_commit_response {
                 value.validate_for_version(version)?;
             }
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: "OffsetCommitResponseTopic",
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for OffsetCommitResponseTopic {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(DecodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(DecodeError::UnsupportedVersion {
                     message: "OffsetCommitResponseTopic",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
                 });
             }
 
-            let name = if version.value() <= 9 {
+            let __kw_field_0 = if version.value() <= 9 {
                 if Self::is_flexible(version) {
                     decoder.read_compact_string()?
                 } else {
@@ -616,12 +644,12 @@ pub mod offset_commit_response {
             } else {
                 StrBytes::default()
             };
-            let topic_id = if version.value() >= 10 {
+            let __kw_field_1 = if version.value() >= 10 {
                 decoder.read_uuid()?
             } else {
                 Uuid::ZERO
             };
-            let partitions = {
+            let __kw_field_2 = {
                 let length = if Self::is_flexible(version) {
                     decoder.read_compact_array_len()?
                 } else {
@@ -637,10 +665,10 @@ pub mod offset_commit_response {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                name,
-                topic_id,
-                partitions,
+            ::core::result::Result::Ok(Self {
+                name: __kw_field_0,
+                topic_id: __kw_field_1,
+                partitions: __kw_field_2,
                 unknown_tagged_fields,
             })
         }
@@ -651,7 +679,7 @@ pub mod offset_commit_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             if version.value() <= 9 {
                 if Self::is_flexible(version) {
                     encoder.write_compact_string(&self.name)?;
@@ -675,7 +703,7 @@ pub mod offset_commit_response {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -684,12 +712,12 @@ pub mod offset_commit_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             OffsetCommitResponseTopic::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| OffsetCommitResponseTopic::encode_validated(self, encoder, version),
@@ -700,7 +728,7 @@ pub mod offset_commit_response {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -712,7 +740,7 @@ pub mod offset_commit_response {
 
     /// `OffsetCommitResponsePartition` as declared by the `OffsetCommit` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct OffsetCommitResponsePartition {
         /// The partition index.
         pub partition_index: i32,
@@ -724,7 +752,8 @@ pub mod offset_commit_response {
 
     impl OffsetCommitResponsePartition {
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(2, 10);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(8, 10));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(8, 10));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
@@ -732,9 +761,12 @@ pub mod offset_commit_response {
     }
 
     impl OffsetCommitResponsePartition {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(EncodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(EncodeError::UnsupportedVersion {
                     message: "OffsetCommitResponsePartition",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
@@ -742,37 +774,40 @@ pub mod offset_commit_response {
             }
 
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: "OffsetCommitResponsePartition",
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for OffsetCommitResponsePartition {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(DecodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(DecodeError::UnsupportedVersion {
                     message: "OffsetCommitResponsePartition",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
                 });
             }
 
-            let partition_index = decoder.read_i32()?;
-            let error_code = decoder.read_i16()?;
+            let __kw_field_0 = decoder.read_i32()?;
+            let __kw_field_1 = decoder.read_i16()?;
             let unknown_tagged_fields = if Self::is_flexible(version) {
                 decoder.read_tagged_fields()?
             } else {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                partition_index,
-                error_code,
+            ::core::result::Result::Ok(Self {
+                partition_index: __kw_field_0,
+                error_code: __kw_field_1,
                 unknown_tagged_fields,
             })
         }
@@ -783,7 +818,7 @@ pub mod offset_commit_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_i32(self.partition_index)?;
             encoder.write_i16(self.error_code)?;
 
@@ -791,7 +826,7 @@ pub mod offset_commit_response {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -800,12 +835,12 @@ pub mod offset_commit_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             OffsetCommitResponsePartition::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| OffsetCommitResponsePartition::encode_validated(self, encoder, version),
@@ -816,7 +851,7 @@ pub mod offset_commit_response {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -828,12 +863,12 @@ pub mod offset_commit_response {
 
     /// Response body for the `OffsetCommit` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct OffsetCommitResponse {
         /// The duration in milliseconds for which the request was throttled due to a quota violation, or zero if the request did not violate any quota.
         pub throttle_time_ms: i32,
         /// The responses for each topic.
-        pub topics: Vec<OffsetCommitResponseTopic>,
+        pub topics: ::std::vec::Vec<OffsetCommitResponseTopic>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
     }
@@ -841,7 +876,8 @@ pub mod offset_commit_response {
     impl KafkaMessage for OffsetCommitResponse {
         const NAME: &'static str = "OffsetCommitResponse";
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(2, 10);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(8, 10));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(8, 10));
     }
 
     impl KafkaResponse for OffsetCommitResponse {
@@ -849,33 +885,39 @@ pub mod offset_commit_response {
     }
 
     impl OffsetCommitResponse {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             crate::message::ensure_encode_version::<Self>(version)?;
 
             for value in &self.topics {
                 value.validate_for_version(version)?;
             }
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: Self::NAME,
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for OffsetCommitResponse {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             crate::message::ensure_decode_version::<Self>(version)?;
 
-            let throttle_time_ms = if version.value() >= 3 {
+            let __kw_field_0 = if version.value() >= 3 {
                 decoder.read_i32()?
             } else {
                 0
             };
-            let topics = {
+            let __kw_field_1 = {
                 let length = if Self::is_flexible(version) {
                     decoder.read_compact_array_len()?
                 } else {
@@ -891,9 +933,9 @@ pub mod offset_commit_response {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                throttle_time_ms,
-                topics,
+            ::core::result::Result::Ok(Self {
+                throttle_time_ms: __kw_field_0,
+                topics: __kw_field_1,
                 unknown_tagged_fields,
             })
         }
@@ -904,7 +946,7 @@ pub mod offset_commit_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             if version.value() >= 3 {
                 encoder.write_i32(self.throttle_time_ms)?;
             }
@@ -921,7 +963,7 @@ pub mod offset_commit_response {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -930,12 +972,12 @@ pub mod offset_commit_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             OffsetCommitResponse::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| OffsetCommitResponse::encode_validated(self, encoder, version),
@@ -946,7 +988,7 @@ pub mod offset_commit_response {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -970,7 +1012,7 @@ pub const OFFSET_COMMIT_REQUEST_DESCRIPTOR: MessageDescriptor = MessageDescripto
     "OffsetCommitRequest",
     MessageDirection::Request,
     VersionRange::new(2, 10),
-    Some(VersionRange::new(8, 10)),
+    ::core::option::Option::Some(VersionRange::new(8, 10)),
 );
 
 /// Static metadata for [`OffsetCommitResponse`].
@@ -979,7 +1021,7 @@ pub const OFFSET_COMMIT_RESPONSE_DESCRIPTOR: MessageDescriptor = MessageDescript
     "OffsetCommitResponse",
     MessageDirection::Response,
     VersionRange::new(2, 10),
-    Some(VersionRange::new(8, 10)),
+    ::core::option::Option::Some(VersionRange::new(8, 10)),
 );
 
 /// Static pair metadata for the `OffsetCommit` API.
@@ -988,6 +1030,6 @@ pub const OFFSET_COMMIT_API_DESCRIPTOR: ApiDescriptor = ApiDescriptor::new(
     &OFFSET_COMMIT_REQUEST_DESCRIPTOR,
     &OFFSET_COMMIT_RESPONSE_DESCRIPTOR,
     VersionRange::new(2, 10),
-    Some(VersionRange::new(8, 10)),
+    ::core::option::Option::Some(VersionRange::new(8, 10)),
     false,
 );

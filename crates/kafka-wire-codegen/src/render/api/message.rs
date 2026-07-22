@@ -11,7 +11,7 @@ use crate::{
 use super::{
     codec::{render_decode, render_encode},
     descriptor::api_descriptor_name,
-    imports::spell,
+    imports::{ExternalSymbol as S, spell},
     prose::sentence,
     structs::render_declared_structs,
     validation::{Owner, render_validation},
@@ -31,8 +31,8 @@ pub(super) fn render_message(
     };
     render_declared_structs(rust, message)?;
 
-    rust.line(format!(
-        "/// {direction} body for the `{}` API.",
+    rust.doc_line(format!(
+        "{direction} body for the `{}` API.",
         message.name.api_stem()
     ));
     rust.line("#[non_exhaustive]");
@@ -51,7 +51,10 @@ pub(super) fn render_message(
         "Eq, PartialEq"
     };
     if derive_default {
-        rust.line(format!("#[derive(Clone, Debug, Default, {equality})]"));
+        rust.line(format!(
+            "#[derive(Clone, Debug, {}, {equality})]",
+            spell(message, S::Default)
+        ));
     } else {
         rust.line(format!("#[derive(Clone, Debug, {equality})]"));
     }
@@ -68,7 +71,7 @@ pub(super) fn render_message(
         rust.line("/// Unknown flexible-version tagged fields retained for forwarding.");
         rust.line(format!(
             "pub unknown_tagged_fields: {},",
-            spell(message, "TaggedFields")
+            spell(message, S::TaggedFields)
         ));
     }
     rust.close("");
@@ -92,7 +95,11 @@ pub(super) fn render_message(
 }
 
 fn render_default(rust: &mut RustText, message: &Message) {
-    rust.open(format!("impl Default for {}", message.name.rust_type()));
+    rust.open(format!(
+        "impl {} for {}",
+        spell(message, S::Default),
+        message.name.rust_type()
+    ));
     rust.open("fn default() -> Self");
     rust.open("Self");
     for field in &message.fields {
@@ -105,7 +112,7 @@ fn render_default(rust: &mut RustText, message: &Message) {
     if !message.effective_flexible_versions().is_empty() {
         rust.line(format!(
             "unknown_tagged_fields: {}::default(),",
-            spell(message, "TaggedFields")
+            spell(message, S::TaggedFields)
         ));
     }
     rust.close("");
@@ -120,11 +127,11 @@ fn render_metadata_impls(
     group: &ApiGroup,
 ) -> Result<(), GenerationError> {
     let (start, end) = invariant::bounded(message, &message.valid_versions, "valid versions")?;
-    let range = spell(message, "VersionRange");
+    let range = spell(message, S::VersionRange);
     let flexible = option_range(message, &message.effective_flexible_versions(), &range)?;
     rust.open(format!(
         "impl {} for {}",
-        spell(message, "KafkaMessage"),
+        spell(message, S::KafkaMessage),
         message.name.rust_type()
     ));
     rust.line(format!(
@@ -135,7 +142,8 @@ fn render_metadata_impls(
         "const SUPPORTED_VERSIONS: {range} = {range}::new({start}, {end});"
     ));
     rust.line(format!(
-        "const FLEXIBLE_VERSIONS: Option<{range}> = {flexible};"
+        "const FLEXIBLE_VERSIONS: {}<{range}> = {flexible};",
+        spell(message, S::Option)
     ));
     rust.close("");
     rust.blank();
@@ -145,12 +153,12 @@ fn render_metadata_impls(
         MessageKind::Response => {
             rust.open(format!(
                 "impl {} for {}",
-                spell(message, "KafkaResponse"),
+                spell(message, S::KafkaResponse),
                 message.name.rust_type()
             ));
             rust.line(format!(
                 "const API_KEY: {0} = {0}::new({1});",
-                spell(message, "ApiKey"),
+                spell(message, S::ApiKey),
                 group.api_key
             ));
             rust.close("");
@@ -165,17 +173,17 @@ fn render_metadata_impls(
 fn render_request_metadata(rust: &mut RustText, message: &Message, group: &ApiGroup) {
     rust.open(format!(
         "impl {} for {}",
-        spell(message, "KafkaRequest"),
+        spell(message, S::KafkaRequest),
         message.name.rust_type()
     ));
     rust.line(format!(
         "const API_KEY: {0} = {0}::new({1});",
-        spell(message, "ApiKey"),
+        spell(message, S::ApiKey),
         group.api_key
     ));
     rust.line(format!(
         "const API_DESCRIPTOR: &'static {} = &super::{};",
-        spell(message, "ApiDescriptor"),
+        spell(message, S::ApiDescriptor),
         api_descriptor_name(group)
     ));
     rust.close("");
@@ -183,7 +191,7 @@ fn render_request_metadata(rust: &mut RustText, message: &Message, group: &ApiGr
 
     rust.open(format!(
         "impl {} for {}",
-        spell(message, "RequestResponsePair"),
+        spell(message, S::RequestResponsePair),
         message.name.rust_type()
     ));
     // The one reference that crosses a module boundary, and it reads the
@@ -205,8 +213,8 @@ fn option_range(
 ) -> Result<String, GenerationError> {
     Ok(
         invariant::optional_bounded(message, versions, "effective flexible versions")?.map_or_else(
-            || "None".to_owned(),
-            |(start, end)| format!("Some({range}::new({start}, {end}))"),
+            || spell(message, S::None),
+            |(start, end)| format!("{}({range}::new({start}, {end}))", spell(message, S::Some)),
         ),
     )
 }

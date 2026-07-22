@@ -13,7 +13,9 @@ mod support;
 
 use std::fs;
 
-use kafka_wire_codegen::{GenerationError, GenerationMode, PairError, render_corpus};
+use kafka_wire_codegen::{
+    CorpusOutcome, GenerationError, GenerationMode, PairError, render_corpus,
+};
 use support::{COMMIT, REFUSED, SUPPORTED, Workspace, hex_digest, read, repository_root, write};
 
 #[test]
@@ -219,7 +221,7 @@ fn a_manifest_must_name_the_expected_schema_and_generator() {
 }
 
 #[test]
-fn generation_and_corpus_probing_run_cross_schema_validation() {
+fn generation_is_strict_while_corpus_probing_isolates_cross_schema_failures() {
     let workspace = Workspace::pinning("corpus-validation", &SUPPORTED);
     replace_locked_schema(
         &workspace,
@@ -243,24 +245,31 @@ fn generation_and_corpus_probing_run_cross_schema_validation() {
         }"#,
     );
 
-    for error in [
-        workspace
-            .generate(GenerationMode::Write)
-            .err()
-            .unwrap_or_else(|| panic!("generation accepted a cross-schema collision")),
-        render_corpus(&workspace.root)
-            .err()
-            .unwrap_or_else(|| panic!("corpus probing accepted a cross-schema collision")),
-    ] {
-        let GenerationError::CorpusValidation(errors) = error else {
-            panic!("cross-schema collision produced the wrong error: {error:?}");
-        };
-        assert!(errors.0.iter().any(|error| {
-            error.code == "KAFKA_SCHEMA_QUALIFIED_STRUCT_COLLISION"
-                && error.message.contains("message `SaslHandshakeRequest`")
-                && error.message.contains("struct `SaslHandshakeRequest`")
-        }));
-    }
+    let error = workspace
+        .generate(GenerationMode::Write)
+        .err()
+        .unwrap_or_else(|| panic!("generation accepted a cross-schema collision"));
+    let GenerationError::CorpusValidation(errors) = error else {
+        panic!("cross-schema collision produced the wrong error: {error:?}");
+    };
+    assert!(errors.0.iter().any(|error| {
+        error.code == "KAFKA_SCHEMA_QUALIFIED_STRUCT_COLLISION"
+            && error.message.contains("message `SaslHandshakeRequest`")
+            && error.message.contains("struct `SaslHandshakeRequest`")
+    }));
+
+    let probe = render_corpus(&workspace.root)
+        .unwrap_or_else(|error| panic!("corpus probing failed globally: {error}"));
+    assert!(matches!(
+        probe.outcomes.get(SUPPORTED[0]),
+        Some(CorpusOutcome::NotRendered { reason })
+            if reason.contains("KAFKA_SCHEMA_QUALIFIED_STRUCT_COLLISION")
+    ));
+    assert!(matches!(
+        probe.outcomes.get(SUPPORTED[1]),
+        Some(CorpusOutcome::NotRendered { reason }) if reason.contains("no request schema")
+    ));
+    assert_eq!(probe.rendered(), 0);
     assert!(workspace.tree().is_empty());
 }
 

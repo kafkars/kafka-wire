@@ -7,7 +7,7 @@ use kafka_wire_schema::{Field, FieldType, Message};
 
 use crate::render::{field, text::RustText};
 
-use super::imports::spell;
+use super::imports::{ExternalSymbol as S, spell};
 
 /// How a structure names itself in an encode error.
 #[derive(Clone, Copy, Eq, PartialEq)]
@@ -41,9 +41,10 @@ pub(super) fn render_validation(
         rust.line("#[allow(clippy::unused_self)]");
     }
     rust.open(format!(
-        "fn validate_for_version(&self, version: {}) -> Result<(), {}>",
-        spell(message, "ApiVersion"),
-        spell(message, "EncodeError"),
+        "fn validate_for_version(&self, version: {}) -> {}<(), {}>",
+        spell(message, S::ApiVersion),
+        spell(message, S::Result),
+        spell(message, S::EncodeError),
     ));
     match owner {
         Owner::Message => rust.line("crate::message::ensure_encode_version::<Self>(version)?;"),
@@ -59,8 +60,9 @@ pub(super) fn render_validation(
     if flexible {
         rust.open("if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty()");
         rust.open(format!(
-            "return Err({}::TaggedFieldsNotRepresentable",
-            spell(message, "EncodeError")
+            "return {}({}::TaggedFieldsNotRepresentable",
+            spell(message, S::Err),
+            spell(message, S::EncodeError)
         ));
         rust.line(format!("message: {},", owner.name()));
         rust.line("version,");
@@ -68,7 +70,7 @@ pub(super) fn render_validation(
         rust.close("");
     }
     rust.blank();
-    rust.line("Ok(())");
+    rust.line(format!("{}(())", spell(message, S::Ok)));
     rust.close("");
     rust.close("");
     rust.blank();
@@ -100,8 +102,9 @@ fn render_representability_checks(
             field::non_default_condition(candidate, message)
         ));
         rust.open(format!(
-            "return Err({}::FieldNotRepresentable",
-            spell(message, "EncodeError")
+            "return {}({}::FieldNotRepresentable",
+            spell(message, S::Err),
+            spell(message, S::EncodeError)
         ));
         rust.line(format!("message: {},", owner.name()));
         rust.line(format!("field: {:?},", candidate.name.protocol()));
@@ -121,8 +124,9 @@ fn render_null_guard(rust: &mut RustText, field: &Field, message: &Message, owne
         field::as_conjunct(&condition)
     ));
     rust.open(format!(
-        "return Err({}::NullNotAllowed",
-        spell(message, "EncodeError")
+        "return {}({}::NullNotAllowed",
+        spell(message, S::Err),
+        spell(message, S::EncodeError)
     ));
     rust.line(format!("message: {},", owner.name()));
     rust.line(format!("field: {:?},", field.name.protocol()));
@@ -134,8 +138,9 @@ fn render_null_guard(rust: &mut RustText, field: &Field, message: &Message, owne
 fn render_struct_version_guard(rust: &mut RustText, message: &Message, owner: Owner<'_>) {
     rust.open("if !Self::SUPPORTED_VERSIONS.contains(version)");
     rust.open(format!(
-        "return Err({}::UnsupportedVersion",
-        spell(message, "EncodeError")
+        "return {}({}::UnsupportedVersion",
+        spell(message, S::Err),
+        spell(message, S::EncodeError)
     ));
     rust.line(format!("message: {},", owner.name()));
     rust.line("version,");
@@ -156,7 +161,10 @@ fn render_nested_validation(rust: &mut RustText, fields: &[Field], message: &Mes
         let name = field.name.rust_field();
         match &field.ty {
             FieldType::Struct(_) if field::is_nullable(field, message) => {
-                rust.open(format!("if let Some(value) = &self.{name}"));
+                rust.open(format!(
+                    "if let {}(value) = &self.{name}",
+                    spell(message, S::Some)
+                ));
                 rust.line("value.validate_for_version(version)?;");
                 rust.close("");
             }
@@ -164,7 +172,10 @@ fn render_nested_validation(rust: &mut RustText, fields: &[Field], message: &Mes
                 rust.line(format!("self.{name}.validate_for_version(version)?;"));
             }
             FieldType::Array(_) if field::is_nullable(field, message) => {
-                rust.open(format!("if let Some(values) = &self.{name}"));
+                rust.open(format!(
+                    "if let {}(values) = &self.{name}",
+                    spell(message, S::Some)
+                ));
                 render_validation_loop(rust);
                 rust.close("");
             }

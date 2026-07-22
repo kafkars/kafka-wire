@@ -20,7 +20,7 @@ pub mod heartbeat_request {
 
     /// Request body for the `Heartbeat` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct HeartbeatRequest {
         /// The group id.
         pub group_id: StrBytes,
@@ -29,7 +29,7 @@ pub mod heartbeat_request {
         /// The member ID.
         pub member_id: StrBytes,
         /// The unique identifier of the consumer instance provided by end user.
-        pub group_instance_id: Option<StrBytes>,
+        pub group_instance_id: ::core::option::Option<StrBytes>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
     }
@@ -37,7 +37,8 @@ pub mod heartbeat_request {
     impl KafkaMessage for HeartbeatRequest {
         const NAME: &'static str = "HeartbeatRequest";
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 4);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(4, 4));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(4, 4));
     }
 
     impl KafkaRequest for HeartbeatRequest {
@@ -50,50 +51,56 @@ pub mod heartbeat_request {
     }
 
     impl HeartbeatRequest {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             crate::message::ensure_encode_version::<Self>(version)?;
 
             if version.value() < 3 && self.group_instance_id.is_some() {
-                return Err(EncodeError::FieldNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::FieldNotRepresentable {
                     message: Self::NAME,
                     field: "GroupInstanceId",
                     version,
                 });
             }
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: Self::NAME,
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for HeartbeatRequest {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             crate::message::ensure_decode_version::<Self>(version)?;
 
-            let group_id = if Self::is_flexible(version) {
+            let __kw_field_0 = if Self::is_flexible(version) {
                 decoder.read_compact_string()?
             } else {
                 decoder.read_string()?
             };
-            let generation_id = decoder.read_i32()?;
-            let member_id = if Self::is_flexible(version) {
+            let __kw_field_1 = decoder.read_i32()?;
+            let __kw_field_2 = if Self::is_flexible(version) {
                 decoder.read_compact_string()?
             } else {
                 decoder.read_string()?
             };
-            let group_instance_id = if version.value() >= 3 {
+            let __kw_field_3 = if version.value() >= 3 {
                 if Self::is_flexible(version) {
                     decoder.read_compact_nullable_string()?
                 } else {
                     decoder.read_nullable_string()?
                 }
             } else {
-                None
+                ::core::option::Option::None
             };
             let unknown_tagged_fields = if Self::is_flexible(version) {
                 decoder.read_tagged_fields()?
@@ -101,11 +108,11 @@ pub mod heartbeat_request {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                group_id,
-                generation_id,
-                member_id,
-                group_instance_id,
+            ::core::result::Result::Ok(Self {
+                group_id: __kw_field_0,
+                generation_id: __kw_field_1,
+                member_id: __kw_field_2,
+                group_instance_id: __kw_field_3,
                 unknown_tagged_fields,
             })
         }
@@ -116,7 +123,7 @@ pub mod heartbeat_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             if Self::is_flexible(version) {
                 encoder.write_compact_string(&self.group_id)?;
             } else {
@@ -140,7 +147,7 @@ pub mod heartbeat_request {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -149,12 +156,12 @@ pub mod heartbeat_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             HeartbeatRequest::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| HeartbeatRequest::encode_validated(self, encoder, version),
@@ -165,7 +172,7 @@ pub mod heartbeat_request {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -190,7 +197,7 @@ pub mod heartbeat_response {
 
     /// Response body for the `Heartbeat` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct HeartbeatResponse {
         /// The duration in milliseconds for which the request was throttled due to a quota violation, or zero if the request did not violate any quota.
         pub throttle_time_ms: i32,
@@ -203,7 +210,8 @@ pub mod heartbeat_response {
     impl KafkaMessage for HeartbeatResponse {
         const NAME: &'static str = "HeartbeatResponse";
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 4);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(4, 4));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(4, 4));
     }
 
     impl KafkaResponse for HeartbeatResponse {
@@ -211,39 +219,45 @@ pub mod heartbeat_response {
     }
 
     impl HeartbeatResponse {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             crate::message::ensure_encode_version::<Self>(version)?;
 
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: Self::NAME,
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for HeartbeatResponse {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             crate::message::ensure_decode_version::<Self>(version)?;
 
-            let throttle_time_ms = if version.value() >= 1 {
+            let __kw_field_0 = if version.value() >= 1 {
                 decoder.read_i32()?
             } else {
                 0
             };
-            let error_code = decoder.read_i16()?;
+            let __kw_field_1 = decoder.read_i16()?;
             let unknown_tagged_fields = if Self::is_flexible(version) {
                 decoder.read_tagged_fields()?
             } else {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                throttle_time_ms,
-                error_code,
+            ::core::result::Result::Ok(Self {
+                throttle_time_ms: __kw_field_0,
+                error_code: __kw_field_1,
                 unknown_tagged_fields,
             })
         }
@@ -254,7 +268,7 @@ pub mod heartbeat_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             if version.value() >= 1 {
                 encoder.write_i32(self.throttle_time_ms)?;
             }
@@ -264,7 +278,7 @@ pub mod heartbeat_response {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -273,12 +287,12 @@ pub mod heartbeat_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             HeartbeatResponse::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| HeartbeatResponse::encode_validated(self, encoder, version),
@@ -289,7 +303,7 @@ pub mod heartbeat_response {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -313,7 +327,7 @@ pub const HEARTBEAT_REQUEST_DESCRIPTOR: MessageDescriptor = MessageDescriptor::n
     "HeartbeatRequest",
     MessageDirection::Request,
     VersionRange::new(0, 4),
-    Some(VersionRange::new(4, 4)),
+    ::core::option::Option::Some(VersionRange::new(4, 4)),
 );
 
 /// Static metadata for [`HeartbeatResponse`].
@@ -322,7 +336,7 @@ pub const HEARTBEAT_RESPONSE_DESCRIPTOR: MessageDescriptor = MessageDescriptor::
     "HeartbeatResponse",
     MessageDirection::Response,
     VersionRange::new(0, 4),
-    Some(VersionRange::new(4, 4)),
+    ::core::option::Option::Some(VersionRange::new(4, 4)),
 );
 
 /// Static pair metadata for the `Heartbeat` API.
@@ -331,6 +345,6 @@ pub const HEARTBEAT_API_DESCRIPTOR: ApiDescriptor = ApiDescriptor::new(
     &HEARTBEAT_REQUEST_DESCRIPTOR,
     &HEARTBEAT_RESPONSE_DESCRIPTOR,
     VersionRange::new(0, 4),
-    Some(VersionRange::new(4, 4)),
+    ::core::option::Option::Some(VersionRange::new(4, 4)),
     false,
 );

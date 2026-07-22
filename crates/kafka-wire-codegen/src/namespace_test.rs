@@ -5,7 +5,7 @@
 
 #![allow(clippy::expect_used)]
 
-use kafka_wire_schema::{ApiName, MessageName};
+use kafka_wire_schema::{ApiName, FieldName, MessageName};
 
 use crate::{
     GenerationError, group::group_sources, lockfile::ProtocolLock,
@@ -81,6 +81,57 @@ fn nested_structs_participate_in_their_actual_module_namespace() {
         } if symbol == collision
             && first.contains("message")
             && second.contains("nested struct")
+    ));
+}
+
+#[test]
+fn flexible_owners_claim_the_synthesized_unknown_tagged_member() {
+    let (mut groups, unkeyed) = corpus();
+    let source = groups
+        .iter_mut()
+        .flat_map(|group| [&mut group.request, &mut group.response])
+        .find(|source| {
+            !source.message.effective_flexible_versions().is_empty()
+                && !source.message.fields.is_empty()
+        })
+        .expect("pinned corpus must contain a flexible message with a field");
+    source.message.fields[0].name = FieldName::new("UnknownTaggedFields");
+
+    let error = validate_generated_namespace(&groups, &unkeyed)
+        .expect_err("a schema field cannot duplicate synthesized storage");
+    assert!(matches!(
+        error,
+        GenerationError::GeneratedSymbolCollision {
+            symbol,
+            first,
+            second,
+            ..
+        } if symbol == "unknown_tagged_fields"
+            && first.contains("schema field")
+            && second.contains("compiler-synthesized")
+    ));
+}
+
+#[test]
+fn generated_exports_cannot_shadow_private_crate_root_modules() {
+    let (groups, mut unkeyed) = corpus();
+    let source = unkeyed
+        .first_mut()
+        .expect("pinned corpus must contain an unkeyed schema");
+    source.message.name = MessageName::new("Message");
+
+    let error = validate_generated_namespace(&groups, &unkeyed)
+        .expect_err("a generated root module cannot shadow a private module");
+    assert!(matches!(
+        error,
+        GenerationError::GeneratedSymbolCollision {
+            symbol,
+            first,
+            second,
+            ..
+        } if symbol == "message"
+            && first.contains("handwritten private crate-root module")
+            && second.contains("generated struct module")
     ));
 }
 

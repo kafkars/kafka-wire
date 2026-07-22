@@ -23,7 +23,7 @@ pub mod remove_raft_voter_request {
     #[derive(Clone, Debug, Eq, PartialEq)]
     pub struct RemoveRaftVoterRequest {
         /// The cluster id of the request.
-        pub cluster_id: Option<StrBytes>,
+        pub cluster_id: ::core::option::Option<StrBytes>,
         /// The replica id of the voter getting removed from the topic partition.
         pub voter_id: i32,
         /// The directory id of the voter getting removed from the topic partition.
@@ -32,10 +32,10 @@ pub mod remove_raft_voter_request {
         pub unknown_tagged_fields: TaggedFields,
     }
 
-    impl Default for RemoveRaftVoterRequest {
+    impl ::core::default::Default for RemoveRaftVoterRequest {
         fn default() -> Self {
             Self {
-                cluster_id: Some(StrBytes::default()),
+                cluster_id: ::core::option::Option::Some(StrBytes::default()),
                 voter_id: 0,
                 voter_directory_id: Uuid::ZERO,
                 unknown_tagged_fields: TaggedFields::default(),
@@ -46,7 +46,8 @@ pub mod remove_raft_voter_request {
     impl KafkaMessage for RemoveRaftVoterRequest {
         const NAME: &'static str = "RemoveRaftVoterRequest";
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 0);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 0));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(0, 0));
     }
 
     impl KafkaRequest for RemoveRaftVoterRequest {
@@ -59,37 +60,43 @@ pub mod remove_raft_voter_request {
     }
 
     impl RemoveRaftVoterRequest {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             crate::message::ensure_encode_version::<Self>(version)?;
 
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: Self::NAME,
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for RemoveRaftVoterRequest {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             crate::message::ensure_decode_version::<Self>(version)?;
 
-            let cluster_id = decoder.read_compact_nullable_string()?;
-            let voter_id = decoder.read_i32()?;
-            let voter_directory_id = decoder.read_uuid()?;
+            let __kw_field_0 = decoder.read_compact_nullable_string()?;
+            let __kw_field_1 = decoder.read_i32()?;
+            let __kw_field_2 = decoder.read_uuid()?;
             let unknown_tagged_fields = if Self::is_flexible(version) {
                 decoder.read_tagged_fields()?
             } else {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                cluster_id,
-                voter_id,
-                voter_directory_id,
+            ::core::result::Result::Ok(Self {
+                cluster_id: __kw_field_0,
+                voter_id: __kw_field_1,
+                voter_directory_id: __kw_field_2,
                 unknown_tagged_fields,
             })
         }
@@ -100,7 +107,7 @@ pub mod remove_raft_voter_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_compact_nullable_string(self.cluster_id.as_ref())?;
             encoder.write_i32(self.voter_id)?;
             encoder.write_uuid(self.voter_directory_id)?;
@@ -109,7 +116,7 @@ pub mod remove_raft_voter_request {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -118,12 +125,12 @@ pub mod remove_raft_voter_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             RemoveRaftVoterRequest::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| RemoveRaftVoterRequest::encode_validated(self, encoder, version),
@@ -134,7 +141,7 @@ pub mod remove_raft_voter_request {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -167,17 +174,17 @@ pub mod remove_raft_voter_response {
         /// The error code, or 0 if there was no error.
         pub error_code: i16,
         /// The error message, or null if there was no error.
-        pub error_message: Option<StrBytes>,
+        pub error_message: ::core::option::Option<StrBytes>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
     }
 
-    impl Default for RemoveRaftVoterResponse {
+    impl ::core::default::Default for RemoveRaftVoterResponse {
         fn default() -> Self {
             Self {
                 throttle_time_ms: 0,
                 error_code: 0,
-                error_message: Some(StrBytes::default()),
+                error_message: ::core::option::Option::Some(StrBytes::default()),
                 unknown_tagged_fields: TaggedFields::default(),
             }
         }
@@ -186,7 +193,8 @@ pub mod remove_raft_voter_response {
     impl KafkaMessage for RemoveRaftVoterResponse {
         const NAME: &'static str = "RemoveRaftVoterResponse";
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 0);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 0));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(0, 0));
     }
 
     impl KafkaResponse for RemoveRaftVoterResponse {
@@ -194,37 +202,43 @@ pub mod remove_raft_voter_response {
     }
 
     impl RemoveRaftVoterResponse {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             crate::message::ensure_encode_version::<Self>(version)?;
 
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: Self::NAME,
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for RemoveRaftVoterResponse {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             crate::message::ensure_decode_version::<Self>(version)?;
 
-            let throttle_time_ms = decoder.read_i32()?;
-            let error_code = decoder.read_i16()?;
-            let error_message = decoder.read_compact_nullable_string()?;
+            let __kw_field_0 = decoder.read_i32()?;
+            let __kw_field_1 = decoder.read_i16()?;
+            let __kw_field_2 = decoder.read_compact_nullable_string()?;
             let unknown_tagged_fields = if Self::is_flexible(version) {
                 decoder.read_tagged_fields()?
             } else {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                throttle_time_ms,
-                error_code,
-                error_message,
+            ::core::result::Result::Ok(Self {
+                throttle_time_ms: __kw_field_0,
+                error_code: __kw_field_1,
+                error_message: __kw_field_2,
                 unknown_tagged_fields,
             })
         }
@@ -235,7 +249,7 @@ pub mod remove_raft_voter_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_i32(self.throttle_time_ms)?;
             encoder.write_i16(self.error_code)?;
             encoder.write_compact_nullable_string(self.error_message.as_ref())?;
@@ -244,7 +258,7 @@ pub mod remove_raft_voter_response {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -253,12 +267,12 @@ pub mod remove_raft_voter_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             RemoveRaftVoterResponse::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| RemoveRaftVoterResponse::encode_validated(self, encoder, version),
@@ -269,7 +283,7 @@ pub mod remove_raft_voter_response {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -293,7 +307,7 @@ pub const REMOVE_RAFT_VOTER_REQUEST_DESCRIPTOR: MessageDescriptor = MessageDescr
     "RemoveRaftVoterRequest",
     MessageDirection::Request,
     VersionRange::new(0, 0),
-    Some(VersionRange::new(0, 0)),
+    ::core::option::Option::Some(VersionRange::new(0, 0)),
 );
 
 /// Static metadata for [`RemoveRaftVoterResponse`].
@@ -302,7 +316,7 @@ pub const REMOVE_RAFT_VOTER_RESPONSE_DESCRIPTOR: MessageDescriptor = MessageDesc
     "RemoveRaftVoterResponse",
     MessageDirection::Response,
     VersionRange::new(0, 0),
-    Some(VersionRange::new(0, 0)),
+    ::core::option::Option::Some(VersionRange::new(0, 0)),
 );
 
 /// Static pair metadata for the `RemoveRaftVoter` API.
@@ -311,6 +325,6 @@ pub const REMOVE_RAFT_VOTER_API_DESCRIPTOR: ApiDescriptor = ApiDescriptor::new(
     &REMOVE_RAFT_VOTER_REQUEST_DESCRIPTOR,
     &REMOVE_RAFT_VOTER_RESPONSE_DESCRIPTOR,
     VersionRange::new(0, 0),
-    Some(VersionRange::new(0, 0)),
+    ::core::option::Option::Some(VersionRange::new(0, 0)),
     false,
 );

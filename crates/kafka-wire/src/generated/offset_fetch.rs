@@ -20,19 +20,20 @@ pub mod offset_fetch_request {
 
     /// `OffsetFetchRequestTopic` as declared by the `OffsetFetch` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct OffsetFetchRequestTopic {
         /// The topic name.
         pub name: StrBytes,
         /// The partition indexes we would like to fetch offsets for.
-        pub partition_indexes: Vec<i32>,
+        pub partition_indexes: ::std::vec::Vec<i32>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
     }
 
     impl OffsetFetchRequestTopic {
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(1, 7);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(6, 7));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(6, 7));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
@@ -40,9 +41,12 @@ pub mod offset_fetch_request {
     }
 
     impl OffsetFetchRequestTopic {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(EncodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(EncodeError::UnsupportedVersion {
                     message: "OffsetFetchRequestTopic",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
@@ -50,32 +54,35 @@ pub mod offset_fetch_request {
             }
 
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: "OffsetFetchRequestTopic",
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for OffsetFetchRequestTopic {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(DecodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(DecodeError::UnsupportedVersion {
                     message: "OffsetFetchRequestTopic",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
                 });
             }
 
-            let name = if Self::is_flexible(version) {
+            let __kw_field_0 = if Self::is_flexible(version) {
                 decoder.read_compact_string()?
             } else {
                 decoder.read_string()?
             };
-            let partition_indexes = {
+            let __kw_field_1 = {
                 let length = if Self::is_flexible(version) {
                     decoder.read_compact_array_len()?
                 } else {
@@ -89,9 +96,9 @@ pub mod offset_fetch_request {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                name,
-                partition_indexes,
+            ::core::result::Result::Ok(Self {
+                name: __kw_field_0,
+                partition_indexes: __kw_field_1,
                 unknown_tagged_fields,
             })
         }
@@ -102,7 +109,7 @@ pub mod offset_fetch_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             if Self::is_flexible(version) {
                 encoder.write_compact_string(&self.name)?;
             } else {
@@ -121,7 +128,7 @@ pub mod offset_fetch_request {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -130,12 +137,12 @@ pub mod offset_fetch_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             OffsetFetchRequestTopic::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| OffsetFetchRequestTopic::encode_validated(self, encoder, version),
@@ -146,7 +153,7 @@ pub mod offset_fetch_request {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -163,18 +170,19 @@ pub mod offset_fetch_request {
         /// The group ID.
         pub group_id: StrBytes,
         /// The member id.
-        pub member_id: Option<StrBytes>,
+        pub member_id: ::core::option::Option<StrBytes>,
         /// The member epoch if using the new consumer protocol (KIP-848).
         pub member_epoch: i32,
         /// Each topic we would like to fetch offsets for, or null to fetch offsets for all topics.
-        pub topics: Option<Vec<OffsetFetchRequestTopics>>,
+        pub topics: ::core::option::Option<::std::vec::Vec<OffsetFetchRequestTopics>>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
     }
 
     impl OffsetFetchRequestGroup {
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(8, 10);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(8, 10));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(8, 10));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
@@ -182,65 +190,71 @@ pub mod offset_fetch_request {
     }
 
     impl OffsetFetchRequestGroup {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(EncodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(EncodeError::UnsupportedVersion {
                     message: "OffsetFetchRequestGroup",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
                 });
             }
 
-            if let Some(values) = &self.topics {
+            if let ::core::option::Option::Some(values) = &self.topics {
                 for value in values {
                     value.validate_for_version(version)?;
                 }
             }
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: "OffsetFetchRequestGroup",
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
-    impl Default for OffsetFetchRequestGroup {
+    impl ::core::default::Default for OffsetFetchRequestGroup {
         fn default() -> Self {
             Self {
                 group_id: StrBytes::default(),
-                member_id: None,
+                member_id: ::core::option::Option::None,
                 member_epoch: -1,
-                topics: Some(Vec::new()),
+                topics: ::core::option::Option::Some(::std::vec::Vec::new()),
                 unknown_tagged_fields: TaggedFields::default(),
             }
         }
     }
 
     impl KafkaDecode for OffsetFetchRequestGroup {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(DecodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(DecodeError::UnsupportedVersion {
                     message: "OffsetFetchRequestGroup",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
                 });
             }
 
-            let group_id = decoder.read_compact_string()?;
-            let member_id = if version.value() >= 9 {
+            let __kw_field_0 = decoder.read_compact_string()?;
+            let __kw_field_1 = if version.value() >= 9 {
                 decoder.read_compact_nullable_string()?
             } else {
-                None
+                ::core::option::Option::None
             };
-            let member_epoch = if version.value() >= 9 {
+            let __kw_field_2 = if version.value() >= 9 {
                 decoder.read_i32()?
             } else {
                 -1
             };
-            let topics = {
+            let __kw_field_3 = {
                 let length = decoder.read_compact_nullable_array_len()?;
                 length
                     .map(|length| {
@@ -256,11 +270,11 @@ pub mod offset_fetch_request {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                group_id,
-                member_id,
-                member_epoch,
-                topics,
+            ::core::result::Result::Ok(Self {
+                group_id: __kw_field_0,
+                member_id: __kw_field_1,
+                member_epoch: __kw_field_2,
+                topics: __kw_field_3,
                 unknown_tagged_fields,
             })
         }
@@ -271,7 +285,7 @@ pub mod offset_fetch_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_compact_string(&self.group_id)?;
             if version.value() >= 9 {
                 encoder.write_compact_nullable_string(self.member_id.as_ref())?;
@@ -279,8 +293,9 @@ pub mod offset_fetch_request {
             if version.value() >= 9 {
                 encoder.write_i32(self.member_epoch)?;
             }
-            encoder.write_compact_nullable_array_len(self.topics.as_ref().map(Vec::len))?;
-            if let Some(values) = &self.topics {
+            encoder
+                .write_compact_nullable_array_len(self.topics.as_ref().map(::std::vec::Vec::len))?;
+            if let ::core::option::Option::Some(values) = &self.topics {
                 for value in values {
                     value.encode_validated(encoder, version)?;
                 }
@@ -290,7 +305,7 @@ pub mod offset_fetch_request {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -299,12 +314,12 @@ pub mod offset_fetch_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             OffsetFetchRequestGroup::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| OffsetFetchRequestGroup::encode_validated(self, encoder, version),
@@ -315,7 +330,7 @@ pub mod offset_fetch_request {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -327,21 +342,22 @@ pub mod offset_fetch_request {
 
     /// `OffsetFetchRequestTopics` as declared by the `OffsetFetch` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct OffsetFetchRequestTopics {
         /// The topic name.
         pub name: StrBytes,
         /// The topic ID.
         pub topic_id: Uuid,
         /// The partition indexes we would like to fetch offsets for.
-        pub partition_indexes: Vec<i32>,
+        pub partition_indexes: ::std::vec::Vec<i32>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
     }
 
     impl OffsetFetchRequestTopics {
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(8, 10);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(8, 10));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(8, 10));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
@@ -349,9 +365,12 @@ pub mod offset_fetch_request {
     }
 
     impl OffsetFetchRequestTopics {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(EncodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(EncodeError::UnsupportedVersion {
                     message: "OffsetFetchRequestTopics",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
@@ -359,37 +378,40 @@ pub mod offset_fetch_request {
             }
 
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: "OffsetFetchRequestTopics",
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for OffsetFetchRequestTopics {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(DecodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(DecodeError::UnsupportedVersion {
                     message: "OffsetFetchRequestTopics",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
                 });
             }
 
-            let name = if version.value() <= 9 {
+            let __kw_field_0 = if version.value() <= 9 {
                 decoder.read_compact_string()?
             } else {
                 StrBytes::default()
             };
-            let topic_id = if version.value() >= 10 {
+            let __kw_field_1 = if version.value() >= 10 {
                 decoder.read_uuid()?
             } else {
                 Uuid::ZERO
             };
-            let partition_indexes = {
+            let __kw_field_2 = {
                 let length = decoder.read_compact_array_len()?;
                 decoder.read_vec(length, Decoder::read_i32)?
             };
@@ -399,10 +421,10 @@ pub mod offset_fetch_request {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                name,
-                topic_id,
-                partition_indexes,
+            ::core::result::Result::Ok(Self {
+                name: __kw_field_0,
+                topic_id: __kw_field_1,
+                partition_indexes: __kw_field_2,
                 unknown_tagged_fields,
             })
         }
@@ -413,7 +435,7 @@ pub mod offset_fetch_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             if version.value() <= 9 {
                 encoder.write_compact_string(&self.name)?;
             }
@@ -429,7 +451,7 @@ pub mod offset_fetch_request {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -438,12 +460,12 @@ pub mod offset_fetch_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             OffsetFetchRequestTopics::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| OffsetFetchRequestTopics::encode_validated(self, encoder, version),
@@ -454,7 +476,7 @@ pub mod offset_fetch_request {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -471,21 +493,21 @@ pub mod offset_fetch_request {
         /// The group to fetch offsets for.
         pub group_id: StrBytes,
         /// Each topic we would like to fetch offsets for, or null to fetch offsets for all topics.
-        pub topics: Option<Vec<OffsetFetchRequestTopic>>,
+        pub topics: ::core::option::Option<::std::vec::Vec<OffsetFetchRequestTopic>>,
         /// Each group we would like to fetch offsets for.
-        pub groups: Vec<OffsetFetchRequestGroup>,
+        pub groups: ::std::vec::Vec<OffsetFetchRequestGroup>,
         /// Whether broker should hold on returning unstable offsets but set a retriable error code for the partitions.
         pub require_stable: bool,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
     }
 
-    impl Default for OffsetFetchRequest {
+    impl ::core::default::Default for OffsetFetchRequest {
         fn default() -> Self {
             Self {
                 group_id: StrBytes::default(),
-                topics: Some(Vec::new()),
-                groups: Vec::new(),
+                topics: ::core::option::Option::Some(::std::vec::Vec::new()),
+                groups: ::std::vec::Vec::new(),
                 require_stable: false,
                 unknown_tagged_fields: TaggedFields::default(),
             }
@@ -495,7 +517,8 @@ pub mod offset_fetch_request {
     impl KafkaMessage for OffsetFetchRequest {
         const NAME: &'static str = "OffsetFetchRequest";
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(1, 10);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(6, 10));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(6, 10));
     }
 
     impl KafkaRequest for OffsetFetchRequest {
@@ -508,46 +531,51 @@ pub mod offset_fetch_request {
     }
 
     impl OffsetFetchRequest {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             crate::message::ensure_encode_version::<Self>(version)?;
 
             if version.value() > 7 && !self.group_id.is_empty() {
-                return Err(EncodeError::FieldNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::FieldNotRepresentable {
                     message: Self::NAME,
                     field: "GroupId",
                     version,
                 });
             }
-            if version.value() > 7 && self.topics != Some(Vec::new()) {
-                return Err(EncodeError::FieldNotRepresentable {
+            if version.value() > 7
+                && self.topics != ::core::option::Option::Some(::std::vec::Vec::new())
+            {
+                return ::core::result::Result::Err(EncodeError::FieldNotRepresentable {
                     message: Self::NAME,
                     field: "Topics",
                     version,
                 });
             }
             if version.value() < 8 && !self.groups.is_empty() {
-                return Err(EncodeError::FieldNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::FieldNotRepresentable {
                     message: Self::NAME,
                     field: "Groups",
                     version,
                 });
             }
             if version.value() < 7 && self.require_stable {
-                return Err(EncodeError::FieldNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::FieldNotRepresentable {
                     message: Self::NAME,
                     field: "RequireStable",
                     version,
                 });
             }
             if version.value() <= 1 && self.topics.is_none() {
-                return Err(EncodeError::NullNotAllowed {
+                return ::core::result::Result::Err(EncodeError::NullNotAllowed {
                     message: Self::NAME,
                     field: "Topics",
                     version,
                 });
             }
             if version.value() <= 7 {
-                if let Some(values) = &self.topics {
+                if let ::core::option::Option::Some(values) = &self.topics {
                     for value in values {
                         value.validate_for_version(version)?;
                     }
@@ -559,21 +587,24 @@ pub mod offset_fetch_request {
                 }
             }
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: Self::NAME,
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for OffsetFetchRequest {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             crate::message::ensure_decode_version::<Self>(version)?;
 
-            let group_id = if version.value() <= 7 {
+            let __kw_field_0 = if version.value() <= 7 {
                 if Self::is_flexible(version) {
                     decoder.read_compact_string()?
                 } else {
@@ -582,7 +613,7 @@ pub mod offset_fetch_request {
             } else {
                 StrBytes::default()
             };
-            let topics = if version.value() <= 7 {
+            let __kw_field_1 = if version.value() <= 7 {
                 let length = if version.value() >= 2 && version.value() <= 7 {
                     if Self::is_flexible(version) {
                         decoder.read_compact_nullable_array_len()?
@@ -590,7 +621,7 @@ pub mod offset_fetch_request {
                         decoder.read_nullable_array_len()?
                     }
                 } else {
-                    Some(decoder.read_array_len()?)
+                    ::core::option::Option::Some(decoder.read_array_len()?)
                 };
                 length
                     .map(|length| {
@@ -600,17 +631,17 @@ pub mod offset_fetch_request {
                     })
                     .transpose()?
             } else {
-                Some(Vec::new())
+                ::core::option::Option::Some(::std::vec::Vec::new())
             };
-            let groups = if version.value() >= 8 {
+            let __kw_field_2 = if version.value() >= 8 {
                 let length = decoder.read_compact_array_len()?;
                 decoder.read_vec(length, |decoder| {
                     OffsetFetchRequestGroup::decode(decoder, version)
                 })?
             } else {
-                Vec::new()
+                ::std::vec::Vec::new()
             };
-            let require_stable = if version.value() >= 7 {
+            let __kw_field_3 = if version.value() >= 7 {
                 decoder.read_bool()?
             } else {
                 false
@@ -621,11 +652,11 @@ pub mod offset_fetch_request {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                group_id,
-                topics,
-                groups,
-                require_stable,
+            ::core::result::Result::Ok(Self {
+                group_id: __kw_field_0,
+                topics: __kw_field_1,
+                groups: __kw_field_2,
+                require_stable: __kw_field_3,
                 unknown_tagged_fields,
             })
         }
@@ -636,7 +667,7 @@ pub mod offset_fetch_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             if version.value() <= 7 {
                 if Self::is_flexible(version) {
                     encoder.write_compact_string(&self.group_id)?;
@@ -646,11 +677,14 @@ pub mod offset_fetch_request {
             }
             if version.value() <= 7 {
                 if Self::is_flexible(version) {
-                    encoder.write_compact_nullable_array_len(self.topics.as_ref().map(Vec::len))?;
+                    encoder.write_compact_nullable_array_len(
+                        self.topics.as_ref().map(::std::vec::Vec::len),
+                    )?;
                 } else {
-                    encoder.write_nullable_array_len(self.topics.as_ref().map(Vec::len))?;
+                    encoder
+                        .write_nullable_array_len(self.topics.as_ref().map(::std::vec::Vec::len))?;
                 }
-                if let Some(values) = &self.topics {
+                if let ::core::option::Option::Some(values) = &self.topics {
                     for value in values {
                         value.encode_validated(encoder, version)?;
                     }
@@ -670,7 +704,7 @@ pub mod offset_fetch_request {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -679,12 +713,12 @@ pub mod offset_fetch_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             OffsetFetchRequest::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| OffsetFetchRequest::encode_validated(self, encoder, version),
@@ -695,7 +729,7 @@ pub mod offset_fetch_request {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -721,19 +755,20 @@ pub mod offset_fetch_response {
 
     /// `OffsetFetchResponseTopic` as declared by the `OffsetFetch` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct OffsetFetchResponseTopic {
         /// The topic name.
         pub name: StrBytes,
         /// The responses per partition.
-        pub partitions: Vec<OffsetFetchResponsePartition>,
+        pub partitions: ::std::vec::Vec<OffsetFetchResponsePartition>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
     }
 
     impl OffsetFetchResponseTopic {
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(1, 7);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(6, 7));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(6, 7));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
@@ -741,9 +776,12 @@ pub mod offset_fetch_response {
     }
 
     impl OffsetFetchResponseTopic {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(EncodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(EncodeError::UnsupportedVersion {
                     message: "OffsetFetchResponseTopic",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
@@ -754,32 +792,35 @@ pub mod offset_fetch_response {
                 value.validate_for_version(version)?;
             }
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: "OffsetFetchResponseTopic",
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for OffsetFetchResponseTopic {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(DecodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(DecodeError::UnsupportedVersion {
                     message: "OffsetFetchResponseTopic",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
                 });
             }
 
-            let name = if Self::is_flexible(version) {
+            let __kw_field_0 = if Self::is_flexible(version) {
                 decoder.read_compact_string()?
             } else {
                 decoder.read_string()?
             };
-            let partitions = {
+            let __kw_field_1 = {
                 let length = if Self::is_flexible(version) {
                     decoder.read_compact_array_len()?
                 } else {
@@ -795,9 +836,9 @@ pub mod offset_fetch_response {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                name,
-                partitions,
+            ::core::result::Result::Ok(Self {
+                name: __kw_field_0,
+                partitions: __kw_field_1,
                 unknown_tagged_fields,
             })
         }
@@ -808,7 +849,7 @@ pub mod offset_fetch_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             if Self::is_flexible(version) {
                 encoder.write_compact_string(&self.name)?;
             } else {
@@ -827,7 +868,7 @@ pub mod offset_fetch_response {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -836,12 +877,12 @@ pub mod offset_fetch_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             OffsetFetchResponseTopic::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| OffsetFetchResponseTopic::encode_validated(self, encoder, version),
@@ -852,7 +893,7 @@ pub mod offset_fetch_response {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -873,7 +914,7 @@ pub mod offset_fetch_response {
         /// The leader epoch.
         pub committed_leader_epoch: i32,
         /// The partition metadata.
-        pub metadata: Option<StrBytes>,
+        pub metadata: ::core::option::Option<StrBytes>,
         /// The error code, or 0 if there was no error.
         pub error_code: i16,
         /// Unknown flexible-version tagged fields retained for forwarding.
@@ -882,7 +923,8 @@ pub mod offset_fetch_response {
 
     impl OffsetFetchResponsePartition {
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(1, 7);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(6, 7));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(6, 7));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
@@ -890,9 +932,12 @@ pub mod offset_fetch_response {
     }
 
     impl OffsetFetchResponsePartition {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(EncodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(EncodeError::UnsupportedVersion {
                     message: "OffsetFetchResponsePartition",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
@@ -900,23 +945,23 @@ pub mod offset_fetch_response {
             }
 
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: "OffsetFetchResponsePartition",
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
-    impl Default for OffsetFetchResponsePartition {
+    impl ::core::default::Default for OffsetFetchResponsePartition {
         fn default() -> Self {
             Self {
                 partition_index: 0,
                 committed_offset: 0,
                 committed_leader_epoch: -1,
-                metadata: Some(StrBytes::default()),
+                metadata: ::core::option::Option::Some(StrBytes::default()),
                 error_code: 0,
                 unknown_tagged_fields: TaggedFields::default(),
             }
@@ -924,40 +969,43 @@ pub mod offset_fetch_response {
     }
 
     impl KafkaDecode for OffsetFetchResponsePartition {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(DecodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(DecodeError::UnsupportedVersion {
                     message: "OffsetFetchResponsePartition",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
                 });
             }
 
-            let partition_index = decoder.read_i32()?;
-            let committed_offset = decoder.read_i64()?;
-            let committed_leader_epoch = if version.value() >= 5 {
+            let __kw_field_0 = decoder.read_i32()?;
+            let __kw_field_1 = decoder.read_i64()?;
+            let __kw_field_2 = if version.value() >= 5 {
                 decoder.read_i32()?
             } else {
                 -1
             };
-            let metadata = if Self::is_flexible(version) {
+            let __kw_field_3 = if Self::is_flexible(version) {
                 decoder.read_compact_nullable_string()?
             } else {
                 decoder.read_nullable_string()?
             };
-            let error_code = decoder.read_i16()?;
+            let __kw_field_4 = decoder.read_i16()?;
             let unknown_tagged_fields = if Self::is_flexible(version) {
                 decoder.read_tagged_fields()?
             } else {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                partition_index,
-                committed_offset,
-                committed_leader_epoch,
-                metadata,
-                error_code,
+            ::core::result::Result::Ok(Self {
+                partition_index: __kw_field_0,
+                committed_offset: __kw_field_1,
+                committed_leader_epoch: __kw_field_2,
+                metadata: __kw_field_3,
+                error_code: __kw_field_4,
                 unknown_tagged_fields,
             })
         }
@@ -968,7 +1016,7 @@ pub mod offset_fetch_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_i32(self.partition_index)?;
             encoder.write_i64(self.committed_offset)?;
             if version.value() >= 5 {
@@ -985,7 +1033,7 @@ pub mod offset_fetch_response {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -994,12 +1042,12 @@ pub mod offset_fetch_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             OffsetFetchResponsePartition::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| OffsetFetchResponsePartition::encode_validated(self, encoder, version),
@@ -1010,7 +1058,7 @@ pub mod offset_fetch_response {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -1022,12 +1070,12 @@ pub mod offset_fetch_response {
 
     /// `OffsetFetchResponseGroup` as declared by the `OffsetFetch` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct OffsetFetchResponseGroup {
         /// The group ID.
         pub group_id: StrBytes,
         /// The responses per topic.
-        pub topics: Vec<OffsetFetchResponseTopics>,
+        pub topics: ::std::vec::Vec<OffsetFetchResponseTopics>,
         /// The group-level error code, or 0 if there was no error.
         pub error_code: i16,
         /// Unknown flexible-version tagged fields retained for forwarding.
@@ -1036,7 +1084,8 @@ pub mod offset_fetch_response {
 
     impl OffsetFetchResponseGroup {
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(8, 10);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(8, 10));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(8, 10));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
@@ -1044,9 +1093,12 @@ pub mod offset_fetch_response {
     }
 
     impl OffsetFetchResponseGroup {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(EncodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(EncodeError::UnsupportedVersion {
                     message: "OffsetFetchResponseGroup",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
@@ -1057,44 +1109,47 @@ pub mod offset_fetch_response {
                 value.validate_for_version(version)?;
             }
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: "OffsetFetchResponseGroup",
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for OffsetFetchResponseGroup {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(DecodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(DecodeError::UnsupportedVersion {
                     message: "OffsetFetchResponseGroup",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
                 });
             }
 
-            let group_id = decoder.read_compact_string()?;
-            let topics = {
+            let __kw_field_0 = decoder.read_compact_string()?;
+            let __kw_field_1 = {
                 let length = decoder.read_compact_array_len()?;
                 decoder.read_vec(length, |decoder| {
                     OffsetFetchResponseTopics::decode(decoder, version)
                 })?
             };
-            let error_code = decoder.read_i16()?;
+            let __kw_field_2 = decoder.read_i16()?;
             let unknown_tagged_fields = if Self::is_flexible(version) {
                 decoder.read_tagged_fields()?
             } else {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                group_id,
-                topics,
-                error_code,
+            ::core::result::Result::Ok(Self {
+                group_id: __kw_field_0,
+                topics: __kw_field_1,
+                error_code: __kw_field_2,
                 unknown_tagged_fields,
             })
         }
@@ -1105,7 +1160,7 @@ pub mod offset_fetch_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_compact_string(&self.group_id)?;
             encoder.write_compact_array_len(self.topics.len())?;
             for value in &self.topics {
@@ -1117,7 +1172,7 @@ pub mod offset_fetch_response {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -1126,12 +1181,12 @@ pub mod offset_fetch_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             OffsetFetchResponseGroup::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| OffsetFetchResponseGroup::encode_validated(self, encoder, version),
@@ -1142,7 +1197,7 @@ pub mod offset_fetch_response {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -1154,21 +1209,22 @@ pub mod offset_fetch_response {
 
     /// `OffsetFetchResponseTopics` as declared by the `OffsetFetch` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct OffsetFetchResponseTopics {
         /// The topic name.
         pub name: StrBytes,
         /// The topic ID.
         pub topic_id: Uuid,
         /// The responses per partition.
-        pub partitions: Vec<OffsetFetchResponsePartitions>,
+        pub partitions: ::std::vec::Vec<OffsetFetchResponsePartitions>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
     }
 
     impl OffsetFetchResponseTopics {
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(8, 10);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(8, 10));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(8, 10));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
@@ -1176,9 +1232,12 @@ pub mod offset_fetch_response {
     }
 
     impl OffsetFetchResponseTopics {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(EncodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(EncodeError::UnsupportedVersion {
                     message: "OffsetFetchResponseTopics",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
@@ -1189,37 +1248,40 @@ pub mod offset_fetch_response {
                 value.validate_for_version(version)?;
             }
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: "OffsetFetchResponseTopics",
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for OffsetFetchResponseTopics {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(DecodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(DecodeError::UnsupportedVersion {
                     message: "OffsetFetchResponseTopics",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
                 });
             }
 
-            let name = if version.value() <= 9 {
+            let __kw_field_0 = if version.value() <= 9 {
                 decoder.read_compact_string()?
             } else {
                 StrBytes::default()
             };
-            let topic_id = if version.value() >= 10 {
+            let __kw_field_1 = if version.value() >= 10 {
                 decoder.read_uuid()?
             } else {
                 Uuid::ZERO
             };
-            let partitions = {
+            let __kw_field_2 = {
                 let length = decoder.read_compact_array_len()?;
                 decoder.read_vec(length, |decoder| {
                     OffsetFetchResponsePartitions::decode(decoder, version)
@@ -1231,10 +1293,10 @@ pub mod offset_fetch_response {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                name,
-                topic_id,
-                partitions,
+            ::core::result::Result::Ok(Self {
+                name: __kw_field_0,
+                topic_id: __kw_field_1,
+                partitions: __kw_field_2,
                 unknown_tagged_fields,
             })
         }
@@ -1245,7 +1307,7 @@ pub mod offset_fetch_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             if version.value() <= 9 {
                 encoder.write_compact_string(&self.name)?;
             }
@@ -1261,7 +1323,7 @@ pub mod offset_fetch_response {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -1270,12 +1332,12 @@ pub mod offset_fetch_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             OffsetFetchResponseTopics::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| OffsetFetchResponseTopics::encode_validated(self, encoder, version),
@@ -1286,7 +1348,7 @@ pub mod offset_fetch_response {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -1307,7 +1369,7 @@ pub mod offset_fetch_response {
         /// The leader epoch.
         pub committed_leader_epoch: i32,
         /// The partition metadata.
-        pub metadata: Option<StrBytes>,
+        pub metadata: ::core::option::Option<StrBytes>,
         /// The partition-level error code, or 0 if there was no error.
         pub error_code: i16,
         /// Unknown flexible-version tagged fields retained for forwarding.
@@ -1316,7 +1378,8 @@ pub mod offset_fetch_response {
 
     impl OffsetFetchResponsePartitions {
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(8, 10);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(8, 10));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(8, 10));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
@@ -1324,9 +1387,12 @@ pub mod offset_fetch_response {
     }
 
     impl OffsetFetchResponsePartitions {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(EncodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(EncodeError::UnsupportedVersion {
                     message: "OffsetFetchResponsePartitions",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
@@ -1334,23 +1400,23 @@ pub mod offset_fetch_response {
             }
 
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: "OffsetFetchResponsePartitions",
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
-    impl Default for OffsetFetchResponsePartitions {
+    impl ::core::default::Default for OffsetFetchResponsePartitions {
         fn default() -> Self {
             Self {
                 partition_index: 0,
                 committed_offset: 0,
                 committed_leader_epoch: -1,
-                metadata: Some(StrBytes::default()),
+                metadata: ::core::option::Option::Some(StrBytes::default()),
                 error_code: 0,
                 unknown_tagged_fields: TaggedFields::default(),
             }
@@ -1358,32 +1424,35 @@ pub mod offset_fetch_response {
     }
 
     impl KafkaDecode for OffsetFetchResponsePartitions {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(DecodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(DecodeError::UnsupportedVersion {
                     message: "OffsetFetchResponsePartitions",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
                 });
             }
 
-            let partition_index = decoder.read_i32()?;
-            let committed_offset = decoder.read_i64()?;
-            let committed_leader_epoch = decoder.read_i32()?;
-            let metadata = decoder.read_compact_nullable_string()?;
-            let error_code = decoder.read_i16()?;
+            let __kw_field_0 = decoder.read_i32()?;
+            let __kw_field_1 = decoder.read_i64()?;
+            let __kw_field_2 = decoder.read_i32()?;
+            let __kw_field_3 = decoder.read_compact_nullable_string()?;
+            let __kw_field_4 = decoder.read_i16()?;
             let unknown_tagged_fields = if Self::is_flexible(version) {
                 decoder.read_tagged_fields()?
             } else {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                partition_index,
-                committed_offset,
-                committed_leader_epoch,
-                metadata,
-                error_code,
+            ::core::result::Result::Ok(Self {
+                partition_index: __kw_field_0,
+                committed_offset: __kw_field_1,
+                committed_leader_epoch: __kw_field_2,
+                metadata: __kw_field_3,
+                error_code: __kw_field_4,
                 unknown_tagged_fields,
             })
         }
@@ -1394,7 +1463,7 @@ pub mod offset_fetch_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_i32(self.partition_index)?;
             encoder.write_i64(self.committed_offset)?;
             encoder.write_i32(self.committed_leader_epoch)?;
@@ -1405,7 +1474,7 @@ pub mod offset_fetch_response {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -1414,12 +1483,12 @@ pub mod offset_fetch_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             OffsetFetchResponsePartitions::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| OffsetFetchResponsePartitions::encode_validated(self, encoder, version),
@@ -1430,7 +1499,7 @@ pub mod offset_fetch_response {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -1442,16 +1511,16 @@ pub mod offset_fetch_response {
 
     /// Response body for the `OffsetFetch` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct OffsetFetchResponse {
         /// The duration in milliseconds for which the request was throttled due to a quota violation, or zero if the request did not violate any quota.
         pub throttle_time_ms: i32,
         /// The responses per topic.
-        pub topics: Vec<OffsetFetchResponseTopic>,
+        pub topics: ::std::vec::Vec<OffsetFetchResponseTopic>,
         /// The top-level error code, or 0 if there was no error.
         pub error_code: i16,
         /// The responses per group id.
-        pub groups: Vec<OffsetFetchResponseGroup>,
+        pub groups: ::std::vec::Vec<OffsetFetchResponseGroup>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
     }
@@ -1459,7 +1528,8 @@ pub mod offset_fetch_response {
     impl KafkaMessage for OffsetFetchResponse {
         const NAME: &'static str = "OffsetFetchResponse";
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(1, 10);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(6, 10));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(6, 10));
     }
 
     impl KafkaResponse for OffsetFetchResponse {
@@ -1467,18 +1537,21 @@ pub mod offset_fetch_response {
     }
 
     impl OffsetFetchResponse {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             crate::message::ensure_encode_version::<Self>(version)?;
 
             if version.value() > 7 && !self.topics.is_empty() {
-                return Err(EncodeError::FieldNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::FieldNotRepresentable {
                     message: Self::NAME,
                     field: "Topics",
                     version,
                 });
             }
             if version.value() < 8 && !self.groups.is_empty() {
-                return Err(EncodeError::FieldNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::FieldNotRepresentable {
                     message: Self::NAME,
                     field: "Groups",
                     version,
@@ -1495,26 +1568,29 @@ pub mod offset_fetch_response {
                 }
             }
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: Self::NAME,
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for OffsetFetchResponse {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             crate::message::ensure_decode_version::<Self>(version)?;
 
-            let throttle_time_ms = if version.value() >= 3 {
+            let __kw_field_0 = if version.value() >= 3 {
                 decoder.read_i32()?
             } else {
                 0
             };
-            let topics = if version.value() <= 7 {
+            let __kw_field_1 = if version.value() <= 7 {
                 let length = if Self::is_flexible(version) {
                     decoder.read_compact_array_len()?
                 } else {
@@ -1524,20 +1600,20 @@ pub mod offset_fetch_response {
                     OffsetFetchResponseTopic::decode(decoder, version)
                 })?
             } else {
-                Vec::new()
+                ::std::vec::Vec::new()
             };
-            let error_code = if version.value() >= 2 && version.value() <= 7 {
+            let __kw_field_2 = if version.value() >= 2 && version.value() <= 7 {
                 decoder.read_i16()?
             } else {
                 0
             };
-            let groups = if version.value() >= 8 {
+            let __kw_field_3 = if version.value() >= 8 {
                 let length = decoder.read_compact_array_len()?;
                 decoder.read_vec(length, |decoder| {
                     OffsetFetchResponseGroup::decode(decoder, version)
                 })?
             } else {
-                Vec::new()
+                ::std::vec::Vec::new()
             };
             let unknown_tagged_fields = if Self::is_flexible(version) {
                 decoder.read_tagged_fields()?
@@ -1545,11 +1621,11 @@ pub mod offset_fetch_response {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                throttle_time_ms,
-                topics,
-                error_code,
-                groups,
+            ::core::result::Result::Ok(Self {
+                throttle_time_ms: __kw_field_0,
+                topics: __kw_field_1,
+                error_code: __kw_field_2,
+                groups: __kw_field_3,
                 unknown_tagged_fields,
             })
         }
@@ -1560,7 +1636,7 @@ pub mod offset_fetch_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             if version.value() >= 3 {
                 encoder.write_i32(self.throttle_time_ms)?;
             }
@@ -1588,7 +1664,7 @@ pub mod offset_fetch_response {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -1597,12 +1673,12 @@ pub mod offset_fetch_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             OffsetFetchResponse::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| OffsetFetchResponse::encode_validated(self, encoder, version),
@@ -1613,7 +1689,7 @@ pub mod offset_fetch_response {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -1637,7 +1713,7 @@ pub const OFFSET_FETCH_REQUEST_DESCRIPTOR: MessageDescriptor = MessageDescriptor
     "OffsetFetchRequest",
     MessageDirection::Request,
     VersionRange::new(1, 10),
-    Some(VersionRange::new(6, 10)),
+    ::core::option::Option::Some(VersionRange::new(6, 10)),
 );
 
 /// Static metadata for [`OffsetFetchResponse`].
@@ -1646,7 +1722,7 @@ pub const OFFSET_FETCH_RESPONSE_DESCRIPTOR: MessageDescriptor = MessageDescripto
     "OffsetFetchResponse",
     MessageDirection::Response,
     VersionRange::new(1, 10),
-    Some(VersionRange::new(6, 10)),
+    ::core::option::Option::Some(VersionRange::new(6, 10)),
 );
 
 /// Static pair metadata for the `OffsetFetch` API.
@@ -1655,6 +1731,6 @@ pub const OFFSET_FETCH_API_DESCRIPTOR: ApiDescriptor = ApiDescriptor::new(
     &OFFSET_FETCH_REQUEST_DESCRIPTOR,
     &OFFSET_FETCH_RESPONSE_DESCRIPTOR,
     VersionRange::new(1, 10),
-    Some(VersionRange::new(6, 10)),
+    ::core::option::Option::Some(VersionRange::new(6, 10)),
     false,
 );

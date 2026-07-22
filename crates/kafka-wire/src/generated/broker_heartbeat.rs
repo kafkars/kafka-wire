@@ -33,14 +33,14 @@ pub mod broker_heartbeat_request {
         /// True if the broker wants to be shut down, false otherwise.
         pub want_shut_down: bool,
         /// Log directories that failed and went offline.
-        pub offline_log_dirs: Vec<Uuid>,
+        pub offline_log_dirs: ::std::vec::Vec<Uuid>,
         /// List of log directories that are cordoned. This is null before the broker reaches the RECOVERY state.
-        pub cordoned_log_dirs: Option<Vec<Uuid>>,
+        pub cordoned_log_dirs: ::core::option::Option<::std::vec::Vec<Uuid>>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
     }
 
-    impl Default for BrokerHeartbeatRequest {
+    impl ::core::default::Default for BrokerHeartbeatRequest {
         fn default() -> Self {
             Self {
                 broker_id: 0,
@@ -48,8 +48,8 @@ pub mod broker_heartbeat_request {
                 current_metadata_offset: 0,
                 want_fence: false,
                 want_shut_down: false,
-                offline_log_dirs: Vec::new(),
-                cordoned_log_dirs: None,
+                offline_log_dirs: ::std::vec::Vec::new(),
+                cordoned_log_dirs: ::core::option::Option::None,
                 unknown_tagged_fields: TaggedFields::default(),
             }
         }
@@ -58,7 +58,8 @@ pub mod broker_heartbeat_request {
     impl KafkaMessage for BrokerHeartbeatRequest {
         const NAME: &'static str = "BrokerHeartbeatRequest";
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 2);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 2));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(0, 2));
     }
 
     impl KafkaRequest for BrokerHeartbeatRequest {
@@ -71,77 +72,84 @@ pub mod broker_heartbeat_request {
     }
 
     impl BrokerHeartbeatRequest {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             crate::message::ensure_encode_version::<Self>(version)?;
 
             if version.value() < 1 && !self.offline_log_dirs.is_empty() {
-                return Err(EncodeError::FieldNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::FieldNotRepresentable {
                     message: Self::NAME,
                     field: "OfflineLogDirs",
                     version,
                 });
             }
             if version.value() < 2 && self.cordoned_log_dirs.is_some() {
-                return Err(EncodeError::FieldNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::FieldNotRepresentable {
                     message: Self::NAME,
                     field: "CordonedLogDirs",
                     version,
                 });
             }
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: Self::NAME,
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for BrokerHeartbeatRequest {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             crate::message::ensure_decode_version::<Self>(version)?;
 
-            let broker_id = decoder.read_i32()?;
-            let broker_epoch = decoder.read_i64()?;
-            let current_metadata_offset = decoder.read_i64()?;
-            let want_fence = decoder.read_bool()?;
-            let want_shut_down = decoder.read_bool()?;
-            let mut offline_log_dirs: Vec<Uuid> = Vec::new();
-            let mut cordoned_log_dirs: Option<Vec<Uuid>> = None;
+            let __kw_field_0 = decoder.read_i32()?;
+            let __kw_field_1 = decoder.read_i64()?;
+            let __kw_field_2 = decoder.read_i64()?;
+            let __kw_field_3 = decoder.read_bool()?;
+            let __kw_field_4 = decoder.read_bool()?;
+            let mut __kw_field_5: ::std::vec::Vec<Uuid> = ::std::vec::Vec::new();
+            let mut __kw_field_6: ::core::option::Option<::std::vec::Vec<Uuid>> =
+                ::core::option::Option::None;
             let mut unknown_tagged_fields = TaggedFields::default();
             if Self::is_flexible(version) {
                 unknown_tagged_fields =
                     decoder.read_tagged_fields_with(|tag, decoder| match tag {
                         0 if version.value() >= 1 => {
-                            offline_log_dirs = {
+                            __kw_field_5 = {
                                 let length = decoder.read_compact_array_len()?;
                                 decoder.read_vec(length, Decoder::read_uuid)?
                             };
-                            Ok(TagOutcome::Decoded)
+                            ::core::result::Result::Ok(TagOutcome::Decoded)
                         }
                         1 if version.value() >= 2 => {
-                            cordoned_log_dirs = {
+                            __kw_field_6 = {
                                 let length = decoder.read_compact_nullable_array_len()?;
                                 length
                                     .map(|length| decoder.read_vec(length, Decoder::read_uuid))
                                     .transpose()?
                             };
-                            Ok(TagOutcome::Decoded)
+                            ::core::result::Result::Ok(TagOutcome::Decoded)
                         }
-                        _ => Ok(TagOutcome::Retained),
+                        _ => ::core::result::Result::Ok(TagOutcome::Retained),
                     })?;
             }
 
-            Ok(Self {
-                broker_id,
-                broker_epoch,
-                current_metadata_offset,
-                want_fence,
-                want_shut_down,
-                offline_log_dirs,
-                cordoned_log_dirs,
+            ::core::result::Result::Ok(Self {
+                broker_id: __kw_field_0,
+                broker_epoch: __kw_field_1,
+                current_metadata_offset: __kw_field_2,
+                want_fence: __kw_field_3,
+                want_shut_down: __kw_field_4,
+                offline_log_dirs: __kw_field_5,
+                cordoned_log_dirs: __kw_field_6,
                 unknown_tagged_fields,
             })
         }
@@ -152,7 +160,7 @@ pub mod broker_heartbeat_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_i32(self.broker_id)?;
             encoder.write_i64(self.broker_epoch)?;
             encoder.write_i64(self.current_metadata_offset)?;
@@ -167,26 +175,26 @@ pub mod broker_heartbeat_request {
                         for value in &self.offline_log_dirs {
                             encoder.write_uuid(*value)?;
                         }
-                        Ok(())
+                        ::core::result::Result::Ok(())
                     })?;
                 }
                 if version.value() >= 2 && self.cordoned_log_dirs.is_some() {
                     known.write(1, |encoder| {
                         encoder.write_compact_nullable_array_len(
-                            self.cordoned_log_dirs.as_ref().map(Vec::len),
+                            self.cordoned_log_dirs.as_ref().map(::std::vec::Vec::len),
                         )?;
-                        if let Some(values) = &self.cordoned_log_dirs {
+                        if let ::core::option::Option::Some(values) = &self.cordoned_log_dirs {
                             for value in values {
                                 encoder.write_uuid(*value)?;
                             }
                         }
-                        Ok(())
+                        ::core::result::Result::Ok(())
                     })?;
                 }
                 encoder.write_merged_tagged_fields(known, &self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -195,12 +203,12 @@ pub mod broker_heartbeat_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             BrokerHeartbeatRequest::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| BrokerHeartbeatRequest::encode_validated(self, encoder, version),
@@ -211,7 +219,7 @@ pub mod broker_heartbeat_request {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -252,7 +260,7 @@ pub mod broker_heartbeat_response {
         pub unknown_tagged_fields: TaggedFields,
     }
 
-    impl Default for BrokerHeartbeatResponse {
+    impl ::core::default::Default for BrokerHeartbeatResponse {
         fn default() -> Self {
             Self {
                 throttle_time_ms: 0,
@@ -268,7 +276,8 @@ pub mod broker_heartbeat_response {
     impl KafkaMessage for BrokerHeartbeatResponse {
         const NAME: &'static str = "BrokerHeartbeatResponse";
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 2);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 2));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(0, 2));
     }
 
     impl KafkaResponse for BrokerHeartbeatResponse {
@@ -276,41 +285,47 @@ pub mod broker_heartbeat_response {
     }
 
     impl BrokerHeartbeatResponse {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             crate::message::ensure_encode_version::<Self>(version)?;
 
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: Self::NAME,
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for BrokerHeartbeatResponse {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             crate::message::ensure_decode_version::<Self>(version)?;
 
-            let throttle_time_ms = decoder.read_i32()?;
-            let error_code = decoder.read_i16()?;
-            let is_caught_up = decoder.read_bool()?;
-            let is_fenced = decoder.read_bool()?;
-            let should_shut_down = decoder.read_bool()?;
+            let __kw_field_0 = decoder.read_i32()?;
+            let __kw_field_1 = decoder.read_i16()?;
+            let __kw_field_2 = decoder.read_bool()?;
+            let __kw_field_3 = decoder.read_bool()?;
+            let __kw_field_4 = decoder.read_bool()?;
             let unknown_tagged_fields = if Self::is_flexible(version) {
                 decoder.read_tagged_fields()?
             } else {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                throttle_time_ms,
-                error_code,
-                is_caught_up,
-                is_fenced,
-                should_shut_down,
+            ::core::result::Result::Ok(Self {
+                throttle_time_ms: __kw_field_0,
+                error_code: __kw_field_1,
+                is_caught_up: __kw_field_2,
+                is_fenced: __kw_field_3,
+                should_shut_down: __kw_field_4,
                 unknown_tagged_fields,
             })
         }
@@ -321,7 +336,7 @@ pub mod broker_heartbeat_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_i32(self.throttle_time_ms)?;
             encoder.write_i16(self.error_code)?;
             encoder.write_bool(self.is_caught_up)?;
@@ -332,7 +347,7 @@ pub mod broker_heartbeat_response {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -341,12 +356,12 @@ pub mod broker_heartbeat_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             BrokerHeartbeatResponse::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| BrokerHeartbeatResponse::encode_validated(self, encoder, version),
@@ -357,7 +372,7 @@ pub mod broker_heartbeat_response {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -381,7 +396,7 @@ pub const BROKER_HEARTBEAT_REQUEST_DESCRIPTOR: MessageDescriptor = MessageDescri
     "BrokerHeartbeatRequest",
     MessageDirection::Request,
     VersionRange::new(0, 2),
-    Some(VersionRange::new(0, 2)),
+    ::core::option::Option::Some(VersionRange::new(0, 2)),
 );
 
 /// Static metadata for [`BrokerHeartbeatResponse`].
@@ -390,7 +405,7 @@ pub const BROKER_HEARTBEAT_RESPONSE_DESCRIPTOR: MessageDescriptor = MessageDescr
     "BrokerHeartbeatResponse",
     MessageDirection::Response,
     VersionRange::new(0, 2),
-    Some(VersionRange::new(0, 2)),
+    ::core::option::Option::Some(VersionRange::new(0, 2)),
 );
 
 /// Static pair metadata for the `BrokerHeartbeat` API.
@@ -399,6 +414,6 @@ pub const BROKER_HEARTBEAT_API_DESCRIPTOR: ApiDescriptor = ApiDescriptor::new(
     &BROKER_HEARTBEAT_REQUEST_DESCRIPTOR,
     &BROKER_HEARTBEAT_RESPONSE_DESCRIPTOR,
     VersionRange::new(0, 2),
-    Some(VersionRange::new(0, 2)),
+    ::core::option::Option::Some(VersionRange::new(0, 2)),
     false,
 );

@@ -20,7 +20,7 @@ pub mod add_offsets_to_txn_request {
 
     /// Request body for the `AddOffsetsToTxn` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct AddOffsetsToTxnRequest {
         /// The transactional id corresponding to the transaction.
         pub transactional_id: StrBytes,
@@ -37,7 +37,8 @@ pub mod add_offsets_to_txn_request {
     impl KafkaMessage for AddOffsetsToTxnRequest {
         const NAME: &'static str = "AddOffsetsToTxnRequest";
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 4);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(3, 4));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(3, 4));
     }
 
     impl KafkaRequest for AddOffsetsToTxnRequest {
@@ -50,32 +51,38 @@ pub mod add_offsets_to_txn_request {
     }
 
     impl AddOffsetsToTxnRequest {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             crate::message::ensure_encode_version::<Self>(version)?;
 
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: Self::NAME,
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for AddOffsetsToTxnRequest {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             crate::message::ensure_decode_version::<Self>(version)?;
 
-            let transactional_id = if Self::is_flexible(version) {
+            let __kw_field_0 = if Self::is_flexible(version) {
                 decoder.read_compact_string()?
             } else {
                 decoder.read_string()?
             };
-            let producer_id = decoder.read_i64()?;
-            let producer_epoch = decoder.read_i16()?;
-            let group_id = if Self::is_flexible(version) {
+            let __kw_field_1 = decoder.read_i64()?;
+            let __kw_field_2 = decoder.read_i16()?;
+            let __kw_field_3 = if Self::is_flexible(version) {
                 decoder.read_compact_string()?
             } else {
                 decoder.read_string()?
@@ -86,11 +93,11 @@ pub mod add_offsets_to_txn_request {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                transactional_id,
-                producer_id,
-                producer_epoch,
-                group_id,
+            ::core::result::Result::Ok(Self {
+                transactional_id: __kw_field_0,
+                producer_id: __kw_field_1,
+                producer_epoch: __kw_field_2,
+                group_id: __kw_field_3,
                 unknown_tagged_fields,
             })
         }
@@ -101,7 +108,7 @@ pub mod add_offsets_to_txn_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             if Self::is_flexible(version) {
                 encoder.write_compact_string(&self.transactional_id)?;
             } else {
@@ -119,7 +126,7 @@ pub mod add_offsets_to_txn_request {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -128,12 +135,12 @@ pub mod add_offsets_to_txn_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             AddOffsetsToTxnRequest::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| AddOffsetsToTxnRequest::encode_validated(self, encoder, version),
@@ -144,7 +151,7 @@ pub mod add_offsets_to_txn_request {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -169,7 +176,7 @@ pub mod add_offsets_to_txn_response {
 
     /// Response body for the `AddOffsetsToTxn` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct AddOffsetsToTxnResponse {
         /// Duration in milliseconds for which the request was throttled due to a quota violation, or zero if the request did not violate any quota.
         pub throttle_time_ms: i32,
@@ -182,7 +189,8 @@ pub mod add_offsets_to_txn_response {
     impl KafkaMessage for AddOffsetsToTxnResponse {
         const NAME: &'static str = "AddOffsetsToTxnResponse";
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 4);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(3, 4));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(3, 4));
     }
 
     impl KafkaResponse for AddOffsetsToTxnResponse {
@@ -190,35 +198,41 @@ pub mod add_offsets_to_txn_response {
     }
 
     impl AddOffsetsToTxnResponse {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             crate::message::ensure_encode_version::<Self>(version)?;
 
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: Self::NAME,
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for AddOffsetsToTxnResponse {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             crate::message::ensure_decode_version::<Self>(version)?;
 
-            let throttle_time_ms = decoder.read_i32()?;
-            let error_code = decoder.read_i16()?;
+            let __kw_field_0 = decoder.read_i32()?;
+            let __kw_field_1 = decoder.read_i16()?;
             let unknown_tagged_fields = if Self::is_flexible(version) {
                 decoder.read_tagged_fields()?
             } else {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                throttle_time_ms,
-                error_code,
+            ::core::result::Result::Ok(Self {
+                throttle_time_ms: __kw_field_0,
+                error_code: __kw_field_1,
                 unknown_tagged_fields,
             })
         }
@@ -229,7 +243,7 @@ pub mod add_offsets_to_txn_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_i32(self.throttle_time_ms)?;
             encoder.write_i16(self.error_code)?;
 
@@ -237,7 +251,7 @@ pub mod add_offsets_to_txn_response {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -246,12 +260,12 @@ pub mod add_offsets_to_txn_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             AddOffsetsToTxnResponse::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| AddOffsetsToTxnResponse::encode_validated(self, encoder, version),
@@ -262,7 +276,7 @@ pub mod add_offsets_to_txn_response {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -286,7 +300,7 @@ pub const ADD_OFFSETS_TO_TXN_REQUEST_DESCRIPTOR: MessageDescriptor = MessageDesc
     "AddOffsetsToTxnRequest",
     MessageDirection::Request,
     VersionRange::new(0, 4),
-    Some(VersionRange::new(3, 4)),
+    ::core::option::Option::Some(VersionRange::new(3, 4)),
 );
 
 /// Static metadata for [`AddOffsetsToTxnResponse`].
@@ -295,7 +309,7 @@ pub const ADD_OFFSETS_TO_TXN_RESPONSE_DESCRIPTOR: MessageDescriptor = MessageDes
     "AddOffsetsToTxnResponse",
     MessageDirection::Response,
     VersionRange::new(0, 4),
-    Some(VersionRange::new(3, 4)),
+    ::core::option::Option::Some(VersionRange::new(3, 4)),
 );
 
 /// Static pair metadata for the `AddOffsetsToTxn` API.
@@ -304,6 +318,6 @@ pub const ADD_OFFSETS_TO_TXN_API_DESCRIPTOR: ApiDescriptor = ApiDescriptor::new(
     &ADD_OFFSETS_TO_TXN_REQUEST_DESCRIPTOR,
     &ADD_OFFSETS_TO_TXN_RESPONSE_DESCRIPTOR,
     VersionRange::new(0, 4),
-    Some(VersionRange::new(3, 4)),
+    ::core::option::Option::Some(VersionRange::new(3, 4)),
     false,
 );

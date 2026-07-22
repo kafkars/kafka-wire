@@ -20,21 +20,22 @@ pub mod produce_request {
 
     /// `TopicProduceData` as declared by the `Produce` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct TopicProduceData {
         /// The topic name.
         pub name: StrBytes,
         /// The unique topic ID.
         pub topic_id: Uuid,
         /// Each partition to produce to.
-        pub partition_data: Vec<PartitionProduceData>,
+        pub partition_data: ::std::vec::Vec<PartitionProduceData>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
     }
 
     impl TopicProduceData {
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(3, 13);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(9, 13));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(9, 13));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
@@ -42,9 +43,12 @@ pub mod produce_request {
     }
 
     impl TopicProduceData {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(EncodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(EncodeError::UnsupportedVersion {
                     message: "TopicProduceData",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
@@ -55,27 +59,30 @@ pub mod produce_request {
                 value.validate_for_version(version)?;
             }
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: "TopicProduceData",
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for TopicProduceData {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(DecodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(DecodeError::UnsupportedVersion {
                     message: "TopicProduceData",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
                 });
             }
 
-            let name = if version.value() <= 12 {
+            let __kw_field_0 = if version.value() <= 12 {
                 if Self::is_flexible(version) {
                     decoder.read_compact_string()?
                 } else {
@@ -84,12 +91,12 @@ pub mod produce_request {
             } else {
                 StrBytes::default()
             };
-            let topic_id = if version.value() >= 13 {
+            let __kw_field_1 = if version.value() >= 13 {
                 decoder.read_uuid()?
             } else {
                 Uuid::ZERO
             };
-            let partition_data = {
+            let __kw_field_2 = {
                 let length = if Self::is_flexible(version) {
                     decoder.read_compact_array_len()?
                 } else {
@@ -105,10 +112,10 @@ pub mod produce_request {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                name,
-                topic_id,
-                partition_data,
+            ::core::result::Result::Ok(Self {
+                name: __kw_field_0,
+                topic_id: __kw_field_1,
+                partition_data: __kw_field_2,
                 unknown_tagged_fields,
             })
         }
@@ -119,7 +126,7 @@ pub mod produce_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             if version.value() <= 12 {
                 if Self::is_flexible(version) {
                     encoder.write_compact_string(&self.name)?;
@@ -143,7 +150,7 @@ pub mod produce_request {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -152,12 +159,12 @@ pub mod produce_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             TopicProduceData::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| TopicProduceData::encode_validated(self, encoder, version),
@@ -168,7 +175,7 @@ pub mod produce_request {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -180,19 +187,20 @@ pub mod produce_request {
 
     /// `PartitionProduceData` as declared by the `Produce` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct PartitionProduceData {
         /// The partition index.
         pub index: i32,
         /// The record data to be produced.
-        pub records: Option<Bytes>,
+        pub records: ::core::option::Option<Bytes>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
     }
 
     impl PartitionProduceData {
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(3, 13);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(9, 13));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(9, 13));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
@@ -200,9 +208,12 @@ pub mod produce_request {
     }
 
     impl PartitionProduceData {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(EncodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(EncodeError::UnsupportedVersion {
                     message: "PartitionProduceData",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
@@ -210,28 +221,31 @@ pub mod produce_request {
             }
 
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: "PartitionProduceData",
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for PartitionProduceData {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(DecodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(DecodeError::UnsupportedVersion {
                     message: "PartitionProduceData",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
                 });
             }
 
-            let index = decoder.read_i32()?;
-            let records = if Self::is_flexible(version) {
+            let __kw_field_0 = decoder.read_i32()?;
+            let __kw_field_1 = if Self::is_flexible(version) {
                 decoder.read_compact_nullable_bytes()?
             } else {
                 decoder.read_nullable_bytes()?
@@ -242,9 +256,9 @@ pub mod produce_request {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                index,
-                records,
+            ::core::result::Result::Ok(Self {
+                index: __kw_field_0,
+                records: __kw_field_1,
                 unknown_tagged_fields,
             })
         }
@@ -255,7 +269,7 @@ pub mod produce_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_i32(self.index)?;
             if Self::is_flexible(version) {
                 encoder.write_compact_nullable_bytes(self.records.as_deref())?;
@@ -267,7 +281,7 @@ pub mod produce_request {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -276,12 +290,12 @@ pub mod produce_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             PartitionProduceData::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| PartitionProduceData::encode_validated(self, encoder, version),
@@ -292,7 +306,7 @@ pub mod produce_request {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -304,16 +318,16 @@ pub mod produce_request {
 
     /// Request body for the `Produce` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct ProduceRequest {
         /// The transactional ID, or null if the producer is not transactional.
-        pub transactional_id: Option<StrBytes>,
+        pub transactional_id: ::core::option::Option<StrBytes>,
         /// The number of acknowledgments the producer requires the leader to have received before considering a request complete. Allowed values: 0 for no acknowledgments, 1 for only the leader and -1 for the full ISR.
         pub acks: i16,
         /// The timeout to await a response in milliseconds.
         pub timeout_ms: i32,
         /// Each topic to produce to.
-        pub topic_data: Vec<TopicProduceData>,
+        pub topic_data: ::std::vec::Vec<TopicProduceData>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
     }
@@ -321,7 +335,8 @@ pub mod produce_request {
     impl KafkaMessage for ProduceRequest {
         const NAME: &'static str = "ProduceRequest";
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(3, 13);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(9, 13));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(9, 13));
     }
 
     impl KafkaRequest for ProduceRequest {
@@ -334,35 +349,41 @@ pub mod produce_request {
     }
 
     impl ProduceRequest {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             crate::message::ensure_encode_version::<Self>(version)?;
 
             for value in &self.topic_data {
                 value.validate_for_version(version)?;
             }
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: Self::NAME,
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for ProduceRequest {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             crate::message::ensure_decode_version::<Self>(version)?;
 
-            let transactional_id = if Self::is_flexible(version) {
+            let __kw_field_0 = if Self::is_flexible(version) {
                 decoder.read_compact_nullable_string()?
             } else {
                 decoder.read_nullable_string()?
             };
-            let acks = decoder.read_i16()?;
-            let timeout_ms = decoder.read_i32()?;
-            let topic_data = {
+            let __kw_field_1 = decoder.read_i16()?;
+            let __kw_field_2 = decoder.read_i32()?;
+            let __kw_field_3 = {
                 let length = if Self::is_flexible(version) {
                     decoder.read_compact_array_len()?
                 } else {
@@ -376,11 +397,11 @@ pub mod produce_request {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                transactional_id,
-                acks,
-                timeout_ms,
-                topic_data,
+            ::core::result::Result::Ok(Self {
+                transactional_id: __kw_field_0,
+                acks: __kw_field_1,
+                timeout_ms: __kw_field_2,
+                topic_data: __kw_field_3,
                 unknown_tagged_fields,
             })
         }
@@ -391,7 +412,7 @@ pub mod produce_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             if Self::is_flexible(version) {
                 encoder.write_compact_nullable_string(self.transactional_id.as_ref())?;
             } else {
@@ -412,7 +433,7 @@ pub mod produce_request {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -421,12 +442,12 @@ pub mod produce_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             ProduceRequest::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| ProduceRequest::encode_validated(self, encoder, version),
@@ -437,7 +458,7 @@ pub mod produce_request {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -463,21 +484,22 @@ pub mod produce_response {
 
     /// `TopicProduceResponse` as declared by the `Produce` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct TopicProduceResponse {
         /// The topic name.
         pub name: StrBytes,
         /// The unique topic ID.
         pub topic_id: Uuid,
         /// Each partition that we produced to within the topic.
-        pub partition_responses: Vec<PartitionProduceResponse>,
+        pub partition_responses: ::std::vec::Vec<PartitionProduceResponse>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
     }
 
     impl TopicProduceResponse {
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(3, 13);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(9, 13));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(9, 13));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
@@ -485,9 +507,12 @@ pub mod produce_response {
     }
 
     impl TopicProduceResponse {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(EncodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(EncodeError::UnsupportedVersion {
                     message: "TopicProduceResponse",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
@@ -498,27 +523,30 @@ pub mod produce_response {
                 value.validate_for_version(version)?;
             }
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: "TopicProduceResponse",
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for TopicProduceResponse {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(DecodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(DecodeError::UnsupportedVersion {
                     message: "TopicProduceResponse",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
                 });
             }
 
-            let name = if version.value() <= 12 {
+            let __kw_field_0 = if version.value() <= 12 {
                 if Self::is_flexible(version) {
                     decoder.read_compact_string()?
                 } else {
@@ -527,12 +555,12 @@ pub mod produce_response {
             } else {
                 StrBytes::default()
             };
-            let topic_id = if version.value() >= 13 {
+            let __kw_field_1 = if version.value() >= 13 {
                 decoder.read_uuid()?
             } else {
                 Uuid::ZERO
             };
-            let partition_responses = {
+            let __kw_field_2 = {
                 let length = if Self::is_flexible(version) {
                     decoder.read_compact_array_len()?
                 } else {
@@ -548,10 +576,10 @@ pub mod produce_response {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                name,
-                topic_id,
-                partition_responses,
+            ::core::result::Result::Ok(Self {
+                name: __kw_field_0,
+                topic_id: __kw_field_1,
+                partition_responses: __kw_field_2,
                 unknown_tagged_fields,
             })
         }
@@ -562,7 +590,7 @@ pub mod produce_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             if version.value() <= 12 {
                 if Self::is_flexible(version) {
                     encoder.write_compact_string(&self.name)?;
@@ -586,7 +614,7 @@ pub mod produce_response {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -595,12 +623,12 @@ pub mod produce_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             TopicProduceResponse::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| TopicProduceResponse::encode_validated(self, encoder, version),
@@ -611,7 +639,7 @@ pub mod produce_response {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -636,9 +664,9 @@ pub mod produce_response {
         /// The log start offset.
         pub log_start_offset: i64,
         /// The batch indices of records that caused the batch to be dropped.
-        pub record_errors: Vec<BatchIndexAndErrorMessage>,
+        pub record_errors: ::std::vec::Vec<BatchIndexAndErrorMessage>,
         /// The global error message summarizing the common root cause of the records that caused the batch to be dropped.
-        pub error_message: Option<StrBytes>,
+        pub error_message: ::core::option::Option<StrBytes>,
         /// The leader broker that the producer should use for future requests.
         pub current_leader: LeaderIdAndEpoch,
         /// Unknown flexible-version tagged fields retained for forwarding.
@@ -647,7 +675,8 @@ pub mod produce_response {
 
     impl PartitionProduceResponse {
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(3, 13);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(9, 13));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(9, 13));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
@@ -655,9 +684,12 @@ pub mod produce_response {
     }
 
     impl PartitionProduceResponse {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(EncodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(EncodeError::UnsupportedVersion {
                     message: "PartitionProduceResponse",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
@@ -665,7 +697,7 @@ pub mod produce_response {
             }
 
             if version.value() < 10 && self.current_leader != LeaderIdAndEpoch::default() {
-                return Err(EncodeError::FieldNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::FieldNotRepresentable {
                     message: "PartitionProduceResponse",
                     field: "CurrentLeader",
                     version,
@@ -680,17 +712,17 @@ pub mod produce_response {
                 self.current_leader.validate_for_version(version)?;
             }
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: "PartitionProduceResponse",
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
-    impl Default for PartitionProduceResponse {
+    impl ::core::default::Default for PartitionProduceResponse {
         fn default() -> Self {
             Self {
                 index: 0,
@@ -698,8 +730,8 @@ pub mod produce_response {
                 base_offset: 0,
                 log_append_time_ms: -1,
                 log_start_offset: -1,
-                record_errors: Vec::new(),
-                error_message: None,
+                record_errors: ::std::vec::Vec::new(),
+                error_message: ::core::option::Option::None,
                 current_leader: LeaderIdAndEpoch::default(),
                 unknown_tagged_fields: TaggedFields::default(),
             }
@@ -707,25 +739,28 @@ pub mod produce_response {
     }
 
     impl KafkaDecode for PartitionProduceResponse {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(DecodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(DecodeError::UnsupportedVersion {
                     message: "PartitionProduceResponse",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
                 });
             }
 
-            let index = decoder.read_i32()?;
-            let error_code = decoder.read_i16()?;
-            let base_offset = decoder.read_i64()?;
-            let log_append_time_ms = decoder.read_i64()?;
-            let log_start_offset = if version.value() >= 5 {
+            let __kw_field_0 = decoder.read_i32()?;
+            let __kw_field_1 = decoder.read_i16()?;
+            let __kw_field_2 = decoder.read_i64()?;
+            let __kw_field_3 = decoder.read_i64()?;
+            let __kw_field_4 = if version.value() >= 5 {
                 decoder.read_i64()?
             } else {
                 -1
             };
-            let record_errors = if version.value() >= 8 {
+            let __kw_field_5 = if version.value() >= 8 {
                 let length = if Self::is_flexible(version) {
                     decoder.read_compact_array_len()?
                 } else {
@@ -735,39 +770,39 @@ pub mod produce_response {
                     BatchIndexAndErrorMessage::decode(decoder, version)
                 })?
             } else {
-                Vec::new()
+                ::std::vec::Vec::new()
             };
-            let error_message = if version.value() >= 8 {
+            let __kw_field_6 = if version.value() >= 8 {
                 if Self::is_flexible(version) {
                     decoder.read_compact_nullable_string()?
                 } else {
                     decoder.read_nullable_string()?
                 }
             } else {
-                None
+                ::core::option::Option::None
             };
-            let mut current_leader: LeaderIdAndEpoch = LeaderIdAndEpoch::default();
+            let mut __kw_field_7: LeaderIdAndEpoch = LeaderIdAndEpoch::default();
             let mut unknown_tagged_fields = TaggedFields::default();
             if Self::is_flexible(version) {
                 unknown_tagged_fields =
                     decoder.read_tagged_fields_with(|tag, decoder| match tag {
                         0 if version.value() >= 10 => {
-                            current_leader = LeaderIdAndEpoch::decode(decoder, version)?;
-                            Ok(TagOutcome::Decoded)
+                            __kw_field_7 = LeaderIdAndEpoch::decode(decoder, version)?;
+                            ::core::result::Result::Ok(TagOutcome::Decoded)
                         }
-                        _ => Ok(TagOutcome::Retained),
+                        _ => ::core::result::Result::Ok(TagOutcome::Retained),
                     })?;
             }
 
-            Ok(Self {
-                index,
-                error_code,
-                base_offset,
-                log_append_time_ms,
-                log_start_offset,
-                record_errors,
-                error_message,
-                current_leader,
+            ::core::result::Result::Ok(Self {
+                index: __kw_field_0,
+                error_code: __kw_field_1,
+                base_offset: __kw_field_2,
+                log_append_time_ms: __kw_field_3,
+                log_start_offset: __kw_field_4,
+                record_errors: __kw_field_5,
+                error_message: __kw_field_6,
+                current_leader: __kw_field_7,
                 unknown_tagged_fields,
             })
         }
@@ -778,7 +813,7 @@ pub mod produce_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_i32(self.index)?;
             encoder.write_i16(self.error_code)?;
             encoder.write_i64(self.base_offset)?;
@@ -809,13 +844,13 @@ pub mod produce_response {
                 if version.value() >= 10 && self.current_leader != LeaderIdAndEpoch::default() {
                     known.write(0, |encoder| {
                         self.current_leader.encode_validated(encoder, version)?;
-                        Ok(())
+                        ::core::result::Result::Ok(())
                     })?;
                 }
                 encoder.write_merged_tagged_fields(known, &self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -824,12 +859,12 @@ pub mod produce_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             PartitionProduceResponse::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| PartitionProduceResponse::encode_validated(self, encoder, version),
@@ -840,7 +875,7 @@ pub mod produce_response {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -852,19 +887,20 @@ pub mod produce_response {
 
     /// `BatchIndexAndErrorMessage` as declared by the `Produce` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct BatchIndexAndErrorMessage {
         /// The batch index of the record that caused the batch to be dropped.
         pub batch_index: i32,
         /// The error message of the record that caused the batch to be dropped.
-        pub batch_index_error_message: Option<StrBytes>,
+        pub batch_index_error_message: ::core::option::Option<StrBytes>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
     }
 
     impl BatchIndexAndErrorMessage {
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(8, 13);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(9, 13));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(9, 13));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
@@ -872,9 +908,12 @@ pub mod produce_response {
     }
 
     impl BatchIndexAndErrorMessage {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(EncodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(EncodeError::UnsupportedVersion {
                     message: "BatchIndexAndErrorMessage",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
@@ -882,28 +921,31 @@ pub mod produce_response {
             }
 
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: "BatchIndexAndErrorMessage",
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for BatchIndexAndErrorMessage {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(DecodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(DecodeError::UnsupportedVersion {
                     message: "BatchIndexAndErrorMessage",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
                 });
             }
 
-            let batch_index = decoder.read_i32()?;
-            let batch_index_error_message = if Self::is_flexible(version) {
+            let __kw_field_0 = decoder.read_i32()?;
+            let __kw_field_1 = if Self::is_flexible(version) {
                 decoder.read_compact_nullable_string()?
             } else {
                 decoder.read_nullable_string()?
@@ -914,9 +956,9 @@ pub mod produce_response {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                batch_index,
-                batch_index_error_message,
+            ::core::result::Result::Ok(Self {
+                batch_index: __kw_field_0,
+                batch_index_error_message: __kw_field_1,
                 unknown_tagged_fields,
             })
         }
@@ -927,7 +969,7 @@ pub mod produce_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_i32(self.batch_index)?;
             if Self::is_flexible(version) {
                 encoder.write_compact_nullable_string(self.batch_index_error_message.as_ref())?;
@@ -939,7 +981,7 @@ pub mod produce_response {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -948,12 +990,12 @@ pub mod produce_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             BatchIndexAndErrorMessage::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| BatchIndexAndErrorMessage::encode_validated(self, encoder, version),
@@ -964,7 +1006,7 @@ pub mod produce_response {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -988,7 +1030,8 @@ pub mod produce_response {
 
     impl LeaderIdAndEpoch {
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(10, 13);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(10, 13));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(10, 13));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
@@ -996,9 +1039,12 @@ pub mod produce_response {
     }
 
     impl LeaderIdAndEpoch {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(EncodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(EncodeError::UnsupportedVersion {
                     message: "LeaderIdAndEpoch",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
@@ -1006,17 +1052,17 @@ pub mod produce_response {
             }
 
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: "LeaderIdAndEpoch",
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
-    impl Default for LeaderIdAndEpoch {
+    impl ::core::default::Default for LeaderIdAndEpoch {
         fn default() -> Self {
             Self {
                 leader_id: -1,
@@ -1027,26 +1073,29 @@ pub mod produce_response {
     }
 
     impl KafkaDecode for LeaderIdAndEpoch {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(DecodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(DecodeError::UnsupportedVersion {
                     message: "LeaderIdAndEpoch",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
                 });
             }
 
-            let leader_id = decoder.read_i32()?;
-            let leader_epoch = decoder.read_i32()?;
+            let __kw_field_0 = decoder.read_i32()?;
+            let __kw_field_1 = decoder.read_i32()?;
             let unknown_tagged_fields = if Self::is_flexible(version) {
                 decoder.read_tagged_fields()?
             } else {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                leader_id,
-                leader_epoch,
+            ::core::result::Result::Ok(Self {
+                leader_id: __kw_field_0,
+                leader_epoch: __kw_field_1,
                 unknown_tagged_fields,
             })
         }
@@ -1057,7 +1106,7 @@ pub mod produce_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_i32(self.leader_id)?;
             encoder.write_i32(self.leader_epoch)?;
 
@@ -1065,7 +1114,7 @@ pub mod produce_response {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -1074,12 +1123,12 @@ pub mod produce_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             LeaderIdAndEpoch::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| LeaderIdAndEpoch::encode_validated(self, encoder, version),
@@ -1090,7 +1139,7 @@ pub mod produce_response {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -1102,7 +1151,7 @@ pub mod produce_response {
 
     /// `NodeEndpoint` as declared by the `Produce` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct NodeEndpoint {
         /// The ID of the associated node.
         pub node_id: i32,
@@ -1111,14 +1160,15 @@ pub mod produce_response {
         /// The node's port.
         pub port: i32,
         /// The rack of the node, or null if it has not been assigned to a rack.
-        pub rack: Option<StrBytes>,
+        pub rack: ::core::option::Option<StrBytes>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
     }
 
     impl NodeEndpoint {
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(10, 13);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(10, 13));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(10, 13));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
@@ -1126,9 +1176,12 @@ pub mod produce_response {
     }
 
     impl NodeEndpoint {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(EncodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(EncodeError::UnsupportedVersion {
                     message: "NodeEndpoint",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
@@ -1136,41 +1189,44 @@ pub mod produce_response {
             }
 
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: "NodeEndpoint",
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for NodeEndpoint {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(DecodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(DecodeError::UnsupportedVersion {
                     message: "NodeEndpoint",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
                 });
             }
 
-            let node_id = decoder.read_i32()?;
-            let host = decoder.read_compact_string()?;
-            let port = decoder.read_i32()?;
-            let rack = decoder.read_compact_nullable_string()?;
+            let __kw_field_0 = decoder.read_i32()?;
+            let __kw_field_1 = decoder.read_compact_string()?;
+            let __kw_field_2 = decoder.read_i32()?;
+            let __kw_field_3 = decoder.read_compact_nullable_string()?;
             let unknown_tagged_fields = if Self::is_flexible(version) {
                 decoder.read_tagged_fields()?
             } else {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                node_id,
-                host,
-                port,
-                rack,
+            ::core::result::Result::Ok(Self {
+                node_id: __kw_field_0,
+                host: __kw_field_1,
+                port: __kw_field_2,
+                rack: __kw_field_3,
                 unknown_tagged_fields,
             })
         }
@@ -1181,7 +1237,7 @@ pub mod produce_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_i32(self.node_id)?;
             encoder.write_compact_string(&self.host)?;
             encoder.write_i32(self.port)?;
@@ -1191,7 +1247,7 @@ pub mod produce_response {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -1200,12 +1256,12 @@ pub mod produce_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             NodeEndpoint::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| NodeEndpoint::encode_validated(self, encoder, version),
@@ -1216,7 +1272,7 @@ pub mod produce_response {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -1228,14 +1284,14 @@ pub mod produce_response {
 
     /// Response body for the `Produce` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct ProduceResponse {
         /// Each produce response.
-        pub responses: Vec<TopicProduceResponse>,
+        pub responses: ::std::vec::Vec<TopicProduceResponse>,
         /// The duration in milliseconds for which the request was throttled due to a quota violation, or zero if the request did not violate any quota.
         pub throttle_time_ms: i32,
         /// Endpoints for all current-leaders enumerated in `PartitionProduceResponses`, with errors `NOT_LEADER_OR_FOLLOWER`.
-        pub node_endpoints: Vec<NodeEndpoint>,
+        pub node_endpoints: ::std::vec::Vec<NodeEndpoint>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
     }
@@ -1243,7 +1299,8 @@ pub mod produce_response {
     impl KafkaMessage for ProduceResponse {
         const NAME: &'static str = "ProduceResponse";
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(3, 13);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(9, 13));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(9, 13));
     }
 
     impl KafkaResponse for ProduceResponse {
@@ -1251,11 +1308,14 @@ pub mod produce_response {
     }
 
     impl ProduceResponse {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             crate::message::ensure_encode_version::<Self>(version)?;
 
             if version.value() < 10 && !self.node_endpoints.is_empty() {
-                return Err(EncodeError::FieldNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::FieldNotRepresentable {
                     message: Self::NAME,
                     field: "NodeEndpoints",
                     version,
@@ -1270,21 +1330,24 @@ pub mod produce_response {
                 }
             }
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: Self::NAME,
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for ProduceResponse {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             crate::message::ensure_decode_version::<Self>(version)?;
 
-            let responses = {
+            let __kw_field_0 = {
                 let length = if Self::is_flexible(version) {
                     decoder.read_compact_array_len()?
                 } else {
@@ -1294,29 +1357,29 @@ pub mod produce_response {
                     TopicProduceResponse::decode(decoder, version)
                 })?
             };
-            let throttle_time_ms = decoder.read_i32()?;
-            let mut node_endpoints: Vec<NodeEndpoint> = Vec::new();
+            let __kw_field_1 = decoder.read_i32()?;
+            let mut __kw_field_2: ::std::vec::Vec<NodeEndpoint> = ::std::vec::Vec::new();
             let mut unknown_tagged_fields = TaggedFields::default();
             if Self::is_flexible(version) {
                 unknown_tagged_fields =
                     decoder.read_tagged_fields_with(|tag, decoder| match tag {
                         0 if version.value() >= 10 => {
-                            node_endpoints = {
+                            __kw_field_2 = {
                                 let length = decoder.read_compact_array_len()?;
                                 decoder.read_vec(length, |decoder| {
                                     NodeEndpoint::decode(decoder, version)
                                 })?
                             };
-                            Ok(TagOutcome::Decoded)
+                            ::core::result::Result::Ok(TagOutcome::Decoded)
                         }
-                        _ => Ok(TagOutcome::Retained),
+                        _ => ::core::result::Result::Ok(TagOutcome::Retained),
                     })?;
             }
 
-            Ok(Self {
-                responses,
-                throttle_time_ms,
-                node_endpoints,
+            ::core::result::Result::Ok(Self {
+                responses: __kw_field_0,
+                throttle_time_ms: __kw_field_1,
+                node_endpoints: __kw_field_2,
                 unknown_tagged_fields,
             })
         }
@@ -1327,7 +1390,7 @@ pub mod produce_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             if Self::is_flexible(version) {
                 encoder.write_compact_array_len(self.responses.len())?;
             } else {
@@ -1346,13 +1409,13 @@ pub mod produce_response {
                         for value in &self.node_endpoints {
                             value.encode_validated(encoder, version)?;
                         }
-                        Ok(())
+                        ::core::result::Result::Ok(())
                     })?;
                 }
                 encoder.write_merged_tagged_fields(known, &self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -1361,12 +1424,12 @@ pub mod produce_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             ProduceResponse::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| ProduceResponse::encode_validated(self, encoder, version),
@@ -1377,7 +1440,7 @@ pub mod produce_response {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -1401,7 +1464,7 @@ pub const PRODUCE_REQUEST_DESCRIPTOR: MessageDescriptor = MessageDescriptor::new
     "ProduceRequest",
     MessageDirection::Request,
     VersionRange::new(3, 13),
-    Some(VersionRange::new(9, 13)),
+    ::core::option::Option::Some(VersionRange::new(9, 13)),
 );
 
 /// Static metadata for [`ProduceResponse`].
@@ -1410,7 +1473,7 @@ pub const PRODUCE_RESPONSE_DESCRIPTOR: MessageDescriptor = MessageDescriptor::ne
     "ProduceResponse",
     MessageDirection::Response,
     VersionRange::new(3, 13),
-    Some(VersionRange::new(9, 13)),
+    ::core::option::Option::Some(VersionRange::new(9, 13)),
 );
 
 /// Static pair metadata for the `Produce` API.
@@ -1419,6 +1482,6 @@ pub const PRODUCE_API_DESCRIPTOR: ApiDescriptor = ApiDescriptor::new(
     &PRODUCE_REQUEST_DESCRIPTOR,
     &PRODUCE_RESPONSE_DESCRIPTOR,
     VersionRange::new(3, 13),
-    Some(VersionRange::new(9, 13)),
+    ::core::option::Option::Some(VersionRange::new(9, 13)),
     false,
 );

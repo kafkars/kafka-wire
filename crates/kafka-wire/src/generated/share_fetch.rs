@@ -20,19 +20,20 @@ pub mod share_fetch_request {
 
     /// `FetchTopic` as declared by the `ShareFetch` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct FetchTopic {
         /// The unique topic ID.
         pub topic_id: Uuid,
         /// The partitions to fetch.
-        pub partitions: Vec<FetchPartition>,
+        pub partitions: ::std::vec::Vec<FetchPartition>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
     }
 
     impl FetchTopic {
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(1, 2);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(1, 2));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(1, 2));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
@@ -40,9 +41,12 @@ pub mod share_fetch_request {
     }
 
     impl FetchTopic {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(EncodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(EncodeError::UnsupportedVersion {
                     message: "FetchTopic",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
@@ -53,28 +57,31 @@ pub mod share_fetch_request {
                 value.validate_for_version(version)?;
             }
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: "FetchTopic",
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for FetchTopic {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(DecodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(DecodeError::UnsupportedVersion {
                     message: "FetchTopic",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
                 });
             }
 
-            let topic_id = decoder.read_uuid()?;
-            let partitions = {
+            let __kw_field_0 = decoder.read_uuid()?;
+            let __kw_field_1 = {
                 let length = decoder.read_compact_array_len()?;
                 decoder.read_vec(length, |decoder| FetchPartition::decode(decoder, version))?
             };
@@ -84,9 +91,9 @@ pub mod share_fetch_request {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                topic_id,
-                partitions,
+            ::core::result::Result::Ok(Self {
+                topic_id: __kw_field_0,
+                partitions: __kw_field_1,
                 unknown_tagged_fields,
             })
         }
@@ -97,7 +104,7 @@ pub mod share_fetch_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_uuid(self.topic_id)?;
             encoder.write_compact_array_len(self.partitions.len())?;
             for value in &self.partitions {
@@ -108,7 +115,7 @@ pub mod share_fetch_request {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -117,12 +124,12 @@ pub mod share_fetch_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             FetchTopic::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| FetchTopic::encode_validated(self, encoder, version),
@@ -133,7 +140,7 @@ pub mod share_fetch_request {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -145,19 +152,20 @@ pub mod share_fetch_request {
 
     /// `FetchPartition` as declared by the `ShareFetch` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct FetchPartition {
         /// The partition index.
         pub partition_index: i32,
         /// Record batches to acknowledge.
-        pub acknowledgement_batches: Vec<AcknowledgementBatch>,
+        pub acknowledgement_batches: ::std::vec::Vec<AcknowledgementBatch>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
     }
 
     impl FetchPartition {
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(1, 2);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(1, 2));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(1, 2));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
@@ -165,9 +173,12 @@ pub mod share_fetch_request {
     }
 
     impl FetchPartition {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(EncodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(EncodeError::UnsupportedVersion {
                     message: "FetchPartition",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
@@ -178,28 +189,31 @@ pub mod share_fetch_request {
                 value.validate_for_version(version)?;
             }
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: "FetchPartition",
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for FetchPartition {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(DecodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(DecodeError::UnsupportedVersion {
                     message: "FetchPartition",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
                 });
             }
 
-            let partition_index = decoder.read_i32()?;
-            let acknowledgement_batches = {
+            let __kw_field_0 = decoder.read_i32()?;
+            let __kw_field_1 = {
                 let length = decoder.read_compact_array_len()?;
                 decoder.read_vec(length, |decoder| {
                     AcknowledgementBatch::decode(decoder, version)
@@ -211,9 +225,9 @@ pub mod share_fetch_request {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                partition_index,
-                acknowledgement_batches,
+            ::core::result::Result::Ok(Self {
+                partition_index: __kw_field_0,
+                acknowledgement_batches: __kw_field_1,
                 unknown_tagged_fields,
             })
         }
@@ -224,7 +238,7 @@ pub mod share_fetch_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_i32(self.partition_index)?;
             encoder.write_compact_array_len(self.acknowledgement_batches.len())?;
             for value in &self.acknowledgement_batches {
@@ -235,7 +249,7 @@ pub mod share_fetch_request {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -244,12 +258,12 @@ pub mod share_fetch_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             FetchPartition::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| FetchPartition::encode_validated(self, encoder, version),
@@ -260,7 +274,7 @@ pub mod share_fetch_request {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -272,21 +286,22 @@ pub mod share_fetch_request {
 
     /// `AcknowledgementBatch` as declared by the `ShareFetch` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct AcknowledgementBatch {
         /// First offset of batch of records to acknowledge.
         pub first_offset: i64,
         /// Last offset (inclusive) of batch of records to acknowledge.
         pub last_offset: i64,
         /// Array of acknowledge types - 0:Gap,1:Accept,2:Release,3:Reject,4:Renew.
-        pub acknowledge_types: Vec<i8>,
+        pub acknowledge_types: ::std::vec::Vec<i8>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
     }
 
     impl AcknowledgementBatch {
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(1, 2);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(1, 2));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(1, 2));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
@@ -294,9 +309,12 @@ pub mod share_fetch_request {
     }
 
     impl AcknowledgementBatch {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(EncodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(EncodeError::UnsupportedVersion {
                     message: "AcknowledgementBatch",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
@@ -304,29 +322,32 @@ pub mod share_fetch_request {
             }
 
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: "AcknowledgementBatch",
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for AcknowledgementBatch {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(DecodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(DecodeError::UnsupportedVersion {
                     message: "AcknowledgementBatch",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
                 });
             }
 
-            let first_offset = decoder.read_i64()?;
-            let last_offset = decoder.read_i64()?;
-            let acknowledge_types = {
+            let __kw_field_0 = decoder.read_i64()?;
+            let __kw_field_1 = decoder.read_i64()?;
+            let __kw_field_2 = {
                 let length = decoder.read_compact_array_len()?;
                 decoder.read_vec(length, Decoder::read_i8)?
             };
@@ -336,10 +357,10 @@ pub mod share_fetch_request {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                first_offset,
-                last_offset,
-                acknowledge_types,
+            ::core::result::Result::Ok(Self {
+                first_offset: __kw_field_0,
+                last_offset: __kw_field_1,
+                acknowledge_types: __kw_field_2,
                 unknown_tagged_fields,
             })
         }
@@ -350,7 +371,7 @@ pub mod share_fetch_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_i64(self.first_offset)?;
             encoder.write_i64(self.last_offset)?;
             encoder.write_compact_array_len(self.acknowledge_types.len())?;
@@ -362,7 +383,7 @@ pub mod share_fetch_request {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -371,12 +392,12 @@ pub mod share_fetch_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             AcknowledgementBatch::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| AcknowledgementBatch::encode_validated(self, encoder, version),
@@ -387,7 +408,7 @@ pub mod share_fetch_request {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -399,19 +420,20 @@ pub mod share_fetch_request {
 
     /// `ForgottenTopic` as declared by the `ShareFetch` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct ForgottenTopic {
         /// The unique topic ID.
         pub topic_id: Uuid,
         /// The partitions indexes to forget.
-        pub partitions: Vec<i32>,
+        pub partitions: ::std::vec::Vec<i32>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
     }
 
     impl ForgottenTopic {
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(1, 2);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(1, 2));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(1, 2));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
@@ -419,9 +441,12 @@ pub mod share_fetch_request {
     }
 
     impl ForgottenTopic {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(EncodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(EncodeError::UnsupportedVersion {
                     message: "ForgottenTopic",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
@@ -429,28 +454,31 @@ pub mod share_fetch_request {
             }
 
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: "ForgottenTopic",
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for ForgottenTopic {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(DecodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(DecodeError::UnsupportedVersion {
                     message: "ForgottenTopic",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
                 });
             }
 
-            let topic_id = decoder.read_uuid()?;
-            let partitions = {
+            let __kw_field_0 = decoder.read_uuid()?;
+            let __kw_field_1 = {
                 let length = decoder.read_compact_array_len()?;
                 decoder.read_vec(length, Decoder::read_i32)?
             };
@@ -460,9 +488,9 @@ pub mod share_fetch_request {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                topic_id,
-                partitions,
+            ::core::result::Result::Ok(Self {
+                topic_id: __kw_field_0,
+                partitions: __kw_field_1,
                 unknown_tagged_fields,
             })
         }
@@ -473,7 +501,7 @@ pub mod share_fetch_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_uuid(self.topic_id)?;
             encoder.write_compact_array_len(self.partitions.len())?;
             for value in &self.partitions {
@@ -484,7 +512,7 @@ pub mod share_fetch_request {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -493,12 +521,12 @@ pub mod share_fetch_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             ForgottenTopic::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| ForgottenTopic::encode_validated(self, encoder, version),
@@ -509,7 +537,7 @@ pub mod share_fetch_request {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -524,9 +552,9 @@ pub mod share_fetch_request {
     #[derive(Clone, Debug, Eq, PartialEq)]
     pub struct ShareFetchRequest {
         /// The group identifier.
-        pub group_id: Option<StrBytes>,
+        pub group_id: ::core::option::Option<StrBytes>,
         /// The member ID.
-        pub member_id: Option<StrBytes>,
+        pub member_id: ::core::option::Option<StrBytes>,
         /// The current share session epoch: 0 to open a share session; -1 to close it; otherwise increments for consecutive requests.
         pub share_session_epoch: i32,
         /// The maximum time in milliseconds to wait for the response.
@@ -544,18 +572,18 @@ pub mod share_fetch_request {
         /// Whether Renew type acknowledgements present in `AcknowledgementBatches`.
         pub is_renew_ack: bool,
         /// The topics to fetch.
-        pub topics: Vec<FetchTopic>,
+        pub topics: ::std::vec::Vec<FetchTopic>,
         /// The partitions to remove from this share session.
-        pub forgotten_topics_data: Vec<ForgottenTopic>,
+        pub forgotten_topics_data: ::std::vec::Vec<ForgottenTopic>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
     }
 
-    impl Default for ShareFetchRequest {
+    impl ::core::default::Default for ShareFetchRequest {
         fn default() -> Self {
             Self {
-                group_id: None,
-                member_id: Some(StrBytes::default()),
+                group_id: ::core::option::Option::None,
+                member_id: ::core::option::Option::Some(StrBytes::default()),
                 share_session_epoch: 0,
                 max_wait_ms: 0,
                 min_bytes: 0,
@@ -564,8 +592,8 @@ pub mod share_fetch_request {
                 batch_size: 0,
                 share_acquire_mode: 0,
                 is_renew_ack: false,
-                topics: Vec::new(),
-                forgotten_topics_data: Vec::new(),
+                topics: ::std::vec::Vec::new(),
+                forgotten_topics_data: ::std::vec::Vec::new(),
                 unknown_tagged_fields: TaggedFields::default(),
             }
         }
@@ -574,7 +602,8 @@ pub mod share_fetch_request {
     impl KafkaMessage for ShareFetchRequest {
         const NAME: &'static str = "ShareFetchRequest";
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(1, 2);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(1, 2));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(1, 2));
     }
 
     impl KafkaRequest for ShareFetchRequest {
@@ -587,11 +616,14 @@ pub mod share_fetch_request {
     }
 
     impl ShareFetchRequest {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             crate::message::ensure_encode_version::<Self>(version)?;
 
             if version.value() < 2 && self.is_renew_ack {
-                return Err(EncodeError::FieldNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::FieldNotRepresentable {
                     message: Self::NAME,
                     field: "IsRenewAck",
                     version,
@@ -604,43 +636,46 @@ pub mod share_fetch_request {
                 value.validate_for_version(version)?;
             }
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: Self::NAME,
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for ShareFetchRequest {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             crate::message::ensure_decode_version::<Self>(version)?;
 
-            let group_id = decoder.read_compact_nullable_string()?;
-            let member_id = decoder.read_compact_nullable_string()?;
-            let share_session_epoch = decoder.read_i32()?;
-            let max_wait_ms = decoder.read_i32()?;
-            let min_bytes = decoder.read_i32()?;
-            let max_bytes = decoder.read_i32()?;
-            let max_records = decoder.read_i32()?;
-            let batch_size = decoder.read_i32()?;
-            let share_acquire_mode = if version.value() >= 2 {
+            let __kw_field_0 = decoder.read_compact_nullable_string()?;
+            let __kw_field_1 = decoder.read_compact_nullable_string()?;
+            let __kw_field_2 = decoder.read_i32()?;
+            let __kw_field_3 = decoder.read_i32()?;
+            let __kw_field_4 = decoder.read_i32()?;
+            let __kw_field_5 = decoder.read_i32()?;
+            let __kw_field_6 = decoder.read_i32()?;
+            let __kw_field_7 = decoder.read_i32()?;
+            let __kw_field_8 = if version.value() >= 2 {
                 decoder.read_i8()?
             } else {
                 0
             };
-            let is_renew_ack = if version.value() >= 2 {
+            let __kw_field_9 = if version.value() >= 2 {
                 decoder.read_bool()?
             } else {
                 false
             };
-            let topics = {
+            let __kw_field_10 = {
                 let length = decoder.read_compact_array_len()?;
                 decoder.read_vec(length, |decoder| FetchTopic::decode(decoder, version))?
             };
-            let forgotten_topics_data = {
+            let __kw_field_11 = {
                 let length = decoder.read_compact_array_len()?;
                 decoder.read_vec(length, |decoder| ForgottenTopic::decode(decoder, version))?
             };
@@ -650,19 +685,19 @@ pub mod share_fetch_request {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                group_id,
-                member_id,
-                share_session_epoch,
-                max_wait_ms,
-                min_bytes,
-                max_bytes,
-                max_records,
-                batch_size,
-                share_acquire_mode,
-                is_renew_ack,
-                topics,
-                forgotten_topics_data,
+            ::core::result::Result::Ok(Self {
+                group_id: __kw_field_0,
+                member_id: __kw_field_1,
+                share_session_epoch: __kw_field_2,
+                max_wait_ms: __kw_field_3,
+                min_bytes: __kw_field_4,
+                max_bytes: __kw_field_5,
+                max_records: __kw_field_6,
+                batch_size: __kw_field_7,
+                share_acquire_mode: __kw_field_8,
+                is_renew_ack: __kw_field_9,
+                topics: __kw_field_10,
+                forgotten_topics_data: __kw_field_11,
                 unknown_tagged_fields,
             })
         }
@@ -673,7 +708,7 @@ pub mod share_fetch_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_compact_nullable_string(self.group_id.as_ref())?;
             encoder.write_compact_nullable_string(self.member_id.as_ref())?;
             encoder.write_i32(self.share_session_epoch)?;
@@ -701,7 +736,7 @@ pub mod share_fetch_request {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -710,12 +745,12 @@ pub mod share_fetch_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             ShareFetchRequest::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| ShareFetchRequest::encode_validated(self, encoder, version),
@@ -726,7 +761,7 @@ pub mod share_fetch_request {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -752,19 +787,20 @@ pub mod share_fetch_response {
 
     /// `ShareFetchableTopicResponse` as declared by the `ShareFetch` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct ShareFetchableTopicResponse {
         /// The unique topic ID.
         pub topic_id: Uuid,
         /// The topic partitions.
-        pub partitions: Vec<PartitionData>,
+        pub partitions: ::std::vec::Vec<PartitionData>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
     }
 
     impl ShareFetchableTopicResponse {
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(1, 2);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(1, 2));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(1, 2));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
@@ -772,9 +808,12 @@ pub mod share_fetch_response {
     }
 
     impl ShareFetchableTopicResponse {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(EncodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(EncodeError::UnsupportedVersion {
                     message: "ShareFetchableTopicResponse",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
@@ -785,28 +824,31 @@ pub mod share_fetch_response {
                 value.validate_for_version(version)?;
             }
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: "ShareFetchableTopicResponse",
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for ShareFetchableTopicResponse {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(DecodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(DecodeError::UnsupportedVersion {
                     message: "ShareFetchableTopicResponse",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
                 });
             }
 
-            let topic_id = decoder.read_uuid()?;
-            let partitions = {
+            let __kw_field_0 = decoder.read_uuid()?;
+            let __kw_field_1 = {
                 let length = decoder.read_compact_array_len()?;
                 decoder.read_vec(length, |decoder| PartitionData::decode(decoder, version))?
             };
@@ -816,9 +858,9 @@ pub mod share_fetch_response {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                topic_id,
-                partitions,
+            ::core::result::Result::Ok(Self {
+                topic_id: __kw_field_0,
+                partitions: __kw_field_1,
                 unknown_tagged_fields,
             })
         }
@@ -829,7 +871,7 @@ pub mod share_fetch_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_uuid(self.topic_id)?;
             encoder.write_compact_array_len(self.partitions.len())?;
             for value in &self.partitions {
@@ -840,7 +882,7 @@ pub mod share_fetch_response {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -849,12 +891,12 @@ pub mod share_fetch_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             ShareFetchableTopicResponse::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| ShareFetchableTopicResponse::encode_validated(self, encoder, version),
@@ -865,7 +907,7 @@ pub mod share_fetch_response {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -877,31 +919,32 @@ pub mod share_fetch_response {
 
     /// `PartitionData` as declared by the `ShareFetch` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct PartitionData {
         /// The partition index.
         pub partition_index: i32,
         /// The fetch error code, or 0 if there was no fetch error.
         pub error_code: i16,
         /// The fetch error message, or null if there was no fetch error.
-        pub error_message: Option<StrBytes>,
+        pub error_message: ::core::option::Option<StrBytes>,
         /// The acknowledge error code, or 0 if there was no acknowledge error.
         pub acknowledge_error_code: i16,
         /// The acknowledge error message, or null if there was no acknowledge error.
-        pub acknowledge_error_message: Option<StrBytes>,
+        pub acknowledge_error_message: ::core::option::Option<StrBytes>,
         /// The current leader of the partition.
         pub current_leader: LeaderIdAndEpoch,
         /// The record data.
         pub records: Bytes,
         /// The acquired records.
-        pub acquired_records: Vec<AcquiredRecords>,
+        pub acquired_records: ::std::vec::Vec<AcquiredRecords>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
     }
 
     impl PartitionData {
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(1, 2);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(1, 2));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(1, 2));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
@@ -909,9 +952,12 @@ pub mod share_fetch_response {
     }
 
     impl PartitionData {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(EncodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(EncodeError::UnsupportedVersion {
                     message: "PartitionData",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
@@ -923,34 +969,37 @@ pub mod share_fetch_response {
                 value.validate_for_version(version)?;
             }
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: "PartitionData",
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for PartitionData {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(DecodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(DecodeError::UnsupportedVersion {
                     message: "PartitionData",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
                 });
             }
 
-            let partition_index = decoder.read_i32()?;
-            let error_code = decoder.read_i16()?;
-            let error_message = decoder.read_compact_nullable_string()?;
-            let acknowledge_error_code = decoder.read_i16()?;
-            let acknowledge_error_message = decoder.read_compact_nullable_string()?;
-            let current_leader = LeaderIdAndEpoch::decode(decoder, version)?;
-            let records = decoder.read_compact_bytes()?;
-            let acquired_records = {
+            let __kw_field_0 = decoder.read_i32()?;
+            let __kw_field_1 = decoder.read_i16()?;
+            let __kw_field_2 = decoder.read_compact_nullable_string()?;
+            let __kw_field_3 = decoder.read_i16()?;
+            let __kw_field_4 = decoder.read_compact_nullable_string()?;
+            let __kw_field_5 = LeaderIdAndEpoch::decode(decoder, version)?;
+            let __kw_field_6 = decoder.read_compact_bytes()?;
+            let __kw_field_7 = {
                 let length = decoder.read_compact_array_len()?;
                 decoder.read_vec(length, |decoder| AcquiredRecords::decode(decoder, version))?
             };
@@ -960,15 +1009,15 @@ pub mod share_fetch_response {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                partition_index,
-                error_code,
-                error_message,
-                acknowledge_error_code,
-                acknowledge_error_message,
-                current_leader,
-                records,
-                acquired_records,
+            ::core::result::Result::Ok(Self {
+                partition_index: __kw_field_0,
+                error_code: __kw_field_1,
+                error_message: __kw_field_2,
+                acknowledge_error_code: __kw_field_3,
+                acknowledge_error_message: __kw_field_4,
+                current_leader: __kw_field_5,
+                records: __kw_field_6,
+                acquired_records: __kw_field_7,
                 unknown_tagged_fields,
             })
         }
@@ -979,7 +1028,7 @@ pub mod share_fetch_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_i32(self.partition_index)?;
             encoder.write_i16(self.error_code)?;
             encoder.write_compact_nullable_string(self.error_message.as_ref())?;
@@ -996,7 +1045,7 @@ pub mod share_fetch_response {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -1005,12 +1054,12 @@ pub mod share_fetch_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             PartitionData::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| PartitionData::encode_validated(self, encoder, version),
@@ -1021,7 +1070,7 @@ pub mod share_fetch_response {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -1033,7 +1082,7 @@ pub mod share_fetch_response {
 
     /// `LeaderIdAndEpoch` as declared by the `ShareFetch` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct LeaderIdAndEpoch {
         /// The ID of the current leader or -1 if the leader is unknown.
         pub leader_id: i32,
@@ -1045,7 +1094,8 @@ pub mod share_fetch_response {
 
     impl LeaderIdAndEpoch {
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(1, 2);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(1, 2));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(1, 2));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
@@ -1053,9 +1103,12 @@ pub mod share_fetch_response {
     }
 
     impl LeaderIdAndEpoch {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(EncodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(EncodeError::UnsupportedVersion {
                     message: "LeaderIdAndEpoch",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
@@ -1063,37 +1116,40 @@ pub mod share_fetch_response {
             }
 
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: "LeaderIdAndEpoch",
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for LeaderIdAndEpoch {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(DecodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(DecodeError::UnsupportedVersion {
                     message: "LeaderIdAndEpoch",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
                 });
             }
 
-            let leader_id = decoder.read_i32()?;
-            let leader_epoch = decoder.read_i32()?;
+            let __kw_field_0 = decoder.read_i32()?;
+            let __kw_field_1 = decoder.read_i32()?;
             let unknown_tagged_fields = if Self::is_flexible(version) {
                 decoder.read_tagged_fields()?
             } else {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                leader_id,
-                leader_epoch,
+            ::core::result::Result::Ok(Self {
+                leader_id: __kw_field_0,
+                leader_epoch: __kw_field_1,
                 unknown_tagged_fields,
             })
         }
@@ -1104,7 +1160,7 @@ pub mod share_fetch_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_i32(self.leader_id)?;
             encoder.write_i32(self.leader_epoch)?;
 
@@ -1112,7 +1168,7 @@ pub mod share_fetch_response {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -1121,12 +1177,12 @@ pub mod share_fetch_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             LeaderIdAndEpoch::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| LeaderIdAndEpoch::encode_validated(self, encoder, version),
@@ -1137,7 +1193,7 @@ pub mod share_fetch_response {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -1149,7 +1205,7 @@ pub mod share_fetch_response {
 
     /// `AcquiredRecords` as declared by the `ShareFetch` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct AcquiredRecords {
         /// The earliest offset in this batch of acquired records.
         pub first_offset: i64,
@@ -1163,7 +1219,8 @@ pub mod share_fetch_response {
 
     impl AcquiredRecords {
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(1, 2);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(1, 2));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(1, 2));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
@@ -1171,9 +1228,12 @@ pub mod share_fetch_response {
     }
 
     impl AcquiredRecords {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(EncodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(EncodeError::UnsupportedVersion {
                     message: "AcquiredRecords",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
@@ -1181,39 +1241,42 @@ pub mod share_fetch_response {
             }
 
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: "AcquiredRecords",
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for AcquiredRecords {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(DecodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(DecodeError::UnsupportedVersion {
                     message: "AcquiredRecords",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
                 });
             }
 
-            let first_offset = decoder.read_i64()?;
-            let last_offset = decoder.read_i64()?;
-            let delivery_count = decoder.read_i16()?;
+            let __kw_field_0 = decoder.read_i64()?;
+            let __kw_field_1 = decoder.read_i64()?;
+            let __kw_field_2 = decoder.read_i16()?;
             let unknown_tagged_fields = if Self::is_flexible(version) {
                 decoder.read_tagged_fields()?
             } else {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                first_offset,
-                last_offset,
-                delivery_count,
+            ::core::result::Result::Ok(Self {
+                first_offset: __kw_field_0,
+                last_offset: __kw_field_1,
+                delivery_count: __kw_field_2,
                 unknown_tagged_fields,
             })
         }
@@ -1224,7 +1287,7 @@ pub mod share_fetch_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_i64(self.first_offset)?;
             encoder.write_i64(self.last_offset)?;
             encoder.write_i16(self.delivery_count)?;
@@ -1233,7 +1296,7 @@ pub mod share_fetch_response {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -1242,12 +1305,12 @@ pub mod share_fetch_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             AcquiredRecords::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| AcquiredRecords::encode_validated(self, encoder, version),
@@ -1258,7 +1321,7 @@ pub mod share_fetch_response {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -1270,7 +1333,7 @@ pub mod share_fetch_response {
 
     /// `NodeEndpoint` as declared by the `ShareFetch` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct NodeEndpoint {
         /// The ID of the associated node.
         pub node_id: i32,
@@ -1279,14 +1342,15 @@ pub mod share_fetch_response {
         /// The node's port.
         pub port: i32,
         /// The rack of the node, or null if it has not been assigned to a rack.
-        pub rack: Option<StrBytes>,
+        pub rack: ::core::option::Option<StrBytes>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
     }
 
     impl NodeEndpoint {
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(1, 2);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(1, 2));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(1, 2));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
@@ -1294,9 +1358,12 @@ pub mod share_fetch_response {
     }
 
     impl NodeEndpoint {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(EncodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(EncodeError::UnsupportedVersion {
                     message: "NodeEndpoint",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
@@ -1304,41 +1371,44 @@ pub mod share_fetch_response {
             }
 
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: "NodeEndpoint",
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for NodeEndpoint {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(DecodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(DecodeError::UnsupportedVersion {
                     message: "NodeEndpoint",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
                 });
             }
 
-            let node_id = decoder.read_i32()?;
-            let host = decoder.read_compact_string()?;
-            let port = decoder.read_i32()?;
-            let rack = decoder.read_compact_nullable_string()?;
+            let __kw_field_0 = decoder.read_i32()?;
+            let __kw_field_1 = decoder.read_compact_string()?;
+            let __kw_field_2 = decoder.read_i32()?;
+            let __kw_field_3 = decoder.read_compact_nullable_string()?;
             let unknown_tagged_fields = if Self::is_flexible(version) {
                 decoder.read_tagged_fields()?
             } else {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                node_id,
-                host,
-                port,
-                rack,
+            ::core::result::Result::Ok(Self {
+                node_id: __kw_field_0,
+                host: __kw_field_1,
+                port: __kw_field_2,
+                rack: __kw_field_3,
                 unknown_tagged_fields,
             })
         }
@@ -1349,7 +1419,7 @@ pub mod share_fetch_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_i32(self.node_id)?;
             encoder.write_compact_string(&self.host)?;
             encoder.write_i32(self.port)?;
@@ -1359,7 +1429,7 @@ pub mod share_fetch_response {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -1368,12 +1438,12 @@ pub mod share_fetch_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             NodeEndpoint::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| NodeEndpoint::encode_validated(self, encoder, version),
@@ -1384,7 +1454,7 @@ pub mod share_fetch_response {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -1396,20 +1466,20 @@ pub mod share_fetch_response {
 
     /// Response body for the `ShareFetch` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct ShareFetchResponse {
         /// The duration in milliseconds for which the request was throttled due to a quota violation, or zero if the request did not violate any quota.
         pub throttle_time_ms: i32,
         /// The top-level response error code.
         pub error_code: i16,
         /// The top-level error message, or null if there was no error.
-        pub error_message: Option<StrBytes>,
+        pub error_message: ::core::option::Option<StrBytes>,
         /// The time in milliseconds for which the acquired records are locked.
         pub acquisition_lock_timeout_ms: i32,
         /// The response topics.
-        pub responses: Vec<ShareFetchableTopicResponse>,
+        pub responses: ::std::vec::Vec<ShareFetchableTopicResponse>,
         /// Endpoints for all current leaders enumerated in `PartitionData` with error `NOT_LEADER_OR_FOLLOWER`.
-        pub node_endpoints: Vec<NodeEndpoint>,
+        pub node_endpoints: ::std::vec::Vec<NodeEndpoint>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
     }
@@ -1417,7 +1487,8 @@ pub mod share_fetch_response {
     impl KafkaMessage for ShareFetchResponse {
         const NAME: &'static str = "ShareFetchResponse";
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(1, 2);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(1, 2));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(1, 2));
     }
 
     impl KafkaResponse for ShareFetchResponse {
@@ -1425,7 +1496,10 @@ pub mod share_fetch_response {
     }
 
     impl ShareFetchResponse {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             crate::message::ensure_encode_version::<Self>(version)?;
 
             for value in &self.responses {
@@ -1435,31 +1509,34 @@ pub mod share_fetch_response {
                 value.validate_for_version(version)?;
             }
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: Self::NAME,
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for ShareFetchResponse {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             crate::message::ensure_decode_version::<Self>(version)?;
 
-            let throttle_time_ms = decoder.read_i32()?;
-            let error_code = decoder.read_i16()?;
-            let error_message = decoder.read_compact_nullable_string()?;
-            let acquisition_lock_timeout_ms = decoder.read_i32()?;
-            let responses = {
+            let __kw_field_0 = decoder.read_i32()?;
+            let __kw_field_1 = decoder.read_i16()?;
+            let __kw_field_2 = decoder.read_compact_nullable_string()?;
+            let __kw_field_3 = decoder.read_i32()?;
+            let __kw_field_4 = {
                 let length = decoder.read_compact_array_len()?;
                 decoder.read_vec(length, |decoder| {
                     ShareFetchableTopicResponse::decode(decoder, version)
                 })?
             };
-            let node_endpoints = {
+            let __kw_field_5 = {
                 let length = decoder.read_compact_array_len()?;
                 decoder.read_vec(length, |decoder| NodeEndpoint::decode(decoder, version))?
             };
@@ -1469,13 +1546,13 @@ pub mod share_fetch_response {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                throttle_time_ms,
-                error_code,
-                error_message,
-                acquisition_lock_timeout_ms,
-                responses,
-                node_endpoints,
+            ::core::result::Result::Ok(Self {
+                throttle_time_ms: __kw_field_0,
+                error_code: __kw_field_1,
+                error_message: __kw_field_2,
+                acquisition_lock_timeout_ms: __kw_field_3,
+                responses: __kw_field_4,
+                node_endpoints: __kw_field_5,
                 unknown_tagged_fields,
             })
         }
@@ -1486,7 +1563,7 @@ pub mod share_fetch_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_i32(self.throttle_time_ms)?;
             encoder.write_i16(self.error_code)?;
             encoder.write_compact_nullable_string(self.error_message.as_ref())?;
@@ -1504,7 +1581,7 @@ pub mod share_fetch_response {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -1513,12 +1590,12 @@ pub mod share_fetch_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             ShareFetchResponse::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| ShareFetchResponse::encode_validated(self, encoder, version),
@@ -1529,7 +1606,7 @@ pub mod share_fetch_response {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -1553,7 +1630,7 @@ pub const SHARE_FETCH_REQUEST_DESCRIPTOR: MessageDescriptor = MessageDescriptor:
     "ShareFetchRequest",
     MessageDirection::Request,
     VersionRange::new(1, 2),
-    Some(VersionRange::new(1, 2)),
+    ::core::option::Option::Some(VersionRange::new(1, 2)),
 );
 
 /// Static metadata for [`ShareFetchResponse`].
@@ -1562,7 +1639,7 @@ pub const SHARE_FETCH_RESPONSE_DESCRIPTOR: MessageDescriptor = MessageDescriptor
     "ShareFetchResponse",
     MessageDirection::Response,
     VersionRange::new(1, 2),
-    Some(VersionRange::new(1, 2)),
+    ::core::option::Option::Some(VersionRange::new(1, 2)),
 );
 
 /// Static pair metadata for the `ShareFetch` API.
@@ -1571,6 +1648,6 @@ pub const SHARE_FETCH_API_DESCRIPTOR: ApiDescriptor = ApiDescriptor::new(
     &SHARE_FETCH_REQUEST_DESCRIPTOR,
     &SHARE_FETCH_RESPONSE_DESCRIPTOR,
     VersionRange::new(1, 2),
-    Some(VersionRange::new(1, 2)),
+    ::core::option::Option::Some(VersionRange::new(1, 2)),
     false,
 );

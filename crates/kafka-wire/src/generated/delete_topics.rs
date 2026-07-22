@@ -20,10 +20,10 @@ pub mod delete_topics_request {
 
     /// `DeleteTopicState` as declared by the `DeleteTopics` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct DeleteTopicState {
         /// The topic name.
-        pub name: Option<StrBytes>,
+        pub name: ::core::option::Option<StrBytes>,
         /// The unique topic ID.
         pub topic_id: Uuid,
         /// Unknown flexible-version tagged fields retained for forwarding.
@@ -32,7 +32,8 @@ pub mod delete_topics_request {
 
     impl DeleteTopicState {
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(6, 6);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(6, 6));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(6, 6));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
@@ -40,9 +41,12 @@ pub mod delete_topics_request {
     }
 
     impl DeleteTopicState {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(EncodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(EncodeError::UnsupportedVersion {
                     message: "DeleteTopicState",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
@@ -50,37 +54,40 @@ pub mod delete_topics_request {
             }
 
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: "DeleteTopicState",
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for DeleteTopicState {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(DecodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(DecodeError::UnsupportedVersion {
                     message: "DeleteTopicState",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
                 });
             }
 
-            let name = decoder.read_compact_nullable_string()?;
-            let topic_id = decoder.read_uuid()?;
+            let __kw_field_0 = decoder.read_compact_nullable_string()?;
+            let __kw_field_1 = decoder.read_uuid()?;
             let unknown_tagged_fields = if Self::is_flexible(version) {
                 decoder.read_tagged_fields()?
             } else {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                name,
-                topic_id,
+            ::core::result::Result::Ok(Self {
+                name: __kw_field_0,
+                topic_id: __kw_field_1,
                 unknown_tagged_fields,
             })
         }
@@ -91,7 +98,7 @@ pub mod delete_topics_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_compact_nullable_string(self.name.as_ref())?;
             encoder.write_uuid(self.topic_id)?;
 
@@ -99,7 +106,7 @@ pub mod delete_topics_request {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -108,12 +115,12 @@ pub mod delete_topics_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             DeleteTopicState::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| DeleteTopicState::encode_validated(self, encoder, version),
@@ -124,7 +131,7 @@ pub mod delete_topics_request {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -136,12 +143,12 @@ pub mod delete_topics_request {
 
     /// Request body for the `DeleteTopics` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct DeleteTopicsRequest {
         /// The name or topic ID of the topic.
-        pub topics: Vec<DeleteTopicState>,
+        pub topics: ::std::vec::Vec<DeleteTopicState>,
         /// The names of the topics to delete.
-        pub topic_names: Vec<StrBytes>,
+        pub topic_names: ::std::vec::Vec<StrBytes>,
         /// The length of time in milliseconds to wait for the deletions to complete.
         pub timeout_ms: i32,
         /// Unknown flexible-version tagged fields retained for forwarding.
@@ -151,7 +158,8 @@ pub mod delete_topics_request {
     impl KafkaMessage for DeleteTopicsRequest {
         const NAME: &'static str = "DeleteTopicsRequest";
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(1, 6);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(4, 6));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(4, 6));
     }
 
     impl KafkaRequest for DeleteTopicsRequest {
@@ -164,11 +172,14 @@ pub mod delete_topics_request {
     }
 
     impl DeleteTopicsRequest {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             crate::message::ensure_encode_version::<Self>(version)?;
 
             if version.value() < 6 && !self.topics.is_empty() {
-                return Err(EncodeError::FieldNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::FieldNotRepresentable {
                     message: Self::NAME,
                     field: "Topics",
                     version,
@@ -180,53 +191,56 @@ pub mod delete_topics_request {
                 }
             }
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: Self::NAME,
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for DeleteTopicsRequest {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             crate::message::ensure_decode_version::<Self>(version)?;
 
-            let topics = if version.value() >= 6 {
+            let __kw_field_0 = if version.value() >= 6 {
                 let length = decoder.read_compact_array_len()?;
                 decoder.read_vec(length, |decoder| DeleteTopicState::decode(decoder, version))?
             } else {
-                Vec::new()
+                ::std::vec::Vec::new()
             };
-            let topic_names = if version.value() <= 5 {
+            let __kw_field_1 = if version.value() <= 5 {
                 let length = if Self::is_flexible(version) {
                     decoder.read_compact_array_len()?
                 } else {
                     decoder.read_array_len()?
                 };
                 decoder.read_vec(length, |decoder| {
-                    Ok(if Self::is_flexible(version) {
+                    ::core::result::Result::Ok(if Self::is_flexible(version) {
                         decoder.read_compact_string()?
                     } else {
                         decoder.read_string()?
                     })
                 })?
             } else {
-                Vec::new()
+                ::std::vec::Vec::new()
             };
-            let timeout_ms = decoder.read_i32()?;
+            let __kw_field_2 = decoder.read_i32()?;
             let unknown_tagged_fields = if Self::is_flexible(version) {
                 decoder.read_tagged_fields()?
             } else {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                topics,
-                topic_names,
-                timeout_ms,
+            ::core::result::Result::Ok(Self {
+                topics: __kw_field_0,
+                topic_names: __kw_field_1,
+                timeout_ms: __kw_field_2,
                 unknown_tagged_fields,
             })
         }
@@ -237,7 +251,7 @@ pub mod delete_topics_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             if version.value() >= 6 {
                 encoder.write_compact_array_len(self.topics.len())?;
                 for value in &self.topics {
@@ -264,7 +278,7 @@ pub mod delete_topics_request {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -273,12 +287,12 @@ pub mod delete_topics_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             DeleteTopicsRequest::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| DeleteTopicsRequest::encode_validated(self, encoder, version),
@@ -289,7 +303,7 @@ pub mod delete_topics_request {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -318,20 +332,21 @@ pub mod delete_topics_response {
     #[derive(Clone, Debug, Eq, PartialEq)]
     pub struct DeletableTopicResult {
         /// The topic name.
-        pub name: Option<StrBytes>,
+        pub name: ::core::option::Option<StrBytes>,
         /// The unique topic ID.
         pub topic_id: Uuid,
         /// The deletion error, or 0 if the deletion succeeded.
         pub error_code: i16,
         /// The error message, or null if there was no error.
-        pub error_message: Option<StrBytes>,
+        pub error_message: ::core::option::Option<StrBytes>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
     }
 
     impl DeletableTopicResult {
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(1, 6);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(4, 6));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(4, 6));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
@@ -339,9 +354,12 @@ pub mod delete_topics_response {
     }
 
     impl DeletableTopicResult {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(EncodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(EncodeError::UnsupportedVersion {
                     message: "DeletableTopicResult",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
@@ -349,64 +367,67 @@ pub mod delete_topics_response {
             }
 
             if version.value() <= 5 && self.name.is_none() {
-                return Err(EncodeError::NullNotAllowed {
+                return ::core::result::Result::Err(EncodeError::NullNotAllowed {
                     message: "DeletableTopicResult",
                     field: "Name",
                     version,
                 });
             }
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: "DeletableTopicResult",
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
-    impl Default for DeletableTopicResult {
+    impl ::core::default::Default for DeletableTopicResult {
         fn default() -> Self {
             Self {
-                name: Some(StrBytes::default()),
+                name: ::core::option::Option::Some(StrBytes::default()),
                 topic_id: Uuid::ZERO,
                 error_code: 0,
-                error_message: None,
+                error_message: ::core::option::Option::None,
                 unknown_tagged_fields: TaggedFields::default(),
             }
         }
     }
 
     impl KafkaDecode for DeletableTopicResult {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(DecodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(DecodeError::UnsupportedVersion {
                     message: "DeletableTopicResult",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
                 });
             }
 
-            let name = if version.value() >= 6 {
+            let __kw_field_0 = if version.value() >= 6 {
                 decoder.read_compact_nullable_string()?
             } else {
-                Some(if Self::is_flexible(version) {
+                ::core::option::Option::Some(if Self::is_flexible(version) {
                     decoder.read_compact_string()?
                 } else {
                     decoder.read_string()?
                 })
             };
-            let topic_id = if version.value() >= 6 {
+            let __kw_field_1 = if version.value() >= 6 {
                 decoder.read_uuid()?
             } else {
                 Uuid::ZERO
             };
-            let error_code = decoder.read_i16()?;
-            let error_message = if version.value() >= 5 {
+            let __kw_field_2 = decoder.read_i16()?;
+            let __kw_field_3 = if version.value() >= 5 {
                 decoder.read_compact_nullable_string()?
             } else {
-                None
+                ::core::option::Option::None
             };
             let unknown_tagged_fields = if Self::is_flexible(version) {
                 decoder.read_tagged_fields()?
@@ -414,11 +435,11 @@ pub mod delete_topics_response {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                name,
-                topic_id,
-                error_code,
-                error_message,
+            ::core::result::Result::Ok(Self {
+                name: __kw_field_0,
+                topic_id: __kw_field_1,
+                error_code: __kw_field_2,
+                error_message: __kw_field_3,
                 unknown_tagged_fields,
             })
         }
@@ -429,7 +450,7 @@ pub mod delete_topics_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             if Self::is_flexible(version) {
                 encoder.write_compact_nullable_string(self.name.as_ref())?;
             } else {
@@ -447,7 +468,7 @@ pub mod delete_topics_response {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -456,12 +477,12 @@ pub mod delete_topics_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             DeletableTopicResult::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| DeletableTopicResult::encode_validated(self, encoder, version),
@@ -472,7 +493,7 @@ pub mod delete_topics_response {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -484,12 +505,12 @@ pub mod delete_topics_response {
 
     /// Response body for the `DeleteTopics` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct DeleteTopicsResponse {
         /// The duration in milliseconds for which the request was throttled due to a quota violation, or zero if the request did not violate any quota.
         pub throttle_time_ms: i32,
         /// The results for each topic we tried to delete.
-        pub responses: Vec<DeletableTopicResult>,
+        pub responses: ::std::vec::Vec<DeletableTopicResult>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
     }
@@ -497,7 +518,8 @@ pub mod delete_topics_response {
     impl KafkaMessage for DeleteTopicsResponse {
         const NAME: &'static str = "DeleteTopicsResponse";
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(1, 6);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(4, 6));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(4, 6));
     }
 
     impl KafkaResponse for DeleteTopicsResponse {
@@ -505,29 +527,35 @@ pub mod delete_topics_response {
     }
 
     impl DeleteTopicsResponse {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             crate::message::ensure_encode_version::<Self>(version)?;
 
             for value in &self.responses {
                 value.validate_for_version(version)?;
             }
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: Self::NAME,
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for DeleteTopicsResponse {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             crate::message::ensure_decode_version::<Self>(version)?;
 
-            let throttle_time_ms = decoder.read_i32()?;
-            let responses = {
+            let __kw_field_0 = decoder.read_i32()?;
+            let __kw_field_1 = {
                 let length = if Self::is_flexible(version) {
                     decoder.read_compact_array_len()?
                 } else {
@@ -543,9 +571,9 @@ pub mod delete_topics_response {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                throttle_time_ms,
-                responses,
+            ::core::result::Result::Ok(Self {
+                throttle_time_ms: __kw_field_0,
+                responses: __kw_field_1,
                 unknown_tagged_fields,
             })
         }
@@ -556,7 +584,7 @@ pub mod delete_topics_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_i32(self.throttle_time_ms)?;
             if Self::is_flexible(version) {
                 encoder.write_compact_array_len(self.responses.len())?;
@@ -571,7 +599,7 @@ pub mod delete_topics_response {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -580,12 +608,12 @@ pub mod delete_topics_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             DeleteTopicsResponse::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| DeleteTopicsResponse::encode_validated(self, encoder, version),
@@ -596,7 +624,7 @@ pub mod delete_topics_response {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -620,7 +648,7 @@ pub const DELETE_TOPICS_REQUEST_DESCRIPTOR: MessageDescriptor = MessageDescripto
     "DeleteTopicsRequest",
     MessageDirection::Request,
     VersionRange::new(1, 6),
-    Some(VersionRange::new(4, 6)),
+    ::core::option::Option::Some(VersionRange::new(4, 6)),
 );
 
 /// Static metadata for [`DeleteTopicsResponse`].
@@ -629,7 +657,7 @@ pub const DELETE_TOPICS_RESPONSE_DESCRIPTOR: MessageDescriptor = MessageDescript
     "DeleteTopicsResponse",
     MessageDirection::Response,
     VersionRange::new(1, 6),
-    Some(VersionRange::new(4, 6)),
+    ::core::option::Option::Some(VersionRange::new(4, 6)),
 );
 
 /// Static pair metadata for the `DeleteTopics` API.
@@ -638,6 +666,6 @@ pub const DELETE_TOPICS_API_DESCRIPTOR: ApiDescriptor = ApiDescriptor::new(
     &DELETE_TOPICS_REQUEST_DESCRIPTOR,
     &DELETE_TOPICS_RESPONSE_DESCRIPTOR,
     VersionRange::new(1, 6),
-    Some(VersionRange::new(4, 6)),
+    ::core::option::Option::Some(VersionRange::new(4, 6)),
     false,
 );

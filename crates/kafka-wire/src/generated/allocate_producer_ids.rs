@@ -29,7 +29,7 @@ pub mod allocate_producer_ids_request {
         pub unknown_tagged_fields: TaggedFields,
     }
 
-    impl Default for AllocateProducerIdsRequest {
+    impl ::core::default::Default for AllocateProducerIdsRequest {
         fn default() -> Self {
             Self {
                 broker_id: 0,
@@ -42,7 +42,8 @@ pub mod allocate_producer_ids_request {
     impl KafkaMessage for AllocateProducerIdsRequest {
         const NAME: &'static str = "AllocateProducerIdsRequest";
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 0);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 0));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(0, 0));
     }
 
     impl KafkaRequest for AllocateProducerIdsRequest {
@@ -55,35 +56,41 @@ pub mod allocate_producer_ids_request {
     }
 
     impl AllocateProducerIdsRequest {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             crate::message::ensure_encode_version::<Self>(version)?;
 
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: Self::NAME,
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for AllocateProducerIdsRequest {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             crate::message::ensure_decode_version::<Self>(version)?;
 
-            let broker_id = decoder.read_i32()?;
-            let broker_epoch = decoder.read_i64()?;
+            let __kw_field_0 = decoder.read_i32()?;
+            let __kw_field_1 = decoder.read_i64()?;
             let unknown_tagged_fields = if Self::is_flexible(version) {
                 decoder.read_tagged_fields()?
             } else {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                broker_id,
-                broker_epoch,
+            ::core::result::Result::Ok(Self {
+                broker_id: __kw_field_0,
+                broker_epoch: __kw_field_1,
                 unknown_tagged_fields,
             })
         }
@@ -94,7 +101,7 @@ pub mod allocate_producer_ids_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_i32(self.broker_id)?;
             encoder.write_i64(self.broker_epoch)?;
 
@@ -102,7 +109,7 @@ pub mod allocate_producer_ids_request {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -111,12 +118,12 @@ pub mod allocate_producer_ids_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             AllocateProducerIdsRequest::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| AllocateProducerIdsRequest::encode_validated(self, encoder, version),
@@ -127,7 +134,7 @@ pub mod allocate_producer_ids_request {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -152,7 +159,7 @@ pub mod allocate_producer_ids_response {
 
     /// Response body for the `AllocateProducerIds` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct AllocateProducerIdsResponse {
         /// The duration in milliseconds for which the request was throttled due to a quota violation, or zero if the request did not violate any quota.
         pub throttle_time_ms: i32,
@@ -169,7 +176,8 @@ pub mod allocate_producer_ids_response {
     impl KafkaMessage for AllocateProducerIdsResponse {
         const NAME: &'static str = "AllocateProducerIdsResponse";
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 0);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 0));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(0, 0));
     }
 
     impl KafkaResponse for AllocateProducerIdsResponse {
@@ -177,39 +185,45 @@ pub mod allocate_producer_ids_response {
     }
 
     impl AllocateProducerIdsResponse {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             crate::message::ensure_encode_version::<Self>(version)?;
 
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: Self::NAME,
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for AllocateProducerIdsResponse {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             crate::message::ensure_decode_version::<Self>(version)?;
 
-            let throttle_time_ms = decoder.read_i32()?;
-            let error_code = decoder.read_i16()?;
-            let producer_id_start = decoder.read_i64()?;
-            let producer_id_len = decoder.read_i32()?;
+            let __kw_field_0 = decoder.read_i32()?;
+            let __kw_field_1 = decoder.read_i16()?;
+            let __kw_field_2 = decoder.read_i64()?;
+            let __kw_field_3 = decoder.read_i32()?;
             let unknown_tagged_fields = if Self::is_flexible(version) {
                 decoder.read_tagged_fields()?
             } else {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                throttle_time_ms,
-                error_code,
-                producer_id_start,
-                producer_id_len,
+            ::core::result::Result::Ok(Self {
+                throttle_time_ms: __kw_field_0,
+                error_code: __kw_field_1,
+                producer_id_start: __kw_field_2,
+                producer_id_len: __kw_field_3,
                 unknown_tagged_fields,
             })
         }
@@ -220,7 +234,7 @@ pub mod allocate_producer_ids_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_i32(self.throttle_time_ms)?;
             encoder.write_i16(self.error_code)?;
             encoder.write_i64(self.producer_id_start)?;
@@ -230,7 +244,7 @@ pub mod allocate_producer_ids_response {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -239,12 +253,12 @@ pub mod allocate_producer_ids_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             AllocateProducerIdsResponse::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| AllocateProducerIdsResponse::encode_validated(self, encoder, version),
@@ -255,7 +269,7 @@ pub mod allocate_producer_ids_response {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -279,7 +293,7 @@ pub const ALLOCATE_PRODUCER_IDS_REQUEST_DESCRIPTOR: MessageDescriptor = MessageD
     "AllocateProducerIdsRequest",
     MessageDirection::Request,
     VersionRange::new(0, 0),
-    Some(VersionRange::new(0, 0)),
+    ::core::option::Option::Some(VersionRange::new(0, 0)),
 );
 
 /// Static metadata for [`AllocateProducerIdsResponse`].
@@ -288,7 +302,7 @@ pub const ALLOCATE_PRODUCER_IDS_RESPONSE_DESCRIPTOR: MessageDescriptor = Message
     "AllocateProducerIdsResponse",
     MessageDirection::Response,
     VersionRange::new(0, 0),
-    Some(VersionRange::new(0, 0)),
+    ::core::option::Option::Some(VersionRange::new(0, 0)),
 );
 
 /// Static pair metadata for the `AllocateProducerIds` API.
@@ -297,6 +311,6 @@ pub const ALLOCATE_PRODUCER_IDS_API_DESCRIPTOR: ApiDescriptor = ApiDescriptor::n
     &ALLOCATE_PRODUCER_IDS_REQUEST_DESCRIPTOR,
     &ALLOCATE_PRODUCER_IDS_RESPONSE_DESCRIPTOR,
     VersionRange::new(0, 0),
-    Some(VersionRange::new(0, 0)),
+    ::core::option::Option::Some(VersionRange::new(0, 0)),
     false,
 );

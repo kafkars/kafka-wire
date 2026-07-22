@@ -19,10 +19,10 @@ pub mod list_config_resources_request {
 
     /// Request body for the `ListConfigResources` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct ListConfigResourcesRequest {
         /// The list of resource type. If the list is empty, it uses default supported config resource types.
-        pub resource_types: Vec<i8>,
+        pub resource_types: ::std::vec::Vec<i8>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
     }
@@ -30,7 +30,8 @@ pub mod list_config_resources_request {
     impl KafkaMessage for ListConfigResourcesRequest {
         const NAME: &'static str = "ListConfigResourcesRequest";
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 1);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 1));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(0, 1));
     }
 
     impl KafkaRequest for ListConfigResourcesRequest {
@@ -43,36 +44,42 @@ pub mod list_config_resources_request {
     }
 
     impl ListConfigResourcesRequest {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             crate::message::ensure_encode_version::<Self>(version)?;
 
             if version.value() < 1 && !self.resource_types.is_empty() {
-                return Err(EncodeError::FieldNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::FieldNotRepresentable {
                     message: Self::NAME,
                     field: "ResourceTypes",
                     version,
                 });
             }
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: Self::NAME,
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for ListConfigResourcesRequest {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             crate::message::ensure_decode_version::<Self>(version)?;
 
-            let resource_types = if version.value() >= 1 {
+            let __kw_field_0 = if version.value() >= 1 {
                 let length = decoder.read_compact_array_len()?;
                 decoder.read_vec(length, Decoder::read_i8)?
             } else {
-                Vec::new()
+                ::std::vec::Vec::new()
             };
             let unknown_tagged_fields = if Self::is_flexible(version) {
                 decoder.read_tagged_fields()?
@@ -80,8 +87,8 @@ pub mod list_config_resources_request {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                resource_types,
+            ::core::result::Result::Ok(Self {
+                resource_types: __kw_field_0,
                 unknown_tagged_fields,
             })
         }
@@ -92,7 +99,7 @@ pub mod list_config_resources_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             if version.value() >= 1 {
                 encoder.write_compact_array_len(self.resource_types.len())?;
                 for value in &self.resource_types {
@@ -104,7 +111,7 @@ pub mod list_config_resources_request {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -113,12 +120,12 @@ pub mod list_config_resources_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             ListConfigResourcesRequest::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| ListConfigResourcesRequest::encode_validated(self, encoder, version),
@@ -129,7 +136,7 @@ pub mod list_config_resources_request {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -167,7 +174,8 @@ pub mod list_config_resources_response {
 
     impl ConfigResource {
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 1);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 1));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(0, 1));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
@@ -175,9 +183,12 @@ pub mod list_config_resources_response {
     }
 
     impl ConfigResource {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(EncodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(EncodeError::UnsupportedVersion {
                     message: "ConfigResource",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
@@ -185,17 +196,17 @@ pub mod list_config_resources_response {
             }
 
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: "ConfigResource",
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
-    impl Default for ConfigResource {
+    impl ::core::default::Default for ConfigResource {
         fn default() -> Self {
             Self {
                 resource_name: StrBytes::default(),
@@ -206,17 +217,20 @@ pub mod list_config_resources_response {
     }
 
     impl KafkaDecode for ConfigResource {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(DecodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(DecodeError::UnsupportedVersion {
                     message: "ConfigResource",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
                 });
             }
 
-            let resource_name = decoder.read_compact_string()?;
-            let resource_type = if version.value() >= 1 {
+            let __kw_field_0 = decoder.read_compact_string()?;
+            let __kw_field_1 = if version.value() >= 1 {
                 decoder.read_i8()?
             } else {
                 16
@@ -227,9 +241,9 @@ pub mod list_config_resources_response {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                resource_name,
-                resource_type,
+            ::core::result::Result::Ok(Self {
+                resource_name: __kw_field_0,
+                resource_type: __kw_field_1,
                 unknown_tagged_fields,
             })
         }
@@ -240,7 +254,7 @@ pub mod list_config_resources_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_compact_string(&self.resource_name)?;
             if version.value() >= 1 {
                 encoder.write_i8(self.resource_type)?;
@@ -250,7 +264,7 @@ pub mod list_config_resources_response {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -259,12 +273,12 @@ pub mod list_config_resources_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             ConfigResource::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| ConfigResource::encode_validated(self, encoder, version),
@@ -275,7 +289,7 @@ pub mod list_config_resources_response {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -287,14 +301,14 @@ pub mod list_config_resources_response {
 
     /// Response body for the `ListConfigResources` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct ListConfigResourcesResponse {
         /// The duration in milliseconds for which the request was throttled due to a quota violation, or zero if the request did not violate any quota.
         pub throttle_time_ms: i32,
         /// The error code, or 0 if there was no error.
         pub error_code: i16,
         /// Each config resource in the response.
-        pub config_resources: Vec<ConfigResource>,
+        pub config_resources: ::std::vec::Vec<ConfigResource>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
     }
@@ -302,7 +316,8 @@ pub mod list_config_resources_response {
     impl KafkaMessage for ListConfigResourcesResponse {
         const NAME: &'static str = "ListConfigResourcesResponse";
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 1);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 1));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(0, 1));
     }
 
     impl KafkaResponse for ListConfigResourcesResponse {
@@ -310,30 +325,36 @@ pub mod list_config_resources_response {
     }
 
     impl ListConfigResourcesResponse {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             crate::message::ensure_encode_version::<Self>(version)?;
 
             for value in &self.config_resources {
                 value.validate_for_version(version)?;
             }
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: Self::NAME,
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for ListConfigResourcesResponse {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             crate::message::ensure_decode_version::<Self>(version)?;
 
-            let throttle_time_ms = decoder.read_i32()?;
-            let error_code = decoder.read_i16()?;
-            let config_resources = {
+            let __kw_field_0 = decoder.read_i32()?;
+            let __kw_field_1 = decoder.read_i16()?;
+            let __kw_field_2 = {
                 let length = decoder.read_compact_array_len()?;
                 decoder.read_vec(length, |decoder| ConfigResource::decode(decoder, version))?
             };
@@ -343,10 +364,10 @@ pub mod list_config_resources_response {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                throttle_time_ms,
-                error_code,
-                config_resources,
+            ::core::result::Result::Ok(Self {
+                throttle_time_ms: __kw_field_0,
+                error_code: __kw_field_1,
+                config_resources: __kw_field_2,
                 unknown_tagged_fields,
             })
         }
@@ -357,7 +378,7 @@ pub mod list_config_resources_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_i32(self.throttle_time_ms)?;
             encoder.write_i16(self.error_code)?;
             encoder.write_compact_array_len(self.config_resources.len())?;
@@ -369,7 +390,7 @@ pub mod list_config_resources_response {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -378,12 +399,12 @@ pub mod list_config_resources_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             ListConfigResourcesResponse::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| ListConfigResourcesResponse::encode_validated(self, encoder, version),
@@ -394,7 +415,7 @@ pub mod list_config_resources_response {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -418,7 +439,7 @@ pub const LIST_CONFIG_RESOURCES_REQUEST_DESCRIPTOR: MessageDescriptor = MessageD
     "ListConfigResourcesRequest",
     MessageDirection::Request,
     VersionRange::new(0, 1),
-    Some(VersionRange::new(0, 1)),
+    ::core::option::Option::Some(VersionRange::new(0, 1)),
 );
 
 /// Static metadata for [`ListConfigResourcesResponse`].
@@ -427,7 +448,7 @@ pub const LIST_CONFIG_RESOURCES_RESPONSE_DESCRIPTOR: MessageDescriptor = Message
     "ListConfigResourcesResponse",
     MessageDirection::Response,
     VersionRange::new(0, 1),
-    Some(VersionRange::new(0, 1)),
+    ::core::option::Option::Some(VersionRange::new(0, 1)),
 );
 
 /// Static pair metadata for the `ListConfigResources` API.
@@ -436,6 +457,6 @@ pub const LIST_CONFIG_RESOURCES_API_DESCRIPTOR: ApiDescriptor = ApiDescriptor::n
     &LIST_CONFIG_RESOURCES_REQUEST_DESCRIPTOR,
     &LIST_CONFIG_RESOURCES_RESPONSE_DESCRIPTOR,
     VersionRange::new(0, 1),
-    Some(VersionRange::new(0, 1)),
+    ::core::option::Option::Some(VersionRange::new(0, 1)),
     false,
 );

@@ -9,7 +9,7 @@
 //! match the initializer, produces a generated file that fails to compile — or,
 //! worse, one that compiles and silently writes a value the peer never sent.
 
-use kafka_wire_schema::{DefaultValue, FieldType, FloatDefault};
+use kafka_wire_schema::{DefaultValue, FieldType};
 
 use super::{
     probe::{field, message, nullable, struct_type},
@@ -37,7 +37,7 @@ fn declared_types() -> Vec<TypeCell> {
         TypeCell {
             ty: FieldType::String,
             nullable: true,
-            declared: "Option<StrBytes>",
+            declared: "::core::option::Option<StrBytes>",
         },
         TypeCell {
             ty: FieldType::Bool,
@@ -72,17 +72,17 @@ fn declared_types() -> Vec<TypeCell> {
         TypeCell {
             ty: FieldType::Array(Box::new(FieldType::String)),
             nullable: false,
-            declared: "Vec<StrBytes>",
+            declared: "::std::vec::Vec<StrBytes>",
         },
         TypeCell {
             ty: FieldType::Array(Box::new(FieldType::String)),
             nullable: true,
-            declared: "Option<Vec<StrBytes>>",
+            declared: "::core::option::Option<::std::vec::Vec<StrBytes>>",
         },
         TypeCell {
             ty: FieldType::Array(Box::new(FieldType::Int32)),
             nullable: false,
-            declared: "Vec<i32>",
+            declared: "::std::vec::Vec<i32>",
         },
         TypeCell {
             ty: FieldType::Float64,
@@ -97,7 +97,7 @@ fn declared_types() -> Vec<TypeCell> {
         TypeCell {
             ty: FieldType::Bytes,
             nullable: true,
-            declared: "Option<Bytes>",
+            declared: "::core::option::Option<Bytes>",
         },
         TypeCell {
             ty: struct_type("TopicData"),
@@ -107,7 +107,7 @@ fn declared_types() -> Vec<TypeCell> {
         TypeCell {
             ty: FieldType::Array(Box::new(struct_type("TopicData"))),
             nullable: false,
-            declared: "Vec<TopicData>",
+            declared: "::std::vec::Vec<TopicData>",
         },
     ]
 }
@@ -148,7 +148,7 @@ fn defaults() -> Vec<DefaultCell> {
             situation: "a field whose protocol default is null",
             ty: FieldType::String,
             default: DefaultValue::Null,
-            initializer: "None",
+            initializer: "::core::option::Option::None",
             non_default: "self.probe.is_some()",
             derivable: true,
             nullable: false,
@@ -193,7 +193,7 @@ fn defaults() -> Vec<DefaultCell> {
             situation: "an array defaulting to empty",
             ty: FieldType::Array(Box::new(FieldType::String)),
             default: DefaultValue::Empty,
-            initializer: "Vec::new()",
+            initializer: "::std::vec::Vec::new()",
             non_default: "!self.probe.is_empty()",
             derivable: true,
             nullable: false,
@@ -220,8 +220,8 @@ fn defaults() -> Vec<DefaultCell> {
             situation: "a nullable string defaulting to a protocol literal",
             ty: FieldType::String,
             default: DefaultValue::String("PLAINTEXT".to_owned()),
-            initializer: "Some(StrBytes::from(\"PLAINTEXT\"))",
-            non_default: "self.probe != Some(StrBytes::from(\"PLAINTEXT\"))",
+            initializer: "::core::option::Option::Some(StrBytes::from(\"PLAINTEXT\"))",
+            non_default: "self.probe != ::core::option::Option::Some(StrBytes::from(\"PLAINTEXT\"))",
             derivable: false,
             nullable: true,
         },
@@ -235,35 +235,15 @@ fn defaults() -> Vec<DefaultCell> {
 /// default" question differently from a scalar, which is why they are pinned
 /// apart from the scalar rows above.
 fn structured_defaults() -> Vec<DefaultCell> {
-    vec![
-        DefaultCell {
-            situation: "a double defaulting to an integral value",
-            ty: FieldType::Float64,
-            default: DefaultValue::Float(FloatDefault::new(1.0)),
-            initializer: "1.0",
-            non_default: "self.probe.to_bits() != 1.0_f64.to_bits()",
-            derivable: false,
-            nullable: false,
-        },
-        DefaultCell {
-            situation: "a double defaulting to a fractional value",
-            ty: FieldType::Float64,
-            default: DefaultValue::Float(FloatDefault::new(0.25)),
-            initializer: "0.25",
-            non_default: "self.probe.to_bits() != 0.25_f64.to_bits()",
-            derivable: false,
-            nullable: false,
-        },
-        DefaultCell {
-            situation: "a non-nullable struct, absent as every member at its own default",
-            ty: struct_type("TopicData"),
-            default: DefaultValue::StructDefaults,
-            initializer: "TopicData::default()",
-            non_default: "self.probe != TopicData::default()",
-            derivable: true,
-            nullable: false,
-        },
-    ]
+    vec![DefaultCell {
+        situation: "a non-nullable struct, absent as every member at its own default",
+        ty: struct_type("TopicData"),
+        default: DefaultValue::StructDefaults,
+        initializer: "TopicData::default()",
+        non_default: "self.probe != TopicData::default()",
+        derivable: true,
+        nullable: false,
+    }]
 }
 
 #[test]
@@ -311,7 +291,7 @@ fn a_nullable_fixed_width_field_is_excluded_by_the_front_end_not_by_this_backend
     let message = message(VALID, "none", vec![probe]);
     let probe = &message.fields[0];
 
-    assert_eq!(rust_type(probe, &message), "Option<i32>");
+    assert_eq!(rust_type(probe, &message), "::core::option::Option<i32>");
     assert!(
         !FieldType::Int32.permits_null(),
         "kafka-wire-schema must keep rejecting nullableVersions on a fixed-width type; \

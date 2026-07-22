@@ -7,7 +7,7 @@
 //! before deciding to check anything in is the point of the whole command.
 //!
 //! It deliberately owns no judgement about schemas and spawns no process. The
-//! renderer's answers come from `kafka-wire-codegen`, and running `cargo check` over
+//! renderer's answers come from `kafka-wire-codegen`, and running `cargo test` over
 //! what is written here belongs to `commands.rs`, the declared owner of process
 //! spawning.
 
@@ -78,6 +78,15 @@ pub(crate) fn write_crate(
     write(&root.join("rustfmt.toml"), "")?;
     write(&root.join("src/lib.rs"), LIB)?;
     write(&root.join("src/message.rs"), MESSAGE_SHIM)?;
+    write(
+        &root.join("src/adversarial_decode.rs"),
+        &kafka_wire_codegen::render_adversarial_decode_fixture()
+            .map_err(|error| format!("render adversarial decode fixture: {error}"))?,
+    )?;
+    write(
+        &root.join("tests/adversarial_decode.rs"),
+        ADVERSARIAL_DECODE_TEST,
+    )?;
     for (name, source) in &corpus.files {
         write(&root.join("src/generated").join(name), source)?;
     }
@@ -128,8 +137,8 @@ fn write(path: &Path, source: &str) -> Result<(), String> {
 pub(crate) const LIB: &str = "//! Compile probe for the whole pinned protocol corpus.\n\
      //!\n\
      //! Written by `cargo xtask generate-all --check-only`. Nothing here is\n\
-     //! checked in and nothing here is executed; the only question asked is\n\
-     //! whether the emitted Rust parses, resolves, and typechecks.\n\
+     //! checked in. The corpus is typechecked and adversarial emitter fixtures\n\
+     //! execute their behavioral assertions.\n\
      \n\
      #![allow(dead_code, unused_imports)]\n\
      \n\
@@ -138,8 +147,33 @@ pub(crate) const LIB: &str = "//! Compile probe for the whole pinned protocol co
      \x20   MessageDirection, RequestResponsePair,\n\
      };\n\
      \n\
+     pub mod adversarial_decode;\n\
      mod generated;\n\
      mod message;\n";
+
+/// Runtime proof that positional decode locals preserve both sibling values.
+pub(crate) const ADVERSARIAL_DECODE_TEST: &str = "//! Generated decode locals preserve field identity at runtime.\n\
+     \n\
+     use kafka_wire_core::{ApiVersion, Bytes, DecodeLimits, Decoder, KafkaDecode};\n\
+     use protocol_probe::adversarial_decode::AdversarialDecodeRequest;\n\
+     \n\
+     #[test]\n\
+     fn sibling_names_decode_from_their_own_wire_positions() {\n\
+     \x20   let input = Bytes::from_static(&[\n\
+     \x20       0, 0, 0, 11,\n\
+     \x20       0, 0, 0, 22,\n\
+     \x20   ]);\n\
+     \x20   let mut decoder = Decoder::new(input, DecodeLimits::default()).unwrap();\n\
+     \x20   let decoded = AdversarialDecodeRequest::decode(\n\
+     \x20       &mut decoder,\n\
+     \x20       ApiVersion::new(0),\n\
+     \x20   )\n\
+     \x20   .unwrap();\n\
+     \n\
+     \x20   assert_eq!(decoded.version, 11);\n\
+     \x20   assert_eq!(decoded.version_value, 22);\n\
+     \x20   decoder.finish().unwrap();\n\
+     }\n";
 
 /// The two version gates generated code calls on every encode and decode.
 ///

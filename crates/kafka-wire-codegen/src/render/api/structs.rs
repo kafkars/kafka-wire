@@ -15,7 +15,7 @@ use crate::{
 
 use super::codec::{render_construction, render_reads, render_struct_encode};
 use super::declarations::{RenderableStruct, declared_structs};
-use super::imports::spell;
+use super::imports::{ExternalSymbol as S, spell};
 use super::prose::sentence;
 use super::tagged::render_tagged_decode;
 use super::validation::{Owner, render_validation};
@@ -119,8 +119,8 @@ fn render_struct_with(
     // Upstream's own spelling, not the Rust one the next line already shows.
     // The qualified type no longer repeats the API stem, so this is what a
     // reader greps back to the schema.
-    rust.line(format!(
-        "/// `{declared}` as declared by the `{}` API.",
+    rust.doc_line(format!(
+        "`{declared}` as declared by the `{}` API.",
         message.name.api_stem()
     ));
     rust.line("#[non_exhaustive]");
@@ -138,7 +138,10 @@ fn render_struct_with(
         "Eq, PartialEq"
     };
     if derive_default {
-        rust.line(format!("#[derive(Clone, Debug, Default, {equality})]"));
+        rust.line(format!(
+            "#[derive(Clone, Debug, {}, {equality})]",
+            spell(message, S::Default)
+        ));
     } else {
         rust.line(format!("#[derive(Clone, Debug, {equality})]"));
     }
@@ -156,7 +159,7 @@ fn render_struct_with(
         rust.line("/// Unknown flexible-version tagged fields retained for forwarding.");
         rust.line(format!(
             "pub unknown_tagged_fields: {},",
-            spell(message, "TaggedFields")
+            spell(message, S::TaggedFields)
         ));
     }
     rust.close("");
@@ -170,7 +173,10 @@ fn render_struct_with(
     render_validation(rust, rust_type, fields, message, owner, flexible);
 
     if !derive_default {
-        rust.open(format!("impl Default for {rust_type}"));
+        rust.open(format!(
+            "impl {} for {rust_type}",
+            spell(message, S::Default)
+        ));
         rust.open("fn default() -> Self");
         rust.open("Self");
         for member in fields {
@@ -183,7 +189,7 @@ fn render_struct_with(
         if flexible {
             rust.line(format!(
                 "unknown_tagged_fields: {}::default(),",
-                spell(message, "TaggedFields")
+                spell(message, S::TaggedFields)
             ));
         }
         rust.close("");
@@ -211,19 +217,24 @@ fn render_identity(
     versions: CodecVersions<'_>,
     identity: Identity,
 ) -> Result<(), GenerationError> {
-    let version_range = spell(message, "VersionRange");
+    let version_range = spell(message, S::VersionRange);
     let range =
         invariant::optional_bounded(message, versions.flexible, "effective flexible versions")?
             .map_or_else(
-                || "None".to_owned(),
-                |(start, end)| format!("Some({version_range}::new({start}, {end}))"),
+                || spell(message, S::None),
+                |(start, end)| {
+                    format!(
+                        "{}({version_range}::new({start}, {end}))",
+                        spell(message, S::Some)
+                    )
+                },
             );
     match identity {
         Identity::Message => {
             let (start, end) = invariant::bounded(message, versions.supported, "valid versions")?;
             rust.open(format!(
                 "impl {} for {rust_type}",
-                spell(message, "KafkaMessage")
+                spell(message, S::KafkaMessage)
             ));
             rust.line(format!(
                 "const NAME: &'static str = {:?};",
@@ -234,7 +245,8 @@ fn render_identity(
                  {version_range}::new({start}, {end});"
             ));
             rust.line(format!(
-                "const FLEXIBLE_VERSIONS: Option<{version_range}> = {range};"
+                "const FLEXIBLE_VERSIONS: {}<{version_range}> = {range};",
+                spell(message, S::Option)
             ));
             rust.close("");
             rust.blank();
@@ -249,12 +261,13 @@ fn render_identity(
             ));
             if !versions.flexible.is_empty() {
                 rust.line(format!(
-                    "const FLEXIBLE_VERSIONS: Option<{version_range}> = {range};"
+                    "const FLEXIBLE_VERSIONS: {}<{version_range}> = {range};",
+                    spell(message, S::Option)
                 ));
                 rust.blank();
                 rust.open(format!(
                     "fn is_flexible(version: {}) -> bool",
-                    spell(message, "ApiVersion")
+                    spell(message, S::ApiVersion)
                 ));
                 rust.line("Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))");
                 rust.close("");
@@ -279,21 +292,23 @@ fn render_struct_decode(
 ) -> Result<(), GenerationError> {
     rust.open(format!(
         "impl {} for {rust_type}",
-        spell(message, "KafkaDecode")
+        spell(message, S::KafkaDecode)
     ));
     rust.open(format!(
-        "fn decode(decoder: &mut {}, version: {}) -> Result<Self, {}>",
-        spell(message, "Decoder"),
-        spell(message, "ApiVersion"),
-        spell(message, "DecodeError"),
+        "fn decode(decoder: &mut {}, version: {}) -> {}<Self, {}>",
+        spell(message, S::Decoder),
+        spell(message, S::ApiVersion),
+        spell(message, S::Result),
+        spell(message, S::DecodeError),
     ));
     match identity {
         Identity::Message => rust.line("crate::message::ensure_decode_version::<Self>(version)?;"),
         Identity::Nested => {
             rust.open("if !Self::SUPPORTED_VERSIONS.contains(version)");
             rust.open(format!(
-                "return Err({}::UnsupportedVersion",
-                spell(message, "DecodeError")
+                "return {}({}::UnsupportedVersion",
+                spell(message, S::Err),
+                spell(message, S::DecodeError)
             ));
             rust.line(format!("message: {rust_type:?},"));
             rust.line("version,");
@@ -308,7 +323,7 @@ fn render_struct_decode(
         render_tagged_decode(rust, fields, message)?;
     }
     rust.blank();
-    render_construction(rust, fields, flexible);
+    render_construction(rust, fields, flexible, message);
     rust.close("");
     rust.close("");
     rust.blank();

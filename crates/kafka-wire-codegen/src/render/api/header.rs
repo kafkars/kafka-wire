@@ -18,7 +18,7 @@ use kafka_wire_schema::{FieldType, Message};
 use crate::{GenerationError, provenance::generated_banner, source::MessageSource};
 
 use super::file::render_braced_use;
-use super::imports;
+use super::imports::{self, ExternalSymbol as S};
 use super::structs::{render_declared_structs, render_standalone};
 use crate::render::text::RustText;
 
@@ -60,36 +60,36 @@ pub(crate) fn render_unkeyed(
 fn render_imports(rust: &mut RustText, message: &Message) {
     let flexible = !message.effective_flexible_versions().is_empty();
     let mut wire = vec![
-        "ApiVersion",
-        "BytesMut",
-        "DecodeError",
-        "Decoder",
-        "EncodeError",
-        "EncodeTarget",
-        "Encoder",
-        "KafkaDecode",
-        "KafkaEncode",
-        "encode_into_with",
-        "encoded_len_with",
+        S::ApiVersion,
+        S::BytesMut,
+        S::DecodeError,
+        S::Decoder,
+        S::EncodeError,
+        S::EncodeTarget,
+        S::Encoder,
+        S::KafkaDecode,
+        S::KafkaEncode,
+        S::EncodeIntoWith,
+        S::EncodedLenWith,
     ];
     let uses = |ty: &FieldType| crate::render::field::uses_type(message, ty);
     if crate::render::field::uses_bytes(message) {
-        wire.push("Bytes");
+        wire.push(S::Bytes);
     }
     if uses(&FieldType::String) {
-        wire.push("StrBytes");
+        wire.push(S::StrBytes);
     }
     if flexible {
-        wire.push("TaggedFields");
+        wire.push(S::TaggedFields);
     }
     if super::tagged::declares_a_tag(message) {
-        wire.push("KnownTags");
-        wire.push("TagOutcome");
+        wire.push(S::KnownTags);
+        wire.push(S::TagOutcome);
     }
     if uses(&FieldType::Uuid) {
-        wire.push("Uuid");
+        wire.push(S::Uuid);
     }
-    wire.push("VersionRange");
+    wire.push(S::VersionRange);
     render_braced_use(
         rust,
         "kafka_wire_core",
@@ -99,7 +99,7 @@ fn render_imports(rust: &mut RustText, message: &Message) {
     render_braced_use(
         rust,
         "crate",
-        &imports::importable(message, &["KafkaMessage"]),
+        &imports::importable(message, &[S::KafkaMessage]),
     );
     rust.blank();
 }

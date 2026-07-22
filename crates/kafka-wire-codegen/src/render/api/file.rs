@@ -13,7 +13,7 @@ use crate::{GenerationError, group::ApiGroup, provenance::generated_banner};
 
 use super::{
     descriptor::{render_api_descriptor, render_descriptor},
-    imports,
+    imports::{self, ExternalSymbol as S},
     message::render_message,
     tagged::declares_a_tag,
 };
@@ -44,7 +44,11 @@ pub(crate) fn render_api(group: &ApiGroup, commit: &str) -> Result<String, Gener
     render_braced_use(
         &mut rust,
         "crate",
-        &["ApiDescriptor", "MessageDescriptor", "MessageDirection"],
+        &[
+            S::ApiDescriptor.name(),
+            S::MessageDescriptor.name(),
+            S::MessageDirection.name(),
+        ],
     );
     rust.blank();
 
@@ -90,38 +94,38 @@ fn render_header(rust: &mut RustText, group: &ApiGroup, commit: &str) {
 fn render_imports(rust: &mut RustText, message: &kafka_wire_schema::Message) {
     let flexible = !message.effective_flexible_versions().is_empty();
     let mut wire = vec![
-        "ApiKey",
-        "ApiVersion",
-        "BytesMut",
-        "DecodeError",
-        "Decoder",
-        "EncodeError",
-        "EncodeTarget",
-        "Encoder",
-        "KafkaDecode",
-        "KafkaEncode",
-        "encode_into_with",
-        "encoded_len_with",
+        S::ApiKey,
+        S::ApiVersion,
+        S::BytesMut,
+        S::DecodeError,
+        S::Decoder,
+        S::EncodeError,
+        S::EncodeTarget,
+        S::Encoder,
+        S::KafkaDecode,
+        S::KafkaEncode,
+        S::EncodeIntoWith,
+        S::EncodedLenWith,
     ];
     if field::uses_type(message, &FieldType::String) {
-        wire.push("StrBytes");
+        wire.push(S::StrBytes);
     }
     if flexible {
-        wire.push("TaggedFields");
+        wire.push(S::TaggedFields);
     }
     // The known-tag machinery is pulled in only by a message that declares one,
     // so the many APIs with a purely unknown section name neither type.
     if declares_a_tag(message) {
-        wire.push("KnownTags");
-        wire.push("TagOutcome");
+        wire.push(S::KnownTags);
+        wire.push(S::TagOutcome);
     }
     if field::uses_bytes(message) {
-        wire.push("Bytes");
+        wire.push(S::Bytes);
     }
     if field::uses_type(message, &FieldType::Uuid) {
-        wire.push("Uuid");
+        wire.push(S::Uuid);
     }
-    wire.push("VersionRange");
+    wire.push(S::VersionRange);
     render_braced_use(
         rust,
         "kafka_wire_core",
@@ -129,19 +133,19 @@ fn render_imports(rust: &mut RustText, message: &kafka_wire_schema::Message) {
     );
     rust.blank();
 
-    let mut local = vec!["KafkaMessage"];
+    let mut local = vec![S::KafkaMessage];
     match message.kind {
         kafka_wire_schema::MessageKind::Request => {
-            local.push("ApiDescriptor");
-            local.push("KafkaRequest");
+            local.push(S::ApiDescriptor);
+            local.push(S::KafkaRequest);
             // The pairing is the one reference that crosses a module boundary,
             // and only a request writes it.
-            local.push("RequestResponsePair");
+            local.push(S::RequestResponsePair);
         }
-        kafka_wire_schema::MessageKind::Response => local.push("KafkaResponse"),
+        kafka_wire_schema::MessageKind::Response => local.push(S::KafkaResponse),
         kafka_wire_schema::MessageKind::Header | kafka_wire_schema::MessageKind::Data => {}
     }
-    local.sort_unstable();
+    local.sort_unstable_by_key(|symbol| symbol.name());
     render_braced_use(rust, "crate", &imports::importable(message, &local));
     rust.blank();
 }
@@ -153,8 +157,8 @@ fn render_imports(rust: &mut RustText, message: &kafka_wire_schema::Message) {
 /// not across the crate, so the module path is part of the type's identity rather
 /// than an implementation detail of where it happens to live.
 pub(super) fn render_module_doc(rust: &mut RustText, message: &kafka_wire_schema::Message) {
-    rust.line(format!(
-        "/// `{}` and every struct it declares, under upstream's own names.",
+    rust.doc_line(format!(
+        "`{}` and every struct it declares, under upstream's own names.",
         message.name.protocol()
     ));
     rust.line("///");

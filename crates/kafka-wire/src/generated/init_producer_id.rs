@@ -23,7 +23,7 @@ pub mod init_producer_id_request {
     #[derive(Clone, Debug, Eq, PartialEq)]
     pub struct InitProducerIdRequest {
         /// The transactional id, or null if the producer is not transactional.
-        pub transactional_id: Option<StrBytes>,
+        pub transactional_id: ::core::option::Option<StrBytes>,
         /// The time in ms to wait before aborting idle transactions sent by this producer. This is only relevant if a `TransactionalId` has been defined.
         pub transaction_timeout_ms: i32,
         /// The producer id. This is used to disambiguate requests if a transactional id is reused following its expiration.
@@ -38,10 +38,10 @@ pub mod init_producer_id_request {
         pub unknown_tagged_fields: TaggedFields,
     }
 
-    impl Default for InitProducerIdRequest {
+    impl ::core::default::Default for InitProducerIdRequest {
         fn default() -> Self {
             Self {
-                transactional_id: Some(StrBytes::default()),
+                transactional_id: ::core::option::Option::Some(StrBytes::default()),
                 transaction_timeout_ms: 0,
                 producer_id: -1,
                 producer_epoch: -1,
@@ -55,7 +55,8 @@ pub mod init_producer_id_request {
     impl KafkaMessage for InitProducerIdRequest {
         const NAME: &'static str = "InitProducerIdRequest";
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 6);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(2, 6));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(2, 6));
     }
 
     impl KafkaRequest for InitProducerIdRequest {
@@ -68,74 +69,80 @@ pub mod init_producer_id_request {
     }
 
     impl InitProducerIdRequest {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             crate::message::ensure_encode_version::<Self>(version)?;
 
             if version.value() < 3 && self.producer_id != -1 {
-                return Err(EncodeError::FieldNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::FieldNotRepresentable {
                     message: Self::NAME,
                     field: "ProducerId",
                     version,
                 });
             }
             if version.value() < 3 && self.producer_epoch != -1 {
-                return Err(EncodeError::FieldNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::FieldNotRepresentable {
                     message: Self::NAME,
                     field: "ProducerEpoch",
                     version,
                 });
             }
             if version.value() < 6 && self.enable2_pc {
-                return Err(EncodeError::FieldNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::FieldNotRepresentable {
                     message: Self::NAME,
                     field: "Enable2Pc",
                     version,
                 });
             }
             if version.value() < 6 && self.keep_prepared_txn {
-                return Err(EncodeError::FieldNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::FieldNotRepresentable {
                     message: Self::NAME,
                     field: "KeepPreparedTxn",
                     version,
                 });
             }
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: Self::NAME,
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for InitProducerIdRequest {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             crate::message::ensure_decode_version::<Self>(version)?;
 
-            let transactional_id = if Self::is_flexible(version) {
+            let __kw_field_0 = if Self::is_flexible(version) {
                 decoder.read_compact_nullable_string()?
             } else {
                 decoder.read_nullable_string()?
             };
-            let transaction_timeout_ms = decoder.read_i32()?;
-            let producer_id = if version.value() >= 3 {
+            let __kw_field_1 = decoder.read_i32()?;
+            let __kw_field_2 = if version.value() >= 3 {
                 decoder.read_i64()?
             } else {
                 -1
             };
-            let producer_epoch = if version.value() >= 3 {
+            let __kw_field_3 = if version.value() >= 3 {
                 decoder.read_i16()?
             } else {
                 -1
             };
-            let enable2_pc = if version.value() >= 6 {
+            let __kw_field_4 = if version.value() >= 6 {
                 decoder.read_bool()?
             } else {
                 false
             };
-            let keep_prepared_txn = if version.value() >= 6 {
+            let __kw_field_5 = if version.value() >= 6 {
                 decoder.read_bool()?
             } else {
                 false
@@ -146,13 +153,13 @@ pub mod init_producer_id_request {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                transactional_id,
-                transaction_timeout_ms,
-                producer_id,
-                producer_epoch,
-                enable2_pc,
-                keep_prepared_txn,
+            ::core::result::Result::Ok(Self {
+                transactional_id: __kw_field_0,
+                transaction_timeout_ms: __kw_field_1,
+                producer_id: __kw_field_2,
+                producer_epoch: __kw_field_3,
+                enable2_pc: __kw_field_4,
+                keep_prepared_txn: __kw_field_5,
                 unknown_tagged_fields,
             })
         }
@@ -163,7 +170,7 @@ pub mod init_producer_id_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             if Self::is_flexible(version) {
                 encoder.write_compact_nullable_string(self.transactional_id.as_ref())?;
             } else {
@@ -187,7 +194,7 @@ pub mod init_producer_id_request {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -196,12 +203,12 @@ pub mod init_producer_id_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             InitProducerIdRequest::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| InitProducerIdRequest::encode_validated(self, encoder, version),
@@ -212,7 +219,7 @@ pub mod init_producer_id_request {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -255,7 +262,7 @@ pub mod init_producer_id_response {
         pub unknown_tagged_fields: TaggedFields,
     }
 
-    impl Default for InitProducerIdResponse {
+    impl ::core::default::Default for InitProducerIdResponse {
         fn default() -> Self {
             Self {
                 throttle_time_ms: 0,
@@ -272,7 +279,8 @@ pub mod init_producer_id_response {
     impl KafkaMessage for InitProducerIdResponse {
         const NAME: &'static str = "InitProducerIdResponse";
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 6);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(2, 6));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(2, 6));
     }
 
     impl KafkaResponse for InitProducerIdResponse {
@@ -280,48 +288,54 @@ pub mod init_producer_id_response {
     }
 
     impl InitProducerIdResponse {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             crate::message::ensure_encode_version::<Self>(version)?;
 
             if version.value() < 6 && self.ongoing_txn_producer_id != -1 {
-                return Err(EncodeError::FieldNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::FieldNotRepresentable {
                     message: Self::NAME,
                     field: "OngoingTxnProducerId",
                     version,
                 });
             }
             if version.value() < 6 && self.ongoing_txn_producer_epoch != -1 {
-                return Err(EncodeError::FieldNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::FieldNotRepresentable {
                     message: Self::NAME,
                     field: "OngoingTxnProducerEpoch",
                     version,
                 });
             }
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: Self::NAME,
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for InitProducerIdResponse {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             crate::message::ensure_decode_version::<Self>(version)?;
 
-            let throttle_time_ms = decoder.read_i32()?;
-            let error_code = decoder.read_i16()?;
-            let producer_id = decoder.read_i64()?;
-            let producer_epoch = decoder.read_i16()?;
-            let ongoing_txn_producer_id = if version.value() >= 6 {
+            let __kw_field_0 = decoder.read_i32()?;
+            let __kw_field_1 = decoder.read_i16()?;
+            let __kw_field_2 = decoder.read_i64()?;
+            let __kw_field_3 = decoder.read_i16()?;
+            let __kw_field_4 = if version.value() >= 6 {
                 decoder.read_i64()?
             } else {
                 -1
             };
-            let ongoing_txn_producer_epoch = if version.value() >= 6 {
+            let __kw_field_5 = if version.value() >= 6 {
                 decoder.read_i16()?
             } else {
                 -1
@@ -332,13 +346,13 @@ pub mod init_producer_id_response {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                throttle_time_ms,
-                error_code,
-                producer_id,
-                producer_epoch,
-                ongoing_txn_producer_id,
-                ongoing_txn_producer_epoch,
+            ::core::result::Result::Ok(Self {
+                throttle_time_ms: __kw_field_0,
+                error_code: __kw_field_1,
+                producer_id: __kw_field_2,
+                producer_epoch: __kw_field_3,
+                ongoing_txn_producer_id: __kw_field_4,
+                ongoing_txn_producer_epoch: __kw_field_5,
                 unknown_tagged_fields,
             })
         }
@@ -349,7 +363,7 @@ pub mod init_producer_id_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_i32(self.throttle_time_ms)?;
             encoder.write_i16(self.error_code)?;
             encoder.write_i64(self.producer_id)?;
@@ -365,7 +379,7 @@ pub mod init_producer_id_response {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -374,12 +388,12 @@ pub mod init_producer_id_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             InitProducerIdResponse::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| InitProducerIdResponse::encode_validated(self, encoder, version),
@@ -390,7 +404,7 @@ pub mod init_producer_id_response {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -414,7 +428,7 @@ pub const INIT_PRODUCER_ID_REQUEST_DESCRIPTOR: MessageDescriptor = MessageDescri
     "InitProducerIdRequest",
     MessageDirection::Request,
     VersionRange::new(0, 6),
-    Some(VersionRange::new(2, 6)),
+    ::core::option::Option::Some(VersionRange::new(2, 6)),
 );
 
 /// Static metadata for [`InitProducerIdResponse`].
@@ -423,7 +437,7 @@ pub const INIT_PRODUCER_ID_RESPONSE_DESCRIPTOR: MessageDescriptor = MessageDescr
     "InitProducerIdResponse",
     MessageDirection::Response,
     VersionRange::new(0, 6),
-    Some(VersionRange::new(2, 6)),
+    ::core::option::Option::Some(VersionRange::new(2, 6)),
 );
 
 /// Static pair metadata for the `InitProducerId` API.
@@ -432,6 +446,6 @@ pub const INIT_PRODUCER_ID_API_DESCRIPTOR: ApiDescriptor = ApiDescriptor::new(
     &INIT_PRODUCER_ID_REQUEST_DESCRIPTOR,
     &INIT_PRODUCER_ID_RESPONSE_DESCRIPTOR,
     VersionRange::new(0, 6),
-    Some(VersionRange::new(2, 6)),
+    ::core::option::Option::Some(VersionRange::new(2, 6)),
     true,
 );

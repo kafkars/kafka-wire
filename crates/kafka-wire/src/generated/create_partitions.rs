@@ -27,14 +27,15 @@ pub mod create_partitions_request {
         /// The new partition count.
         pub count: i32,
         /// The new partition assignments.
-        pub assignments: Option<Vec<CreatePartitionsAssignment>>,
+        pub assignments: ::core::option::Option<::std::vec::Vec<CreatePartitionsAssignment>>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
     }
 
     impl CreatePartitionsTopic {
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 3);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(2, 3));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(2, 3));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
@@ -42,59 +43,65 @@ pub mod create_partitions_request {
     }
 
     impl CreatePartitionsTopic {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(EncodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(EncodeError::UnsupportedVersion {
                     message: "CreatePartitionsTopic",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
                 });
             }
 
-            if let Some(values) = &self.assignments {
+            if let ::core::option::Option::Some(values) = &self.assignments {
                 for value in values {
                     value.validate_for_version(version)?;
                 }
             }
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: "CreatePartitionsTopic",
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
-    impl Default for CreatePartitionsTopic {
+    impl ::core::default::Default for CreatePartitionsTopic {
         fn default() -> Self {
             Self {
                 name: StrBytes::default(),
                 count: 0,
-                assignments: Some(Vec::new()),
+                assignments: ::core::option::Option::Some(::std::vec::Vec::new()),
                 unknown_tagged_fields: TaggedFields::default(),
             }
         }
     }
 
     impl KafkaDecode for CreatePartitionsTopic {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(DecodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(DecodeError::UnsupportedVersion {
                     message: "CreatePartitionsTopic",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
                 });
             }
 
-            let name = if Self::is_flexible(version) {
+            let __kw_field_0 = if Self::is_flexible(version) {
                 decoder.read_compact_string()?
             } else {
                 decoder.read_string()?
             };
-            let count = decoder.read_i32()?;
-            let assignments = {
+            let __kw_field_1 = decoder.read_i32()?;
+            let __kw_field_2 = {
                 let length = if Self::is_flexible(version) {
                     decoder.read_compact_nullable_array_len()?
                 } else {
@@ -114,10 +121,10 @@ pub mod create_partitions_request {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                name,
-                count,
-                assignments,
+            ::core::result::Result::Ok(Self {
+                name: __kw_field_0,
+                count: __kw_field_1,
+                assignments: __kw_field_2,
                 unknown_tagged_fields,
             })
         }
@@ -128,7 +135,7 @@ pub mod create_partitions_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             if Self::is_flexible(version) {
                 encoder.write_compact_string(&self.name)?;
             } else {
@@ -136,12 +143,15 @@ pub mod create_partitions_request {
             }
             encoder.write_i32(self.count)?;
             if Self::is_flexible(version) {
-                encoder
-                    .write_compact_nullable_array_len(self.assignments.as_ref().map(Vec::len))?;
+                encoder.write_compact_nullable_array_len(
+                    self.assignments.as_ref().map(::std::vec::Vec::len),
+                )?;
             } else {
-                encoder.write_nullable_array_len(self.assignments.as_ref().map(Vec::len))?;
+                encoder.write_nullable_array_len(
+                    self.assignments.as_ref().map(::std::vec::Vec::len),
+                )?;
             }
-            if let Some(values) = &self.assignments {
+            if let ::core::option::Option::Some(values) = &self.assignments {
                 for value in values {
                     value.encode_validated(encoder, version)?;
                 }
@@ -151,7 +161,7 @@ pub mod create_partitions_request {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -160,12 +170,12 @@ pub mod create_partitions_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             CreatePartitionsTopic::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| CreatePartitionsTopic::encode_validated(self, encoder, version),
@@ -176,7 +186,7 @@ pub mod create_partitions_request {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -188,17 +198,18 @@ pub mod create_partitions_request {
 
     /// `CreatePartitionsAssignment` as declared by the `CreatePartitions` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct CreatePartitionsAssignment {
         /// The assigned broker `IDs`.
-        pub broker_ids: Vec<i32>,
+        pub broker_ids: ::std::vec::Vec<i32>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
     }
 
     impl CreatePartitionsAssignment {
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 3);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(2, 3));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(2, 3));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
@@ -206,9 +217,12 @@ pub mod create_partitions_request {
     }
 
     impl CreatePartitionsAssignment {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(EncodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(EncodeError::UnsupportedVersion {
                     message: "CreatePartitionsAssignment",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
@@ -216,27 +230,30 @@ pub mod create_partitions_request {
             }
 
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: "CreatePartitionsAssignment",
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for CreatePartitionsAssignment {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(DecodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(DecodeError::UnsupportedVersion {
                     message: "CreatePartitionsAssignment",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
                 });
             }
 
-            let broker_ids = {
+            let __kw_field_0 = {
                 let length = if Self::is_flexible(version) {
                     decoder.read_compact_array_len()?
                 } else {
@@ -250,8 +267,8 @@ pub mod create_partitions_request {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                broker_ids,
+            ::core::result::Result::Ok(Self {
+                broker_ids: __kw_field_0,
                 unknown_tagged_fields,
             })
         }
@@ -262,7 +279,7 @@ pub mod create_partitions_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             if Self::is_flexible(version) {
                 encoder.write_compact_array_len(self.broker_ids.len())?;
             } else {
@@ -276,7 +293,7 @@ pub mod create_partitions_request {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -285,12 +302,12 @@ pub mod create_partitions_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             CreatePartitionsAssignment::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| CreatePartitionsAssignment::encode_validated(self, encoder, version),
@@ -301,7 +318,7 @@ pub mod create_partitions_request {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -313,10 +330,10 @@ pub mod create_partitions_request {
 
     /// Request body for the `CreatePartitions` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct CreatePartitionsRequest {
         /// Each topic that we want to create new partitions inside.
-        pub topics: Vec<CreatePartitionsTopic>,
+        pub topics: ::std::vec::Vec<CreatePartitionsTopic>,
         /// The time in ms to wait for the partitions to be created.
         pub timeout_ms: i32,
         /// If true, then validate the request, but don't actually increase the number of partitions.
@@ -328,7 +345,8 @@ pub mod create_partitions_request {
     impl KafkaMessage for CreatePartitionsRequest {
         const NAME: &'static str = "CreatePartitionsRequest";
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 3);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(2, 3));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(2, 3));
     }
 
     impl KafkaRequest for CreatePartitionsRequest {
@@ -341,28 +359,34 @@ pub mod create_partitions_request {
     }
 
     impl CreatePartitionsRequest {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             crate::message::ensure_encode_version::<Self>(version)?;
 
             for value in &self.topics {
                 value.validate_for_version(version)?;
             }
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: Self::NAME,
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for CreatePartitionsRequest {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             crate::message::ensure_decode_version::<Self>(version)?;
 
-            let topics = {
+            let __kw_field_0 = {
                 let length = if Self::is_flexible(version) {
                     decoder.read_compact_array_len()?
                 } else {
@@ -372,18 +396,18 @@ pub mod create_partitions_request {
                     CreatePartitionsTopic::decode(decoder, version)
                 })?
             };
-            let timeout_ms = decoder.read_i32()?;
-            let validate_only = decoder.read_bool()?;
+            let __kw_field_1 = decoder.read_i32()?;
+            let __kw_field_2 = decoder.read_bool()?;
             let unknown_tagged_fields = if Self::is_flexible(version) {
                 decoder.read_tagged_fields()?
             } else {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                topics,
-                timeout_ms,
-                validate_only,
+            ::core::result::Result::Ok(Self {
+                topics: __kw_field_0,
+                timeout_ms: __kw_field_1,
+                validate_only: __kw_field_2,
                 unknown_tagged_fields,
             })
         }
@@ -394,7 +418,7 @@ pub mod create_partitions_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             if Self::is_flexible(version) {
                 encoder.write_compact_array_len(self.topics.len())?;
             } else {
@@ -410,7 +434,7 @@ pub mod create_partitions_request {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -419,12 +443,12 @@ pub mod create_partitions_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             CreatePartitionsRequest::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| CreatePartitionsRequest::encode_validated(self, encoder, version),
@@ -435,7 +459,7 @@ pub mod create_partitions_request {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -461,21 +485,22 @@ pub mod create_partitions_response {
 
     /// `CreatePartitionsTopicResult` as declared by the `CreatePartitions` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct CreatePartitionsTopicResult {
         /// The topic name.
         pub name: StrBytes,
         /// The result error, or zero if there was no error.
         pub error_code: i16,
         /// The result message, or null if there was no error.
-        pub error_message: Option<StrBytes>,
+        pub error_message: ::core::option::Option<StrBytes>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
     }
 
     impl CreatePartitionsTopicResult {
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 3);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(2, 3));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(2, 3));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
@@ -483,9 +508,12 @@ pub mod create_partitions_response {
     }
 
     impl CreatePartitionsTopicResult {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(EncodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(EncodeError::UnsupportedVersion {
                     message: "CreatePartitionsTopicResult",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
@@ -493,33 +521,36 @@ pub mod create_partitions_response {
             }
 
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: "CreatePartitionsTopicResult",
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for CreatePartitionsTopicResult {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(DecodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(DecodeError::UnsupportedVersion {
                     message: "CreatePartitionsTopicResult",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
                 });
             }
 
-            let name = if Self::is_flexible(version) {
+            let __kw_field_0 = if Self::is_flexible(version) {
                 decoder.read_compact_string()?
             } else {
                 decoder.read_string()?
             };
-            let error_code = decoder.read_i16()?;
-            let error_message = if Self::is_flexible(version) {
+            let __kw_field_1 = decoder.read_i16()?;
+            let __kw_field_2 = if Self::is_flexible(version) {
                 decoder.read_compact_nullable_string()?
             } else {
                 decoder.read_nullable_string()?
@@ -530,10 +561,10 @@ pub mod create_partitions_response {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                name,
-                error_code,
-                error_message,
+            ::core::result::Result::Ok(Self {
+                name: __kw_field_0,
+                error_code: __kw_field_1,
+                error_message: __kw_field_2,
                 unknown_tagged_fields,
             })
         }
@@ -544,7 +575,7 @@ pub mod create_partitions_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             if Self::is_flexible(version) {
                 encoder.write_compact_string(&self.name)?;
             } else {
@@ -561,7 +592,7 @@ pub mod create_partitions_response {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -570,12 +601,12 @@ pub mod create_partitions_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             CreatePartitionsTopicResult::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| CreatePartitionsTopicResult::encode_validated(self, encoder, version),
@@ -586,7 +617,7 @@ pub mod create_partitions_response {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -598,12 +629,12 @@ pub mod create_partitions_response {
 
     /// Response body for the `CreatePartitions` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct CreatePartitionsResponse {
         /// The duration in milliseconds for which the request was throttled due to a quota violation, or zero if the request did not violate any quota.
         pub throttle_time_ms: i32,
         /// The partition creation results for each topic.
-        pub results: Vec<CreatePartitionsTopicResult>,
+        pub results: ::std::vec::Vec<CreatePartitionsTopicResult>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
     }
@@ -611,7 +642,8 @@ pub mod create_partitions_response {
     impl KafkaMessage for CreatePartitionsResponse {
         const NAME: &'static str = "CreatePartitionsResponse";
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 3);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(2, 3));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(2, 3));
     }
 
     impl KafkaResponse for CreatePartitionsResponse {
@@ -619,29 +651,35 @@ pub mod create_partitions_response {
     }
 
     impl CreatePartitionsResponse {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             crate::message::ensure_encode_version::<Self>(version)?;
 
             for value in &self.results {
                 value.validate_for_version(version)?;
             }
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: Self::NAME,
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for CreatePartitionsResponse {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             crate::message::ensure_decode_version::<Self>(version)?;
 
-            let throttle_time_ms = decoder.read_i32()?;
-            let results = {
+            let __kw_field_0 = decoder.read_i32()?;
+            let __kw_field_1 = {
                 let length = if Self::is_flexible(version) {
                     decoder.read_compact_array_len()?
                 } else {
@@ -657,9 +695,9 @@ pub mod create_partitions_response {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                throttle_time_ms,
-                results,
+            ::core::result::Result::Ok(Self {
+                throttle_time_ms: __kw_field_0,
+                results: __kw_field_1,
                 unknown_tagged_fields,
             })
         }
@@ -670,7 +708,7 @@ pub mod create_partitions_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_i32(self.throttle_time_ms)?;
             if Self::is_flexible(version) {
                 encoder.write_compact_array_len(self.results.len())?;
@@ -685,7 +723,7 @@ pub mod create_partitions_response {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -694,12 +732,12 @@ pub mod create_partitions_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             CreatePartitionsResponse::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| CreatePartitionsResponse::encode_validated(self, encoder, version),
@@ -710,7 +748,7 @@ pub mod create_partitions_response {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -734,7 +772,7 @@ pub const CREATE_PARTITIONS_REQUEST_DESCRIPTOR: MessageDescriptor = MessageDescr
     "CreatePartitionsRequest",
     MessageDirection::Request,
     VersionRange::new(0, 3),
-    Some(VersionRange::new(2, 3)),
+    ::core::option::Option::Some(VersionRange::new(2, 3)),
 );
 
 /// Static metadata for [`CreatePartitionsResponse`].
@@ -743,7 +781,7 @@ pub const CREATE_PARTITIONS_RESPONSE_DESCRIPTOR: MessageDescriptor = MessageDesc
     "CreatePartitionsResponse",
     MessageDirection::Response,
     VersionRange::new(0, 3),
-    Some(VersionRange::new(2, 3)),
+    ::core::option::Option::Some(VersionRange::new(2, 3)),
 );
 
 /// Static pair metadata for the `CreatePartitions` API.
@@ -752,6 +790,6 @@ pub const CREATE_PARTITIONS_API_DESCRIPTOR: ApiDescriptor = ApiDescriptor::new(
     &CREATE_PARTITIONS_REQUEST_DESCRIPTOR,
     &CREATE_PARTITIONS_RESPONSE_DESCRIPTOR,
     VersionRange::new(0, 3),
-    Some(VersionRange::new(2, 3)),
+    ::core::option::Option::Some(VersionRange::new(2, 3)),
     false,
 );

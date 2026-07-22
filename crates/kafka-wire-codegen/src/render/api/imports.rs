@@ -24,37 +24,9 @@
 
 use kafka_wire_schema::Message;
 
-/// Every name a message module may import, and where it comes from.
-///
-/// This is the emitter's import list stated once, so that the clash check and
-/// the import rendering cannot disagree. A name emitted as a literal but absent
-/// here would be spelled bare in a module that declares a struct of that name,
-/// which is the failure this table exists to prevent.
-pub(super) const IMPORTABLE: &[(&str, &str)] = &[
-    ("ApiKey", "kafka_wire_core"),
-    ("ApiVersion", "kafka_wire_core"),
-    ("Bytes", "kafka_wire_core"),
-    ("BytesMut", "kafka_wire_core"),
-    ("DecodeError", "kafka_wire_core"),
-    ("Decoder", "kafka_wire_core"),
-    ("EncodeError", "kafka_wire_core"),
-    ("EncodeTarget", "kafka_wire_core"),
-    ("Encoder", "kafka_wire_core"),
-    ("KafkaDecode", "kafka_wire_core"),
-    ("KafkaEncode", "kafka_wire_core"),
-    ("KnownTags", "kafka_wire_core"),
-    ("StrBytes", "kafka_wire_core"),
-    ("TagOutcome", "kafka_wire_core"),
-    ("TaggedFields", "kafka_wire_core"),
-    ("Uuid", "kafka_wire_core"),
-    ("VersionRange", "kafka_wire_core"),
-    ("encode_into_with", "kafka_wire_core"),
-    ("encoded_len_with", "kafka_wire_core"),
-    ("KafkaMessage", "crate"),
-    ("KafkaRequest", "crate"),
-    ("KafkaResponse", "crate"),
-    ("RequestResponsePair", "crate"),
-];
+pub(crate) use super::symbol::ExternalSymbol;
+
+pub(super) const IMPORTABLE: &[ExternalSymbol] = ExternalSymbol::IMPORTABLE;
 
 /// Whether this message's module declares an item of this name.
 ///
@@ -76,25 +48,18 @@ pub(crate) fn declares(message: &Message, name: &str) -> bool {
 /// The bare name almost always, because almost no module declares a struct that
 /// clashes with one. A module that does gets the full path for that one name and
 /// keeps the bare spelling for every other.
-pub(crate) fn spell(message: &Message, name: &str) -> String {
+pub(crate) fn spell(message: &Message, symbol: ExternalSymbol) -> String {
+    if let Some(absolute) = symbol.absolute() {
+        return absolute.to_owned();
+    }
+    let name = symbol.name();
+    let origin = symbol
+        .origin()
+        .unwrap_or_else(|| unreachable!("absolute symbols return before import rendering"));
     if declares(message, name) {
-        return format!("{}::{name}", origin(name));
+        return format!("{origin}::{name}");
     }
     name.to_owned()
-}
-
-/// The crate an importable name comes from.
-///
-/// Panic-free by construction is not available here — the name is a literal at
-/// every call site — so an unlisted name falls back to `kafka_wire_core`, which is
-/// where all but four of them live. A name that reached this fallback wrongly
-/// would fail to compile in the one module that declares it, which is the same
-/// signal the table exists to raise, at the same place.
-fn origin(name: &str) -> &'static str {
-    IMPORTABLE
-        .iter()
-        .find(|(candidate, _)| *candidate == name)
-        .map_or("kafka_wire_core", |(_, path)| *path)
 }
 
 /// Filters an import list down to the names this module can actually bind.
@@ -103,10 +68,16 @@ fn origin(name: &str) -> &'static str {
 /// would not help — the uses are by name — and an alias would put a second
 /// spelling of one type into generated source, which is worse to read than the
 /// full path at the two or three places it appears.
-pub(crate) fn importable<'a>(message: &Message, names: &[&'a str]) -> Vec<&'a str> {
+pub(crate) fn importable(message: &Message, names: &[ExternalSymbol]) -> Vec<&'static str> {
+    debug_assert!(
+        names.iter().all(|symbol| IMPORTABLE.contains(symbol)),
+        "only the exhaustive typed import vocabulary may reach a generated use declaration"
+    );
     names
         .iter()
         .copied()
-        .filter(|name| !declares(message, name))
+        .filter(|symbol| symbol.origin().is_some())
+        .filter(|symbol| !declares(message, symbol.name()))
+        .map(ExternalSymbol::name)
         .collect()
 }

@@ -20,10 +20,10 @@ pub mod delete_groups_request {
 
     /// Request body for the `DeleteGroups` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct DeleteGroupsRequest {
         /// The group names to delete.
-        pub groups_names: Vec<StrBytes>,
+        pub groups_names: ::std::vec::Vec<StrBytes>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
     }
@@ -31,7 +31,8 @@ pub mod delete_groups_request {
     impl KafkaMessage for DeleteGroupsRequest {
         const NAME: &'static str = "DeleteGroupsRequest";
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 3);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(2, 3));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(2, 3));
     }
 
     impl KafkaRequest for DeleteGroupsRequest {
@@ -44,32 +45,38 @@ pub mod delete_groups_request {
     }
 
     impl DeleteGroupsRequest {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             crate::message::ensure_encode_version::<Self>(version)?;
 
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: Self::NAME,
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for DeleteGroupsRequest {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             crate::message::ensure_decode_version::<Self>(version)?;
 
-            let groups_names = {
+            let __kw_field_0 = {
                 let length = if Self::is_flexible(version) {
                     decoder.read_compact_array_len()?
                 } else {
                     decoder.read_array_len()?
                 };
                 decoder.read_vec(length, |decoder| {
-                    Ok(if Self::is_flexible(version) {
+                    ::core::result::Result::Ok(if Self::is_flexible(version) {
                         decoder.read_compact_string()?
                     } else {
                         decoder.read_string()?
@@ -82,8 +89,8 @@ pub mod delete_groups_request {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                groups_names,
+            ::core::result::Result::Ok(Self {
+                groups_names: __kw_field_0,
                 unknown_tagged_fields,
             })
         }
@@ -94,7 +101,7 @@ pub mod delete_groups_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             if Self::is_flexible(version) {
                 encoder.write_compact_array_len(self.groups_names.len())?;
             } else {
@@ -112,7 +119,7 @@ pub mod delete_groups_request {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -121,12 +128,12 @@ pub mod delete_groups_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             DeleteGroupsRequest::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| DeleteGroupsRequest::encode_validated(self, encoder, version),
@@ -137,7 +144,7 @@ pub mod delete_groups_request {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -163,21 +170,22 @@ pub mod delete_groups_response {
 
     /// `DeletableGroupResult` as declared by the `DeleteGroups` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct DeletableGroupResult {
         /// The group id.
         pub group_id: StrBytes,
         /// The deletion error, or 0 if the deletion succeeded.
         pub error_code: i16,
         /// The error message, or null if there was no error.
-        pub error_message: Option<StrBytes>,
+        pub error_message: ::core::option::Option<StrBytes>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
     }
 
     impl DeletableGroupResult {
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 3);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(2, 3));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(2, 3));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
@@ -185,9 +193,12 @@ pub mod delete_groups_response {
     }
 
     impl DeletableGroupResult {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(EncodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(EncodeError::UnsupportedVersion {
                     message: "DeletableGroupResult",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
@@ -195,36 +206,39 @@ pub mod delete_groups_response {
             }
 
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: "DeletableGroupResult",
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for DeletableGroupResult {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(DecodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(DecodeError::UnsupportedVersion {
                     message: "DeletableGroupResult",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
                 });
             }
 
-            let group_id = if Self::is_flexible(version) {
+            let __kw_field_0 = if Self::is_flexible(version) {
                 decoder.read_compact_string()?
             } else {
                 decoder.read_string()?
             };
-            let error_code = decoder.read_i16()?;
-            let error_message = if version.value() >= 3 {
+            let __kw_field_1 = decoder.read_i16()?;
+            let __kw_field_2 = if version.value() >= 3 {
                 decoder.read_compact_nullable_string()?
             } else {
-                None
+                ::core::option::Option::None
             };
             let unknown_tagged_fields = if Self::is_flexible(version) {
                 decoder.read_tagged_fields()?
@@ -232,10 +246,10 @@ pub mod delete_groups_response {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                group_id,
-                error_code,
-                error_message,
+            ::core::result::Result::Ok(Self {
+                group_id: __kw_field_0,
+                error_code: __kw_field_1,
+                error_message: __kw_field_2,
                 unknown_tagged_fields,
             })
         }
@@ -246,7 +260,7 @@ pub mod delete_groups_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             if Self::is_flexible(version) {
                 encoder.write_compact_string(&self.group_id)?;
             } else {
@@ -261,7 +275,7 @@ pub mod delete_groups_response {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -270,12 +284,12 @@ pub mod delete_groups_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             DeletableGroupResult::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| DeletableGroupResult::encode_validated(self, encoder, version),
@@ -286,7 +300,7 @@ pub mod delete_groups_response {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -298,12 +312,12 @@ pub mod delete_groups_response {
 
     /// Response body for the `DeleteGroups` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct DeleteGroupsResponse {
         /// The duration in milliseconds for which the request was throttled due to a quota violation, or zero if the request did not violate any quota.
         pub throttle_time_ms: i32,
         /// The deletion results.
-        pub results: Vec<DeletableGroupResult>,
+        pub results: ::std::vec::Vec<DeletableGroupResult>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
     }
@@ -311,7 +325,8 @@ pub mod delete_groups_response {
     impl KafkaMessage for DeleteGroupsResponse {
         const NAME: &'static str = "DeleteGroupsResponse";
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 3);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(2, 3));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(2, 3));
     }
 
     impl KafkaResponse for DeleteGroupsResponse {
@@ -319,29 +334,35 @@ pub mod delete_groups_response {
     }
 
     impl DeleteGroupsResponse {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             crate::message::ensure_encode_version::<Self>(version)?;
 
             for value in &self.results {
                 value.validate_for_version(version)?;
             }
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: Self::NAME,
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for DeleteGroupsResponse {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             crate::message::ensure_decode_version::<Self>(version)?;
 
-            let throttle_time_ms = decoder.read_i32()?;
-            let results = {
+            let __kw_field_0 = decoder.read_i32()?;
+            let __kw_field_1 = {
                 let length = if Self::is_flexible(version) {
                     decoder.read_compact_array_len()?
                 } else {
@@ -357,9 +378,9 @@ pub mod delete_groups_response {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                throttle_time_ms,
-                results,
+            ::core::result::Result::Ok(Self {
+                throttle_time_ms: __kw_field_0,
+                results: __kw_field_1,
                 unknown_tagged_fields,
             })
         }
@@ -370,7 +391,7 @@ pub mod delete_groups_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_i32(self.throttle_time_ms)?;
             if Self::is_flexible(version) {
                 encoder.write_compact_array_len(self.results.len())?;
@@ -385,7 +406,7 @@ pub mod delete_groups_response {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -394,12 +415,12 @@ pub mod delete_groups_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             DeleteGroupsResponse::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| DeleteGroupsResponse::encode_validated(self, encoder, version),
@@ -410,7 +431,7 @@ pub mod delete_groups_response {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -434,7 +455,7 @@ pub const DELETE_GROUPS_REQUEST_DESCRIPTOR: MessageDescriptor = MessageDescripto
     "DeleteGroupsRequest",
     MessageDirection::Request,
     VersionRange::new(0, 3),
-    Some(VersionRange::new(2, 3)),
+    ::core::option::Option::Some(VersionRange::new(2, 3)),
 );
 
 /// Static metadata for [`DeleteGroupsResponse`].
@@ -443,7 +464,7 @@ pub const DELETE_GROUPS_RESPONSE_DESCRIPTOR: MessageDescriptor = MessageDescript
     "DeleteGroupsResponse",
     MessageDirection::Response,
     VersionRange::new(0, 3),
-    Some(VersionRange::new(2, 3)),
+    ::core::option::Option::Some(VersionRange::new(2, 3)),
 );
 
 /// Static pair metadata for the `DeleteGroups` API.
@@ -452,6 +473,6 @@ pub const DELETE_GROUPS_API_DESCRIPTOR: ApiDescriptor = ApiDescriptor::new(
     &DELETE_GROUPS_REQUEST_DESCRIPTOR,
     &DELETE_GROUPS_RESPONSE_DESCRIPTOR,
     VersionRange::new(0, 3),
-    Some(VersionRange::new(2, 3)),
+    ::core::option::Option::Some(VersionRange::new(2, 3)),
     false,
 );

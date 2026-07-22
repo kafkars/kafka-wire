@@ -20,19 +20,20 @@ pub mod alter_partition_reassignments_request {
 
     /// `ReassignableTopic` as declared by the `AlterPartitionReassignments` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct ReassignableTopic {
         /// The topic name.
         pub name: StrBytes,
         /// The partitions to reassign.
-        pub partitions: Vec<ReassignablePartition>,
+        pub partitions: ::std::vec::Vec<ReassignablePartition>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
     }
 
     impl ReassignableTopic {
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 1);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 1));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(0, 1));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
@@ -40,9 +41,12 @@ pub mod alter_partition_reassignments_request {
     }
 
     impl ReassignableTopic {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(EncodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(EncodeError::UnsupportedVersion {
                     message: "ReassignableTopic",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
@@ -53,28 +57,31 @@ pub mod alter_partition_reassignments_request {
                 value.validate_for_version(version)?;
             }
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: "ReassignableTopic",
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for ReassignableTopic {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(DecodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(DecodeError::UnsupportedVersion {
                     message: "ReassignableTopic",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
                 });
             }
 
-            let name = decoder.read_compact_string()?;
-            let partitions = {
+            let __kw_field_0 = decoder.read_compact_string()?;
+            let __kw_field_1 = {
                 let length = decoder.read_compact_array_len()?;
                 decoder.read_vec(length, |decoder| {
                     ReassignablePartition::decode(decoder, version)
@@ -86,9 +93,9 @@ pub mod alter_partition_reassignments_request {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                name,
-                partitions,
+            ::core::result::Result::Ok(Self {
+                name: __kw_field_0,
+                partitions: __kw_field_1,
                 unknown_tagged_fields,
             })
         }
@@ -99,7 +106,7 @@ pub mod alter_partition_reassignments_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_compact_string(&self.name)?;
             encoder.write_compact_array_len(self.partitions.len())?;
             for value in &self.partitions {
@@ -110,7 +117,7 @@ pub mod alter_partition_reassignments_request {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -119,12 +126,12 @@ pub mod alter_partition_reassignments_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             ReassignableTopic::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| ReassignableTopic::encode_validated(self, encoder, version),
@@ -135,7 +142,7 @@ pub mod alter_partition_reassignments_request {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -147,19 +154,20 @@ pub mod alter_partition_reassignments_request {
 
     /// `ReassignablePartition` as declared by the `AlterPartitionReassignments` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct ReassignablePartition {
         /// The partition index.
         pub partition_index: i32,
         /// The replicas to place the partitions on, or null to cancel a pending reassignment for this partition.
-        pub replicas: Option<Vec<i32>>,
+        pub replicas: ::core::option::Option<::std::vec::Vec<i32>>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
     }
 
     impl ReassignablePartition {
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 1);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 1));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(0, 1));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
@@ -167,9 +175,12 @@ pub mod alter_partition_reassignments_request {
     }
 
     impl ReassignablePartition {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(EncodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(EncodeError::UnsupportedVersion {
                     message: "ReassignablePartition",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
@@ -177,28 +188,31 @@ pub mod alter_partition_reassignments_request {
             }
 
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: "ReassignablePartition",
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for ReassignablePartition {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(DecodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(DecodeError::UnsupportedVersion {
                     message: "ReassignablePartition",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
                 });
             }
 
-            let partition_index = decoder.read_i32()?;
-            let replicas = {
+            let __kw_field_0 = decoder.read_i32()?;
+            let __kw_field_1 = {
                 let length = decoder.read_compact_nullable_array_len()?;
                 length
                     .map(|length| decoder.read_vec(length, Decoder::read_i32))
@@ -210,9 +224,9 @@ pub mod alter_partition_reassignments_request {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                partition_index,
-                replicas,
+            ::core::result::Result::Ok(Self {
+                partition_index: __kw_field_0,
+                replicas: __kw_field_1,
                 unknown_tagged_fields,
             })
         }
@@ -223,10 +237,12 @@ pub mod alter_partition_reassignments_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_i32(self.partition_index)?;
-            encoder.write_compact_nullable_array_len(self.replicas.as_ref().map(Vec::len))?;
-            if let Some(values) = &self.replicas {
+            encoder.write_compact_nullable_array_len(
+                self.replicas.as_ref().map(::std::vec::Vec::len),
+            )?;
+            if let ::core::option::Option::Some(values) = &self.replicas {
                 for value in values {
                     encoder.write_i32(*value)?;
                 }
@@ -236,7 +252,7 @@ pub mod alter_partition_reassignments_request {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -245,12 +261,12 @@ pub mod alter_partition_reassignments_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             ReassignablePartition::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| ReassignablePartition::encode_validated(self, encoder, version),
@@ -261,7 +277,7 @@ pub mod alter_partition_reassignments_request {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -280,17 +296,17 @@ pub mod alter_partition_reassignments_request {
         /// The option indicating whether changing the replication factor of any given partition as part of this request is a valid move.
         pub allow_replication_factor_change: bool,
         /// The topics to reassign.
-        pub topics: Vec<ReassignableTopic>,
+        pub topics: ::std::vec::Vec<ReassignableTopic>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
     }
 
-    impl Default for AlterPartitionReassignmentsRequest {
+    impl ::core::default::Default for AlterPartitionReassignmentsRequest {
         fn default() -> Self {
             Self {
                 timeout_ms: 60_000,
                 allow_replication_factor_change: true,
-                topics: Vec::new(),
+                topics: ::std::vec::Vec::new(),
                 unknown_tagged_fields: TaggedFields::default(),
             }
         }
@@ -299,7 +315,8 @@ pub mod alter_partition_reassignments_request {
     impl KafkaMessage for AlterPartitionReassignmentsRequest {
         const NAME: &'static str = "AlterPartitionReassignmentsRequest";
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 1);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 1));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(0, 1));
     }
 
     impl KafkaRequest for AlterPartitionReassignmentsRequest {
@@ -313,11 +330,14 @@ pub mod alter_partition_reassignments_request {
     }
 
     impl AlterPartitionReassignmentsRequest {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             crate::message::ensure_encode_version::<Self>(version)?;
 
             if version.value() < 1 && !self.allow_replication_factor_change {
-                return Err(EncodeError::FieldNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::FieldNotRepresentable {
                     message: Self::NAME,
                     field: "AllowReplicationFactorChange",
                     version,
@@ -327,27 +347,30 @@ pub mod alter_partition_reassignments_request {
                 value.validate_for_version(version)?;
             }
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: Self::NAME,
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for AlterPartitionReassignmentsRequest {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             crate::message::ensure_decode_version::<Self>(version)?;
 
-            let timeout_ms = decoder.read_i32()?;
-            let allow_replication_factor_change = if version.value() >= 1 {
+            let __kw_field_0 = decoder.read_i32()?;
+            let __kw_field_1 = if version.value() >= 1 {
                 decoder.read_bool()?
             } else {
                 true
             };
-            let topics = {
+            let __kw_field_2 = {
                 let length = decoder.read_compact_array_len()?;
                 decoder.read_vec(length, |decoder| {
                     ReassignableTopic::decode(decoder, version)
@@ -359,10 +382,10 @@ pub mod alter_partition_reassignments_request {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                timeout_ms,
-                allow_replication_factor_change,
-                topics,
+            ::core::result::Result::Ok(Self {
+                timeout_ms: __kw_field_0,
+                allow_replication_factor_change: __kw_field_1,
+                topics: __kw_field_2,
                 unknown_tagged_fields,
             })
         }
@@ -373,7 +396,7 @@ pub mod alter_partition_reassignments_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_i32(self.timeout_ms)?;
             if version.value() >= 1 {
                 encoder.write_bool(self.allow_replication_factor_change)?;
@@ -387,7 +410,7 @@ pub mod alter_partition_reassignments_request {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -396,12 +419,12 @@ pub mod alter_partition_reassignments_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             AlterPartitionReassignmentsRequest::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| {
@@ -414,7 +437,7 @@ pub mod alter_partition_reassignments_request {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -444,19 +467,20 @@ pub mod alter_partition_reassignments_response {
 
     /// `ReassignableTopicResponse` as declared by the `AlterPartitionReassignments` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct ReassignableTopicResponse {
         /// The topic name.
         pub name: StrBytes,
         /// The responses to partitions to reassign.
-        pub partitions: Vec<ReassignablePartitionResponse>,
+        pub partitions: ::std::vec::Vec<ReassignablePartitionResponse>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
     }
 
     impl ReassignableTopicResponse {
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 1);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 1));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(0, 1));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
@@ -464,9 +488,12 @@ pub mod alter_partition_reassignments_response {
     }
 
     impl ReassignableTopicResponse {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(EncodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(EncodeError::UnsupportedVersion {
                     message: "ReassignableTopicResponse",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
@@ -477,28 +504,31 @@ pub mod alter_partition_reassignments_response {
                 value.validate_for_version(version)?;
             }
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: "ReassignableTopicResponse",
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for ReassignableTopicResponse {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(DecodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(DecodeError::UnsupportedVersion {
                     message: "ReassignableTopicResponse",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
                 });
             }
 
-            let name = decoder.read_compact_string()?;
-            let partitions = {
+            let __kw_field_0 = decoder.read_compact_string()?;
+            let __kw_field_1 = {
                 let length = decoder.read_compact_array_len()?;
                 decoder.read_vec(length, |decoder| {
                     ReassignablePartitionResponse::decode(decoder, version)
@@ -510,9 +540,9 @@ pub mod alter_partition_reassignments_response {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                name,
-                partitions,
+            ::core::result::Result::Ok(Self {
+                name: __kw_field_0,
+                partitions: __kw_field_1,
                 unknown_tagged_fields,
             })
         }
@@ -523,7 +553,7 @@ pub mod alter_partition_reassignments_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_compact_string(&self.name)?;
             encoder.write_compact_array_len(self.partitions.len())?;
             for value in &self.partitions {
@@ -534,7 +564,7 @@ pub mod alter_partition_reassignments_response {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -543,12 +573,12 @@ pub mod alter_partition_reassignments_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             ReassignableTopicResponse::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| ReassignableTopicResponse::encode_validated(self, encoder, version),
@@ -559,7 +589,7 @@ pub mod alter_partition_reassignments_response {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -578,14 +608,15 @@ pub mod alter_partition_reassignments_response {
         /// The error code for this partition, or 0 if there was no error.
         pub error_code: i16,
         /// The error message for this partition, or null if there was no error.
-        pub error_message: Option<StrBytes>,
+        pub error_message: ::core::option::Option<StrBytes>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
     }
 
     impl ReassignablePartitionResponse {
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 1);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 1));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(0, 1));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
@@ -593,9 +624,12 @@ pub mod alter_partition_reassignments_response {
     }
 
     impl ReassignablePartitionResponse {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(EncodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(EncodeError::UnsupportedVersion {
                     message: "ReassignablePartitionResponse",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
@@ -603,50 +637,53 @@ pub mod alter_partition_reassignments_response {
             }
 
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: "ReassignablePartitionResponse",
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
-    impl Default for ReassignablePartitionResponse {
+    impl ::core::default::Default for ReassignablePartitionResponse {
         fn default() -> Self {
             Self {
                 partition_index: 0,
                 error_code: 0,
-                error_message: Some(StrBytes::default()),
+                error_message: ::core::option::Option::Some(StrBytes::default()),
                 unknown_tagged_fields: TaggedFields::default(),
             }
         }
     }
 
     impl KafkaDecode for ReassignablePartitionResponse {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(DecodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(DecodeError::UnsupportedVersion {
                     message: "ReassignablePartitionResponse",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
                 });
             }
 
-            let partition_index = decoder.read_i32()?;
-            let error_code = decoder.read_i16()?;
-            let error_message = decoder.read_compact_nullable_string()?;
+            let __kw_field_0 = decoder.read_i32()?;
+            let __kw_field_1 = decoder.read_i16()?;
+            let __kw_field_2 = decoder.read_compact_nullable_string()?;
             let unknown_tagged_fields = if Self::is_flexible(version) {
                 decoder.read_tagged_fields()?
             } else {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                partition_index,
-                error_code,
-                error_message,
+            ::core::result::Result::Ok(Self {
+                partition_index: __kw_field_0,
+                error_code: __kw_field_1,
+                error_message: __kw_field_2,
                 unknown_tagged_fields,
             })
         }
@@ -657,7 +694,7 @@ pub mod alter_partition_reassignments_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_i32(self.partition_index)?;
             encoder.write_i16(self.error_code)?;
             encoder.write_compact_nullable_string(self.error_message.as_ref())?;
@@ -666,7 +703,7 @@ pub mod alter_partition_reassignments_response {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -675,12 +712,12 @@ pub mod alter_partition_reassignments_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             ReassignablePartitionResponse::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| ReassignablePartitionResponse::encode_validated(self, encoder, version),
@@ -691,7 +728,7 @@ pub mod alter_partition_reassignments_response {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -712,21 +749,21 @@ pub mod alter_partition_reassignments_response {
         /// The top-level error code, or 0 if there was no error.
         pub error_code: i16,
         /// The top-level error message, or null if there was no error.
-        pub error_message: Option<StrBytes>,
+        pub error_message: ::core::option::Option<StrBytes>,
         /// The responses to topics to reassign.
-        pub responses: Vec<ReassignableTopicResponse>,
+        pub responses: ::std::vec::Vec<ReassignableTopicResponse>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
     }
 
-    impl Default for AlterPartitionReassignmentsResponse {
+    impl ::core::default::Default for AlterPartitionReassignmentsResponse {
         fn default() -> Self {
             Self {
                 throttle_time_ms: 0,
                 allow_replication_factor_change: true,
                 error_code: 0,
-                error_message: Some(StrBytes::default()),
-                responses: Vec::new(),
+                error_message: ::core::option::Option::Some(StrBytes::default()),
+                responses: ::std::vec::Vec::new(),
                 unknown_tagged_fields: TaggedFields::default(),
             }
         }
@@ -735,7 +772,8 @@ pub mod alter_partition_reassignments_response {
     impl KafkaMessage for AlterPartitionReassignmentsResponse {
         const NAME: &'static str = "AlterPartitionReassignmentsResponse";
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 1);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 1));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(0, 1));
     }
 
     impl KafkaResponse for AlterPartitionReassignmentsResponse {
@@ -743,36 +781,42 @@ pub mod alter_partition_reassignments_response {
     }
 
     impl AlterPartitionReassignmentsResponse {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             crate::message::ensure_encode_version::<Self>(version)?;
 
             for value in &self.responses {
                 value.validate_for_version(version)?;
             }
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: Self::NAME,
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for AlterPartitionReassignmentsResponse {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             crate::message::ensure_decode_version::<Self>(version)?;
 
-            let throttle_time_ms = decoder.read_i32()?;
-            let allow_replication_factor_change = if version.value() >= 1 {
+            let __kw_field_0 = decoder.read_i32()?;
+            let __kw_field_1 = if version.value() >= 1 {
                 decoder.read_bool()?
             } else {
                 true
             };
-            let error_code = decoder.read_i16()?;
-            let error_message = decoder.read_compact_nullable_string()?;
-            let responses = {
+            let __kw_field_2 = decoder.read_i16()?;
+            let __kw_field_3 = decoder.read_compact_nullable_string()?;
+            let __kw_field_4 = {
                 let length = decoder.read_compact_array_len()?;
                 decoder.read_vec(length, |decoder| {
                     ReassignableTopicResponse::decode(decoder, version)
@@ -784,12 +828,12 @@ pub mod alter_partition_reassignments_response {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                throttle_time_ms,
-                allow_replication_factor_change,
-                error_code,
-                error_message,
-                responses,
+            ::core::result::Result::Ok(Self {
+                throttle_time_ms: __kw_field_0,
+                allow_replication_factor_change: __kw_field_1,
+                error_code: __kw_field_2,
+                error_message: __kw_field_3,
+                responses: __kw_field_4,
                 unknown_tagged_fields,
             })
         }
@@ -800,7 +844,7 @@ pub mod alter_partition_reassignments_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_i32(self.throttle_time_ms)?;
             if version.value() >= 1 {
                 encoder.write_bool(self.allow_replication_factor_change)?;
@@ -816,7 +860,7 @@ pub mod alter_partition_reassignments_response {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -825,12 +869,12 @@ pub mod alter_partition_reassignments_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             AlterPartitionReassignmentsResponse::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| {
@@ -843,7 +887,7 @@ pub mod alter_partition_reassignments_response {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -872,7 +916,7 @@ pub const ALTER_PARTITION_REASSIGNMENTS_REQUEST_DESCRIPTOR: MessageDescriptor =
         "AlterPartitionReassignmentsRequest",
         MessageDirection::Request,
         VersionRange::new(0, 1),
-        Some(VersionRange::new(0, 1)),
+        ::core::option::Option::Some(VersionRange::new(0, 1)),
     );
 
 /// Static metadata for [`AlterPartitionReassignmentsResponse`].
@@ -882,7 +926,7 @@ pub const ALTER_PARTITION_REASSIGNMENTS_RESPONSE_DESCRIPTOR: MessageDescriptor =
         "AlterPartitionReassignmentsResponse",
         MessageDirection::Response,
         VersionRange::new(0, 1),
-        Some(VersionRange::new(0, 1)),
+        ::core::option::Option::Some(VersionRange::new(0, 1)),
     );
 
 /// Static pair metadata for the `AlterPartitionReassignments` API.
@@ -891,6 +935,6 @@ pub const ALTER_PARTITION_REASSIGNMENTS_API_DESCRIPTOR: ApiDescriptor = ApiDescr
     &ALTER_PARTITION_REASSIGNMENTS_REQUEST_DESCRIPTOR,
     &ALTER_PARTITION_REASSIGNMENTS_RESPONSE_DESCRIPTOR,
     VersionRange::new(0, 1),
-    Some(VersionRange::new(0, 1)),
+    ::core::option::Option::Some(VersionRange::new(0, 1)),
     false,
 );

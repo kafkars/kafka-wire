@@ -177,6 +177,13 @@ pub(crate) fn claim_output_path(
     path: &str,
     producer: &str,
 ) -> Result<(), GenerationError> {
+    if is_windows_device_path(path) {
+        return Err(GenerationError::NonPortableGeneratedPath {
+            path: path.to_owned(),
+            producer: producer.to_owned(),
+            reason: "the filename stem is a reserved Windows device name",
+        });
+    }
     if let Some(first) = claimed.get(path) {
         return Err(GenerationError::GeneratedPathCollision {
             path: path.to_owned(),
@@ -186,4 +193,19 @@ pub(crate) fn claim_output_path(
     }
     claimed.insert(path.to_owned(), producer.to_owned());
     Ok(())
+}
+
+fn is_windows_device_path(path: &str) -> bool {
+    let filename = path.rsplit('/').next().unwrap_or(path);
+    let stem = filename
+        .split('.')
+        .next()
+        .unwrap_or(filename)
+        .trim_end_matches([' ', '.'])
+        .to_ascii_uppercase();
+    matches!(stem.as_str(), "CON" | "PRN" | "AUX" | "NUL")
+        || stem
+            .strip_prefix("COM")
+            .or_else(|| stem.strip_prefix("LPT"))
+            .is_some_and(|suffix| suffix.len() == 1 && matches!(suffix.as_bytes()[0], b'1'..=b'9'))
 }

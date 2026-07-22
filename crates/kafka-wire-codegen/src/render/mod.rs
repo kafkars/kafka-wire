@@ -12,8 +12,12 @@ mod text;
 
 #[cfg(test)]
 mod fuzz_dispatch_test;
+#[cfg(test)]
+mod text_test;
 
-pub(crate) use api::{api_descriptor_name, descriptor_name, render_api, render_unkeyed};
+pub(crate) use api::{
+    api_descriptor_name, declared_structs, descriptor_name, render_api, render_unkeyed,
+};
 pub(crate) use exports::render_exports_file;
 pub(crate) use fuzz_dispatch::render_fuzz_dispatch;
 pub(crate) use header_version::render_header_version;

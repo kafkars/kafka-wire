@@ -25,13 +25,13 @@ pub mod delete_acls_request {
         /// The resource type.
         pub resource_type_filter: i8,
         /// The resource name, or null to match any resource name.
-        pub resource_name_filter: Option<StrBytes>,
+        pub resource_name_filter: ::core::option::Option<StrBytes>,
         /// The pattern type.
         pub pattern_type_filter: i8,
         /// The principal filter, or null to accept all principals.
-        pub principal_filter: Option<StrBytes>,
+        pub principal_filter: ::core::option::Option<StrBytes>,
         /// The host filter, or null to accept all hosts.
-        pub host_filter: Option<StrBytes>,
+        pub host_filter: ::core::option::Option<StrBytes>,
         /// The ACL operation.
         pub operation: i8,
         /// The permission type.
@@ -42,7 +42,8 @@ pub mod delete_acls_request {
 
     impl DeleteAclsFilter {
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(1, 3);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(2, 3));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(2, 3));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
@@ -50,9 +51,12 @@ pub mod delete_acls_request {
     }
 
     impl DeleteAclsFilter {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(EncodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(EncodeError::UnsupportedVersion {
                     message: "DeleteAclsFilter",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
@@ -60,24 +64,24 @@ pub mod delete_acls_request {
             }
 
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: "DeleteAclsFilter",
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
-    impl Default for DeleteAclsFilter {
+    impl ::core::default::Default for DeleteAclsFilter {
         fn default() -> Self {
             Self {
                 resource_type_filter: 0,
-                resource_name_filter: Some(StrBytes::default()),
+                resource_name_filter: ::core::option::Option::Some(StrBytes::default()),
                 pattern_type_filter: 3,
-                principal_filter: Some(StrBytes::default()),
-                host_filter: Some(StrBytes::default()),
+                principal_filter: ::core::option::Option::Some(StrBytes::default()),
+                host_filter: ::core::option::Option::Some(StrBytes::default()),
                 operation: 0,
                 permission_type: 0,
                 unknown_tagged_fields: TaggedFields::default(),
@@ -86,48 +90,51 @@ pub mod delete_acls_request {
     }
 
     impl KafkaDecode for DeleteAclsFilter {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(DecodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(DecodeError::UnsupportedVersion {
                     message: "DeleteAclsFilter",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
                 });
             }
 
-            let resource_type_filter = decoder.read_i8()?;
-            let resource_name_filter = if Self::is_flexible(version) {
+            let __kw_field_0 = decoder.read_i8()?;
+            let __kw_field_1 = if Self::is_flexible(version) {
                 decoder.read_compact_nullable_string()?
             } else {
                 decoder.read_nullable_string()?
             };
-            let pattern_type_filter = decoder.read_i8()?;
-            let principal_filter = if Self::is_flexible(version) {
+            let __kw_field_2 = decoder.read_i8()?;
+            let __kw_field_3 = if Self::is_flexible(version) {
                 decoder.read_compact_nullable_string()?
             } else {
                 decoder.read_nullable_string()?
             };
-            let host_filter = if Self::is_flexible(version) {
+            let __kw_field_4 = if Self::is_flexible(version) {
                 decoder.read_compact_nullable_string()?
             } else {
                 decoder.read_nullable_string()?
             };
-            let operation = decoder.read_i8()?;
-            let permission_type = decoder.read_i8()?;
+            let __kw_field_5 = decoder.read_i8()?;
+            let __kw_field_6 = decoder.read_i8()?;
             let unknown_tagged_fields = if Self::is_flexible(version) {
                 decoder.read_tagged_fields()?
             } else {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                resource_type_filter,
-                resource_name_filter,
-                pattern_type_filter,
-                principal_filter,
-                host_filter,
-                operation,
-                permission_type,
+            ::core::result::Result::Ok(Self {
+                resource_type_filter: __kw_field_0,
+                resource_name_filter: __kw_field_1,
+                pattern_type_filter: __kw_field_2,
+                principal_filter: __kw_field_3,
+                host_filter: __kw_field_4,
+                operation: __kw_field_5,
+                permission_type: __kw_field_6,
                 unknown_tagged_fields,
             })
         }
@@ -138,7 +145,7 @@ pub mod delete_acls_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_i8(self.resource_type_filter)?;
             if Self::is_flexible(version) {
                 encoder.write_compact_nullable_string(self.resource_name_filter.as_ref())?;
@@ -163,7 +170,7 @@ pub mod delete_acls_request {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -172,12 +179,12 @@ pub mod delete_acls_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             DeleteAclsFilter::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| DeleteAclsFilter::encode_validated(self, encoder, version),
@@ -188,7 +195,7 @@ pub mod delete_acls_request {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -200,10 +207,10 @@ pub mod delete_acls_request {
 
     /// Request body for the `DeleteAcls` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct DeleteAclsRequest {
         /// The filters to use when deleting `ACLs`.
-        pub filters: Vec<DeleteAclsFilter>,
+        pub filters: ::std::vec::Vec<DeleteAclsFilter>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
     }
@@ -211,7 +218,8 @@ pub mod delete_acls_request {
     impl KafkaMessage for DeleteAclsRequest {
         const NAME: &'static str = "DeleteAclsRequest";
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(1, 3);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(2, 3));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(2, 3));
     }
 
     impl KafkaRequest for DeleteAclsRequest {
@@ -224,28 +232,34 @@ pub mod delete_acls_request {
     }
 
     impl DeleteAclsRequest {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             crate::message::ensure_encode_version::<Self>(version)?;
 
             for value in &self.filters {
                 value.validate_for_version(version)?;
             }
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: Self::NAME,
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for DeleteAclsRequest {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             crate::message::ensure_decode_version::<Self>(version)?;
 
-            let filters = {
+            let __kw_field_0 = {
                 let length = if Self::is_flexible(version) {
                     decoder.read_compact_array_len()?
                 } else {
@@ -259,8 +273,8 @@ pub mod delete_acls_request {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                filters,
+            ::core::result::Result::Ok(Self {
+                filters: __kw_field_0,
                 unknown_tagged_fields,
             })
         }
@@ -271,7 +285,7 @@ pub mod delete_acls_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             if Self::is_flexible(version) {
                 encoder.write_compact_array_len(self.filters.len())?;
             } else {
@@ -285,7 +299,7 @@ pub mod delete_acls_request {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -294,12 +308,12 @@ pub mod delete_acls_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             DeleteAclsRequest::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| DeleteAclsRequest::encode_validated(self, encoder, version),
@@ -310,7 +324,7 @@ pub mod delete_acls_request {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -341,16 +355,17 @@ pub mod delete_acls_response {
         /// The error code, or 0 if the filter succeeded.
         pub error_code: i16,
         /// The error message, or null if the filter succeeded.
-        pub error_message: Option<StrBytes>,
+        pub error_message: ::core::option::Option<StrBytes>,
         /// The `ACLs` which matched this filter.
-        pub matching_acls: Vec<DeleteAclsMatchingAcl>,
+        pub matching_acls: ::std::vec::Vec<DeleteAclsMatchingAcl>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
     }
 
     impl DeleteAclsFilterResult {
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(1, 3);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(2, 3));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(2, 3));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
@@ -358,9 +373,12 @@ pub mod delete_acls_response {
     }
 
     impl DeleteAclsFilterResult {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(EncodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(EncodeError::UnsupportedVersion {
                     message: "DeleteAclsFilterResult",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
@@ -371,44 +389,47 @@ pub mod delete_acls_response {
                 value.validate_for_version(version)?;
             }
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: "DeleteAclsFilterResult",
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
-    impl Default for DeleteAclsFilterResult {
+    impl ::core::default::Default for DeleteAclsFilterResult {
         fn default() -> Self {
             Self {
                 error_code: 0,
-                error_message: Some(StrBytes::default()),
-                matching_acls: Vec::new(),
+                error_message: ::core::option::Option::Some(StrBytes::default()),
+                matching_acls: ::std::vec::Vec::new(),
                 unknown_tagged_fields: TaggedFields::default(),
             }
         }
     }
 
     impl KafkaDecode for DeleteAclsFilterResult {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(DecodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(DecodeError::UnsupportedVersion {
                     message: "DeleteAclsFilterResult",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
                 });
             }
 
-            let error_code = decoder.read_i16()?;
-            let error_message = if Self::is_flexible(version) {
+            let __kw_field_0 = decoder.read_i16()?;
+            let __kw_field_1 = if Self::is_flexible(version) {
                 decoder.read_compact_nullable_string()?
             } else {
                 decoder.read_nullable_string()?
             };
-            let matching_acls = {
+            let __kw_field_2 = {
                 let length = if Self::is_flexible(version) {
                     decoder.read_compact_array_len()?
                 } else {
@@ -424,10 +445,10 @@ pub mod delete_acls_response {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                error_code,
-                error_message,
-                matching_acls,
+            ::core::result::Result::Ok(Self {
+                error_code: __kw_field_0,
+                error_message: __kw_field_1,
+                matching_acls: __kw_field_2,
                 unknown_tagged_fields,
             })
         }
@@ -438,7 +459,7 @@ pub mod delete_acls_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_i16(self.error_code)?;
             if Self::is_flexible(version) {
                 encoder.write_compact_nullable_string(self.error_message.as_ref())?;
@@ -458,7 +479,7 @@ pub mod delete_acls_response {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -467,12 +488,12 @@ pub mod delete_acls_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             DeleteAclsFilterResult::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| DeleteAclsFilterResult::encode_validated(self, encoder, version),
@@ -483,7 +504,7 @@ pub mod delete_acls_response {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -500,7 +521,7 @@ pub mod delete_acls_response {
         /// The deletion error code, or 0 if the deletion succeeded.
         pub error_code: i16,
         /// The deletion error message, or null if the deletion succeeded.
-        pub error_message: Option<StrBytes>,
+        pub error_message: ::core::option::Option<StrBytes>,
         /// The ACL resource type.
         pub resource_type: i8,
         /// The ACL resource name.
@@ -521,7 +542,8 @@ pub mod delete_acls_response {
 
     impl DeleteAclsMatchingAcl {
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(1, 3);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(2, 3));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(2, 3));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
@@ -529,9 +551,12 @@ pub mod delete_acls_response {
     }
 
     impl DeleteAclsMatchingAcl {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(EncodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(EncodeError::UnsupportedVersion {
                     message: "DeleteAclsMatchingAcl",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
@@ -539,21 +564,21 @@ pub mod delete_acls_response {
             }
 
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: "DeleteAclsMatchingAcl",
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
-    impl Default for DeleteAclsMatchingAcl {
+    impl ::core::default::Default for DeleteAclsMatchingAcl {
         fn default() -> Self {
             Self {
                 error_code: 0,
-                error_message: Some(StrBytes::default()),
+                error_message: ::core::option::Option::Some(StrBytes::default()),
                 resource_type: 0,
                 resource_name: StrBytes::default(),
                 pattern_type: 3,
@@ -567,56 +592,59 @@ pub mod delete_acls_response {
     }
 
     impl KafkaDecode for DeleteAclsMatchingAcl {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(DecodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(DecodeError::UnsupportedVersion {
                     message: "DeleteAclsMatchingAcl",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
                 });
             }
 
-            let error_code = decoder.read_i16()?;
-            let error_message = if Self::is_flexible(version) {
+            let __kw_field_0 = decoder.read_i16()?;
+            let __kw_field_1 = if Self::is_flexible(version) {
                 decoder.read_compact_nullable_string()?
             } else {
                 decoder.read_nullable_string()?
             };
-            let resource_type = decoder.read_i8()?;
-            let resource_name = if Self::is_flexible(version) {
+            let __kw_field_2 = decoder.read_i8()?;
+            let __kw_field_3 = if Self::is_flexible(version) {
                 decoder.read_compact_string()?
             } else {
                 decoder.read_string()?
             };
-            let pattern_type = decoder.read_i8()?;
-            let principal = if Self::is_flexible(version) {
+            let __kw_field_4 = decoder.read_i8()?;
+            let __kw_field_5 = if Self::is_flexible(version) {
                 decoder.read_compact_string()?
             } else {
                 decoder.read_string()?
             };
-            let host = if Self::is_flexible(version) {
+            let __kw_field_6 = if Self::is_flexible(version) {
                 decoder.read_compact_string()?
             } else {
                 decoder.read_string()?
             };
-            let operation = decoder.read_i8()?;
-            let permission_type = decoder.read_i8()?;
+            let __kw_field_7 = decoder.read_i8()?;
+            let __kw_field_8 = decoder.read_i8()?;
             let unknown_tagged_fields = if Self::is_flexible(version) {
                 decoder.read_tagged_fields()?
             } else {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                error_code,
-                error_message,
-                resource_type,
-                resource_name,
-                pattern_type,
-                principal,
-                host,
-                operation,
-                permission_type,
+            ::core::result::Result::Ok(Self {
+                error_code: __kw_field_0,
+                error_message: __kw_field_1,
+                resource_type: __kw_field_2,
+                resource_name: __kw_field_3,
+                pattern_type: __kw_field_4,
+                principal: __kw_field_5,
+                host: __kw_field_6,
+                operation: __kw_field_7,
+                permission_type: __kw_field_8,
                 unknown_tagged_fields,
             })
         }
@@ -627,7 +655,7 @@ pub mod delete_acls_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_i16(self.error_code)?;
             if Self::is_flexible(version) {
                 encoder.write_compact_nullable_string(self.error_message.as_ref())?;
@@ -658,7 +686,7 @@ pub mod delete_acls_response {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -667,12 +695,12 @@ pub mod delete_acls_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             DeleteAclsMatchingAcl::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| DeleteAclsMatchingAcl::encode_validated(self, encoder, version),
@@ -683,7 +711,7 @@ pub mod delete_acls_response {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -695,12 +723,12 @@ pub mod delete_acls_response {
 
     /// Response body for the `DeleteAcls` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct DeleteAclsResponse {
         /// The duration in milliseconds for which the request was throttled due to a quota violation, or zero if the request did not violate any quota.
         pub throttle_time_ms: i32,
         /// The results for each filter.
-        pub filter_results: Vec<DeleteAclsFilterResult>,
+        pub filter_results: ::std::vec::Vec<DeleteAclsFilterResult>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
     }
@@ -708,7 +736,8 @@ pub mod delete_acls_response {
     impl KafkaMessage for DeleteAclsResponse {
         const NAME: &'static str = "DeleteAclsResponse";
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(1, 3);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(2, 3));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(2, 3));
     }
 
     impl KafkaResponse for DeleteAclsResponse {
@@ -716,29 +745,35 @@ pub mod delete_acls_response {
     }
 
     impl DeleteAclsResponse {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             crate::message::ensure_encode_version::<Self>(version)?;
 
             for value in &self.filter_results {
                 value.validate_for_version(version)?;
             }
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: Self::NAME,
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for DeleteAclsResponse {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             crate::message::ensure_decode_version::<Self>(version)?;
 
-            let throttle_time_ms = decoder.read_i32()?;
-            let filter_results = {
+            let __kw_field_0 = decoder.read_i32()?;
+            let __kw_field_1 = {
                 let length = if Self::is_flexible(version) {
                     decoder.read_compact_array_len()?
                 } else {
@@ -754,9 +789,9 @@ pub mod delete_acls_response {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                throttle_time_ms,
-                filter_results,
+            ::core::result::Result::Ok(Self {
+                throttle_time_ms: __kw_field_0,
+                filter_results: __kw_field_1,
                 unknown_tagged_fields,
             })
         }
@@ -767,7 +802,7 @@ pub mod delete_acls_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_i32(self.throttle_time_ms)?;
             if Self::is_flexible(version) {
                 encoder.write_compact_array_len(self.filter_results.len())?;
@@ -782,7 +817,7 @@ pub mod delete_acls_response {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -791,12 +826,12 @@ pub mod delete_acls_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             DeleteAclsResponse::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| DeleteAclsResponse::encode_validated(self, encoder, version),
@@ -807,7 +842,7 @@ pub mod delete_acls_response {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -831,7 +866,7 @@ pub const DELETE_ACLS_REQUEST_DESCRIPTOR: MessageDescriptor = MessageDescriptor:
     "DeleteAclsRequest",
     MessageDirection::Request,
     VersionRange::new(1, 3),
-    Some(VersionRange::new(2, 3)),
+    ::core::option::Option::Some(VersionRange::new(2, 3)),
 );
 
 /// Static metadata for [`DeleteAclsResponse`].
@@ -840,7 +875,7 @@ pub const DELETE_ACLS_RESPONSE_DESCRIPTOR: MessageDescriptor = MessageDescriptor
     "DeleteAclsResponse",
     MessageDirection::Response,
     VersionRange::new(1, 3),
-    Some(VersionRange::new(2, 3)),
+    ::core::option::Option::Some(VersionRange::new(2, 3)),
 );
 
 /// Static pair metadata for the `DeleteAcls` API.
@@ -849,6 +884,6 @@ pub const DELETE_ACLS_API_DESCRIPTOR: ApiDescriptor = ApiDescriptor::new(
     &DELETE_ACLS_REQUEST_DESCRIPTOR,
     &DELETE_ACLS_RESPONSE_DESCRIPTOR,
     VersionRange::new(1, 3),
-    Some(VersionRange::new(2, 3)),
+    ::core::option::Option::Some(VersionRange::new(2, 3)),
     false,
 );

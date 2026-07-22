@@ -20,7 +20,7 @@ pub mod get_telemetry_subscriptions_request {
 
     /// Request body for the `GetTelemetrySubscriptions` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct GetTelemetrySubscriptionsRequest {
         /// Unique id for this client instance, must be set to 0 on the first request.
         pub client_instance_id: Uuid,
@@ -31,7 +31,8 @@ pub mod get_telemetry_subscriptions_request {
     impl KafkaMessage for GetTelemetrySubscriptionsRequest {
         const NAME: &'static str = "GetTelemetrySubscriptionsRequest";
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 0);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 0));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(0, 0));
     }
 
     impl KafkaRequest for GetTelemetrySubscriptionsRequest {
@@ -45,33 +46,39 @@ pub mod get_telemetry_subscriptions_request {
     }
 
     impl GetTelemetrySubscriptionsRequest {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             crate::message::ensure_encode_version::<Self>(version)?;
 
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: Self::NAME,
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for GetTelemetrySubscriptionsRequest {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             crate::message::ensure_decode_version::<Self>(version)?;
 
-            let client_instance_id = decoder.read_uuid()?;
+            let __kw_field_0 = decoder.read_uuid()?;
             let unknown_tagged_fields = if Self::is_flexible(version) {
                 decoder.read_tagged_fields()?
             } else {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                client_instance_id,
+            ::core::result::Result::Ok(Self {
+                client_instance_id: __kw_field_0,
                 unknown_tagged_fields,
             })
         }
@@ -82,14 +89,14 @@ pub mod get_telemetry_subscriptions_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_uuid(self.client_instance_id)?;
 
             if Self::is_flexible(version) {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -98,12 +105,12 @@ pub mod get_telemetry_subscriptions_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             GetTelemetrySubscriptionsRequest::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| {
@@ -116,7 +123,7 @@ pub mod get_telemetry_subscriptions_request {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -146,7 +153,7 @@ pub mod get_telemetry_subscriptions_response {
 
     /// Response body for the `GetTelemetrySubscriptions` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct GetTelemetrySubscriptionsResponse {
         /// The duration in milliseconds for which the request was throttled due to a quota violation, or zero if the request did not violate any quota.
         pub throttle_time_ms: i32,
@@ -157,7 +164,7 @@ pub mod get_telemetry_subscriptions_response {
         /// Unique identifier for the current subscription set for this client instance.
         pub subscription_id: i32,
         /// Compression types that broker accepts for the `PushTelemetryRequest`.
-        pub accepted_compression_types: Vec<i8>,
+        pub accepted_compression_types: ::std::vec::Vec<i8>,
         /// Configured push interval, which is the lowest configured interval in the current subscription set.
         pub push_interval_ms: i32,
         /// The maximum bytes of binary data the broker accepts in `PushTelemetryRequest`.
@@ -165,7 +172,7 @@ pub mod get_telemetry_subscriptions_response {
         /// Flag to indicate monotonic/counter metrics are to be emitted as deltas or cumulative values.
         pub delta_temporality: bool,
         /// Requested metrics prefix string match. Empty array: No metrics subscribed, Array\[0\] empty string: All metrics subscribed.
-        pub requested_metrics: Vec<StrBytes>,
+        pub requested_metrics: ::std::vec::Vec<StrBytes>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
     }
@@ -173,7 +180,8 @@ pub mod get_telemetry_subscriptions_response {
     impl KafkaMessage for GetTelemetrySubscriptionsResponse {
         const NAME: &'static str = "GetTelemetrySubscriptionsResponse";
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 0);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 0));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(0, 0));
     }
 
     impl KafkaResponse for GetTelemetrySubscriptionsResponse {
@@ -181,36 +189,42 @@ pub mod get_telemetry_subscriptions_response {
     }
 
     impl GetTelemetrySubscriptionsResponse {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             crate::message::ensure_encode_version::<Self>(version)?;
 
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: Self::NAME,
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for GetTelemetrySubscriptionsResponse {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             crate::message::ensure_decode_version::<Self>(version)?;
 
-            let throttle_time_ms = decoder.read_i32()?;
-            let error_code = decoder.read_i16()?;
-            let client_instance_id = decoder.read_uuid()?;
-            let subscription_id = decoder.read_i32()?;
-            let accepted_compression_types = {
+            let __kw_field_0 = decoder.read_i32()?;
+            let __kw_field_1 = decoder.read_i16()?;
+            let __kw_field_2 = decoder.read_uuid()?;
+            let __kw_field_3 = decoder.read_i32()?;
+            let __kw_field_4 = {
                 let length = decoder.read_compact_array_len()?;
                 decoder.read_vec(length, Decoder::read_i8)?
             };
-            let push_interval_ms = decoder.read_i32()?;
-            let telemetry_max_bytes = decoder.read_i32()?;
-            let delta_temporality = decoder.read_bool()?;
-            let requested_metrics = {
+            let __kw_field_5 = decoder.read_i32()?;
+            let __kw_field_6 = decoder.read_i32()?;
+            let __kw_field_7 = decoder.read_bool()?;
+            let __kw_field_8 = {
                 let length = decoder.read_compact_array_len()?;
                 decoder.read_vec(length, Decoder::read_compact_string)?
             };
@@ -220,16 +234,16 @@ pub mod get_telemetry_subscriptions_response {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                throttle_time_ms,
-                error_code,
-                client_instance_id,
-                subscription_id,
-                accepted_compression_types,
-                push_interval_ms,
-                telemetry_max_bytes,
-                delta_temporality,
-                requested_metrics,
+            ::core::result::Result::Ok(Self {
+                throttle_time_ms: __kw_field_0,
+                error_code: __kw_field_1,
+                client_instance_id: __kw_field_2,
+                subscription_id: __kw_field_3,
+                accepted_compression_types: __kw_field_4,
+                push_interval_ms: __kw_field_5,
+                telemetry_max_bytes: __kw_field_6,
+                delta_temporality: __kw_field_7,
+                requested_metrics: __kw_field_8,
                 unknown_tagged_fields,
             })
         }
@@ -240,7 +254,7 @@ pub mod get_telemetry_subscriptions_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_i32(self.throttle_time_ms)?;
             encoder.write_i16(self.error_code)?;
             encoder.write_uuid(self.client_instance_id)?;
@@ -261,7 +275,7 @@ pub mod get_telemetry_subscriptions_response {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -270,12 +284,12 @@ pub mod get_telemetry_subscriptions_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             GetTelemetrySubscriptionsResponse::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| {
@@ -288,7 +302,7 @@ pub mod get_telemetry_subscriptions_response {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -317,7 +331,7 @@ pub const GET_TELEMETRY_SUBSCRIPTIONS_REQUEST_DESCRIPTOR: MessageDescriptor =
         "GetTelemetrySubscriptionsRequest",
         MessageDirection::Request,
         VersionRange::new(0, 0),
-        Some(VersionRange::new(0, 0)),
+        ::core::option::Option::Some(VersionRange::new(0, 0)),
     );
 
 /// Static metadata for [`GetTelemetrySubscriptionsResponse`].
@@ -327,7 +341,7 @@ pub const GET_TELEMETRY_SUBSCRIPTIONS_RESPONSE_DESCRIPTOR: MessageDescriptor =
         "GetTelemetrySubscriptionsResponse",
         MessageDirection::Response,
         VersionRange::new(0, 0),
-        Some(VersionRange::new(0, 0)),
+        ::core::option::Option::Some(VersionRange::new(0, 0)),
     );
 
 /// Static pair metadata for the `GetTelemetrySubscriptions` API.
@@ -336,6 +350,6 @@ pub const GET_TELEMETRY_SUBSCRIPTIONS_API_DESCRIPTOR: ApiDescriptor = ApiDescrip
     &GET_TELEMETRY_SUBSCRIPTIONS_REQUEST_DESCRIPTOR,
     &GET_TELEMETRY_SUBSCRIPTIONS_RESPONSE_DESCRIPTOR,
     VersionRange::new(0, 0),
-    Some(VersionRange::new(0, 0)),
+    ::core::option::Option::Some(VersionRange::new(0, 0)),
     false,
 );

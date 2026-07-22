@@ -20,7 +20,7 @@ pub mod describe_delegation_token_request {
 
     /// `DescribeDelegationTokenOwner` as declared by the `DescribeDelegationToken` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct DescribeDelegationTokenOwner {
         /// The owner principal type.
         pub principal_type: StrBytes,
@@ -32,7 +32,8 @@ pub mod describe_delegation_token_request {
 
     impl DescribeDelegationTokenOwner {
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(1, 3);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(2, 3));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(2, 3));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
@@ -40,9 +41,12 @@ pub mod describe_delegation_token_request {
     }
 
     impl DescribeDelegationTokenOwner {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(EncodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(EncodeError::UnsupportedVersion {
                     message: "DescribeDelegationTokenOwner",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
@@ -50,32 +54,35 @@ pub mod describe_delegation_token_request {
             }
 
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: "DescribeDelegationTokenOwner",
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for DescribeDelegationTokenOwner {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(DecodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(DecodeError::UnsupportedVersion {
                     message: "DescribeDelegationTokenOwner",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
                 });
             }
 
-            let principal_type = if Self::is_flexible(version) {
+            let __kw_field_0 = if Self::is_flexible(version) {
                 decoder.read_compact_string()?
             } else {
                 decoder.read_string()?
             };
-            let principal_name = if Self::is_flexible(version) {
+            let __kw_field_1 = if Self::is_flexible(version) {
                 decoder.read_compact_string()?
             } else {
                 decoder.read_string()?
@@ -86,9 +93,9 @@ pub mod describe_delegation_token_request {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                principal_type,
-                principal_name,
+            ::core::result::Result::Ok(Self {
+                principal_type: __kw_field_0,
+                principal_name: __kw_field_1,
                 unknown_tagged_fields,
             })
         }
@@ -99,7 +106,7 @@ pub mod describe_delegation_token_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             if Self::is_flexible(version) {
                 encoder.write_compact_string(&self.principal_type)?;
             } else {
@@ -115,7 +122,7 @@ pub mod describe_delegation_token_request {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -124,12 +131,12 @@ pub mod describe_delegation_token_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             DescribeDelegationTokenOwner::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| DescribeDelegationTokenOwner::encode_validated(self, encoder, version),
@@ -140,7 +147,7 @@ pub mod describe_delegation_token_request {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -155,15 +162,15 @@ pub mod describe_delegation_token_request {
     #[derive(Clone, Debug, Eq, PartialEq)]
     pub struct DescribeDelegationTokenRequest {
         /// Each owner that we want to describe delegation tokens for, or null to describe all tokens.
-        pub owners: Option<Vec<DescribeDelegationTokenOwner>>,
+        pub owners: ::core::option::Option<::std::vec::Vec<DescribeDelegationTokenOwner>>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
     }
 
-    impl Default for DescribeDelegationTokenRequest {
+    impl ::core::default::Default for DescribeDelegationTokenRequest {
         fn default() -> Self {
             Self {
-                owners: Some(Vec::new()),
+                owners: ::core::option::Option::Some(::std::vec::Vec::new()),
                 unknown_tagged_fields: TaggedFields::default(),
             }
         }
@@ -172,7 +179,8 @@ pub mod describe_delegation_token_request {
     impl KafkaMessage for DescribeDelegationTokenRequest {
         const NAME: &'static str = "DescribeDelegationTokenRequest";
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(1, 3);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(2, 3));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(2, 3));
     }
 
     impl KafkaRequest for DescribeDelegationTokenRequest {
@@ -186,30 +194,36 @@ pub mod describe_delegation_token_request {
     }
 
     impl DescribeDelegationTokenRequest {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             crate::message::ensure_encode_version::<Self>(version)?;
 
-            if let Some(values) = &self.owners {
+            if let ::core::option::Option::Some(values) = &self.owners {
                 for value in values {
                     value.validate_for_version(version)?;
                 }
             }
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: Self::NAME,
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for DescribeDelegationTokenRequest {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             crate::message::ensure_decode_version::<Self>(version)?;
 
-            let owners = {
+            let __kw_field_0 = {
                 let length = if Self::is_flexible(version) {
                     decoder.read_compact_nullable_array_len()?
                 } else {
@@ -229,8 +243,8 @@ pub mod describe_delegation_token_request {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                owners,
+            ::core::result::Result::Ok(Self {
+                owners: __kw_field_0,
                 unknown_tagged_fields,
             })
         }
@@ -241,13 +255,15 @@ pub mod describe_delegation_token_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             if Self::is_flexible(version) {
-                encoder.write_compact_nullable_array_len(self.owners.as_ref().map(Vec::len))?;
+                encoder.write_compact_nullable_array_len(
+                    self.owners.as_ref().map(::std::vec::Vec::len),
+                )?;
             } else {
-                encoder.write_nullable_array_len(self.owners.as_ref().map(Vec::len))?;
+                encoder.write_nullable_array_len(self.owners.as_ref().map(::std::vec::Vec::len))?;
             }
-            if let Some(values) = &self.owners {
+            if let ::core::option::Option::Some(values) = &self.owners {
                 for value in values {
                     value.encode_validated(encoder, version)?;
                 }
@@ -257,7 +273,7 @@ pub mod describe_delegation_token_request {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -266,12 +282,12 @@ pub mod describe_delegation_token_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             DescribeDelegationTokenRequest::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| DescribeDelegationTokenRequest::encode_validated(self, encoder, version),
@@ -282,7 +298,7 @@ pub mod describe_delegation_token_request {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -308,7 +324,7 @@ pub mod describe_delegation_token_response {
 
     /// `DescribedDelegationToken` as declared by the `DescribeDelegationToken` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct DescribedDelegationToken {
         /// The token principal type.
         pub principal_type: StrBytes,
@@ -329,14 +345,15 @@ pub mod describe_delegation_token_response {
         /// The token HMAC.
         pub hmac: Bytes,
         /// Those who are able to renew this token before it expires.
-        pub renewers: Vec<DescribedDelegationTokenRenewer>,
+        pub renewers: ::std::vec::Vec<DescribedDelegationTokenRenewer>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
     }
 
     impl DescribedDelegationToken {
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(1, 3);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(2, 3));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(2, 3));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
@@ -344,9 +361,12 @@ pub mod describe_delegation_token_response {
     }
 
     impl DescribedDelegationToken {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(EncodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(EncodeError::UnsupportedVersion {
                     message: "DescribedDelegationToken",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
@@ -354,14 +374,14 @@ pub mod describe_delegation_token_response {
             }
 
             if version.value() < 3 && !self.token_requester_principal_type.is_empty() {
-                return Err(EncodeError::FieldNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::FieldNotRepresentable {
                     message: "DescribedDelegationToken",
                     field: "TokenRequesterPrincipalType",
                     version,
                 });
             }
             if version.value() < 3 && !self.token_requester_principal_name.is_empty() {
-                return Err(EncodeError::FieldNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::FieldNotRepresentable {
                     message: "DescribedDelegationToken",
                     field: "TokenRequesterPrincipalName",
                     version,
@@ -371,60 +391,63 @@ pub mod describe_delegation_token_response {
                 value.validate_for_version(version)?;
             }
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: "DescribedDelegationToken",
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for DescribedDelegationToken {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(DecodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(DecodeError::UnsupportedVersion {
                     message: "DescribedDelegationToken",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
                 });
             }
 
-            let principal_type = if Self::is_flexible(version) {
+            let __kw_field_0 = if Self::is_flexible(version) {
                 decoder.read_compact_string()?
             } else {
                 decoder.read_string()?
             };
-            let principal_name = if Self::is_flexible(version) {
+            let __kw_field_1 = if Self::is_flexible(version) {
                 decoder.read_compact_string()?
             } else {
                 decoder.read_string()?
             };
-            let token_requester_principal_type = if version.value() >= 3 {
+            let __kw_field_2 = if version.value() >= 3 {
                 decoder.read_compact_string()?
             } else {
                 StrBytes::default()
             };
-            let token_requester_principal_name = if version.value() >= 3 {
+            let __kw_field_3 = if version.value() >= 3 {
                 decoder.read_compact_string()?
             } else {
                 StrBytes::default()
             };
-            let issue_timestamp = decoder.read_i64()?;
-            let expiry_timestamp = decoder.read_i64()?;
-            let max_timestamp = decoder.read_i64()?;
-            let token_id = if Self::is_flexible(version) {
+            let __kw_field_4 = decoder.read_i64()?;
+            let __kw_field_5 = decoder.read_i64()?;
+            let __kw_field_6 = decoder.read_i64()?;
+            let __kw_field_7 = if Self::is_flexible(version) {
                 decoder.read_compact_string()?
             } else {
                 decoder.read_string()?
             };
-            let hmac = if Self::is_flexible(version) {
+            let __kw_field_8 = if Self::is_flexible(version) {
                 decoder.read_compact_bytes()?
             } else {
                 decoder.read_bytes()?
             };
-            let renewers = {
+            let __kw_field_9 = {
                 let length = if Self::is_flexible(version) {
                     decoder.read_compact_array_len()?
                 } else {
@@ -440,17 +463,17 @@ pub mod describe_delegation_token_response {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                principal_type,
-                principal_name,
-                token_requester_principal_type,
-                token_requester_principal_name,
-                issue_timestamp,
-                expiry_timestamp,
-                max_timestamp,
-                token_id,
-                hmac,
-                renewers,
+            ::core::result::Result::Ok(Self {
+                principal_type: __kw_field_0,
+                principal_name: __kw_field_1,
+                token_requester_principal_type: __kw_field_2,
+                token_requester_principal_name: __kw_field_3,
+                issue_timestamp: __kw_field_4,
+                expiry_timestamp: __kw_field_5,
+                max_timestamp: __kw_field_6,
+                token_id: __kw_field_7,
+                hmac: __kw_field_8,
+                renewers: __kw_field_9,
                 unknown_tagged_fields,
             })
         }
@@ -461,7 +484,7 @@ pub mod describe_delegation_token_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             if Self::is_flexible(version) {
                 encoder.write_compact_string(&self.principal_type)?;
             } else {
@@ -504,7 +527,7 @@ pub mod describe_delegation_token_response {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -513,12 +536,12 @@ pub mod describe_delegation_token_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             DescribedDelegationToken::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| DescribedDelegationToken::encode_validated(self, encoder, version),
@@ -529,7 +552,7 @@ pub mod describe_delegation_token_response {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -541,7 +564,7 @@ pub mod describe_delegation_token_response {
 
     /// `DescribedDelegationTokenRenewer` as declared by the `DescribeDelegationToken` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct DescribedDelegationTokenRenewer {
         /// The renewer principal type.
         pub principal_type: StrBytes,
@@ -553,7 +576,8 @@ pub mod describe_delegation_token_response {
 
     impl DescribedDelegationTokenRenewer {
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(1, 3);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(2, 3));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(2, 3));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
@@ -561,9 +585,12 @@ pub mod describe_delegation_token_response {
     }
 
     impl DescribedDelegationTokenRenewer {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(EncodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(EncodeError::UnsupportedVersion {
                     message: "DescribedDelegationTokenRenewer",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
@@ -571,32 +598,35 @@ pub mod describe_delegation_token_response {
             }
 
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: "DescribedDelegationTokenRenewer",
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for DescribedDelegationTokenRenewer {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(DecodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(DecodeError::UnsupportedVersion {
                     message: "DescribedDelegationTokenRenewer",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
                 });
             }
 
-            let principal_type = if Self::is_flexible(version) {
+            let __kw_field_0 = if Self::is_flexible(version) {
                 decoder.read_compact_string()?
             } else {
                 decoder.read_string()?
             };
-            let principal_name = if Self::is_flexible(version) {
+            let __kw_field_1 = if Self::is_flexible(version) {
                 decoder.read_compact_string()?
             } else {
                 decoder.read_string()?
@@ -607,9 +637,9 @@ pub mod describe_delegation_token_response {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                principal_type,
-                principal_name,
+            ::core::result::Result::Ok(Self {
+                principal_type: __kw_field_0,
+                principal_name: __kw_field_1,
                 unknown_tagged_fields,
             })
         }
@@ -620,7 +650,7 @@ pub mod describe_delegation_token_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             if Self::is_flexible(version) {
                 encoder.write_compact_string(&self.principal_type)?;
             } else {
@@ -636,7 +666,7 @@ pub mod describe_delegation_token_response {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -645,12 +675,12 @@ pub mod describe_delegation_token_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             DescribedDelegationTokenRenewer::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| DescribedDelegationTokenRenewer::encode_validated(self, encoder, version),
@@ -661,7 +691,7 @@ pub mod describe_delegation_token_response {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -673,12 +703,12 @@ pub mod describe_delegation_token_response {
 
     /// Response body for the `DescribeDelegationToken` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct DescribeDelegationTokenResponse {
         /// The error code, or 0 if there was no error.
         pub error_code: i16,
         /// The tokens.
-        pub tokens: Vec<DescribedDelegationToken>,
+        pub tokens: ::std::vec::Vec<DescribedDelegationToken>,
         /// The duration in milliseconds for which the request was throttled due to a quota violation, or zero if the request did not violate any quota.
         pub throttle_time_ms: i32,
         /// Unknown flexible-version tagged fields retained for forwarding.
@@ -688,7 +718,8 @@ pub mod describe_delegation_token_response {
     impl KafkaMessage for DescribeDelegationTokenResponse {
         const NAME: &'static str = "DescribeDelegationTokenResponse";
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(1, 3);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(2, 3));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(2, 3));
     }
 
     impl KafkaResponse for DescribeDelegationTokenResponse {
@@ -696,29 +727,35 @@ pub mod describe_delegation_token_response {
     }
 
     impl DescribeDelegationTokenResponse {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             crate::message::ensure_encode_version::<Self>(version)?;
 
             for value in &self.tokens {
                 value.validate_for_version(version)?;
             }
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: Self::NAME,
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for DescribeDelegationTokenResponse {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             crate::message::ensure_decode_version::<Self>(version)?;
 
-            let error_code = decoder.read_i16()?;
-            let tokens = {
+            let __kw_field_0 = decoder.read_i16()?;
+            let __kw_field_1 = {
                 let length = if Self::is_flexible(version) {
                     decoder.read_compact_array_len()?
                 } else {
@@ -728,17 +765,17 @@ pub mod describe_delegation_token_response {
                     DescribedDelegationToken::decode(decoder, version)
                 })?
             };
-            let throttle_time_ms = decoder.read_i32()?;
+            let __kw_field_2 = decoder.read_i32()?;
             let unknown_tagged_fields = if Self::is_flexible(version) {
                 decoder.read_tagged_fields()?
             } else {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                error_code,
-                tokens,
-                throttle_time_ms,
+            ::core::result::Result::Ok(Self {
+                error_code: __kw_field_0,
+                tokens: __kw_field_1,
+                throttle_time_ms: __kw_field_2,
                 unknown_tagged_fields,
             })
         }
@@ -749,7 +786,7 @@ pub mod describe_delegation_token_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_i16(self.error_code)?;
             if Self::is_flexible(version) {
                 encoder.write_compact_array_len(self.tokens.len())?;
@@ -765,7 +802,7 @@ pub mod describe_delegation_token_response {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -774,12 +811,12 @@ pub mod describe_delegation_token_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             DescribeDelegationTokenResponse::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| DescribeDelegationTokenResponse::encode_validated(self, encoder, version),
@@ -790,7 +827,7 @@ pub mod describe_delegation_token_response {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -814,7 +851,7 @@ pub const DESCRIBE_DELEGATION_TOKEN_REQUEST_DESCRIPTOR: MessageDescriptor = Mess
     "DescribeDelegationTokenRequest",
     MessageDirection::Request,
     VersionRange::new(1, 3),
-    Some(VersionRange::new(2, 3)),
+    ::core::option::Option::Some(VersionRange::new(2, 3)),
 );
 
 /// Static metadata for [`DescribeDelegationTokenResponse`].
@@ -823,7 +860,7 @@ pub const DESCRIBE_DELEGATION_TOKEN_RESPONSE_DESCRIPTOR: MessageDescriptor = Mes
     "DescribeDelegationTokenResponse",
     MessageDirection::Response,
     VersionRange::new(1, 3),
-    Some(VersionRange::new(2, 3)),
+    ::core::option::Option::Some(VersionRange::new(2, 3)),
 );
 
 /// Static pair metadata for the `DescribeDelegationToken` API.
@@ -832,6 +869,6 @@ pub const DESCRIBE_DELEGATION_TOKEN_API_DESCRIPTOR: ApiDescriptor = ApiDescripto
     &DESCRIBE_DELEGATION_TOKEN_REQUEST_DESCRIPTOR,
     &DESCRIBE_DELEGATION_TOKEN_RESPONSE_DESCRIPTOR,
     VersionRange::new(1, 3),
-    Some(VersionRange::new(2, 3)),
+    ::core::option::Option::Some(VersionRange::new(2, 3)),
     false,
 );

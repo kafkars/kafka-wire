@@ -20,19 +20,20 @@ pub mod list_offsets_request {
 
     /// `ListOffsetsTopic` as declared by the `ListOffsets` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct ListOffsetsTopic {
         /// The topic name.
         pub name: StrBytes,
         /// Each partition in the request.
-        pub partitions: Vec<ListOffsetsPartition>,
+        pub partitions: ::std::vec::Vec<ListOffsetsPartition>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
     }
 
     impl ListOffsetsTopic {
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(1, 11);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(6, 11));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(6, 11));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
@@ -40,9 +41,12 @@ pub mod list_offsets_request {
     }
 
     impl ListOffsetsTopic {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(EncodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(EncodeError::UnsupportedVersion {
                     message: "ListOffsetsTopic",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
@@ -53,32 +57,35 @@ pub mod list_offsets_request {
                 value.validate_for_version(version)?;
             }
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: "ListOffsetsTopic",
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for ListOffsetsTopic {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(DecodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(DecodeError::UnsupportedVersion {
                     message: "ListOffsetsTopic",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
                 });
             }
 
-            let name = if Self::is_flexible(version) {
+            let __kw_field_0 = if Self::is_flexible(version) {
                 decoder.read_compact_string()?
             } else {
                 decoder.read_string()?
             };
-            let partitions = {
+            let __kw_field_1 = {
                 let length = if Self::is_flexible(version) {
                     decoder.read_compact_array_len()?
                 } else {
@@ -94,9 +101,9 @@ pub mod list_offsets_request {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                name,
-                partitions,
+            ::core::result::Result::Ok(Self {
+                name: __kw_field_0,
+                partitions: __kw_field_1,
                 unknown_tagged_fields,
             })
         }
@@ -107,7 +114,7 @@ pub mod list_offsets_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             if Self::is_flexible(version) {
                 encoder.write_compact_string(&self.name)?;
             } else {
@@ -126,7 +133,7 @@ pub mod list_offsets_request {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -135,12 +142,12 @@ pub mod list_offsets_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             ListOffsetsTopic::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| ListOffsetsTopic::encode_validated(self, encoder, version),
@@ -151,7 +158,7 @@ pub mod list_offsets_request {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -177,7 +184,8 @@ pub mod list_offsets_request {
 
     impl ListOffsetsPartition {
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(1, 11);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(6, 11));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(6, 11));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
@@ -185,9 +193,12 @@ pub mod list_offsets_request {
     }
 
     impl ListOffsetsPartition {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(EncodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(EncodeError::UnsupportedVersion {
                     message: "ListOffsetsPartition",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
@@ -195,17 +206,17 @@ pub mod list_offsets_request {
             }
 
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: "ListOffsetsPartition",
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
-    impl Default for ListOffsetsPartition {
+    impl ::core::default::Default for ListOffsetsPartition {
         fn default() -> Self {
             Self {
                 partition_index: 0,
@@ -217,32 +228,35 @@ pub mod list_offsets_request {
     }
 
     impl KafkaDecode for ListOffsetsPartition {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(DecodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(DecodeError::UnsupportedVersion {
                     message: "ListOffsetsPartition",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
                 });
             }
 
-            let partition_index = decoder.read_i32()?;
-            let current_leader_epoch = if version.value() >= 4 {
+            let __kw_field_0 = decoder.read_i32()?;
+            let __kw_field_1 = if version.value() >= 4 {
                 decoder.read_i32()?
             } else {
                 -1
             };
-            let timestamp = decoder.read_i64()?;
+            let __kw_field_2 = decoder.read_i64()?;
             let unknown_tagged_fields = if Self::is_flexible(version) {
                 decoder.read_tagged_fields()?
             } else {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                partition_index,
-                current_leader_epoch,
-                timestamp,
+            ::core::result::Result::Ok(Self {
+                partition_index: __kw_field_0,
+                current_leader_epoch: __kw_field_1,
+                timestamp: __kw_field_2,
                 unknown_tagged_fields,
             })
         }
@@ -253,7 +267,7 @@ pub mod list_offsets_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_i32(self.partition_index)?;
             if version.value() >= 4 {
                 encoder.write_i32(self.current_leader_epoch)?;
@@ -264,7 +278,7 @@ pub mod list_offsets_request {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -273,12 +287,12 @@ pub mod list_offsets_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             ListOffsetsPartition::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| ListOffsetsPartition::encode_validated(self, encoder, version),
@@ -289,7 +303,7 @@ pub mod list_offsets_request {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -301,14 +315,14 @@ pub mod list_offsets_request {
 
     /// Request body for the `ListOffsets` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct ListOffsetsRequest {
         /// The broker ID of the requester, or -1 if this request is being made by a normal consumer.
         pub replica_id: i32,
         /// This setting controls the visibility of transactional records. Using `READ_UNCOMMITTED` (`isolation_level` = 0) makes all records visible. With `READ_COMMITTED` (`isolation_level` = 1), non-transactional and COMMITTED transactional records are visible. To be more concrete, `READ_COMMITTED` returns all data from offsets smaller than the current LSO (last stable offset), and enables the inclusion of the list of aborted transactions in the result, which allows consumers to discard ABORTED transactional records.
         pub isolation_level: i8,
         /// Each topic in the request.
-        pub topics: Vec<ListOffsetsTopic>,
+        pub topics: ::std::vec::Vec<ListOffsetsTopic>,
         /// The timeout to await a response in milliseconds for requests that require reading from remote storage for topics enabled with tiered storage.
         pub timeout_ms: i32,
         /// Unknown flexible-version tagged fields retained for forwarding.
@@ -318,7 +332,8 @@ pub mod list_offsets_request {
     impl KafkaMessage for ListOffsetsRequest {
         const NAME: &'static str = "ListOffsetsRequest";
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(1, 11);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(6, 11));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(6, 11));
     }
 
     impl KafkaRequest for ListOffsetsRequest {
@@ -331,11 +346,14 @@ pub mod list_offsets_request {
     }
 
     impl ListOffsetsRequest {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             crate::message::ensure_encode_version::<Self>(version)?;
 
             if version.value() < 2 && self.isolation_level != 0 {
-                return Err(EncodeError::FieldNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::FieldNotRepresentable {
                     message: Self::NAME,
                     field: "IsolationLevel",
                     version,
@@ -345,27 +363,30 @@ pub mod list_offsets_request {
                 value.validate_for_version(version)?;
             }
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: Self::NAME,
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for ListOffsetsRequest {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             crate::message::ensure_decode_version::<Self>(version)?;
 
-            let replica_id = decoder.read_i32()?;
-            let isolation_level = if version.value() >= 2 {
+            let __kw_field_0 = decoder.read_i32()?;
+            let __kw_field_1 = if version.value() >= 2 {
                 decoder.read_i8()?
             } else {
                 0
             };
-            let topics = {
+            let __kw_field_2 = {
                 let length = if Self::is_flexible(version) {
                     decoder.read_compact_array_len()?
                 } else {
@@ -373,7 +394,7 @@ pub mod list_offsets_request {
                 };
                 decoder.read_vec(length, |decoder| ListOffsetsTopic::decode(decoder, version))?
             };
-            let timeout_ms = if version.value() >= 10 {
+            let __kw_field_3 = if version.value() >= 10 {
                 decoder.read_i32()?
             } else {
                 0
@@ -384,11 +405,11 @@ pub mod list_offsets_request {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                replica_id,
-                isolation_level,
-                topics,
-                timeout_ms,
+            ::core::result::Result::Ok(Self {
+                replica_id: __kw_field_0,
+                isolation_level: __kw_field_1,
+                topics: __kw_field_2,
+                timeout_ms: __kw_field_3,
                 unknown_tagged_fields,
             })
         }
@@ -399,7 +420,7 @@ pub mod list_offsets_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_i32(self.replica_id)?;
             if version.value() >= 2 {
                 encoder.write_i8(self.isolation_level)?;
@@ -420,7 +441,7 @@ pub mod list_offsets_request {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -429,12 +450,12 @@ pub mod list_offsets_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             ListOffsetsRequest::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| ListOffsetsRequest::encode_validated(self, encoder, version),
@@ -445,7 +466,7 @@ pub mod list_offsets_request {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -471,19 +492,20 @@ pub mod list_offsets_response {
 
     /// `ListOffsetsTopicResponse` as declared by the `ListOffsets` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct ListOffsetsTopicResponse {
         /// The topic name.
         pub name: StrBytes,
         /// Each partition in the response.
-        pub partitions: Vec<ListOffsetsPartitionResponse>,
+        pub partitions: ::std::vec::Vec<ListOffsetsPartitionResponse>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
     }
 
     impl ListOffsetsTopicResponse {
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(1, 11);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(6, 11));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(6, 11));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
@@ -491,9 +513,12 @@ pub mod list_offsets_response {
     }
 
     impl ListOffsetsTopicResponse {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(EncodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(EncodeError::UnsupportedVersion {
                     message: "ListOffsetsTopicResponse",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
@@ -504,32 +529,35 @@ pub mod list_offsets_response {
                 value.validate_for_version(version)?;
             }
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: "ListOffsetsTopicResponse",
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for ListOffsetsTopicResponse {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(DecodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(DecodeError::UnsupportedVersion {
                     message: "ListOffsetsTopicResponse",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
                 });
             }
 
-            let name = if Self::is_flexible(version) {
+            let __kw_field_0 = if Self::is_flexible(version) {
                 decoder.read_compact_string()?
             } else {
                 decoder.read_string()?
             };
-            let partitions = {
+            let __kw_field_1 = {
                 let length = if Self::is_flexible(version) {
                     decoder.read_compact_array_len()?
                 } else {
@@ -545,9 +573,9 @@ pub mod list_offsets_response {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                name,
-                partitions,
+            ::core::result::Result::Ok(Self {
+                name: __kw_field_0,
+                partitions: __kw_field_1,
                 unknown_tagged_fields,
             })
         }
@@ -558,7 +586,7 @@ pub mod list_offsets_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             if Self::is_flexible(version) {
                 encoder.write_compact_string(&self.name)?;
             } else {
@@ -577,7 +605,7 @@ pub mod list_offsets_response {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -586,12 +614,12 @@ pub mod list_offsets_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             ListOffsetsTopicResponse::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| ListOffsetsTopicResponse::encode_validated(self, encoder, version),
@@ -602,7 +630,7 @@ pub mod list_offsets_response {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -632,7 +660,8 @@ pub mod list_offsets_response {
 
     impl ListOffsetsPartitionResponse {
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(1, 11);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(6, 11));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(6, 11));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
@@ -640,9 +669,12 @@ pub mod list_offsets_response {
     }
 
     impl ListOffsetsPartitionResponse {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(EncodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(EncodeError::UnsupportedVersion {
                     message: "ListOffsetsPartitionResponse",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
@@ -650,24 +682,24 @@ pub mod list_offsets_response {
             }
 
             if version.value() < 4 && self.leader_epoch != -1 {
-                return Err(EncodeError::FieldNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::FieldNotRepresentable {
                     message: "ListOffsetsPartitionResponse",
                     field: "LeaderEpoch",
                     version,
                 });
             }
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: "ListOffsetsPartitionResponse",
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
-    impl Default for ListOffsetsPartitionResponse {
+    impl ::core::default::Default for ListOffsetsPartitionResponse {
         fn default() -> Self {
             Self {
                 partition_index: 0,
@@ -681,20 +713,23 @@ pub mod list_offsets_response {
     }
 
     impl KafkaDecode for ListOffsetsPartitionResponse {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(DecodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(DecodeError::UnsupportedVersion {
                     message: "ListOffsetsPartitionResponse",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
                 });
             }
 
-            let partition_index = decoder.read_i32()?;
-            let error_code = decoder.read_i16()?;
-            let timestamp = decoder.read_i64()?;
-            let offset = decoder.read_i64()?;
-            let leader_epoch = if version.value() >= 4 {
+            let __kw_field_0 = decoder.read_i32()?;
+            let __kw_field_1 = decoder.read_i16()?;
+            let __kw_field_2 = decoder.read_i64()?;
+            let __kw_field_3 = decoder.read_i64()?;
+            let __kw_field_4 = if version.value() >= 4 {
                 decoder.read_i32()?
             } else {
                 -1
@@ -705,12 +740,12 @@ pub mod list_offsets_response {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                partition_index,
-                error_code,
-                timestamp,
-                offset,
-                leader_epoch,
+            ::core::result::Result::Ok(Self {
+                partition_index: __kw_field_0,
+                error_code: __kw_field_1,
+                timestamp: __kw_field_2,
+                offset: __kw_field_3,
+                leader_epoch: __kw_field_4,
                 unknown_tagged_fields,
             })
         }
@@ -721,7 +756,7 @@ pub mod list_offsets_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_i32(self.partition_index)?;
             encoder.write_i16(self.error_code)?;
             encoder.write_i64(self.timestamp)?;
@@ -734,7 +769,7 @@ pub mod list_offsets_response {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -743,12 +778,12 @@ pub mod list_offsets_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             ListOffsetsPartitionResponse::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| ListOffsetsPartitionResponse::encode_validated(self, encoder, version),
@@ -759,7 +794,7 @@ pub mod list_offsets_response {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -771,12 +806,12 @@ pub mod list_offsets_response {
 
     /// Response body for the `ListOffsets` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct ListOffsetsResponse {
         /// The duration in milliseconds for which the request was throttled due to a quota violation, or zero if the request did not violate any quota.
         pub throttle_time_ms: i32,
         /// Each topic in the response.
-        pub topics: Vec<ListOffsetsTopicResponse>,
+        pub topics: ::std::vec::Vec<ListOffsetsTopicResponse>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
     }
@@ -784,7 +819,8 @@ pub mod list_offsets_response {
     impl KafkaMessage for ListOffsetsResponse {
         const NAME: &'static str = "ListOffsetsResponse";
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(1, 11);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(6, 11));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(6, 11));
     }
 
     impl KafkaResponse for ListOffsetsResponse {
@@ -792,33 +828,39 @@ pub mod list_offsets_response {
     }
 
     impl ListOffsetsResponse {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             crate::message::ensure_encode_version::<Self>(version)?;
 
             for value in &self.topics {
                 value.validate_for_version(version)?;
             }
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: Self::NAME,
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for ListOffsetsResponse {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             crate::message::ensure_decode_version::<Self>(version)?;
 
-            let throttle_time_ms = if version.value() >= 2 {
+            let __kw_field_0 = if version.value() >= 2 {
                 decoder.read_i32()?
             } else {
                 0
             };
-            let topics = {
+            let __kw_field_1 = {
                 let length = if Self::is_flexible(version) {
                     decoder.read_compact_array_len()?
                 } else {
@@ -834,9 +876,9 @@ pub mod list_offsets_response {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                throttle_time_ms,
-                topics,
+            ::core::result::Result::Ok(Self {
+                throttle_time_ms: __kw_field_0,
+                topics: __kw_field_1,
                 unknown_tagged_fields,
             })
         }
@@ -847,7 +889,7 @@ pub mod list_offsets_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             if version.value() >= 2 {
                 encoder.write_i32(self.throttle_time_ms)?;
             }
@@ -864,7 +906,7 @@ pub mod list_offsets_response {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -873,12 +915,12 @@ pub mod list_offsets_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             ListOffsetsResponse::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| ListOffsetsResponse::encode_validated(self, encoder, version),
@@ -889,7 +931,7 @@ pub mod list_offsets_response {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -913,7 +955,7 @@ pub const LIST_OFFSETS_REQUEST_DESCRIPTOR: MessageDescriptor = MessageDescriptor
     "ListOffsetsRequest",
     MessageDirection::Request,
     VersionRange::new(1, 11),
-    Some(VersionRange::new(6, 11)),
+    ::core::option::Option::Some(VersionRange::new(6, 11)),
 );
 
 /// Static metadata for [`ListOffsetsResponse`].
@@ -922,7 +964,7 @@ pub const LIST_OFFSETS_RESPONSE_DESCRIPTOR: MessageDescriptor = MessageDescripto
     "ListOffsetsResponse",
     MessageDirection::Response,
     VersionRange::new(1, 11),
-    Some(VersionRange::new(6, 11)),
+    ::core::option::Option::Some(VersionRange::new(6, 11)),
 );
 
 /// Static pair metadata for the `ListOffsets` API.
@@ -931,6 +973,6 @@ pub const LIST_OFFSETS_API_DESCRIPTOR: ApiDescriptor = ApiDescriptor::new(
     &LIST_OFFSETS_REQUEST_DESCRIPTOR,
     &LIST_OFFSETS_RESPONSE_DESCRIPTOR,
     VersionRange::new(1, 11),
-    Some(VersionRange::new(6, 11)),
+    ::core::option::Option::Some(VersionRange::new(6, 11)),
     false,
 );

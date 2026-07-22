@@ -27,14 +27,15 @@ pub mod describe_client_quotas_request {
         /// How to match the entity {0 = exact name, 1 = default name, 2 = any specified name}.
         pub match_type: i8,
         /// The string to match against, or null if unused for the match type.
-        pub match_: Option<StrBytes>,
+        pub match_: ::core::option::Option<StrBytes>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
     }
 
     impl ComponentData {
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 1);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(1, 1));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(1, 1));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
@@ -42,9 +43,12 @@ pub mod describe_client_quotas_request {
     }
 
     impl ComponentData {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(EncodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(EncodeError::UnsupportedVersion {
                     message: "ComponentData",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
@@ -52,44 +56,47 @@ pub mod describe_client_quotas_request {
             }
 
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: "ComponentData",
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
-    impl Default for ComponentData {
+    impl ::core::default::Default for ComponentData {
         fn default() -> Self {
             Self {
                 entity_type: StrBytes::default(),
                 match_type: 0,
-                match_: Some(StrBytes::default()),
+                match_: ::core::option::Option::Some(StrBytes::default()),
                 unknown_tagged_fields: TaggedFields::default(),
             }
         }
     }
 
     impl KafkaDecode for ComponentData {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(DecodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(DecodeError::UnsupportedVersion {
                     message: "ComponentData",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
                 });
             }
 
-            let entity_type = if Self::is_flexible(version) {
+            let __kw_field_0 = if Self::is_flexible(version) {
                 decoder.read_compact_string()?
             } else {
                 decoder.read_string()?
             };
-            let match_type = decoder.read_i8()?;
-            let match_ = if Self::is_flexible(version) {
+            let __kw_field_1 = decoder.read_i8()?;
+            let __kw_field_2 = if Self::is_flexible(version) {
                 decoder.read_compact_nullable_string()?
             } else {
                 decoder.read_nullable_string()?
@@ -100,10 +107,10 @@ pub mod describe_client_quotas_request {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                entity_type,
-                match_type,
-                match_,
+            ::core::result::Result::Ok(Self {
+                entity_type: __kw_field_0,
+                match_type: __kw_field_1,
+                match_: __kw_field_2,
                 unknown_tagged_fields,
             })
         }
@@ -114,7 +121,7 @@ pub mod describe_client_quotas_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             if Self::is_flexible(version) {
                 encoder.write_compact_string(&self.entity_type)?;
             } else {
@@ -131,7 +138,7 @@ pub mod describe_client_quotas_request {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -140,12 +147,12 @@ pub mod describe_client_quotas_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             ComponentData::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| ComponentData::encode_validated(self, encoder, version),
@@ -156,7 +163,7 @@ pub mod describe_client_quotas_request {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -168,10 +175,10 @@ pub mod describe_client_quotas_request {
 
     /// Request body for the `DescribeClientQuotas` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct DescribeClientQuotasRequest {
         /// Filter components to apply to quota entities.
-        pub components: Vec<ComponentData>,
+        pub components: ::std::vec::Vec<ComponentData>,
         /// Whether the match is strict, i.e. should exclude entities with unspecified entity types.
         pub strict: bool,
         /// Unknown flexible-version tagged fields retained for forwarding.
@@ -181,7 +188,8 @@ pub mod describe_client_quotas_request {
     impl KafkaMessage for DescribeClientQuotasRequest {
         const NAME: &'static str = "DescribeClientQuotasRequest";
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 1);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(1, 1));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(1, 1));
     }
 
     impl KafkaRequest for DescribeClientQuotasRequest {
@@ -195,28 +203,34 @@ pub mod describe_client_quotas_request {
     }
 
     impl DescribeClientQuotasRequest {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             crate::message::ensure_encode_version::<Self>(version)?;
 
             for value in &self.components {
                 value.validate_for_version(version)?;
             }
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: Self::NAME,
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for DescribeClientQuotasRequest {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             crate::message::ensure_decode_version::<Self>(version)?;
 
-            let components = {
+            let __kw_field_0 = {
                 let length = if Self::is_flexible(version) {
                     decoder.read_compact_array_len()?
                 } else {
@@ -224,16 +238,16 @@ pub mod describe_client_quotas_request {
                 };
                 decoder.read_vec(length, |decoder| ComponentData::decode(decoder, version))?
             };
-            let strict = decoder.read_bool()?;
+            let __kw_field_1 = decoder.read_bool()?;
             let unknown_tagged_fields = if Self::is_flexible(version) {
                 decoder.read_tagged_fields()?
             } else {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                components,
-                strict,
+            ::core::result::Result::Ok(Self {
+                components: __kw_field_0,
+                strict: __kw_field_1,
                 unknown_tagged_fields,
             })
         }
@@ -244,7 +258,7 @@ pub mod describe_client_quotas_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             if Self::is_flexible(version) {
                 encoder.write_compact_array_len(self.components.len())?;
             } else {
@@ -259,7 +273,7 @@ pub mod describe_client_quotas_request {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -268,12 +282,12 @@ pub mod describe_client_quotas_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             DescribeClientQuotasRequest::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| DescribeClientQuotasRequest::encode_validated(self, encoder, version),
@@ -284,7 +298,7 @@ pub mod describe_client_quotas_request {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -310,19 +324,20 @@ pub mod describe_client_quotas_response {
 
     /// `EntryData` as declared by the `DescribeClientQuotas` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, PartialEq)]
     pub struct EntryData {
         /// The quota entity description.
-        pub entity: Vec<EntityData>,
+        pub entity: ::std::vec::Vec<EntityData>,
         /// The quota values for the entity.
-        pub values: Vec<ValueData>,
+        pub values: ::std::vec::Vec<ValueData>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
     }
 
     impl EntryData {
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 1);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(1, 1));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(1, 1));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
@@ -330,9 +345,12 @@ pub mod describe_client_quotas_response {
     }
 
     impl EntryData {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(EncodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(EncodeError::UnsupportedVersion {
                     message: "EntryData",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
@@ -346,27 +364,30 @@ pub mod describe_client_quotas_response {
                 value.validate_for_version(version)?;
             }
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: "EntryData",
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for EntryData {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(DecodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(DecodeError::UnsupportedVersion {
                     message: "EntryData",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
                 });
             }
 
-            let entity = {
+            let __kw_field_0 = {
                 let length = if Self::is_flexible(version) {
                     decoder.read_compact_array_len()?
                 } else {
@@ -374,7 +395,7 @@ pub mod describe_client_quotas_response {
                 };
                 decoder.read_vec(length, |decoder| EntityData::decode(decoder, version))?
             };
-            let values_value = {
+            let __kw_field_1 = {
                 let length = if Self::is_flexible(version) {
                     decoder.read_compact_array_len()?
                 } else {
@@ -388,9 +409,9 @@ pub mod describe_client_quotas_response {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                entity,
-                values: values_value,
+            ::core::result::Result::Ok(Self {
+                entity: __kw_field_0,
+                values: __kw_field_1,
                 unknown_tagged_fields,
             })
         }
@@ -401,7 +422,7 @@ pub mod describe_client_quotas_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             if Self::is_flexible(version) {
                 encoder.write_compact_array_len(self.entity.len())?;
             } else {
@@ -423,7 +444,7 @@ pub mod describe_client_quotas_response {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -432,12 +453,12 @@ pub mod describe_client_quotas_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             EntryData::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| EntryData::encode_validated(self, encoder, version),
@@ -448,7 +469,7 @@ pub mod describe_client_quotas_response {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -465,14 +486,15 @@ pub mod describe_client_quotas_response {
         /// The entity type.
         pub entity_type: StrBytes,
         /// The entity name, or null if the default.
-        pub entity_name: Option<StrBytes>,
+        pub entity_name: ::core::option::Option<StrBytes>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
     }
 
     impl EntityData {
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 1);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(1, 1));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(1, 1));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
@@ -480,9 +502,12 @@ pub mod describe_client_quotas_response {
     }
 
     impl EntityData {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(EncodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(EncodeError::UnsupportedVersion {
                     message: "EntityData",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
@@ -490,42 +515,45 @@ pub mod describe_client_quotas_response {
             }
 
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: "EntityData",
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
-    impl Default for EntityData {
+    impl ::core::default::Default for EntityData {
         fn default() -> Self {
             Self {
                 entity_type: StrBytes::default(),
-                entity_name: Some(StrBytes::default()),
+                entity_name: ::core::option::Option::Some(StrBytes::default()),
                 unknown_tagged_fields: TaggedFields::default(),
             }
         }
     }
 
     impl KafkaDecode for EntityData {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(DecodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(DecodeError::UnsupportedVersion {
                     message: "EntityData",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
                 });
             }
 
-            let entity_type = if Self::is_flexible(version) {
+            let __kw_field_0 = if Self::is_flexible(version) {
                 decoder.read_compact_string()?
             } else {
                 decoder.read_string()?
             };
-            let entity_name = if Self::is_flexible(version) {
+            let __kw_field_1 = if Self::is_flexible(version) {
                 decoder.read_compact_nullable_string()?
             } else {
                 decoder.read_nullable_string()?
@@ -536,9 +564,9 @@ pub mod describe_client_quotas_response {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                entity_type,
-                entity_name,
+            ::core::result::Result::Ok(Self {
+                entity_type: __kw_field_0,
+                entity_name: __kw_field_1,
                 unknown_tagged_fields,
             })
         }
@@ -549,7 +577,7 @@ pub mod describe_client_quotas_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             if Self::is_flexible(version) {
                 encoder.write_compact_string(&self.entity_type)?;
             } else {
@@ -565,7 +593,7 @@ pub mod describe_client_quotas_response {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -574,12 +602,12 @@ pub mod describe_client_quotas_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             EntityData::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| EntityData::encode_validated(self, encoder, version),
@@ -590,7 +618,7 @@ pub mod describe_client_quotas_response {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -614,7 +642,8 @@ pub mod describe_client_quotas_response {
 
     impl ValueData {
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 1);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(1, 1));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(1, 1));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
@@ -622,9 +651,12 @@ pub mod describe_client_quotas_response {
     }
 
     impl ValueData {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(EncodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(EncodeError::UnsupportedVersion {
                     message: "ValueData",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
@@ -632,51 +664,54 @@ pub mod describe_client_quotas_response {
             }
 
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: "ValueData",
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
-    impl Default for ValueData {
+    impl ::core::default::Default for ValueData {
         fn default() -> Self {
             Self {
                 key: StrBytes::default(),
-                value: 0.0,
+                value: f64::from_bits(0x0000_0000_0000_0000_u64),
                 unknown_tagged_fields: TaggedFields::default(),
             }
         }
     }
 
     impl KafkaDecode for ValueData {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(DecodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(DecodeError::UnsupportedVersion {
                     message: "ValueData",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
                 });
             }
 
-            let key = if Self::is_flexible(version) {
+            let __kw_field_0 = if Self::is_flexible(version) {
                 decoder.read_compact_string()?
             } else {
                 decoder.read_string()?
             };
-            let value = decoder.read_float64()?;
+            let __kw_field_1 = decoder.read_float64()?;
             let unknown_tagged_fields = if Self::is_flexible(version) {
                 decoder.read_tagged_fields()?
             } else {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                key,
-                value,
+            ::core::result::Result::Ok(Self {
+                key: __kw_field_0,
+                value: __kw_field_1,
                 unknown_tagged_fields,
             })
         }
@@ -687,7 +722,7 @@ pub mod describe_client_quotas_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             if Self::is_flexible(version) {
                 encoder.write_compact_string(&self.key)?;
             } else {
@@ -699,7 +734,7 @@ pub mod describe_client_quotas_response {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -708,12 +743,12 @@ pub mod describe_client_quotas_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             ValueData::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| ValueData::encode_validated(self, encoder, version),
@@ -724,7 +759,7 @@ pub mod describe_client_quotas_response {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -743,20 +778,20 @@ pub mod describe_client_quotas_response {
         /// The error code, or `0` if the quota description succeeded.
         pub error_code: i16,
         /// The error message, or `null` if the quota description succeeded.
-        pub error_message: Option<StrBytes>,
+        pub error_message: ::core::option::Option<StrBytes>,
         /// A result entry.
-        pub entries: Option<Vec<EntryData>>,
+        pub entries: ::core::option::Option<::std::vec::Vec<EntryData>>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
     }
 
-    impl Default for DescribeClientQuotasResponse {
+    impl ::core::default::Default for DescribeClientQuotasResponse {
         fn default() -> Self {
             Self {
                 throttle_time_ms: 0,
                 error_code: 0,
-                error_message: Some(StrBytes::default()),
-                entries: Some(Vec::new()),
+                error_message: ::core::option::Option::Some(StrBytes::default()),
+                entries: ::core::option::Option::Some(::std::vec::Vec::new()),
                 unknown_tagged_fields: TaggedFields::default(),
             }
         }
@@ -765,7 +800,8 @@ pub mod describe_client_quotas_response {
     impl KafkaMessage for DescribeClientQuotasResponse {
         const NAME: &'static str = "DescribeClientQuotasResponse";
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 1);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(1, 1));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(1, 1));
     }
 
     impl KafkaResponse for DescribeClientQuotasResponse {
@@ -773,37 +809,43 @@ pub mod describe_client_quotas_response {
     }
 
     impl DescribeClientQuotasResponse {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             crate::message::ensure_encode_version::<Self>(version)?;
 
-            if let Some(values) = &self.entries {
+            if let ::core::option::Option::Some(values) = &self.entries {
                 for value in values {
                     value.validate_for_version(version)?;
                 }
             }
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: Self::NAME,
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for DescribeClientQuotasResponse {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             crate::message::ensure_decode_version::<Self>(version)?;
 
-            let throttle_time_ms = decoder.read_i32()?;
-            let error_code = decoder.read_i16()?;
-            let error_message = if Self::is_flexible(version) {
+            let __kw_field_0 = decoder.read_i32()?;
+            let __kw_field_1 = decoder.read_i16()?;
+            let __kw_field_2 = if Self::is_flexible(version) {
                 decoder.read_compact_nullable_string()?
             } else {
                 decoder.read_nullable_string()?
             };
-            let entries = {
+            let __kw_field_3 = {
                 let length = if Self::is_flexible(version) {
                     decoder.read_compact_nullable_array_len()?
                 } else {
@@ -821,11 +863,11 @@ pub mod describe_client_quotas_response {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                throttle_time_ms,
-                error_code,
-                error_message,
-                entries,
+            ::core::result::Result::Ok(Self {
+                throttle_time_ms: __kw_field_0,
+                error_code: __kw_field_1,
+                error_message: __kw_field_2,
+                entries: __kw_field_3,
                 unknown_tagged_fields,
             })
         }
@@ -836,7 +878,7 @@ pub mod describe_client_quotas_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_i32(self.throttle_time_ms)?;
             encoder.write_i16(self.error_code)?;
             if Self::is_flexible(version) {
@@ -845,11 +887,14 @@ pub mod describe_client_quotas_response {
                 encoder.write_nullable_string(self.error_message.as_ref())?;
             }
             if Self::is_flexible(version) {
-                encoder.write_compact_nullable_array_len(self.entries.as_ref().map(Vec::len))?;
+                encoder.write_compact_nullable_array_len(
+                    self.entries.as_ref().map(::std::vec::Vec::len),
+                )?;
             } else {
-                encoder.write_nullable_array_len(self.entries.as_ref().map(Vec::len))?;
+                encoder
+                    .write_nullable_array_len(self.entries.as_ref().map(::std::vec::Vec::len))?;
             }
-            if let Some(values) = &self.entries {
+            if let ::core::option::Option::Some(values) = &self.entries {
                 for value in values {
                     value.encode_validated(encoder, version)?;
                 }
@@ -859,7 +904,7 @@ pub mod describe_client_quotas_response {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -868,12 +913,12 @@ pub mod describe_client_quotas_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             DescribeClientQuotasResponse::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| DescribeClientQuotasResponse::encode_validated(self, encoder, version),
@@ -884,7 +929,7 @@ pub mod describe_client_quotas_response {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -908,7 +953,7 @@ pub const DESCRIBE_CLIENT_QUOTAS_REQUEST_DESCRIPTOR: MessageDescriptor = Message
     "DescribeClientQuotasRequest",
     MessageDirection::Request,
     VersionRange::new(0, 1),
-    Some(VersionRange::new(1, 1)),
+    ::core::option::Option::Some(VersionRange::new(1, 1)),
 );
 
 /// Static metadata for [`DescribeClientQuotasResponse`].
@@ -917,7 +962,7 @@ pub const DESCRIBE_CLIENT_QUOTAS_RESPONSE_DESCRIPTOR: MessageDescriptor = Messag
     "DescribeClientQuotasResponse",
     MessageDirection::Response,
     VersionRange::new(0, 1),
-    Some(VersionRange::new(1, 1)),
+    ::core::option::Option::Some(VersionRange::new(1, 1)),
 );
 
 /// Static pair metadata for the `DescribeClientQuotas` API.
@@ -926,6 +971,6 @@ pub const DESCRIBE_CLIENT_QUOTAS_API_DESCRIPTOR: ApiDescriptor = ApiDescriptor::
     &DESCRIBE_CLIENT_QUOTAS_REQUEST_DESCRIPTOR,
     &DESCRIBE_CLIENT_QUOTAS_RESPONSE_DESCRIPTOR,
     VersionRange::new(0, 1),
-    Some(VersionRange::new(1, 1)),
+    ::core::option::Option::Some(VersionRange::new(1, 1)),
     false,
 );

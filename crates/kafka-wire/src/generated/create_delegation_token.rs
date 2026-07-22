@@ -20,7 +20,7 @@ pub mod create_delegation_token_request {
 
     /// `CreatableRenewers` as declared by the `CreateDelegationToken` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct CreatableRenewers {
         /// The type of the Kafka principal.
         pub principal_type: StrBytes,
@@ -32,7 +32,8 @@ pub mod create_delegation_token_request {
 
     impl CreatableRenewers {
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(1, 3);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(2, 3));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(2, 3));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
@@ -40,9 +41,12 @@ pub mod create_delegation_token_request {
     }
 
     impl CreatableRenewers {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(EncodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(EncodeError::UnsupportedVersion {
                     message: "CreatableRenewers",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
@@ -50,32 +54,35 @@ pub mod create_delegation_token_request {
             }
 
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: "CreatableRenewers",
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for CreatableRenewers {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(DecodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(DecodeError::UnsupportedVersion {
                     message: "CreatableRenewers",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
                 });
             }
 
-            let principal_type = if Self::is_flexible(version) {
+            let __kw_field_0 = if Self::is_flexible(version) {
                 decoder.read_compact_string()?
             } else {
                 decoder.read_string()?
             };
-            let principal_name = if Self::is_flexible(version) {
+            let __kw_field_1 = if Self::is_flexible(version) {
                 decoder.read_compact_string()?
             } else {
                 decoder.read_string()?
@@ -86,9 +93,9 @@ pub mod create_delegation_token_request {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                principal_type,
-                principal_name,
+            ::core::result::Result::Ok(Self {
+                principal_type: __kw_field_0,
+                principal_name: __kw_field_1,
                 unknown_tagged_fields,
             })
         }
@@ -99,7 +106,7 @@ pub mod create_delegation_token_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             if Self::is_flexible(version) {
                 encoder.write_compact_string(&self.principal_type)?;
             } else {
@@ -115,7 +122,7 @@ pub mod create_delegation_token_request {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -124,12 +131,12 @@ pub mod create_delegation_token_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             CreatableRenewers::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| CreatableRenewers::encode_validated(self, encoder, version),
@@ -140,7 +147,7 @@ pub mod create_delegation_token_request {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -155,23 +162,23 @@ pub mod create_delegation_token_request {
     #[derive(Clone, Debug, Eq, PartialEq)]
     pub struct CreateDelegationTokenRequest {
         /// The principal type of the owner of the token. If it's null it defaults to the token request principal.
-        pub owner_principal_type: Option<StrBytes>,
+        pub owner_principal_type: ::core::option::Option<StrBytes>,
         /// The principal name of the owner of the token. If it's null it defaults to the token request principal.
-        pub owner_principal_name: Option<StrBytes>,
+        pub owner_principal_name: ::core::option::Option<StrBytes>,
         /// A list of those who are allowed to renew this token before it expires.
-        pub renewers: Vec<CreatableRenewers>,
+        pub renewers: ::std::vec::Vec<CreatableRenewers>,
         /// The maximum lifetime of the token in milliseconds, or -1 to use the server side default.
         pub max_lifetime_ms: i64,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
     }
 
-    impl Default for CreateDelegationTokenRequest {
+    impl ::core::default::Default for CreateDelegationTokenRequest {
         fn default() -> Self {
             Self {
-                owner_principal_type: Some(StrBytes::default()),
-                owner_principal_name: Some(StrBytes::default()),
-                renewers: Vec::new(),
+                owner_principal_type: ::core::option::Option::Some(StrBytes::default()),
+                owner_principal_name: ::core::option::Option::Some(StrBytes::default()),
+                renewers: ::std::vec::Vec::new(),
                 max_lifetime_ms: 0,
                 unknown_tagged_fields: TaggedFields::default(),
             }
@@ -181,7 +188,8 @@ pub mod create_delegation_token_request {
     impl KafkaMessage for CreateDelegationTokenRequest {
         const NAME: &'static str = "CreateDelegationTokenRequest";
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(1, 3);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(2, 3));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(2, 3));
     }
 
     impl KafkaRequest for CreateDelegationTokenRequest {
@@ -195,18 +203,25 @@ pub mod create_delegation_token_request {
     }
 
     impl CreateDelegationTokenRequest {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             crate::message::ensure_encode_version::<Self>(version)?;
 
-            if version.value() < 3 && self.owner_principal_type != Some(StrBytes::default()) {
-                return Err(EncodeError::FieldNotRepresentable {
+            if version.value() < 3
+                && self.owner_principal_type != ::core::option::Option::Some(StrBytes::default())
+            {
+                return ::core::result::Result::Err(EncodeError::FieldNotRepresentable {
                     message: Self::NAME,
                     field: "OwnerPrincipalType",
                     version,
                 });
             }
-            if version.value() < 3 && self.owner_principal_name != Some(StrBytes::default()) {
-                return Err(EncodeError::FieldNotRepresentable {
+            if version.value() < 3
+                && self.owner_principal_name != ::core::option::Option::Some(StrBytes::default())
+            {
+                return ::core::result::Result::Err(EncodeError::FieldNotRepresentable {
                     message: Self::NAME,
                     field: "OwnerPrincipalName",
                     version,
@@ -216,31 +231,34 @@ pub mod create_delegation_token_request {
                 value.validate_for_version(version)?;
             }
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: Self::NAME,
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for CreateDelegationTokenRequest {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             crate::message::ensure_decode_version::<Self>(version)?;
 
-            let owner_principal_type = if version.value() >= 3 {
+            let __kw_field_0 = if version.value() >= 3 {
                 decoder.read_compact_nullable_string()?
             } else {
-                Some(StrBytes::default())
+                ::core::option::Option::Some(StrBytes::default())
             };
-            let owner_principal_name = if version.value() >= 3 {
+            let __kw_field_1 = if version.value() >= 3 {
                 decoder.read_compact_nullable_string()?
             } else {
-                Some(StrBytes::default())
+                ::core::option::Option::Some(StrBytes::default())
             };
-            let renewers = {
+            let __kw_field_2 = {
                 let length = if Self::is_flexible(version) {
                     decoder.read_compact_array_len()?
                 } else {
@@ -250,18 +268,18 @@ pub mod create_delegation_token_request {
                     CreatableRenewers::decode(decoder, version)
                 })?
             };
-            let max_lifetime_ms = decoder.read_i64()?;
+            let __kw_field_3 = decoder.read_i64()?;
             let unknown_tagged_fields = if Self::is_flexible(version) {
                 decoder.read_tagged_fields()?
             } else {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                owner_principal_type,
-                owner_principal_name,
-                renewers,
-                max_lifetime_ms,
+            ::core::result::Result::Ok(Self {
+                owner_principal_type: __kw_field_0,
+                owner_principal_name: __kw_field_1,
+                renewers: __kw_field_2,
+                max_lifetime_ms: __kw_field_3,
                 unknown_tagged_fields,
             })
         }
@@ -272,7 +290,7 @@ pub mod create_delegation_token_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             if version.value() >= 3 {
                 encoder.write_compact_nullable_string(self.owner_principal_type.as_ref())?;
             }
@@ -293,7 +311,7 @@ pub mod create_delegation_token_request {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -302,12 +320,12 @@ pub mod create_delegation_token_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             CreateDelegationTokenRequest::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| CreateDelegationTokenRequest::encode_validated(self, encoder, version),
@@ -318,7 +336,7 @@ pub mod create_delegation_token_request {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -344,7 +362,7 @@ pub mod create_delegation_token_response {
 
     /// Response body for the `CreateDelegationToken` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct CreateDelegationTokenResponse {
         /// The top-level error, or zero if there was no error.
         pub error_code: i16,
@@ -375,7 +393,8 @@ pub mod create_delegation_token_response {
     impl KafkaMessage for CreateDelegationTokenResponse {
         const NAME: &'static str = "CreateDelegationTokenResponse";
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(1, 3);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(2, 3));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(2, 3));
     }
 
     impl KafkaResponse for CreateDelegationTokenResponse {
@@ -383,91 +402,97 @@ pub mod create_delegation_token_response {
     }
 
     impl CreateDelegationTokenResponse {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             crate::message::ensure_encode_version::<Self>(version)?;
 
             if version.value() < 3 && !self.token_requester_principal_type.is_empty() {
-                return Err(EncodeError::FieldNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::FieldNotRepresentable {
                     message: Self::NAME,
                     field: "TokenRequesterPrincipalType",
                     version,
                 });
             }
             if version.value() < 3 && !self.token_requester_principal_name.is_empty() {
-                return Err(EncodeError::FieldNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::FieldNotRepresentable {
                     message: Self::NAME,
                     field: "TokenRequesterPrincipalName",
                     version,
                 });
             }
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: Self::NAME,
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for CreateDelegationTokenResponse {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             crate::message::ensure_decode_version::<Self>(version)?;
 
-            let error_code = decoder.read_i16()?;
-            let principal_type = if Self::is_flexible(version) {
+            let __kw_field_0 = decoder.read_i16()?;
+            let __kw_field_1 = if Self::is_flexible(version) {
                 decoder.read_compact_string()?
             } else {
                 decoder.read_string()?
             };
-            let principal_name = if Self::is_flexible(version) {
+            let __kw_field_2 = if Self::is_flexible(version) {
                 decoder.read_compact_string()?
             } else {
                 decoder.read_string()?
             };
-            let token_requester_principal_type = if version.value() >= 3 {
+            let __kw_field_3 = if version.value() >= 3 {
                 decoder.read_compact_string()?
             } else {
                 StrBytes::default()
             };
-            let token_requester_principal_name = if version.value() >= 3 {
+            let __kw_field_4 = if version.value() >= 3 {
                 decoder.read_compact_string()?
             } else {
                 StrBytes::default()
             };
-            let issue_timestamp_ms = decoder.read_i64()?;
-            let expiry_timestamp_ms = decoder.read_i64()?;
-            let max_timestamp_ms = decoder.read_i64()?;
-            let token_id = if Self::is_flexible(version) {
+            let __kw_field_5 = decoder.read_i64()?;
+            let __kw_field_6 = decoder.read_i64()?;
+            let __kw_field_7 = decoder.read_i64()?;
+            let __kw_field_8 = if Self::is_flexible(version) {
                 decoder.read_compact_string()?
             } else {
                 decoder.read_string()?
             };
-            let hmac = if Self::is_flexible(version) {
+            let __kw_field_9 = if Self::is_flexible(version) {
                 decoder.read_compact_bytes()?
             } else {
                 decoder.read_bytes()?
             };
-            let throttle_time_ms = decoder.read_i32()?;
+            let __kw_field_10 = decoder.read_i32()?;
             let unknown_tagged_fields = if Self::is_flexible(version) {
                 decoder.read_tagged_fields()?
             } else {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                error_code,
-                principal_type,
-                principal_name,
-                token_requester_principal_type,
-                token_requester_principal_name,
-                issue_timestamp_ms,
-                expiry_timestamp_ms,
-                max_timestamp_ms,
-                token_id,
-                hmac,
-                throttle_time_ms,
+            ::core::result::Result::Ok(Self {
+                error_code: __kw_field_0,
+                principal_type: __kw_field_1,
+                principal_name: __kw_field_2,
+                token_requester_principal_type: __kw_field_3,
+                token_requester_principal_name: __kw_field_4,
+                issue_timestamp_ms: __kw_field_5,
+                expiry_timestamp_ms: __kw_field_6,
+                max_timestamp_ms: __kw_field_7,
+                token_id: __kw_field_8,
+                hmac: __kw_field_9,
+                throttle_time_ms: __kw_field_10,
                 unknown_tagged_fields,
             })
         }
@@ -478,7 +503,7 @@ pub mod create_delegation_token_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_i16(self.error_code)?;
             if Self::is_flexible(version) {
                 encoder.write_compact_string(&self.principal_type)?;
@@ -515,7 +540,7 @@ pub mod create_delegation_token_response {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -524,12 +549,12 @@ pub mod create_delegation_token_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             CreateDelegationTokenResponse::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| CreateDelegationTokenResponse::encode_validated(self, encoder, version),
@@ -540,7 +565,7 @@ pub mod create_delegation_token_response {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -564,7 +589,7 @@ pub const CREATE_DELEGATION_TOKEN_REQUEST_DESCRIPTOR: MessageDescriptor = Messag
     "CreateDelegationTokenRequest",
     MessageDirection::Request,
     VersionRange::new(1, 3),
-    Some(VersionRange::new(2, 3)),
+    ::core::option::Option::Some(VersionRange::new(2, 3)),
 );
 
 /// Static metadata for [`CreateDelegationTokenResponse`].
@@ -573,7 +598,7 @@ pub const CREATE_DELEGATION_TOKEN_RESPONSE_DESCRIPTOR: MessageDescriptor = Messa
     "CreateDelegationTokenResponse",
     MessageDirection::Response,
     VersionRange::new(1, 3),
-    Some(VersionRange::new(2, 3)),
+    ::core::option::Option::Some(VersionRange::new(2, 3)),
 );
 
 /// Static pair metadata for the `CreateDelegationToken` API.
@@ -582,6 +607,6 @@ pub const CREATE_DELEGATION_TOKEN_API_DESCRIPTOR: ApiDescriptor = ApiDescriptor:
     &CREATE_DELEGATION_TOKEN_REQUEST_DESCRIPTOR,
     &CREATE_DELEGATION_TOKEN_RESPONSE_DESCRIPTOR,
     VersionRange::new(1, 3),
-    Some(VersionRange::new(2, 3)),
+    ::core::option::Option::Some(VersionRange::new(2, 3)),
     false,
 );

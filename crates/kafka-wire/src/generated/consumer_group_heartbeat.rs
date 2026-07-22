@@ -20,19 +20,20 @@ pub mod consumer_group_heartbeat_request {
 
     /// `TopicPartitions` as declared by the `ConsumerGroupHeartbeat` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct TopicPartitions {
         /// The topic ID.
         pub topic_id: Uuid,
         /// The partitions.
-        pub partitions: Vec<i32>,
+        pub partitions: ::std::vec::Vec<i32>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
     }
 
     impl TopicPartitions {
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 1);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 1));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(0, 1));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
@@ -40,9 +41,12 @@ pub mod consumer_group_heartbeat_request {
     }
 
     impl TopicPartitions {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(EncodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(EncodeError::UnsupportedVersion {
                     message: "TopicPartitions",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
@@ -50,28 +54,31 @@ pub mod consumer_group_heartbeat_request {
             }
 
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: "TopicPartitions",
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for TopicPartitions {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(DecodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(DecodeError::UnsupportedVersion {
                     message: "TopicPartitions",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
                 });
             }
 
-            let topic_id = decoder.read_uuid()?;
-            let partitions = {
+            let __kw_field_0 = decoder.read_uuid()?;
+            let __kw_field_1 = {
                 let length = decoder.read_compact_array_len()?;
                 decoder.read_vec(length, Decoder::read_i32)?
             };
@@ -81,9 +88,9 @@ pub mod consumer_group_heartbeat_request {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                topic_id,
-                partitions,
+            ::core::result::Result::Ok(Self {
+                topic_id: __kw_field_0,
+                partitions: __kw_field_1,
                 unknown_tagged_fields,
             })
         }
@@ -94,7 +101,7 @@ pub mod consumer_group_heartbeat_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_uuid(self.topic_id)?;
             encoder.write_compact_array_len(self.partitions.len())?;
             for value in &self.partitions {
@@ -105,7 +112,7 @@ pub mod consumer_group_heartbeat_request {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -114,12 +121,12 @@ pub mod consumer_group_heartbeat_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             TopicPartitions::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| TopicPartitions::encode_validated(self, encoder, version),
@@ -130,7 +137,7 @@ pub mod consumer_group_heartbeat_request {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -151,36 +158,36 @@ pub mod consumer_group_heartbeat_request {
         /// The current member epoch; 0 to join the group; -1 to leave the group; -2 to indicate that the static member will rejoin.
         pub member_epoch: i32,
         /// null if not provided or if it didn't change since the last heartbeat; the instance Id otherwise.
-        pub instance_id: Option<StrBytes>,
+        pub instance_id: ::core::option::Option<StrBytes>,
         /// null if not provided or if it didn't change since the last heartbeat; the rack ID of consumer otherwise.
-        pub rack_id: Option<StrBytes>,
+        pub rack_id: ::core::option::Option<StrBytes>,
         /// -1 if it didn't change since the last heartbeat; the maximum time in milliseconds that the coordinator will wait on the member to revoke its partitions otherwise.
         pub rebalance_timeout_ms: i32,
         /// null if it didn't change since the last heartbeat; the subscribed topic names otherwise.
-        pub subscribed_topic_names: Option<Vec<StrBytes>>,
+        pub subscribed_topic_names: ::core::option::Option<::std::vec::Vec<StrBytes>>,
         /// null if it didn't change since the last heartbeat; the subscribed topic regex otherwise.
-        pub subscribed_topic_regex: Option<StrBytes>,
+        pub subscribed_topic_regex: ::core::option::Option<StrBytes>,
         /// null if not used or if it didn't change since the last heartbeat; the server side assignor to use otherwise.
-        pub server_assignor: Option<StrBytes>,
+        pub server_assignor: ::core::option::Option<StrBytes>,
         /// null if it didn't change since the last heartbeat; the partitions owned by the member.
-        pub topic_partitions: Option<Vec<TopicPartitions>>,
+        pub topic_partitions: ::core::option::Option<::std::vec::Vec<TopicPartitions>>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
     }
 
-    impl Default for ConsumerGroupHeartbeatRequest {
+    impl ::core::default::Default for ConsumerGroupHeartbeatRequest {
         fn default() -> Self {
             Self {
                 group_id: StrBytes::default(),
                 member_id: StrBytes::default(),
                 member_epoch: 0,
-                instance_id: None,
-                rack_id: None,
+                instance_id: ::core::option::Option::None,
+                rack_id: ::core::option::Option::None,
                 rebalance_timeout_ms: -1,
-                subscribed_topic_names: None,
-                subscribed_topic_regex: None,
-                server_assignor: None,
-                topic_partitions: None,
+                subscribed_topic_names: ::core::option::Option::None,
+                subscribed_topic_regex: ::core::option::Option::None,
+                server_assignor: ::core::option::Option::None,
+                topic_partitions: ::core::option::Option::None,
                 unknown_tagged_fields: TaggedFields::default(),
             }
         }
@@ -189,7 +196,8 @@ pub mod consumer_group_heartbeat_request {
     impl KafkaMessage for ConsumerGroupHeartbeatRequest {
         const NAME: &'static str = "ConsumerGroupHeartbeatRequest";
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 1);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 1));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(0, 1));
     }
 
     impl KafkaRequest for ConsumerGroupHeartbeatRequest {
@@ -203,55 +211,61 @@ pub mod consumer_group_heartbeat_request {
     }
 
     impl ConsumerGroupHeartbeatRequest {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             crate::message::ensure_encode_version::<Self>(version)?;
 
             if version.value() < 1 && self.subscribed_topic_regex.is_some() {
-                return Err(EncodeError::FieldNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::FieldNotRepresentable {
                     message: Self::NAME,
                     field: "SubscribedTopicRegex",
                     version,
                 });
             }
-            if let Some(values) = &self.topic_partitions {
+            if let ::core::option::Option::Some(values) = &self.topic_partitions {
                 for value in values {
                     value.validate_for_version(version)?;
                 }
             }
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: Self::NAME,
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for ConsumerGroupHeartbeatRequest {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             crate::message::ensure_decode_version::<Self>(version)?;
 
-            let group_id = decoder.read_compact_string()?;
-            let member_id = decoder.read_compact_string()?;
-            let member_epoch = decoder.read_i32()?;
-            let instance_id = decoder.read_compact_nullable_string()?;
-            let rack_id = decoder.read_compact_nullable_string()?;
-            let rebalance_timeout_ms = decoder.read_i32()?;
-            let subscribed_topic_names = {
+            let __kw_field_0 = decoder.read_compact_string()?;
+            let __kw_field_1 = decoder.read_compact_string()?;
+            let __kw_field_2 = decoder.read_i32()?;
+            let __kw_field_3 = decoder.read_compact_nullable_string()?;
+            let __kw_field_4 = decoder.read_compact_nullable_string()?;
+            let __kw_field_5 = decoder.read_i32()?;
+            let __kw_field_6 = {
                 let length = decoder.read_compact_nullable_array_len()?;
                 length
                     .map(|length| decoder.read_vec(length, Decoder::read_compact_string))
                     .transpose()?
             };
-            let subscribed_topic_regex = if version.value() >= 1 {
+            let __kw_field_7 = if version.value() >= 1 {
                 decoder.read_compact_nullable_string()?
             } else {
-                None
+                ::core::option::Option::None
             };
-            let server_assignor = decoder.read_compact_nullable_string()?;
-            let topic_partitions = {
+            let __kw_field_8 = decoder.read_compact_nullable_string()?;
+            let __kw_field_9 = {
                 let length = decoder.read_compact_nullable_array_len()?;
                 length
                     .map(|length| {
@@ -266,17 +280,17 @@ pub mod consumer_group_heartbeat_request {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                group_id,
-                member_id,
-                member_epoch,
-                instance_id,
-                rack_id,
-                rebalance_timeout_ms,
-                subscribed_topic_names,
-                subscribed_topic_regex,
-                server_assignor,
-                topic_partitions,
+            ::core::result::Result::Ok(Self {
+                group_id: __kw_field_0,
+                member_id: __kw_field_1,
+                member_epoch: __kw_field_2,
+                instance_id: __kw_field_3,
+                rack_id: __kw_field_4,
+                rebalance_timeout_ms: __kw_field_5,
+                subscribed_topic_names: __kw_field_6,
+                subscribed_topic_regex: __kw_field_7,
+                server_assignor: __kw_field_8,
+                topic_partitions: __kw_field_9,
                 unknown_tagged_fields,
             })
         }
@@ -287,7 +301,7 @@ pub mod consumer_group_heartbeat_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_compact_string(&self.group_id)?;
             encoder.write_compact_string(&self.member_id)?;
             encoder.write_i32(self.member_epoch)?;
@@ -295,9 +309,11 @@ pub mod consumer_group_heartbeat_request {
             encoder.write_compact_nullable_string(self.rack_id.as_ref())?;
             encoder.write_i32(self.rebalance_timeout_ms)?;
             encoder.write_compact_nullable_array_len(
-                self.subscribed_topic_names.as_ref().map(Vec::len),
+                self.subscribed_topic_names
+                    .as_ref()
+                    .map(::std::vec::Vec::len),
             )?;
-            if let Some(values) = &self.subscribed_topic_names {
+            if let ::core::option::Option::Some(values) = &self.subscribed_topic_names {
                 for value in values {
                     encoder.write_compact_string(value)?;
                 }
@@ -306,9 +322,10 @@ pub mod consumer_group_heartbeat_request {
                 encoder.write_compact_nullable_string(self.subscribed_topic_regex.as_ref())?;
             }
             encoder.write_compact_nullable_string(self.server_assignor.as_ref())?;
-            encoder
-                .write_compact_nullable_array_len(self.topic_partitions.as_ref().map(Vec::len))?;
-            if let Some(values) = &self.topic_partitions {
+            encoder.write_compact_nullable_array_len(
+                self.topic_partitions.as_ref().map(::std::vec::Vec::len),
+            )?;
+            if let ::core::option::Option::Some(values) = &self.topic_partitions {
                 for value in values {
                     value.encode_validated(encoder, version)?;
                 }
@@ -318,7 +335,7 @@ pub mod consumer_group_heartbeat_request {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -327,12 +344,12 @@ pub mod consumer_group_heartbeat_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             ConsumerGroupHeartbeatRequest::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| ConsumerGroupHeartbeatRequest::encode_validated(self, encoder, version),
@@ -343,7 +360,7 @@ pub mod consumer_group_heartbeat_request {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -369,19 +386,20 @@ pub mod consumer_group_heartbeat_response {
 
     /// `TopicPartitions` as declared by the `ConsumerGroupHeartbeat` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct TopicPartitions {
         /// The topic ID.
         pub topic_id: Uuid,
         /// The partitions.
-        pub partitions: Vec<i32>,
+        pub partitions: ::std::vec::Vec<i32>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
     }
 
     impl TopicPartitions {
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 1);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 1));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(0, 1));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
@@ -389,9 +407,12 @@ pub mod consumer_group_heartbeat_response {
     }
 
     impl TopicPartitions {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(EncodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(EncodeError::UnsupportedVersion {
                     message: "TopicPartitions",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
@@ -399,28 +420,31 @@ pub mod consumer_group_heartbeat_response {
             }
 
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: "TopicPartitions",
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for TopicPartitions {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(DecodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(DecodeError::UnsupportedVersion {
                     message: "TopicPartitions",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
                 });
             }
 
-            let topic_id = decoder.read_uuid()?;
-            let partitions = {
+            let __kw_field_0 = decoder.read_uuid()?;
+            let __kw_field_1 = {
                 let length = decoder.read_compact_array_len()?;
                 decoder.read_vec(length, Decoder::read_i32)?
             };
@@ -430,9 +454,9 @@ pub mod consumer_group_heartbeat_response {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                topic_id,
-                partitions,
+            ::core::result::Result::Ok(Self {
+                topic_id: __kw_field_0,
+                partitions: __kw_field_1,
                 unknown_tagged_fields,
             })
         }
@@ -443,7 +467,7 @@ pub mod consumer_group_heartbeat_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_uuid(self.topic_id)?;
             encoder.write_compact_array_len(self.partitions.len())?;
             for value in &self.partitions {
@@ -454,7 +478,7 @@ pub mod consumer_group_heartbeat_response {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -463,12 +487,12 @@ pub mod consumer_group_heartbeat_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             TopicPartitions::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| TopicPartitions::encode_validated(self, encoder, version),
@@ -479,7 +503,7 @@ pub mod consumer_group_heartbeat_response {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -491,17 +515,18 @@ pub mod consumer_group_heartbeat_response {
 
     /// `Assignment` as declared by the `ConsumerGroupHeartbeat` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct Assignment {
         /// The partitions assigned to the member that can be used immediately.
-        pub topic_partitions: Vec<TopicPartitions>,
+        pub topic_partitions: ::std::vec::Vec<TopicPartitions>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
     }
 
     impl Assignment {
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 1);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 1));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(0, 1));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
@@ -509,9 +534,12 @@ pub mod consumer_group_heartbeat_response {
     }
 
     impl Assignment {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(EncodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(EncodeError::UnsupportedVersion {
                     message: "Assignment",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
@@ -522,27 +550,30 @@ pub mod consumer_group_heartbeat_response {
                 value.validate_for_version(version)?;
             }
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: "Assignment",
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for Assignment {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(DecodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(DecodeError::UnsupportedVersion {
                     message: "Assignment",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
                 });
             }
 
-            let topic_partitions = {
+            let __kw_field_0 = {
                 let length = decoder.read_compact_array_len()?;
                 decoder.read_vec(length, |decoder| TopicPartitions::decode(decoder, version))?
             };
@@ -552,8 +583,8 @@ pub mod consumer_group_heartbeat_response {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                topic_partitions,
+            ::core::result::Result::Ok(Self {
+                topic_partitions: __kw_field_0,
                 unknown_tagged_fields,
             })
         }
@@ -564,7 +595,7 @@ pub mod consumer_group_heartbeat_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_compact_array_len(self.topic_partitions.len())?;
             for value in &self.topic_partitions {
                 value.encode_validated(encoder, version)?;
@@ -574,7 +605,7 @@ pub mod consumer_group_heartbeat_response {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -583,12 +614,12 @@ pub mod consumer_group_heartbeat_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             Assignment::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| Assignment::encode_validated(self, encoder, version),
@@ -599,7 +630,7 @@ pub mod consumer_group_heartbeat_response {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -611,22 +642,22 @@ pub mod consumer_group_heartbeat_response {
 
     /// Response body for the `ConsumerGroupHeartbeat` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct ConsumerGroupHeartbeatResponse {
         /// The duration in milliseconds for which the request was throttled due to a quota violation, or zero if the request did not violate any quota.
         pub throttle_time_ms: i32,
         /// The top-level error code, or 0 if there was no error.
         pub error_code: i16,
         /// The top-level error message, or null if there was no error.
-        pub error_message: Option<StrBytes>,
+        pub error_message: ::core::option::Option<StrBytes>,
         /// The member id is generated by the consumer starting from version 1, while in version 0, it can be provided by users or generated by the group coordinator.
-        pub member_id: Option<StrBytes>,
+        pub member_id: ::core::option::Option<StrBytes>,
         /// The member epoch.
         pub member_epoch: i32,
         /// The heartbeat interval in milliseconds.
         pub heartbeat_interval_ms: i32,
         /// null if not provided; the assignment otherwise.
-        pub assignment: Option<Assignment>,
+        pub assignment: ::core::option::Option<Assignment>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
     }
@@ -634,7 +665,8 @@ pub mod consumer_group_heartbeat_response {
     impl KafkaMessage for ConsumerGroupHeartbeatResponse {
         const NAME: &'static str = "ConsumerGroupHeartbeatResponse";
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 1);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 1));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(0, 1));
     }
 
     impl KafkaResponse for ConsumerGroupHeartbeatResponse {
@@ -642,37 +674,43 @@ pub mod consumer_group_heartbeat_response {
     }
 
     impl ConsumerGroupHeartbeatResponse {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             crate::message::ensure_encode_version::<Self>(version)?;
 
-            if let Some(value) = &self.assignment {
+            if let ::core::option::Option::Some(value) = &self.assignment {
                 value.validate_for_version(version)?;
             }
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: Self::NAME,
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for ConsumerGroupHeartbeatResponse {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             crate::message::ensure_decode_version::<Self>(version)?;
 
-            let throttle_time_ms = decoder.read_i32()?;
-            let error_code = decoder.read_i16()?;
-            let error_message = decoder.read_compact_nullable_string()?;
-            let member_id = decoder.read_compact_nullable_string()?;
-            let member_epoch = decoder.read_i32()?;
-            let heartbeat_interval_ms = decoder.read_i32()?;
-            let assignment = if decoder.read_struct_presence()? {
-                Some(Assignment::decode(decoder, version)?)
+            let __kw_field_0 = decoder.read_i32()?;
+            let __kw_field_1 = decoder.read_i16()?;
+            let __kw_field_2 = decoder.read_compact_nullable_string()?;
+            let __kw_field_3 = decoder.read_compact_nullable_string()?;
+            let __kw_field_4 = decoder.read_i32()?;
+            let __kw_field_5 = decoder.read_i32()?;
+            let __kw_field_6 = if decoder.read_struct_presence()? {
+                ::core::option::Option::Some(Assignment::decode(decoder, version)?)
             } else {
-                None
+                ::core::option::Option::None
             };
             let unknown_tagged_fields = if Self::is_flexible(version) {
                 decoder.read_tagged_fields()?
@@ -680,14 +718,14 @@ pub mod consumer_group_heartbeat_response {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                throttle_time_ms,
-                error_code,
-                error_message,
-                member_id,
-                member_epoch,
-                heartbeat_interval_ms,
-                assignment,
+            ::core::result::Result::Ok(Self {
+                throttle_time_ms: __kw_field_0,
+                error_code: __kw_field_1,
+                error_message: __kw_field_2,
+                member_id: __kw_field_3,
+                member_epoch: __kw_field_4,
+                heartbeat_interval_ms: __kw_field_5,
+                assignment: __kw_field_6,
                 unknown_tagged_fields,
             })
         }
@@ -698,14 +736,14 @@ pub mod consumer_group_heartbeat_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_i32(self.throttle_time_ms)?;
             encoder.write_i16(self.error_code)?;
             encoder.write_compact_nullable_string(self.error_message.as_ref())?;
             encoder.write_compact_nullable_string(self.member_id.as_ref())?;
             encoder.write_i32(self.member_epoch)?;
             encoder.write_i32(self.heartbeat_interval_ms)?;
-            if let Some(value) = &self.assignment {
+            if let ::core::option::Option::Some(value) = &self.assignment {
                 encoder.write_struct_presence(true)?;
                 value.encode_validated(encoder, version)?;
             } else {
@@ -716,7 +754,7 @@ pub mod consumer_group_heartbeat_response {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -725,12 +763,12 @@ pub mod consumer_group_heartbeat_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             ConsumerGroupHeartbeatResponse::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| ConsumerGroupHeartbeatResponse::encode_validated(self, encoder, version),
@@ -741,7 +779,7 @@ pub mod consumer_group_heartbeat_response {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -765,7 +803,7 @@ pub const CONSUMER_GROUP_HEARTBEAT_REQUEST_DESCRIPTOR: MessageDescriptor = Messa
     "ConsumerGroupHeartbeatRequest",
     MessageDirection::Request,
     VersionRange::new(0, 1),
-    Some(VersionRange::new(0, 1)),
+    ::core::option::Option::Some(VersionRange::new(0, 1)),
 );
 
 /// Static metadata for [`ConsumerGroupHeartbeatResponse`].
@@ -774,7 +812,7 @@ pub const CONSUMER_GROUP_HEARTBEAT_RESPONSE_DESCRIPTOR: MessageDescriptor = Mess
     "ConsumerGroupHeartbeatResponse",
     MessageDirection::Response,
     VersionRange::new(0, 1),
-    Some(VersionRange::new(0, 1)),
+    ::core::option::Option::Some(VersionRange::new(0, 1)),
 );
 
 /// Static pair metadata for the `ConsumerGroupHeartbeat` API.
@@ -783,6 +821,6 @@ pub const CONSUMER_GROUP_HEARTBEAT_API_DESCRIPTOR: ApiDescriptor = ApiDescriptor
     &CONSUMER_GROUP_HEARTBEAT_REQUEST_DESCRIPTOR,
     &CONSUMER_GROUP_HEARTBEAT_RESPONSE_DESCRIPTOR,
     VersionRange::new(0, 1),
-    Some(VersionRange::new(0, 1)),
+    ::core::option::Option::Some(VersionRange::new(0, 1)),
     false,
 );

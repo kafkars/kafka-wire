@@ -20,7 +20,7 @@ pub mod end_txn_request {
 
     /// Request body for the `EndTxn` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct EndTxnRequest {
         /// The ID of the transaction to end.
         pub transactional_id: StrBytes,
@@ -37,7 +37,8 @@ pub mod end_txn_request {
     impl KafkaMessage for EndTxnRequest {
         const NAME: &'static str = "EndTxnRequest";
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 5);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(3, 5));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(3, 5));
     }
 
     impl KafkaRequest for EndTxnRequest {
@@ -50,43 +51,49 @@ pub mod end_txn_request {
     }
 
     impl EndTxnRequest {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             crate::message::ensure_encode_version::<Self>(version)?;
 
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: Self::NAME,
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for EndTxnRequest {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             crate::message::ensure_decode_version::<Self>(version)?;
 
-            let transactional_id = if Self::is_flexible(version) {
+            let __kw_field_0 = if Self::is_flexible(version) {
                 decoder.read_compact_string()?
             } else {
                 decoder.read_string()?
             };
-            let producer_id = decoder.read_i64()?;
-            let producer_epoch = decoder.read_i16()?;
-            let committed = decoder.read_bool()?;
+            let __kw_field_1 = decoder.read_i64()?;
+            let __kw_field_2 = decoder.read_i16()?;
+            let __kw_field_3 = decoder.read_bool()?;
             let unknown_tagged_fields = if Self::is_flexible(version) {
                 decoder.read_tagged_fields()?
             } else {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                transactional_id,
-                producer_id,
-                producer_epoch,
-                committed,
+            ::core::result::Result::Ok(Self {
+                transactional_id: __kw_field_0,
+                producer_id: __kw_field_1,
+                producer_epoch: __kw_field_2,
+                committed: __kw_field_3,
                 unknown_tagged_fields,
             })
         }
@@ -97,7 +104,7 @@ pub mod end_txn_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             if Self::is_flexible(version) {
                 encoder.write_compact_string(&self.transactional_id)?;
             } else {
@@ -111,7 +118,7 @@ pub mod end_txn_request {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -120,12 +127,12 @@ pub mod end_txn_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             EndTxnRequest::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| EndTxnRequest::encode_validated(self, encoder, version),
@@ -136,7 +143,7 @@ pub mod end_txn_request {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -175,7 +182,7 @@ pub mod end_txn_response {
         pub unknown_tagged_fields: TaggedFields,
     }
 
-    impl Default for EndTxnResponse {
+    impl ::core::default::Default for EndTxnResponse {
         fn default() -> Self {
             Self {
                 throttle_time_ms: 0,
@@ -190,7 +197,8 @@ pub mod end_txn_response {
     impl KafkaMessage for EndTxnResponse {
         const NAME: &'static str = "EndTxnResponse";
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 5);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(3, 5));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(3, 5));
     }
 
     impl KafkaResponse for EndTxnResponse {
@@ -198,32 +206,38 @@ pub mod end_txn_response {
     }
 
     impl EndTxnResponse {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             crate::message::ensure_encode_version::<Self>(version)?;
 
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: Self::NAME,
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for EndTxnResponse {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             crate::message::ensure_decode_version::<Self>(version)?;
 
-            let throttle_time_ms = decoder.read_i32()?;
-            let error_code = decoder.read_i16()?;
-            let producer_id = if version.value() >= 5 {
+            let __kw_field_0 = decoder.read_i32()?;
+            let __kw_field_1 = decoder.read_i16()?;
+            let __kw_field_2 = if version.value() >= 5 {
                 decoder.read_i64()?
             } else {
                 -1
             };
-            let producer_epoch = if version.value() >= 5 {
+            let __kw_field_3 = if version.value() >= 5 {
                 decoder.read_i16()?
             } else {
                 -1
@@ -234,11 +248,11 @@ pub mod end_txn_response {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                throttle_time_ms,
-                error_code,
-                producer_id,
-                producer_epoch,
+            ::core::result::Result::Ok(Self {
+                throttle_time_ms: __kw_field_0,
+                error_code: __kw_field_1,
+                producer_id: __kw_field_2,
+                producer_epoch: __kw_field_3,
                 unknown_tagged_fields,
             })
         }
@@ -249,7 +263,7 @@ pub mod end_txn_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_i32(self.throttle_time_ms)?;
             encoder.write_i16(self.error_code)?;
             if version.value() >= 5 {
@@ -263,7 +277,7 @@ pub mod end_txn_response {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -272,12 +286,12 @@ pub mod end_txn_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             EndTxnResponse::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| EndTxnResponse::encode_validated(self, encoder, version),
@@ -288,7 +302,7 @@ pub mod end_txn_response {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -312,7 +326,7 @@ pub const END_TXN_REQUEST_DESCRIPTOR: MessageDescriptor = MessageDescriptor::new
     "EndTxnRequest",
     MessageDirection::Request,
     VersionRange::new(0, 5),
-    Some(VersionRange::new(3, 5)),
+    ::core::option::Option::Some(VersionRange::new(3, 5)),
 );
 
 /// Static metadata for [`EndTxnResponse`].
@@ -321,7 +335,7 @@ pub const END_TXN_RESPONSE_DESCRIPTOR: MessageDescriptor = MessageDescriptor::ne
     "EndTxnResponse",
     MessageDirection::Response,
     VersionRange::new(0, 5),
-    Some(VersionRange::new(3, 5)),
+    ::core::option::Option::Some(VersionRange::new(3, 5)),
 );
 
 /// Static pair metadata for the `EndTxn` API.
@@ -330,6 +344,6 @@ pub const END_TXN_API_DESCRIPTOR: ApiDescriptor = ApiDescriptor::new(
     &END_TXN_REQUEST_DESCRIPTOR,
     &END_TXN_RESPONSE_DESCRIPTOR,
     VersionRange::new(0, 5),
-    Some(VersionRange::new(3, 5)),
+    ::core::option::Option::Some(VersionRange::new(3, 5)),
     false,
 );

@@ -23,24 +23,24 @@ pub mod list_transactions_request {
     #[derive(Clone, Debug, Eq, PartialEq)]
     pub struct ListTransactionsRequest {
         /// The transaction states to filter by: if empty, all transactions are returned; if non-empty, then only transactions matching one of the filtered states will be returned.
-        pub state_filters: Vec<StrBytes>,
+        pub state_filters: ::std::vec::Vec<StrBytes>,
         /// The `producerIds` to filter by: if empty, all transactions will be returned; if non-empty, only transactions which match one of the filtered `producerIds` will be returned.
-        pub producer_id_filters: Vec<i64>,
+        pub producer_id_filters: ::std::vec::Vec<i64>,
         /// Duration (in millis) to filter by: if < 0, all transactions will be returned; otherwise, only transactions running longer than this duration will be returned.
         pub duration_filter: i64,
         /// The transactional ID regular expression pattern to filter by: if it is empty or null, all transactions are returned; Otherwise then only the transactions matching the given regular expression will be returned.
-        pub transactional_id_pattern: Option<StrBytes>,
+        pub transactional_id_pattern: ::core::option::Option<StrBytes>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
     }
 
-    impl Default for ListTransactionsRequest {
+    impl ::core::default::Default for ListTransactionsRequest {
         fn default() -> Self {
             Self {
-                state_filters: Vec::new(),
-                producer_id_filters: Vec::new(),
+                state_filters: ::std::vec::Vec::new(),
+                producer_id_filters: ::std::vec::Vec::new(),
                 duration_filter: -1,
-                transactional_id_pattern: None,
+                transactional_id_pattern: ::core::option::Option::None,
                 unknown_tagged_fields: TaggedFields::default(),
             }
         }
@@ -49,7 +49,8 @@ pub mod list_transactions_request {
     impl KafkaMessage for ListTransactionsRequest {
         const NAME: &'static str = "ListTransactionsRequest";
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 2);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 2));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(0, 2));
     }
 
     impl KafkaRequest for ListTransactionsRequest {
@@ -62,55 +63,61 @@ pub mod list_transactions_request {
     }
 
     impl ListTransactionsRequest {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             crate::message::ensure_encode_version::<Self>(version)?;
 
             if version.value() < 1 && self.duration_filter != -1 {
-                return Err(EncodeError::FieldNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::FieldNotRepresentable {
                     message: Self::NAME,
                     field: "DurationFilter",
                     version,
                 });
             }
             if version.value() < 2 && self.transactional_id_pattern.is_some() {
-                return Err(EncodeError::FieldNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::FieldNotRepresentable {
                     message: Self::NAME,
                     field: "TransactionalIdPattern",
                     version,
                 });
             }
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: Self::NAME,
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for ListTransactionsRequest {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             crate::message::ensure_decode_version::<Self>(version)?;
 
-            let state_filters = {
+            let __kw_field_0 = {
                 let length = decoder.read_compact_array_len()?;
                 decoder.read_vec(length, Decoder::read_compact_string)?
             };
-            let producer_id_filters = {
+            let __kw_field_1 = {
                 let length = decoder.read_compact_array_len()?;
                 decoder.read_vec(length, Decoder::read_i64)?
             };
-            let duration_filter = if version.value() >= 1 {
+            let __kw_field_2 = if version.value() >= 1 {
                 decoder.read_i64()?
             } else {
                 -1
             };
-            let transactional_id_pattern = if version.value() >= 2 {
+            let __kw_field_3 = if version.value() >= 2 {
                 decoder.read_compact_nullable_string()?
             } else {
-                None
+                ::core::option::Option::None
             };
             let unknown_tagged_fields = if Self::is_flexible(version) {
                 decoder.read_tagged_fields()?
@@ -118,11 +125,11 @@ pub mod list_transactions_request {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                state_filters,
-                producer_id_filters,
-                duration_filter,
-                transactional_id_pattern,
+            ::core::result::Result::Ok(Self {
+                state_filters: __kw_field_0,
+                producer_id_filters: __kw_field_1,
+                duration_filter: __kw_field_2,
+                transactional_id_pattern: __kw_field_3,
                 unknown_tagged_fields,
             })
         }
@@ -133,7 +140,7 @@ pub mod list_transactions_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_compact_array_len(self.state_filters.len())?;
             for value in &self.state_filters {
                 encoder.write_compact_string(value)?;
@@ -153,7 +160,7 @@ pub mod list_transactions_request {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -162,12 +169,12 @@ pub mod list_transactions_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             ListTransactionsRequest::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| ListTransactionsRequest::encode_validated(self, encoder, version),
@@ -178,7 +185,7 @@ pub mod list_transactions_request {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -204,7 +211,7 @@ pub mod list_transactions_response {
 
     /// `TransactionState` as declared by the `ListTransactions` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct TransactionState {
         /// The transactional id.
         pub transactional_id: StrBytes,
@@ -218,7 +225,8 @@ pub mod list_transactions_response {
 
     impl TransactionState {
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 2);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 2));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(0, 2));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
@@ -226,9 +234,12 @@ pub mod list_transactions_response {
     }
 
     impl TransactionState {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(EncodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(EncodeError::UnsupportedVersion {
                     message: "TransactionState",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
@@ -236,39 +247,42 @@ pub mod list_transactions_response {
             }
 
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: "TransactionState",
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for TransactionState {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(DecodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(DecodeError::UnsupportedVersion {
                     message: "TransactionState",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
                 });
             }
 
-            let transactional_id = decoder.read_compact_string()?;
-            let producer_id = decoder.read_i64()?;
-            let transaction_state = decoder.read_compact_string()?;
+            let __kw_field_0 = decoder.read_compact_string()?;
+            let __kw_field_1 = decoder.read_i64()?;
+            let __kw_field_2 = decoder.read_compact_string()?;
             let unknown_tagged_fields = if Self::is_flexible(version) {
                 decoder.read_tagged_fields()?
             } else {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                transactional_id,
-                producer_id,
-                transaction_state,
+            ::core::result::Result::Ok(Self {
+                transactional_id: __kw_field_0,
+                producer_id: __kw_field_1,
+                transaction_state: __kw_field_2,
                 unknown_tagged_fields,
             })
         }
@@ -279,7 +293,7 @@ pub mod list_transactions_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_compact_string(&self.transactional_id)?;
             encoder.write_i64(self.producer_id)?;
             encoder.write_compact_string(&self.transaction_state)?;
@@ -288,7 +302,7 @@ pub mod list_transactions_response {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -297,12 +311,12 @@ pub mod list_transactions_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             TransactionState::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| TransactionState::encode_validated(self, encoder, version),
@@ -313,7 +327,7 @@ pub mod list_transactions_response {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -325,16 +339,16 @@ pub mod list_transactions_response {
 
     /// Response body for the `ListTransactions` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct ListTransactionsResponse {
         /// The duration in milliseconds for which the request was throttled due to a quota violation, or zero if the request did not violate any quota.
         pub throttle_time_ms: i32,
         /// The error code, or 0 if there was no error.
         pub error_code: i16,
         /// Set of state filters provided in the request which were unknown to the transaction coordinator.
-        pub unknown_state_filters: Vec<StrBytes>,
+        pub unknown_state_filters: ::std::vec::Vec<StrBytes>,
         /// The current state of the transaction for the transactional id.
-        pub transaction_states: Vec<TransactionState>,
+        pub transaction_states: ::std::vec::Vec<TransactionState>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
     }
@@ -342,7 +356,8 @@ pub mod list_transactions_response {
     impl KafkaMessage for ListTransactionsResponse {
         const NAME: &'static str = "ListTransactionsResponse";
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 2);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 2));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(0, 2));
     }
 
     impl KafkaResponse for ListTransactionsResponse {
@@ -350,34 +365,40 @@ pub mod list_transactions_response {
     }
 
     impl ListTransactionsResponse {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             crate::message::ensure_encode_version::<Self>(version)?;
 
             for value in &self.transaction_states {
                 value.validate_for_version(version)?;
             }
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: Self::NAME,
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for ListTransactionsResponse {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             crate::message::ensure_decode_version::<Self>(version)?;
 
-            let throttle_time_ms = decoder.read_i32()?;
-            let error_code = decoder.read_i16()?;
-            let unknown_state_filters = {
+            let __kw_field_0 = decoder.read_i32()?;
+            let __kw_field_1 = decoder.read_i16()?;
+            let __kw_field_2 = {
                 let length = decoder.read_compact_array_len()?;
                 decoder.read_vec(length, Decoder::read_compact_string)?
             };
-            let transaction_states = {
+            let __kw_field_3 = {
                 let length = decoder.read_compact_array_len()?;
                 decoder.read_vec(length, |decoder| TransactionState::decode(decoder, version))?
             };
@@ -387,11 +408,11 @@ pub mod list_transactions_response {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                throttle_time_ms,
-                error_code,
-                unknown_state_filters,
-                transaction_states,
+            ::core::result::Result::Ok(Self {
+                throttle_time_ms: __kw_field_0,
+                error_code: __kw_field_1,
+                unknown_state_filters: __kw_field_2,
+                transaction_states: __kw_field_3,
                 unknown_tagged_fields,
             })
         }
@@ -402,7 +423,7 @@ pub mod list_transactions_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_i32(self.throttle_time_ms)?;
             encoder.write_i16(self.error_code)?;
             encoder.write_compact_array_len(self.unknown_state_filters.len())?;
@@ -418,7 +439,7 @@ pub mod list_transactions_response {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -427,12 +448,12 @@ pub mod list_transactions_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             ListTransactionsResponse::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| ListTransactionsResponse::encode_validated(self, encoder, version),
@@ -443,7 +464,7 @@ pub mod list_transactions_response {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -467,7 +488,7 @@ pub const LIST_TRANSACTIONS_REQUEST_DESCRIPTOR: MessageDescriptor = MessageDescr
     "ListTransactionsRequest",
     MessageDirection::Request,
     VersionRange::new(0, 2),
-    Some(VersionRange::new(0, 2)),
+    ::core::option::Option::Some(VersionRange::new(0, 2)),
 );
 
 /// Static metadata for [`ListTransactionsResponse`].
@@ -476,7 +497,7 @@ pub const LIST_TRANSACTIONS_RESPONSE_DESCRIPTOR: MessageDescriptor = MessageDesc
     "ListTransactionsResponse",
     MessageDirection::Response,
     VersionRange::new(0, 2),
-    Some(VersionRange::new(0, 2)),
+    ::core::option::Option::Some(VersionRange::new(0, 2)),
 );
 
 /// Static pair metadata for the `ListTransactions` API.
@@ -485,6 +506,6 @@ pub const LIST_TRANSACTIONS_API_DESCRIPTOR: ApiDescriptor = ApiDescriptor::new(
     &LIST_TRANSACTIONS_REQUEST_DESCRIPTOR,
     &LIST_TRANSACTIONS_RESPONSE_DESCRIPTOR,
     VersionRange::new(0, 2),
-    Some(VersionRange::new(0, 2)),
+    ::core::option::Option::Some(VersionRange::new(0, 2)),
     false,
 );

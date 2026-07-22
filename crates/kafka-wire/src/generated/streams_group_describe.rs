@@ -20,10 +20,10 @@ pub mod streams_group_describe_request {
 
     /// Request body for the `StreamsGroupDescribe` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct StreamsGroupDescribeRequest {
         /// The ids of the groups to describe.
-        pub group_ids: Vec<StrBytes>,
+        pub group_ids: ::std::vec::Vec<StrBytes>,
         /// Whether to include authorized operations.
         pub include_authorized_operations: bool,
         /// Whether to include the full topology description from the topology description plugin in the response.
@@ -35,7 +35,8 @@ pub mod streams_group_describe_request {
     impl KafkaMessage for StreamsGroupDescribeRequest {
         const NAME: &'static str = "StreamsGroupDescribeRequest";
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 1);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 1));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(0, 1));
     }
 
     impl KafkaRequest for StreamsGroupDescribeRequest {
@@ -49,37 +50,43 @@ pub mod streams_group_describe_request {
     }
 
     impl StreamsGroupDescribeRequest {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             crate::message::ensure_encode_version::<Self>(version)?;
 
             if version.value() < 1 && self.include_topology_description {
-                return Err(EncodeError::FieldNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::FieldNotRepresentable {
                     message: Self::NAME,
                     field: "IncludeTopologyDescription",
                     version,
                 });
             }
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: Self::NAME,
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for StreamsGroupDescribeRequest {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             crate::message::ensure_decode_version::<Self>(version)?;
 
-            let group_ids = {
+            let __kw_field_0 = {
                 let length = decoder.read_compact_array_len()?;
                 decoder.read_vec(length, Decoder::read_compact_string)?
             };
-            let include_authorized_operations = decoder.read_bool()?;
-            let include_topology_description = if version.value() >= 1 {
+            let __kw_field_1 = decoder.read_bool()?;
+            let __kw_field_2 = if version.value() >= 1 {
                 decoder.read_bool()?
             } else {
                 false
@@ -90,10 +97,10 @@ pub mod streams_group_describe_request {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                group_ids,
-                include_authorized_operations,
-                include_topology_description,
+            ::core::result::Result::Ok(Self {
+                group_ids: __kw_field_0,
+                include_authorized_operations: __kw_field_1,
+                include_topology_description: __kw_field_2,
                 unknown_tagged_fields,
             })
         }
@@ -104,7 +111,7 @@ pub mod streams_group_describe_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_compact_array_len(self.group_ids.len())?;
             for value in &self.group_ids {
                 encoder.write_compact_string(value)?;
@@ -118,7 +125,7 @@ pub mod streams_group_describe_request {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -127,12 +134,12 @@ pub mod streams_group_describe_request {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             StreamsGroupDescribeRequest::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| StreamsGroupDescribeRequest::encode_validated(self, encoder, version),
@@ -143,7 +150,7 @@ pub mod streams_group_describe_request {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -169,7 +176,7 @@ pub mod streams_group_describe_response {
 
     /// `Endpoint` as declared by the `StreamsGroupDescribe` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct Endpoint {
         /// host of the endpoint.
         pub host: StrBytes,
@@ -181,7 +188,8 @@ pub mod streams_group_describe_response {
 
     impl Endpoint {
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 1);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 1));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(0, 1));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
@@ -189,9 +197,12 @@ pub mod streams_group_describe_response {
     }
 
     impl Endpoint {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(EncodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(EncodeError::UnsupportedVersion {
                     message: "Endpoint",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
@@ -199,37 +210,40 @@ pub mod streams_group_describe_response {
             }
 
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: "Endpoint",
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for Endpoint {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(DecodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(DecodeError::UnsupportedVersion {
                     message: "Endpoint",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
                 });
             }
 
-            let host = decoder.read_compact_string()?;
-            let port = decoder.read_u16()?;
+            let __kw_field_0 = decoder.read_compact_string()?;
+            let __kw_field_1 = decoder.read_u16()?;
             let unknown_tagged_fields = if Self::is_flexible(version) {
                 decoder.read_tagged_fields()?
             } else {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                host,
-                port,
+            ::core::result::Result::Ok(Self {
+                host: __kw_field_0,
+                port: __kw_field_1,
                 unknown_tagged_fields,
             })
         }
@@ -240,7 +254,7 @@ pub mod streams_group_describe_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_compact_string(&self.host)?;
             encoder.write_u16(self.port)?;
 
@@ -248,7 +262,7 @@ pub mod streams_group_describe_response {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -257,12 +271,12 @@ pub mod streams_group_describe_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             Endpoint::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| Endpoint::encode_validated(self, encoder, version),
@@ -273,7 +287,7 @@ pub mod streams_group_describe_response {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -285,7 +299,7 @@ pub mod streams_group_describe_response {
 
     /// `TaskOffset` as declared by the `StreamsGroupDescribe` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct TaskOffset {
         /// The subtopology identifier.
         pub subtopology_id: StrBytes,
@@ -299,7 +313,8 @@ pub mod streams_group_describe_response {
 
     impl TaskOffset {
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 1);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 1));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(0, 1));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
@@ -307,9 +322,12 @@ pub mod streams_group_describe_response {
     }
 
     impl TaskOffset {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(EncodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(EncodeError::UnsupportedVersion {
                     message: "TaskOffset",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
@@ -317,39 +335,42 @@ pub mod streams_group_describe_response {
             }
 
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: "TaskOffset",
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for TaskOffset {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(DecodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(DecodeError::UnsupportedVersion {
                     message: "TaskOffset",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
                 });
             }
 
-            let subtopology_id = decoder.read_compact_string()?;
-            let partition = decoder.read_i32()?;
-            let offset = decoder.read_i64()?;
+            let __kw_field_0 = decoder.read_compact_string()?;
+            let __kw_field_1 = decoder.read_i32()?;
+            let __kw_field_2 = decoder.read_i64()?;
             let unknown_tagged_fields = if Self::is_flexible(version) {
                 decoder.read_tagged_fields()?
             } else {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                subtopology_id,
-                partition,
-                offset,
+            ::core::result::Result::Ok(Self {
+                subtopology_id: __kw_field_0,
+                partition: __kw_field_1,
+                offset: __kw_field_2,
                 unknown_tagged_fields,
             })
         }
@@ -360,7 +381,7 @@ pub mod streams_group_describe_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_compact_string(&self.subtopology_id)?;
             encoder.write_i32(self.partition)?;
             encoder.write_i64(self.offset)?;
@@ -369,7 +390,7 @@ pub mod streams_group_describe_response {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -378,12 +399,12 @@ pub mod streams_group_describe_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             TaskOffset::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| TaskOffset::encode_validated(self, encoder, version),
@@ -394,7 +415,7 @@ pub mod streams_group_describe_response {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -406,21 +427,22 @@ pub mod streams_group_describe_response {
 
     /// `Assignment` as declared by the `StreamsGroupDescribe` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct Assignment {
         /// Active tasks for this client.
-        pub active_tasks: Vec<TaskIds>,
+        pub active_tasks: ::std::vec::Vec<TaskIds>,
         /// Standby tasks for this client.
-        pub standby_tasks: Vec<TaskIds>,
+        pub standby_tasks: ::std::vec::Vec<TaskIds>,
         /// Warm-up tasks for this client.
-        pub warmup_tasks: Vec<TaskIds>,
+        pub warmup_tasks: ::std::vec::Vec<TaskIds>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
     }
 
     impl Assignment {
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 1);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 1));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(0, 1));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
@@ -428,9 +450,12 @@ pub mod streams_group_describe_response {
     }
 
     impl Assignment {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(EncodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(EncodeError::UnsupportedVersion {
                     message: "Assignment",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
@@ -447,35 +472,38 @@ pub mod streams_group_describe_response {
                 value.validate_for_version(version)?;
             }
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: "Assignment",
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for Assignment {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(DecodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(DecodeError::UnsupportedVersion {
                     message: "Assignment",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
                 });
             }
 
-            let active_tasks = {
+            let __kw_field_0 = {
                 let length = decoder.read_compact_array_len()?;
                 decoder.read_vec(length, |decoder| TaskIds::decode(decoder, version))?
             };
-            let standby_tasks = {
+            let __kw_field_1 = {
                 let length = decoder.read_compact_array_len()?;
                 decoder.read_vec(length, |decoder| TaskIds::decode(decoder, version))?
             };
-            let warmup_tasks = {
+            let __kw_field_2 = {
                 let length = decoder.read_compact_array_len()?;
                 decoder.read_vec(length, |decoder| TaskIds::decode(decoder, version))?
             };
@@ -485,10 +513,10 @@ pub mod streams_group_describe_response {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                active_tasks,
-                standby_tasks,
-                warmup_tasks,
+            ::core::result::Result::Ok(Self {
+                active_tasks: __kw_field_0,
+                standby_tasks: __kw_field_1,
+                warmup_tasks: __kw_field_2,
                 unknown_tagged_fields,
             })
         }
@@ -499,7 +527,7 @@ pub mod streams_group_describe_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_compact_array_len(self.active_tasks.len())?;
             for value in &self.active_tasks {
                 value.encode_validated(encoder, version)?;
@@ -517,7 +545,7 @@ pub mod streams_group_describe_response {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -526,12 +554,12 @@ pub mod streams_group_describe_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             Assignment::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| Assignment::encode_validated(self, encoder, version),
@@ -542,7 +570,7 @@ pub mod streams_group_describe_response {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -554,19 +582,20 @@ pub mod streams_group_describe_response {
 
     /// `TaskIds` as declared by the `StreamsGroupDescribe` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct TaskIds {
         /// The subtopology identifier.
         pub subtopology_id: StrBytes,
         /// The partitions of the input topics processed by this member.
-        pub partitions: Vec<i32>,
+        pub partitions: ::std::vec::Vec<i32>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
     }
 
     impl TaskIds {
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 1);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 1));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(0, 1));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
@@ -574,9 +603,12 @@ pub mod streams_group_describe_response {
     }
 
     impl TaskIds {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(EncodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(EncodeError::UnsupportedVersion {
                     message: "TaskIds",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
@@ -584,28 +616,31 @@ pub mod streams_group_describe_response {
             }
 
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: "TaskIds",
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for TaskIds {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(DecodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(DecodeError::UnsupportedVersion {
                     message: "TaskIds",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
                 });
             }
 
-            let subtopology_id = decoder.read_compact_string()?;
-            let partitions = {
+            let __kw_field_0 = decoder.read_compact_string()?;
+            let __kw_field_1 = {
                 let length = decoder.read_compact_array_len()?;
                 decoder.read_vec(length, Decoder::read_i32)?
             };
@@ -615,9 +650,9 @@ pub mod streams_group_describe_response {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                subtopology_id,
-                partitions,
+            ::core::result::Result::Ok(Self {
+                subtopology_id: __kw_field_0,
+                partitions: __kw_field_1,
                 unknown_tagged_fields,
             })
         }
@@ -628,7 +663,7 @@ pub mod streams_group_describe_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_compact_string(&self.subtopology_id)?;
             encoder.write_compact_array_len(self.partitions.len())?;
             for value in &self.partitions {
@@ -639,7 +674,7 @@ pub mod streams_group_describe_response {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -648,12 +683,12 @@ pub mod streams_group_describe_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             TaskIds::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| TaskIds::encode_validated(self, encoder, version),
@@ -664,7 +699,7 @@ pub mod streams_group_describe_response {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -676,7 +711,7 @@ pub mod streams_group_describe_response {
 
     /// `KeyValue` as declared by the `StreamsGroupDescribe` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct KeyValue {
         /// key of the config.
         pub key: StrBytes,
@@ -688,7 +723,8 @@ pub mod streams_group_describe_response {
 
     impl KeyValue {
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 1);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 1));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(0, 1));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
@@ -696,9 +732,12 @@ pub mod streams_group_describe_response {
     }
 
     impl KeyValue {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(EncodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(EncodeError::UnsupportedVersion {
                     message: "KeyValue",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
@@ -706,37 +745,40 @@ pub mod streams_group_describe_response {
             }
 
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: "KeyValue",
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for KeyValue {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(DecodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(DecodeError::UnsupportedVersion {
                     message: "KeyValue",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
                 });
             }
 
-            let key = decoder.read_compact_string()?;
-            let value = decoder.read_compact_string()?;
+            let __kw_field_0 = decoder.read_compact_string()?;
+            let __kw_field_1 = decoder.read_compact_string()?;
             let unknown_tagged_fields = if Self::is_flexible(version) {
                 decoder.read_tagged_fields()?
             } else {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                key,
-                value,
+            ::core::result::Result::Ok(Self {
+                key: __kw_field_0,
+                value: __kw_field_1,
                 unknown_tagged_fields,
             })
         }
@@ -747,7 +789,7 @@ pub mod streams_group_describe_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_compact_string(&self.key)?;
             encoder.write_compact_string(&self.value)?;
 
@@ -755,7 +797,7 @@ pub mod streams_group_describe_response {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -764,12 +806,12 @@ pub mod streams_group_describe_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             KeyValue::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| KeyValue::encode_validated(self, encoder, version),
@@ -780,7 +822,7 @@ pub mod streams_group_describe_response {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -792,7 +834,7 @@ pub mod streams_group_describe_response {
 
     /// `TopicInfo` as declared by the `StreamsGroupDescribe` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct TopicInfo {
         /// The name of the topic.
         pub name: StrBytes,
@@ -801,14 +843,15 @@ pub mod streams_group_describe_response {
         /// The replication factor of the topic. Can be 0 if the default replication factor should be used.
         pub replication_factor: i16,
         /// Topic-level configurations as key-value pairs.
-        pub topic_configs: Vec<KeyValue>,
+        pub topic_configs: ::std::vec::Vec<KeyValue>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
     }
 
     impl TopicInfo {
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 1);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 1));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(0, 1));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
@@ -816,9 +859,12 @@ pub mod streams_group_describe_response {
     }
 
     impl TopicInfo {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(EncodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(EncodeError::UnsupportedVersion {
                     message: "TopicInfo",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
@@ -829,30 +875,33 @@ pub mod streams_group_describe_response {
                 value.validate_for_version(version)?;
             }
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: "TopicInfo",
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for TopicInfo {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(DecodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(DecodeError::UnsupportedVersion {
                     message: "TopicInfo",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
                 });
             }
 
-            let name = decoder.read_compact_string()?;
-            let partitions = decoder.read_i32()?;
-            let replication_factor = decoder.read_i16()?;
-            let topic_configs = {
+            let __kw_field_0 = decoder.read_compact_string()?;
+            let __kw_field_1 = decoder.read_i32()?;
+            let __kw_field_2 = decoder.read_i16()?;
+            let __kw_field_3 = {
                 let length = decoder.read_compact_array_len()?;
                 decoder.read_vec(length, |decoder| KeyValue::decode(decoder, version))?
             };
@@ -862,11 +911,11 @@ pub mod streams_group_describe_response {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                name,
-                partitions,
-                replication_factor,
-                topic_configs,
+            ::core::result::Result::Ok(Self {
+                name: __kw_field_0,
+                partitions: __kw_field_1,
+                replication_factor: __kw_field_2,
+                topic_configs: __kw_field_3,
                 unknown_tagged_fields,
             })
         }
@@ -877,7 +926,7 @@ pub mod streams_group_describe_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_compact_string(&self.name)?;
             encoder.write_i32(self.partitions)?;
             encoder.write_i16(self.replication_factor)?;
@@ -890,7 +939,7 @@ pub mod streams_group_describe_response {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -899,12 +948,12 @@ pub mod streams_group_describe_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             TopicInfo::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| TopicInfo::encode_validated(self, encoder, version),
@@ -915,7 +964,7 @@ pub mod streams_group_describe_response {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -927,19 +976,20 @@ pub mod streams_group_describe_response {
 
     /// `TopologyDescription` as declared by the `StreamsGroupDescribe` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct TopologyDescription {
         /// The subtopologies that make up this topology.
-        pub subtopologies: Vec<TopologyDescriptionSubtopology>,
+        pub subtopologies: ::std::vec::Vec<TopologyDescriptionSubtopology>,
         /// Global state stores used by this topology.
-        pub global_stores: Vec<TopologyDescriptionGlobalStore>,
+        pub global_stores: ::std::vec::Vec<TopologyDescriptionGlobalStore>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
     }
 
     impl TopologyDescription {
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(1, 1);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(1, 1));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(1, 1));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
@@ -947,9 +997,12 @@ pub mod streams_group_describe_response {
     }
 
     impl TopologyDescription {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(EncodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(EncodeError::UnsupportedVersion {
                     message: "TopologyDescription",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
@@ -963,33 +1016,36 @@ pub mod streams_group_describe_response {
                 value.validate_for_version(version)?;
             }
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: "TopologyDescription",
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for TopologyDescription {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(DecodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(DecodeError::UnsupportedVersion {
                     message: "TopologyDescription",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
                 });
             }
 
-            let subtopologies = {
+            let __kw_field_0 = {
                 let length = decoder.read_compact_array_len()?;
                 decoder.read_vec(length, |decoder| {
                     TopologyDescriptionSubtopology::decode(decoder, version)
                 })?
             };
-            let global_stores = {
+            let __kw_field_1 = {
                 let length = decoder.read_compact_array_len()?;
                 decoder.read_vec(length, |decoder| {
                     TopologyDescriptionGlobalStore::decode(decoder, version)
@@ -1001,9 +1057,9 @@ pub mod streams_group_describe_response {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                subtopologies,
-                global_stores,
+            ::core::result::Result::Ok(Self {
+                subtopologies: __kw_field_0,
+                global_stores: __kw_field_1,
                 unknown_tagged_fields,
             })
         }
@@ -1014,7 +1070,7 @@ pub mod streams_group_describe_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_compact_array_len(self.subtopologies.len())?;
             for value in &self.subtopologies {
                 value.encode_validated(encoder, version)?;
@@ -1028,7 +1084,7 @@ pub mod streams_group_describe_response {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -1037,12 +1093,12 @@ pub mod streams_group_describe_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             TopologyDescription::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| TopologyDescription::encode_validated(self, encoder, version),
@@ -1053,7 +1109,7 @@ pub mod streams_group_describe_response {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -1065,19 +1121,20 @@ pub mod streams_group_describe_response {
 
     /// `TopologyDescriptionSubtopology` as declared by the `StreamsGroupDescribe` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct TopologyDescriptionSubtopology {
         /// The subtopology identifier, unique within the topology.
         pub subtopology_id: StrBytes,
         /// The processing nodes in this subtopology.
-        pub nodes: Vec<TopologyDescriptionNode>,
+        pub nodes: ::std::vec::Vec<TopologyDescriptionNode>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
     }
 
     impl TopologyDescriptionSubtopology {
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(1, 1);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(1, 1));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(1, 1));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
@@ -1085,9 +1142,12 @@ pub mod streams_group_describe_response {
     }
 
     impl TopologyDescriptionSubtopology {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(EncodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(EncodeError::UnsupportedVersion {
                     message: "TopologyDescriptionSubtopology",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
@@ -1098,28 +1158,31 @@ pub mod streams_group_describe_response {
                 value.validate_for_version(version)?;
             }
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: "TopologyDescriptionSubtopology",
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for TopologyDescriptionSubtopology {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(DecodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(DecodeError::UnsupportedVersion {
                     message: "TopologyDescriptionSubtopology",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
                 });
             }
 
-            let subtopology_id = decoder.read_compact_string()?;
-            let nodes = {
+            let __kw_field_0 = decoder.read_compact_string()?;
+            let __kw_field_1 = {
                 let length = decoder.read_compact_array_len()?;
                 decoder.read_vec(length, |decoder| {
                     TopologyDescriptionNode::decode(decoder, version)
@@ -1131,9 +1194,9 @@ pub mod streams_group_describe_response {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                subtopology_id,
-                nodes,
+            ::core::result::Result::Ok(Self {
+                subtopology_id: __kw_field_0,
+                nodes: __kw_field_1,
                 unknown_tagged_fields,
             })
         }
@@ -1144,7 +1207,7 @@ pub mod streams_group_describe_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_compact_string(&self.subtopology_id)?;
             encoder.write_compact_array_len(self.nodes.len())?;
             for value in &self.nodes {
@@ -1155,7 +1218,7 @@ pub mod streams_group_describe_response {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -1164,12 +1227,12 @@ pub mod streams_group_describe_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             TopologyDescriptionSubtopology::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| TopologyDescriptionSubtopology::encode_validated(self, encoder, version),
@@ -1180,7 +1243,7 @@ pub mod streams_group_describe_response {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -1192,27 +1255,28 @@ pub mod streams_group_describe_response {
 
     /// `TopologyDescriptionNode` as declared by the `StreamsGroupDescribe` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct TopologyDescriptionNode {
         /// The name of this node (e.g., KSTREAM-SOURCE-0000000000).
         pub name: StrBytes,
         /// The type of this node: 1=SOURCE, 2=PROCESSOR, 3=SINK.
         pub node_type: i8,
         /// The source topics this node reads from. Defined only for source nodes, may be empty if source topics are dynamically determined.
-        pub source_topics: Vec<StrBytes>,
+        pub source_topics: ::std::vec::Vec<StrBytes>,
         /// The topic this node writes to. Defined only for sink nodes, may be null if sink topic is dynamically determined.
-        pub sink_topic: Option<StrBytes>,
+        pub sink_topic: ::core::option::Option<StrBytes>,
         /// The state store names accessed by this node. Defined only for processor nodes.
-        pub stores: Vec<StrBytes>,
+        pub stores: ::std::vec::Vec<StrBytes>,
         /// The names of successor nodes in the processing graph. Predecessor relationships are reconstructed from this field.
-        pub successors: Vec<StrBytes>,
+        pub successors: ::std::vec::Vec<StrBytes>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
     }
 
     impl TopologyDescriptionNode {
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(1, 1);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(1, 1));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(1, 1));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
@@ -1220,9 +1284,12 @@ pub mod streams_group_describe_response {
     }
 
     impl TopologyDescriptionNode {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(EncodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(EncodeError::UnsupportedVersion {
                     message: "TopologyDescriptionNode",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
@@ -1230,38 +1297,41 @@ pub mod streams_group_describe_response {
             }
 
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: "TopologyDescriptionNode",
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for TopologyDescriptionNode {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(DecodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(DecodeError::UnsupportedVersion {
                     message: "TopologyDescriptionNode",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
                 });
             }
 
-            let name = decoder.read_compact_string()?;
-            let node_type = decoder.read_i8()?;
-            let source_topics = {
+            let __kw_field_0 = decoder.read_compact_string()?;
+            let __kw_field_1 = decoder.read_i8()?;
+            let __kw_field_2 = {
                 let length = decoder.read_compact_array_len()?;
                 decoder.read_vec(length, Decoder::read_compact_string)?
             };
-            let sink_topic = decoder.read_compact_nullable_string()?;
-            let stores = {
+            let __kw_field_3 = decoder.read_compact_nullable_string()?;
+            let __kw_field_4 = {
                 let length = decoder.read_compact_array_len()?;
                 decoder.read_vec(length, Decoder::read_compact_string)?
             };
-            let successors = {
+            let __kw_field_5 = {
                 let length = decoder.read_compact_array_len()?;
                 decoder.read_vec(length, Decoder::read_compact_string)?
             };
@@ -1271,13 +1341,13 @@ pub mod streams_group_describe_response {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                name,
-                node_type,
-                source_topics,
-                sink_topic,
-                stores,
-                successors,
+            ::core::result::Result::Ok(Self {
+                name: __kw_field_0,
+                node_type: __kw_field_1,
+                source_topics: __kw_field_2,
+                sink_topic: __kw_field_3,
+                stores: __kw_field_4,
+                successors: __kw_field_5,
                 unknown_tagged_fields,
             })
         }
@@ -1288,7 +1358,7 @@ pub mod streams_group_describe_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_compact_string(&self.name)?;
             encoder.write_i8(self.node_type)?;
             encoder.write_compact_array_len(self.source_topics.len())?;
@@ -1309,7 +1379,7 @@ pub mod streams_group_describe_response {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -1318,12 +1388,12 @@ pub mod streams_group_describe_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             TopologyDescriptionNode::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| TopologyDescriptionNode::encode_validated(self, encoder, version),
@@ -1334,7 +1404,7 @@ pub mod streams_group_describe_response {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -1346,7 +1416,7 @@ pub mod streams_group_describe_response {
 
     /// `TopologyDescriptionGlobalStore` as declared by the `StreamsGroupDescribe` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct TopologyDescriptionGlobalStore {
         /// The source node providing data to the global store.
         pub source: TopologyDescriptionNode,
@@ -1358,7 +1428,8 @@ pub mod streams_group_describe_response {
 
     impl TopologyDescriptionGlobalStore {
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(1, 1);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(1, 1));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(1, 1));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
@@ -1366,9 +1437,12 @@ pub mod streams_group_describe_response {
     }
 
     impl TopologyDescriptionGlobalStore {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(EncodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(EncodeError::UnsupportedVersion {
                     message: "TopologyDescriptionGlobalStore",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
@@ -1378,37 +1452,40 @@ pub mod streams_group_describe_response {
             self.source.validate_for_version(version)?;
             self.processor.validate_for_version(version)?;
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: "TopologyDescriptionGlobalStore",
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for TopologyDescriptionGlobalStore {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(DecodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(DecodeError::UnsupportedVersion {
                     message: "TopologyDescriptionGlobalStore",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
                 });
             }
 
-            let source = TopologyDescriptionNode::decode(decoder, version)?;
-            let processor = TopologyDescriptionNode::decode(decoder, version)?;
+            let __kw_field_0 = TopologyDescriptionNode::decode(decoder, version)?;
+            let __kw_field_1 = TopologyDescriptionNode::decode(decoder, version)?;
             let unknown_tagged_fields = if Self::is_flexible(version) {
                 decoder.read_tagged_fields()?
             } else {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                source,
-                processor,
+            ::core::result::Result::Ok(Self {
+                source: __kw_field_0,
+                processor: __kw_field_1,
                 unknown_tagged_fields,
             })
         }
@@ -1419,7 +1496,7 @@ pub mod streams_group_describe_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.source.encode_validated(encoder, version)?;
             self.processor.encode_validated(encoder, version)?;
 
@@ -1427,7 +1504,7 @@ pub mod streams_group_describe_response {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -1436,12 +1513,12 @@ pub mod streams_group_describe_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             TopologyDescriptionGlobalStore::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| TopologyDescriptionGlobalStore::encode_validated(self, encoder, version),
@@ -1452,7 +1529,7 @@ pub mod streams_group_describe_response {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -1469,7 +1546,7 @@ pub mod streams_group_describe_response {
         /// The describe error, or 0 if there was no error.
         pub error_code: i16,
         /// The top-level error message, or null if there was no error.
-        pub error_message: Option<StrBytes>,
+        pub error_message: ::core::option::Option<StrBytes>,
         /// The group ID string.
         pub group_id: StrBytes,
         /// The group state string, or the empty string.
@@ -1479,13 +1556,13 @@ pub mod streams_group_describe_response {
         /// The assignment epoch.
         pub assignment_epoch: i32,
         /// The topology metadata currently initialized for the streams application. Can be null in case of a describe error.
-        pub topology: Option<Topology>,
+        pub topology: ::core::option::Option<Topology>,
         /// The members.
-        pub members: Vec<Member>,
+        pub members: ::std::vec::Vec<Member>,
         /// 32-bit bitfield to represent authorized operations for this group.
         pub authorized_operations: i32,
         /// The full topology description for this group. Non-null if and only if `TopologyDescriptionStatus` is AVAILABLE (3); null otherwise.
-        pub topology_description: Option<TopologyDescription>,
+        pub topology_description: ::core::option::Option<TopologyDescription>,
         /// The status of the topology description for this group, paired with `TopologyDescription`: 0=`NOT_REQUESTED` (client did not set `IncludeTopologyDescription`; `TopologyDescription` is null); 1=`NOT_STORED` (no description recorded for this group; `TopologyDescription` is null); 2=ERROR (broker failed to fetch the description, see broker logs; `TopologyDescription` is null); 3=AVAILABLE (`TopologyDescription` is non-null and carries the description).
         pub topology_description_status: i8,
         /// Unknown flexible-version tagged fields retained for forwarding.
@@ -1494,7 +1571,8 @@ pub mod streams_group_describe_response {
 
     impl DescribedGroup {
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 1);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 1));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(0, 1));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
@@ -1502,9 +1580,12 @@ pub mod streams_group_describe_response {
     }
 
     impl DescribedGroup {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(EncodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(EncodeError::UnsupportedVersion {
                     message: "DescribedGroup",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
@@ -1512,54 +1593,54 @@ pub mod streams_group_describe_response {
             }
 
             if version.value() < 1 && self.topology_description.is_some() {
-                return Err(EncodeError::FieldNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::FieldNotRepresentable {
                     message: "DescribedGroup",
                     field: "TopologyDescription",
                     version,
                 });
             }
             if version.value() < 1 && self.topology_description_status != 0 {
-                return Err(EncodeError::FieldNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::FieldNotRepresentable {
                     message: "DescribedGroup",
                     field: "TopologyDescriptionStatus",
                     version,
                 });
             }
-            if let Some(value) = &self.topology {
+            if let ::core::option::Option::Some(value) = &self.topology {
                 value.validate_for_version(version)?;
             }
             for value in &self.members {
                 value.validate_for_version(version)?;
             }
             if version.value() >= 1 {
-                if let Some(value) = &self.topology_description {
+                if let ::core::option::Option::Some(value) = &self.topology_description {
                     value.validate_for_version(version)?;
                 }
             }
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: "DescribedGroup",
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
-    impl Default for DescribedGroup {
+    impl ::core::default::Default for DescribedGroup {
         fn default() -> Self {
             Self {
                 error_code: 0,
-                error_message: None,
+                error_message: ::core::option::Option::None,
                 group_id: StrBytes::default(),
                 group_state: StrBytes::default(),
                 group_epoch: 0,
                 assignment_epoch: 0,
-                topology: None,
-                members: Vec::new(),
+                topology: ::core::option::Option::None,
+                members: ::std::vec::Vec::new(),
                 authorized_operations: -2_147_483_648,
-                topology_description: None,
+                topology_description: ::core::option::Option::None,
                 topology_description_status: 0,
                 unknown_tagged_fields: TaggedFields::default(),
             }
@@ -1567,41 +1648,44 @@ pub mod streams_group_describe_response {
     }
 
     impl KafkaDecode for DescribedGroup {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(DecodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(DecodeError::UnsupportedVersion {
                     message: "DescribedGroup",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
                 });
             }
 
-            let error_code = decoder.read_i16()?;
-            let error_message = decoder.read_compact_nullable_string()?;
-            let group_id = decoder.read_compact_string()?;
-            let group_state = decoder.read_compact_string()?;
-            let group_epoch = decoder.read_i32()?;
-            let assignment_epoch = decoder.read_i32()?;
-            let topology = if decoder.read_struct_presence()? {
-                Some(Topology::decode(decoder, version)?)
+            let __kw_field_0 = decoder.read_i16()?;
+            let __kw_field_1 = decoder.read_compact_nullable_string()?;
+            let __kw_field_2 = decoder.read_compact_string()?;
+            let __kw_field_3 = decoder.read_compact_string()?;
+            let __kw_field_4 = decoder.read_i32()?;
+            let __kw_field_5 = decoder.read_i32()?;
+            let __kw_field_6 = if decoder.read_struct_presence()? {
+                ::core::option::Option::Some(Topology::decode(decoder, version)?)
             } else {
-                None
+                ::core::option::Option::None
             };
-            let members = {
+            let __kw_field_7 = {
                 let length = decoder.read_compact_array_len()?;
                 decoder.read_vec(length, |decoder| Member::decode(decoder, version))?
             };
-            let authorized_operations = decoder.read_i32()?;
-            let topology_description = if version.value() >= 1 {
+            let __kw_field_8 = decoder.read_i32()?;
+            let __kw_field_9 = if version.value() >= 1 {
                 if decoder.read_struct_presence()? {
-                    Some(TopologyDescription::decode(decoder, version)?)
+                    ::core::option::Option::Some(TopologyDescription::decode(decoder, version)?)
                 } else {
-                    None
+                    ::core::option::Option::None
                 }
             } else {
-                None
+                ::core::option::Option::None
             };
-            let topology_description_status = if version.value() >= 1 {
+            let __kw_field_10 = if version.value() >= 1 {
                 decoder.read_i8()?
             } else {
                 0
@@ -1612,18 +1696,18 @@ pub mod streams_group_describe_response {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                error_code,
-                error_message,
-                group_id,
-                group_state,
-                group_epoch,
-                assignment_epoch,
-                topology,
-                members,
-                authorized_operations,
-                topology_description,
-                topology_description_status,
+            ::core::result::Result::Ok(Self {
+                error_code: __kw_field_0,
+                error_message: __kw_field_1,
+                group_id: __kw_field_2,
+                group_state: __kw_field_3,
+                group_epoch: __kw_field_4,
+                assignment_epoch: __kw_field_5,
+                topology: __kw_field_6,
+                members: __kw_field_7,
+                authorized_operations: __kw_field_8,
+                topology_description: __kw_field_9,
+                topology_description_status: __kw_field_10,
                 unknown_tagged_fields,
             })
         }
@@ -1634,14 +1718,14 @@ pub mod streams_group_describe_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_i16(self.error_code)?;
             encoder.write_compact_nullable_string(self.error_message.as_ref())?;
             encoder.write_compact_string(&self.group_id)?;
             encoder.write_compact_string(&self.group_state)?;
             encoder.write_i32(self.group_epoch)?;
             encoder.write_i32(self.assignment_epoch)?;
-            if let Some(value) = &self.topology {
+            if let ::core::option::Option::Some(value) = &self.topology {
                 encoder.write_struct_presence(true)?;
                 value.encode_validated(encoder, version)?;
             } else {
@@ -1653,7 +1737,7 @@ pub mod streams_group_describe_response {
             }
             encoder.write_i32(self.authorized_operations)?;
             if version.value() >= 1 {
-                if let Some(value) = &self.topology_description {
+                if let ::core::option::Option::Some(value) = &self.topology_description {
                     encoder.write_struct_presence(true)?;
                     value.encode_validated(encoder, version)?;
                 } else {
@@ -1668,7 +1752,7 @@ pub mod streams_group_describe_response {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -1677,12 +1761,12 @@ pub mod streams_group_describe_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             DescribedGroup::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| DescribedGroup::encode_validated(self, encoder, version),
@@ -1693,7 +1777,7 @@ pub mod streams_group_describe_response {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -1705,19 +1789,20 @@ pub mod streams_group_describe_response {
 
     /// `Topology` as declared by the `StreamsGroupDescribe` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct Topology {
         /// The epoch of the currently initialized topology for this group.
         pub epoch: i32,
         /// The subtopologies of the streams application. This contains the configured subtopologies, where the number of partitions are set and any regular expressions are resolved to actual topics. Null if the group is uninitialized, source topics are missing or incorrectly partitioned.
-        pub subtopologies: Option<Vec<Subtopology>>,
+        pub subtopologies: ::core::option::Option<::std::vec::Vec<Subtopology>>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
     }
 
     impl Topology {
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 1);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 1));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(0, 1));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
@@ -1725,43 +1810,49 @@ pub mod streams_group_describe_response {
     }
 
     impl Topology {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(EncodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(EncodeError::UnsupportedVersion {
                     message: "Topology",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
                 });
             }
 
-            if let Some(values) = &self.subtopologies {
+            if let ::core::option::Option::Some(values) = &self.subtopologies {
                 for value in values {
                     value.validate_for_version(version)?;
                 }
             }
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: "Topology",
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for Topology {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(DecodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(DecodeError::UnsupportedVersion {
                     message: "Topology",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
                 });
             }
 
-            let epoch = decoder.read_i32()?;
-            let subtopologies = {
+            let __kw_field_0 = decoder.read_i32()?;
+            let __kw_field_1 = {
                 let length = decoder.read_compact_nullable_array_len()?;
                 length
                     .map(|length| {
@@ -1775,9 +1866,9 @@ pub mod streams_group_describe_response {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                epoch,
-                subtopologies,
+            ::core::result::Result::Ok(Self {
+                epoch: __kw_field_0,
+                subtopologies: __kw_field_1,
                 unknown_tagged_fields,
             })
         }
@@ -1788,10 +1879,12 @@ pub mod streams_group_describe_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_i32(self.epoch)?;
-            encoder.write_compact_nullable_array_len(self.subtopologies.as_ref().map(Vec::len))?;
-            if let Some(values) = &self.subtopologies {
+            encoder.write_compact_nullable_array_len(
+                self.subtopologies.as_ref().map(::std::vec::Vec::len),
+            )?;
+            if let ::core::option::Option::Some(values) = &self.subtopologies {
                 for value in values {
                     value.encode_validated(encoder, version)?;
                 }
@@ -1801,7 +1894,7 @@ pub mod streams_group_describe_response {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -1810,12 +1903,12 @@ pub mod streams_group_describe_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             Topology::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| Topology::encode_validated(self, encoder, version),
@@ -1826,7 +1919,7 @@ pub mod streams_group_describe_response {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -1838,25 +1931,26 @@ pub mod streams_group_describe_response {
 
     /// `Subtopology` as declared by the `StreamsGroupDescribe` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct Subtopology {
         /// String to uniquely identify the subtopology.
         pub subtopology_id: StrBytes,
         /// The topics the subtopology reads from.
-        pub source_topics: Vec<StrBytes>,
+        pub source_topics: ::std::vec::Vec<StrBytes>,
         /// The repartition topics the subtopology writes to.
-        pub repartition_sink_topics: Vec<StrBytes>,
+        pub repartition_sink_topics: ::std::vec::Vec<StrBytes>,
         /// The set of state changelog topics associated with this subtopology. Created automatically.
-        pub state_changelog_topics: Vec<TopicInfo>,
+        pub state_changelog_topics: ::std::vec::Vec<TopicInfo>,
         /// The set of source topics that are internally created repartition topics. Created automatically.
-        pub repartition_source_topics: Vec<TopicInfo>,
+        pub repartition_source_topics: ::std::vec::Vec<TopicInfo>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
     }
 
     impl Subtopology {
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 1);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 1));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(0, 1));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
@@ -1864,9 +1958,12 @@ pub mod streams_group_describe_response {
     }
 
     impl Subtopology {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(EncodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(EncodeError::UnsupportedVersion {
                     message: "Subtopology",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
@@ -1880,40 +1977,43 @@ pub mod streams_group_describe_response {
                 value.validate_for_version(version)?;
             }
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: "Subtopology",
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for Subtopology {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(DecodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(DecodeError::UnsupportedVersion {
                     message: "Subtopology",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
                 });
             }
 
-            let subtopology_id = decoder.read_compact_string()?;
-            let source_topics = {
+            let __kw_field_0 = decoder.read_compact_string()?;
+            let __kw_field_1 = {
                 let length = decoder.read_compact_array_len()?;
                 decoder.read_vec(length, Decoder::read_compact_string)?
             };
-            let repartition_sink_topics = {
+            let __kw_field_2 = {
                 let length = decoder.read_compact_array_len()?;
                 decoder.read_vec(length, Decoder::read_compact_string)?
             };
-            let state_changelog_topics = {
+            let __kw_field_3 = {
                 let length = decoder.read_compact_array_len()?;
                 decoder.read_vec(length, |decoder| TopicInfo::decode(decoder, version))?
             };
-            let repartition_source_topics = {
+            let __kw_field_4 = {
                 let length = decoder.read_compact_array_len()?;
                 decoder.read_vec(length, |decoder| TopicInfo::decode(decoder, version))?
             };
@@ -1923,12 +2023,12 @@ pub mod streams_group_describe_response {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                subtopology_id,
-                source_topics,
-                repartition_sink_topics,
-                state_changelog_topics,
-                repartition_source_topics,
+            ::core::result::Result::Ok(Self {
+                subtopology_id: __kw_field_0,
+                source_topics: __kw_field_1,
+                repartition_sink_topics: __kw_field_2,
+                state_changelog_topics: __kw_field_3,
+                repartition_source_topics: __kw_field_4,
                 unknown_tagged_fields,
             })
         }
@@ -1939,7 +2039,7 @@ pub mod streams_group_describe_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_compact_string(&self.subtopology_id)?;
             encoder.write_compact_array_len(self.source_topics.len())?;
             for value in &self.source_topics {
@@ -1962,7 +2062,7 @@ pub mod streams_group_describe_response {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -1971,12 +2071,12 @@ pub mod streams_group_describe_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             Subtopology::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| Subtopology::encode_validated(self, encoder, version),
@@ -1987,7 +2087,7 @@ pub mod streams_group_describe_response {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -1999,16 +2099,16 @@ pub mod streams_group_describe_response {
 
     /// `Member` as declared by the `StreamsGroupDescribe` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct Member {
         /// The member ID.
         pub member_id: StrBytes,
         /// The member epoch.
         pub member_epoch: i32,
         /// The member instance ID for static membership.
-        pub instance_id: Option<StrBytes>,
+        pub instance_id: ::core::option::Option<StrBytes>,
         /// The rack ID.
-        pub rack_id: Option<StrBytes>,
+        pub rack_id: ::core::option::Option<StrBytes>,
         /// The client ID.
         pub client_id: StrBytes,
         /// The client host.
@@ -2018,13 +2118,13 @@ pub mod streams_group_describe_response {
         /// Identity of the streams instance that may have multiple clients.
         pub process_id: StrBytes,
         /// User-defined endpoint for Interactive Queries. Null if not defined for this client.
-        pub user_endpoint: Option<Endpoint>,
+        pub user_endpoint: ::core::option::Option<Endpoint>,
         /// Used for rack-aware assignment algorithm.
-        pub client_tags: Vec<KeyValue>,
+        pub client_tags: ::std::vec::Vec<KeyValue>,
         /// Cumulative changelog offsets for tasks.
-        pub task_offsets: Vec<TaskOffset>,
+        pub task_offsets: ::std::vec::Vec<TaskOffset>,
         /// Cumulative changelog end offsets for tasks.
-        pub task_end_offsets: Vec<TaskOffset>,
+        pub task_end_offsets: ::std::vec::Vec<TaskOffset>,
         /// The current assignment.
         pub assignment: Assignment,
         /// The target assignment.
@@ -2037,7 +2137,8 @@ pub mod streams_group_describe_response {
 
     impl Member {
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 1);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 1));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(0, 1));
 
         fn is_flexible(version: ApiVersion) -> bool {
             Self::FLEXIBLE_VERSIONS.is_some_and(|range| range.contains(version))
@@ -2045,16 +2146,19 @@ pub mod streams_group_describe_response {
     }
 
     impl Member {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(EncodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(EncodeError::UnsupportedVersion {
                     message: "Member",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
                 });
             }
 
-            if let Some(value) = &self.user_endpoint {
+            if let ::core::option::Option::Some(value) = &self.user_endpoint {
                 value.validate_for_version(version)?;
             }
             for value in &self.client_tags {
@@ -2069,76 +2173,79 @@ pub mod streams_group_describe_response {
             self.assignment.validate_for_version(version)?;
             self.target_assignment.validate_for_version(version)?;
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: "Member",
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for Member {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             if !Self::SUPPORTED_VERSIONS.contains(version) {
-                return Err(DecodeError::UnsupportedVersion {
+                return ::core::result::Result::Err(DecodeError::UnsupportedVersion {
                     message: "Member",
                     version,
                     supported: Self::SUPPORTED_VERSIONS,
                 });
             }
 
-            let member_id = decoder.read_compact_string()?;
-            let member_epoch = decoder.read_i32()?;
-            let instance_id = decoder.read_compact_nullable_string()?;
-            let rack_id = decoder.read_compact_nullable_string()?;
-            let client_id = decoder.read_compact_string()?;
-            let client_host = decoder.read_compact_string()?;
-            let topology_epoch = decoder.read_i32()?;
-            let process_id = decoder.read_compact_string()?;
-            let user_endpoint = if decoder.read_struct_presence()? {
-                Some(Endpoint::decode(decoder, version)?)
+            let __kw_field_0 = decoder.read_compact_string()?;
+            let __kw_field_1 = decoder.read_i32()?;
+            let __kw_field_2 = decoder.read_compact_nullable_string()?;
+            let __kw_field_3 = decoder.read_compact_nullable_string()?;
+            let __kw_field_4 = decoder.read_compact_string()?;
+            let __kw_field_5 = decoder.read_compact_string()?;
+            let __kw_field_6 = decoder.read_i32()?;
+            let __kw_field_7 = decoder.read_compact_string()?;
+            let __kw_field_8 = if decoder.read_struct_presence()? {
+                ::core::option::Option::Some(Endpoint::decode(decoder, version)?)
             } else {
-                None
+                ::core::option::Option::None
             };
-            let client_tags = {
+            let __kw_field_9 = {
                 let length = decoder.read_compact_array_len()?;
                 decoder.read_vec(length, |decoder| KeyValue::decode(decoder, version))?
             };
-            let task_offsets = {
+            let __kw_field_10 = {
                 let length = decoder.read_compact_array_len()?;
                 decoder.read_vec(length, |decoder| TaskOffset::decode(decoder, version))?
             };
-            let task_end_offsets = {
+            let __kw_field_11 = {
                 let length = decoder.read_compact_array_len()?;
                 decoder.read_vec(length, |decoder| TaskOffset::decode(decoder, version))?
             };
-            let assignment = Assignment::decode(decoder, version)?;
-            let target_assignment = Assignment::decode(decoder, version)?;
-            let is_classic = decoder.read_bool()?;
+            let __kw_field_12 = Assignment::decode(decoder, version)?;
+            let __kw_field_13 = Assignment::decode(decoder, version)?;
+            let __kw_field_14 = decoder.read_bool()?;
             let unknown_tagged_fields = if Self::is_flexible(version) {
                 decoder.read_tagged_fields()?
             } else {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                member_id,
-                member_epoch,
-                instance_id,
-                rack_id,
-                client_id,
-                client_host,
-                topology_epoch,
-                process_id,
-                user_endpoint,
-                client_tags,
-                task_offsets,
-                task_end_offsets,
-                assignment,
-                target_assignment,
-                is_classic,
+            ::core::result::Result::Ok(Self {
+                member_id: __kw_field_0,
+                member_epoch: __kw_field_1,
+                instance_id: __kw_field_2,
+                rack_id: __kw_field_3,
+                client_id: __kw_field_4,
+                client_host: __kw_field_5,
+                topology_epoch: __kw_field_6,
+                process_id: __kw_field_7,
+                user_endpoint: __kw_field_8,
+                client_tags: __kw_field_9,
+                task_offsets: __kw_field_10,
+                task_end_offsets: __kw_field_11,
+                assignment: __kw_field_12,
+                target_assignment: __kw_field_13,
+                is_classic: __kw_field_14,
                 unknown_tagged_fields,
             })
         }
@@ -2149,7 +2256,7 @@ pub mod streams_group_describe_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_compact_string(&self.member_id)?;
             encoder.write_i32(self.member_epoch)?;
             encoder.write_compact_nullable_string(self.instance_id.as_ref())?;
@@ -2158,7 +2265,7 @@ pub mod streams_group_describe_response {
             encoder.write_compact_string(&self.client_host)?;
             encoder.write_i32(self.topology_epoch)?;
             encoder.write_compact_string(&self.process_id)?;
-            if let Some(value) = &self.user_endpoint {
+            if let ::core::option::Option::Some(value) = &self.user_endpoint {
                 encoder.write_struct_presence(true)?;
                 value.encode_validated(encoder, version)?;
             } else {
@@ -2184,7 +2291,7 @@ pub mod streams_group_describe_response {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -2193,12 +2300,12 @@ pub mod streams_group_describe_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             Member::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| Member::encode_validated(self, encoder, version),
@@ -2209,7 +2316,7 @@ pub mod streams_group_describe_response {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -2221,12 +2328,12 @@ pub mod streams_group_describe_response {
 
     /// Response body for the `StreamsGroupDescribe` API.
     #[non_exhaustive]
-    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    #[derive(Clone, Debug, ::core::default::Default, Eq, PartialEq)]
     pub struct StreamsGroupDescribeResponse {
         /// The duration in milliseconds for which the request was throttled due to a quota violation, or zero if the request did not violate any quota.
         pub throttle_time_ms: i32,
         /// Each described group.
-        pub groups: Vec<DescribedGroup>,
+        pub groups: ::std::vec::Vec<DescribedGroup>,
         /// Unknown flexible-version tagged fields retained for forwarding.
         pub unknown_tagged_fields: TaggedFields,
     }
@@ -2234,7 +2341,8 @@ pub mod streams_group_describe_response {
     impl KafkaMessage for StreamsGroupDescribeResponse {
         const NAME: &'static str = "StreamsGroupDescribeResponse";
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 1);
-        const FLEXIBLE_VERSIONS: Option<VersionRange> = Some(VersionRange::new(0, 1));
+        const FLEXIBLE_VERSIONS: ::core::option::Option<VersionRange> =
+            ::core::option::Option::Some(VersionRange::new(0, 1));
     }
 
     impl KafkaResponse for StreamsGroupDescribeResponse {
@@ -2242,29 +2350,35 @@ pub mod streams_group_describe_response {
     }
 
     impl StreamsGroupDescribeResponse {
-        fn validate_for_version(&self, version: ApiVersion) -> Result<(), EncodeError> {
+        fn validate_for_version(
+            &self,
+            version: ApiVersion,
+        ) -> ::core::result::Result<(), EncodeError> {
             crate::message::ensure_encode_version::<Self>(version)?;
 
             for value in &self.groups {
                 value.validate_for_version(version)?;
             }
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
-                return Err(EncodeError::TaggedFieldsNotRepresentable {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: Self::NAME,
                     version,
                 });
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
     impl KafkaDecode for StreamsGroupDescribeResponse {
-        fn decode(decoder: &mut Decoder, version: ApiVersion) -> Result<Self, DecodeError> {
+        fn decode(
+            decoder: &mut Decoder,
+            version: ApiVersion,
+        ) -> ::core::result::Result<Self, DecodeError> {
             crate::message::ensure_decode_version::<Self>(version)?;
 
-            let throttle_time_ms = decoder.read_i32()?;
-            let groups = {
+            let __kw_field_0 = decoder.read_i32()?;
+            let __kw_field_1 = {
                 let length = decoder.read_compact_array_len()?;
                 decoder.read_vec(length, |decoder| DescribedGroup::decode(decoder, version))?
             };
@@ -2274,9 +2388,9 @@ pub mod streams_group_describe_response {
                 TaggedFields::default()
             };
 
-            Ok(Self {
-                throttle_time_ms,
-                groups,
+            ::core::result::Result::Ok(Self {
+                throttle_time_ms: __kw_field_0,
+                groups: __kw_field_1,
                 unknown_tagged_fields,
             })
         }
@@ -2287,7 +2401,7 @@ pub mod streams_group_describe_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             encoder.write_i32(self.throttle_time_ms)?;
             encoder.write_compact_array_len(self.groups.len())?;
             for value in &self.groups {
@@ -2298,7 +2412,7 @@ pub mod streams_group_describe_response {
                 encoder.write_tagged_fields(&self.unknown_tagged_fields)?;
             }
 
-            Ok(())
+            ::core::result::Result::Ok(())
         }
     }
 
@@ -2307,12 +2421,12 @@ pub mod streams_group_describe_response {
             &self,
             encoder: &mut Encoder<T>,
             version: ApiVersion,
-        ) -> Result<(), EncodeError> {
+        ) -> ::core::result::Result<(), EncodeError> {
             self.validate_for_version(version)?;
             StreamsGroupDescribeResponse::encode_validated(self, encoder, version)
         }
 
-        fn encoded_len(&self, version: ApiVersion) -> Result<usize, EncodeError> {
+        fn encoded_len(&self, version: ApiVersion) -> ::core::result::Result<usize, EncodeError> {
             encoded_len_with(
                 || self.validate_for_version(version),
                 |encoder| StreamsGroupDescribeResponse::encode_validated(self, encoder, version),
@@ -2323,7 +2437,7 @@ pub mod streams_group_describe_response {
             &self,
             buffer: &mut BytesMut,
             version: ApiVersion,
-        ) -> Result<usize, EncodeError> {
+        ) -> ::core::result::Result<usize, EncodeError> {
             encode_into_with(
                 buffer,
                 || self.validate_for_version(version),
@@ -2347,7 +2461,7 @@ pub const STREAMS_GROUP_DESCRIBE_REQUEST_DESCRIPTOR: MessageDescriptor = Message
     "StreamsGroupDescribeRequest",
     MessageDirection::Request,
     VersionRange::new(0, 1),
-    Some(VersionRange::new(0, 1)),
+    ::core::option::Option::Some(VersionRange::new(0, 1)),
 );
 
 /// Static metadata for [`StreamsGroupDescribeResponse`].
@@ -2356,7 +2470,7 @@ pub const STREAMS_GROUP_DESCRIBE_RESPONSE_DESCRIPTOR: MessageDescriptor = Messag
     "StreamsGroupDescribeResponse",
     MessageDirection::Response,
     VersionRange::new(0, 1),
-    Some(VersionRange::new(0, 1)),
+    ::core::option::Option::Some(VersionRange::new(0, 1)),
 );
 
 /// Static pair metadata for the `StreamsGroupDescribe` API.
@@ -2365,6 +2479,6 @@ pub const STREAMS_GROUP_DESCRIBE_API_DESCRIPTOR: ApiDescriptor = ApiDescriptor::
     &STREAMS_GROUP_DESCRIBE_REQUEST_DESCRIPTOR,
     &STREAMS_GROUP_DESCRIBE_RESPONSE_DESCRIPTOR,
     VersionRange::new(0, 1),
-    Some(VersionRange::new(0, 1)),
+    ::core::option::Option::Some(VersionRange::new(0, 1)),
     false,
 );

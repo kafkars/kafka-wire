@@ -12,6 +12,8 @@ mod probe;
 #[cfg(test)]
 mod codec_test;
 #[cfg(test)]
+mod float_defaults_test;
+#[cfg(test)]
 mod types_test;
 #[cfg(test)]
 mod validate_test;

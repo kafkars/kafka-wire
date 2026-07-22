@@ -9,11 +9,11 @@ use kafka_wire_schema::{Field, FieldType, Message, StructOrigin, StructRef, Vers
 use crate::GenerationError;
 
 /// One declaration paired with the body and effective windows its codecs use.
-pub(super) struct RenderableStruct<'a> {
-    pub(super) name: &'a StructRef,
-    pub(super) fields: &'a [Field],
-    pub(super) versions: &'a VersionSet,
-    pub(super) flexible_versions: VersionSet,
+pub(crate) struct RenderableStruct<'a> {
+    pub(crate) name: &'a StructRef,
+    pub(crate) fields: &'a [Field],
+    pub(crate) versions: &'a VersionSet,
+    pub(crate) flexible_versions: VersionSet,
 }
 
 /// Every struct this message declares, paired with its members, in protocol
@@ -22,7 +22,7 @@ pub(super) struct RenderableStruct<'a> {
 /// `commonStructs` and an inline body are two spellings of one concept, but the
 /// members live in different places. The IR table fixes identity and order;
 /// this walk only reconnects each table entry to its single source body.
-pub(super) fn declared_structs(
+pub(crate) fn declared_structs(
     message: &Message,
 ) -> Result<Vec<RenderableStruct<'_>>, GenerationError> {
     let mut declared = Vec::new();

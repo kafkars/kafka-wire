@@ -14,7 +14,7 @@ use std::path::{Path, PathBuf};
 
 use kafka_wire_schema::Message;
 
-use super::imports::{IMPORTABLE, declares};
+use super::imports::{ExternalSymbol as S, IMPORTABLE, declares};
 use crate::{lockfile::ProtocolLock, source::load_every_source};
 
 /// Every (module, name) pair the pinned corpus forces to be written in full.
@@ -49,9 +49,10 @@ fn corpus() -> Vec<Message> {
 fn one_module_in_the_corpus_must_spell_a_wire_type_in_full() {
     let mut clashes = Vec::new();
     for message in corpus() {
-        for (name, _) in IMPORTABLE {
+        for symbol in IMPORTABLE {
+            let name = symbol.name();
             if declares(&message, name) {
-                clashes.push((message.name.rust_module().to_owned(), (*name).to_owned()));
+                clashes.push((message.name.rust_module().to_owned(), name.to_owned()));
             }
         }
     }
@@ -81,10 +82,11 @@ fn a_module_that_declares_no_clashing_struct_writes_every_name_bare() {
         .find(|message| message.name.rust_module() == "produce_request")
         .unwrap_or_else(|| panic!("the corpus must contain ProduceRequest"));
 
-    for (name, _) in IMPORTABLE {
+    for symbol in IMPORTABLE {
+        let name = symbol.name();
         assert_eq!(
-            super::imports::spell(ordinary, name),
-            *name,
+            super::imports::spell(ordinary, *symbol),
+            name,
             "`produce_request` declares no struct named `{name}` and must import it",
         );
     }
@@ -99,14 +101,14 @@ fn the_one_clashing_module_qualifies_that_name_and_only_that_name() {
         .unwrap_or_else(|| panic!("the corpus must contain ApiVersionsResponse"));
 
     assert_eq!(
-        super::imports::spell(api_versions, "ApiVersion"),
+        super::imports::spell(api_versions, S::ApiVersion),
         "kafka_wire_core::ApiVersion",
     );
     // Every other name it imports keeps the bare spelling, which is what makes
     // this resolution worth the extra machinery over qualifying everything.
-    assert_eq!(super::imports::spell(api_versions, "Decoder"), "Decoder");
+    assert_eq!(super::imports::spell(api_versions, S::Decoder), "Decoder");
     assert_eq!(
-        super::imports::spell(api_versions, "KafkaMessage"),
+        super::imports::spell(api_versions, S::KafkaMessage),
         "KafkaMessage",
     );
 }
@@ -123,7 +125,41 @@ fn a_crate_local_name_would_be_qualified_against_the_crate_not_the_wire() {
     message.name = kafka_wire_schema::MessageName::new("KafkaRequest");
 
     assert_eq!(
-        super::imports::spell(&message, "KafkaRequest"),
+        super::imports::spell(&message, S::KafkaRequest),
         "crate::KafkaRequest",
     );
+}
+
+#[test]
+fn api_descriptor_has_one_explicit_crate_origin() {
+    let mut message = corpus()
+        .into_iter()
+        .find(|message| message.name.rust_module() == "produce_request")
+        .unwrap_or_else(|| panic!("the corpus must contain ProduceRequest"));
+    message.name = kafka_wire_schema::MessageName::new("ApiDescriptor");
+
+    assert_eq!(
+        super::imports::spell(&message, S::ApiDescriptor),
+        "crate::ApiDescriptor",
+    );
+}
+
+#[test]
+fn prelude_vocabulary_is_always_absolute_and_cannot_be_shadowed() {
+    let message = corpus()
+        .into_iter()
+        .find(|message| message.name.rust_module() == "produce_request")
+        .unwrap_or_else(|| panic!("the corpus must contain ProduceRequest"));
+    for (symbol, expected) in [
+        (S::Result, "::core::result::Result"),
+        (S::Option, "::core::option::Option"),
+        (S::Vec, "::std::vec::Vec"),
+        (S::Default, "::core::default::Default"),
+        (S::Ok, "::core::result::Result::Ok"),
+        (S::Err, "::core::result::Result::Err"),
+        (S::Some, "::core::option::Option::Some"),
+        (S::None, "::core::option::Option::None"),
+    ] {
+        assert_eq!(super::imports::spell(&message, symbol), expected);
+    }
 }
