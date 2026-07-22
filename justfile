@@ -8,6 +8,10 @@ generate:
 generated-check:
     cargo xtask generated-check
 
+# Compile the full pinned corpus and execute compiler-authored adversarial fixtures.
+probe-check:
+    cargo xtask generate-all --check-only
+
 
 # Verify the broker-authored byte vectors. Pure Rust: no Java, no jar, no network.
 vectors-check:
@@ -39,7 +43,7 @@ test:
 doc:
     RUSTDOCFLAGS="-D warnings" cargo doc --workspace --all-features --no-deps
 
-check: generated-check vectors-check records-check fmt lint test doc
+check: generated-check probe-check vectors-check records-check fmt lint test doc
 
 tree:
     find crates xtask spec -type f | sort
