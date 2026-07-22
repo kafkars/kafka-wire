@@ -17,6 +17,25 @@ fn request_and_response_names_must_leave_a_nonempty_api_stem() {
     }
 }
 
+#[test]
+fn an_api_stem_must_remain_valid_after_rust_normalization() {
+    for (request, response) in [
+        ("---Request", "---Response"),
+        ("_Request", "_Response"),
+        (" Request", " Response"),
+        ("...Request", "...Response"),
+    ] {
+        assert_codes(
+            &schema("request", request),
+            &["KAFKA_SCHEMA_INVALID_API_NAME"],
+        );
+        assert_codes(
+            &schema("response", response),
+            &["KAFKA_SCHEMA_INVALID_API_NAME"],
+        );
+    }
+}
+
 fn schema(kind: &str, name: &str) -> String {
     format!(
         r#"{{ "apiKey": 1, "type": "{kind}", "name": "{name}",

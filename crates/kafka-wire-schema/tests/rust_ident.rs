@@ -20,7 +20,7 @@ fn current_and_future_reserved_words_share_one_escape_policy() {
 
 #[test]
 fn malformed_normalized_names_are_rejected() {
-    for source in ["", "---", "123Name"] {
+    for source in ["", "_", "---", "123Name"] {
         assert!(
             RustIdent::snake(source).is_err(),
             "{source:?} unexpectedly became a Rust identifier"
