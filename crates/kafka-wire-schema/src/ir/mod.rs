@@ -1,16 +1,19 @@
 //! Backend-neutral protocol semantics.
 
+mod api_name;
 mod common_struct;
 mod entity;
 mod field;
 mod field_type;
 mod message;
 mod name;
+mod rust_keyword;
 mod struct_ref;
 mod struct_table;
 mod value;
 mod version;
 
+pub use api_name::ApiName;
 pub use common_struct::CommonStruct;
 pub use entity::{EntityType, EntityTypeParseError};
 pub use field::Field;

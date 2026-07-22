@@ -11,10 +11,10 @@ mod source;
 mod validate;
 
 pub use ir::{
-    CommonStruct, DefaultValue, EntityType, EntityTypeParseError, Field, FieldName, FieldType,
-    FloatDefault, Message, MessageKind, MessageName, Qualification, RustIdent, RustIdentError,
-    StructDeclaration, StructOrigin, StructRef, StructTable, TypeParseError, VersionParseError,
-    VersionRange, VersionSet,
+    ApiName, CommonStruct, DefaultValue, EntityType, EntityTypeParseError, Field, FieldName,
+    FieldType, FloatDefault, Message, MessageKind, MessageName, Qualification, RustIdent,
+    RustIdentError, StructDeclaration, StructOrigin, StructRef, StructTable, TypeParseError,
+    VersionParseError, VersionRange, VersionSet,
 };
 pub use load::{SchemaError, load_message, load_message_with, load_source, load_source_with};
 pub use lower::{LowerError, lower_message};

@@ -2,7 +2,7 @@
 
 use std::collections::BTreeSet;
 
-use crate::{Message, MessageKind};
+use crate::{ApiName, Message, MessageKind};
 
 use super::{
     SchemaExceptions, ValidationErrors,
@@ -30,6 +30,7 @@ pub fn validate_message_with(
     validate_versions(message, &mut errors);
     validate_api_key(message, &mut errors);
     validate_kind_name(message, &mut errors);
+    validate_negotiation_policy(message, &mut errors);
     validate_listeners(message, &mut errors);
     validate_structs(message, &mut errors);
 
@@ -54,6 +55,17 @@ pub fn validate_message_with(
         Ok(())
     } else {
         Err(ValidationErrors(errors))
+    }
+}
+
+fn validate_negotiation_policy(message: &Message, errors: &mut Vec<super::ValidationError>) {
+    if message.latest_version_unstable && message.kind != MessageKind::Request {
+        errors.push(diagnostic(
+            message,
+            None,
+            "KAFKA_SCHEMA_UNEXPECTED_UNSTABLE_POLICY",
+            "latestVersionUnstable is request-side API negotiation policy",
+        ));
     }
 }
 
@@ -134,6 +146,16 @@ fn validate_kind_name(message: &Message, errors: &mut Vec<super::ValidationError
             None,
             "KAFKA_SCHEMA_DIRECTION_NAME",
             &format!("message name does not end with `{suffix}` as its kind requires"),
+        ));
+    } else if let Err(error) = ApiName::try_from_message(&message.name) {
+        errors.push(diagnostic(
+            message,
+            None,
+            "KAFKA_SCHEMA_INVALID_API_NAME",
+            &format!(
+                "API name `{}` cannot form a Rust module identifier: {error}",
+                message.name.api_stem()
+            ),
         ));
     }
 }

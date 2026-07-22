@@ -8,6 +8,8 @@ use std::fmt;
 use heck::{ToSnakeCase, ToUpperCamelCase};
 use thiserror::Error;
 
+use super::rust_keyword::is_rust_keyword;
+
 /// A normalized identifier proven parseable by this workspace's Rust parser.
 #[derive(Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
 pub struct RustIdent(String);
@@ -35,11 +37,14 @@ impl RustIdent {
 
         // Rust keywords, including future-reserved words such as the 2024
         // edition's `gen`, become ordinary identifiers through one stable
-        // suffix policy. Malformed names remain malformed after the suffix and
-        // are rejected rather than silently invented.
-        let escaped = format!("{normalized}_");
-        if parses_as_ident(&escaped) {
-            return Ok(Self(escaped));
+        // suffix policy. Do not try that repair for arbitrary malformed input:
+        // a lone `_`, for example, would otherwise become the unrelated valid
+        // identifier `__` and cross the checked-name boundary.
+        if is_rust_keyword(&normalized) {
+            let escaped = format!("{normalized}_");
+            if parses_as_ident(&escaped) {
+                return Ok(Self(escaped));
+            }
         }
 
         Err(RustIdentError {
