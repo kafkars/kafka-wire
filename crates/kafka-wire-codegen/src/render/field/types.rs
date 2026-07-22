@@ -70,8 +70,8 @@ pub(crate) fn rust_type(field: &Field, message: &Message) -> String {
 /// questions, and the second belongs to `validate`.
 ///
 /// A struct reference is emitted under the spelling lowering resolved, never a
-/// name this file re-derives. Under the module-scoped naming rule that is upstream's own spelling and
-/// the reference is a sibling in the same module, so it needs no path.
+/// name this file re-derives. Module-scoped naming keeps upstream's spelling,
+/// and the reference is a sibling in the same module, so it needs no path.
 ///
 /// A wire type does need one, in the rare module that declares a struct of the
 /// same name; `spell` is what decides, and it is asked here rather than by the

@@ -1,8 +1,8 @@
 //! Module-scoped identity for one nested struct.
 //!
-//! This file owns the module-scoped naming rule's naming rule: a nested struct keeps upstream's own
-//! spelling, and the scope that disambiguates it is the module its owning
-//! message is emitted into. It deliberately does not own whether a reference
+//! A nested struct keeps upstream's spelling, disambiguated by the module of
+//! its owning message. This file owns that module-scoped identity. It deliberately
+//! does not own whether a reference
 //! binds to a declaration (`validate/structs.rs`), the per-message declaration
 //! table (`struct_table.rs`), or uniqueness within a module
 //! (`validate/uniqueness.rs`).
@@ -11,9 +11,9 @@ use super::{MessageName, RustIdent, RustIdentError};
 
 /// Which scope disambiguates a struct name.
 ///
-/// the earlier flat naming rule had three arms here, all of which built a flat, globally unique
-/// identifier out of the owner and the declared name. the module-scoped naming rule replaced the
-/// whole construction with a Rust module, so one arm is left. The enum stays
+/// The earlier flat identity had three arms, each building one globally unique
+/// identifier from the owner and declared name. A Rust module now supplies that
+/// scope, so one arm is left. The enum stays
 /// rather than being deleted because the owner is still *recorded* — it decides
 /// which module the struct lands in — and a regression that reintroduced
 /// qualification into the name would otherwise be invisible at this layer.
@@ -30,8 +30,8 @@ pub enum Qualification {
 
 /// A struct reference bound to the message that owns its declaration.
 ///
-/// Kafka scopes a struct name to the message that declares it, and the module-scoped naming rule
-/// gives Rust the same scope: one module per message, holding the message type
+/// Kafka scopes a struct name to the message that declares it. Rust mirrors
+/// that boundary with one module per message, holding the message type
 /// and every struct it declares. A bare upstream spelling is unambiguous there
 /// — `PartitionData` names 17 distinct shapes across 14 API keys, and each lands
 /// in its own module. Lowering still binds the owner, because the owner is what

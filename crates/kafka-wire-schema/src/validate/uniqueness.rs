@@ -1,7 +1,7 @@
 //! Uniqueness of the Rust type names emission produces, in each of its scopes.
 //!
-//! This file owns the module-scoped naming rule's collision guard. There are **two** scopes, and
-//! getting them backwards is the whole failure mode this file exists to prevent:
+//! This file owns collision checks for the two emitted name scopes. Getting
+//! them backwards is the whole failure mode this file exists to prevent:
 //!
 //! * **The module.** `kafka-wire-codegen` emits one `pub mod` per message, holding
 //!   the message type and every struct that message declares under upstream's
@@ -10,8 +10,8 @@
 //! * **The crate root.** Only message types are re-exported flat, so that
 //!   `kafka_wire::ProduceRequest` needs no module path. Two message types of
 //!   one name would be an unexportable pair. Nested structs do *not* participate
-//!   — that is exactly what the module-scoped naming rule bought, and putting them back into the
-//!   global map would reject `EntryData` in both directions of
+//!   — that isolation is the reason for the module boundary. Putting nested
+//!   names back into the global map would reject `EntryData` in both directions of
 //!   `AlterClientQuotas`, which is legal and generated today.
 //!
 //! Scoping the global map too widely rejects correct schemas; scoping the module

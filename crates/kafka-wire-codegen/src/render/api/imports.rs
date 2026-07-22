@@ -1,15 +1,15 @@
 //! What a message module imports, and how it spells a name it cannot import.
 //!
-//! the module-scoped naming rule puts each message and the structs it declares into one module under
-//! upstream's own spellings. That opens a scope no measurement of the schemas
+//! Each message and its declared structs share one module under upstream's own
+//! spellings. That opens a scope no measurement of the schemas
 //! can find, because it depends on what the *emitter* imports rather than on
 //! what upstream declares: a declared struct can collide with a name its own
 //! module imports. `ApiVersionsResponse` declares a struct upstream spells
 //! `ApiVersion`, and every module imports `kafka_wire_core::ApiVersion` for its
 //! codec signatures — `error[E0255]`.
 //!
-//! the module-scoped naming rule names two resolutions and this file implements the second, the one
-//! it calls the reference-grade answer: import every name that does not clash,
+//! Two resolutions are possible; this file implements the readable one: import
+//! every name that does not clash,
 //! and spell the clashing one in full at its point of use. The alternative —
 //! qualifying every wire type everywhere — is immune by construction and makes
 //! every generated signature longer, in exactly the code this decision exists

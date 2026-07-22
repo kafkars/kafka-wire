@@ -205,7 +205,7 @@ public final class Oracle {
      * The top-level entry is keyed by the message name rather than by the Java
      * class name, because `Data` is Kafka's suffix and not part of the protocol.
      * Nested structs keep upstream's own spelling, which is exactly the scope
-     * the module-scoped naming rule gives them here: unique within their message, and not beyond it.
+     * their message module supplies: unique within that message, and not beyond it.
      */
     private static ArrayNode structsOf(String message) throws Exception {
         ArrayNode structs = MAPPER.createArrayNode();

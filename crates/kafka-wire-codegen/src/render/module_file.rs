@@ -54,8 +54,8 @@ pub(crate) fn render_module_file(
 /// names public — and a second traversal is a second chance to disagree.
 ///
 /// Each message contributes three names: its directional descriptor, its type,
-/// and the module the module-scoped naming rule scopes its nested structs to. Each group adds its
-/// pair descriptor. The message module has to be re-exported, not merely
+/// and the module that contains its nested structs. Each group adds its pair
+/// descriptor. The message module has to be re-exported, not merely
 /// emitted — a nested struct is reachable only through it now, and a `pub mod`
 /// nothing re-exports is both unreachable to a caller and an `unreachable_pub`
 /// warning on checked-in output.

@@ -11,9 +11,9 @@ use super::{LowerError, field::lower_field, field::parse_versions, structs::coll
 
 /// Lowers one raw Kafka message definition into backend-neutral semantics.
 ///
-/// The message name is normalized first because everything below it is bound
-/// relative to it: the module-scoped naming rule scopes every nested struct to its owning message's
-/// module, so the owner has to exist before a single field type can be parsed.
+/// The message name is normalized first because every nested struct is bound
+/// relative to its owning message's module. The owner therefore has to exist
+/// before a single field type can be parsed.
 pub fn lower_message(raw: RawMessage, source: PathBuf) -> Result<Message, LowerError> {
     if !raw.extra.is_empty() {
         return Err(LowerError::MessageProperties {

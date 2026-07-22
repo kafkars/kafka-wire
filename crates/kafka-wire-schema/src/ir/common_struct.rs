@@ -14,8 +14,8 @@ use super::{Field, StructRef, VersionSet};
 /// has its shape — `DescribeQuorumResponse` declares `ReplicaState` once and
 /// both `CurrentVoters` and `Observers` refer to it. The block is scoped to a
 /// single message and direction, so it is not shared between a request and its
-/// response even when the two declare identical shapes, and under module-scoped naming it
-/// lands in the same module an inline declaration lands in, under the same
+/// response even when the two declare identical shapes. Like an inline
+/// declaration, it lands in its owning message's module under the same
 /// spelling: `DescribeQuorumResponse` declares `ReplicaState`, and that is the
 /// name emitted.
 #[derive(Clone, Debug, Eq, PartialEq)]

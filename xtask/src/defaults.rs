@@ -55,7 +55,7 @@ struct MessageDefaults {
 }
 
 /// One struct's fields, keyed top-level by message name and nested by upstream's
-/// own struct spelling, as the module-scoped naming rule scopes them.
+/// own struct spelling within the module of the message that declares it.
 #[derive(Debug, Deserialize, Serialize)]
 struct StructDefaults {
     #[serde(rename = "struct")]

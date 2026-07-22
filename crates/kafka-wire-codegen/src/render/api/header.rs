@@ -7,8 +7,8 @@
 //! knows how to emit — so this file owns the module around them and nothing
 //! about how a field becomes Rust.
 //!
-//! Each schema gets a module of its own, for the reason the module-scoped naming rule gives every
-//! message one. These were rendered flat into a single `framing.rs`, and the
+//! Each schema gets its own module so its nested names remain local, just as
+//! message schemas do. These were rendered flat into a single `framing.rs`, and the
 //! moment struct names went bare `TopicPartition` and `Voter` each collided
 //! there — `LeaderChangeMessage` and `VotersRecord` both declare `Voter`, with
 //! different fields. Measured by attempting it, not predicted.

@@ -75,8 +75,8 @@ impl StructTable {
     ///
     /// The order is each `commonStructs` entry in file order followed by the
     /// inline bodies nested inside it, then the inline bodies of the root field
-    /// tree in written field order. the earlier flat naming rule fixes generated item order to
-    /// protocol declaration order, so this is that order rather than an
+    /// tree in written field order. Generated items follow protocol declaration
+    /// order, so this is that order rather than an
     /// incidental one, and a renderer may emit it directly.
     pub fn declarations(&self) -> &[StructDeclaration] {
         &self.declarations

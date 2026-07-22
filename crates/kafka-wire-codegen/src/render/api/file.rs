@@ -1,7 +1,7 @@
 //! Complete-file orchestration, provenance, and import rendering for one API key.
 //!
-//! the module-scoped naming rule makes the module the scope a nested struct name is unique in, so
-//! this file owns two levels rather than one. Each message becomes a `pub mod`
+//! A message module is the namespace in which its nested struct names are
+//! unique, so this file owns two levels rather than one. Each message becomes a `pub mod`
 //! holding its own imports, its own type, and every struct it declares under
 //! upstream's spelling. The file level holds only what has to see both
 //! directions at once: the flat re-export of each message type, and the

@@ -25,8 +25,8 @@ pub(super) fn validate_structs(message: &Message, errors: &mut Vec<ValidationErr
 
 /// Reports a struct name this message declares more than once.
 ///
-/// the module-scoped naming rule scopes nested structs to their owning message's module, which is
-/// exactly sufficient only because no message declares one name with two shapes.
+/// Nested structs live in their owning message's module, which is sufficient
+/// only because no message declares one name with two shapes.
 /// That is a measured property of today's corpus, so it is checked on every run
 /// rather than trusted: an upstream schema that breaks it must fail here with
 /// both declaration sites named, never silently merge two shapes into one Rust
