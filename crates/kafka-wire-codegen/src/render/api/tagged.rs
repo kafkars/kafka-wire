@@ -167,7 +167,7 @@ pub(super) fn render_tagged_encode(rust: &mut RustText, fields: &[Field], messag
             spell(message, S::KnownTags)
         ));
         for (tag, _, field) in &tagged {
-            render_tag_measure(rust, *tag, field, message);
+            render_tag_claim(rust, *tag, field, message);
         }
         rust.line("encoder.write_merged_tagged_fields(");
         rust.line("    known,");
@@ -186,22 +186,25 @@ pub(super) fn render_tagged_encode(rust: &mut RustText, fields: &[Field], messag
     rust.close("");
 }
 
-/// One known tag's contribution: written only when present and non-default.
+/// Claims one active tag and measures it only when its value is non-default.
 ///
-/// Omitting a default-valued tag is the whole point of the construct. The
-/// section is sparse, and writing a tag that says nothing would inflate every
-/// message for no information — so this reuses the same non-default test that
-/// already decides whether a version-gated inline field is representable.
-fn render_tag_measure(rust: &mut RustText, tag: u32, field: &Field, message: &Message) {
+/// Default omission keeps the section sparse but never relinquishes the tag
+/// number: an active known tag cannot also be forwarded as retained unknown
+/// state.
+fn render_tag_claim(rust: &mut RustText, tag: u32, field: &Field, message: &Message) {
     let non_default = field::non_default_condition(field, message);
-    let condition = match field::tagged_presence_condition(field, message) {
-        Some(presence) => format!("{} && {non_default}", field::as_conjunct(&presence)),
-        None => non_default,
-    };
-    rust.open(format!("if {condition}"));
+    let presence = field::tagged_presence_condition(field, message);
+    if let Some(condition) = &presence {
+        rust.open(format!("if {condition}"));
+    }
+    rust.line(format!("known.claim({tag})?;"));
+    rust.open(format!("if {non_default}"));
     rust.line(format!(
         "known.measure({tag}, |encoder| Self::{}(self, encoder, version))?;",
         tag_helper(tag)
     ));
     rust.close("");
+    if presence.is_some() {
+        rust.close("");
+    }
 }

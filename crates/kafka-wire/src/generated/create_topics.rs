@@ -694,8 +694,8 @@ pub mod create_topics_request {
 pub mod create_topics_response {
     use kafka_wire_core::{
         ApiKey, ApiVersion, BytesMut, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder,
-        KafkaDecode, KafkaEncode, KnownTags, StrBytes, TagOutcome, TaggedFields, Uuid,
-        VersionRange, encode_into_with, encoded_len_with,
+        KafkaDecode, KafkaEncode, KnownTags, StrBytes, TagOutcome, TaggedFields, TaggedFieldsError,
+        Uuid, VersionRange, encode_into_with, encoded_len_with,
     };
 
     use crate::{KafkaMessage, KafkaResponse, ProtocolEq};
@@ -753,6 +753,11 @@ pub mod create_topics_response {
                         value.validate_for_version(version)?;
                     }
                 }
+            }
+            if version.value() >= 5 && self.unknown_tagged_fields.contains_tag(0) {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsInvalid(
+                    TaggedFieldsError::Duplicate { tag: 0 },
+                ));
             }
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
                 return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
@@ -927,6 +932,7 @@ pub mod create_topics_response {
 
             if Self::is_flexible(version) {
                 let mut known = KnownTags::new();
+                known.claim(0)?;
                 if self.topic_config_error_code != 0 {
                     known.measure(0, |encoder| {
                         Self::__kw_encode_known_tag_0(self, encoder, version)

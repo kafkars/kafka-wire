@@ -7,6 +7,19 @@ use bytes::BytesMut;
 
 use super::EncodeError;
 
+/// What an encoding target needs for a payload whose length is already known.
+///
+/// This is an implementation hook for `Encoder`; protocol codecs should write
+/// through the encoder rather than branch on the target themselves.
+#[doc(hidden)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum PremeasuredWrite {
+    /// The target accounted for the payload from its length alone.
+    Accounted,
+    /// The target needs the payload writer to emit the actual bytes.
+    WritePayload,
+}
+
 /// Destination consumed by `Encoder`.
 pub trait EncodeTarget {
     /// Writes one contiguous byte slice.
@@ -21,6 +34,16 @@ pub trait EncodeTarget {
     /// Returns whether this target has observed no bytes.
     fn is_empty(&self) -> bool {
         self.len() == 0
+    }
+
+    /// Accounts for a payload whose exact byte length was already measured.
+    ///
+    /// Byte-materializing targets use the default and receive the payload
+    /// normally. A sizing target can advance directly and avoid traversing the
+    /// same value a second time.
+    #[doc(hidden)]
+    fn prepare_premeasured(&mut self, _length: usize) -> Result<PremeasuredWrite, EncodeError> {
+        Ok(PremeasuredWrite::WritePayload)
     }
 }
 
@@ -86,5 +109,18 @@ impl EncodeTarget for SizeTarget {
     #[inline]
     fn len(&self) -> usize {
         self.len
+    }
+
+    #[inline]
+    fn prepare_premeasured(&mut self, length: usize) -> Result<PremeasuredWrite, EncodeError> {
+        self.len = self
+            .len
+            .checked_add(length)
+            .ok_or(EncodeError::LengthOverflow {
+                kind: "encoded message",
+                length: usize::MAX,
+                maximum: usize::MAX,
+            })?;
+        Ok(PremeasuredWrite::Accounted)
     }
 }

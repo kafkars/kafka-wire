@@ -7,7 +7,7 @@ use bytes::BytesMut;
 
 use crate::{StrBytes, TaggedFields};
 
-use super::{BufferTarget, EncodeError, EncodeTarget, SizeTarget};
+use super::{BufferTarget, EncodeError, EncodeTarget, PremeasuredWrite, SizeTarget};
 
 /// Stateful Kafka wire encoder over an encoding target.
 #[derive(Debug)]
@@ -47,6 +47,14 @@ impl<T: EncodeTarget> Encoder<T> {
     #[inline]
     pub fn is_empty(&self) -> bool {
         self.target.is_empty()
+    }
+
+    /// Asks the target how it handles an already measured payload.
+    pub(super) fn prepare_premeasured(
+        &mut self,
+        length: usize,
+    ) -> Result<PremeasuredWrite, EncodeError> {
+        self.target.prepare_premeasured(length)
     }
 
     /// Writes a Kafka boolean.

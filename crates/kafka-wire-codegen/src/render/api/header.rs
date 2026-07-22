@@ -85,6 +85,7 @@ fn render_imports(rust: &mut RustText, message: &Message) {
     if super::tagged::declares_a_tag(message) {
         wire.push(S::KnownTags);
         wire.push(S::TagOutcome);
+        wire.push(S::TaggedFieldsError);
     }
     if uses(&FieldType::Uuid) {
         wire.push(S::Uuid);

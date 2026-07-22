@@ -813,8 +813,8 @@ pub mod end_quorum_epoch_request {
 pub mod end_quorum_epoch_response {
     use kafka_wire_core::{
         ApiKey, ApiVersion, BytesMut, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder,
-        KafkaDecode, KafkaEncode, KnownTags, StrBytes, TagOutcome, TaggedFields, VersionRange,
-        encode_into_with, encoded_len_with,
+        KafkaDecode, KafkaEncode, KnownTags, StrBytes, TagOutcome, TaggedFields, TaggedFieldsError,
+        VersionRange, encode_into_with, encoded_len_with,
     };
 
     use crate::{KafkaMessage, KafkaResponse, ProtocolEq};
@@ -1323,6 +1323,11 @@ pub mod end_quorum_epoch_response {
                     value.validate_for_version(version)?;
                 }
             }
+            if version.value() >= 1 && self.unknown_tagged_fields.contains_tag(0) {
+                return ::core::result::Result::Err(EncodeError::TaggedFieldsInvalid(
+                    TaggedFieldsError::Duplicate { tag: 0 },
+                ));
+            }
             if !Self::is_flexible(version) && !self.unknown_tagged_fields.is_empty() {
                 return ::core::result::Result::Err(EncodeError::TaggedFieldsNotRepresentable {
                     message: Self::NAME,
@@ -1407,6 +1412,7 @@ pub mod end_quorum_epoch_response {
 
             if Self::is_flexible(version) {
                 let mut known = KnownTags::new();
+                known.claim(0)?;
                 if !self.node_endpoints.is_empty() {
                     known.measure(0, |encoder| {
                         Self::__kw_encode_known_tag_0(self, encoder, version)

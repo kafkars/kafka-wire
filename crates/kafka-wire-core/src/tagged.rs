@@ -63,6 +63,16 @@ impl TaggedFields {
         self.fields.iter()
     }
 
+    /// Returns whether this set contains `tag`.
+    ///
+    /// Construction keeps the fields ordered, so lookup does not scan retained
+    /// payloads or allocate.
+    pub fn contains_tag(&self, tag: u32) -> bool {
+        self.fields
+            .binary_search_by_key(&tag, TaggedField::tag)
+            .is_ok()
+    }
+
     /// Returns the number of fields.
     pub fn len(&self) -> usize {
         self.fields.len()

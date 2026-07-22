@@ -4,11 +4,11 @@
   "ir_version": 1,
   "upstream_repository": "https://github.com/apache/kafka",
   "upstream_commit": "678c0e07e4733c5a592e52046dc2c4e1625587f1",
-  "semantic_inputs_sha256": "8411ab1af2e9562e4d0e6598cf7610d668e9f25442e780e3d73b662de079cdd9",
+  "semantic_inputs_sha256": "9bfc6d8cd1e007550edb4ed0607aaa88c4fb489d705fffd00a05b113ce4e0685",
   "protocol_lock_sha256": "ba0a2510be56dbe225a9346c4fc6df5d3c48d33bec9ef92b4959f038659a0de2",
   "headers_override_sha256": "2831709c06549001fd4c59d3f58b33fcded5f7e0505d31a2777caa3657210c95",
   "schema_exceptions_sha256": "d10311cc6f570d1bfd13c6cf0194cf1f139f12226553d9a3ba2ac05c81d0583d",
-  "compiler_source_sha256": "3b165e9ae308f281f397806d87b60ca1b78b20a4c14c3ca4c018411cbb0dc865",
+  "compiler_source_sha256": "424f1f7615813818f6175eeb68b2ac6152e9b4305377484c0ac9f867b83c2a1b",
   "rustfmt_sha256": "1d4b22e8a230b0627ce08efc3f2d5a0f7b4400ccc45d40f6fb95a7bc9ea46a82",
   "rustfmt_identity": "version=rustfmt 1.8.0-stable (6b00bc3880 2025-06-23); edition=2024",
   "files": [
@@ -58,7 +58,7 @@
     },
     {
       "path": "api_versions.rs",
-      "sha256": "9e84f8566a894f18ad7323c683c7e68f8549069a3e516793b1434c60311b8ce8"
+      "sha256": "de6d6259ae5964857a4e7c5ffd94345f1b30e659e955857f6a095360e6a24967"
     },
     {
       "path": "assign_replicas_to_dirs.rs",
@@ -66,11 +66,11 @@
     },
     {
       "path": "begin_quorum_epoch.rs",
-      "sha256": "115891d680396650601ef9145ac979102a72cab6753623f1eae93b7eaab09111"
+      "sha256": "b2b998570a3768a27bb9ad2a31e0bed3151f973fd595975769573d73a65c4af1"
     },
     {
       "path": "broker_heartbeat.rs",
-      "sha256": "f3587243141505d9abb07ae307143da1b07947554abc8183db93f41ecc8976dc"
+      "sha256": "6de29922002a4890f466bff5ceb3a550607e686c38999fc0126e001c9d6c0473"
     },
     {
       "path": "broker_registration.rs",
@@ -102,7 +102,7 @@
     },
     {
       "path": "create_topics.rs",
-      "sha256": "9038aa7fcf4342589b9e20e2e268191818e8eab98186abb4ca13e7d7c204c767"
+      "sha256": "ca09be2063ae8290d1c28c9fff01efa1051a5e0dd3cedf0e5c9079679924c895"
     },
     {
       "path": "delete_acls.rs",
@@ -186,7 +186,7 @@
     },
     {
       "path": "end_quorum_epoch.rs",
-      "sha256": "abf05a1e17b92df8488b22412fc88e0fe1c7daca127d24a8fc78b4d3336e0a81"
+      "sha256": "f47be968634fae3a5abf5439b5d3f8c30f8e2adaa2a7d52c6d14402fca2bb6b6"
     },
     {
       "path": "end_txn.rs",
@@ -206,11 +206,11 @@
     },
     {
       "path": "fetch.rs",
-      "sha256": "f9bba9df19a57293d3316a2fa163d91ce5e35ad6d914fa2115f44d105e3705c2"
+      "sha256": "b3a51544ce29208777cdc1142f857ab35c1f2d397371edf1a2a6e3846ca75b8d"
     },
     {
       "path": "fetch_snapshot.rs",
-      "sha256": "39306288479fc15347940c597b841db94c2e17b8fe0264b2af23e73d371e2cd7"
+      "sha256": "32f3a0b1ef34f401da9aeca9202f4e2a76ac66b9cb3dfdd67afb00cc58df9ac4"
     },
     {
       "path": "find_coordinator.rs",
@@ -302,7 +302,7 @@
     },
     {
       "path": "produce.rs",
-      "sha256": "4477faf4eecd812af48d3d4b91471687a235e2a40616d71665f516e37be6c5d9"
+      "sha256": "be26fe97b542b86fbab15ff356f04939342fd9f9e0e86071f4c1c787bf7ade9d"
     },
     {
       "path": "push_telemetry.rs",
@@ -369,6 +369,10 @@
       "sha256": "045e0af1484ff21a6ee378540ecbb36f3b9eabfc62eecb206b88171508f0d6de"
     },
     {
+      "path": "tag_claims.rs",
+      "sha256": "9751ddb802fc90343a3ede2772f246318c06004c0e1f5c767ed38890a7530c8a"
+    },
+    {
       "path": "txn_offset_commit.rs",
       "sha256": "fc5945a0381b729500e16f996732cdfce5201d4d391e05b34b46aa6313fbae3f"
     },
@@ -382,11 +386,11 @@
     },
     {
       "path": "update_raft_voter.rs",
-      "sha256": "24391dc75df00287ac55eb51ddc8ba26b9bca7f880b94e728614b904e44456d3"
+      "sha256": "43d4e065404e942cfba4ff25f52cc4be7e7787594183c02246f80ebe5ec55500"
     },
     {
       "path": "vote.rs",
-      "sha256": "0f9978f4b8365a4bdff9b3df3866ce1adcf2d6c433a1aeac223ca67701e4ac69"
+      "sha256": "1dba57788f78f8e3d0a8fe2e1d3258685f8a83c33421c734fc4898453c4da00e"
     },
     {
       "path": "write_share_group_state.rs",

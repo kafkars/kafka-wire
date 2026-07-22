@@ -16,5 +16,5 @@ mod varint;
 pub use encoder::Encoder;
 pub use error::EncodeError;
 pub use known::KnownTags;
-pub use target::{BufferTarget, EncodeTarget, SizeTarget};
+pub use target::{BufferTarget, EncodeTarget, PremeasuredWrite, SizeTarget};
 pub use value::{KafkaEncode, encode_into_with, encoded_len_with};

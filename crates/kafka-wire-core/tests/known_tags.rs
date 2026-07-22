@@ -14,6 +14,7 @@ use kafka_wire_core::{
     DecodeError, DecodeLimits, Decoder, EncodeError, EncodeTarget, Encoder, KnownTags, TagOutcome,
     TaggedField, TaggedFields,
 };
+use std::cell::Cell;
 
 /// A section of one entry: tag 0, one byte of payload `0xaa`.
 const UNKNOWN_TAG_0: &[u8] = &[0x01, 0x00, 0x01, 0xaa];
@@ -103,7 +104,7 @@ fn a_section_of_only_unknown_tags_is_byte_identical_to_the_plain_writer() {
 #[test]
 fn a_known_tag_colliding_with_a_retained_one_is_named() {
     let mut known = KnownTags::new();
-    known.measure(0, |encoder| encoder.write_i16(7)).unwrap();
+    known.claim(0).unwrap();
 
     let mut buffer = BytesMut::new();
     let error = Encoder::new(&mut buffer)
@@ -117,6 +118,58 @@ fn a_known_tag_colliding_with_a_retained_one_is_named() {
     assert!(
         buffer.is_empty(),
         "the collision must be rejected before output"
+    );
+}
+
+#[test]
+fn a_claimed_default_tag_is_not_counted_or_written() {
+    let bytes = wire(
+        || {
+            let mut known = KnownTags::new();
+            known.claim(1).unwrap();
+            known
+        },
+        &unknown(9, &[0xaa]),
+    );
+
+    assert_eq!(bytes, [0x01, 0x09, 0x01, 0xaa]);
+}
+
+#[test]
+fn claiming_one_schema_tag_twice_is_a_duplicate() {
+    let mut known = KnownTags::new();
+    known.claim(1).unwrap();
+
+    assert!(matches!(
+        known.claim(1),
+        Err(EncodeError::TaggedFieldsInvalid(_))
+    ));
+}
+
+#[test]
+fn a_sizing_target_accounts_for_a_measured_payload_without_replaying_it() {
+    let traversals = Cell::new(0_usize);
+    let mut known = KnownTags::new();
+    known
+        .measure(1, |encoder| {
+            traversals.set(traversals.get() + 1);
+            encoder.write_i16(7)
+        })
+        .unwrap();
+
+    let mut sizer = Encoder::sizing();
+    sizer
+        .write_merged_tagged_fields(known, &TaggedFields::default(), |_, encoder| {
+            traversals.set(traversals.get() + 1);
+            encoder.write_i16(7)
+        })
+        .unwrap();
+
+    assert_eq!(sizer.len(), 5);
+    assert_eq!(
+        traversals.get(),
+        1,
+        "the measured payload must not be replayed into SizeTarget"
     );
 }
 
@@ -231,4 +284,17 @@ fn a_value_reaching_past_its_declared_size_cannot_see_the_next_entry() {
 fn a_section_survives_the_round_trip_that_knows_none_of_it() {
     let retained = decoder(UNKNOWN_TAG_0).read_tagged_fields().unwrap();
     assert_eq!(wire(KnownTags::new, &retained), UNKNOWN_TAG_0);
+}
+
+#[test]
+fn retained_tag_lookup_uses_the_ordered_numeric_identity() {
+    let fields = TaggedFields::from_sorted(vec![
+        TaggedField::new(1, Bytes::from_static(&[0xaa])),
+        TaggedField::new(3, Bytes::from_static(&[0xbb])),
+    ])
+    .unwrap();
+
+    assert!(fields.contains_tag(1));
+    assert!(!fields.contains_tag(2));
+    assert!(fields.contains_tag(3));
 }

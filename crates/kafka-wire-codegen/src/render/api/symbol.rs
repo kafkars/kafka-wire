@@ -22,6 +22,7 @@ pub(crate) enum ExternalSymbol {
     StrBytes,
     TagOutcome,
     TaggedFields,
+    TaggedFieldsError,
     Uuid,
     VersionRange,
     EncodeIntoWith,
@@ -62,6 +63,7 @@ impl ExternalSymbol {
         Self::StrBytes,
         Self::TagOutcome,
         Self::TaggedFields,
+        Self::TaggedFieldsError,
         Self::Uuid,
         Self::VersionRange,
         Self::EncodeIntoWith,
@@ -93,6 +95,7 @@ impl ExternalSymbol {
             Self::StrBytes => "StrBytes",
             Self::TagOutcome => "TagOutcome",
             Self::TaggedFields => "TaggedFields",
+            Self::TaggedFieldsError => "TaggedFieldsError",
             Self::Uuid => "Uuid",
             Self::VersionRange => "VersionRange",
             Self::EncodeIntoWith => "encode_into_with",
@@ -140,6 +143,7 @@ impl ExternalSymbol {
             | Self::StrBytes
             | Self::TagOutcome
             | Self::TaggedFields
+            | Self::TaggedFieldsError
             | Self::Uuid
             | Self::VersionRange
             | Self::EncodeIntoWith
