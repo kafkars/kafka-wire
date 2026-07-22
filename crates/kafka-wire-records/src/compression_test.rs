@@ -5,6 +5,7 @@
 
 use std::io::Write as _;
 
+use bytes::Bytes;
 use kafka_wire_core::EncodeError;
 
 use crate::attributes::Compression;
@@ -49,8 +50,19 @@ fn zstd_refuses_an_oversized_window() -> Result<(), Box<dyn std::error::Error>> 
     let frame = encoder.finish()?;
 
     assert!(matches!(
-        Compression::Zstd.decompress(&frame, 1_024),
+        Compression::Zstd.decompress(Bytes::from(frame), 1_024),
         Err(RecordError::CompressionFailed { codec: "zstd", .. })
     ));
     Ok(())
+}
+
+#[test]
+fn uncompressed_payloads_keep_their_existing_byte_owner() {
+    let payload = Bytes::from_static(b"already bounded");
+    let allocation = payload.as_ptr();
+    let decoded = Compression::None
+        .decompress(payload, 1_024)
+        .unwrap_or_else(|error| panic!("uncompressed payload: {error}"));
+
+    assert_eq!(decoded.as_ptr(), allocation);
 }

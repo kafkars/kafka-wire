@@ -6,6 +6,13 @@
 
 use kafka_wire_core::DecodeLimits;
 
+/// Largest complete batch Kafka's signed 32-bit `batchLength` can describe.
+///
+/// The field counts bytes after the initial 12-byte base-offset and length
+/// prefix, so the complete container may be exactly 12 bytes larger than
+/// `i32::MAX`.
+pub const MAX_PROTOCOL_BATCH_BYTES: usize = 12 + 2_147_483_647;
+
 /// Resource limits applied while decoding one Kafka record batch.
 #[non_exhaustive]
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -76,6 +83,14 @@ impl RecordEncodeLimits {
         Self {
             max_uncompressed_records_bytes,
             max_encoded_batch_bytes,
+        }
+    }
+
+    pub(crate) const fn effective_max_encoded_batch_bytes(self) -> usize {
+        if self.max_encoded_batch_bytes < MAX_PROTOCOL_BATCH_BYTES {
+            self.max_encoded_batch_bytes
+        } else {
+            MAX_PROTOCOL_BATCH_BYTES
         }
     }
 }

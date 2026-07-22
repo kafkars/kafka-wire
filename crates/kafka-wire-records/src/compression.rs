@@ -26,6 +26,7 @@
 
 use std::{fmt, io::Read as _};
 
+use bytes::Bytes;
 use kafka_wire_core::EncodeError;
 
 use crate::attributes::Compression;
@@ -46,14 +47,22 @@ const ZSTD_MAX_WINDOW_LOG: u32 = 31;
 
 impl Compression {
     /// Decompresses one records payload.
-    pub(crate) fn decompress(self, payload: &[u8], limit: usize) -> Result<Vec<u8>, RecordError> {
+    pub(crate) fn decompress(self, payload: Bytes, limit: usize) -> Result<Bytes, RecordError> {
         match self {
             Self::None => checked_uncompressed(payload, limit),
-            Self::Gzip => read_bounded("gzip", flate2::read::GzDecoder::new(payload), limit),
-            Self::Snappy => decompress_xerial(payload, limit),
-            Self::Lz4 => read_bounded("lz4", lz4_flex::frame::FrameDecoder::new(payload), limit),
+            Self::Gzip => read_bounded(
+                "gzip",
+                flate2::read::GzDecoder::new(payload.as_ref()),
+                limit,
+            ),
+            Self::Snappy => decompress_xerial(payload.as_ref(), limit),
+            Self::Lz4 => read_bounded(
+                "lz4",
+                lz4_flex::frame::FrameDecoder::new(payload.as_ref()),
+                limit,
+            ),
             Self::Zstd => {
-                let mut decoder = zstd::stream::read::Decoder::new(payload)
+                let mut decoder = zstd::stream::read::Decoder::new(payload.as_ref())
                     .map_err(|error| Self::failed("zstd", &error))?;
                 decoder
                     .window_log_max(zstd_window_log(limit))
@@ -77,21 +86,21 @@ pub(crate) fn zstd_window_log(limit: usize) -> u32 {
     ceiling.clamp(ZSTD_MIN_WINDOW_LOG, ZSTD_MAX_WINDOW_LOG)
 }
 
-fn checked_uncompressed(payload: &[u8], limit: usize) -> Result<Vec<u8>, RecordError> {
+fn checked_uncompressed(payload: Bytes, limit: usize) -> Result<Bytes, RecordError> {
     if payload.len() > limit {
         return Err(RecordError::DecompressionLimitExceeded {
             codec: "uncompressed",
             limit,
         });
     }
-    Ok(payload.to_vec())
+    Ok(payload)
 }
 
 fn read_bounded(
     codec: &'static str,
     reader: impl std::io::Read,
     limit: usize,
-) -> Result<Vec<u8>, RecordError> {
+) -> Result<Bytes, RecordError> {
     let observed = limit.saturating_add(1);
     let mut reader = reader.take(u64::try_from(observed).unwrap_or(u64::MAX));
     let mut out = Vec::new();
@@ -101,10 +110,10 @@ fn read_bounded(
     if out.len() > limit {
         return Err(RecordError::DecompressionLimitExceeded { codec, limit });
     }
-    Ok(out)
+    Ok(Bytes::from(out))
 }
 
-fn decompress_xerial(payload: &[u8], limit: usize) -> Result<Vec<u8>, RecordError> {
+fn decompress_xerial(payload: &[u8], limit: usize) -> Result<Bytes, RecordError> {
     let header = XERIAL_MAGIC.len() + 8;
     if payload.len() < header || payload[..XERIAL_MAGIC.len()] != XERIAL_MAGIC {
         return Err(RecordError::CompressionFailed {
@@ -153,7 +162,7 @@ fn decompress_xerial(payload: &[u8], limit: usize) -> Result<Vec<u8>, RecordErro
         );
         rest = tail;
     }
-    Ok(out)
+    Ok(Bytes::from(out))
 }
 
 pub(crate) fn xerial_block_length(length: usize) -> Result<u32, EncodeError> {

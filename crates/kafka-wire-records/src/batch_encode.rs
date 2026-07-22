@@ -10,6 +10,7 @@ use crate::{
     RecordBatch, RecordEncodeLimits, RecordError,
     attributes::{Attributes, Compression},
     batch::{CRC_COVERAGE_START, MAGIC_V2},
+    limits::MAX_PROTOCOL_BATCH_BYTES,
 };
 
 const FIXED_BATCH_BYTES: usize = 61;
@@ -30,6 +31,7 @@ impl RecordBatch {
         buffer: &mut BytesMut,
         limits: RecordEncodeLimits,
     ) -> Result<usize, RecordError> {
+        let max_batch_bytes = limits.effective_max_encoded_batch_bytes();
         let uncompressed = crate::record_set::encoded_len_all(
             &self.records,
             limits.max_uncompressed_records_bytes,
@@ -41,28 +43,21 @@ impl RecordBatch {
                 maximum: usize::try_from(i32::MAX).unwrap_or(usize::MAX),
             })?;
         let minimum = if self.compression == Compression::None {
-            FIXED_BATCH_BYTES
-                .checked_add(uncompressed)
-                .unwrap_or(usize::MAX)
+            complete_batch_len(uncompressed)?
         } else {
             FIXED_BATCH_BYTES
         };
-        if minimum > limits.max_encoded_batch_bytes {
+        if minimum > max_batch_bytes {
             return Err(RecordError::BatchLimitExceeded {
                 length: minimum,
-                limit: limits.max_encoded_batch_bytes,
+                limit: max_batch_bytes,
             });
         }
 
         let start = buffer.len();
         buffer.reserve(minimum);
-        let outcome = self.encode_preflighted(
-            buffer,
-            start,
-            uncompressed,
-            record_count,
-            limits.max_encoded_batch_bytes,
-        );
+        let outcome =
+            self.encode_preflighted(buffer, start, uncompressed, record_count, max_batch_bytes);
         if outcome.is_err() {
             buffer.truncate(start);
         }
@@ -119,6 +114,17 @@ impl RecordBatch {
         buffer[start + CRC_OFFSET..start + CRC_OFFSET + 4].copy_from_slice(&crc.to_be_bytes());
         Ok(total)
     }
+}
+
+pub(crate) fn complete_batch_len(records_bytes: usize) -> Result<usize, RecordError> {
+    FIXED_BATCH_BYTES.checked_add(records_bytes).ok_or_else(|| {
+        EncodeError::LengthOverflow {
+            kind: "record batch",
+            length: usize::MAX,
+            maximum: MAX_PROTOCOL_BATCH_BYTES,
+        }
+        .into()
+    })
 }
 
 fn write_header(buffer: &mut BytesMut, batch: &RecordBatch, record_count: i32) {

@@ -121,10 +121,10 @@ impl RecordBatch {
         let payload = decoder.take_bytes(end - (CRC_COVERAGE_START + 40))?;
         let payload = attributes
             .compression
-            .decompress(&payload, limits.max_decompressed_records_bytes)?;
+            .decompress(payload, limits.max_decompressed_records_bytes)?;
         let payload_len = payload.len();
         let records = crate::record_set::decode_all(
-            Bytes::from(payload),
+            payload,
             records_count,
             limits.wire_for_container(payload_len),
         )?;
