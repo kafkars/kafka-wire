@@ -100,6 +100,19 @@ fn a_negative_record_length_is_named_at_its_prefix() {
 }
 
 #[test]
+fn a_negative_header_count_is_named_at_its_prefix() {
+    let mut bytes = encoded(&empty_record()).to_vec();
+    let offset = bytes.len() - 1;
+    assert_eq!(bytes[offset], 0, "fixture header count is not zero");
+    bytes[offset] = 1; // Zigzag encoding of -1.
+
+    assert_eq!(
+        decode(Bytes::from(bytes), DecodeLimits::default()).unwrap_err(),
+        RecordError::NegativeHeaderCount { count: -1, offset }
+    );
+}
+
+#[test]
 fn trailing_record_body_bytes_report_the_consumed_size() {
     let mut bytes = encoded(&empty_record()).to_vec();
     let declared = usize::from(bytes[0] / 2);
