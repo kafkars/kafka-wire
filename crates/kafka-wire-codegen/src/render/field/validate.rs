@@ -5,8 +5,7 @@ use kafka_wire_schema::{FieldType, Message};
 use crate::GenerationError;
 
 pub(crate) fn validate_supported(message: &Message) -> Result<(), GenerationError> {
-    // Three structurally different declarations used to land in one diagnostic,
-    // and the one that actually occurs was described by the wrong half of it.
+    // A retired message has no wire format for a backend to represent.
     if message.valid_versions.is_empty() {
         return unsupported(
             message,
@@ -36,10 +35,8 @@ pub(crate) fn validate_supported(message: &Message) -> Result<(), GenerationErro
         );
     }
 
-    // Common structs are emitted by `render_declared_structs` exactly as inline
-    // bodies are, so a construct declared in one reaches an emitter with no rule
-    // for it unless it is checked here. Walking only `message.fields` left the
-    // boundary open on one of the two places upstream spells a struct.
+    // Common and inline structs reach the same emitters, so both declaration
+    // spellings must cross this capability boundary before rendering.
     for common in &message.common_structs {
         validate_fields(&common.fields, message)?;
     }

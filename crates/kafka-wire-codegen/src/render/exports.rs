@@ -4,8 +4,8 @@
 //! crate root and never writes the module path underneath. Making the generated
 //! names reachable there means naming every one of them AT the crate root, and
 //! `include!` is the only construct in Rust that places items into a file from
-//! another one. So this module emits the list and `lib.rs` includes it, which is
-//! what retired the wildcard re-export the facade used to need.
+//! another one. This module therefore emits the explicit list that `lib.rs`
+//! includes without a wildcard re-export.
 //!
 //! Two consequences follow from the include and are visible in the output. The
 //! provenance line is `//` rather than `//!`, because Rust refuses an inner doc

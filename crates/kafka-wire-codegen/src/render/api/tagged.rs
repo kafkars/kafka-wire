@@ -113,14 +113,14 @@ fn render_tag_arm(
     rust.open(arm);
     let name = local(plan.field_index());
     if let FieldType::Array(element) = &plan.field().ty {
-        let (read, _) = field::element_codec(element, plan.field(), message)?;
-        let (length, _) = field::array_length_codec(plan.field(), message);
+        let element = field::element_codec(element, plan.field(), message)?;
+        let length = field::array_length_codec(plan.field(), message);
         rust.open(format!("{name} ="));
         render_array_body(
             rust,
             message,
-            &length,
-            &read,
+            &length.read,
+            &element.read,
             field::is_nullable(plan.field(), message),
         );
         rust.close(";");

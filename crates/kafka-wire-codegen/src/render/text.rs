@@ -1,4 +1,7 @@
 //! Tiny indentation-aware text sink for complete generated files.
+//!
+//! Callers own Rust syntax; this builder owns physical-line containment and
+//! balanced scope indentation, failing at the emitter boundary when they drift.
 
 /// Deterministic line-oriented Rust source builder.
 #[derive(Debug, Default)]
@@ -44,20 +47,33 @@ impl RustText {
     }
 
     pub(crate) fn close(&mut self, suffix: &str) {
-        self.indent = self.indent.saturating_sub(1);
+        self.dedent("close");
         self.line(format!("}}{suffix}"));
     }
 
     pub(crate) fn reopen(&mut self, line: &str) {
-        self.indent = self.indent.saturating_sub(1);
+        self.dedent("reopen");
         self.line(line);
         self.indent += 1;
     }
 
     pub(crate) fn finish(mut self) -> String {
+        assert_eq!(
+            self.indent, 0,
+            "RustText::finish found {} unclosed scope(s)",
+            self.indent
+        );
         while self.output.ends_with("\n\n") {
             self.output.pop();
         }
         self.output
+    }
+
+    fn dedent(&mut self, operation: &str) {
+        assert!(
+            self.indent > 0,
+            "RustText::{operation} cannot close a scope because none is open"
+        );
+        self.indent -= 1;
     }
 }

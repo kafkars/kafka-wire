@@ -22,11 +22,9 @@ pub(crate) fn render_module_file(
     // `too_many_lines` asks a human to find a seam. A decode body is one `let`
     // per declared field, so its length is the message's field count and there
     // is no seam to find — `StreamsGroupHeartbeatRequest` crosses 100 lines by
-    // having that many fields. This is the same reasoning that retired the
-    // generated file-size budget as a design target in `architecture.toml`, and
-    // it is scoped to this module tree so the lint keeps its force everywhere a
-    // human writes the code. Emitted rather than written by hand so the
-    // exception stays part of the reviewed, hashed output.
+    // having that many fields. Scope the exception to generated modules so the
+    // lint keeps its force everywhere a human writes code, and emit it here so
+    // it stays part of the reviewed, hashed output.
     rust.line("#![allow(clippy::too_many_lines)]");
     rust.blank();
 

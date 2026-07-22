@@ -219,22 +219,21 @@ pub(super) fn render_reads(
             continue;
         }
         if let FieldType::Array(element) = &field.ty {
-            let (read, _) = field::element_codec(element, field, message)?;
-            let (length, _) = field::array_length_codec(field, message);
+            let element = field::element_codec(element, field, message)?;
+            let length = field::array_length_codec(field, message);
             let nullable = field::is_nullable(field, message);
             let name = local(index);
-            // An array is gated by version exactly as a scalar is. Emitting the
-            // block unconditionally read a later version's field out of an
-            // earlier version's bytes, which Apache Kafka's own vectors caught.
+            // Arrays carry the same presence gates as scalars; otherwise a
+            // later-version field consumes bytes belonging to an earlier shape.
             match field::presence_condition(field, message) {
                 None => {
                     rust.open(format!("let {name} ="));
-                    render_array_body(rust, message, &length, &read, nullable);
+                    render_array_body(rust, message, &length.read, &element.read, nullable);
                     rust.close(";");
                 }
                 Some(condition) => {
                     rust.open(format!("let {name} = if {condition}"));
-                    render_array_body(rust, message, &length, &read, nullable);
+                    render_array_body(rust, message, &length.read, &element.read, nullable);
                     rust.reopen("} else {");
                     rust.line(field::default_expression(field, message));
                     rust.close(";");
@@ -271,8 +270,8 @@ pub(super) fn render_writes(
             continue;
         }
         if let FieldType::Array(element) = &field.ty {
-            let (_, write) = field::element_codec(element, field, message)?;
-            let (_, length) = field::array_length_codec(field, message);
+            let element = field::element_codec(element, field, message)?;
+            let length = field::array_length_codec(field, message);
             let nullable = field::is_nullable(field, message);
             let name = field.name.rust_field();
             let gate = field::presence_condition(field, message);
@@ -280,9 +279,9 @@ pub(super) fn render_writes(
                 rust.open(format!("if {condition}"));
             }
             if nullable {
-                render_nullable_array_encode(rust, message, name, &length, &write);
+                render_nullable_array_encode(rust, message, name, &length.write, &element.write);
             } else {
-                render_array_encode(rust, name, &length, &write);
+                render_array_encode(rust, name, &length.write, &element.write);
             }
             if gate.is_some() {
                 rust.close("");

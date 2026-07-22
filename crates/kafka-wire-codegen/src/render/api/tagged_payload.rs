@@ -66,13 +66,13 @@ fn render_tag_payload(
     message: &Message,
 ) -> Result<(), GenerationError> {
     if let FieldType::Array(element) = &field.ty {
-        let (_, write) = field::element_codec(element, field, message)?;
-        let (_, length) = field::array_length_codec(field, message);
+        let element = field::element_codec(element, field, message)?;
+        let length = field::array_length_codec(field, message);
         let name = field.name.rust_field();
         if field::is_nullable(field, message) {
-            render_nullable_array_encode(rust, message, name, &length, &write);
+            render_nullable_array_encode(rust, message, name, &length.write, &element.write);
         } else {
-            render_array_encode(rust, name, &length, &write);
+            render_array_encode(rust, name, &length.write, &element.write);
         }
     } else {
         rust.line(field::write_statement(field, message)?);

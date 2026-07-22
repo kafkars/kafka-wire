@@ -27,6 +27,12 @@ use crate::{
     },
 };
 
+/// One wire-shape decision with its read expression and write statement named.
+pub(crate) struct WireCodec {
+    pub(crate) read: String,
+    pub(crate) write: String,
+}
+
 pub(crate) fn read_expression(field: &Field, message: &Message) -> Result<String, GenerationError> {
     match nullability_of(field, message) {
         Nullability::Never => read_over(&present(field, message), field, message, false),
@@ -95,27 +101,26 @@ fn gate(compact: &str, legacy: &str) -> String {
 
 /// Read expression and write statement for an array's own length prefix.
 ///
-/// The prefix is the one part of an array that changes with the encoding
-/// regime: compact arrays carry a varint of `len + 1`, legacy arrays a plain
-/// `int32`. Elements are unaffected, which is why this is decided here and not
-/// in `element_codec`.
-pub(crate) fn array_length_codec(field: &Field, message: &Message) -> (String, String) {
+/// The array container's regime-dependent component is its length prefix:
+/// compact arrays carry a varint of `len + 1`, while legacy arrays use a plain
+/// `int32`. Element encoding is selected independently by `element_codec`.
+pub(crate) fn array_length_codec(field: &Field, message: &Message) -> WireCodec {
     let whole = present(field, message);
     match nullability_of(field, message) {
-        Nullability::Never => (
-            array_len_read(&whole, field, message, false),
-            array_len_write(&whole, field, message, false),
-        ),
-        Nullability::Always => (
-            array_len_read(&whole, field, message, true),
-            array_len_write(&whole, field, message, true),
-        ),
+        Nullability::Never => WireCodec {
+            read: array_len_read(&whole, field, message, false),
+            write: array_len_write(&whole, field, message, false),
+        },
+        Nullability::Always => WireCodec {
+            read: array_len_read(&whole, field, message, true),
+            write: array_len_write(&whole, field, message, true),
+        },
         Nullability::Gated { nullable, plain } => {
             let condition = version::condition_for(&nullable, message);
             let null_read = array_len_read(&nullable, field, message, true);
             let plain_read = array_len_read(&plain, field, message, false);
-            (
-                format!(
+            WireCodec {
+                read: format!(
                     "if {condition} {{ {null_read} }} else {{ {}({plain_read}) }}",
                     spell(message, S::Some)
                 ),
@@ -123,8 +128,8 @@ pub(crate) fn array_length_codec(field: &Field, message: &Message) -> (String, S
                 // its non-null counterpart for a present value, so `Some(n)`
                 // is byte-identical under both; only `None` differs, and that
                 // case is refused outright by the guard `render_writes` emits.
-                array_len_write(&whole, field, message, true),
-            )
+                write: array_len_write(&whole, field, message, true),
+            }
         }
     }
 }
@@ -187,17 +192,14 @@ fn array_len_write(
 /// The generated loop binds `value` by reference, so a `Copy` scalar is
 /// dereferenced at the call and a borrowed type is passed straight through.
 ///
-/// A length-prefixed element carries its own prefix, and that prefix follows
-/// the message's encoding regime exactly as a top-level field's does: a string
-/// inside a compact array is a compact string. Apache Kafka's own bytes caught
-/// this — reading `02 03 6731 00` with a legacy element reader takes `0x0367`
-/// as an int16 length and asks for 871 bytes. Only fixed-width elements are
+/// Length-prefixed elements follow the message's encoding regime: a compact
+/// array contains compact strings and bytes. Only fixed-width elements are
 /// regime-independent.
 pub(crate) fn element_codec(
     element: &FieldType,
     field: &Field,
     message: &Message,
-) -> Result<(String, String), GenerationError> {
+) -> Result<WireCodec, GenerationError> {
     if let Some(pair) = length_prefixed_element(element, field, message) {
         return Ok(pair);
     }
@@ -212,15 +214,12 @@ pub(crate) fn element_codec(
         FieldType::Uuid => ("decoder.read_uuid()?", "encoder.write_uuid(*value)?;"),
         FieldType::Float64 => ("decoder.read_float64()?", "encoder.write_float64(*value)?;"),
         FieldType::Struct(reference) => {
-            return Ok((
-                format!("{}::decode(decoder, version)?", reference.rust_type()),
-                "value.encode_validated(encoder, version)?;".to_owned(),
-            ));
+            return Ok(WireCodec {
+                read: format!("{}::decode(decoder, version)?", reference.rust_type()),
+                write: "value.encode_validated(encoder, version)?;".to_owned(),
+            });
         }
-        // String and Bytes returned above through `length_prefixed_element`;
-        // they are named here only because the match must stay total.
-        // String, Bytes, and Records returned above through
-        // `length_prefixed_element`; named here only so the match stays total.
+        // Length-prefixed variants returned above are named only to keep this match total.
         other @ (FieldType::String
         | FieldType::Bytes
         | FieldType::Records
@@ -232,7 +231,10 @@ pub(crate) fn element_codec(
             ));
         }
     };
-    Ok((pair.0.to_owned(), pair.1.to_owned()))
+    Ok(WireCodec {
+        read: pair.0.to_owned(),
+        write: pair.1.to_owned(),
+    })
 }
 
 /// The regime-dependent codec for an element that carries its own length.
@@ -240,7 +242,7 @@ fn length_prefixed_element(
     element: &FieldType,
     field: &Field,
     message: &Message,
-) -> Option<(String, String)> {
+) -> Option<WireCodec> {
     let (compact_read, legacy_read, compact_write, legacy_write) = match element {
         FieldType::String => (
             "decoder.read_compact_string()?",
@@ -256,14 +258,15 @@ fn length_prefixed_element(
         ),
         _ => return None,
     };
-    Some(match encoding_of(field, message) {
+    let (read, write) = match encoding_of(field, message) {
         Encoding::Compact => (compact_read.to_owned(), compact_write.to_owned()),
         Encoding::Legacy => (legacy_read.to_owned(), legacy_write.to_owned()),
         Encoding::VersionGated => (
             gate(compact_read, legacy_read),
             gate(compact_write, legacy_write),
         ),
-    })
+    };
+    Some(WireCodec { read, write })
 }
 
 fn read_method(
@@ -351,12 +354,8 @@ fn write_method(
         FieldType::Bytes | FieldType::Records if nullable => Ok(format!(
             "encoder.write_nullable_bytes(self.{name}.as_deref())?;"
         )),
-        // `Records` belongs beside `Bytes` in every arm, and was missing from
-        // this one alone. The read path had it, so a non-nullable records field
-        // in a flexible message was read with a compact prefix and written with
-        // a legacy one — the exact encode/decode divergence this repository's
-        // single-encode-path design exists to make impossible, reintroduced by
-        // one absent variant in one match arm.
+        // `Records` shares every byte-string arm with `Bytes`; otherwise a
+        // flexible field can decode a compact prefix but encode a legacy one.
         FieldType::Bytes | FieldType::Records if compact => {
             Ok(format!("encoder.write_compact_bytes(&self.{name})?;"))
         }

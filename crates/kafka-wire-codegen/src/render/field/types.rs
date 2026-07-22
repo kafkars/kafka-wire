@@ -262,10 +262,8 @@ pub(crate) fn uses_type(message: &Message, wanted: &FieldType) -> bool {
 ///
 /// Two protocol types answer to one Rust type: `bytes` and `records` both become
 /// `Bytes`, because a records field is a length-prefixed blob whose contents this
-/// crate does not yet parse. An import decided by `uses_type(.., Bytes)` alone
-/// therefore leaves a records-only message naming a type it never imported —
-/// which is exactly what the compile probe caught. The mapping lives here, next
-/// to the `type_name` arm that makes it true, so the two cannot drift apart.
+/// crate does not yet parse. This mapping stays beside `type_name`, so importing
+/// the shared Rust type cannot drift from declaring it.
 pub(crate) fn uses_bytes(message: &Message) -> bool {
     uses_type(message, &FieldType::Bytes) || uses_type(message, &FieldType::Records)
 }
