@@ -5,7 +5,7 @@
 
 #![allow(clippy::unwrap_used)]
 
-use kafka_wire_schema::{FieldName, MessageName, RustIdent};
+use kafka_wire_schema::{FieldName, MessageName, RustIdent, StructRef};
 
 #[test]
 fn current_and_future_reserved_words_share_one_escape_policy() {
@@ -24,6 +24,25 @@ fn malformed_normalized_names_are_rejected() {
         assert!(
             RustIdent::snake(source).is_err(),
             "{source:?} unexpectedly became a Rust identifier"
+        );
+    }
+}
+
+#[test]
+fn source_names_cannot_carry_physical_line_boundaries() {
+    for source in [
+        "Line\nBreak",
+        "Carriage\rReturn",
+        "Control\u{7f}Byte",
+        "Unicode\u{2028}Line",
+        "Unicode\u{2029}Paragraph",
+    ] {
+        assert!(MessageName::try_new(source).is_err(), "message {source:?}");
+        assert!(FieldName::try_new(source).is_err(), "field {source:?}");
+        let owner = MessageName::new("ExampleRequest");
+        assert!(
+            StructRef::try_qualify(&owner, source).is_err(),
+            "struct {source:?}"
         );
     }
 }

@@ -245,6 +245,26 @@ fn inline_nesting_deeper_than_the_adapter_walks_is_rejected() {
     );
 }
 
+#[test]
+fn source_control_characters_are_rejected_at_the_ir_boundary() {
+    let message_source = request("").replacen("ExampleRequest", "Example\\u000aRequest", 1);
+    let message_error = lower_error(&message_source);
+    assert!(
+        matches!(&message_error, LowerError::Identifier { kind, name, .. }
+            if *kind == "message" && name == "Example\nRequest"),
+        "expected a contained message-name diagnostic, got {message_error}"
+    );
+
+    let field_error = lower_error(&request(
+        r#"{ "name": "Bad\u2028Field", "type": "string", "versions": "0+" }"#,
+    ));
+    assert!(
+        matches!(&field_error, LowerError::Identifier { kind, name, .. }
+            if *kind == "field" && name == "Bad\u{2028}Field"),
+        "expected a contained field-name diagnostic, got {field_error}"
+    );
+}
+
 /// Builds a valid request whose root fields are the ones under test.
 fn request(fields: &str) -> String {
     format!(
