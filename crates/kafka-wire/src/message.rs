@@ -4,6 +4,8 @@ use kafka_wire_core::{
     ApiKey, ApiVersion, DecodeError, EncodeError, KafkaDecode, KafkaEncode, VersionRange,
 };
 
+use crate::ApiDescriptor;
+
 /// Shared metadata and wire contracts for every generated message.
 ///
 /// Generated unchecked writers are private implementation details. In
@@ -48,17 +50,8 @@ pub trait KafkaMessage: KafkaEncode + KafkaDecode {
 pub trait KafkaRequest: KafkaMessage {
     /// Numeric Kafka API key.
     const API_KEY: ApiKey;
-    /// Whether the highest supported version is excluded from default negotiation.
-    const LATEST_VERSION_UNSTABLE: bool = false;
-
-    /// Highest version suitable for default negotiation.
-    ///
-    /// An unstable highest version remains explicitly encodable; it is omitted
-    /// only from the default ceiling. `None` means the sole supported version
-    /// is unstable.
-    fn latest_stable_version() -> Option<ApiVersion> {
-        latest_stable_version(Self::SUPPORTED_VERSIONS, Self::LATEST_VERSION_UNSTABLE)
-    }
+    /// Pair-level metadata shared with the generated response type.
+    const API_DESCRIPTOR: &'static ApiDescriptor;
 }
 
 pub(crate) const fn latest_stable_version(

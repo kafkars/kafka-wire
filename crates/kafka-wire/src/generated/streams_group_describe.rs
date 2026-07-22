@@ -16,7 +16,7 @@ pub mod streams_group_describe_request {
         encoded_len_with,
     };
 
-    use crate::{KafkaMessage, KafkaRequest, RequestResponsePair};
+    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, RequestResponsePair};
 
     /// Request body for the `StreamsGroupDescribe` API.
     #[non_exhaustive]
@@ -40,7 +40,8 @@ pub mod streams_group_describe_request {
 
     impl KafkaRequest for StreamsGroupDescribeRequest {
         const API_KEY: ApiKey = ApiKey::new(89);
-        const LATEST_VERSION_UNSTABLE: bool = false;
+        const API_DESCRIPTOR: &'static ApiDescriptor =
+            &super::STREAMS_GROUP_DESCRIBE_API_DESCRIPTOR;
     }
 
     impl RequestResponsePair for StreamsGroupDescribeRequest {
@@ -2335,7 +2336,7 @@ pub mod streams_group_describe_response {
 
 use kafka_wire_core::VersionRange;
 
-use crate::{MessageDescriptor, MessageDirection};
+use crate::{ApiDescriptor, MessageDescriptor, MessageDirection};
 
 pub use streams_group_describe_request::StreamsGroupDescribeRequest;
 pub use streams_group_describe_response::StreamsGroupDescribeResponse;
@@ -2347,7 +2348,6 @@ pub const STREAMS_GROUP_DESCRIBE_REQUEST_DESCRIPTOR: MessageDescriptor = Message
     MessageDirection::Request,
     VersionRange::new(0, 1),
     Some(VersionRange::new(0, 1)),
-    false,
 );
 
 /// Static metadata for [`StreamsGroupDescribeResponse`].
@@ -2355,6 +2355,15 @@ pub const STREAMS_GROUP_DESCRIBE_RESPONSE_DESCRIPTOR: MessageDescriptor = Messag
     89,
     "StreamsGroupDescribeResponse",
     MessageDirection::Response,
+    VersionRange::new(0, 1),
+    Some(VersionRange::new(0, 1)),
+);
+
+/// Static pair metadata for the `StreamsGroupDescribe` API.
+pub const STREAMS_GROUP_DESCRIBE_API_DESCRIPTOR: ApiDescriptor = ApiDescriptor::new(
+    89,
+    &STREAMS_GROUP_DESCRIBE_REQUEST_DESCRIPTOR,
+    &STREAMS_GROUP_DESCRIBE_RESPONSE_DESCRIPTOR,
     VersionRange::new(0, 1),
     Some(VersionRange::new(0, 1)),
     false,

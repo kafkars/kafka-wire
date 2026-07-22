@@ -16,7 +16,7 @@ pub mod initialize_share_group_state_request {
         encoded_len_with,
     };
 
-    use crate::{KafkaMessage, KafkaRequest, RequestResponsePair};
+    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, RequestResponsePair};
 
     /// `InitializeStateData` as declared by the `InitializeShareGroupState` API.
     #[non_exhaustive]
@@ -284,7 +284,8 @@ pub mod initialize_share_group_state_request {
 
     impl KafkaRequest for InitializeShareGroupStateRequest {
         const API_KEY: ApiKey = ApiKey::new(83);
-        const LATEST_VERSION_UNSTABLE: bool = false;
+        const API_DESCRIPTOR: &'static ApiDescriptor =
+            &super::INITIALIZE_SHARE_GROUP_STATE_API_DESCRIPTOR;
     }
 
     impl RequestResponsePair for InitializeShareGroupStateRequest {
@@ -771,7 +772,7 @@ pub mod initialize_share_group_state_response {
 
 use kafka_wire_core::VersionRange;
 
-use crate::{MessageDescriptor, MessageDirection};
+use crate::{ApiDescriptor, MessageDescriptor, MessageDirection};
 
 pub use initialize_share_group_state_request::InitializeShareGroupStateRequest;
 pub use initialize_share_group_state_response::InitializeShareGroupStateResponse;
@@ -784,7 +785,6 @@ pub const INITIALIZE_SHARE_GROUP_STATE_REQUEST_DESCRIPTOR: MessageDescriptor =
         MessageDirection::Request,
         VersionRange::new(0, 0),
         Some(VersionRange::new(0, 0)),
-        false,
     );
 
 /// Static metadata for [`InitializeShareGroupStateResponse`].
@@ -795,5 +795,14 @@ pub const INITIALIZE_SHARE_GROUP_STATE_RESPONSE_DESCRIPTOR: MessageDescriptor =
         MessageDirection::Response,
         VersionRange::new(0, 0),
         Some(VersionRange::new(0, 0)),
-        false,
     );
+
+/// Static pair metadata for the `InitializeShareGroupState` API.
+pub const INITIALIZE_SHARE_GROUP_STATE_API_DESCRIPTOR: ApiDescriptor = ApiDescriptor::new(
+    83,
+    &INITIALIZE_SHARE_GROUP_STATE_REQUEST_DESCRIPTOR,
+    &INITIALIZE_SHARE_GROUP_STATE_RESPONSE_DESCRIPTOR,
+    VersionRange::new(0, 0),
+    Some(VersionRange::new(0, 0)),
+    false,
+);

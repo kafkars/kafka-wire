@@ -48,20 +48,26 @@ pub(crate) fn render_fuzz_dispatch(
     for (selector, source) in messages.iter().enumerate() {
         let message = &source.message;
         let (first, last) = invariant::bounded(message, &message.valid_versions, "valid versions")?;
+        rust.open(format!("{selector} =>"));
+        rust.open(format!(
+            "if let Some(version) = select_version(version_selector, {first}, {last})"
+        ));
         rust.line(format!(
-            "{selector} => round_trip::<kafka_wire::{}>(body, \
-             select_version(version_selector, {first}, {last})),",
+            "round_trip::<kafka_wire::{}>(body, version);",
             message.name.rust_type()
         ));
+        rust.close("");
+        rust.close("");
     }
     rust.line("_ => unreachable!(\"modulo result exceeded the generated dispatch table\"),");
     rust.close("");
     rust.close("");
     rust.blank();
-    rust.open("fn select_version(selector: u16, first: i16, last: i16) -> ApiVersion");
-    rust.line("let width = u16::try_from(i32::from(last) - i32::from(first) + 1).unwrap_or(1);");
-    rust.line("let offset = i16::try_from(selector % width).unwrap_or(0);");
-    rust.line("ApiVersion::new(first + offset)");
+    rust.open("fn select_version(selector: u16, first: i16, last: i16) -> Option<ApiVersion>");
+    rust.line("let width = i32::from(last).checked_sub(i32::from(first))?.checked_add(1)?;");
+    rust.line("let offset = i32::from(selector).checked_rem(width)?;");
+    rust.line("let selected = i32::from(first).checked_add(offset)?;");
+    rust.line("Some(ApiVersion::new(i16::try_from(selected).ok()?))");
     rust.close("");
     Ok(rust.finish())
 }

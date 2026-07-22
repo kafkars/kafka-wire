@@ -16,7 +16,7 @@ pub mod delete_groups_request {
         encoded_len_with,
     };
 
-    use crate::{KafkaMessage, KafkaRequest, RequestResponsePair};
+    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, RequestResponsePair};
 
     /// Request body for the `DeleteGroups` API.
     #[non_exhaustive]
@@ -36,7 +36,7 @@ pub mod delete_groups_request {
 
     impl KafkaRequest for DeleteGroupsRequest {
         const API_KEY: ApiKey = ApiKey::new(42);
-        const LATEST_VERSION_UNSTABLE: bool = false;
+        const API_DESCRIPTOR: &'static ApiDescriptor = &super::DELETE_GROUPS_API_DESCRIPTOR;
     }
 
     impl RequestResponsePair for DeleteGroupsRequest {
@@ -423,7 +423,7 @@ pub mod delete_groups_response {
 
 use kafka_wire_core::VersionRange;
 
-use crate::{MessageDescriptor, MessageDirection};
+use crate::{ApiDescriptor, MessageDescriptor, MessageDirection};
 
 pub use delete_groups_request::DeleteGroupsRequest;
 pub use delete_groups_response::DeleteGroupsResponse;
@@ -435,7 +435,6 @@ pub const DELETE_GROUPS_REQUEST_DESCRIPTOR: MessageDescriptor = MessageDescripto
     MessageDirection::Request,
     VersionRange::new(0, 3),
     Some(VersionRange::new(2, 3)),
-    false,
 );
 
 /// Static metadata for [`DeleteGroupsResponse`].
@@ -443,6 +442,15 @@ pub const DELETE_GROUPS_RESPONSE_DESCRIPTOR: MessageDescriptor = MessageDescript
     42,
     "DeleteGroupsResponse",
     MessageDirection::Response,
+    VersionRange::new(0, 3),
+    Some(VersionRange::new(2, 3)),
+);
+
+/// Static pair metadata for the `DeleteGroups` API.
+pub const DELETE_GROUPS_API_DESCRIPTOR: ApiDescriptor = ApiDescriptor::new(
+    42,
+    &DELETE_GROUPS_REQUEST_DESCRIPTOR,
+    &DELETE_GROUPS_RESPONSE_DESCRIPTOR,
     VersionRange::new(0, 3),
     Some(VersionRange::new(2, 3)),
     false,

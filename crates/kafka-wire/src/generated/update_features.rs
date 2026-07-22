@@ -16,7 +16,7 @@ pub mod update_features_request {
         encoded_len_with,
     };
 
-    use crate::{KafkaMessage, KafkaRequest, RequestResponsePair};
+    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, RequestResponsePair};
 
     /// `FeatureUpdateKey` as declared by the `UpdateFeatures` API.
     #[non_exhaustive]
@@ -215,7 +215,7 @@ pub mod update_features_request {
 
     impl KafkaRequest for UpdateFeaturesRequest {
         const API_KEY: ApiKey = ApiKey::new(57);
-        const LATEST_VERSION_UNSTABLE: bool = false;
+        const API_DESCRIPTOR: &'static ApiDescriptor = &super::UPDATE_FEATURES_API_DESCRIPTOR;
     }
 
     impl RequestResponsePair for UpdateFeaturesRequest {
@@ -623,7 +623,7 @@ pub mod update_features_response {
 
 use kafka_wire_core::VersionRange;
 
-use crate::{MessageDescriptor, MessageDirection};
+use crate::{ApiDescriptor, MessageDescriptor, MessageDirection};
 
 pub use update_features_request::UpdateFeaturesRequest;
 pub use update_features_response::UpdateFeaturesResponse;
@@ -635,7 +635,6 @@ pub const UPDATE_FEATURES_REQUEST_DESCRIPTOR: MessageDescriptor = MessageDescrip
     MessageDirection::Request,
     VersionRange::new(0, 2),
     Some(VersionRange::new(0, 2)),
-    false,
 );
 
 /// Static metadata for [`UpdateFeaturesResponse`].
@@ -643,6 +642,15 @@ pub const UPDATE_FEATURES_RESPONSE_DESCRIPTOR: MessageDescriptor = MessageDescri
     57,
     "UpdateFeaturesResponse",
     MessageDirection::Response,
+    VersionRange::new(0, 2),
+    Some(VersionRange::new(0, 2)),
+);
+
+/// Static pair metadata for the `UpdateFeatures` API.
+pub const UPDATE_FEATURES_API_DESCRIPTOR: ApiDescriptor = ApiDescriptor::new(
+    57,
+    &UPDATE_FEATURES_REQUEST_DESCRIPTOR,
+    &UPDATE_FEATURES_RESPONSE_DESCRIPTOR,
     VersionRange::new(0, 2),
     Some(VersionRange::new(0, 2)),
     false,

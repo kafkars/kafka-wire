@@ -16,7 +16,7 @@ pub mod broker_registration_request {
         encoded_len_with,
     };
 
-    use crate::{KafkaMessage, KafkaRequest, RequestResponsePair};
+    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, RequestResponsePair};
 
     /// `Listener` as declared by the `BrokerRegistration` API.
     #[non_exhaustive]
@@ -316,7 +316,7 @@ pub mod broker_registration_request {
 
     impl KafkaRequest for BrokerRegistrationRequest {
         const API_KEY: ApiKey = ApiKey::new(62);
-        const LATEST_VERSION_UNSTABLE: bool = false;
+        const API_DESCRIPTOR: &'static ApiDescriptor = &super::BROKER_REGISTRATION_API_DESCRIPTOR;
     }
 
     impl RequestResponsePair for BrokerRegistrationRequest {
@@ -611,7 +611,7 @@ pub mod broker_registration_response {
 
 use kafka_wire_core::VersionRange;
 
-use crate::{MessageDescriptor, MessageDirection};
+use crate::{ApiDescriptor, MessageDescriptor, MessageDirection};
 
 pub use broker_registration_request::BrokerRegistrationRequest;
 pub use broker_registration_response::BrokerRegistrationResponse;
@@ -623,7 +623,6 @@ pub const BROKER_REGISTRATION_REQUEST_DESCRIPTOR: MessageDescriptor = MessageDes
     MessageDirection::Request,
     VersionRange::new(0, 4),
     Some(VersionRange::new(0, 4)),
-    false,
 );
 
 /// Static metadata for [`BrokerRegistrationResponse`].
@@ -631,6 +630,15 @@ pub const BROKER_REGISTRATION_RESPONSE_DESCRIPTOR: MessageDescriptor = MessageDe
     62,
     "BrokerRegistrationResponse",
     MessageDirection::Response,
+    VersionRange::new(0, 4),
+    Some(VersionRange::new(0, 4)),
+);
+
+/// Static pair metadata for the `BrokerRegistration` API.
+pub const BROKER_REGISTRATION_API_DESCRIPTOR: ApiDescriptor = ApiDescriptor::new(
+    62,
+    &BROKER_REGISTRATION_REQUEST_DESCRIPTOR,
+    &BROKER_REGISTRATION_RESPONSE_DESCRIPTOR,
     VersionRange::new(0, 4),
     Some(VersionRange::new(0, 4)),
     false,

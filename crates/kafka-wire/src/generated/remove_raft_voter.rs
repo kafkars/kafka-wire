@@ -16,7 +16,7 @@ pub mod remove_raft_voter_request {
         encoded_len_with,
     };
 
-    use crate::{KafkaMessage, KafkaRequest, RequestResponsePair};
+    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, RequestResponsePair};
 
     /// Request body for the `RemoveRaftVoter` API.
     #[non_exhaustive]
@@ -51,7 +51,7 @@ pub mod remove_raft_voter_request {
 
     impl KafkaRequest for RemoveRaftVoterRequest {
         const API_KEY: ApiKey = ApiKey::new(81);
-        const LATEST_VERSION_UNSTABLE: bool = false;
+        const API_DESCRIPTOR: &'static ApiDescriptor = &super::REMOVE_RAFT_VOTER_API_DESCRIPTOR;
     }
 
     impl RequestResponsePair for RemoveRaftVoterRequest {
@@ -282,7 +282,7 @@ pub mod remove_raft_voter_response {
 
 use kafka_wire_core::VersionRange;
 
-use crate::{MessageDescriptor, MessageDirection};
+use crate::{ApiDescriptor, MessageDescriptor, MessageDirection};
 
 pub use remove_raft_voter_request::RemoveRaftVoterRequest;
 pub use remove_raft_voter_response::RemoveRaftVoterResponse;
@@ -294,7 +294,6 @@ pub const REMOVE_RAFT_VOTER_REQUEST_DESCRIPTOR: MessageDescriptor = MessageDescr
     MessageDirection::Request,
     VersionRange::new(0, 0),
     Some(VersionRange::new(0, 0)),
-    false,
 );
 
 /// Static metadata for [`RemoveRaftVoterResponse`].
@@ -302,6 +301,15 @@ pub const REMOVE_RAFT_VOTER_RESPONSE_DESCRIPTOR: MessageDescriptor = MessageDesc
     81,
     "RemoveRaftVoterResponse",
     MessageDirection::Response,
+    VersionRange::new(0, 0),
+    Some(VersionRange::new(0, 0)),
+);
+
+/// Static pair metadata for the `RemoveRaftVoter` API.
+pub const REMOVE_RAFT_VOTER_API_DESCRIPTOR: ApiDescriptor = ApiDescriptor::new(
+    81,
+    &REMOVE_RAFT_VOTER_REQUEST_DESCRIPTOR,
+    &REMOVE_RAFT_VOTER_RESPONSE_DESCRIPTOR,
     VersionRange::new(0, 0),
     Some(VersionRange::new(0, 0)),
     false,

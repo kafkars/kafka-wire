@@ -16,7 +16,7 @@ pub mod share_fetch_request {
         encoded_len_with,
     };
 
-    use crate::{KafkaMessage, KafkaRequest, RequestResponsePair};
+    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, RequestResponsePair};
 
     /// `FetchTopic` as declared by the `ShareFetch` API.
     #[non_exhaustive]
@@ -579,7 +579,7 @@ pub mod share_fetch_request {
 
     impl KafkaRequest for ShareFetchRequest {
         const API_KEY: ApiKey = ApiKey::new(78);
-        const LATEST_VERSION_UNSTABLE: bool = false;
+        const API_DESCRIPTOR: &'static ApiDescriptor = &super::SHARE_FETCH_API_DESCRIPTOR;
     }
 
     impl RequestResponsePair for ShareFetchRequest {
@@ -1542,7 +1542,7 @@ pub mod share_fetch_response {
 
 use kafka_wire_core::VersionRange;
 
-use crate::{MessageDescriptor, MessageDirection};
+use crate::{ApiDescriptor, MessageDescriptor, MessageDirection};
 
 pub use share_fetch_request::ShareFetchRequest;
 pub use share_fetch_response::ShareFetchResponse;
@@ -1554,7 +1554,6 @@ pub const SHARE_FETCH_REQUEST_DESCRIPTOR: MessageDescriptor = MessageDescriptor:
     MessageDirection::Request,
     VersionRange::new(1, 2),
     Some(VersionRange::new(1, 2)),
-    false,
 );
 
 /// Static metadata for [`ShareFetchResponse`].
@@ -1562,6 +1561,15 @@ pub const SHARE_FETCH_RESPONSE_DESCRIPTOR: MessageDescriptor = MessageDescriptor
     78,
     "ShareFetchResponse",
     MessageDirection::Response,
+    VersionRange::new(1, 2),
+    Some(VersionRange::new(1, 2)),
+);
+
+/// Static pair metadata for the `ShareFetch` API.
+pub const SHARE_FETCH_API_DESCRIPTOR: ApiDescriptor = ApiDescriptor::new(
+    78,
+    &SHARE_FETCH_REQUEST_DESCRIPTOR,
+    &SHARE_FETCH_RESPONSE_DESCRIPTOR,
     VersionRange::new(1, 2),
     Some(VersionRange::new(1, 2)),
     false,

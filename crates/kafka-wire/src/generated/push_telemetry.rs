@@ -16,7 +16,7 @@ pub mod push_telemetry_request {
         encoded_len_with,
     };
 
-    use crate::{KafkaMessage, KafkaRequest, RequestResponsePair};
+    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, RequestResponsePair};
 
     /// Request body for the `PushTelemetry` API.
     #[non_exhaustive]
@@ -44,7 +44,7 @@ pub mod push_telemetry_request {
 
     impl KafkaRequest for PushTelemetryRequest {
         const API_KEY: ApiKey = ApiKey::new(72);
-        const LATEST_VERSION_UNSTABLE: bool = false;
+        const API_DESCRIPTOR: &'static ApiDescriptor = &super::PUSH_TELEMETRY_API_DESCRIPTOR;
     }
 
     impl RequestResponsePair for PushTelemetryRequest {
@@ -264,7 +264,7 @@ pub mod push_telemetry_response {
 
 use kafka_wire_core::VersionRange;
 
-use crate::{MessageDescriptor, MessageDirection};
+use crate::{ApiDescriptor, MessageDescriptor, MessageDirection};
 
 pub use push_telemetry_request::PushTelemetryRequest;
 pub use push_telemetry_response::PushTelemetryResponse;
@@ -276,7 +276,6 @@ pub const PUSH_TELEMETRY_REQUEST_DESCRIPTOR: MessageDescriptor = MessageDescript
     MessageDirection::Request,
     VersionRange::new(0, 0),
     Some(VersionRange::new(0, 0)),
-    false,
 );
 
 /// Static metadata for [`PushTelemetryResponse`].
@@ -284,6 +283,15 @@ pub const PUSH_TELEMETRY_RESPONSE_DESCRIPTOR: MessageDescriptor = MessageDescrip
     72,
     "PushTelemetryResponse",
     MessageDirection::Response,
+    VersionRange::new(0, 0),
+    Some(VersionRange::new(0, 0)),
+);
+
+/// Static pair metadata for the `PushTelemetry` API.
+pub const PUSH_TELEMETRY_API_DESCRIPTOR: ApiDescriptor = ApiDescriptor::new(
+    72,
+    &PUSH_TELEMETRY_REQUEST_DESCRIPTOR,
+    &PUSH_TELEMETRY_RESPONSE_DESCRIPTOR,
     VersionRange::new(0, 0),
     Some(VersionRange::new(0, 0)),
     false,

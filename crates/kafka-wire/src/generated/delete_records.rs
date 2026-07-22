@@ -16,7 +16,7 @@ pub mod delete_records_request {
         encoded_len_with,
     };
 
-    use crate::{KafkaMessage, KafkaRequest, RequestResponsePair};
+    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, RequestResponsePair};
 
     /// `DeleteRecordsTopic` as declared by the `DeleteRecords` API.
     #[non_exhaustive]
@@ -297,7 +297,7 @@ pub mod delete_records_request {
 
     impl KafkaRequest for DeleteRecordsRequest {
         const API_KEY: ApiKey = ApiKey::new(21);
-        const LATEST_VERSION_UNSTABLE: bool = false;
+        const API_DESCRIPTOR: &'static ApiDescriptor = &super::DELETE_RECORDS_API_DESCRIPTOR;
     }
 
     impl RequestResponsePair for DeleteRecordsRequest {
@@ -811,7 +811,7 @@ pub mod delete_records_response {
 
 use kafka_wire_core::VersionRange;
 
-use crate::{MessageDescriptor, MessageDirection};
+use crate::{ApiDescriptor, MessageDescriptor, MessageDirection};
 
 pub use delete_records_request::DeleteRecordsRequest;
 pub use delete_records_response::DeleteRecordsResponse;
@@ -823,7 +823,6 @@ pub const DELETE_RECORDS_REQUEST_DESCRIPTOR: MessageDescriptor = MessageDescript
     MessageDirection::Request,
     VersionRange::new(0, 2),
     Some(VersionRange::new(2, 2)),
-    false,
 );
 
 /// Static metadata for [`DeleteRecordsResponse`].
@@ -831,6 +830,15 @@ pub const DELETE_RECORDS_RESPONSE_DESCRIPTOR: MessageDescriptor = MessageDescrip
     21,
     "DeleteRecordsResponse",
     MessageDirection::Response,
+    VersionRange::new(0, 2),
+    Some(VersionRange::new(2, 2)),
+);
+
+/// Static pair metadata for the `DeleteRecords` API.
+pub const DELETE_RECORDS_API_DESCRIPTOR: ApiDescriptor = ApiDescriptor::new(
+    21,
+    &DELETE_RECORDS_REQUEST_DESCRIPTOR,
+    &DELETE_RECORDS_RESPONSE_DESCRIPTOR,
     VersionRange::new(0, 2),
     Some(VersionRange::new(2, 2)),
     false,

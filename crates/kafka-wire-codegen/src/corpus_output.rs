@@ -21,7 +21,7 @@ pub(crate) fn render_group(
     emitted: &mut Vec<ApiGroup>,
     producers: &mut BTreeMap<String, String>,
 ) -> Result<(), GenerationError> {
-    let filename = format!("{}.rs", group.module_name);
+    let filename = format!("{}.rs", group.module_name());
     let rendered = render_api(group, commit).and_then(|source| {
         format_rendered_rust(BTreeMap::from([(filename.clone(), source)]), workspace)
     });

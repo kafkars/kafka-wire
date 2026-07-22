@@ -15,7 +15,7 @@ pub mod list_config_resources_request {
         KafkaDecode, KafkaEncode, TaggedFields, VersionRange, encode_into_with, encoded_len_with,
     };
 
-    use crate::{KafkaMessage, KafkaRequest, RequestResponsePair};
+    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, RequestResponsePair};
 
     /// Request body for the `ListConfigResources` API.
     #[non_exhaustive]
@@ -35,7 +35,7 @@ pub mod list_config_resources_request {
 
     impl KafkaRequest for ListConfigResourcesRequest {
         const API_KEY: ApiKey = ApiKey::new(74);
-        const LATEST_VERSION_UNSTABLE: bool = false;
+        const API_DESCRIPTOR: &'static ApiDescriptor = &super::LIST_CONFIG_RESOURCES_API_DESCRIPTOR;
     }
 
     impl RequestResponsePair for ListConfigResourcesRequest {
@@ -407,7 +407,7 @@ pub mod list_config_resources_response {
 
 use kafka_wire_core::VersionRange;
 
-use crate::{MessageDescriptor, MessageDirection};
+use crate::{ApiDescriptor, MessageDescriptor, MessageDirection};
 
 pub use list_config_resources_request::ListConfigResourcesRequest;
 pub use list_config_resources_response::ListConfigResourcesResponse;
@@ -419,7 +419,6 @@ pub const LIST_CONFIG_RESOURCES_REQUEST_DESCRIPTOR: MessageDescriptor = MessageD
     MessageDirection::Request,
     VersionRange::new(0, 1),
     Some(VersionRange::new(0, 1)),
-    false,
 );
 
 /// Static metadata for [`ListConfigResourcesResponse`].
@@ -427,6 +426,15 @@ pub const LIST_CONFIG_RESOURCES_RESPONSE_DESCRIPTOR: MessageDescriptor = Message
     74,
     "ListConfigResourcesResponse",
     MessageDirection::Response,
+    VersionRange::new(0, 1),
+    Some(VersionRange::new(0, 1)),
+);
+
+/// Static pair metadata for the `ListConfigResources` API.
+pub const LIST_CONFIG_RESOURCES_API_DESCRIPTOR: ApiDescriptor = ApiDescriptor::new(
+    74,
+    &LIST_CONFIG_RESOURCES_REQUEST_DESCRIPTOR,
+    &LIST_CONFIG_RESOURCES_RESPONSE_DESCRIPTOR,
     VersionRange::new(0, 1),
     Some(VersionRange::new(0, 1)),
     false,

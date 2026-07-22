@@ -15,7 +15,7 @@ pub mod sasl_handshake_request {
         KafkaDecode, KafkaEncode, StrBytes, VersionRange, encode_into_with, encoded_len_with,
     };
 
-    use crate::{KafkaMessage, KafkaRequest, RequestResponsePair};
+    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, RequestResponsePair};
 
     /// Request body for the `SaslHandshake` API.
     #[non_exhaustive]
@@ -33,7 +33,7 @@ pub mod sasl_handshake_request {
 
     impl KafkaRequest for SaslHandshakeRequest {
         const API_KEY: ApiKey = ApiKey::new(17);
-        const LATEST_VERSION_UNSTABLE: bool = false;
+        const API_DESCRIPTOR: &'static ApiDescriptor = &super::SASL_HANDSHAKE_API_DESCRIPTOR;
     }
 
     impl RequestResponsePair for SaslHandshakeRequest {
@@ -211,7 +211,7 @@ pub mod sasl_handshake_response {
 
 use kafka_wire_core::VersionRange;
 
-use crate::{MessageDescriptor, MessageDirection};
+use crate::{ApiDescriptor, MessageDescriptor, MessageDirection};
 
 pub use sasl_handshake_request::SaslHandshakeRequest;
 pub use sasl_handshake_response::SaslHandshakeResponse;
@@ -223,7 +223,6 @@ pub const SASL_HANDSHAKE_REQUEST_DESCRIPTOR: MessageDescriptor = MessageDescript
     MessageDirection::Request,
     VersionRange::new(0, 1),
     None,
-    false,
 );
 
 /// Static metadata for [`SaslHandshakeResponse`].
@@ -231,6 +230,15 @@ pub const SASL_HANDSHAKE_RESPONSE_DESCRIPTOR: MessageDescriptor = MessageDescrip
     17,
     "SaslHandshakeResponse",
     MessageDirection::Response,
+    VersionRange::new(0, 1),
+    None,
+);
+
+/// Static pair metadata for the `SaslHandshake` API.
+pub const SASL_HANDSHAKE_API_DESCRIPTOR: ApiDescriptor = ApiDescriptor::new(
+    17,
+    &SASL_HANDSHAKE_REQUEST_DESCRIPTOR,
+    &SASL_HANDSHAKE_RESPONSE_DESCRIPTOR,
     VersionRange::new(0, 1),
     None,
     false,

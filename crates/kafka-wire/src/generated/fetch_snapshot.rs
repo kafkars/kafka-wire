@@ -16,7 +16,7 @@ pub mod fetch_snapshot_request {
         VersionRange, encode_into_with, encoded_len_with,
     };
 
-    use crate::{KafkaMessage, KafkaRequest, RequestResponsePair};
+    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, RequestResponsePair};
 
     /// `TopicSnapshot` as declared by the `FetchSnapshot` API.
     #[non_exhaustive]
@@ -441,7 +441,7 @@ pub mod fetch_snapshot_request {
 
     impl KafkaRequest for FetchSnapshotRequest {
         const API_KEY: ApiKey = ApiKey::new(59);
-        const LATEST_VERSION_UNSTABLE: bool = false;
+        const API_DESCRIPTOR: &'static ApiDescriptor = &super::FETCH_SNAPSHOT_API_DESCRIPTOR;
     }
 
     impl RequestResponsePair for FetchSnapshotRequest {
@@ -1366,7 +1366,7 @@ pub mod fetch_snapshot_response {
 
 use kafka_wire_core::VersionRange;
 
-use crate::{MessageDescriptor, MessageDirection};
+use crate::{ApiDescriptor, MessageDescriptor, MessageDirection};
 
 pub use fetch_snapshot_request::FetchSnapshotRequest;
 pub use fetch_snapshot_response::FetchSnapshotResponse;
@@ -1378,7 +1378,6 @@ pub const FETCH_SNAPSHOT_REQUEST_DESCRIPTOR: MessageDescriptor = MessageDescript
     MessageDirection::Request,
     VersionRange::new(0, 1),
     Some(VersionRange::new(0, 1)),
-    false,
 );
 
 /// Static metadata for [`FetchSnapshotResponse`].
@@ -1386,6 +1385,15 @@ pub const FETCH_SNAPSHOT_RESPONSE_DESCRIPTOR: MessageDescriptor = MessageDescrip
     59,
     "FetchSnapshotResponse",
     MessageDirection::Response,
+    VersionRange::new(0, 1),
+    Some(VersionRange::new(0, 1)),
+);
+
+/// Static pair metadata for the `FetchSnapshot` API.
+pub const FETCH_SNAPSHOT_API_DESCRIPTOR: ApiDescriptor = ApiDescriptor::new(
+    59,
+    &FETCH_SNAPSHOT_REQUEST_DESCRIPTOR,
+    &FETCH_SNAPSHOT_RESPONSE_DESCRIPTOR,
     VersionRange::new(0, 1),
     Some(VersionRange::new(0, 1)),
     false,

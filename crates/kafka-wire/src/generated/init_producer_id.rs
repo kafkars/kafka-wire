@@ -16,7 +16,7 @@ pub mod init_producer_id_request {
         encoded_len_with,
     };
 
-    use crate::{KafkaMessage, KafkaRequest, RequestResponsePair};
+    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, RequestResponsePair};
 
     /// Request body for the `InitProducerId` API.
     #[non_exhaustive]
@@ -60,7 +60,7 @@ pub mod init_producer_id_request {
 
     impl KafkaRequest for InitProducerIdRequest {
         const API_KEY: ApiKey = ApiKey::new(22);
-        const LATEST_VERSION_UNSTABLE: bool = true;
+        const API_DESCRIPTOR: &'static ApiDescriptor = &super::INIT_PRODUCER_ID_API_DESCRIPTOR;
     }
 
     impl RequestResponsePair for InitProducerIdRequest {
@@ -403,7 +403,7 @@ pub mod init_producer_id_response {
 
 use kafka_wire_core::VersionRange;
 
-use crate::{MessageDescriptor, MessageDirection};
+use crate::{ApiDescriptor, MessageDescriptor, MessageDirection};
 
 pub use init_producer_id_request::InitProducerIdRequest;
 pub use init_producer_id_response::InitProducerIdResponse;
@@ -415,7 +415,6 @@ pub const INIT_PRODUCER_ID_REQUEST_DESCRIPTOR: MessageDescriptor = MessageDescri
     MessageDirection::Request,
     VersionRange::new(0, 6),
     Some(VersionRange::new(2, 6)),
-    true,
 );
 
 /// Static metadata for [`InitProducerIdResponse`].
@@ -425,5 +424,14 @@ pub const INIT_PRODUCER_ID_RESPONSE_DESCRIPTOR: MessageDescriptor = MessageDescr
     MessageDirection::Response,
     VersionRange::new(0, 6),
     Some(VersionRange::new(2, 6)),
-    false,
+);
+
+/// Static pair metadata for the `InitProducerId` API.
+pub const INIT_PRODUCER_ID_API_DESCRIPTOR: ApiDescriptor = ApiDescriptor::new(
+    22,
+    &INIT_PRODUCER_ID_REQUEST_DESCRIPTOR,
+    &INIT_PRODUCER_ID_RESPONSE_DESCRIPTOR,
+    VersionRange::new(0, 6),
+    Some(VersionRange::new(2, 6)),
+    true,
 );

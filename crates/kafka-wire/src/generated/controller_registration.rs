@@ -16,7 +16,7 @@ pub mod controller_registration_request {
         encoded_len_with,
     };
 
-    use crate::{KafkaMessage, KafkaRequest, RequestResponsePair};
+    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, RequestResponsePair};
 
     /// `Listener` as declared by the `ControllerRegistration` API.
     #[non_exhaustive]
@@ -291,7 +291,8 @@ pub mod controller_registration_request {
 
     impl KafkaRequest for ControllerRegistrationRequest {
         const API_KEY: ApiKey = ApiKey::new(70);
-        const LATEST_VERSION_UNSTABLE: bool = false;
+        const API_DESCRIPTOR: &'static ApiDescriptor =
+            &super::CONTROLLER_REGISTRATION_API_DESCRIPTOR;
     }
 
     impl RequestResponsePair for ControllerRegistrationRequest {
@@ -546,7 +547,7 @@ pub mod controller_registration_response {
 
 use kafka_wire_core::VersionRange;
 
-use crate::{MessageDescriptor, MessageDirection};
+use crate::{ApiDescriptor, MessageDescriptor, MessageDirection};
 
 pub use controller_registration_request::ControllerRegistrationRequest;
 pub use controller_registration_response::ControllerRegistrationResponse;
@@ -558,7 +559,6 @@ pub const CONTROLLER_REGISTRATION_REQUEST_DESCRIPTOR: MessageDescriptor = Messag
     MessageDirection::Request,
     VersionRange::new(0, 0),
     Some(VersionRange::new(0, 0)),
-    false,
 );
 
 /// Static metadata for [`ControllerRegistrationResponse`].
@@ -566,6 +566,15 @@ pub const CONTROLLER_REGISTRATION_RESPONSE_DESCRIPTOR: MessageDescriptor = Messa
     70,
     "ControllerRegistrationResponse",
     MessageDirection::Response,
+    VersionRange::new(0, 0),
+    Some(VersionRange::new(0, 0)),
+);
+
+/// Static pair metadata for the `ControllerRegistration` API.
+pub const CONTROLLER_REGISTRATION_API_DESCRIPTOR: ApiDescriptor = ApiDescriptor::new(
+    70,
+    &CONTROLLER_REGISTRATION_REQUEST_DESCRIPTOR,
+    &CONTROLLER_REGISTRATION_RESPONSE_DESCRIPTOR,
     VersionRange::new(0, 0),
     Some(VersionRange::new(0, 0)),
     false,

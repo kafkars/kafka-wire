@@ -16,7 +16,7 @@ pub mod join_group_request {
         encoded_len_with,
     };
 
-    use crate::{KafkaMessage, KafkaRequest, RequestResponsePair};
+    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, RequestResponsePair};
 
     /// `JoinGroupRequestProtocol` as declared by the `JoinGroup` API.
     #[non_exhaustive]
@@ -198,7 +198,7 @@ pub mod join_group_request {
 
     impl KafkaRequest for JoinGroupRequest {
         const API_KEY: ApiKey = ApiKey::new(11);
-        const LATEST_VERSION_UNSTABLE: bool = false;
+        const API_DESCRIPTOR: &'static ApiDescriptor = &super::JOIN_GROUP_API_DESCRIPTOR;
     }
 
     impl RequestResponsePair for JoinGroupRequest {
@@ -786,7 +786,7 @@ pub mod join_group_response {
 
 use kafka_wire_core::VersionRange;
 
-use crate::{MessageDescriptor, MessageDirection};
+use crate::{ApiDescriptor, MessageDescriptor, MessageDirection};
 
 pub use join_group_request::JoinGroupRequest;
 pub use join_group_response::JoinGroupResponse;
@@ -798,7 +798,6 @@ pub const JOIN_GROUP_REQUEST_DESCRIPTOR: MessageDescriptor = MessageDescriptor::
     MessageDirection::Request,
     VersionRange::new(0, 9),
     Some(VersionRange::new(6, 9)),
-    false,
 );
 
 /// Static metadata for [`JoinGroupResponse`].
@@ -806,6 +805,15 @@ pub const JOIN_GROUP_RESPONSE_DESCRIPTOR: MessageDescriptor = MessageDescriptor:
     11,
     "JoinGroupResponse",
     MessageDirection::Response,
+    VersionRange::new(0, 9),
+    Some(VersionRange::new(6, 9)),
+);
+
+/// Static pair metadata for the `JoinGroup` API.
+pub const JOIN_GROUP_API_DESCRIPTOR: ApiDescriptor = ApiDescriptor::new(
+    11,
+    &JOIN_GROUP_REQUEST_DESCRIPTOR,
+    &JOIN_GROUP_RESPONSE_DESCRIPTOR,
     VersionRange::new(0, 9),
     Some(VersionRange::new(6, 9)),
     false,

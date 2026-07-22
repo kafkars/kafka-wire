@@ -4,6 +4,7 @@ use kafka_wire_schema::{Message, MessageKind};
 
 use crate::{
     GenerationError,
+    group::ApiGroup,
     render::{invariant, text::RustText},
 };
 
@@ -36,7 +37,39 @@ pub(super) fn render_descriptor(
         "    {},",
         option_range(message, &message.effective_flexible_versions())?
     ));
-    rust.line(format!("    {},", message.latest_version_unstable));
+    rust.line(");");
+    rust.blank();
+    Ok(())
+}
+
+pub(super) fn render_api_descriptor(
+    rust: &mut RustText,
+    group: &ApiGroup,
+) -> Result<(), GenerationError> {
+    let constant = api_descriptor_name(group);
+    let request = descriptor_name(&group.request.message);
+    let response = descriptor_name(&group.response.message);
+    let (start, end) = invariant::bounded(
+        &group.request.message,
+        &group.supported_versions,
+        "pair supported versions",
+    )?;
+    rust.line(format!(
+        "/// Static pair metadata for the `{}` API.",
+        group.name.protocol_stem()
+    ));
+    rust.line(format!(
+        "pub const {constant}: ApiDescriptor = ApiDescriptor::new("
+    ));
+    rust.line(format!("    {},", group.api_key));
+    rust.line(format!("    &{request},"));
+    rust.line(format!("    &{response},"));
+    rust.line(format!("    VersionRange::new({start}, {end}),"));
+    rust.line(format!(
+        "    {},",
+        option_range(&group.request.message, &group.flexible_versions)?
+    ));
+    rust.line(format!("    {},", group.latest_version_unstable));
     rust.line(");");
     rust.blank();
     Ok(())
@@ -44,6 +77,10 @@ pub(super) fn render_descriptor(
 
 pub(crate) fn descriptor_name(message: &Message) -> String {
     format!("{}_DESCRIPTOR", message.name.descriptor_symbol())
+}
+
+pub(crate) fn api_descriptor_name(group: &ApiGroup) -> String {
+    format!("{}_API_DESCRIPTOR", group.name.descriptor_symbol())
 }
 
 fn option_range(

@@ -16,7 +16,7 @@ pub mod broker_heartbeat_request {
         encode_into_with, encoded_len_with,
     };
 
-    use crate::{KafkaMessage, KafkaRequest, RequestResponsePair};
+    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, RequestResponsePair};
 
     /// Request body for the `BrokerHeartbeat` API.
     #[non_exhaustive]
@@ -63,7 +63,7 @@ pub mod broker_heartbeat_request {
 
     impl KafkaRequest for BrokerHeartbeatRequest {
         const API_KEY: ApiKey = ApiKey::new(63);
-        const LATEST_VERSION_UNSTABLE: bool = false;
+        const API_DESCRIPTOR: &'static ApiDescriptor = &super::BROKER_HEARTBEAT_API_DESCRIPTOR;
     }
 
     impl RequestResponsePair for BrokerHeartbeatRequest {
@@ -370,7 +370,7 @@ pub mod broker_heartbeat_response {
 
 use kafka_wire_core::VersionRange;
 
-use crate::{MessageDescriptor, MessageDirection};
+use crate::{ApiDescriptor, MessageDescriptor, MessageDirection};
 
 pub use broker_heartbeat_request::BrokerHeartbeatRequest;
 pub use broker_heartbeat_response::BrokerHeartbeatResponse;
@@ -382,7 +382,6 @@ pub const BROKER_HEARTBEAT_REQUEST_DESCRIPTOR: MessageDescriptor = MessageDescri
     MessageDirection::Request,
     VersionRange::new(0, 2),
     Some(VersionRange::new(0, 2)),
-    false,
 );
 
 /// Static metadata for [`BrokerHeartbeatResponse`].
@@ -390,6 +389,15 @@ pub const BROKER_HEARTBEAT_RESPONSE_DESCRIPTOR: MessageDescriptor = MessageDescr
     63,
     "BrokerHeartbeatResponse",
     MessageDirection::Response,
+    VersionRange::new(0, 2),
+    Some(VersionRange::new(0, 2)),
+);
+
+/// Static pair metadata for the `BrokerHeartbeat` API.
+pub const BROKER_HEARTBEAT_API_DESCRIPTOR: ApiDescriptor = ApiDescriptor::new(
+    63,
+    &BROKER_HEARTBEAT_REQUEST_DESCRIPTOR,
+    &BROKER_HEARTBEAT_RESPONSE_DESCRIPTOR,
     VersionRange::new(0, 2),
     Some(VersionRange::new(0, 2)),
     false,

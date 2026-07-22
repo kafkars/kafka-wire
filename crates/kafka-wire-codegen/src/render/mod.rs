@@ -13,7 +13,7 @@ mod text;
 #[cfg(test)]
 mod fuzz_dispatch_test;
 
-pub(crate) use api::{render_api, render_unkeyed};
+pub(crate) use api::{api_descriptor_name, descriptor_name, render_api, render_unkeyed};
 pub(crate) use exports::render_exports_file;
 pub(crate) use fuzz_dispatch::render_fuzz_dispatch;
 pub(crate) use header_version::render_header_version;

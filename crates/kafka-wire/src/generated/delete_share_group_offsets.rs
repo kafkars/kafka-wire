@@ -16,7 +16,7 @@ pub mod delete_share_group_offsets_request {
         encoded_len_with,
     };
 
-    use crate::{KafkaMessage, KafkaRequest, RequestResponsePair};
+    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, RequestResponsePair};
 
     /// `DeleteShareGroupOffsetsRequestTopic` as declared by the `DeleteShareGroupOffsets` API.
     #[non_exhaustive]
@@ -155,7 +155,8 @@ pub mod delete_share_group_offsets_request {
 
     impl KafkaRequest for DeleteShareGroupOffsetsRequest {
         const API_KEY: ApiKey = ApiKey::new(92);
-        const LATEST_VERSION_UNSTABLE: bool = false;
+        const API_DESCRIPTOR: &'static ApiDescriptor =
+            &super::DELETE_SHARE_GROUP_OFFSETS_API_DESCRIPTOR;
     }
 
     impl RequestResponsePair for DeleteShareGroupOffsetsRequest {
@@ -531,7 +532,7 @@ pub mod delete_share_group_offsets_response {
 
 use kafka_wire_core::VersionRange;
 
-use crate::{MessageDescriptor, MessageDirection};
+use crate::{ApiDescriptor, MessageDescriptor, MessageDirection};
 
 pub use delete_share_group_offsets_request::DeleteShareGroupOffsetsRequest;
 pub use delete_share_group_offsets_response::DeleteShareGroupOffsetsResponse;
@@ -543,7 +544,6 @@ pub const DELETE_SHARE_GROUP_OFFSETS_REQUEST_DESCRIPTOR: MessageDescriptor = Mes
     MessageDirection::Request,
     VersionRange::new(0, 0),
     Some(VersionRange::new(0, 0)),
-    false,
 );
 
 /// Static metadata for [`DeleteShareGroupOffsetsResponse`].
@@ -554,5 +554,14 @@ pub const DELETE_SHARE_GROUP_OFFSETS_RESPONSE_DESCRIPTOR: MessageDescriptor =
         MessageDirection::Response,
         VersionRange::new(0, 0),
         Some(VersionRange::new(0, 0)),
-        false,
     );
+
+/// Static pair metadata for the `DeleteShareGroupOffsets` API.
+pub const DELETE_SHARE_GROUP_OFFSETS_API_DESCRIPTOR: ApiDescriptor = ApiDescriptor::new(
+    92,
+    &DELETE_SHARE_GROUP_OFFSETS_REQUEST_DESCRIPTOR,
+    &DELETE_SHARE_GROUP_OFFSETS_RESPONSE_DESCRIPTOR,
+    VersionRange::new(0, 0),
+    Some(VersionRange::new(0, 0)),
+    false,
+);

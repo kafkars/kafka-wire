@@ -16,7 +16,7 @@ pub mod metadata_request {
         encoded_len_with,
     };
 
-    use crate::{KafkaMessage, KafkaRequest, RequestResponsePair};
+    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, RequestResponsePair};
 
     /// `MetadataRequestTopic` as declared by the `Metadata` API.
     #[non_exhaustive]
@@ -205,7 +205,7 @@ pub mod metadata_request {
 
     impl KafkaRequest for MetadataRequest {
         const API_KEY: ApiKey = ApiKey::new(3);
-        const LATEST_VERSION_UNSTABLE: bool = false;
+        const API_DESCRIPTOR: &'static ApiDescriptor = &super::METADATA_API_DESCRIPTOR;
     }
 
     impl RequestResponsePair for MetadataRequest {
@@ -1197,7 +1197,7 @@ pub mod metadata_response {
 
 use kafka_wire_core::VersionRange;
 
-use crate::{MessageDescriptor, MessageDirection};
+use crate::{ApiDescriptor, MessageDescriptor, MessageDirection};
 
 pub use metadata_request::MetadataRequest;
 pub use metadata_response::MetadataResponse;
@@ -1209,7 +1209,6 @@ pub const METADATA_REQUEST_DESCRIPTOR: MessageDescriptor = MessageDescriptor::ne
     MessageDirection::Request,
     VersionRange::new(0, 13),
     Some(VersionRange::new(9, 13)),
-    false,
 );
 
 /// Static metadata for [`MetadataResponse`].
@@ -1217,6 +1216,15 @@ pub const METADATA_RESPONSE_DESCRIPTOR: MessageDescriptor = MessageDescriptor::n
     3,
     "MetadataResponse",
     MessageDirection::Response,
+    VersionRange::new(0, 13),
+    Some(VersionRange::new(9, 13)),
+);
+
+/// Static pair metadata for the `Metadata` API.
+pub const METADATA_API_DESCRIPTOR: ApiDescriptor = ApiDescriptor::new(
+    3,
+    &METADATA_REQUEST_DESCRIPTOR,
+    &METADATA_RESPONSE_DESCRIPTOR,
     VersionRange::new(0, 13),
     Some(VersionRange::new(9, 13)),
     false,

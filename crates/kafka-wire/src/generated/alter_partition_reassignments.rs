@@ -16,7 +16,7 @@ pub mod alter_partition_reassignments_request {
         encoded_len_with,
     };
 
-    use crate::{KafkaMessage, KafkaRequest, RequestResponsePair};
+    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, RequestResponsePair};
 
     /// `ReassignableTopic` as declared by the `AlterPartitionReassignments` API.
     #[non_exhaustive]
@@ -304,7 +304,8 @@ pub mod alter_partition_reassignments_request {
 
     impl KafkaRequest for AlterPartitionReassignmentsRequest {
         const API_KEY: ApiKey = ApiKey::new(45);
-        const LATEST_VERSION_UNSTABLE: bool = false;
+        const API_DESCRIPTOR: &'static ApiDescriptor =
+            &super::ALTER_PARTITION_REASSIGNMENTS_API_DESCRIPTOR;
     }
 
     impl RequestResponsePair for AlterPartitionReassignmentsRequest {
@@ -859,7 +860,7 @@ pub mod alter_partition_reassignments_response {
 
 use kafka_wire_core::VersionRange;
 
-use crate::{MessageDescriptor, MessageDirection};
+use crate::{ApiDescriptor, MessageDescriptor, MessageDirection};
 
 pub use alter_partition_reassignments_request::AlterPartitionReassignmentsRequest;
 pub use alter_partition_reassignments_response::AlterPartitionReassignmentsResponse;
@@ -872,7 +873,6 @@ pub const ALTER_PARTITION_REASSIGNMENTS_REQUEST_DESCRIPTOR: MessageDescriptor =
         MessageDirection::Request,
         VersionRange::new(0, 1),
         Some(VersionRange::new(0, 1)),
-        false,
     );
 
 /// Static metadata for [`AlterPartitionReassignmentsResponse`].
@@ -883,5 +883,14 @@ pub const ALTER_PARTITION_REASSIGNMENTS_RESPONSE_DESCRIPTOR: MessageDescriptor =
         MessageDirection::Response,
         VersionRange::new(0, 1),
         Some(VersionRange::new(0, 1)),
-        false,
     );
+
+/// Static pair metadata for the `AlterPartitionReassignments` API.
+pub const ALTER_PARTITION_REASSIGNMENTS_API_DESCRIPTOR: ApiDescriptor = ApiDescriptor::new(
+    45,
+    &ALTER_PARTITION_REASSIGNMENTS_REQUEST_DESCRIPTOR,
+    &ALTER_PARTITION_REASSIGNMENTS_RESPONSE_DESCRIPTOR,
+    VersionRange::new(0, 1),
+    Some(VersionRange::new(0, 1)),
+    false,
+);

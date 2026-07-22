@@ -16,7 +16,7 @@ pub mod renew_delegation_token_request {
         encoded_len_with,
     };
 
-    use crate::{KafkaMessage, KafkaRequest, RequestResponsePair};
+    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, RequestResponsePair};
 
     /// Request body for the `RenewDelegationToken` API.
     #[non_exhaustive]
@@ -38,7 +38,8 @@ pub mod renew_delegation_token_request {
 
     impl KafkaRequest for RenewDelegationTokenRequest {
         const API_KEY: ApiKey = ApiKey::new(39);
-        const LATEST_VERSION_UNSTABLE: bool = false;
+        const API_DESCRIPTOR: &'static ApiDescriptor =
+            &super::RENEW_DELEGATION_TOKEN_API_DESCRIPTOR;
     }
 
     impl RequestResponsePair for RenewDelegationTokenRequest {
@@ -262,7 +263,7 @@ pub mod renew_delegation_token_response {
 
 use kafka_wire_core::VersionRange;
 
-use crate::{MessageDescriptor, MessageDirection};
+use crate::{ApiDescriptor, MessageDescriptor, MessageDirection};
 
 pub use renew_delegation_token_request::RenewDelegationTokenRequest;
 pub use renew_delegation_token_response::RenewDelegationTokenResponse;
@@ -274,7 +275,6 @@ pub const RENEW_DELEGATION_TOKEN_REQUEST_DESCRIPTOR: MessageDescriptor = Message
     MessageDirection::Request,
     VersionRange::new(1, 2),
     Some(VersionRange::new(2, 2)),
-    false,
 );
 
 /// Static metadata for [`RenewDelegationTokenResponse`].
@@ -282,6 +282,15 @@ pub const RENEW_DELEGATION_TOKEN_RESPONSE_DESCRIPTOR: MessageDescriptor = Messag
     39,
     "RenewDelegationTokenResponse",
     MessageDirection::Response,
+    VersionRange::new(1, 2),
+    Some(VersionRange::new(2, 2)),
+);
+
+/// Static pair metadata for the `RenewDelegationToken` API.
+pub const RENEW_DELEGATION_TOKEN_API_DESCRIPTOR: ApiDescriptor = ApiDescriptor::new(
+    39,
+    &RENEW_DELEGATION_TOKEN_REQUEST_DESCRIPTOR,
+    &RENEW_DELEGATION_TOKEN_RESPONSE_DESCRIPTOR,
     VersionRange::new(1, 2),
     Some(VersionRange::new(2, 2)),
     false,

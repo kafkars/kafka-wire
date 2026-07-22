@@ -16,7 +16,7 @@ pub mod create_delegation_token_request {
         encoded_len_with,
     };
 
-    use crate::{KafkaMessage, KafkaRequest, RequestResponsePair};
+    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, RequestResponsePair};
 
     /// `CreatableRenewers` as declared by the `CreateDelegationToken` API.
     #[non_exhaustive]
@@ -186,7 +186,8 @@ pub mod create_delegation_token_request {
 
     impl KafkaRequest for CreateDelegationTokenRequest {
         const API_KEY: ApiKey = ApiKey::new(38);
-        const LATEST_VERSION_UNSTABLE: bool = false;
+        const API_DESCRIPTOR: &'static ApiDescriptor =
+            &super::CREATE_DELEGATION_TOKEN_API_DESCRIPTOR;
     }
 
     impl RequestResponsePair for CreateDelegationTokenRequest {
@@ -552,7 +553,7 @@ pub mod create_delegation_token_response {
 
 use kafka_wire_core::VersionRange;
 
-use crate::{MessageDescriptor, MessageDirection};
+use crate::{ApiDescriptor, MessageDescriptor, MessageDirection};
 
 pub use create_delegation_token_request::CreateDelegationTokenRequest;
 pub use create_delegation_token_response::CreateDelegationTokenResponse;
@@ -564,7 +565,6 @@ pub const CREATE_DELEGATION_TOKEN_REQUEST_DESCRIPTOR: MessageDescriptor = Messag
     MessageDirection::Request,
     VersionRange::new(1, 3),
     Some(VersionRange::new(2, 3)),
-    false,
 );
 
 /// Static metadata for [`CreateDelegationTokenResponse`].
@@ -572,6 +572,15 @@ pub const CREATE_DELEGATION_TOKEN_RESPONSE_DESCRIPTOR: MessageDescriptor = Messa
     38,
     "CreateDelegationTokenResponse",
     MessageDirection::Response,
+    VersionRange::new(1, 3),
+    Some(VersionRange::new(2, 3)),
+);
+
+/// Static pair metadata for the `CreateDelegationToken` API.
+pub const CREATE_DELEGATION_TOKEN_API_DESCRIPTOR: ApiDescriptor = ApiDescriptor::new(
+    38,
+    &CREATE_DELEGATION_TOKEN_REQUEST_DESCRIPTOR,
+    &CREATE_DELEGATION_TOKEN_RESPONSE_DESCRIPTOR,
     VersionRange::new(1, 3),
     Some(VersionRange::new(2, 3)),
     false,

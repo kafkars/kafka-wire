@@ -16,7 +16,7 @@ pub mod alter_share_group_offsets_request {
         encoded_len_with,
     };
 
-    use crate::{KafkaMessage, KafkaRequest, RequestResponsePair};
+    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, RequestResponsePair};
 
     /// `AlterShareGroupOffsetsRequestTopic` as declared by the `AlterShareGroupOffsets` API.
     #[non_exhaustive]
@@ -293,7 +293,8 @@ pub mod alter_share_group_offsets_request {
 
     impl KafkaRequest for AlterShareGroupOffsetsRequest {
         const API_KEY: ApiKey = ApiKey::new(91);
-        const LATEST_VERSION_UNSTABLE: bool = false;
+        const API_DESCRIPTOR: &'static ApiDescriptor =
+            &super::ALTER_SHARE_GROUP_OFFSETS_API_DESCRIPTOR;
     }
 
     impl RequestResponsePair for AlterShareGroupOffsetsRequest {
@@ -808,7 +809,7 @@ pub mod alter_share_group_offsets_response {
 
 use kafka_wire_core::VersionRange;
 
-use crate::{MessageDescriptor, MessageDirection};
+use crate::{ApiDescriptor, MessageDescriptor, MessageDirection};
 
 pub use alter_share_group_offsets_request::AlterShareGroupOffsetsRequest;
 pub use alter_share_group_offsets_response::AlterShareGroupOffsetsResponse;
@@ -820,7 +821,6 @@ pub const ALTER_SHARE_GROUP_OFFSETS_REQUEST_DESCRIPTOR: MessageDescriptor = Mess
     MessageDirection::Request,
     VersionRange::new(0, 0),
     Some(VersionRange::new(0, 0)),
-    false,
 );
 
 /// Static metadata for [`AlterShareGroupOffsetsResponse`].
@@ -828,6 +828,15 @@ pub const ALTER_SHARE_GROUP_OFFSETS_RESPONSE_DESCRIPTOR: MessageDescriptor = Mes
     91,
     "AlterShareGroupOffsetsResponse",
     MessageDirection::Response,
+    VersionRange::new(0, 0),
+    Some(VersionRange::new(0, 0)),
+);
+
+/// Static pair metadata for the `AlterShareGroupOffsets` API.
+pub const ALTER_SHARE_GROUP_OFFSETS_API_DESCRIPTOR: ApiDescriptor = ApiDescriptor::new(
+    91,
+    &ALTER_SHARE_GROUP_OFFSETS_REQUEST_DESCRIPTOR,
+    &ALTER_SHARE_GROUP_OFFSETS_RESPONSE_DESCRIPTOR,
     VersionRange::new(0, 0),
     Some(VersionRange::new(0, 0)),
     false,

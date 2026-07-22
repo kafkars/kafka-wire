@@ -16,7 +16,7 @@ pub mod describe_user_scram_credentials_request {
         encoded_len_with,
     };
 
-    use crate::{KafkaMessage, KafkaRequest, RequestResponsePair};
+    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, RequestResponsePair};
 
     /// `UserName` as declared by the `DescribeUserScramCredentials` API.
     #[non_exhaustive]
@@ -156,7 +156,8 @@ pub mod describe_user_scram_credentials_request {
 
     impl KafkaRequest for DescribeUserScramCredentialsRequest {
         const API_KEY: ApiKey = ApiKey::new(50);
-        const LATEST_VERSION_UNSTABLE: bool = false;
+        const API_DESCRIPTOR: &'static ApiDescriptor =
+            &super::DESCRIBE_USER_SCRAM_CREDENTIALS_API_DESCRIPTOR;
     }
 
     impl RequestResponsePair for DescribeUserScramCredentialsRequest {
@@ -696,7 +697,7 @@ pub mod describe_user_scram_credentials_response {
 
 use kafka_wire_core::VersionRange;
 
-use crate::{MessageDescriptor, MessageDirection};
+use crate::{ApiDescriptor, MessageDescriptor, MessageDirection};
 
 pub use describe_user_scram_credentials_request::DescribeUserScramCredentialsRequest;
 pub use describe_user_scram_credentials_response::DescribeUserScramCredentialsResponse;
@@ -709,7 +710,6 @@ pub const DESCRIBE_USER_SCRAM_CREDENTIALS_REQUEST_DESCRIPTOR: MessageDescriptor 
         MessageDirection::Request,
         VersionRange::new(0, 0),
         Some(VersionRange::new(0, 0)),
-        false,
     );
 
 /// Static metadata for [`DescribeUserScramCredentialsResponse`].
@@ -720,5 +720,14 @@ pub const DESCRIBE_USER_SCRAM_CREDENTIALS_RESPONSE_DESCRIPTOR: MessageDescriptor
         MessageDirection::Response,
         VersionRange::new(0, 0),
         Some(VersionRange::new(0, 0)),
-        false,
     );
+
+/// Static pair metadata for the `DescribeUserScramCredentials` API.
+pub const DESCRIBE_USER_SCRAM_CREDENTIALS_API_DESCRIPTOR: ApiDescriptor = ApiDescriptor::new(
+    50,
+    &DESCRIBE_USER_SCRAM_CREDENTIALS_REQUEST_DESCRIPTOR,
+    &DESCRIBE_USER_SCRAM_CREDENTIALS_RESPONSE_DESCRIPTOR,
+    VersionRange::new(0, 0),
+    Some(VersionRange::new(0, 0)),
+    false,
+);

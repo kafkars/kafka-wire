@@ -16,7 +16,7 @@ pub mod leave_group_request {
         encoded_len_with,
     };
 
-    use crate::{KafkaMessage, KafkaRequest, RequestResponsePair};
+    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, RequestResponsePair};
 
     /// `MemberIdentity` as declared by the `LeaveGroup` API.
     #[non_exhaustive]
@@ -183,7 +183,7 @@ pub mod leave_group_request {
 
     impl KafkaRequest for LeaveGroupRequest {
         const API_KEY: ApiKey = ApiKey::new(13);
-        const LATEST_VERSION_UNSTABLE: bool = false;
+        const API_DESCRIPTOR: &'static ApiDescriptor = &super::LEAVE_GROUP_API_DESCRIPTOR;
     }
 
     impl RequestResponsePair for LeaveGroupRequest {
@@ -638,7 +638,7 @@ pub mod leave_group_response {
 
 use kafka_wire_core::VersionRange;
 
-use crate::{MessageDescriptor, MessageDirection};
+use crate::{ApiDescriptor, MessageDescriptor, MessageDirection};
 
 pub use leave_group_request::LeaveGroupRequest;
 pub use leave_group_response::LeaveGroupResponse;
@@ -650,7 +650,6 @@ pub const LEAVE_GROUP_REQUEST_DESCRIPTOR: MessageDescriptor = MessageDescriptor:
     MessageDirection::Request,
     VersionRange::new(0, 5),
     Some(VersionRange::new(4, 5)),
-    false,
 );
 
 /// Static metadata for [`LeaveGroupResponse`].
@@ -658,6 +657,15 @@ pub const LEAVE_GROUP_RESPONSE_DESCRIPTOR: MessageDescriptor = MessageDescriptor
     13,
     "LeaveGroupResponse",
     MessageDirection::Response,
+    VersionRange::new(0, 5),
+    Some(VersionRange::new(4, 5)),
+);
+
+/// Static pair metadata for the `LeaveGroup` API.
+pub const LEAVE_GROUP_API_DESCRIPTOR: ApiDescriptor = ApiDescriptor::new(
+    13,
+    &LEAVE_GROUP_REQUEST_DESCRIPTOR,
+    &LEAVE_GROUP_RESPONSE_DESCRIPTOR,
     VersionRange::new(0, 5),
     Some(VersionRange::new(4, 5)),
     false,

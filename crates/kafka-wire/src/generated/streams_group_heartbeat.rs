@@ -16,7 +16,7 @@ pub mod streams_group_heartbeat_request {
         encoded_len_with,
     };
 
-    use crate::{KafkaMessage, KafkaRequest, RequestResponsePair};
+    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, RequestResponsePair};
 
     /// `KeyValue` as declared by the `StreamsGroupHeartbeat` API.
     #[non_exhaustive]
@@ -1153,7 +1153,8 @@ pub mod streams_group_heartbeat_request {
 
     impl KafkaRequest for StreamsGroupHeartbeatRequest {
         const API_KEY: ApiKey = ApiKey::new(88);
-        const LATEST_VERSION_UNSTABLE: bool = false;
+        const API_DESCRIPTOR: &'static ApiDescriptor =
+            &super::STREAMS_GROUP_HEARTBEAT_API_DESCRIPTOR;
     }
 
     impl RequestResponsePair for StreamsGroupHeartbeatRequest {
@@ -2368,7 +2369,7 @@ pub mod streams_group_heartbeat_response {
 
 use kafka_wire_core::VersionRange;
 
-use crate::{MessageDescriptor, MessageDirection};
+use crate::{ApiDescriptor, MessageDescriptor, MessageDirection};
 
 pub use streams_group_heartbeat_request::StreamsGroupHeartbeatRequest;
 pub use streams_group_heartbeat_response::StreamsGroupHeartbeatResponse;
@@ -2380,7 +2381,6 @@ pub const STREAMS_GROUP_HEARTBEAT_REQUEST_DESCRIPTOR: MessageDescriptor = Messag
     MessageDirection::Request,
     VersionRange::new(0, 1),
     Some(VersionRange::new(0, 1)),
-    false,
 );
 
 /// Static metadata for [`StreamsGroupHeartbeatResponse`].
@@ -2388,6 +2388,15 @@ pub const STREAMS_GROUP_HEARTBEAT_RESPONSE_DESCRIPTOR: MessageDescriptor = Messa
     88,
     "StreamsGroupHeartbeatResponse",
     MessageDirection::Response,
+    VersionRange::new(0, 1),
+    Some(VersionRange::new(0, 1)),
+);
+
+/// Static pair metadata for the `StreamsGroupHeartbeat` API.
+pub const STREAMS_GROUP_HEARTBEAT_API_DESCRIPTOR: ApiDescriptor = ApiDescriptor::new(
+    88,
+    &STREAMS_GROUP_HEARTBEAT_REQUEST_DESCRIPTOR,
+    &STREAMS_GROUP_HEARTBEAT_RESPONSE_DESCRIPTOR,
     VersionRange::new(0, 1),
     Some(VersionRange::new(0, 1)),
     false,

@@ -10,707 +10,918 @@ use super::round_trip;
 pub(super) fn dispatch(message_selector: u16, version_selector: u16, body: &[u8]) {
     match usize::from(message_selector) % 180 {
         0 => {
-            round_trip::<kafka_wire::ProduceRequest>(body, select_version(version_selector, 3, 13))
+            if let Some(version) = select_version(version_selector, 3, 13) {
+                round_trip::<kafka_wire::ProduceRequest>(body, version);
+            }
         }
         1 => {
-            round_trip::<kafka_wire::ProduceResponse>(body, select_version(version_selector, 3, 13))
+            if let Some(version) = select_version(version_selector, 3, 13) {
+                round_trip::<kafka_wire::ProduceResponse>(body, version);
+            }
         }
-        2 => round_trip::<kafka_wire::FetchRequest>(body, select_version(version_selector, 4, 18)),
-        3 => round_trip::<kafka_wire::FetchResponse>(body, select_version(version_selector, 4, 18)),
-        4 => round_trip::<kafka_wire::ListOffsetsRequest>(
-            body,
-            select_version(version_selector, 1, 11),
-        ),
-        5 => round_trip::<kafka_wire::ListOffsetsResponse>(
-            body,
-            select_version(version_selector, 1, 11),
-        ),
+        2 => {
+            if let Some(version) = select_version(version_selector, 4, 18) {
+                round_trip::<kafka_wire::FetchRequest>(body, version);
+            }
+        }
+        3 => {
+            if let Some(version) = select_version(version_selector, 4, 18) {
+                round_trip::<kafka_wire::FetchResponse>(body, version);
+            }
+        }
+        4 => {
+            if let Some(version) = select_version(version_selector, 1, 11) {
+                round_trip::<kafka_wire::ListOffsetsRequest>(body, version);
+            }
+        }
+        5 => {
+            if let Some(version) = select_version(version_selector, 1, 11) {
+                round_trip::<kafka_wire::ListOffsetsResponse>(body, version);
+            }
+        }
         6 => {
-            round_trip::<kafka_wire::MetadataRequest>(body, select_version(version_selector, 0, 13))
+            if let Some(version) = select_version(version_selector, 0, 13) {
+                round_trip::<kafka_wire::MetadataRequest>(body, version);
+            }
         }
-        7 => round_trip::<kafka_wire::MetadataResponse>(
-            body,
-            select_version(version_selector, 0, 13),
-        ),
-        8 => round_trip::<kafka_wire::OffsetCommitRequest>(
-            body,
-            select_version(version_selector, 2, 10),
-        ),
-        9 => round_trip::<kafka_wire::OffsetCommitResponse>(
-            body,
-            select_version(version_selector, 2, 10),
-        ),
-        10 => round_trip::<kafka_wire::OffsetFetchRequest>(
-            body,
-            select_version(version_selector, 1, 10),
-        ),
-        11 => round_trip::<kafka_wire::OffsetFetchResponse>(
-            body,
-            select_version(version_selector, 1, 10),
-        ),
-        12 => round_trip::<kafka_wire::FindCoordinatorRequest>(
-            body,
-            select_version(version_selector, 0, 6),
-        ),
-        13 => round_trip::<kafka_wire::FindCoordinatorResponse>(
-            body,
-            select_version(version_selector, 0, 6),
-        ),
+        7 => {
+            if let Some(version) = select_version(version_selector, 0, 13) {
+                round_trip::<kafka_wire::MetadataResponse>(body, version);
+            }
+        }
+        8 => {
+            if let Some(version) = select_version(version_selector, 2, 10) {
+                round_trip::<kafka_wire::OffsetCommitRequest>(body, version);
+            }
+        }
+        9 => {
+            if let Some(version) = select_version(version_selector, 2, 10) {
+                round_trip::<kafka_wire::OffsetCommitResponse>(body, version);
+            }
+        }
+        10 => {
+            if let Some(version) = select_version(version_selector, 1, 10) {
+                round_trip::<kafka_wire::OffsetFetchRequest>(body, version);
+            }
+        }
+        11 => {
+            if let Some(version) = select_version(version_selector, 1, 10) {
+                round_trip::<kafka_wire::OffsetFetchResponse>(body, version);
+            }
+        }
+        12 => {
+            if let Some(version) = select_version(version_selector, 0, 6) {
+                round_trip::<kafka_wire::FindCoordinatorRequest>(body, version);
+            }
+        }
+        13 => {
+            if let Some(version) = select_version(version_selector, 0, 6) {
+                round_trip::<kafka_wire::FindCoordinatorResponse>(body, version);
+            }
+        }
         14 => {
-            round_trip::<kafka_wire::JoinGroupRequest>(body, select_version(version_selector, 0, 9))
+            if let Some(version) = select_version(version_selector, 0, 9) {
+                round_trip::<kafka_wire::JoinGroupRequest>(body, version);
+            }
         }
-        15 => round_trip::<kafka_wire::JoinGroupResponse>(
-            body,
-            select_version(version_selector, 0, 9),
-        ),
+        15 => {
+            if let Some(version) = select_version(version_selector, 0, 9) {
+                round_trip::<kafka_wire::JoinGroupResponse>(body, version);
+            }
+        }
         16 => {
-            round_trip::<kafka_wire::HeartbeatRequest>(body, select_version(version_selector, 0, 4))
+            if let Some(version) = select_version(version_selector, 0, 4) {
+                round_trip::<kafka_wire::HeartbeatRequest>(body, version);
+            }
         }
-        17 => round_trip::<kafka_wire::HeartbeatResponse>(
-            body,
-            select_version(version_selector, 0, 4),
-        ),
-        18 => round_trip::<kafka_wire::LeaveGroupRequest>(
-            body,
-            select_version(version_selector, 0, 5),
-        ),
-        19 => round_trip::<kafka_wire::LeaveGroupResponse>(
-            body,
-            select_version(version_selector, 0, 5),
-        ),
+        17 => {
+            if let Some(version) = select_version(version_selector, 0, 4) {
+                round_trip::<kafka_wire::HeartbeatResponse>(body, version);
+            }
+        }
+        18 => {
+            if let Some(version) = select_version(version_selector, 0, 5) {
+                round_trip::<kafka_wire::LeaveGroupRequest>(body, version);
+            }
+        }
+        19 => {
+            if let Some(version) = select_version(version_selector, 0, 5) {
+                round_trip::<kafka_wire::LeaveGroupResponse>(body, version);
+            }
+        }
         20 => {
-            round_trip::<kafka_wire::SyncGroupRequest>(body, select_version(version_selector, 0, 5))
+            if let Some(version) = select_version(version_selector, 0, 5) {
+                round_trip::<kafka_wire::SyncGroupRequest>(body, version);
+            }
         }
-        21 => round_trip::<kafka_wire::SyncGroupResponse>(
-            body,
-            select_version(version_selector, 0, 5),
-        ),
-        22 => round_trip::<kafka_wire::DescribeGroupsRequest>(
-            body,
-            select_version(version_selector, 0, 6),
-        ),
-        23 => round_trip::<kafka_wire::DescribeGroupsResponse>(
-            body,
-            select_version(version_selector, 0, 6),
-        ),
-        24 => round_trip::<kafka_wire::ListGroupsRequest>(
-            body,
-            select_version(version_selector, 0, 5),
-        ),
-        25 => round_trip::<kafka_wire::ListGroupsResponse>(
-            body,
-            select_version(version_selector, 0, 5),
-        ),
-        26 => round_trip::<kafka_wire::SaslHandshakeRequest>(
-            body,
-            select_version(version_selector, 0, 1),
-        ),
-        27 => round_trip::<kafka_wire::SaslHandshakeResponse>(
-            body,
-            select_version(version_selector, 0, 1),
-        ),
-        28 => round_trip::<kafka_wire::ApiVersionsRequest>(
-            body,
-            select_version(version_selector, 0, 5),
-        ),
-        29 => round_trip::<kafka_wire::ApiVersionsResponse>(
-            body,
-            select_version(version_selector, 0, 5),
-        ),
-        30 => round_trip::<kafka_wire::CreateTopicsRequest>(
-            body,
-            select_version(version_selector, 2, 7),
-        ),
-        31 => round_trip::<kafka_wire::CreateTopicsResponse>(
-            body,
-            select_version(version_selector, 2, 7),
-        ),
-        32 => round_trip::<kafka_wire::DeleteTopicsRequest>(
-            body,
-            select_version(version_selector, 1, 6),
-        ),
-        33 => round_trip::<kafka_wire::DeleteTopicsResponse>(
-            body,
-            select_version(version_selector, 1, 6),
-        ),
-        34 => round_trip::<kafka_wire::DeleteRecordsRequest>(
-            body,
-            select_version(version_selector, 0, 2),
-        ),
-        35 => round_trip::<kafka_wire::DeleteRecordsResponse>(
-            body,
-            select_version(version_selector, 0, 2),
-        ),
-        36 => round_trip::<kafka_wire::InitProducerIdRequest>(
-            body,
-            select_version(version_selector, 0, 6),
-        ),
-        37 => round_trip::<kafka_wire::InitProducerIdResponse>(
-            body,
-            select_version(version_selector, 0, 6),
-        ),
-        38 => round_trip::<kafka_wire::OffsetForLeaderEpochRequest>(
-            body,
-            select_version(version_selector, 2, 4),
-        ),
-        39 => round_trip::<kafka_wire::OffsetForLeaderEpochResponse>(
-            body,
-            select_version(version_selector, 2, 4),
-        ),
-        40 => round_trip::<kafka_wire::AddPartitionsToTxnRequest>(
-            body,
-            select_version(version_selector, 0, 5),
-        ),
-        41 => round_trip::<kafka_wire::AddPartitionsToTxnResponse>(
-            body,
-            select_version(version_selector, 0, 5),
-        ),
-        42 => round_trip::<kafka_wire::AddOffsetsToTxnRequest>(
-            body,
-            select_version(version_selector, 0, 4),
-        ),
-        43 => round_trip::<kafka_wire::AddOffsetsToTxnResponse>(
-            body,
-            select_version(version_selector, 0, 4),
-        ),
-        44 => round_trip::<kafka_wire::EndTxnRequest>(body, select_version(version_selector, 0, 5)),
+        21 => {
+            if let Some(version) = select_version(version_selector, 0, 5) {
+                round_trip::<kafka_wire::SyncGroupResponse>(body, version);
+            }
+        }
+        22 => {
+            if let Some(version) = select_version(version_selector, 0, 6) {
+                round_trip::<kafka_wire::DescribeGroupsRequest>(body, version);
+            }
+        }
+        23 => {
+            if let Some(version) = select_version(version_selector, 0, 6) {
+                round_trip::<kafka_wire::DescribeGroupsResponse>(body, version);
+            }
+        }
+        24 => {
+            if let Some(version) = select_version(version_selector, 0, 5) {
+                round_trip::<kafka_wire::ListGroupsRequest>(body, version);
+            }
+        }
+        25 => {
+            if let Some(version) = select_version(version_selector, 0, 5) {
+                round_trip::<kafka_wire::ListGroupsResponse>(body, version);
+            }
+        }
+        26 => {
+            if let Some(version) = select_version(version_selector, 0, 1) {
+                round_trip::<kafka_wire::SaslHandshakeRequest>(body, version);
+            }
+        }
+        27 => {
+            if let Some(version) = select_version(version_selector, 0, 1) {
+                round_trip::<kafka_wire::SaslHandshakeResponse>(body, version);
+            }
+        }
+        28 => {
+            if let Some(version) = select_version(version_selector, 0, 5) {
+                round_trip::<kafka_wire::ApiVersionsRequest>(body, version);
+            }
+        }
+        29 => {
+            if let Some(version) = select_version(version_selector, 0, 5) {
+                round_trip::<kafka_wire::ApiVersionsResponse>(body, version);
+            }
+        }
+        30 => {
+            if let Some(version) = select_version(version_selector, 2, 7) {
+                round_trip::<kafka_wire::CreateTopicsRequest>(body, version);
+            }
+        }
+        31 => {
+            if let Some(version) = select_version(version_selector, 2, 7) {
+                round_trip::<kafka_wire::CreateTopicsResponse>(body, version);
+            }
+        }
+        32 => {
+            if let Some(version) = select_version(version_selector, 1, 6) {
+                round_trip::<kafka_wire::DeleteTopicsRequest>(body, version);
+            }
+        }
+        33 => {
+            if let Some(version) = select_version(version_selector, 1, 6) {
+                round_trip::<kafka_wire::DeleteTopicsResponse>(body, version);
+            }
+        }
+        34 => {
+            if let Some(version) = select_version(version_selector, 0, 2) {
+                round_trip::<kafka_wire::DeleteRecordsRequest>(body, version);
+            }
+        }
+        35 => {
+            if let Some(version) = select_version(version_selector, 0, 2) {
+                round_trip::<kafka_wire::DeleteRecordsResponse>(body, version);
+            }
+        }
+        36 => {
+            if let Some(version) = select_version(version_selector, 0, 6) {
+                round_trip::<kafka_wire::InitProducerIdRequest>(body, version);
+            }
+        }
+        37 => {
+            if let Some(version) = select_version(version_selector, 0, 6) {
+                round_trip::<kafka_wire::InitProducerIdResponse>(body, version);
+            }
+        }
+        38 => {
+            if let Some(version) = select_version(version_selector, 2, 4) {
+                round_trip::<kafka_wire::OffsetForLeaderEpochRequest>(body, version);
+            }
+        }
+        39 => {
+            if let Some(version) = select_version(version_selector, 2, 4) {
+                round_trip::<kafka_wire::OffsetForLeaderEpochResponse>(body, version);
+            }
+        }
+        40 => {
+            if let Some(version) = select_version(version_selector, 0, 5) {
+                round_trip::<kafka_wire::AddPartitionsToTxnRequest>(body, version);
+            }
+        }
+        41 => {
+            if let Some(version) = select_version(version_selector, 0, 5) {
+                round_trip::<kafka_wire::AddPartitionsToTxnResponse>(body, version);
+            }
+        }
+        42 => {
+            if let Some(version) = select_version(version_selector, 0, 4) {
+                round_trip::<kafka_wire::AddOffsetsToTxnRequest>(body, version);
+            }
+        }
+        43 => {
+            if let Some(version) = select_version(version_selector, 0, 4) {
+                round_trip::<kafka_wire::AddOffsetsToTxnResponse>(body, version);
+            }
+        }
+        44 => {
+            if let Some(version) = select_version(version_selector, 0, 5) {
+                round_trip::<kafka_wire::EndTxnRequest>(body, version);
+            }
+        }
         45 => {
-            round_trip::<kafka_wire::EndTxnResponse>(body, select_version(version_selector, 0, 5))
+            if let Some(version) = select_version(version_selector, 0, 5) {
+                round_trip::<kafka_wire::EndTxnResponse>(body, version);
+            }
         }
-        46 => round_trip::<kafka_wire::WriteTxnMarkersRequest>(
-            body,
-            select_version(version_selector, 1, 2),
-        ),
-        47 => round_trip::<kafka_wire::WriteTxnMarkersResponse>(
-            body,
-            select_version(version_selector, 1, 2),
-        ),
-        48 => round_trip::<kafka_wire::TxnOffsetCommitRequest>(
-            body,
-            select_version(version_selector, 0, 6),
-        ),
-        49 => round_trip::<kafka_wire::TxnOffsetCommitResponse>(
-            body,
-            select_version(version_selector, 0, 6),
-        ),
-        50 => round_trip::<kafka_wire::DescribeAclsRequest>(
-            body,
-            select_version(version_selector, 1, 3),
-        ),
-        51 => round_trip::<kafka_wire::DescribeAclsResponse>(
-            body,
-            select_version(version_selector, 1, 3),
-        ),
-        52 => round_trip::<kafka_wire::CreateAclsRequest>(
-            body,
-            select_version(version_selector, 1, 3),
-        ),
-        53 => round_trip::<kafka_wire::CreateAclsResponse>(
-            body,
-            select_version(version_selector, 1, 3),
-        ),
-        54 => round_trip::<kafka_wire::DeleteAclsRequest>(
-            body,
-            select_version(version_selector, 1, 3),
-        ),
-        55 => round_trip::<kafka_wire::DeleteAclsResponse>(
-            body,
-            select_version(version_selector, 1, 3),
-        ),
-        56 => round_trip::<kafka_wire::DescribeConfigsRequest>(
-            body,
-            select_version(version_selector, 1, 4),
-        ),
-        57 => round_trip::<kafka_wire::DescribeConfigsResponse>(
-            body,
-            select_version(version_selector, 1, 4),
-        ),
-        58 => round_trip::<kafka_wire::AlterConfigsRequest>(
-            body,
-            select_version(version_selector, 0, 2),
-        ),
-        59 => round_trip::<kafka_wire::AlterConfigsResponse>(
-            body,
-            select_version(version_selector, 0, 2),
-        ),
-        60 => round_trip::<kafka_wire::AlterReplicaLogDirsRequest>(
-            body,
-            select_version(version_selector, 1, 2),
-        ),
-        61 => round_trip::<kafka_wire::AlterReplicaLogDirsResponse>(
-            body,
-            select_version(version_selector, 1, 2),
-        ),
-        62 => round_trip::<kafka_wire::DescribeLogDirsRequest>(
-            body,
-            select_version(version_selector, 1, 5),
-        ),
-        63 => round_trip::<kafka_wire::DescribeLogDirsResponse>(
-            body,
-            select_version(version_selector, 1, 5),
-        ),
-        64 => round_trip::<kafka_wire::SaslAuthenticateRequest>(
-            body,
-            select_version(version_selector, 0, 2),
-        ),
-        65 => round_trip::<kafka_wire::SaslAuthenticateResponse>(
-            body,
-            select_version(version_selector, 0, 2),
-        ),
-        66 => round_trip::<kafka_wire::CreatePartitionsRequest>(
-            body,
-            select_version(version_selector, 0, 3),
-        ),
-        67 => round_trip::<kafka_wire::CreatePartitionsResponse>(
-            body,
-            select_version(version_selector, 0, 3),
-        ),
-        68 => round_trip::<kafka_wire::CreateDelegationTokenRequest>(
-            body,
-            select_version(version_selector, 1, 3),
-        ),
-        69 => round_trip::<kafka_wire::CreateDelegationTokenResponse>(
-            body,
-            select_version(version_selector, 1, 3),
-        ),
-        70 => round_trip::<kafka_wire::RenewDelegationTokenRequest>(
-            body,
-            select_version(version_selector, 1, 2),
-        ),
-        71 => round_trip::<kafka_wire::RenewDelegationTokenResponse>(
-            body,
-            select_version(version_selector, 1, 2),
-        ),
-        72 => round_trip::<kafka_wire::ExpireDelegationTokenRequest>(
-            body,
-            select_version(version_selector, 1, 2),
-        ),
-        73 => round_trip::<kafka_wire::ExpireDelegationTokenResponse>(
-            body,
-            select_version(version_selector, 1, 2),
-        ),
-        74 => round_trip::<kafka_wire::DescribeDelegationTokenRequest>(
-            body,
-            select_version(version_selector, 1, 3),
-        ),
-        75 => round_trip::<kafka_wire::DescribeDelegationTokenResponse>(
-            body,
-            select_version(version_selector, 1, 3),
-        ),
-        76 => round_trip::<kafka_wire::DeleteGroupsRequest>(
-            body,
-            select_version(version_selector, 0, 3),
-        ),
-        77 => round_trip::<kafka_wire::DeleteGroupsResponse>(
-            body,
-            select_version(version_selector, 0, 3),
-        ),
-        78 => round_trip::<kafka_wire::ElectLeadersRequest>(
-            body,
-            select_version(version_selector, 0, 2),
-        ),
-        79 => round_trip::<kafka_wire::ElectLeadersResponse>(
-            body,
-            select_version(version_selector, 0, 2),
-        ),
-        80 => round_trip::<kafka_wire::IncrementalAlterConfigsRequest>(
-            body,
-            select_version(version_selector, 0, 1),
-        ),
-        81 => round_trip::<kafka_wire::IncrementalAlterConfigsResponse>(
-            body,
-            select_version(version_selector, 0, 1),
-        ),
-        82 => round_trip::<kafka_wire::AlterPartitionReassignmentsRequest>(
-            body,
-            select_version(version_selector, 0, 1),
-        ),
-        83 => round_trip::<kafka_wire::AlterPartitionReassignmentsResponse>(
-            body,
-            select_version(version_selector, 0, 1),
-        ),
-        84 => round_trip::<kafka_wire::ListPartitionReassignmentsRequest>(
-            body,
-            select_version(version_selector, 0, 0),
-        ),
-        85 => round_trip::<kafka_wire::ListPartitionReassignmentsResponse>(
-            body,
-            select_version(version_selector, 0, 0),
-        ),
-        86 => round_trip::<kafka_wire::OffsetDeleteRequest>(
-            body,
-            select_version(version_selector, 0, 0),
-        ),
-        87 => round_trip::<kafka_wire::OffsetDeleteResponse>(
-            body,
-            select_version(version_selector, 0, 0),
-        ),
-        88 => round_trip::<kafka_wire::DescribeClientQuotasRequest>(
-            body,
-            select_version(version_selector, 0, 1),
-        ),
-        89 => round_trip::<kafka_wire::DescribeClientQuotasResponse>(
-            body,
-            select_version(version_selector, 0, 1),
-        ),
-        90 => round_trip::<kafka_wire::AlterClientQuotasRequest>(
-            body,
-            select_version(version_selector, 0, 1),
-        ),
-        91 => round_trip::<kafka_wire::AlterClientQuotasResponse>(
-            body,
-            select_version(version_selector, 0, 1),
-        ),
-        92 => round_trip::<kafka_wire::DescribeUserScramCredentialsRequest>(
-            body,
-            select_version(version_selector, 0, 0),
-        ),
-        93 => round_trip::<kafka_wire::DescribeUserScramCredentialsResponse>(
-            body,
-            select_version(version_selector, 0, 0),
-        ),
-        94 => round_trip::<kafka_wire::AlterUserScramCredentialsRequest>(
-            body,
-            select_version(version_selector, 0, 0),
-        ),
-        95 => round_trip::<kafka_wire::AlterUserScramCredentialsResponse>(
-            body,
-            select_version(version_selector, 0, 0),
-        ),
-        96 => round_trip::<kafka_wire::VoteRequest>(body, select_version(version_selector, 0, 2)),
-        97 => round_trip::<kafka_wire::VoteResponse>(body, select_version(version_selector, 0, 2)),
-        98 => round_trip::<kafka_wire::BeginQuorumEpochRequest>(
-            body,
-            select_version(version_selector, 0, 1),
-        ),
-        99 => round_trip::<kafka_wire::BeginQuorumEpochResponse>(
-            body,
-            select_version(version_selector, 0, 1),
-        ),
-        100 => round_trip::<kafka_wire::EndQuorumEpochRequest>(
-            body,
-            select_version(version_selector, 0, 1),
-        ),
-        101 => round_trip::<kafka_wire::EndQuorumEpochResponse>(
-            body,
-            select_version(version_selector, 0, 1),
-        ),
-        102 => round_trip::<kafka_wire::DescribeQuorumRequest>(
-            body,
-            select_version(version_selector, 0, 2),
-        ),
-        103 => round_trip::<kafka_wire::DescribeQuorumResponse>(
-            body,
-            select_version(version_selector, 0, 2),
-        ),
-        104 => round_trip::<kafka_wire::AlterPartitionRequest>(
-            body,
-            select_version(version_selector, 2, 3),
-        ),
-        105 => round_trip::<kafka_wire::AlterPartitionResponse>(
-            body,
-            select_version(version_selector, 2, 3),
-        ),
-        106 => round_trip::<kafka_wire::UpdateFeaturesRequest>(
-            body,
-            select_version(version_selector, 0, 2),
-        ),
-        107 => round_trip::<kafka_wire::UpdateFeaturesResponse>(
-            body,
-            select_version(version_selector, 0, 2),
-        ),
+        46 => {
+            if let Some(version) = select_version(version_selector, 1, 2) {
+                round_trip::<kafka_wire::WriteTxnMarkersRequest>(body, version);
+            }
+        }
+        47 => {
+            if let Some(version) = select_version(version_selector, 1, 2) {
+                round_trip::<kafka_wire::WriteTxnMarkersResponse>(body, version);
+            }
+        }
+        48 => {
+            if let Some(version) = select_version(version_selector, 0, 6) {
+                round_trip::<kafka_wire::TxnOffsetCommitRequest>(body, version);
+            }
+        }
+        49 => {
+            if let Some(version) = select_version(version_selector, 0, 6) {
+                round_trip::<kafka_wire::TxnOffsetCommitResponse>(body, version);
+            }
+        }
+        50 => {
+            if let Some(version) = select_version(version_selector, 1, 3) {
+                round_trip::<kafka_wire::DescribeAclsRequest>(body, version);
+            }
+        }
+        51 => {
+            if let Some(version) = select_version(version_selector, 1, 3) {
+                round_trip::<kafka_wire::DescribeAclsResponse>(body, version);
+            }
+        }
+        52 => {
+            if let Some(version) = select_version(version_selector, 1, 3) {
+                round_trip::<kafka_wire::CreateAclsRequest>(body, version);
+            }
+        }
+        53 => {
+            if let Some(version) = select_version(version_selector, 1, 3) {
+                round_trip::<kafka_wire::CreateAclsResponse>(body, version);
+            }
+        }
+        54 => {
+            if let Some(version) = select_version(version_selector, 1, 3) {
+                round_trip::<kafka_wire::DeleteAclsRequest>(body, version);
+            }
+        }
+        55 => {
+            if let Some(version) = select_version(version_selector, 1, 3) {
+                round_trip::<kafka_wire::DeleteAclsResponse>(body, version);
+            }
+        }
+        56 => {
+            if let Some(version) = select_version(version_selector, 1, 4) {
+                round_trip::<kafka_wire::DescribeConfigsRequest>(body, version);
+            }
+        }
+        57 => {
+            if let Some(version) = select_version(version_selector, 1, 4) {
+                round_trip::<kafka_wire::DescribeConfigsResponse>(body, version);
+            }
+        }
+        58 => {
+            if let Some(version) = select_version(version_selector, 0, 2) {
+                round_trip::<kafka_wire::AlterConfigsRequest>(body, version);
+            }
+        }
+        59 => {
+            if let Some(version) = select_version(version_selector, 0, 2) {
+                round_trip::<kafka_wire::AlterConfigsResponse>(body, version);
+            }
+        }
+        60 => {
+            if let Some(version) = select_version(version_selector, 1, 2) {
+                round_trip::<kafka_wire::AlterReplicaLogDirsRequest>(body, version);
+            }
+        }
+        61 => {
+            if let Some(version) = select_version(version_selector, 1, 2) {
+                round_trip::<kafka_wire::AlterReplicaLogDirsResponse>(body, version);
+            }
+        }
+        62 => {
+            if let Some(version) = select_version(version_selector, 1, 5) {
+                round_trip::<kafka_wire::DescribeLogDirsRequest>(body, version);
+            }
+        }
+        63 => {
+            if let Some(version) = select_version(version_selector, 1, 5) {
+                round_trip::<kafka_wire::DescribeLogDirsResponse>(body, version);
+            }
+        }
+        64 => {
+            if let Some(version) = select_version(version_selector, 0, 2) {
+                round_trip::<kafka_wire::SaslAuthenticateRequest>(body, version);
+            }
+        }
+        65 => {
+            if let Some(version) = select_version(version_selector, 0, 2) {
+                round_trip::<kafka_wire::SaslAuthenticateResponse>(body, version);
+            }
+        }
+        66 => {
+            if let Some(version) = select_version(version_selector, 0, 3) {
+                round_trip::<kafka_wire::CreatePartitionsRequest>(body, version);
+            }
+        }
+        67 => {
+            if let Some(version) = select_version(version_selector, 0, 3) {
+                round_trip::<kafka_wire::CreatePartitionsResponse>(body, version);
+            }
+        }
+        68 => {
+            if let Some(version) = select_version(version_selector, 1, 3) {
+                round_trip::<kafka_wire::CreateDelegationTokenRequest>(body, version);
+            }
+        }
+        69 => {
+            if let Some(version) = select_version(version_selector, 1, 3) {
+                round_trip::<kafka_wire::CreateDelegationTokenResponse>(body, version);
+            }
+        }
+        70 => {
+            if let Some(version) = select_version(version_selector, 1, 2) {
+                round_trip::<kafka_wire::RenewDelegationTokenRequest>(body, version);
+            }
+        }
+        71 => {
+            if let Some(version) = select_version(version_selector, 1, 2) {
+                round_trip::<kafka_wire::RenewDelegationTokenResponse>(body, version);
+            }
+        }
+        72 => {
+            if let Some(version) = select_version(version_selector, 1, 2) {
+                round_trip::<kafka_wire::ExpireDelegationTokenRequest>(body, version);
+            }
+        }
+        73 => {
+            if let Some(version) = select_version(version_selector, 1, 2) {
+                round_trip::<kafka_wire::ExpireDelegationTokenResponse>(body, version);
+            }
+        }
+        74 => {
+            if let Some(version) = select_version(version_selector, 1, 3) {
+                round_trip::<kafka_wire::DescribeDelegationTokenRequest>(body, version);
+            }
+        }
+        75 => {
+            if let Some(version) = select_version(version_selector, 1, 3) {
+                round_trip::<kafka_wire::DescribeDelegationTokenResponse>(body, version);
+            }
+        }
+        76 => {
+            if let Some(version) = select_version(version_selector, 0, 3) {
+                round_trip::<kafka_wire::DeleteGroupsRequest>(body, version);
+            }
+        }
+        77 => {
+            if let Some(version) = select_version(version_selector, 0, 3) {
+                round_trip::<kafka_wire::DeleteGroupsResponse>(body, version);
+            }
+        }
+        78 => {
+            if let Some(version) = select_version(version_selector, 0, 2) {
+                round_trip::<kafka_wire::ElectLeadersRequest>(body, version);
+            }
+        }
+        79 => {
+            if let Some(version) = select_version(version_selector, 0, 2) {
+                round_trip::<kafka_wire::ElectLeadersResponse>(body, version);
+            }
+        }
+        80 => {
+            if let Some(version) = select_version(version_selector, 0, 1) {
+                round_trip::<kafka_wire::IncrementalAlterConfigsRequest>(body, version);
+            }
+        }
+        81 => {
+            if let Some(version) = select_version(version_selector, 0, 1) {
+                round_trip::<kafka_wire::IncrementalAlterConfigsResponse>(body, version);
+            }
+        }
+        82 => {
+            if let Some(version) = select_version(version_selector, 0, 1) {
+                round_trip::<kafka_wire::AlterPartitionReassignmentsRequest>(body, version);
+            }
+        }
+        83 => {
+            if let Some(version) = select_version(version_selector, 0, 1) {
+                round_trip::<kafka_wire::AlterPartitionReassignmentsResponse>(body, version);
+            }
+        }
+        84 => {
+            if let Some(version) = select_version(version_selector, 0, 0) {
+                round_trip::<kafka_wire::ListPartitionReassignmentsRequest>(body, version);
+            }
+        }
+        85 => {
+            if let Some(version) = select_version(version_selector, 0, 0) {
+                round_trip::<kafka_wire::ListPartitionReassignmentsResponse>(body, version);
+            }
+        }
+        86 => {
+            if let Some(version) = select_version(version_selector, 0, 0) {
+                round_trip::<kafka_wire::OffsetDeleteRequest>(body, version);
+            }
+        }
+        87 => {
+            if let Some(version) = select_version(version_selector, 0, 0) {
+                round_trip::<kafka_wire::OffsetDeleteResponse>(body, version);
+            }
+        }
+        88 => {
+            if let Some(version) = select_version(version_selector, 0, 1) {
+                round_trip::<kafka_wire::DescribeClientQuotasRequest>(body, version);
+            }
+        }
+        89 => {
+            if let Some(version) = select_version(version_selector, 0, 1) {
+                round_trip::<kafka_wire::DescribeClientQuotasResponse>(body, version);
+            }
+        }
+        90 => {
+            if let Some(version) = select_version(version_selector, 0, 1) {
+                round_trip::<kafka_wire::AlterClientQuotasRequest>(body, version);
+            }
+        }
+        91 => {
+            if let Some(version) = select_version(version_selector, 0, 1) {
+                round_trip::<kafka_wire::AlterClientQuotasResponse>(body, version);
+            }
+        }
+        92 => {
+            if let Some(version) = select_version(version_selector, 0, 0) {
+                round_trip::<kafka_wire::DescribeUserScramCredentialsRequest>(body, version);
+            }
+        }
+        93 => {
+            if let Some(version) = select_version(version_selector, 0, 0) {
+                round_trip::<kafka_wire::DescribeUserScramCredentialsResponse>(body, version);
+            }
+        }
+        94 => {
+            if let Some(version) = select_version(version_selector, 0, 0) {
+                round_trip::<kafka_wire::AlterUserScramCredentialsRequest>(body, version);
+            }
+        }
+        95 => {
+            if let Some(version) = select_version(version_selector, 0, 0) {
+                round_trip::<kafka_wire::AlterUserScramCredentialsResponse>(body, version);
+            }
+        }
+        96 => {
+            if let Some(version) = select_version(version_selector, 0, 2) {
+                round_trip::<kafka_wire::VoteRequest>(body, version);
+            }
+        }
+        97 => {
+            if let Some(version) = select_version(version_selector, 0, 2) {
+                round_trip::<kafka_wire::VoteResponse>(body, version);
+            }
+        }
+        98 => {
+            if let Some(version) = select_version(version_selector, 0, 1) {
+                round_trip::<kafka_wire::BeginQuorumEpochRequest>(body, version);
+            }
+        }
+        99 => {
+            if let Some(version) = select_version(version_selector, 0, 1) {
+                round_trip::<kafka_wire::BeginQuorumEpochResponse>(body, version);
+            }
+        }
+        100 => {
+            if let Some(version) = select_version(version_selector, 0, 1) {
+                round_trip::<kafka_wire::EndQuorumEpochRequest>(body, version);
+            }
+        }
+        101 => {
+            if let Some(version) = select_version(version_selector, 0, 1) {
+                round_trip::<kafka_wire::EndQuorumEpochResponse>(body, version);
+            }
+        }
+        102 => {
+            if let Some(version) = select_version(version_selector, 0, 2) {
+                round_trip::<kafka_wire::DescribeQuorumRequest>(body, version);
+            }
+        }
+        103 => {
+            if let Some(version) = select_version(version_selector, 0, 2) {
+                round_trip::<kafka_wire::DescribeQuorumResponse>(body, version);
+            }
+        }
+        104 => {
+            if let Some(version) = select_version(version_selector, 2, 3) {
+                round_trip::<kafka_wire::AlterPartitionRequest>(body, version);
+            }
+        }
+        105 => {
+            if let Some(version) = select_version(version_selector, 2, 3) {
+                round_trip::<kafka_wire::AlterPartitionResponse>(body, version);
+            }
+        }
+        106 => {
+            if let Some(version) = select_version(version_selector, 0, 2) {
+                round_trip::<kafka_wire::UpdateFeaturesRequest>(body, version);
+            }
+        }
+        107 => {
+            if let Some(version) = select_version(version_selector, 0, 2) {
+                round_trip::<kafka_wire::UpdateFeaturesResponse>(body, version);
+            }
+        }
         108 => {
-            round_trip::<kafka_wire::EnvelopeRequest>(body, select_version(version_selector, 0, 0))
+            if let Some(version) = select_version(version_selector, 0, 0) {
+                round_trip::<kafka_wire::EnvelopeRequest>(body, version);
+            }
         }
         109 => {
-            round_trip::<kafka_wire::EnvelopeResponse>(body, select_version(version_selector, 0, 0))
+            if let Some(version) = select_version(version_selector, 0, 0) {
+                round_trip::<kafka_wire::EnvelopeResponse>(body, version);
+            }
         }
-        110 => round_trip::<kafka_wire::FetchSnapshotRequest>(
-            body,
-            select_version(version_selector, 0, 1),
-        ),
-        111 => round_trip::<kafka_wire::FetchSnapshotResponse>(
-            body,
-            select_version(version_selector, 0, 1),
-        ),
-        112 => round_trip::<kafka_wire::DescribeClusterRequest>(
-            body,
-            select_version(version_selector, 0, 2),
-        ),
-        113 => round_trip::<kafka_wire::DescribeClusterResponse>(
-            body,
-            select_version(version_selector, 0, 2),
-        ),
-        114 => round_trip::<kafka_wire::DescribeProducersRequest>(
-            body,
-            select_version(version_selector, 0, 0),
-        ),
-        115 => round_trip::<kafka_wire::DescribeProducersResponse>(
-            body,
-            select_version(version_selector, 0, 0),
-        ),
-        116 => round_trip::<kafka_wire::BrokerRegistrationRequest>(
-            body,
-            select_version(version_selector, 0, 4),
-        ),
-        117 => round_trip::<kafka_wire::BrokerRegistrationResponse>(
-            body,
-            select_version(version_selector, 0, 4),
-        ),
-        118 => round_trip::<kafka_wire::BrokerHeartbeatRequest>(
-            body,
-            select_version(version_selector, 0, 2),
-        ),
-        119 => round_trip::<kafka_wire::BrokerHeartbeatResponse>(
-            body,
-            select_version(version_selector, 0, 2),
-        ),
-        120 => round_trip::<kafka_wire::UnregisterBrokerRequest>(
-            body,
-            select_version(version_selector, 0, 0),
-        ),
-        121 => round_trip::<kafka_wire::UnregisterBrokerResponse>(
-            body,
-            select_version(version_selector, 0, 0),
-        ),
-        122 => round_trip::<kafka_wire::DescribeTransactionsRequest>(
-            body,
-            select_version(version_selector, 0, 0),
-        ),
-        123 => round_trip::<kafka_wire::DescribeTransactionsResponse>(
-            body,
-            select_version(version_selector, 0, 0),
-        ),
-        124 => round_trip::<kafka_wire::ListTransactionsRequest>(
-            body,
-            select_version(version_selector, 0, 2),
-        ),
-        125 => round_trip::<kafka_wire::ListTransactionsResponse>(
-            body,
-            select_version(version_selector, 0, 2),
-        ),
-        126 => round_trip::<kafka_wire::AllocateProducerIdsRequest>(
-            body,
-            select_version(version_selector, 0, 0),
-        ),
-        127 => round_trip::<kafka_wire::AllocateProducerIdsResponse>(
-            body,
-            select_version(version_selector, 0, 0),
-        ),
-        128 => round_trip::<kafka_wire::ConsumerGroupHeartbeatRequest>(
-            body,
-            select_version(version_selector, 0, 1),
-        ),
-        129 => round_trip::<kafka_wire::ConsumerGroupHeartbeatResponse>(
-            body,
-            select_version(version_selector, 0, 1),
-        ),
-        130 => round_trip::<kafka_wire::ConsumerGroupDescribeRequest>(
-            body,
-            select_version(version_selector, 0, 1),
-        ),
-        131 => round_trip::<kafka_wire::ConsumerGroupDescribeResponse>(
-            body,
-            select_version(version_selector, 0, 1),
-        ),
-        132 => round_trip::<kafka_wire::ControllerRegistrationRequest>(
-            body,
-            select_version(version_selector, 0, 0),
-        ),
-        133 => round_trip::<kafka_wire::ControllerRegistrationResponse>(
-            body,
-            select_version(version_selector, 0, 0),
-        ),
-        134 => round_trip::<kafka_wire::GetTelemetrySubscriptionsRequest>(
-            body,
-            select_version(version_selector, 0, 0),
-        ),
-        135 => round_trip::<kafka_wire::GetTelemetrySubscriptionsResponse>(
-            body,
-            select_version(version_selector, 0, 0),
-        ),
-        136 => round_trip::<kafka_wire::PushTelemetryRequest>(
-            body,
-            select_version(version_selector, 0, 0),
-        ),
-        137 => round_trip::<kafka_wire::PushTelemetryResponse>(
-            body,
-            select_version(version_selector, 0, 0),
-        ),
-        138 => round_trip::<kafka_wire::AssignReplicasToDirsRequest>(
-            body,
-            select_version(version_selector, 0, 0),
-        ),
-        139 => round_trip::<kafka_wire::AssignReplicasToDirsResponse>(
-            body,
-            select_version(version_selector, 0, 0),
-        ),
-        140 => round_trip::<kafka_wire::ListConfigResourcesRequest>(
-            body,
-            select_version(version_selector, 0, 1),
-        ),
-        141 => round_trip::<kafka_wire::ListConfigResourcesResponse>(
-            body,
-            select_version(version_selector, 0, 1),
-        ),
-        142 => round_trip::<kafka_wire::DescribeTopicPartitionsRequest>(
-            body,
-            select_version(version_selector, 0, 0),
-        ),
-        143 => round_trip::<kafka_wire::DescribeTopicPartitionsResponse>(
-            body,
-            select_version(version_selector, 0, 0),
-        ),
-        144 => round_trip::<kafka_wire::ShareGroupHeartbeatRequest>(
-            body,
-            select_version(version_selector, 1, 1),
-        ),
-        145 => round_trip::<kafka_wire::ShareGroupHeartbeatResponse>(
-            body,
-            select_version(version_selector, 1, 1),
-        ),
-        146 => round_trip::<kafka_wire::ShareGroupDescribeRequest>(
-            body,
-            select_version(version_selector, 1, 1),
-        ),
-        147 => round_trip::<kafka_wire::ShareGroupDescribeResponse>(
-            body,
-            select_version(version_selector, 1, 1),
-        ),
-        148 => round_trip::<kafka_wire::ShareFetchRequest>(
-            body,
-            select_version(version_selector, 1, 2),
-        ),
-        149 => round_trip::<kafka_wire::ShareFetchResponse>(
-            body,
-            select_version(version_selector, 1, 2),
-        ),
-        150 => round_trip::<kafka_wire::ShareAcknowledgeRequest>(
-            body,
-            select_version(version_selector, 1, 2),
-        ),
-        151 => round_trip::<kafka_wire::ShareAcknowledgeResponse>(
-            body,
-            select_version(version_selector, 1, 2),
-        ),
-        152 => round_trip::<kafka_wire::AddRaftVoterRequest>(
-            body,
-            select_version(version_selector, 0, 1),
-        ),
-        153 => round_trip::<kafka_wire::AddRaftVoterResponse>(
-            body,
-            select_version(version_selector, 0, 1),
-        ),
-        154 => round_trip::<kafka_wire::RemoveRaftVoterRequest>(
-            body,
-            select_version(version_selector, 0, 0),
-        ),
-        155 => round_trip::<kafka_wire::RemoveRaftVoterResponse>(
-            body,
-            select_version(version_selector, 0, 0),
-        ),
-        156 => round_trip::<kafka_wire::UpdateRaftVoterRequest>(
-            body,
-            select_version(version_selector, 0, 0),
-        ),
-        157 => round_trip::<kafka_wire::UpdateRaftVoterResponse>(
-            body,
-            select_version(version_selector, 0, 0),
-        ),
-        158 => round_trip::<kafka_wire::InitializeShareGroupStateRequest>(
-            body,
-            select_version(version_selector, 0, 0),
-        ),
-        159 => round_trip::<kafka_wire::InitializeShareGroupStateResponse>(
-            body,
-            select_version(version_selector, 0, 0),
-        ),
-        160 => round_trip::<kafka_wire::ReadShareGroupStateRequest>(
-            body,
-            select_version(version_selector, 0, 0),
-        ),
-        161 => round_trip::<kafka_wire::ReadShareGroupStateResponse>(
-            body,
-            select_version(version_selector, 0, 0),
-        ),
-        162 => round_trip::<kafka_wire::WriteShareGroupStateRequest>(
-            body,
-            select_version(version_selector, 0, 1),
-        ),
-        163 => round_trip::<kafka_wire::WriteShareGroupStateResponse>(
-            body,
-            select_version(version_selector, 0, 1),
-        ),
-        164 => round_trip::<kafka_wire::DeleteShareGroupStateRequest>(
-            body,
-            select_version(version_selector, 0, 0),
-        ),
-        165 => round_trip::<kafka_wire::DeleteShareGroupStateResponse>(
-            body,
-            select_version(version_selector, 0, 0),
-        ),
-        166 => round_trip::<kafka_wire::ReadShareGroupStateSummaryRequest>(
-            body,
-            select_version(version_selector, 0, 1),
-        ),
-        167 => round_trip::<kafka_wire::ReadShareGroupStateSummaryResponse>(
-            body,
-            select_version(version_selector, 0, 1),
-        ),
-        168 => round_trip::<kafka_wire::StreamsGroupHeartbeatRequest>(
-            body,
-            select_version(version_selector, 0, 1),
-        ),
-        169 => round_trip::<kafka_wire::StreamsGroupHeartbeatResponse>(
-            body,
-            select_version(version_selector, 0, 1),
-        ),
-        170 => round_trip::<kafka_wire::StreamsGroupDescribeRequest>(
-            body,
-            select_version(version_selector, 0, 1),
-        ),
-        171 => round_trip::<kafka_wire::StreamsGroupDescribeResponse>(
-            body,
-            select_version(version_selector, 0, 1),
-        ),
-        172 => round_trip::<kafka_wire::DescribeShareGroupOffsetsRequest>(
-            body,
-            select_version(version_selector, 0, 1),
-        ),
-        173 => round_trip::<kafka_wire::DescribeShareGroupOffsetsResponse>(
-            body,
-            select_version(version_selector, 0, 1),
-        ),
-        174 => round_trip::<kafka_wire::AlterShareGroupOffsetsRequest>(
-            body,
-            select_version(version_selector, 0, 0),
-        ),
-        175 => round_trip::<kafka_wire::AlterShareGroupOffsetsResponse>(
-            body,
-            select_version(version_selector, 0, 0),
-        ),
-        176 => round_trip::<kafka_wire::DeleteShareGroupOffsetsRequest>(
-            body,
-            select_version(version_selector, 0, 0),
-        ),
-        177 => round_trip::<kafka_wire::DeleteShareGroupOffsetsResponse>(
-            body,
-            select_version(version_selector, 0, 0),
-        ),
-        178 => round_trip::<kafka_wire::StreamsGroupTopologyDescriptionUpdateRequest>(
-            body,
-            select_version(version_selector, 0, 0),
-        ),
-        179 => round_trip::<kafka_wire::StreamsGroupTopologyDescriptionUpdateResponse>(
-            body,
-            select_version(version_selector, 0, 0),
-        ),
+        110 => {
+            if let Some(version) = select_version(version_selector, 0, 1) {
+                round_trip::<kafka_wire::FetchSnapshotRequest>(body, version);
+            }
+        }
+        111 => {
+            if let Some(version) = select_version(version_selector, 0, 1) {
+                round_trip::<kafka_wire::FetchSnapshotResponse>(body, version);
+            }
+        }
+        112 => {
+            if let Some(version) = select_version(version_selector, 0, 2) {
+                round_trip::<kafka_wire::DescribeClusterRequest>(body, version);
+            }
+        }
+        113 => {
+            if let Some(version) = select_version(version_selector, 0, 2) {
+                round_trip::<kafka_wire::DescribeClusterResponse>(body, version);
+            }
+        }
+        114 => {
+            if let Some(version) = select_version(version_selector, 0, 0) {
+                round_trip::<kafka_wire::DescribeProducersRequest>(body, version);
+            }
+        }
+        115 => {
+            if let Some(version) = select_version(version_selector, 0, 0) {
+                round_trip::<kafka_wire::DescribeProducersResponse>(body, version);
+            }
+        }
+        116 => {
+            if let Some(version) = select_version(version_selector, 0, 4) {
+                round_trip::<kafka_wire::BrokerRegistrationRequest>(body, version);
+            }
+        }
+        117 => {
+            if let Some(version) = select_version(version_selector, 0, 4) {
+                round_trip::<kafka_wire::BrokerRegistrationResponse>(body, version);
+            }
+        }
+        118 => {
+            if let Some(version) = select_version(version_selector, 0, 2) {
+                round_trip::<kafka_wire::BrokerHeartbeatRequest>(body, version);
+            }
+        }
+        119 => {
+            if let Some(version) = select_version(version_selector, 0, 2) {
+                round_trip::<kafka_wire::BrokerHeartbeatResponse>(body, version);
+            }
+        }
+        120 => {
+            if let Some(version) = select_version(version_selector, 0, 0) {
+                round_trip::<kafka_wire::UnregisterBrokerRequest>(body, version);
+            }
+        }
+        121 => {
+            if let Some(version) = select_version(version_selector, 0, 0) {
+                round_trip::<kafka_wire::UnregisterBrokerResponse>(body, version);
+            }
+        }
+        122 => {
+            if let Some(version) = select_version(version_selector, 0, 0) {
+                round_trip::<kafka_wire::DescribeTransactionsRequest>(body, version);
+            }
+        }
+        123 => {
+            if let Some(version) = select_version(version_selector, 0, 0) {
+                round_trip::<kafka_wire::DescribeTransactionsResponse>(body, version);
+            }
+        }
+        124 => {
+            if let Some(version) = select_version(version_selector, 0, 2) {
+                round_trip::<kafka_wire::ListTransactionsRequest>(body, version);
+            }
+        }
+        125 => {
+            if let Some(version) = select_version(version_selector, 0, 2) {
+                round_trip::<kafka_wire::ListTransactionsResponse>(body, version);
+            }
+        }
+        126 => {
+            if let Some(version) = select_version(version_selector, 0, 0) {
+                round_trip::<kafka_wire::AllocateProducerIdsRequest>(body, version);
+            }
+        }
+        127 => {
+            if let Some(version) = select_version(version_selector, 0, 0) {
+                round_trip::<kafka_wire::AllocateProducerIdsResponse>(body, version);
+            }
+        }
+        128 => {
+            if let Some(version) = select_version(version_selector, 0, 1) {
+                round_trip::<kafka_wire::ConsumerGroupHeartbeatRequest>(body, version);
+            }
+        }
+        129 => {
+            if let Some(version) = select_version(version_selector, 0, 1) {
+                round_trip::<kafka_wire::ConsumerGroupHeartbeatResponse>(body, version);
+            }
+        }
+        130 => {
+            if let Some(version) = select_version(version_selector, 0, 1) {
+                round_trip::<kafka_wire::ConsumerGroupDescribeRequest>(body, version);
+            }
+        }
+        131 => {
+            if let Some(version) = select_version(version_selector, 0, 1) {
+                round_trip::<kafka_wire::ConsumerGroupDescribeResponse>(body, version);
+            }
+        }
+        132 => {
+            if let Some(version) = select_version(version_selector, 0, 0) {
+                round_trip::<kafka_wire::ControllerRegistrationRequest>(body, version);
+            }
+        }
+        133 => {
+            if let Some(version) = select_version(version_selector, 0, 0) {
+                round_trip::<kafka_wire::ControllerRegistrationResponse>(body, version);
+            }
+        }
+        134 => {
+            if let Some(version) = select_version(version_selector, 0, 0) {
+                round_trip::<kafka_wire::GetTelemetrySubscriptionsRequest>(body, version);
+            }
+        }
+        135 => {
+            if let Some(version) = select_version(version_selector, 0, 0) {
+                round_trip::<kafka_wire::GetTelemetrySubscriptionsResponse>(body, version);
+            }
+        }
+        136 => {
+            if let Some(version) = select_version(version_selector, 0, 0) {
+                round_trip::<kafka_wire::PushTelemetryRequest>(body, version);
+            }
+        }
+        137 => {
+            if let Some(version) = select_version(version_selector, 0, 0) {
+                round_trip::<kafka_wire::PushTelemetryResponse>(body, version);
+            }
+        }
+        138 => {
+            if let Some(version) = select_version(version_selector, 0, 0) {
+                round_trip::<kafka_wire::AssignReplicasToDirsRequest>(body, version);
+            }
+        }
+        139 => {
+            if let Some(version) = select_version(version_selector, 0, 0) {
+                round_trip::<kafka_wire::AssignReplicasToDirsResponse>(body, version);
+            }
+        }
+        140 => {
+            if let Some(version) = select_version(version_selector, 0, 1) {
+                round_trip::<kafka_wire::ListConfigResourcesRequest>(body, version);
+            }
+        }
+        141 => {
+            if let Some(version) = select_version(version_selector, 0, 1) {
+                round_trip::<kafka_wire::ListConfigResourcesResponse>(body, version);
+            }
+        }
+        142 => {
+            if let Some(version) = select_version(version_selector, 0, 0) {
+                round_trip::<kafka_wire::DescribeTopicPartitionsRequest>(body, version);
+            }
+        }
+        143 => {
+            if let Some(version) = select_version(version_selector, 0, 0) {
+                round_trip::<kafka_wire::DescribeTopicPartitionsResponse>(body, version);
+            }
+        }
+        144 => {
+            if let Some(version) = select_version(version_selector, 1, 1) {
+                round_trip::<kafka_wire::ShareGroupHeartbeatRequest>(body, version);
+            }
+        }
+        145 => {
+            if let Some(version) = select_version(version_selector, 1, 1) {
+                round_trip::<kafka_wire::ShareGroupHeartbeatResponse>(body, version);
+            }
+        }
+        146 => {
+            if let Some(version) = select_version(version_selector, 1, 1) {
+                round_trip::<kafka_wire::ShareGroupDescribeRequest>(body, version);
+            }
+        }
+        147 => {
+            if let Some(version) = select_version(version_selector, 1, 1) {
+                round_trip::<kafka_wire::ShareGroupDescribeResponse>(body, version);
+            }
+        }
+        148 => {
+            if let Some(version) = select_version(version_selector, 1, 2) {
+                round_trip::<kafka_wire::ShareFetchRequest>(body, version);
+            }
+        }
+        149 => {
+            if let Some(version) = select_version(version_selector, 1, 2) {
+                round_trip::<kafka_wire::ShareFetchResponse>(body, version);
+            }
+        }
+        150 => {
+            if let Some(version) = select_version(version_selector, 1, 2) {
+                round_trip::<kafka_wire::ShareAcknowledgeRequest>(body, version);
+            }
+        }
+        151 => {
+            if let Some(version) = select_version(version_selector, 1, 2) {
+                round_trip::<kafka_wire::ShareAcknowledgeResponse>(body, version);
+            }
+        }
+        152 => {
+            if let Some(version) = select_version(version_selector, 0, 1) {
+                round_trip::<kafka_wire::AddRaftVoterRequest>(body, version);
+            }
+        }
+        153 => {
+            if let Some(version) = select_version(version_selector, 0, 1) {
+                round_trip::<kafka_wire::AddRaftVoterResponse>(body, version);
+            }
+        }
+        154 => {
+            if let Some(version) = select_version(version_selector, 0, 0) {
+                round_trip::<kafka_wire::RemoveRaftVoterRequest>(body, version);
+            }
+        }
+        155 => {
+            if let Some(version) = select_version(version_selector, 0, 0) {
+                round_trip::<kafka_wire::RemoveRaftVoterResponse>(body, version);
+            }
+        }
+        156 => {
+            if let Some(version) = select_version(version_selector, 0, 0) {
+                round_trip::<kafka_wire::UpdateRaftVoterRequest>(body, version);
+            }
+        }
+        157 => {
+            if let Some(version) = select_version(version_selector, 0, 0) {
+                round_trip::<kafka_wire::UpdateRaftVoterResponse>(body, version);
+            }
+        }
+        158 => {
+            if let Some(version) = select_version(version_selector, 0, 0) {
+                round_trip::<kafka_wire::InitializeShareGroupStateRequest>(body, version);
+            }
+        }
+        159 => {
+            if let Some(version) = select_version(version_selector, 0, 0) {
+                round_trip::<kafka_wire::InitializeShareGroupStateResponse>(body, version);
+            }
+        }
+        160 => {
+            if let Some(version) = select_version(version_selector, 0, 0) {
+                round_trip::<kafka_wire::ReadShareGroupStateRequest>(body, version);
+            }
+        }
+        161 => {
+            if let Some(version) = select_version(version_selector, 0, 0) {
+                round_trip::<kafka_wire::ReadShareGroupStateResponse>(body, version);
+            }
+        }
+        162 => {
+            if let Some(version) = select_version(version_selector, 0, 1) {
+                round_trip::<kafka_wire::WriteShareGroupStateRequest>(body, version);
+            }
+        }
+        163 => {
+            if let Some(version) = select_version(version_selector, 0, 1) {
+                round_trip::<kafka_wire::WriteShareGroupStateResponse>(body, version);
+            }
+        }
+        164 => {
+            if let Some(version) = select_version(version_selector, 0, 0) {
+                round_trip::<kafka_wire::DeleteShareGroupStateRequest>(body, version);
+            }
+        }
+        165 => {
+            if let Some(version) = select_version(version_selector, 0, 0) {
+                round_trip::<kafka_wire::DeleteShareGroupStateResponse>(body, version);
+            }
+        }
+        166 => {
+            if let Some(version) = select_version(version_selector, 0, 1) {
+                round_trip::<kafka_wire::ReadShareGroupStateSummaryRequest>(body, version);
+            }
+        }
+        167 => {
+            if let Some(version) = select_version(version_selector, 0, 1) {
+                round_trip::<kafka_wire::ReadShareGroupStateSummaryResponse>(body, version);
+            }
+        }
+        168 => {
+            if let Some(version) = select_version(version_selector, 0, 1) {
+                round_trip::<kafka_wire::StreamsGroupHeartbeatRequest>(body, version);
+            }
+        }
+        169 => {
+            if let Some(version) = select_version(version_selector, 0, 1) {
+                round_trip::<kafka_wire::StreamsGroupHeartbeatResponse>(body, version);
+            }
+        }
+        170 => {
+            if let Some(version) = select_version(version_selector, 0, 1) {
+                round_trip::<kafka_wire::StreamsGroupDescribeRequest>(body, version);
+            }
+        }
+        171 => {
+            if let Some(version) = select_version(version_selector, 0, 1) {
+                round_trip::<kafka_wire::StreamsGroupDescribeResponse>(body, version);
+            }
+        }
+        172 => {
+            if let Some(version) = select_version(version_selector, 0, 1) {
+                round_trip::<kafka_wire::DescribeShareGroupOffsetsRequest>(body, version);
+            }
+        }
+        173 => {
+            if let Some(version) = select_version(version_selector, 0, 1) {
+                round_trip::<kafka_wire::DescribeShareGroupOffsetsResponse>(body, version);
+            }
+        }
+        174 => {
+            if let Some(version) = select_version(version_selector, 0, 0) {
+                round_trip::<kafka_wire::AlterShareGroupOffsetsRequest>(body, version);
+            }
+        }
+        175 => {
+            if let Some(version) = select_version(version_selector, 0, 0) {
+                round_trip::<kafka_wire::AlterShareGroupOffsetsResponse>(body, version);
+            }
+        }
+        176 => {
+            if let Some(version) = select_version(version_selector, 0, 0) {
+                round_trip::<kafka_wire::DeleteShareGroupOffsetsRequest>(body, version);
+            }
+        }
+        177 => {
+            if let Some(version) = select_version(version_selector, 0, 0) {
+                round_trip::<kafka_wire::DeleteShareGroupOffsetsResponse>(body, version);
+            }
+        }
+        178 => {
+            if let Some(version) = select_version(version_selector, 0, 0) {
+                round_trip::<kafka_wire::StreamsGroupTopologyDescriptionUpdateRequest>(
+                    body, version,
+                );
+            }
+        }
+        179 => {
+            if let Some(version) = select_version(version_selector, 0, 0) {
+                round_trip::<kafka_wire::StreamsGroupTopologyDescriptionUpdateResponse>(
+                    body, version,
+                );
+            }
+        }
         _ => unreachable!("modulo result exceeded the generated dispatch table"),
     }
 }
 
-fn select_version(selector: u16, first: i16, last: i16) -> ApiVersion {
-    let width = u16::try_from(i32::from(last) - i32::from(first) + 1).unwrap_or(1);
-    let offset = i16::try_from(selector % width).unwrap_or(0);
-    ApiVersion::new(first + offset)
+fn select_version(selector: u16, first: i16, last: i16) -> Option<ApiVersion> {
+    let width = i32::from(last)
+        .checked_sub(i32::from(first))?
+        .checked_add(1)?;
+    let offset = i32::from(selector).checked_rem(width)?;
+    let selected = i32::from(first).checked_add(offset)?;
+    Some(ApiVersion::new(i16::try_from(selected).ok()?))
 }

@@ -16,7 +16,7 @@ pub mod create_partitions_request {
         encoded_len_with,
     };
 
-    use crate::{KafkaMessage, KafkaRequest, RequestResponsePair};
+    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, RequestResponsePair};
 
     /// `CreatePartitionsTopic` as declared by the `CreatePartitions` API.
     #[non_exhaustive]
@@ -333,7 +333,7 @@ pub mod create_partitions_request {
 
     impl KafkaRequest for CreatePartitionsRequest {
         const API_KEY: ApiKey = ApiKey::new(37);
-        const LATEST_VERSION_UNSTABLE: bool = false;
+        const API_DESCRIPTOR: &'static ApiDescriptor = &super::CREATE_PARTITIONS_API_DESCRIPTOR;
     }
 
     impl RequestResponsePair for CreatePartitionsRequest {
@@ -723,7 +723,7 @@ pub mod create_partitions_response {
 
 use kafka_wire_core::VersionRange;
 
-use crate::{MessageDescriptor, MessageDirection};
+use crate::{ApiDescriptor, MessageDescriptor, MessageDirection};
 
 pub use create_partitions_request::CreatePartitionsRequest;
 pub use create_partitions_response::CreatePartitionsResponse;
@@ -735,7 +735,6 @@ pub const CREATE_PARTITIONS_REQUEST_DESCRIPTOR: MessageDescriptor = MessageDescr
     MessageDirection::Request,
     VersionRange::new(0, 3),
     Some(VersionRange::new(2, 3)),
-    false,
 );
 
 /// Static metadata for [`CreatePartitionsResponse`].
@@ -743,6 +742,15 @@ pub const CREATE_PARTITIONS_RESPONSE_DESCRIPTOR: MessageDescriptor = MessageDesc
     37,
     "CreatePartitionsResponse",
     MessageDirection::Response,
+    VersionRange::new(0, 3),
+    Some(VersionRange::new(2, 3)),
+);
+
+/// Static pair metadata for the `CreatePartitions` API.
+pub const CREATE_PARTITIONS_API_DESCRIPTOR: ApiDescriptor = ApiDescriptor::new(
+    37,
+    &CREATE_PARTITIONS_REQUEST_DESCRIPTOR,
+    &CREATE_PARTITIONS_RESPONSE_DESCRIPTOR,
     VersionRange::new(0, 3),
     Some(VersionRange::new(2, 3)),
     false,

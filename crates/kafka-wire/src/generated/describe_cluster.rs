@@ -15,7 +15,7 @@ pub mod describe_cluster_request {
         KafkaDecode, KafkaEncode, TaggedFields, VersionRange, encode_into_with, encoded_len_with,
     };
 
-    use crate::{KafkaMessage, KafkaRequest, RequestResponsePair};
+    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, RequestResponsePair};
 
     /// Request body for the `DescribeCluster` API.
     #[non_exhaustive]
@@ -50,7 +50,7 @@ pub mod describe_cluster_request {
 
     impl KafkaRequest for DescribeClusterRequest {
         const API_KEY: ApiKey = ApiKey::new(60);
-        const LATEST_VERSION_UNSTABLE: bool = false;
+        const API_DESCRIPTOR: &'static ApiDescriptor = &super::DESCRIBE_CLUSTER_API_DESCRIPTOR;
     }
 
     impl RequestResponsePair for DescribeClusterRequest {
@@ -505,7 +505,7 @@ pub mod describe_cluster_response {
 
 use kafka_wire_core::VersionRange;
 
-use crate::{MessageDescriptor, MessageDirection};
+use crate::{ApiDescriptor, MessageDescriptor, MessageDirection};
 
 pub use describe_cluster_request::DescribeClusterRequest;
 pub use describe_cluster_response::DescribeClusterResponse;
@@ -517,7 +517,6 @@ pub const DESCRIBE_CLUSTER_REQUEST_DESCRIPTOR: MessageDescriptor = MessageDescri
     MessageDirection::Request,
     VersionRange::new(0, 2),
     Some(VersionRange::new(0, 2)),
-    false,
 );
 
 /// Static metadata for [`DescribeClusterResponse`].
@@ -525,6 +524,15 @@ pub const DESCRIBE_CLUSTER_RESPONSE_DESCRIPTOR: MessageDescriptor = MessageDescr
     60,
     "DescribeClusterResponse",
     MessageDirection::Response,
+    VersionRange::new(0, 2),
+    Some(VersionRange::new(0, 2)),
+);
+
+/// Static pair metadata for the `DescribeCluster` API.
+pub const DESCRIBE_CLUSTER_API_DESCRIPTOR: ApiDescriptor = ApiDescriptor::new(
+    60,
+    &DESCRIBE_CLUSTER_REQUEST_DESCRIPTOR,
+    &DESCRIBE_CLUSTER_RESPONSE_DESCRIPTOR,
     VersionRange::new(0, 2),
     Some(VersionRange::new(0, 2)),
     false,

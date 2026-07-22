@@ -16,7 +16,7 @@ pub mod assign_replicas_to_dirs_request {
         encoded_len_with,
     };
 
-    use crate::{KafkaMessage, KafkaRequest, RequestResponsePair};
+    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, RequestResponsePair};
 
     /// `DirectoryData` as declared by the `AssignReplicasToDirs` API.
     #[non_exhaustive]
@@ -412,7 +412,8 @@ pub mod assign_replicas_to_dirs_request {
 
     impl KafkaRequest for AssignReplicasToDirsRequest {
         const API_KEY: ApiKey = ApiKey::new(73);
-        const LATEST_VERSION_UNSTABLE: bool = false;
+        const API_DESCRIPTOR: &'static ApiDescriptor =
+            &super::ASSIGN_REPLICAS_TO_DIRS_API_DESCRIPTOR;
     }
 
     impl RequestResponsePair for AssignReplicasToDirsRequest {
@@ -1016,7 +1017,7 @@ pub mod assign_replicas_to_dirs_response {
 
 use kafka_wire_core::VersionRange;
 
-use crate::{MessageDescriptor, MessageDirection};
+use crate::{ApiDescriptor, MessageDescriptor, MessageDirection};
 
 pub use assign_replicas_to_dirs_request::AssignReplicasToDirsRequest;
 pub use assign_replicas_to_dirs_response::AssignReplicasToDirsResponse;
@@ -1028,7 +1029,6 @@ pub const ASSIGN_REPLICAS_TO_DIRS_REQUEST_DESCRIPTOR: MessageDescriptor = Messag
     MessageDirection::Request,
     VersionRange::new(0, 0),
     Some(VersionRange::new(0, 0)),
-    false,
 );
 
 /// Static metadata for [`AssignReplicasToDirsResponse`].
@@ -1036,6 +1036,15 @@ pub const ASSIGN_REPLICAS_TO_DIRS_RESPONSE_DESCRIPTOR: MessageDescriptor = Messa
     73,
     "AssignReplicasToDirsResponse",
     MessageDirection::Response,
+    VersionRange::new(0, 0),
+    Some(VersionRange::new(0, 0)),
+);
+
+/// Static pair metadata for the `AssignReplicasToDirs` API.
+pub const ASSIGN_REPLICAS_TO_DIRS_API_DESCRIPTOR: ApiDescriptor = ApiDescriptor::new(
+    73,
+    &ASSIGN_REPLICAS_TO_DIRS_REQUEST_DESCRIPTOR,
+    &ASSIGN_REPLICAS_TO_DIRS_RESPONSE_DESCRIPTOR,
     VersionRange::new(0, 0),
     Some(VersionRange::new(0, 0)),
     false,

@@ -16,7 +16,7 @@ pub mod write_txn_markers_request {
         encoded_len_with,
     };
 
-    use crate::{KafkaMessage, KafkaRequest, RequestResponsePair};
+    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, RequestResponsePair};
 
     /// `WritableTxnMarker` as declared by the `WriteTxnMarkers` API.
     #[non_exhaustive]
@@ -311,7 +311,7 @@ pub mod write_txn_markers_request {
 
     impl KafkaRequest for WriteTxnMarkersRequest {
         const API_KEY: ApiKey = ApiKey::new(27);
-        const LATEST_VERSION_UNSTABLE: bool = false;
+        const API_DESCRIPTOR: &'static ApiDescriptor = &super::WRITE_TXN_MARKERS_API_DESCRIPTOR;
     }
 
     impl RequestResponsePair for WriteTxnMarkersRequest {
@@ -913,7 +913,7 @@ pub mod write_txn_markers_response {
 
 use kafka_wire_core::VersionRange;
 
-use crate::{MessageDescriptor, MessageDirection};
+use crate::{ApiDescriptor, MessageDescriptor, MessageDirection};
 
 pub use write_txn_markers_request::WriteTxnMarkersRequest;
 pub use write_txn_markers_response::WriteTxnMarkersResponse;
@@ -925,7 +925,6 @@ pub const WRITE_TXN_MARKERS_REQUEST_DESCRIPTOR: MessageDescriptor = MessageDescr
     MessageDirection::Request,
     VersionRange::new(1, 2),
     Some(VersionRange::new(1, 2)),
-    false,
 );
 
 /// Static metadata for [`WriteTxnMarkersResponse`].
@@ -933,6 +932,15 @@ pub const WRITE_TXN_MARKERS_RESPONSE_DESCRIPTOR: MessageDescriptor = MessageDesc
     27,
     "WriteTxnMarkersResponse",
     MessageDirection::Response,
+    VersionRange::new(1, 2),
+    Some(VersionRange::new(1, 2)),
+);
+
+/// Static pair metadata for the `WriteTxnMarkers` API.
+pub const WRITE_TXN_MARKERS_API_DESCRIPTOR: ApiDescriptor = ApiDescriptor::new(
+    27,
+    &WRITE_TXN_MARKERS_REQUEST_DESCRIPTOR,
+    &WRITE_TXN_MARKERS_RESPONSE_DESCRIPTOR,
     VersionRange::new(1, 2),
     Some(VersionRange::new(1, 2)),
     false,

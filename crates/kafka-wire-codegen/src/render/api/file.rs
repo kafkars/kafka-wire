@@ -12,7 +12,10 @@ use kafka_wire_schema::FieldType;
 use crate::{GenerationError, group::ApiGroup, provenance::generated_banner};
 
 use super::{
-    descriptor::render_descriptor, imports, message::render_message, tagged::declares_a_tag,
+    descriptor::{render_api_descriptor, render_descriptor},
+    imports,
+    message::render_message,
+    tagged::declares_a_tag,
 };
 use crate::render::{field, text::RustText};
 
@@ -27,7 +30,7 @@ pub(crate) fn render_api(group: &ApiGroup, commit: &str) -> Result<String, Gener
     for source in group.messages() {
         render_module_doc(&mut rust, &source.message);
         rust.open(format!("pub mod {}", source.message.name.rust_module()));
-        render_imports(&mut rust, &source.message, group);
+        render_imports(&mut rust, &source.message);
         render_message(&mut rust, &source.message, group)?;
         rust.close("");
         rust.blank();
@@ -41,7 +44,7 @@ pub(crate) fn render_api(group: &ApiGroup, commit: &str) -> Result<String, Gener
     render_braced_use(
         &mut rust,
         "crate",
-        &["MessageDescriptor", "MessageDirection"],
+        &["ApiDescriptor", "MessageDescriptor", "MessageDirection"],
     );
     rust.blank();
 
@@ -57,32 +60,23 @@ pub(crate) fn render_api(group: &ApiGroup, commit: &str) -> Result<String, Gener
     for source in group.messages() {
         render_descriptor(&mut rust, &source.message, group.api_key)?;
     }
+    render_api_descriptor(&mut rust, group)?;
     Ok(rust.finish())
 }
 
 fn render_header(rust: &mut RustText, group: &ApiGroup, commit: &str) {
     rust.line(generated_banner());
     rust.line("//!");
-    match (&group.request, &group.response) {
-        (Some(request), Some(response)) => {
-            rust.line(format!(
-                "//! API key {} from `{}` and `{}`",
-                group.api_key, request.filename, response.filename
-            ));
-            rust.line(format!("//! at Apache Kafka commit `{commit}`."));
-            rust.line(format!("//! Request SHA-256: `{}`.", request.sha256));
-            rust.line(format!("//! Response SHA-256: `{}`.", response.sha256));
-        }
-        (Some(source), None) | (None, Some(source)) => {
-            rust.line(format!(
-                "//! API key {} from `{}` at Apache Kafka commit",
-                group.api_key, source.filename
-            ));
-            rust.line(format!("//! `{commit}`."));
-            rust.line(format!("//! Source SHA-256: `{}`.", source.sha256));
-        }
-        (None, None) => {}
-    }
+    rust.line(format!(
+        "//! API key {} from `{}` and `{}`",
+        group.api_key, group.request.filename, group.response.filename
+    ));
+    rust.line(format!("//! at Apache Kafka commit `{commit}`."));
+    rust.line(format!("//! Request SHA-256: `{}`.", group.request.sha256));
+    rust.line(format!(
+        "//! Response SHA-256: `{}`.",
+        group.response.sha256
+    ));
     rust.blank();
 }
 
@@ -93,7 +87,7 @@ fn render_header(rust: &mut RustText, group: &ApiGroup, commit: &str) {
 /// was harmless because nothing could clash; now each module binds names into a
 /// scope that also holds upstream's own struct spellings, so a name imported
 /// without being used is a name that can collide for no reason.
-fn render_imports(rust: &mut RustText, message: &kafka_wire_schema::Message, group: &ApiGroup) {
+fn render_imports(rust: &mut RustText, message: &kafka_wire_schema::Message) {
     let flexible = !message.effective_flexible_versions().is_empty();
     let mut wire = vec![
         "ApiKey",
@@ -138,12 +132,11 @@ fn render_imports(rust: &mut RustText, message: &kafka_wire_schema::Message, gro
     let mut local = vec!["KafkaMessage"];
     match message.kind {
         kafka_wire_schema::MessageKind::Request => {
+            local.push("ApiDescriptor");
             local.push("KafkaRequest");
             // The pairing is the one reference that crosses a module boundary,
             // and only a request writes it.
-            if group.response.is_some() {
-                local.push("RequestResponsePair");
-            }
+            local.push("RequestResponsePair");
         }
         kafka_wire_schema::MessageKind::Response => local.push("KafkaResponse"),
         kafka_wire_schema::MessageKind::Header | kafka_wire_schema::MessageKind::Data => {}

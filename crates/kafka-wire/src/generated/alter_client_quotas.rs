@@ -16,7 +16,7 @@ pub mod alter_client_quotas_request {
         encoded_len_with,
     };
 
-    use crate::{KafkaMessage, KafkaRequest, RequestResponsePair};
+    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, RequestResponsePair};
 
     /// `EntryData` as declared by the `AlterClientQuotas` API.
     #[non_exhaustive]
@@ -470,7 +470,7 @@ pub mod alter_client_quotas_request {
 
     impl KafkaRequest for AlterClientQuotasRequest {
         const API_KEY: ApiKey = ApiKey::new(49);
-        const LATEST_VERSION_UNSTABLE: bool = false;
+        const API_DESCRIPTOR: &'static ApiDescriptor = &super::ALTER_CLIENT_QUOTAS_API_DESCRIPTOR;
     }
 
     impl RequestResponsePair for AlterClientQuotasRequest {
@@ -1015,7 +1015,7 @@ pub mod alter_client_quotas_response {
 
 use kafka_wire_core::VersionRange;
 
-use crate::{MessageDescriptor, MessageDirection};
+use crate::{ApiDescriptor, MessageDescriptor, MessageDirection};
 
 pub use alter_client_quotas_request::AlterClientQuotasRequest;
 pub use alter_client_quotas_response::AlterClientQuotasResponse;
@@ -1027,7 +1027,6 @@ pub const ALTER_CLIENT_QUOTAS_REQUEST_DESCRIPTOR: MessageDescriptor = MessageDes
     MessageDirection::Request,
     VersionRange::new(0, 1),
     Some(VersionRange::new(1, 1)),
-    false,
 );
 
 /// Static metadata for [`AlterClientQuotasResponse`].
@@ -1035,6 +1034,15 @@ pub const ALTER_CLIENT_QUOTAS_RESPONSE_DESCRIPTOR: MessageDescriptor = MessageDe
     49,
     "AlterClientQuotasResponse",
     MessageDirection::Response,
+    VersionRange::new(0, 1),
+    Some(VersionRange::new(1, 1)),
+);
+
+/// Static pair metadata for the `AlterClientQuotas` API.
+pub const ALTER_CLIENT_QUOTAS_API_DESCRIPTOR: ApiDescriptor = ApiDescriptor::new(
+    49,
+    &ALTER_CLIENT_QUOTAS_REQUEST_DESCRIPTOR,
+    &ALTER_CLIENT_QUOTAS_RESPONSE_DESCRIPTOR,
     VersionRange::new(0, 1),
     Some(VersionRange::new(1, 1)),
     false,

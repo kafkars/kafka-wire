@@ -16,7 +16,7 @@ pub mod read_share_group_state_summary_request {
         encoded_len_with,
     };
 
-    use crate::{KafkaMessage, KafkaRequest, RequestResponsePair};
+    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, RequestResponsePair};
 
     /// `ReadStateSummaryData` as declared by the `ReadShareGroupStateSummary` API.
     #[non_exhaustive]
@@ -279,7 +279,8 @@ pub mod read_share_group_state_summary_request {
 
     impl KafkaRequest for ReadShareGroupStateSummaryRequest {
         const API_KEY: ApiKey = ApiKey::new(87);
-        const LATEST_VERSION_UNSTABLE: bool = false;
+        const API_DESCRIPTOR: &'static ApiDescriptor =
+            &super::READ_SHARE_GROUP_STATE_SUMMARY_API_DESCRIPTOR;
     }
 
     impl RequestResponsePair for ReadShareGroupStateSummaryRequest {
@@ -807,7 +808,7 @@ pub mod read_share_group_state_summary_response {
 
 use kafka_wire_core::VersionRange;
 
-use crate::{MessageDescriptor, MessageDirection};
+use crate::{ApiDescriptor, MessageDescriptor, MessageDirection};
 
 pub use read_share_group_state_summary_request::ReadShareGroupStateSummaryRequest;
 pub use read_share_group_state_summary_response::ReadShareGroupStateSummaryResponse;
@@ -820,7 +821,6 @@ pub const READ_SHARE_GROUP_STATE_SUMMARY_REQUEST_DESCRIPTOR: MessageDescriptor =
         MessageDirection::Request,
         VersionRange::new(0, 1),
         Some(VersionRange::new(0, 1)),
-        false,
     );
 
 /// Static metadata for [`ReadShareGroupStateSummaryResponse`].
@@ -831,5 +831,14 @@ pub const READ_SHARE_GROUP_STATE_SUMMARY_RESPONSE_DESCRIPTOR: MessageDescriptor 
         MessageDirection::Response,
         VersionRange::new(0, 1),
         Some(VersionRange::new(0, 1)),
-        false,
     );
+
+/// Static pair metadata for the `ReadShareGroupStateSummary` API.
+pub const READ_SHARE_GROUP_STATE_SUMMARY_API_DESCRIPTOR: ApiDescriptor = ApiDescriptor::new(
+    87,
+    &READ_SHARE_GROUP_STATE_SUMMARY_REQUEST_DESCRIPTOR,
+    &READ_SHARE_GROUP_STATE_SUMMARY_RESPONSE_DESCRIPTOR,
+    VersionRange::new(0, 1),
+    Some(VersionRange::new(0, 1)),
+    false,
+);

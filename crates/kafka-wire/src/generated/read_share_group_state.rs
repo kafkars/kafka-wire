@@ -16,7 +16,7 @@ pub mod read_share_group_state_request {
         encoded_len_with,
     };
 
-    use crate::{KafkaMessage, KafkaRequest, RequestResponsePair};
+    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, RequestResponsePair};
 
     /// `ReadStateData` as declared by the `ReadShareGroupState` API.
     #[non_exhaustive]
@@ -279,7 +279,8 @@ pub mod read_share_group_state_request {
 
     impl KafkaRequest for ReadShareGroupStateRequest {
         const API_KEY: ApiKey = ApiKey::new(84);
-        const LATEST_VERSION_UNSTABLE: bool = false;
+        const API_DESCRIPTOR: &'static ApiDescriptor =
+            &super::READ_SHARE_GROUP_STATE_API_DESCRIPTOR;
     }
 
     impl RequestResponsePair for ReadShareGroupStateRequest {
@@ -900,7 +901,7 @@ pub mod read_share_group_state_response {
 
 use kafka_wire_core::VersionRange;
 
-use crate::{MessageDescriptor, MessageDirection};
+use crate::{ApiDescriptor, MessageDescriptor, MessageDirection};
 
 pub use read_share_group_state_request::ReadShareGroupStateRequest;
 pub use read_share_group_state_response::ReadShareGroupStateResponse;
@@ -912,7 +913,6 @@ pub const READ_SHARE_GROUP_STATE_REQUEST_DESCRIPTOR: MessageDescriptor = Message
     MessageDirection::Request,
     VersionRange::new(0, 0),
     Some(VersionRange::new(0, 0)),
-    false,
 );
 
 /// Static metadata for [`ReadShareGroupStateResponse`].
@@ -920,6 +920,15 @@ pub const READ_SHARE_GROUP_STATE_RESPONSE_DESCRIPTOR: MessageDescriptor = Messag
     84,
     "ReadShareGroupStateResponse",
     MessageDirection::Response,
+    VersionRange::new(0, 0),
+    Some(VersionRange::new(0, 0)),
+);
+
+/// Static pair metadata for the `ReadShareGroupState` API.
+pub const READ_SHARE_GROUP_STATE_API_DESCRIPTOR: ApiDescriptor = ApiDescriptor::new(
+    84,
+    &READ_SHARE_GROUP_STATE_REQUEST_DESCRIPTOR,
+    &READ_SHARE_GROUP_STATE_RESPONSE_DESCRIPTOR,
     VersionRange::new(0, 0),
     Some(VersionRange::new(0, 0)),
     false,

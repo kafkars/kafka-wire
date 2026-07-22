@@ -16,7 +16,7 @@ pub mod consumer_group_describe_request {
         encoded_len_with,
     };
 
-    use crate::{KafkaMessage, KafkaRequest, RequestResponsePair};
+    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, RequestResponsePair};
 
     /// Request body for the `ConsumerGroupDescribe` API.
     #[non_exhaustive]
@@ -38,7 +38,8 @@ pub mod consumer_group_describe_request {
 
     impl KafkaRequest for ConsumerGroupDescribeRequest {
         const API_KEY: ApiKey = ApiKey::new(69);
-        const LATEST_VERSION_UNSTABLE: bool = false;
+        const API_DESCRIPTOR: &'static ApiDescriptor =
+            &super::CONSUMER_GROUP_DESCRIBE_API_DESCRIPTOR;
     }
 
     impl RequestResponsePair for ConsumerGroupDescribeRequest {
@@ -883,7 +884,7 @@ pub mod consumer_group_describe_response {
 
 use kafka_wire_core::VersionRange;
 
-use crate::{MessageDescriptor, MessageDirection};
+use crate::{ApiDescriptor, MessageDescriptor, MessageDirection};
 
 pub use consumer_group_describe_request::ConsumerGroupDescribeRequest;
 pub use consumer_group_describe_response::ConsumerGroupDescribeResponse;
@@ -895,7 +896,6 @@ pub const CONSUMER_GROUP_DESCRIBE_REQUEST_DESCRIPTOR: MessageDescriptor = Messag
     MessageDirection::Request,
     VersionRange::new(0, 1),
     Some(VersionRange::new(0, 1)),
-    false,
 );
 
 /// Static metadata for [`ConsumerGroupDescribeResponse`].
@@ -903,6 +903,15 @@ pub const CONSUMER_GROUP_DESCRIBE_RESPONSE_DESCRIPTOR: MessageDescriptor = Messa
     69,
     "ConsumerGroupDescribeResponse",
     MessageDirection::Response,
+    VersionRange::new(0, 1),
+    Some(VersionRange::new(0, 1)),
+);
+
+/// Static pair metadata for the `ConsumerGroupDescribe` API.
+pub const CONSUMER_GROUP_DESCRIBE_API_DESCRIPTOR: ApiDescriptor = ApiDescriptor::new(
+    69,
+    &CONSUMER_GROUP_DESCRIBE_REQUEST_DESCRIPTOR,
+    &CONSUMER_GROUP_DESCRIBE_RESPONSE_DESCRIPTOR,
     VersionRange::new(0, 1),
     Some(VersionRange::new(0, 1)),
     false,

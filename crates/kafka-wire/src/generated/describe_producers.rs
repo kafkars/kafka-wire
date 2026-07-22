@@ -16,7 +16,7 @@ pub mod describe_producers_request {
         encoded_len_with,
     };
 
-    use crate::{KafkaMessage, KafkaRequest, RequestResponsePair};
+    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, RequestResponsePair};
 
     /// `TopicRequest` as declared by the `DescribeProducers` API.
     #[non_exhaustive]
@@ -158,7 +158,7 @@ pub mod describe_producers_request {
 
     impl KafkaRequest for DescribeProducersRequest {
         const API_KEY: ApiKey = ApiKey::new(61);
-        const LATEST_VERSION_UNSTABLE: bool = false;
+        const API_DESCRIPTOR: &'static ApiDescriptor = &super::DESCRIBE_PRODUCERS_API_DESCRIPTOR;
     }
 
     impl RequestResponsePair for DescribeProducersRequest {
@@ -797,7 +797,7 @@ pub mod describe_producers_response {
 
 use kafka_wire_core::VersionRange;
 
-use crate::{MessageDescriptor, MessageDirection};
+use crate::{ApiDescriptor, MessageDescriptor, MessageDirection};
 
 pub use describe_producers_request::DescribeProducersRequest;
 pub use describe_producers_response::DescribeProducersResponse;
@@ -809,7 +809,6 @@ pub const DESCRIBE_PRODUCERS_REQUEST_DESCRIPTOR: MessageDescriptor = MessageDesc
     MessageDirection::Request,
     VersionRange::new(0, 0),
     Some(VersionRange::new(0, 0)),
-    false,
 );
 
 /// Static metadata for [`DescribeProducersResponse`].
@@ -817,6 +816,15 @@ pub const DESCRIBE_PRODUCERS_RESPONSE_DESCRIPTOR: MessageDescriptor = MessageDes
     61,
     "DescribeProducersResponse",
     MessageDirection::Response,
+    VersionRange::new(0, 0),
+    Some(VersionRange::new(0, 0)),
+);
+
+/// Static pair metadata for the `DescribeProducers` API.
+pub const DESCRIBE_PRODUCERS_API_DESCRIPTOR: ApiDescriptor = ApiDescriptor::new(
+    61,
+    &DESCRIBE_PRODUCERS_REQUEST_DESCRIPTOR,
+    &DESCRIBE_PRODUCERS_RESPONSE_DESCRIPTOR,
     VersionRange::new(0, 0),
     Some(VersionRange::new(0, 0)),
     false,

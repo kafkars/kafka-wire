@@ -16,7 +16,7 @@ pub mod elect_leaders_request {
         encoded_len_with,
     };
 
-    use crate::{KafkaMessage, KafkaRequest, RequestResponsePair};
+    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, RequestResponsePair};
 
     /// `TopicPartitions` as declared by the `ElectLeaders` API.
     #[non_exhaustive]
@@ -189,7 +189,7 @@ pub mod elect_leaders_request {
 
     impl KafkaRequest for ElectLeadersRequest {
         const API_KEY: ApiKey = ApiKey::new(43);
-        const LATEST_VERSION_UNSTABLE: bool = false;
+        const API_DESCRIPTOR: &'static ApiDescriptor = &super::ELECT_LEADERS_API_DESCRIPTOR;
     }
 
     impl RequestResponsePair for ElectLeadersRequest {
@@ -763,7 +763,7 @@ pub mod elect_leaders_response {
 
 use kafka_wire_core::VersionRange;
 
-use crate::{MessageDescriptor, MessageDirection};
+use crate::{ApiDescriptor, MessageDescriptor, MessageDirection};
 
 pub use elect_leaders_request::ElectLeadersRequest;
 pub use elect_leaders_response::ElectLeadersResponse;
@@ -775,7 +775,6 @@ pub const ELECT_LEADERS_REQUEST_DESCRIPTOR: MessageDescriptor = MessageDescripto
     MessageDirection::Request,
     VersionRange::new(0, 2),
     Some(VersionRange::new(2, 2)),
-    false,
 );
 
 /// Static metadata for [`ElectLeadersResponse`].
@@ -783,6 +782,15 @@ pub const ELECT_LEADERS_RESPONSE_DESCRIPTOR: MessageDescriptor = MessageDescript
     43,
     "ElectLeadersResponse",
     MessageDirection::Response,
+    VersionRange::new(0, 2),
+    Some(VersionRange::new(2, 2)),
+);
+
+/// Static pair metadata for the `ElectLeaders` API.
+pub const ELECT_LEADERS_API_DESCRIPTOR: ApiDescriptor = ApiDescriptor::new(
+    43,
+    &ELECT_LEADERS_REQUEST_DESCRIPTOR,
+    &ELECT_LEADERS_RESPONSE_DESCRIPTOR,
     VersionRange::new(0, 2),
     Some(VersionRange::new(2, 2)),
     false,

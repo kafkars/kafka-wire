@@ -16,7 +16,7 @@ pub mod expire_delegation_token_request {
         encoded_len_with,
     };
 
-    use crate::{KafkaMessage, KafkaRequest, RequestResponsePair};
+    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, RequestResponsePair};
 
     /// Request body for the `ExpireDelegationToken` API.
     #[non_exhaustive]
@@ -38,7 +38,8 @@ pub mod expire_delegation_token_request {
 
     impl KafkaRequest for ExpireDelegationTokenRequest {
         const API_KEY: ApiKey = ApiKey::new(40);
-        const LATEST_VERSION_UNSTABLE: bool = false;
+        const API_DESCRIPTOR: &'static ApiDescriptor =
+            &super::EXPIRE_DELEGATION_TOKEN_API_DESCRIPTOR;
     }
 
     impl RequestResponsePair for ExpireDelegationTokenRequest {
@@ -262,7 +263,7 @@ pub mod expire_delegation_token_response {
 
 use kafka_wire_core::VersionRange;
 
-use crate::{MessageDescriptor, MessageDirection};
+use crate::{ApiDescriptor, MessageDescriptor, MessageDirection};
 
 pub use expire_delegation_token_request::ExpireDelegationTokenRequest;
 pub use expire_delegation_token_response::ExpireDelegationTokenResponse;
@@ -274,7 +275,6 @@ pub const EXPIRE_DELEGATION_TOKEN_REQUEST_DESCRIPTOR: MessageDescriptor = Messag
     MessageDirection::Request,
     VersionRange::new(1, 2),
     Some(VersionRange::new(2, 2)),
-    false,
 );
 
 /// Static metadata for [`ExpireDelegationTokenResponse`].
@@ -282,6 +282,15 @@ pub const EXPIRE_DELEGATION_TOKEN_RESPONSE_DESCRIPTOR: MessageDescriptor = Messa
     40,
     "ExpireDelegationTokenResponse",
     MessageDirection::Response,
+    VersionRange::new(1, 2),
+    Some(VersionRange::new(2, 2)),
+);
+
+/// Static pair metadata for the `ExpireDelegationToken` API.
+pub const EXPIRE_DELEGATION_TOKEN_API_DESCRIPTOR: ApiDescriptor = ApiDescriptor::new(
+    40,
+    &EXPIRE_DELEGATION_TOKEN_REQUEST_DESCRIPTOR,
+    &EXPIRE_DELEGATION_TOKEN_RESPONSE_DESCRIPTOR,
     VersionRange::new(1, 2),
     Some(VersionRange::new(2, 2)),
     false,

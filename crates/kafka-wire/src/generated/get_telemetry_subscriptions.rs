@@ -16,7 +16,7 @@ pub mod get_telemetry_subscriptions_request {
         encoded_len_with,
     };
 
-    use crate::{KafkaMessage, KafkaRequest, RequestResponsePair};
+    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, RequestResponsePair};
 
     /// Request body for the `GetTelemetrySubscriptions` API.
     #[non_exhaustive]
@@ -36,7 +36,8 @@ pub mod get_telemetry_subscriptions_request {
 
     impl KafkaRequest for GetTelemetrySubscriptionsRequest {
         const API_KEY: ApiKey = ApiKey::new(71);
-        const LATEST_VERSION_UNSTABLE: bool = false;
+        const API_DESCRIPTOR: &'static ApiDescriptor =
+            &super::GET_TELEMETRY_SUBSCRIPTIONS_API_DESCRIPTOR;
     }
 
     impl RequestResponsePair for GetTelemetrySubscriptionsRequest {
@@ -304,7 +305,7 @@ pub mod get_telemetry_subscriptions_response {
 
 use kafka_wire_core::VersionRange;
 
-use crate::{MessageDescriptor, MessageDirection};
+use crate::{ApiDescriptor, MessageDescriptor, MessageDirection};
 
 pub use get_telemetry_subscriptions_request::GetTelemetrySubscriptionsRequest;
 pub use get_telemetry_subscriptions_response::GetTelemetrySubscriptionsResponse;
@@ -317,7 +318,6 @@ pub const GET_TELEMETRY_SUBSCRIPTIONS_REQUEST_DESCRIPTOR: MessageDescriptor =
         MessageDirection::Request,
         VersionRange::new(0, 0),
         Some(VersionRange::new(0, 0)),
-        false,
     );
 
 /// Static metadata for [`GetTelemetrySubscriptionsResponse`].
@@ -328,5 +328,14 @@ pub const GET_TELEMETRY_SUBSCRIPTIONS_RESPONSE_DESCRIPTOR: MessageDescriptor =
         MessageDirection::Response,
         VersionRange::new(0, 0),
         Some(VersionRange::new(0, 0)),
-        false,
     );
+
+/// Static pair metadata for the `GetTelemetrySubscriptions` API.
+pub const GET_TELEMETRY_SUBSCRIPTIONS_API_DESCRIPTOR: ApiDescriptor = ApiDescriptor::new(
+    71,
+    &GET_TELEMETRY_SUBSCRIPTIONS_REQUEST_DESCRIPTOR,
+    &GET_TELEMETRY_SUBSCRIPTIONS_RESPONSE_DESCRIPTOR,
+    VersionRange::new(0, 0),
+    Some(VersionRange::new(0, 0)),
+    false,
+);

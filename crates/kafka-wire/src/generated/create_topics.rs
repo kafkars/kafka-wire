@@ -16,7 +16,7 @@ pub mod create_topics_request {
         encoded_len_with,
     };
 
-    use crate::{KafkaMessage, KafkaRequest, RequestResponsePair};
+    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, RequestResponsePair};
 
     /// `CreatableTopic` as declared by the `CreateTopics` API.
     #[non_exhaustive]
@@ -500,7 +500,7 @@ pub mod create_topics_request {
 
     impl KafkaRequest for CreateTopicsRequest {
         const API_KEY: ApiKey = ApiKey::new(19);
-        const LATEST_VERSION_UNSTABLE: bool = false;
+        const API_DESCRIPTOR: &'static ApiDescriptor = &super::CREATE_TOPICS_API_DESCRIPTOR;
     }
 
     impl RequestResponsePair for CreateTopicsRequest {
@@ -1128,7 +1128,7 @@ pub mod create_topics_response {
 
 use kafka_wire_core::VersionRange;
 
-use crate::{MessageDescriptor, MessageDirection};
+use crate::{ApiDescriptor, MessageDescriptor, MessageDirection};
 
 pub use create_topics_request::CreateTopicsRequest;
 pub use create_topics_response::CreateTopicsResponse;
@@ -1140,7 +1140,6 @@ pub const CREATE_TOPICS_REQUEST_DESCRIPTOR: MessageDescriptor = MessageDescripto
     MessageDirection::Request,
     VersionRange::new(2, 7),
     Some(VersionRange::new(5, 7)),
-    false,
 );
 
 /// Static metadata for [`CreateTopicsResponse`].
@@ -1148,6 +1147,15 @@ pub const CREATE_TOPICS_RESPONSE_DESCRIPTOR: MessageDescriptor = MessageDescript
     19,
     "CreateTopicsResponse",
     MessageDirection::Response,
+    VersionRange::new(2, 7),
+    Some(VersionRange::new(5, 7)),
+);
+
+/// Static pair metadata for the `CreateTopics` API.
+pub const CREATE_TOPICS_API_DESCRIPTOR: ApiDescriptor = ApiDescriptor::new(
+    19,
+    &CREATE_TOPICS_REQUEST_DESCRIPTOR,
+    &CREATE_TOPICS_RESPONSE_DESCRIPTOR,
     VersionRange::new(2, 7),
     Some(VersionRange::new(5, 7)),
     false,

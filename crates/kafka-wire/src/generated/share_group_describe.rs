@@ -16,7 +16,7 @@ pub mod share_group_describe_request {
         encoded_len_with,
     };
 
-    use crate::{KafkaMessage, KafkaRequest, RequestResponsePair};
+    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, RequestResponsePair};
 
     /// Request body for the `ShareGroupDescribe` API.
     #[non_exhaustive]
@@ -38,7 +38,7 @@ pub mod share_group_describe_request {
 
     impl KafkaRequest for ShareGroupDescribeRequest {
         const API_KEY: ApiKey = ApiKey::new(77);
-        const LATEST_VERSION_UNSTABLE: bool = false;
+        const API_DESCRIPTOR: &'static ApiDescriptor = &super::SHARE_GROUP_DESCRIBE_API_DESCRIPTOR;
     }
 
     impl RequestResponsePair for ShareGroupDescribeRequest {
@@ -837,7 +837,7 @@ pub mod share_group_describe_response {
 
 use kafka_wire_core::VersionRange;
 
-use crate::{MessageDescriptor, MessageDirection};
+use crate::{ApiDescriptor, MessageDescriptor, MessageDirection};
 
 pub use share_group_describe_request::ShareGroupDescribeRequest;
 pub use share_group_describe_response::ShareGroupDescribeResponse;
@@ -849,7 +849,6 @@ pub const SHARE_GROUP_DESCRIBE_REQUEST_DESCRIPTOR: MessageDescriptor = MessageDe
     MessageDirection::Request,
     VersionRange::new(1, 1),
     Some(VersionRange::new(1, 1)),
-    false,
 );
 
 /// Static metadata for [`ShareGroupDescribeResponse`].
@@ -857,6 +856,15 @@ pub const SHARE_GROUP_DESCRIBE_RESPONSE_DESCRIPTOR: MessageDescriptor = MessageD
     77,
     "ShareGroupDescribeResponse",
     MessageDirection::Response,
+    VersionRange::new(1, 1),
+    Some(VersionRange::new(1, 1)),
+);
+
+/// Static pair metadata for the `ShareGroupDescribe` API.
+pub const SHARE_GROUP_DESCRIBE_API_DESCRIPTOR: ApiDescriptor = ApiDescriptor::new(
+    77,
+    &SHARE_GROUP_DESCRIBE_REQUEST_DESCRIPTOR,
+    &SHARE_GROUP_DESCRIBE_RESPONSE_DESCRIPTOR,
     VersionRange::new(1, 1),
     Some(VersionRange::new(1, 1)),
     false,

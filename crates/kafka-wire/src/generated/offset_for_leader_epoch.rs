@@ -16,7 +16,7 @@ pub mod offset_for_leader_epoch_request {
         encoded_len_with,
     };
 
-    use crate::{KafkaMessage, KafkaRequest, RequestResponsePair};
+    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, RequestResponsePair};
 
     /// `OffsetForLeaderTopic` as declared by the `OffsetForLeaderEpoch` API.
     #[non_exhaustive]
@@ -323,7 +323,8 @@ pub mod offset_for_leader_epoch_request {
 
     impl KafkaRequest for OffsetForLeaderEpochRequest {
         const API_KEY: ApiKey = ApiKey::new(23);
-        const LATEST_VERSION_UNSTABLE: bool = false;
+        const API_DESCRIPTOR: &'static ApiDescriptor =
+            &super::OFFSET_FOR_LEADER_EPOCH_API_DESCRIPTOR;
     }
 
     impl RequestResponsePair for OffsetForLeaderEpochRequest {
@@ -858,7 +859,7 @@ pub mod offset_for_leader_epoch_response {
 
 use kafka_wire_core::VersionRange;
 
-use crate::{MessageDescriptor, MessageDirection};
+use crate::{ApiDescriptor, MessageDescriptor, MessageDirection};
 
 pub use offset_for_leader_epoch_request::OffsetForLeaderEpochRequest;
 pub use offset_for_leader_epoch_response::OffsetForLeaderEpochResponse;
@@ -870,7 +871,6 @@ pub const OFFSET_FOR_LEADER_EPOCH_REQUEST_DESCRIPTOR: MessageDescriptor = Messag
     MessageDirection::Request,
     VersionRange::new(2, 4),
     Some(VersionRange::new(4, 4)),
-    false,
 );
 
 /// Static metadata for [`OffsetForLeaderEpochResponse`].
@@ -878,6 +878,15 @@ pub const OFFSET_FOR_LEADER_EPOCH_RESPONSE_DESCRIPTOR: MessageDescriptor = Messa
     23,
     "OffsetForLeaderEpochResponse",
     MessageDirection::Response,
+    VersionRange::new(2, 4),
+    Some(VersionRange::new(4, 4)),
+);
+
+/// Static pair metadata for the `OffsetForLeaderEpoch` API.
+pub const OFFSET_FOR_LEADER_EPOCH_API_DESCRIPTOR: ApiDescriptor = ApiDescriptor::new(
+    23,
+    &OFFSET_FOR_LEADER_EPOCH_REQUEST_DESCRIPTOR,
+    &OFFSET_FOR_LEADER_EPOCH_RESPONSE_DESCRIPTOR,
     VersionRange::new(2, 4),
     Some(VersionRange::new(4, 4)),
     false,

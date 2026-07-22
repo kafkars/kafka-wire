@@ -16,7 +16,7 @@ pub mod describe_configs_request {
         encoded_len_with,
     };
 
-    use crate::{KafkaMessage, KafkaRequest, RequestResponsePair};
+    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, RequestResponsePair};
 
     /// `DescribeConfigsResource` as declared by the `DescribeConfigs` API.
     #[non_exhaustive]
@@ -212,7 +212,7 @@ pub mod describe_configs_request {
 
     impl KafkaRequest for DescribeConfigsRequest {
         const API_KEY: ApiKey = ApiKey::new(32);
-        const LATEST_VERSION_UNSTABLE: bool = false;
+        const API_DESCRIPTOR: &'static ApiDescriptor = &super::DESCRIBE_CONFIGS_API_DESCRIPTOR;
     }
 
     impl RequestResponsePair for DescribeConfigsRequest {
@@ -1022,7 +1022,7 @@ pub mod describe_configs_response {
 
 use kafka_wire_core::VersionRange;
 
-use crate::{MessageDescriptor, MessageDirection};
+use crate::{ApiDescriptor, MessageDescriptor, MessageDirection};
 
 pub use describe_configs_request::DescribeConfigsRequest;
 pub use describe_configs_response::DescribeConfigsResponse;
@@ -1034,7 +1034,6 @@ pub const DESCRIBE_CONFIGS_REQUEST_DESCRIPTOR: MessageDescriptor = MessageDescri
     MessageDirection::Request,
     VersionRange::new(1, 4),
     Some(VersionRange::new(4, 4)),
-    false,
 );
 
 /// Static metadata for [`DescribeConfigsResponse`].
@@ -1042,6 +1041,15 @@ pub const DESCRIBE_CONFIGS_RESPONSE_DESCRIPTOR: MessageDescriptor = MessageDescr
     32,
     "DescribeConfigsResponse",
     MessageDirection::Response,
+    VersionRange::new(1, 4),
+    Some(VersionRange::new(4, 4)),
+);
+
+/// Static pair metadata for the `DescribeConfigs` API.
+pub const DESCRIBE_CONFIGS_API_DESCRIPTOR: ApiDescriptor = ApiDescriptor::new(
+    32,
+    &DESCRIBE_CONFIGS_REQUEST_DESCRIPTOR,
+    &DESCRIBE_CONFIGS_RESPONSE_DESCRIPTOR,
     VersionRange::new(1, 4),
     Some(VersionRange::new(4, 4)),
     false,

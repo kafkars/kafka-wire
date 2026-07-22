@@ -100,240 +100,264 @@ mod write_share_group_state;
 mod write_txn_markers;
 
 pub use add_offsets_to_txn::{
-    ADD_OFFSETS_TO_TXN_REQUEST_DESCRIPTOR, ADD_OFFSETS_TO_TXN_RESPONSE_DESCRIPTOR,
-    AddOffsetsToTxnRequest, AddOffsetsToTxnResponse, add_offsets_to_txn_request,
-    add_offsets_to_txn_response,
+    ADD_OFFSETS_TO_TXN_API_DESCRIPTOR, ADD_OFFSETS_TO_TXN_REQUEST_DESCRIPTOR,
+    ADD_OFFSETS_TO_TXN_RESPONSE_DESCRIPTOR, AddOffsetsToTxnRequest, AddOffsetsToTxnResponse,
+    add_offsets_to_txn_request, add_offsets_to_txn_response,
 };
 pub use add_partitions_to_txn::{
-    ADD_PARTITIONS_TO_TXN_REQUEST_DESCRIPTOR, ADD_PARTITIONS_TO_TXN_RESPONSE_DESCRIPTOR,
-    AddPartitionsToTxnRequest, AddPartitionsToTxnResponse, add_partitions_to_txn_request,
-    add_partitions_to_txn_response,
+    ADD_PARTITIONS_TO_TXN_API_DESCRIPTOR, ADD_PARTITIONS_TO_TXN_REQUEST_DESCRIPTOR,
+    ADD_PARTITIONS_TO_TXN_RESPONSE_DESCRIPTOR, AddPartitionsToTxnRequest,
+    AddPartitionsToTxnResponse, add_partitions_to_txn_request, add_partitions_to_txn_response,
 };
 pub use add_raft_voter::{
-    ADD_RAFT_VOTER_REQUEST_DESCRIPTOR, ADD_RAFT_VOTER_RESPONSE_DESCRIPTOR, AddRaftVoterRequest,
-    AddRaftVoterResponse, add_raft_voter_request, add_raft_voter_response,
+    ADD_RAFT_VOTER_API_DESCRIPTOR, ADD_RAFT_VOTER_REQUEST_DESCRIPTOR,
+    ADD_RAFT_VOTER_RESPONSE_DESCRIPTOR, AddRaftVoterRequest, AddRaftVoterResponse,
+    add_raft_voter_request, add_raft_voter_response,
 };
 pub use allocate_producer_ids::{
-    ALLOCATE_PRODUCER_IDS_REQUEST_DESCRIPTOR, ALLOCATE_PRODUCER_IDS_RESPONSE_DESCRIPTOR,
-    AllocateProducerIdsRequest, AllocateProducerIdsResponse, allocate_producer_ids_request,
-    allocate_producer_ids_response,
+    ALLOCATE_PRODUCER_IDS_API_DESCRIPTOR, ALLOCATE_PRODUCER_IDS_REQUEST_DESCRIPTOR,
+    ALLOCATE_PRODUCER_IDS_RESPONSE_DESCRIPTOR, AllocateProducerIdsRequest,
+    AllocateProducerIdsResponse, allocate_producer_ids_request, allocate_producer_ids_response,
 };
 pub use alter_client_quotas::{
-    ALTER_CLIENT_QUOTAS_REQUEST_DESCRIPTOR, ALTER_CLIENT_QUOTAS_RESPONSE_DESCRIPTOR,
-    AlterClientQuotasRequest, AlterClientQuotasResponse, alter_client_quotas_request,
-    alter_client_quotas_response,
+    ALTER_CLIENT_QUOTAS_API_DESCRIPTOR, ALTER_CLIENT_QUOTAS_REQUEST_DESCRIPTOR,
+    ALTER_CLIENT_QUOTAS_RESPONSE_DESCRIPTOR, AlterClientQuotasRequest, AlterClientQuotasResponse,
+    alter_client_quotas_request, alter_client_quotas_response,
 };
 pub use alter_configs::{
-    ALTER_CONFIGS_REQUEST_DESCRIPTOR, ALTER_CONFIGS_RESPONSE_DESCRIPTOR, AlterConfigsRequest,
-    AlterConfigsResponse, alter_configs_request, alter_configs_response,
+    ALTER_CONFIGS_API_DESCRIPTOR, ALTER_CONFIGS_REQUEST_DESCRIPTOR,
+    ALTER_CONFIGS_RESPONSE_DESCRIPTOR, AlterConfigsRequest, AlterConfigsResponse,
+    alter_configs_request, alter_configs_response,
 };
 pub use alter_partition::{
-    ALTER_PARTITION_REQUEST_DESCRIPTOR, ALTER_PARTITION_RESPONSE_DESCRIPTOR, AlterPartitionRequest,
-    AlterPartitionResponse, alter_partition_request, alter_partition_response,
+    ALTER_PARTITION_API_DESCRIPTOR, ALTER_PARTITION_REQUEST_DESCRIPTOR,
+    ALTER_PARTITION_RESPONSE_DESCRIPTOR, AlterPartitionRequest, AlterPartitionResponse,
+    alter_partition_request, alter_partition_response,
 };
 pub use alter_partition_reassignments::{
-    ALTER_PARTITION_REASSIGNMENTS_REQUEST_DESCRIPTOR,
+    ALTER_PARTITION_REASSIGNMENTS_API_DESCRIPTOR, ALTER_PARTITION_REASSIGNMENTS_REQUEST_DESCRIPTOR,
     ALTER_PARTITION_REASSIGNMENTS_RESPONSE_DESCRIPTOR, AlterPartitionReassignmentsRequest,
     AlterPartitionReassignmentsResponse, alter_partition_reassignments_request,
     alter_partition_reassignments_response,
 };
 pub use alter_replica_log_dirs::{
-    ALTER_REPLICA_LOG_DIRS_REQUEST_DESCRIPTOR, ALTER_REPLICA_LOG_DIRS_RESPONSE_DESCRIPTOR,
-    AlterReplicaLogDirsRequest, AlterReplicaLogDirsResponse, alter_replica_log_dirs_request,
-    alter_replica_log_dirs_response,
+    ALTER_REPLICA_LOG_DIRS_API_DESCRIPTOR, ALTER_REPLICA_LOG_DIRS_REQUEST_DESCRIPTOR,
+    ALTER_REPLICA_LOG_DIRS_RESPONSE_DESCRIPTOR, AlterReplicaLogDirsRequest,
+    AlterReplicaLogDirsResponse, alter_replica_log_dirs_request, alter_replica_log_dirs_response,
 };
 pub use alter_share_group_offsets::{
-    ALTER_SHARE_GROUP_OFFSETS_REQUEST_DESCRIPTOR, ALTER_SHARE_GROUP_OFFSETS_RESPONSE_DESCRIPTOR,
-    AlterShareGroupOffsetsRequest, AlterShareGroupOffsetsResponse,
-    alter_share_group_offsets_request, alter_share_group_offsets_response,
+    ALTER_SHARE_GROUP_OFFSETS_API_DESCRIPTOR, ALTER_SHARE_GROUP_OFFSETS_REQUEST_DESCRIPTOR,
+    ALTER_SHARE_GROUP_OFFSETS_RESPONSE_DESCRIPTOR, AlterShareGroupOffsetsRequest,
+    AlterShareGroupOffsetsResponse, alter_share_group_offsets_request,
+    alter_share_group_offsets_response,
 };
 pub use alter_user_scram_credentials::{
-    ALTER_USER_SCRAM_CREDENTIALS_REQUEST_DESCRIPTOR,
+    ALTER_USER_SCRAM_CREDENTIALS_API_DESCRIPTOR, ALTER_USER_SCRAM_CREDENTIALS_REQUEST_DESCRIPTOR,
     ALTER_USER_SCRAM_CREDENTIALS_RESPONSE_DESCRIPTOR, AlterUserScramCredentialsRequest,
     AlterUserScramCredentialsResponse, alter_user_scram_credentials_request,
     alter_user_scram_credentials_response,
 };
 pub use api_versions::{
-    API_VERSIONS_REQUEST_DESCRIPTOR, API_VERSIONS_RESPONSE_DESCRIPTOR, ApiVersionsRequest,
-    ApiVersionsResponse, api_versions_request, api_versions_response,
+    API_VERSIONS_API_DESCRIPTOR, API_VERSIONS_REQUEST_DESCRIPTOR, API_VERSIONS_RESPONSE_DESCRIPTOR,
+    ApiVersionsRequest, ApiVersionsResponse, api_versions_request, api_versions_response,
 };
 pub use assign_replicas_to_dirs::{
-    ASSIGN_REPLICAS_TO_DIRS_REQUEST_DESCRIPTOR, ASSIGN_REPLICAS_TO_DIRS_RESPONSE_DESCRIPTOR,
-    AssignReplicasToDirsRequest, AssignReplicasToDirsResponse, assign_replicas_to_dirs_request,
+    ASSIGN_REPLICAS_TO_DIRS_API_DESCRIPTOR, ASSIGN_REPLICAS_TO_DIRS_REQUEST_DESCRIPTOR,
+    ASSIGN_REPLICAS_TO_DIRS_RESPONSE_DESCRIPTOR, AssignReplicasToDirsRequest,
+    AssignReplicasToDirsResponse, assign_replicas_to_dirs_request,
     assign_replicas_to_dirs_response,
 };
 pub use begin_quorum_epoch::{
-    BEGIN_QUORUM_EPOCH_REQUEST_DESCRIPTOR, BEGIN_QUORUM_EPOCH_RESPONSE_DESCRIPTOR,
-    BeginQuorumEpochRequest, BeginQuorumEpochResponse, begin_quorum_epoch_request,
-    begin_quorum_epoch_response,
+    BEGIN_QUORUM_EPOCH_API_DESCRIPTOR, BEGIN_QUORUM_EPOCH_REQUEST_DESCRIPTOR,
+    BEGIN_QUORUM_EPOCH_RESPONSE_DESCRIPTOR, BeginQuorumEpochRequest, BeginQuorumEpochResponse,
+    begin_quorum_epoch_request, begin_quorum_epoch_response,
 };
 pub use broker_heartbeat::{
-    BROKER_HEARTBEAT_REQUEST_DESCRIPTOR, BROKER_HEARTBEAT_RESPONSE_DESCRIPTOR,
-    BrokerHeartbeatRequest, BrokerHeartbeatResponse, broker_heartbeat_request,
-    broker_heartbeat_response,
+    BROKER_HEARTBEAT_API_DESCRIPTOR, BROKER_HEARTBEAT_REQUEST_DESCRIPTOR,
+    BROKER_HEARTBEAT_RESPONSE_DESCRIPTOR, BrokerHeartbeatRequest, BrokerHeartbeatResponse,
+    broker_heartbeat_request, broker_heartbeat_response,
 };
 pub use broker_registration::{
-    BROKER_REGISTRATION_REQUEST_DESCRIPTOR, BROKER_REGISTRATION_RESPONSE_DESCRIPTOR,
-    BrokerRegistrationRequest, BrokerRegistrationResponse, broker_registration_request,
-    broker_registration_response,
+    BROKER_REGISTRATION_API_DESCRIPTOR, BROKER_REGISTRATION_REQUEST_DESCRIPTOR,
+    BROKER_REGISTRATION_RESPONSE_DESCRIPTOR, BrokerRegistrationRequest, BrokerRegistrationResponse,
+    broker_registration_request, broker_registration_response,
 };
 pub use consumer_group_describe::{
-    CONSUMER_GROUP_DESCRIBE_REQUEST_DESCRIPTOR, CONSUMER_GROUP_DESCRIBE_RESPONSE_DESCRIPTOR,
-    ConsumerGroupDescribeRequest, ConsumerGroupDescribeResponse, consumer_group_describe_request,
+    CONSUMER_GROUP_DESCRIBE_API_DESCRIPTOR, CONSUMER_GROUP_DESCRIBE_REQUEST_DESCRIPTOR,
+    CONSUMER_GROUP_DESCRIBE_RESPONSE_DESCRIPTOR, ConsumerGroupDescribeRequest,
+    ConsumerGroupDescribeResponse, consumer_group_describe_request,
     consumer_group_describe_response,
 };
 pub use consumer_group_heartbeat::{
-    CONSUMER_GROUP_HEARTBEAT_REQUEST_DESCRIPTOR, CONSUMER_GROUP_HEARTBEAT_RESPONSE_DESCRIPTOR,
-    ConsumerGroupHeartbeatRequest, ConsumerGroupHeartbeatResponse,
-    consumer_group_heartbeat_request, consumer_group_heartbeat_response,
+    CONSUMER_GROUP_HEARTBEAT_API_DESCRIPTOR, CONSUMER_GROUP_HEARTBEAT_REQUEST_DESCRIPTOR,
+    CONSUMER_GROUP_HEARTBEAT_RESPONSE_DESCRIPTOR, ConsumerGroupHeartbeatRequest,
+    ConsumerGroupHeartbeatResponse, consumer_group_heartbeat_request,
+    consumer_group_heartbeat_response,
 };
 pub use controller_registration::{
-    CONTROLLER_REGISTRATION_REQUEST_DESCRIPTOR, CONTROLLER_REGISTRATION_RESPONSE_DESCRIPTOR,
-    ControllerRegistrationRequest, ControllerRegistrationResponse, controller_registration_request,
+    CONTROLLER_REGISTRATION_API_DESCRIPTOR, CONTROLLER_REGISTRATION_REQUEST_DESCRIPTOR,
+    CONTROLLER_REGISTRATION_RESPONSE_DESCRIPTOR, ControllerRegistrationRequest,
+    ControllerRegistrationResponse, controller_registration_request,
     controller_registration_response,
 };
 pub use create_acls::{
-    CREATE_ACLS_REQUEST_DESCRIPTOR, CREATE_ACLS_RESPONSE_DESCRIPTOR, CreateAclsRequest,
-    CreateAclsResponse, create_acls_request, create_acls_response,
+    CREATE_ACLS_API_DESCRIPTOR, CREATE_ACLS_REQUEST_DESCRIPTOR, CREATE_ACLS_RESPONSE_DESCRIPTOR,
+    CreateAclsRequest, CreateAclsResponse, create_acls_request, create_acls_response,
 };
 pub use create_delegation_token::{
-    CREATE_DELEGATION_TOKEN_REQUEST_DESCRIPTOR, CREATE_DELEGATION_TOKEN_RESPONSE_DESCRIPTOR,
-    CreateDelegationTokenRequest, CreateDelegationTokenResponse, create_delegation_token_request,
+    CREATE_DELEGATION_TOKEN_API_DESCRIPTOR, CREATE_DELEGATION_TOKEN_REQUEST_DESCRIPTOR,
+    CREATE_DELEGATION_TOKEN_RESPONSE_DESCRIPTOR, CreateDelegationTokenRequest,
+    CreateDelegationTokenResponse, create_delegation_token_request,
     create_delegation_token_response,
 };
 pub use create_partitions::{
-    CREATE_PARTITIONS_REQUEST_DESCRIPTOR, CREATE_PARTITIONS_RESPONSE_DESCRIPTOR,
-    CreatePartitionsRequest, CreatePartitionsResponse, create_partitions_request,
-    create_partitions_response,
+    CREATE_PARTITIONS_API_DESCRIPTOR, CREATE_PARTITIONS_REQUEST_DESCRIPTOR,
+    CREATE_PARTITIONS_RESPONSE_DESCRIPTOR, CreatePartitionsRequest, CreatePartitionsResponse,
+    create_partitions_request, create_partitions_response,
 };
 pub use create_topics::{
-    CREATE_TOPICS_REQUEST_DESCRIPTOR, CREATE_TOPICS_RESPONSE_DESCRIPTOR, CreateTopicsRequest,
-    CreateTopicsResponse, create_topics_request, create_topics_response,
+    CREATE_TOPICS_API_DESCRIPTOR, CREATE_TOPICS_REQUEST_DESCRIPTOR,
+    CREATE_TOPICS_RESPONSE_DESCRIPTOR, CreateTopicsRequest, CreateTopicsResponse,
+    create_topics_request, create_topics_response,
 };
 pub use delete_acls::{
-    DELETE_ACLS_REQUEST_DESCRIPTOR, DELETE_ACLS_RESPONSE_DESCRIPTOR, DeleteAclsRequest,
-    DeleteAclsResponse, delete_acls_request, delete_acls_response,
+    DELETE_ACLS_API_DESCRIPTOR, DELETE_ACLS_REQUEST_DESCRIPTOR, DELETE_ACLS_RESPONSE_DESCRIPTOR,
+    DeleteAclsRequest, DeleteAclsResponse, delete_acls_request, delete_acls_response,
 };
 pub use delete_groups::{
-    DELETE_GROUPS_REQUEST_DESCRIPTOR, DELETE_GROUPS_RESPONSE_DESCRIPTOR, DeleteGroupsRequest,
-    DeleteGroupsResponse, delete_groups_request, delete_groups_response,
+    DELETE_GROUPS_API_DESCRIPTOR, DELETE_GROUPS_REQUEST_DESCRIPTOR,
+    DELETE_GROUPS_RESPONSE_DESCRIPTOR, DeleteGroupsRequest, DeleteGroupsResponse,
+    delete_groups_request, delete_groups_response,
 };
 pub use delete_records::{
-    DELETE_RECORDS_REQUEST_DESCRIPTOR, DELETE_RECORDS_RESPONSE_DESCRIPTOR, DeleteRecordsRequest,
-    DeleteRecordsResponse, delete_records_request, delete_records_response,
+    DELETE_RECORDS_API_DESCRIPTOR, DELETE_RECORDS_REQUEST_DESCRIPTOR,
+    DELETE_RECORDS_RESPONSE_DESCRIPTOR, DeleteRecordsRequest, DeleteRecordsResponse,
+    delete_records_request, delete_records_response,
 };
 pub use delete_share_group_offsets::{
-    DELETE_SHARE_GROUP_OFFSETS_REQUEST_DESCRIPTOR, DELETE_SHARE_GROUP_OFFSETS_RESPONSE_DESCRIPTOR,
-    DeleteShareGroupOffsetsRequest, DeleteShareGroupOffsetsResponse,
-    delete_share_group_offsets_request, delete_share_group_offsets_response,
+    DELETE_SHARE_GROUP_OFFSETS_API_DESCRIPTOR, DELETE_SHARE_GROUP_OFFSETS_REQUEST_DESCRIPTOR,
+    DELETE_SHARE_GROUP_OFFSETS_RESPONSE_DESCRIPTOR, DeleteShareGroupOffsetsRequest,
+    DeleteShareGroupOffsetsResponse, delete_share_group_offsets_request,
+    delete_share_group_offsets_response,
 };
 pub use delete_share_group_state::{
-    DELETE_SHARE_GROUP_STATE_REQUEST_DESCRIPTOR, DELETE_SHARE_GROUP_STATE_RESPONSE_DESCRIPTOR,
-    DeleteShareGroupStateRequest, DeleteShareGroupStateResponse, delete_share_group_state_request,
+    DELETE_SHARE_GROUP_STATE_API_DESCRIPTOR, DELETE_SHARE_GROUP_STATE_REQUEST_DESCRIPTOR,
+    DELETE_SHARE_GROUP_STATE_RESPONSE_DESCRIPTOR, DeleteShareGroupStateRequest,
+    DeleteShareGroupStateResponse, delete_share_group_state_request,
     delete_share_group_state_response,
 };
 pub use delete_topics::{
-    DELETE_TOPICS_REQUEST_DESCRIPTOR, DELETE_TOPICS_RESPONSE_DESCRIPTOR, DeleteTopicsRequest,
-    DeleteTopicsResponse, delete_topics_request, delete_topics_response,
+    DELETE_TOPICS_API_DESCRIPTOR, DELETE_TOPICS_REQUEST_DESCRIPTOR,
+    DELETE_TOPICS_RESPONSE_DESCRIPTOR, DeleteTopicsRequest, DeleteTopicsResponse,
+    delete_topics_request, delete_topics_response,
 };
 pub use describe_acls::{
-    DESCRIBE_ACLS_REQUEST_DESCRIPTOR, DESCRIBE_ACLS_RESPONSE_DESCRIPTOR, DescribeAclsRequest,
-    DescribeAclsResponse, describe_acls_request, describe_acls_response,
+    DESCRIBE_ACLS_API_DESCRIPTOR, DESCRIBE_ACLS_REQUEST_DESCRIPTOR,
+    DESCRIBE_ACLS_RESPONSE_DESCRIPTOR, DescribeAclsRequest, DescribeAclsResponse,
+    describe_acls_request, describe_acls_response,
 };
 pub use describe_client_quotas::{
-    DESCRIBE_CLIENT_QUOTAS_REQUEST_DESCRIPTOR, DESCRIBE_CLIENT_QUOTAS_RESPONSE_DESCRIPTOR,
-    DescribeClientQuotasRequest, DescribeClientQuotasResponse, describe_client_quotas_request,
-    describe_client_quotas_response,
+    DESCRIBE_CLIENT_QUOTAS_API_DESCRIPTOR, DESCRIBE_CLIENT_QUOTAS_REQUEST_DESCRIPTOR,
+    DESCRIBE_CLIENT_QUOTAS_RESPONSE_DESCRIPTOR, DescribeClientQuotasRequest,
+    DescribeClientQuotasResponse, describe_client_quotas_request, describe_client_quotas_response,
 };
 pub use describe_cluster::{
-    DESCRIBE_CLUSTER_REQUEST_DESCRIPTOR, DESCRIBE_CLUSTER_RESPONSE_DESCRIPTOR,
-    DescribeClusterRequest, DescribeClusterResponse, describe_cluster_request,
-    describe_cluster_response,
+    DESCRIBE_CLUSTER_API_DESCRIPTOR, DESCRIBE_CLUSTER_REQUEST_DESCRIPTOR,
+    DESCRIBE_CLUSTER_RESPONSE_DESCRIPTOR, DescribeClusterRequest, DescribeClusterResponse,
+    describe_cluster_request, describe_cluster_response,
 };
 pub use describe_configs::{
-    DESCRIBE_CONFIGS_REQUEST_DESCRIPTOR, DESCRIBE_CONFIGS_RESPONSE_DESCRIPTOR,
-    DescribeConfigsRequest, DescribeConfigsResponse, describe_configs_request,
-    describe_configs_response,
+    DESCRIBE_CONFIGS_API_DESCRIPTOR, DESCRIBE_CONFIGS_REQUEST_DESCRIPTOR,
+    DESCRIBE_CONFIGS_RESPONSE_DESCRIPTOR, DescribeConfigsRequest, DescribeConfigsResponse,
+    describe_configs_request, describe_configs_response,
 };
 pub use describe_delegation_token::{
-    DESCRIBE_DELEGATION_TOKEN_REQUEST_DESCRIPTOR, DESCRIBE_DELEGATION_TOKEN_RESPONSE_DESCRIPTOR,
-    DescribeDelegationTokenRequest, DescribeDelegationTokenResponse,
-    describe_delegation_token_request, describe_delegation_token_response,
+    DESCRIBE_DELEGATION_TOKEN_API_DESCRIPTOR, DESCRIBE_DELEGATION_TOKEN_REQUEST_DESCRIPTOR,
+    DESCRIBE_DELEGATION_TOKEN_RESPONSE_DESCRIPTOR, DescribeDelegationTokenRequest,
+    DescribeDelegationTokenResponse, describe_delegation_token_request,
+    describe_delegation_token_response,
 };
 pub use describe_groups::{
-    DESCRIBE_GROUPS_REQUEST_DESCRIPTOR, DESCRIBE_GROUPS_RESPONSE_DESCRIPTOR, DescribeGroupsRequest,
-    DescribeGroupsResponse, describe_groups_request, describe_groups_response,
+    DESCRIBE_GROUPS_API_DESCRIPTOR, DESCRIBE_GROUPS_REQUEST_DESCRIPTOR,
+    DESCRIBE_GROUPS_RESPONSE_DESCRIPTOR, DescribeGroupsRequest, DescribeGroupsResponse,
+    describe_groups_request, describe_groups_response,
 };
 pub use describe_log_dirs::{
-    DESCRIBE_LOG_DIRS_REQUEST_DESCRIPTOR, DESCRIBE_LOG_DIRS_RESPONSE_DESCRIPTOR,
-    DescribeLogDirsRequest, DescribeLogDirsResponse, describe_log_dirs_request,
-    describe_log_dirs_response,
+    DESCRIBE_LOG_DIRS_API_DESCRIPTOR, DESCRIBE_LOG_DIRS_REQUEST_DESCRIPTOR,
+    DESCRIBE_LOG_DIRS_RESPONSE_DESCRIPTOR, DescribeLogDirsRequest, DescribeLogDirsResponse,
+    describe_log_dirs_request, describe_log_dirs_response,
 };
 pub use describe_producers::{
-    DESCRIBE_PRODUCERS_REQUEST_DESCRIPTOR, DESCRIBE_PRODUCERS_RESPONSE_DESCRIPTOR,
-    DescribeProducersRequest, DescribeProducersResponse, describe_producers_request,
-    describe_producers_response,
+    DESCRIBE_PRODUCERS_API_DESCRIPTOR, DESCRIBE_PRODUCERS_REQUEST_DESCRIPTOR,
+    DESCRIBE_PRODUCERS_RESPONSE_DESCRIPTOR, DescribeProducersRequest, DescribeProducersResponse,
+    describe_producers_request, describe_producers_response,
 };
 pub use describe_quorum::{
-    DESCRIBE_QUORUM_REQUEST_DESCRIPTOR, DESCRIBE_QUORUM_RESPONSE_DESCRIPTOR, DescribeQuorumRequest,
-    DescribeQuorumResponse, describe_quorum_request, describe_quorum_response,
+    DESCRIBE_QUORUM_API_DESCRIPTOR, DESCRIBE_QUORUM_REQUEST_DESCRIPTOR,
+    DESCRIBE_QUORUM_RESPONSE_DESCRIPTOR, DescribeQuorumRequest, DescribeQuorumResponse,
+    describe_quorum_request, describe_quorum_response,
 };
 pub use describe_share_group_offsets::{
-    DESCRIBE_SHARE_GROUP_OFFSETS_REQUEST_DESCRIPTOR,
+    DESCRIBE_SHARE_GROUP_OFFSETS_API_DESCRIPTOR, DESCRIBE_SHARE_GROUP_OFFSETS_REQUEST_DESCRIPTOR,
     DESCRIBE_SHARE_GROUP_OFFSETS_RESPONSE_DESCRIPTOR, DescribeShareGroupOffsetsRequest,
     DescribeShareGroupOffsetsResponse, describe_share_group_offsets_request,
     describe_share_group_offsets_response,
 };
 pub use describe_topic_partitions::{
-    DESCRIBE_TOPIC_PARTITIONS_REQUEST_DESCRIPTOR, DESCRIBE_TOPIC_PARTITIONS_RESPONSE_DESCRIPTOR,
-    DescribeTopicPartitionsRequest, DescribeTopicPartitionsResponse,
-    describe_topic_partitions_request, describe_topic_partitions_response,
+    DESCRIBE_TOPIC_PARTITIONS_API_DESCRIPTOR, DESCRIBE_TOPIC_PARTITIONS_REQUEST_DESCRIPTOR,
+    DESCRIBE_TOPIC_PARTITIONS_RESPONSE_DESCRIPTOR, DescribeTopicPartitionsRequest,
+    DescribeTopicPartitionsResponse, describe_topic_partitions_request,
+    describe_topic_partitions_response,
 };
 pub use describe_transactions::{
-    DESCRIBE_TRANSACTIONS_REQUEST_DESCRIPTOR, DESCRIBE_TRANSACTIONS_RESPONSE_DESCRIPTOR,
-    DescribeTransactionsRequest, DescribeTransactionsResponse, describe_transactions_request,
-    describe_transactions_response,
+    DESCRIBE_TRANSACTIONS_API_DESCRIPTOR, DESCRIBE_TRANSACTIONS_REQUEST_DESCRIPTOR,
+    DESCRIBE_TRANSACTIONS_RESPONSE_DESCRIPTOR, DescribeTransactionsRequest,
+    DescribeTransactionsResponse, describe_transactions_request, describe_transactions_response,
 };
 pub use describe_user_scram_credentials::{
+    DESCRIBE_USER_SCRAM_CREDENTIALS_API_DESCRIPTOR,
     DESCRIBE_USER_SCRAM_CREDENTIALS_REQUEST_DESCRIPTOR,
     DESCRIBE_USER_SCRAM_CREDENTIALS_RESPONSE_DESCRIPTOR, DescribeUserScramCredentialsRequest,
     DescribeUserScramCredentialsResponse, describe_user_scram_credentials_request,
     describe_user_scram_credentials_response,
 };
 pub use elect_leaders::{
-    ELECT_LEADERS_REQUEST_DESCRIPTOR, ELECT_LEADERS_RESPONSE_DESCRIPTOR, ElectLeadersRequest,
-    ElectLeadersResponse, elect_leaders_request, elect_leaders_response,
+    ELECT_LEADERS_API_DESCRIPTOR, ELECT_LEADERS_REQUEST_DESCRIPTOR,
+    ELECT_LEADERS_RESPONSE_DESCRIPTOR, ElectLeadersRequest, ElectLeadersResponse,
+    elect_leaders_request, elect_leaders_response,
 };
 pub use end_quorum_epoch::{
-    END_QUORUM_EPOCH_REQUEST_DESCRIPTOR, END_QUORUM_EPOCH_RESPONSE_DESCRIPTOR,
-    EndQuorumEpochRequest, EndQuorumEpochResponse, end_quorum_epoch_request,
-    end_quorum_epoch_response,
+    END_QUORUM_EPOCH_API_DESCRIPTOR, END_QUORUM_EPOCH_REQUEST_DESCRIPTOR,
+    END_QUORUM_EPOCH_RESPONSE_DESCRIPTOR, EndQuorumEpochRequest, EndQuorumEpochResponse,
+    end_quorum_epoch_request, end_quorum_epoch_response,
 };
 pub use end_txn::{
-    END_TXN_REQUEST_DESCRIPTOR, END_TXN_RESPONSE_DESCRIPTOR, EndTxnRequest, EndTxnResponse,
-    end_txn_request, end_txn_response,
+    END_TXN_API_DESCRIPTOR, END_TXN_REQUEST_DESCRIPTOR, END_TXN_RESPONSE_DESCRIPTOR, EndTxnRequest,
+    EndTxnResponse, end_txn_request, end_txn_response,
 };
 pub use envelope::{
-    ENVELOPE_REQUEST_DESCRIPTOR, ENVELOPE_RESPONSE_DESCRIPTOR, EnvelopeRequest, EnvelopeResponse,
-    envelope_request, envelope_response,
+    ENVELOPE_API_DESCRIPTOR, ENVELOPE_REQUEST_DESCRIPTOR, ENVELOPE_RESPONSE_DESCRIPTOR,
+    EnvelopeRequest, EnvelopeResponse, envelope_request, envelope_response,
 };
 pub use expire_delegation_token::{
-    EXPIRE_DELEGATION_TOKEN_REQUEST_DESCRIPTOR, EXPIRE_DELEGATION_TOKEN_RESPONSE_DESCRIPTOR,
-    ExpireDelegationTokenRequest, ExpireDelegationTokenResponse, expire_delegation_token_request,
+    EXPIRE_DELEGATION_TOKEN_API_DESCRIPTOR, EXPIRE_DELEGATION_TOKEN_REQUEST_DESCRIPTOR,
+    EXPIRE_DELEGATION_TOKEN_RESPONSE_DESCRIPTOR, ExpireDelegationTokenRequest,
+    ExpireDelegationTokenResponse, expire_delegation_token_request,
     expire_delegation_token_response,
 };
 pub use fetch::{
-    FETCH_REQUEST_DESCRIPTOR, FETCH_RESPONSE_DESCRIPTOR, FetchRequest, FetchResponse,
-    fetch_request, fetch_response,
+    FETCH_API_DESCRIPTOR, FETCH_REQUEST_DESCRIPTOR, FETCH_RESPONSE_DESCRIPTOR, FetchRequest,
+    FetchResponse, fetch_request, fetch_response,
 };
 pub use fetch_snapshot::{
-    FETCH_SNAPSHOT_REQUEST_DESCRIPTOR, FETCH_SNAPSHOT_RESPONSE_DESCRIPTOR, FetchSnapshotRequest,
-    FetchSnapshotResponse, fetch_snapshot_request, fetch_snapshot_response,
+    FETCH_SNAPSHOT_API_DESCRIPTOR, FETCH_SNAPSHOT_REQUEST_DESCRIPTOR,
+    FETCH_SNAPSHOT_RESPONSE_DESCRIPTOR, FetchSnapshotRequest, FetchSnapshotResponse,
+    fetch_snapshot_request, fetch_snapshot_response,
 };
 pub use find_coordinator::{
-    FIND_COORDINATOR_REQUEST_DESCRIPTOR, FIND_COORDINATOR_RESPONSE_DESCRIPTOR,
-    FindCoordinatorRequest, FindCoordinatorResponse, find_coordinator_request,
-    find_coordinator_response,
+    FIND_COORDINATOR_API_DESCRIPTOR, FIND_COORDINATOR_REQUEST_DESCRIPTOR,
+    FIND_COORDINATOR_RESPONSE_DESCRIPTOR, FindCoordinatorRequest, FindCoordinatorResponse,
+    find_coordinator_request, find_coordinator_response,
 };
 pub use framing::{
     AbortedTxn, ConsumerProtocolAssignment, ConsumerProtocolSubscription, ControlRecordTypeSchema,
@@ -344,154 +368,163 @@ pub use framing::{
     request_header, response_header, snapshot_footer_record, snapshot_header_record, voters_record,
 };
 pub use get_telemetry_subscriptions::{
-    GET_TELEMETRY_SUBSCRIPTIONS_REQUEST_DESCRIPTOR,
+    GET_TELEMETRY_SUBSCRIPTIONS_API_DESCRIPTOR, GET_TELEMETRY_SUBSCRIPTIONS_REQUEST_DESCRIPTOR,
     GET_TELEMETRY_SUBSCRIPTIONS_RESPONSE_DESCRIPTOR, GetTelemetrySubscriptionsRequest,
     GetTelemetrySubscriptionsResponse, get_telemetry_subscriptions_request,
     get_telemetry_subscriptions_response,
 };
 pub use header_version::{request_header_version, response_header_version};
 pub use heartbeat::{
-    HEARTBEAT_REQUEST_DESCRIPTOR, HEARTBEAT_RESPONSE_DESCRIPTOR, HeartbeatRequest,
-    HeartbeatResponse, heartbeat_request, heartbeat_response,
+    HEARTBEAT_API_DESCRIPTOR, HEARTBEAT_REQUEST_DESCRIPTOR, HEARTBEAT_RESPONSE_DESCRIPTOR,
+    HeartbeatRequest, HeartbeatResponse, heartbeat_request, heartbeat_response,
 };
 pub use incremental_alter_configs::{
-    INCREMENTAL_ALTER_CONFIGS_REQUEST_DESCRIPTOR, INCREMENTAL_ALTER_CONFIGS_RESPONSE_DESCRIPTOR,
-    IncrementalAlterConfigsRequest, IncrementalAlterConfigsResponse,
-    incremental_alter_configs_request, incremental_alter_configs_response,
+    INCREMENTAL_ALTER_CONFIGS_API_DESCRIPTOR, INCREMENTAL_ALTER_CONFIGS_REQUEST_DESCRIPTOR,
+    INCREMENTAL_ALTER_CONFIGS_RESPONSE_DESCRIPTOR, IncrementalAlterConfigsRequest,
+    IncrementalAlterConfigsResponse, incremental_alter_configs_request,
+    incremental_alter_configs_response,
 };
 pub use init_producer_id::{
-    INIT_PRODUCER_ID_REQUEST_DESCRIPTOR, INIT_PRODUCER_ID_RESPONSE_DESCRIPTOR,
-    InitProducerIdRequest, InitProducerIdResponse, init_producer_id_request,
-    init_producer_id_response,
+    INIT_PRODUCER_ID_API_DESCRIPTOR, INIT_PRODUCER_ID_REQUEST_DESCRIPTOR,
+    INIT_PRODUCER_ID_RESPONSE_DESCRIPTOR, InitProducerIdRequest, InitProducerIdResponse,
+    init_producer_id_request, init_producer_id_response,
 };
 pub use initialize_share_group_state::{
-    INITIALIZE_SHARE_GROUP_STATE_REQUEST_DESCRIPTOR,
+    INITIALIZE_SHARE_GROUP_STATE_API_DESCRIPTOR, INITIALIZE_SHARE_GROUP_STATE_REQUEST_DESCRIPTOR,
     INITIALIZE_SHARE_GROUP_STATE_RESPONSE_DESCRIPTOR, InitializeShareGroupStateRequest,
     InitializeShareGroupStateResponse, initialize_share_group_state_request,
     initialize_share_group_state_response,
 };
 pub use join_group::{
-    JOIN_GROUP_REQUEST_DESCRIPTOR, JOIN_GROUP_RESPONSE_DESCRIPTOR, JoinGroupRequest,
-    JoinGroupResponse, join_group_request, join_group_response,
+    JOIN_GROUP_API_DESCRIPTOR, JOIN_GROUP_REQUEST_DESCRIPTOR, JOIN_GROUP_RESPONSE_DESCRIPTOR,
+    JoinGroupRequest, JoinGroupResponse, join_group_request, join_group_response,
 };
 pub use leave_group::{
-    LEAVE_GROUP_REQUEST_DESCRIPTOR, LEAVE_GROUP_RESPONSE_DESCRIPTOR, LeaveGroupRequest,
-    LeaveGroupResponse, leave_group_request, leave_group_response,
+    LEAVE_GROUP_API_DESCRIPTOR, LEAVE_GROUP_REQUEST_DESCRIPTOR, LEAVE_GROUP_RESPONSE_DESCRIPTOR,
+    LeaveGroupRequest, LeaveGroupResponse, leave_group_request, leave_group_response,
 };
 pub use list_config_resources::{
-    LIST_CONFIG_RESOURCES_REQUEST_DESCRIPTOR, LIST_CONFIG_RESOURCES_RESPONSE_DESCRIPTOR,
-    ListConfigResourcesRequest, ListConfigResourcesResponse, list_config_resources_request,
-    list_config_resources_response,
+    LIST_CONFIG_RESOURCES_API_DESCRIPTOR, LIST_CONFIG_RESOURCES_REQUEST_DESCRIPTOR,
+    LIST_CONFIG_RESOURCES_RESPONSE_DESCRIPTOR, ListConfigResourcesRequest,
+    ListConfigResourcesResponse, list_config_resources_request, list_config_resources_response,
 };
 pub use list_groups::{
-    LIST_GROUPS_REQUEST_DESCRIPTOR, LIST_GROUPS_RESPONSE_DESCRIPTOR, ListGroupsRequest,
-    ListGroupsResponse, list_groups_request, list_groups_response,
+    LIST_GROUPS_API_DESCRIPTOR, LIST_GROUPS_REQUEST_DESCRIPTOR, LIST_GROUPS_RESPONSE_DESCRIPTOR,
+    ListGroupsRequest, ListGroupsResponse, list_groups_request, list_groups_response,
 };
 pub use list_offsets::{
-    LIST_OFFSETS_REQUEST_DESCRIPTOR, LIST_OFFSETS_RESPONSE_DESCRIPTOR, ListOffsetsRequest,
-    ListOffsetsResponse, list_offsets_request, list_offsets_response,
+    LIST_OFFSETS_API_DESCRIPTOR, LIST_OFFSETS_REQUEST_DESCRIPTOR, LIST_OFFSETS_RESPONSE_DESCRIPTOR,
+    ListOffsetsRequest, ListOffsetsResponse, list_offsets_request, list_offsets_response,
 };
 pub use list_partition_reassignments::{
-    LIST_PARTITION_REASSIGNMENTS_REQUEST_DESCRIPTOR,
+    LIST_PARTITION_REASSIGNMENTS_API_DESCRIPTOR, LIST_PARTITION_REASSIGNMENTS_REQUEST_DESCRIPTOR,
     LIST_PARTITION_REASSIGNMENTS_RESPONSE_DESCRIPTOR, ListPartitionReassignmentsRequest,
     ListPartitionReassignmentsResponse, list_partition_reassignments_request,
     list_partition_reassignments_response,
 };
 pub use list_transactions::{
-    LIST_TRANSACTIONS_REQUEST_DESCRIPTOR, LIST_TRANSACTIONS_RESPONSE_DESCRIPTOR,
-    ListTransactionsRequest, ListTransactionsResponse, list_transactions_request,
-    list_transactions_response,
+    LIST_TRANSACTIONS_API_DESCRIPTOR, LIST_TRANSACTIONS_REQUEST_DESCRIPTOR,
+    LIST_TRANSACTIONS_RESPONSE_DESCRIPTOR, ListTransactionsRequest, ListTransactionsResponse,
+    list_transactions_request, list_transactions_response,
 };
 pub use metadata::{
-    METADATA_REQUEST_DESCRIPTOR, METADATA_RESPONSE_DESCRIPTOR, MetadataRequest, MetadataResponse,
-    metadata_request, metadata_response,
+    METADATA_API_DESCRIPTOR, METADATA_REQUEST_DESCRIPTOR, METADATA_RESPONSE_DESCRIPTOR,
+    MetadataRequest, MetadataResponse, metadata_request, metadata_response,
 };
 pub use offset_commit::{
-    OFFSET_COMMIT_REQUEST_DESCRIPTOR, OFFSET_COMMIT_RESPONSE_DESCRIPTOR, OffsetCommitRequest,
-    OffsetCommitResponse, offset_commit_request, offset_commit_response,
+    OFFSET_COMMIT_API_DESCRIPTOR, OFFSET_COMMIT_REQUEST_DESCRIPTOR,
+    OFFSET_COMMIT_RESPONSE_DESCRIPTOR, OffsetCommitRequest, OffsetCommitResponse,
+    offset_commit_request, offset_commit_response,
 };
 pub use offset_delete::{
-    OFFSET_DELETE_REQUEST_DESCRIPTOR, OFFSET_DELETE_RESPONSE_DESCRIPTOR, OffsetDeleteRequest,
-    OffsetDeleteResponse, offset_delete_request, offset_delete_response,
+    OFFSET_DELETE_API_DESCRIPTOR, OFFSET_DELETE_REQUEST_DESCRIPTOR,
+    OFFSET_DELETE_RESPONSE_DESCRIPTOR, OffsetDeleteRequest, OffsetDeleteResponse,
+    offset_delete_request, offset_delete_response,
 };
 pub use offset_fetch::{
-    OFFSET_FETCH_REQUEST_DESCRIPTOR, OFFSET_FETCH_RESPONSE_DESCRIPTOR, OffsetFetchRequest,
-    OffsetFetchResponse, offset_fetch_request, offset_fetch_response,
+    OFFSET_FETCH_API_DESCRIPTOR, OFFSET_FETCH_REQUEST_DESCRIPTOR, OFFSET_FETCH_RESPONSE_DESCRIPTOR,
+    OffsetFetchRequest, OffsetFetchResponse, offset_fetch_request, offset_fetch_response,
 };
 pub use offset_for_leader_epoch::{
-    OFFSET_FOR_LEADER_EPOCH_REQUEST_DESCRIPTOR, OFFSET_FOR_LEADER_EPOCH_RESPONSE_DESCRIPTOR,
-    OffsetForLeaderEpochRequest, OffsetForLeaderEpochResponse, offset_for_leader_epoch_request,
+    OFFSET_FOR_LEADER_EPOCH_API_DESCRIPTOR, OFFSET_FOR_LEADER_EPOCH_REQUEST_DESCRIPTOR,
+    OFFSET_FOR_LEADER_EPOCH_RESPONSE_DESCRIPTOR, OffsetForLeaderEpochRequest,
+    OffsetForLeaderEpochResponse, offset_for_leader_epoch_request,
     offset_for_leader_epoch_response,
 };
 pub use produce::{
-    PRODUCE_REQUEST_DESCRIPTOR, PRODUCE_RESPONSE_DESCRIPTOR, ProduceRequest, ProduceResponse,
-    produce_request, produce_response,
+    PRODUCE_API_DESCRIPTOR, PRODUCE_REQUEST_DESCRIPTOR, PRODUCE_RESPONSE_DESCRIPTOR,
+    ProduceRequest, ProduceResponse, produce_request, produce_response,
 };
 pub use push_telemetry::{
-    PUSH_TELEMETRY_REQUEST_DESCRIPTOR, PUSH_TELEMETRY_RESPONSE_DESCRIPTOR, PushTelemetryRequest,
-    PushTelemetryResponse, push_telemetry_request, push_telemetry_response,
+    PUSH_TELEMETRY_API_DESCRIPTOR, PUSH_TELEMETRY_REQUEST_DESCRIPTOR,
+    PUSH_TELEMETRY_RESPONSE_DESCRIPTOR, PushTelemetryRequest, PushTelemetryResponse,
+    push_telemetry_request, push_telemetry_response,
 };
 pub use read_share_group_state::{
-    READ_SHARE_GROUP_STATE_REQUEST_DESCRIPTOR, READ_SHARE_GROUP_STATE_RESPONSE_DESCRIPTOR,
-    ReadShareGroupStateRequest, ReadShareGroupStateResponse, read_share_group_state_request,
-    read_share_group_state_response,
+    READ_SHARE_GROUP_STATE_API_DESCRIPTOR, READ_SHARE_GROUP_STATE_REQUEST_DESCRIPTOR,
+    READ_SHARE_GROUP_STATE_RESPONSE_DESCRIPTOR, ReadShareGroupStateRequest,
+    ReadShareGroupStateResponse, read_share_group_state_request, read_share_group_state_response,
 };
 pub use read_share_group_state_summary::{
+    READ_SHARE_GROUP_STATE_SUMMARY_API_DESCRIPTOR,
     READ_SHARE_GROUP_STATE_SUMMARY_REQUEST_DESCRIPTOR,
     READ_SHARE_GROUP_STATE_SUMMARY_RESPONSE_DESCRIPTOR, ReadShareGroupStateSummaryRequest,
     ReadShareGroupStateSummaryResponse, read_share_group_state_summary_request,
     read_share_group_state_summary_response,
 };
-pub use registry::MESSAGE_DESCRIPTORS;
+pub use registry::{API_DESCRIPTORS, MESSAGE_DESCRIPTORS};
 pub use remove_raft_voter::{
-    REMOVE_RAFT_VOTER_REQUEST_DESCRIPTOR, REMOVE_RAFT_VOTER_RESPONSE_DESCRIPTOR,
-    RemoveRaftVoterRequest, RemoveRaftVoterResponse, remove_raft_voter_request,
-    remove_raft_voter_response,
+    REMOVE_RAFT_VOTER_API_DESCRIPTOR, REMOVE_RAFT_VOTER_REQUEST_DESCRIPTOR,
+    REMOVE_RAFT_VOTER_RESPONSE_DESCRIPTOR, RemoveRaftVoterRequest, RemoveRaftVoterResponse,
+    remove_raft_voter_request, remove_raft_voter_response,
 };
 pub use renew_delegation_token::{
-    RENEW_DELEGATION_TOKEN_REQUEST_DESCRIPTOR, RENEW_DELEGATION_TOKEN_RESPONSE_DESCRIPTOR,
-    RenewDelegationTokenRequest, RenewDelegationTokenResponse, renew_delegation_token_request,
-    renew_delegation_token_response,
+    RENEW_DELEGATION_TOKEN_API_DESCRIPTOR, RENEW_DELEGATION_TOKEN_REQUEST_DESCRIPTOR,
+    RENEW_DELEGATION_TOKEN_RESPONSE_DESCRIPTOR, RenewDelegationTokenRequest,
+    RenewDelegationTokenResponse, renew_delegation_token_request, renew_delegation_token_response,
 };
 pub use sasl_authenticate::{
-    SASL_AUTHENTICATE_REQUEST_DESCRIPTOR, SASL_AUTHENTICATE_RESPONSE_DESCRIPTOR,
-    SaslAuthenticateRequest, SaslAuthenticateResponse, sasl_authenticate_request,
-    sasl_authenticate_response,
+    SASL_AUTHENTICATE_API_DESCRIPTOR, SASL_AUTHENTICATE_REQUEST_DESCRIPTOR,
+    SASL_AUTHENTICATE_RESPONSE_DESCRIPTOR, SaslAuthenticateRequest, SaslAuthenticateResponse,
+    sasl_authenticate_request, sasl_authenticate_response,
 };
 pub use sasl_handshake::{
-    SASL_HANDSHAKE_REQUEST_DESCRIPTOR, SASL_HANDSHAKE_RESPONSE_DESCRIPTOR, SaslHandshakeRequest,
-    SaslHandshakeResponse, sasl_handshake_request, sasl_handshake_response,
+    SASL_HANDSHAKE_API_DESCRIPTOR, SASL_HANDSHAKE_REQUEST_DESCRIPTOR,
+    SASL_HANDSHAKE_RESPONSE_DESCRIPTOR, SaslHandshakeRequest, SaslHandshakeResponse,
+    sasl_handshake_request, sasl_handshake_response,
 };
 pub use share_acknowledge::{
-    SHARE_ACKNOWLEDGE_REQUEST_DESCRIPTOR, SHARE_ACKNOWLEDGE_RESPONSE_DESCRIPTOR,
-    ShareAcknowledgeRequest, ShareAcknowledgeResponse, share_acknowledge_request,
-    share_acknowledge_response,
+    SHARE_ACKNOWLEDGE_API_DESCRIPTOR, SHARE_ACKNOWLEDGE_REQUEST_DESCRIPTOR,
+    SHARE_ACKNOWLEDGE_RESPONSE_DESCRIPTOR, ShareAcknowledgeRequest, ShareAcknowledgeResponse,
+    share_acknowledge_request, share_acknowledge_response,
 };
 pub use share_fetch::{
-    SHARE_FETCH_REQUEST_DESCRIPTOR, SHARE_FETCH_RESPONSE_DESCRIPTOR, ShareFetchRequest,
-    ShareFetchResponse, share_fetch_request, share_fetch_response,
+    SHARE_FETCH_API_DESCRIPTOR, SHARE_FETCH_REQUEST_DESCRIPTOR, SHARE_FETCH_RESPONSE_DESCRIPTOR,
+    ShareFetchRequest, ShareFetchResponse, share_fetch_request, share_fetch_response,
 };
 pub use share_group_describe::{
-    SHARE_GROUP_DESCRIBE_REQUEST_DESCRIPTOR, SHARE_GROUP_DESCRIBE_RESPONSE_DESCRIPTOR,
-    ShareGroupDescribeRequest, ShareGroupDescribeResponse, share_group_describe_request,
-    share_group_describe_response,
+    SHARE_GROUP_DESCRIBE_API_DESCRIPTOR, SHARE_GROUP_DESCRIBE_REQUEST_DESCRIPTOR,
+    SHARE_GROUP_DESCRIBE_RESPONSE_DESCRIPTOR, ShareGroupDescribeRequest,
+    ShareGroupDescribeResponse, share_group_describe_request, share_group_describe_response,
 };
 pub use share_group_heartbeat::{
-    SHARE_GROUP_HEARTBEAT_REQUEST_DESCRIPTOR, SHARE_GROUP_HEARTBEAT_RESPONSE_DESCRIPTOR,
-    ShareGroupHeartbeatRequest, ShareGroupHeartbeatResponse, share_group_heartbeat_request,
-    share_group_heartbeat_response,
+    SHARE_GROUP_HEARTBEAT_API_DESCRIPTOR, SHARE_GROUP_HEARTBEAT_REQUEST_DESCRIPTOR,
+    SHARE_GROUP_HEARTBEAT_RESPONSE_DESCRIPTOR, ShareGroupHeartbeatRequest,
+    ShareGroupHeartbeatResponse, share_group_heartbeat_request, share_group_heartbeat_response,
 };
 pub use streams_group_describe::{
-    STREAMS_GROUP_DESCRIBE_REQUEST_DESCRIPTOR, STREAMS_GROUP_DESCRIBE_RESPONSE_DESCRIPTOR,
-    StreamsGroupDescribeRequest, StreamsGroupDescribeResponse, streams_group_describe_request,
-    streams_group_describe_response,
+    STREAMS_GROUP_DESCRIBE_API_DESCRIPTOR, STREAMS_GROUP_DESCRIBE_REQUEST_DESCRIPTOR,
+    STREAMS_GROUP_DESCRIBE_RESPONSE_DESCRIPTOR, StreamsGroupDescribeRequest,
+    StreamsGroupDescribeResponse, streams_group_describe_request, streams_group_describe_response,
 };
 pub use streams_group_heartbeat::{
-    STREAMS_GROUP_HEARTBEAT_REQUEST_DESCRIPTOR, STREAMS_GROUP_HEARTBEAT_RESPONSE_DESCRIPTOR,
-    StreamsGroupHeartbeatRequest, StreamsGroupHeartbeatResponse, streams_group_heartbeat_request,
+    STREAMS_GROUP_HEARTBEAT_API_DESCRIPTOR, STREAMS_GROUP_HEARTBEAT_REQUEST_DESCRIPTOR,
+    STREAMS_GROUP_HEARTBEAT_RESPONSE_DESCRIPTOR, StreamsGroupHeartbeatRequest,
+    StreamsGroupHeartbeatResponse, streams_group_heartbeat_request,
     streams_group_heartbeat_response,
 };
 pub use streams_group_topology_description_update::{
+    STREAMS_GROUP_TOPOLOGY_DESCRIPTION_UPDATE_API_DESCRIPTOR,
     STREAMS_GROUP_TOPOLOGY_DESCRIPTION_UPDATE_REQUEST_DESCRIPTOR,
     STREAMS_GROUP_TOPOLOGY_DESCRIPTION_UPDATE_RESPONSE_DESCRIPTOR,
     StreamsGroupTopologyDescriptionUpdateRequest, StreamsGroupTopologyDescriptionUpdateResponse,
@@ -499,39 +532,41 @@ pub use streams_group_topology_description_update::{
     streams_group_topology_description_update_response,
 };
 pub use sync_group::{
-    SYNC_GROUP_REQUEST_DESCRIPTOR, SYNC_GROUP_RESPONSE_DESCRIPTOR, SyncGroupRequest,
-    SyncGroupResponse, sync_group_request, sync_group_response,
+    SYNC_GROUP_API_DESCRIPTOR, SYNC_GROUP_REQUEST_DESCRIPTOR, SYNC_GROUP_RESPONSE_DESCRIPTOR,
+    SyncGroupRequest, SyncGroupResponse, sync_group_request, sync_group_response,
 };
 pub use txn_offset_commit::{
-    TXN_OFFSET_COMMIT_REQUEST_DESCRIPTOR, TXN_OFFSET_COMMIT_RESPONSE_DESCRIPTOR,
-    TxnOffsetCommitRequest, TxnOffsetCommitResponse, txn_offset_commit_request,
-    txn_offset_commit_response,
+    TXN_OFFSET_COMMIT_API_DESCRIPTOR, TXN_OFFSET_COMMIT_REQUEST_DESCRIPTOR,
+    TXN_OFFSET_COMMIT_RESPONSE_DESCRIPTOR, TxnOffsetCommitRequest, TxnOffsetCommitResponse,
+    txn_offset_commit_request, txn_offset_commit_response,
 };
 pub use unregister_broker::{
-    UNREGISTER_BROKER_REQUEST_DESCRIPTOR, UNREGISTER_BROKER_RESPONSE_DESCRIPTOR,
-    UnregisterBrokerRequest, UnregisterBrokerResponse, unregister_broker_request,
-    unregister_broker_response,
+    UNREGISTER_BROKER_API_DESCRIPTOR, UNREGISTER_BROKER_REQUEST_DESCRIPTOR,
+    UNREGISTER_BROKER_RESPONSE_DESCRIPTOR, UnregisterBrokerRequest, UnregisterBrokerResponse,
+    unregister_broker_request, unregister_broker_response,
 };
 pub use update_features::{
-    UPDATE_FEATURES_REQUEST_DESCRIPTOR, UPDATE_FEATURES_RESPONSE_DESCRIPTOR, UpdateFeaturesRequest,
-    UpdateFeaturesResponse, update_features_request, update_features_response,
+    UPDATE_FEATURES_API_DESCRIPTOR, UPDATE_FEATURES_REQUEST_DESCRIPTOR,
+    UPDATE_FEATURES_RESPONSE_DESCRIPTOR, UpdateFeaturesRequest, UpdateFeaturesResponse,
+    update_features_request, update_features_response,
 };
 pub use update_raft_voter::{
-    UPDATE_RAFT_VOTER_REQUEST_DESCRIPTOR, UPDATE_RAFT_VOTER_RESPONSE_DESCRIPTOR,
-    UpdateRaftVoterRequest, UpdateRaftVoterResponse, update_raft_voter_request,
-    update_raft_voter_response,
+    UPDATE_RAFT_VOTER_API_DESCRIPTOR, UPDATE_RAFT_VOTER_REQUEST_DESCRIPTOR,
+    UPDATE_RAFT_VOTER_RESPONSE_DESCRIPTOR, UpdateRaftVoterRequest, UpdateRaftVoterResponse,
+    update_raft_voter_request, update_raft_voter_response,
 };
 pub use vote::{
-    VOTE_REQUEST_DESCRIPTOR, VOTE_RESPONSE_DESCRIPTOR, VoteRequest, VoteResponse, vote_request,
-    vote_response,
+    VOTE_API_DESCRIPTOR, VOTE_REQUEST_DESCRIPTOR, VOTE_RESPONSE_DESCRIPTOR, VoteRequest,
+    VoteResponse, vote_request, vote_response,
 };
 pub use write_share_group_state::{
-    WRITE_SHARE_GROUP_STATE_REQUEST_DESCRIPTOR, WRITE_SHARE_GROUP_STATE_RESPONSE_DESCRIPTOR,
-    WriteShareGroupStateRequest, WriteShareGroupStateResponse, write_share_group_state_request,
+    WRITE_SHARE_GROUP_STATE_API_DESCRIPTOR, WRITE_SHARE_GROUP_STATE_REQUEST_DESCRIPTOR,
+    WRITE_SHARE_GROUP_STATE_RESPONSE_DESCRIPTOR, WriteShareGroupStateRequest,
+    WriteShareGroupStateResponse, write_share_group_state_request,
     write_share_group_state_response,
 };
 pub use write_txn_markers::{
-    WRITE_TXN_MARKERS_REQUEST_DESCRIPTOR, WRITE_TXN_MARKERS_RESPONSE_DESCRIPTOR,
-    WriteTxnMarkersRequest, WriteTxnMarkersResponse, write_txn_markers_request,
-    write_txn_markers_response,
+    WRITE_TXN_MARKERS_API_DESCRIPTOR, WRITE_TXN_MARKERS_REQUEST_DESCRIPTOR,
+    WRITE_TXN_MARKERS_RESPONSE_DESCRIPTOR, WriteTxnMarkersRequest, WriteTxnMarkersResponse,
+    write_txn_markers_request, write_txn_markers_response,
 };

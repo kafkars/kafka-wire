@@ -15,7 +15,7 @@ pub mod allocate_producer_ids_request {
         KafkaDecode, KafkaEncode, TaggedFields, VersionRange, encode_into_with, encoded_len_with,
     };
 
-    use crate::{KafkaMessage, KafkaRequest, RequestResponsePair};
+    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, RequestResponsePair};
 
     /// Request body for the `AllocateProducerIds` API.
     #[non_exhaustive]
@@ -47,7 +47,7 @@ pub mod allocate_producer_ids_request {
 
     impl KafkaRequest for AllocateProducerIdsRequest {
         const API_KEY: ApiKey = ApiKey::new(67);
-        const LATEST_VERSION_UNSTABLE: bool = false;
+        const API_DESCRIPTOR: &'static ApiDescriptor = &super::ALLOCATE_PRODUCER_IDS_API_DESCRIPTOR;
     }
 
     impl RequestResponsePair for AllocateProducerIdsRequest {
@@ -268,7 +268,7 @@ pub mod allocate_producer_ids_response {
 
 use kafka_wire_core::VersionRange;
 
-use crate::{MessageDescriptor, MessageDirection};
+use crate::{ApiDescriptor, MessageDescriptor, MessageDirection};
 
 pub use allocate_producer_ids_request::AllocateProducerIdsRequest;
 pub use allocate_producer_ids_response::AllocateProducerIdsResponse;
@@ -280,7 +280,6 @@ pub const ALLOCATE_PRODUCER_IDS_REQUEST_DESCRIPTOR: MessageDescriptor = MessageD
     MessageDirection::Request,
     VersionRange::new(0, 0),
     Some(VersionRange::new(0, 0)),
-    false,
 );
 
 /// Static metadata for [`AllocateProducerIdsResponse`].
@@ -288,6 +287,15 @@ pub const ALLOCATE_PRODUCER_IDS_RESPONSE_DESCRIPTOR: MessageDescriptor = Message
     67,
     "AllocateProducerIdsResponse",
     MessageDirection::Response,
+    VersionRange::new(0, 0),
+    Some(VersionRange::new(0, 0)),
+);
+
+/// Static pair metadata for the `AllocateProducerIds` API.
+pub const ALLOCATE_PRODUCER_IDS_API_DESCRIPTOR: ApiDescriptor = ApiDescriptor::new(
+    67,
+    &ALLOCATE_PRODUCER_IDS_REQUEST_DESCRIPTOR,
+    &ALLOCATE_PRODUCER_IDS_RESPONSE_DESCRIPTOR,
     VersionRange::new(0, 0),
     Some(VersionRange::new(0, 0)),
     false,

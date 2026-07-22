@@ -16,7 +16,7 @@ pub mod vote_request {
         encoded_len_with,
     };
 
-    use crate::{KafkaMessage, KafkaRequest, RequestResponsePair};
+    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, RequestResponsePair};
 
     /// `TopicData` as declared by the `Vote` API.
     #[non_exhaustive]
@@ -347,7 +347,7 @@ pub mod vote_request {
 
     impl KafkaRequest for VoteRequest {
         const API_KEY: ApiKey = ApiKey::new(52);
-        const LATEST_VERSION_UNSTABLE: bool = false;
+        const API_DESCRIPTOR: &'static ApiDescriptor = &super::VOTE_API_DESCRIPTOR;
     }
 
     impl RequestResponsePair for VoteRequest {
@@ -1000,7 +1000,7 @@ pub mod vote_response {
 
 use kafka_wire_core::VersionRange;
 
-use crate::{MessageDescriptor, MessageDirection};
+use crate::{ApiDescriptor, MessageDescriptor, MessageDirection};
 
 pub use vote_request::VoteRequest;
 pub use vote_response::VoteResponse;
@@ -1012,7 +1012,6 @@ pub const VOTE_REQUEST_DESCRIPTOR: MessageDescriptor = MessageDescriptor::new(
     MessageDirection::Request,
     VersionRange::new(0, 2),
     Some(VersionRange::new(0, 2)),
-    false,
 );
 
 /// Static metadata for [`VoteResponse`].
@@ -1020,6 +1019,15 @@ pub const VOTE_RESPONSE_DESCRIPTOR: MessageDescriptor = MessageDescriptor::new(
     52,
     "VoteResponse",
     MessageDirection::Response,
+    VersionRange::new(0, 2),
+    Some(VersionRange::new(0, 2)),
+);
+
+/// Static pair metadata for the `Vote` API.
+pub const VOTE_API_DESCRIPTOR: ApiDescriptor = ApiDescriptor::new(
+    52,
+    &VOTE_REQUEST_DESCRIPTOR,
+    &VOTE_RESPONSE_DESCRIPTOR,
     VersionRange::new(0, 2),
     Some(VersionRange::new(0, 2)),
     false,

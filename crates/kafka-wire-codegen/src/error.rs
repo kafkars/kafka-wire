@@ -101,27 +101,25 @@ pub enum GenerationError {
     /// The schema front end rejected a pinned source.
     #[error(transparent)]
     Schema(#[from] kafka_wire_schema::SchemaError),
-    /// Two messages claimed the same direction for one API key.
-    #[error("duplicate {direction} message for API key {api_key}: {left} and {right}")]
-    DuplicateDirection {
-        /// API key.
-        api_key: i16,
-        /// Request or response.
-        direction: &'static str,
-        /// First message.
-        left: String,
-        /// Second message.
-        right: String,
-    },
-    /// One request and response sharing an API key had different API stems.
-    #[error("API key {api_key} has mismatched pair names: {request} and {response}")]
-    PairName {
-        /// API key.
-        api_key: i16,
-        /// Request name.
-        request: String,
-        /// Response name.
-        response: String,
+    /// Whole-corpus semantics violated a cross-source invariant.
+    #[error(transparent)]
+    CorpusValidation(#[from] kafka_wire_schema::ValidationErrors),
+    /// Request/response grouping rejected an incomplete or incompatible pair.
+    #[error(transparent)]
+    Pair(#[from] crate::PairError),
+    /// Two producers claimed one emitted Rust symbol namespace.
+    #[error(
+        "generated symbol collision for `{symbol}` in {namespace}: first producer `{first}`, second producer `{second}`"
+    )]
+    GeneratedSymbolCollision {
+        /// Rust namespace and scope where both claims land.
+        namespace: String,
+        /// Colliding emitted identifier.
+        symbol: String,
+        /// First message, struct, fixed output, or handwritten item.
+        first: String,
+        /// Later claimant.
+        second: String,
     },
     /// Two compiler outputs claimed one generated-tree path.
     #[error(

@@ -16,7 +16,7 @@ pub mod share_group_heartbeat_request {
         encoded_len_with,
     };
 
-    use crate::{KafkaMessage, KafkaRequest, RequestResponsePair};
+    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, RequestResponsePair};
 
     /// Request body for the `ShareGroupHeartbeat` API.
     #[non_exhaustive]
@@ -44,7 +44,7 @@ pub mod share_group_heartbeat_request {
 
     impl KafkaRequest for ShareGroupHeartbeatRequest {
         const API_KEY: ApiKey = ApiKey::new(76);
-        const LATEST_VERSION_UNSTABLE: bool = false;
+        const API_DESCRIPTOR: &'static ApiDescriptor = &super::SHARE_GROUP_HEARTBEAT_API_DESCRIPTOR;
     }
 
     impl RequestResponsePair for ShareGroupHeartbeatRequest {
@@ -556,7 +556,7 @@ pub mod share_group_heartbeat_response {
 
 use kafka_wire_core::VersionRange;
 
-use crate::{MessageDescriptor, MessageDirection};
+use crate::{ApiDescriptor, MessageDescriptor, MessageDirection};
 
 pub use share_group_heartbeat_request::ShareGroupHeartbeatRequest;
 pub use share_group_heartbeat_response::ShareGroupHeartbeatResponse;
@@ -568,7 +568,6 @@ pub const SHARE_GROUP_HEARTBEAT_REQUEST_DESCRIPTOR: MessageDescriptor = MessageD
     MessageDirection::Request,
     VersionRange::new(1, 1),
     Some(VersionRange::new(1, 1)),
-    false,
 );
 
 /// Static metadata for [`ShareGroupHeartbeatResponse`].
@@ -576,6 +575,15 @@ pub const SHARE_GROUP_HEARTBEAT_RESPONSE_DESCRIPTOR: MessageDescriptor = Message
     76,
     "ShareGroupHeartbeatResponse",
     MessageDirection::Response,
+    VersionRange::new(1, 1),
+    Some(VersionRange::new(1, 1)),
+);
+
+/// Static pair metadata for the `ShareGroupHeartbeat` API.
+pub const SHARE_GROUP_HEARTBEAT_API_DESCRIPTOR: ApiDescriptor = ApiDescriptor::new(
+    76,
+    &SHARE_GROUP_HEARTBEAT_REQUEST_DESCRIPTOR,
+    &SHARE_GROUP_HEARTBEAT_RESPONSE_DESCRIPTOR,
     VersionRange::new(1, 1),
     Some(VersionRange::new(1, 1)),
     false,

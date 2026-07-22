@@ -13,7 +13,7 @@ mod support;
 
 use std::fs;
 
-use kafka_wire_codegen::{GenerationError, GenerationMode};
+use kafka_wire_codegen::{GenerationError, GenerationMode, PairError, render_corpus};
 use support::{COMMIT, REFUSED, SUPPORTED, Workspace, hex_digest, read, repository_root, write};
 
 #[test]
@@ -86,8 +86,12 @@ fn a_refused_schema_leaves_no_partial_tree_behind() {
         .err()
         .unwrap_or_else(|| panic!("the backend rendered a schema outside its slice"));
     assert!(
-        matches!(error, GenerationError::UnsupportedSchema { .. }),
-        "a schema outside the slice must be refused by name: {error:?}"
+        matches!(
+            error,
+            GenerationError::UnsupportedSchema { .. }
+                | GenerationError::Pair(PairError::MissingDirection { .. })
+        ),
+        "an incomplete or unsupported API must be refused by name: {error:?}"
     );
     assert!(
         workspace.tree().is_empty(),
@@ -212,4 +216,71 @@ fn a_manifest_must_name_the_expected_schema_and_generator() {
         assert!(matches!(error, GenerationError::UnownedOutputTree { .. }));
         assert_eq!(read(&handwritten), "//! Preserve me.\n");
     }
+}
+
+#[test]
+fn generation_and_corpus_probing_run_cross_schema_validation() {
+    let workspace = Workspace::pinning("corpus-validation", &SUPPORTED);
+    replace_locked_schema(
+        &workspace,
+        SUPPORTED[0],
+        r#"{
+          "apiKey": 17,
+          "type": "request",
+          "name": "SaslHandshakeRequest",
+          "validVersions": "0-1",
+          "flexibleVersions": "none",
+          "fields": [
+            {
+              "name": "Entries",
+              "type": "[]SaslHandshakeRequest",
+              "versions": "0+",
+              "fields": [
+                { "name": "Value", "type": "string", "versions": "0+" }
+              ]
+            }
+          ]
+        }"#,
+    );
+
+    for error in [
+        workspace
+            .generate(GenerationMode::Write)
+            .err()
+            .unwrap_or_else(|| panic!("generation accepted a cross-schema collision")),
+        render_corpus(&workspace.root)
+            .err()
+            .unwrap_or_else(|| panic!("corpus probing accepted a cross-schema collision")),
+    ] {
+        let GenerationError::CorpusValidation(errors) = error else {
+            panic!("cross-schema collision produced the wrong error: {error:?}");
+        };
+        assert!(errors.0.iter().any(|error| {
+            error.code == "KAFKA_SCHEMA_QUALIFIED_STRUCT_COLLISION"
+                && error.message.contains("message `SaslHandshakeRequest`")
+                && error.message.contains("struct `SaslHandshakeRequest`")
+        }));
+    }
+    assert!(workspace.tree().is_empty());
+}
+
+fn replace_locked_schema(workspace: &Workspace, filename: &str, source: &str) {
+    let path = workspace
+        .root
+        .join("spec/upstream/apache-kafka")
+        .join(COMMIT)
+        .join("message")
+        .join(filename);
+    let old = fs::read(&path).unwrap_or_else(|error| panic!("read {}: {error}", path.display()));
+    let old_digest = hex_digest(&old);
+    write(&path, source);
+    let new_digest = hex_digest(source.as_bytes());
+    let lock = workspace.root.join("spec/protocol.lock");
+    let updated = read(&lock).replace(&old_digest, &new_digest);
+    assert_ne!(
+        updated,
+        read(&lock),
+        "fixture digest was not present in lock"
+    );
+    write(&lock, &updated);
 }

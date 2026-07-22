@@ -19,7 +19,7 @@ mod metadata_test;
 #[cfg(test)]
 mod structs_test;
 
-pub(crate) use descriptor::descriptor_name;
+pub(crate) use descriptor::{api_descriptor_name, descriptor_name};
 pub(crate) use file::render_api;
 pub(crate) use header::render_unkeyed;
 pub(crate) use imports::spell;

@@ -16,7 +16,7 @@ pub mod end_txn_request {
         encoded_len_with,
     };
 
-    use crate::{KafkaMessage, KafkaRequest, RequestResponsePair};
+    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, RequestResponsePair};
 
     /// Request body for the `EndTxn` API.
     #[non_exhaustive]
@@ -42,7 +42,7 @@ pub mod end_txn_request {
 
     impl KafkaRequest for EndTxnRequest {
         const API_KEY: ApiKey = ApiKey::new(26);
-        const LATEST_VERSION_UNSTABLE: bool = false;
+        const API_DESCRIPTOR: &'static ApiDescriptor = &super::END_TXN_API_DESCRIPTOR;
     }
 
     impl RequestResponsePair for EndTxnRequest {
@@ -301,7 +301,7 @@ pub mod end_txn_response {
 
 use kafka_wire_core::VersionRange;
 
-use crate::{MessageDescriptor, MessageDirection};
+use crate::{ApiDescriptor, MessageDescriptor, MessageDirection};
 
 pub use end_txn_request::EndTxnRequest;
 pub use end_txn_response::EndTxnResponse;
@@ -313,7 +313,6 @@ pub const END_TXN_REQUEST_DESCRIPTOR: MessageDescriptor = MessageDescriptor::new
     MessageDirection::Request,
     VersionRange::new(0, 5),
     Some(VersionRange::new(3, 5)),
-    false,
 );
 
 /// Static metadata for [`EndTxnResponse`].
@@ -321,6 +320,15 @@ pub const END_TXN_RESPONSE_DESCRIPTOR: MessageDescriptor = MessageDescriptor::ne
     26,
     "EndTxnResponse",
     MessageDirection::Response,
+    VersionRange::new(0, 5),
+    Some(VersionRange::new(3, 5)),
+);
+
+/// Static pair metadata for the `EndTxn` API.
+pub const END_TXN_API_DESCRIPTOR: ApiDescriptor = ApiDescriptor::new(
+    26,
+    &END_TXN_REQUEST_DESCRIPTOR,
+    &END_TXN_RESPONSE_DESCRIPTOR,
     VersionRange::new(0, 5),
     Some(VersionRange::new(3, 5)),
     false,

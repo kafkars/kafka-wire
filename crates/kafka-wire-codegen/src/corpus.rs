@@ -16,9 +16,11 @@ use std::{collections::BTreeMap, path::Path};
 use crate::{
     GenerationError,
     corpus_output::{insert_probe_file, refusal_cause, render_group},
+    corpus_validation::validate_source_corpus,
     format::format_rendered_rust,
     group::group_sources,
     lockfile::ProtocolLock,
+    namespace::validate_generated_namespace,
     overrides::HeaderOverrides,
     render::{
         render_fuzz_dispatch, render_header_version, render_module_file, render_registry,
@@ -93,6 +95,7 @@ pub fn render_corpus(workspace_root: impl AsRef<Path>) -> Result<CorpusRender, G
     let workspace = workspace_root.as_ref();
     let lock = ProtocolLock::read(&workspace.join("spec/protocol.lock"))?;
     let corpus = load_every_source(workspace, &lock)?;
+    validate_source_corpus(&corpus.sources)?;
 
     let mut probe = CorpusRender::default();
     let mut producers = BTreeMap::new();
@@ -103,6 +106,7 @@ pub fn render_corpus(workspace_root: impl AsRef<Path>) -> Result<CorpusRender, G
     }
 
     let grouped = group_sources(corpus.sources)?;
+    validate_generated_namespace(&grouped.api, &grouped.unkeyed)?;
     let overrides = HeaderOverrides::read(workspace, &lock, &grouped.api, &grouped.unkeyed)?;
 
     // Headers and data schemas answer to no API key and render into one module

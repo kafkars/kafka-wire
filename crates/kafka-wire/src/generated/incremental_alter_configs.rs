@@ -16,7 +16,7 @@ pub mod incremental_alter_configs_request {
         encoded_len_with,
     };
 
-    use crate::{KafkaMessage, KafkaRequest, RequestResponsePair};
+    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, RequestResponsePair};
 
     /// `AlterConfigsResource` as declared by the `IncrementalAlterConfigs` API.
     #[non_exhaustive]
@@ -332,7 +332,8 @@ pub mod incremental_alter_configs_request {
 
     impl KafkaRequest for IncrementalAlterConfigsRequest {
         const API_KEY: ApiKey = ApiKey::new(44);
-        const LATEST_VERSION_UNSTABLE: bool = false;
+        const API_DESCRIPTOR: &'static ApiDescriptor =
+            &super::INCREMENTAL_ALTER_CONFIGS_API_DESCRIPTOR;
     }
 
     impl RequestResponsePair for IncrementalAlterConfigsRequest {
@@ -736,7 +737,7 @@ pub mod incremental_alter_configs_response {
 
 use kafka_wire_core::VersionRange;
 
-use crate::{MessageDescriptor, MessageDirection};
+use crate::{ApiDescriptor, MessageDescriptor, MessageDirection};
 
 pub use incremental_alter_configs_request::IncrementalAlterConfigsRequest;
 pub use incremental_alter_configs_response::IncrementalAlterConfigsResponse;
@@ -748,7 +749,6 @@ pub const INCREMENTAL_ALTER_CONFIGS_REQUEST_DESCRIPTOR: MessageDescriptor = Mess
     MessageDirection::Request,
     VersionRange::new(0, 1),
     Some(VersionRange::new(1, 1)),
-    false,
 );
 
 /// Static metadata for [`IncrementalAlterConfigsResponse`].
@@ -756,6 +756,15 @@ pub const INCREMENTAL_ALTER_CONFIGS_RESPONSE_DESCRIPTOR: MessageDescriptor = Mes
     44,
     "IncrementalAlterConfigsResponse",
     MessageDirection::Response,
+    VersionRange::new(0, 1),
+    Some(VersionRange::new(1, 1)),
+);
+
+/// Static pair metadata for the `IncrementalAlterConfigs` API.
+pub const INCREMENTAL_ALTER_CONFIGS_API_DESCRIPTOR: ApiDescriptor = ApiDescriptor::new(
+    44,
+    &INCREMENTAL_ALTER_CONFIGS_REQUEST_DESCRIPTOR,
+    &INCREMENTAL_ALTER_CONFIGS_RESPONSE_DESCRIPTOR,
     VersionRange::new(0, 1),
     Some(VersionRange::new(1, 1)),
     false,

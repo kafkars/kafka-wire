@@ -134,8 +134,8 @@ pub(crate) const LIB: &str = "//! Compile probe for the whole pinned protocol co
      #![allow(dead_code, unused_imports)]\n\
      \n\
      pub use kafka_wire::{\n\
-     \x20   KafkaMessage, KafkaRequest, KafkaResponse, MessageDescriptor, MessageDirection,\n\
-     \x20   RequestResponsePair,\n\
+     \x20   ApiDescriptor, KafkaMessage, KafkaRequest, KafkaResponse, MessageDescriptor,\n\
+     \x20   MessageDirection, RequestResponsePair,\n\
      };\n\
      \n\
      mod generated;\n\

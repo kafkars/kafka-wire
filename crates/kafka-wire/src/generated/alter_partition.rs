@@ -16,7 +16,7 @@ pub mod alter_partition_request {
         encoded_len_with,
     };
 
-    use crate::{KafkaMessage, KafkaRequest, RequestResponsePair};
+    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, RequestResponsePair};
 
     /// `TopicData` as declared by the `AlterPartition` API.
     #[non_exhaustive]
@@ -477,7 +477,7 @@ pub mod alter_partition_request {
 
     impl KafkaRequest for AlterPartitionRequest {
         const API_KEY: ApiKey = ApiKey::new(56);
-        const LATEST_VERSION_UNSTABLE: bool = false;
+        const API_DESCRIPTOR: &'static ApiDescriptor = &super::ALTER_PARTITION_API_DESCRIPTOR;
     }
 
     impl RequestResponsePair for AlterPartitionRequest {
@@ -987,7 +987,7 @@ pub mod alter_partition_response {
 
 use kafka_wire_core::VersionRange;
 
-use crate::{MessageDescriptor, MessageDirection};
+use crate::{ApiDescriptor, MessageDescriptor, MessageDirection};
 
 pub use alter_partition_request::AlterPartitionRequest;
 pub use alter_partition_response::AlterPartitionResponse;
@@ -999,7 +999,6 @@ pub const ALTER_PARTITION_REQUEST_DESCRIPTOR: MessageDescriptor = MessageDescrip
     MessageDirection::Request,
     VersionRange::new(2, 3),
     Some(VersionRange::new(2, 3)),
-    false,
 );
 
 /// Static metadata for [`AlterPartitionResponse`].
@@ -1007,6 +1006,15 @@ pub const ALTER_PARTITION_RESPONSE_DESCRIPTOR: MessageDescriptor = MessageDescri
     56,
     "AlterPartitionResponse",
     MessageDirection::Response,
+    VersionRange::new(2, 3),
+    Some(VersionRange::new(2, 3)),
+);
+
+/// Static pair metadata for the `AlterPartition` API.
+pub const ALTER_PARTITION_API_DESCRIPTOR: ApiDescriptor = ApiDescriptor::new(
+    56,
+    &ALTER_PARTITION_REQUEST_DESCRIPTOR,
+    &ALTER_PARTITION_RESPONSE_DESCRIPTOR,
     VersionRange::new(2, 3),
     Some(VersionRange::new(2, 3)),
     false,

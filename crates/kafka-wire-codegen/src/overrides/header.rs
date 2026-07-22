@@ -119,17 +119,7 @@ impl HeaderOverrides {
                         exception.api_key
                     ),
                 })?;
-            let response =
-                group
-                    .response
-                    .as_ref()
-                    .ok_or_else(|| GenerationError::InvalidOverride {
-                        path: path.to_path_buf(),
-                        reason: format!(
-                            "api key {} has no pinned response schema",
-                            exception.api_key
-                        ),
-                    })?;
+            let response = &group.response;
             if exception
                 .versions
                 .intersection(&response.message.valid_versions)

@@ -16,7 +16,7 @@ pub mod consumer_group_heartbeat_request {
         encoded_len_with,
     };
 
-    use crate::{KafkaMessage, KafkaRequest, RequestResponsePair};
+    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, RequestResponsePair};
 
     /// `TopicPartitions` as declared by the `ConsumerGroupHeartbeat` API.
     #[non_exhaustive]
@@ -194,7 +194,8 @@ pub mod consumer_group_heartbeat_request {
 
     impl KafkaRequest for ConsumerGroupHeartbeatRequest {
         const API_KEY: ApiKey = ApiKey::new(68);
-        const LATEST_VERSION_UNSTABLE: bool = false;
+        const API_DESCRIPTOR: &'static ApiDescriptor =
+            &super::CONSUMER_GROUP_HEARTBEAT_API_DESCRIPTOR;
     }
 
     impl RequestResponsePair for ConsumerGroupHeartbeatRequest {
@@ -753,7 +754,7 @@ pub mod consumer_group_heartbeat_response {
 
 use kafka_wire_core::VersionRange;
 
-use crate::{MessageDescriptor, MessageDirection};
+use crate::{ApiDescriptor, MessageDescriptor, MessageDirection};
 
 pub use consumer_group_heartbeat_request::ConsumerGroupHeartbeatRequest;
 pub use consumer_group_heartbeat_response::ConsumerGroupHeartbeatResponse;
@@ -765,7 +766,6 @@ pub const CONSUMER_GROUP_HEARTBEAT_REQUEST_DESCRIPTOR: MessageDescriptor = Messa
     MessageDirection::Request,
     VersionRange::new(0, 1),
     Some(VersionRange::new(0, 1)),
-    false,
 );
 
 /// Static metadata for [`ConsumerGroupHeartbeatResponse`].
@@ -773,6 +773,15 @@ pub const CONSUMER_GROUP_HEARTBEAT_RESPONSE_DESCRIPTOR: MessageDescriptor = Mess
     68,
     "ConsumerGroupHeartbeatResponse",
     MessageDirection::Response,
+    VersionRange::new(0, 1),
+    Some(VersionRange::new(0, 1)),
+);
+
+/// Static pair metadata for the `ConsumerGroupHeartbeat` API.
+pub const CONSUMER_GROUP_HEARTBEAT_API_DESCRIPTOR: ApiDescriptor = ApiDescriptor::new(
+    68,
+    &CONSUMER_GROUP_HEARTBEAT_REQUEST_DESCRIPTOR,
+    &CONSUMER_GROUP_HEARTBEAT_RESPONSE_DESCRIPTOR,
     VersionRange::new(0, 1),
     Some(VersionRange::new(0, 1)),
     false,

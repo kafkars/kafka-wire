@@ -16,7 +16,7 @@ pub mod describe_client_quotas_request {
         encoded_len_with,
     };
 
-    use crate::{KafkaMessage, KafkaRequest, RequestResponsePair};
+    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, RequestResponsePair};
 
     /// `ComponentData` as declared by the `DescribeClientQuotas` API.
     #[non_exhaustive]
@@ -186,7 +186,8 @@ pub mod describe_client_quotas_request {
 
     impl KafkaRequest for DescribeClientQuotasRequest {
         const API_KEY: ApiKey = ApiKey::new(48);
-        const LATEST_VERSION_UNSTABLE: bool = false;
+        const API_DESCRIPTOR: &'static ApiDescriptor =
+            &super::DESCRIBE_CLIENT_QUOTAS_API_DESCRIPTOR;
     }
 
     impl RequestResponsePair for DescribeClientQuotasRequest {
@@ -896,7 +897,7 @@ pub mod describe_client_quotas_response {
 
 use kafka_wire_core::VersionRange;
 
-use crate::{MessageDescriptor, MessageDirection};
+use crate::{ApiDescriptor, MessageDescriptor, MessageDirection};
 
 pub use describe_client_quotas_request::DescribeClientQuotasRequest;
 pub use describe_client_quotas_response::DescribeClientQuotasResponse;
@@ -908,7 +909,6 @@ pub const DESCRIBE_CLIENT_QUOTAS_REQUEST_DESCRIPTOR: MessageDescriptor = Message
     MessageDirection::Request,
     VersionRange::new(0, 1),
     Some(VersionRange::new(1, 1)),
-    false,
 );
 
 /// Static metadata for [`DescribeClientQuotasResponse`].
@@ -916,6 +916,15 @@ pub const DESCRIBE_CLIENT_QUOTAS_RESPONSE_DESCRIPTOR: MessageDescriptor = Messag
     48,
     "DescribeClientQuotasResponse",
     MessageDirection::Response,
+    VersionRange::new(0, 1),
+    Some(VersionRange::new(1, 1)),
+);
+
+/// Static pair metadata for the `DescribeClientQuotas` API.
+pub const DESCRIBE_CLIENT_QUOTAS_API_DESCRIPTOR: ApiDescriptor = ApiDescriptor::new(
+    48,
+    &DESCRIBE_CLIENT_QUOTAS_REQUEST_DESCRIPTOR,
+    &DESCRIBE_CLIENT_QUOTAS_RESPONSE_DESCRIPTOR,
     VersionRange::new(0, 1),
     Some(VersionRange::new(1, 1)),
     false,

@@ -16,7 +16,7 @@ pub mod alter_configs_request {
         encoded_len_with,
     };
 
-    use crate::{KafkaMessage, KafkaRequest, RequestResponsePair};
+    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, RequestResponsePair};
 
     /// `AlterConfigsResource` as declared by the `AlterConfigs` API.
     #[non_exhaustive]
@@ -326,7 +326,7 @@ pub mod alter_configs_request {
 
     impl KafkaRequest for AlterConfigsRequest {
         const API_KEY: ApiKey = ApiKey::new(33);
-        const LATEST_VERSION_UNSTABLE: bool = false;
+        const API_DESCRIPTOR: &'static ApiDescriptor = &super::ALTER_CONFIGS_API_DESCRIPTOR;
     }
 
     impl RequestResponsePair for AlterConfigsRequest {
@@ -730,7 +730,7 @@ pub mod alter_configs_response {
 
 use kafka_wire_core::VersionRange;
 
-use crate::{MessageDescriptor, MessageDirection};
+use crate::{ApiDescriptor, MessageDescriptor, MessageDirection};
 
 pub use alter_configs_request::AlterConfigsRequest;
 pub use alter_configs_response::AlterConfigsResponse;
@@ -742,7 +742,6 @@ pub const ALTER_CONFIGS_REQUEST_DESCRIPTOR: MessageDescriptor = MessageDescripto
     MessageDirection::Request,
     VersionRange::new(0, 2),
     Some(VersionRange::new(2, 2)),
-    false,
 );
 
 /// Static metadata for [`AlterConfigsResponse`].
@@ -750,6 +749,15 @@ pub const ALTER_CONFIGS_RESPONSE_DESCRIPTOR: MessageDescriptor = MessageDescript
     33,
     "AlterConfigsResponse",
     MessageDirection::Response,
+    VersionRange::new(0, 2),
+    Some(VersionRange::new(2, 2)),
+);
+
+/// Static pair metadata for the `AlterConfigs` API.
+pub const ALTER_CONFIGS_API_DESCRIPTOR: ApiDescriptor = ApiDescriptor::new(
+    33,
+    &ALTER_CONFIGS_REQUEST_DESCRIPTOR,
+    &ALTER_CONFIGS_RESPONSE_DESCRIPTOR,
     VersionRange::new(0, 2),
     Some(VersionRange::new(2, 2)),
     false,

@@ -16,7 +16,7 @@ pub mod describe_quorum_request {
         encoded_len_with,
     };
 
-    use crate::{KafkaMessage, KafkaRequest, RequestResponsePair};
+    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, RequestResponsePair};
 
     /// `TopicData` as declared by the `DescribeQuorum` API.
     #[non_exhaustive]
@@ -272,7 +272,7 @@ pub mod describe_quorum_request {
 
     impl KafkaRequest for DescribeQuorumRequest {
         const API_KEY: ApiKey = ApiKey::new(55);
-        const LATEST_VERSION_UNSTABLE: bool = false;
+        const API_DESCRIPTOR: &'static ApiDescriptor = &super::DESCRIBE_QUORUM_API_DESCRIPTOR;
     }
 
     impl RequestResponsePair for DescribeQuorumRequest {
@@ -1275,7 +1275,7 @@ pub mod describe_quorum_response {
 
 use kafka_wire_core::VersionRange;
 
-use crate::{MessageDescriptor, MessageDirection};
+use crate::{ApiDescriptor, MessageDescriptor, MessageDirection};
 
 pub use describe_quorum_request::DescribeQuorumRequest;
 pub use describe_quorum_response::DescribeQuorumResponse;
@@ -1287,7 +1287,6 @@ pub const DESCRIBE_QUORUM_REQUEST_DESCRIPTOR: MessageDescriptor = MessageDescrip
     MessageDirection::Request,
     VersionRange::new(0, 2),
     Some(VersionRange::new(0, 2)),
-    false,
 );
 
 /// Static metadata for [`DescribeQuorumResponse`].
@@ -1295,6 +1294,15 @@ pub const DESCRIBE_QUORUM_RESPONSE_DESCRIPTOR: MessageDescriptor = MessageDescri
     55,
     "DescribeQuorumResponse",
     MessageDirection::Response,
+    VersionRange::new(0, 2),
+    Some(VersionRange::new(0, 2)),
+);
+
+/// Static pair metadata for the `DescribeQuorum` API.
+pub const DESCRIBE_QUORUM_API_DESCRIPTOR: ApiDescriptor = ApiDescriptor::new(
+    55,
+    &DESCRIBE_QUORUM_REQUEST_DESCRIPTOR,
+    &DESCRIBE_QUORUM_RESPONSE_DESCRIPTOR,
     VersionRange::new(0, 2),
     Some(VersionRange::new(0, 2)),
     false,

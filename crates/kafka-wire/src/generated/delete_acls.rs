@@ -16,7 +16,7 @@ pub mod delete_acls_request {
         encoded_len_with,
     };
 
-    use crate::{KafkaMessage, KafkaRequest, RequestResponsePair};
+    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, RequestResponsePair};
 
     /// `DeleteAclsFilter` as declared by the `DeleteAcls` API.
     #[non_exhaustive]
@@ -216,7 +216,7 @@ pub mod delete_acls_request {
 
     impl KafkaRequest for DeleteAclsRequest {
         const API_KEY: ApiKey = ApiKey::new(31);
-        const LATEST_VERSION_UNSTABLE: bool = false;
+        const API_DESCRIPTOR: &'static ApiDescriptor = &super::DELETE_ACLS_API_DESCRIPTOR;
     }
 
     impl RequestResponsePair for DeleteAclsRequest {
@@ -820,7 +820,7 @@ pub mod delete_acls_response {
 
 use kafka_wire_core::VersionRange;
 
-use crate::{MessageDescriptor, MessageDirection};
+use crate::{ApiDescriptor, MessageDescriptor, MessageDirection};
 
 pub use delete_acls_request::DeleteAclsRequest;
 pub use delete_acls_response::DeleteAclsResponse;
@@ -832,7 +832,6 @@ pub const DELETE_ACLS_REQUEST_DESCRIPTOR: MessageDescriptor = MessageDescriptor:
     MessageDirection::Request,
     VersionRange::new(1, 3),
     Some(VersionRange::new(2, 3)),
-    false,
 );
 
 /// Static metadata for [`DeleteAclsResponse`].
@@ -840,6 +839,15 @@ pub const DELETE_ACLS_RESPONSE_DESCRIPTOR: MessageDescriptor = MessageDescriptor
     31,
     "DeleteAclsResponse",
     MessageDirection::Response,
+    VersionRange::new(1, 3),
+    Some(VersionRange::new(2, 3)),
+);
+
+/// Static pair metadata for the `DeleteAcls` API.
+pub const DELETE_ACLS_API_DESCRIPTOR: ApiDescriptor = ApiDescriptor::new(
+    31,
+    &DELETE_ACLS_REQUEST_DESCRIPTOR,
+    &DELETE_ACLS_RESPONSE_DESCRIPTOR,
     VersionRange::new(1, 3),
     Some(VersionRange::new(2, 3)),
     false,

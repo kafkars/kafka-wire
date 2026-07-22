@@ -16,7 +16,7 @@ pub mod find_coordinator_request {
         encoded_len_with,
     };
 
-    use crate::{KafkaMessage, KafkaRequest, RequestResponsePair};
+    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, RequestResponsePair};
 
     /// Request body for the `FindCoordinator` API.
     #[non_exhaustive]
@@ -40,7 +40,7 @@ pub mod find_coordinator_request {
 
     impl KafkaRequest for FindCoordinatorRequest {
         const API_KEY: ApiKey = ApiKey::new(10);
-        const LATEST_VERSION_UNSTABLE: bool = false;
+        const API_DESCRIPTOR: &'static ApiDescriptor = &super::FIND_COORDINATOR_API_DESCRIPTOR;
     }
 
     impl RequestResponsePair for FindCoordinatorRequest {
@@ -598,7 +598,7 @@ pub mod find_coordinator_response {
 
 use kafka_wire_core::VersionRange;
 
-use crate::{MessageDescriptor, MessageDirection};
+use crate::{ApiDescriptor, MessageDescriptor, MessageDirection};
 
 pub use find_coordinator_request::FindCoordinatorRequest;
 pub use find_coordinator_response::FindCoordinatorResponse;
@@ -610,7 +610,6 @@ pub const FIND_COORDINATOR_REQUEST_DESCRIPTOR: MessageDescriptor = MessageDescri
     MessageDirection::Request,
     VersionRange::new(0, 6),
     Some(VersionRange::new(3, 6)),
-    false,
 );
 
 /// Static metadata for [`FindCoordinatorResponse`].
@@ -618,6 +617,15 @@ pub const FIND_COORDINATOR_RESPONSE_DESCRIPTOR: MessageDescriptor = MessageDescr
     10,
     "FindCoordinatorResponse",
     MessageDirection::Response,
+    VersionRange::new(0, 6),
+    Some(VersionRange::new(3, 6)),
+);
+
+/// Static pair metadata for the `FindCoordinator` API.
+pub const FIND_COORDINATOR_API_DESCRIPTOR: ApiDescriptor = ApiDescriptor::new(
+    10,
+    &FIND_COORDINATOR_REQUEST_DESCRIPTOR,
+    &FIND_COORDINATOR_RESPONSE_DESCRIPTOR,
     VersionRange::new(0, 6),
     Some(VersionRange::new(3, 6)),
     false,

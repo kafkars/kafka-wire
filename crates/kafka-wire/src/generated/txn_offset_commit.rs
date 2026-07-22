@@ -16,7 +16,7 @@ pub mod txn_offset_commit_request {
         encoded_len_with,
     };
 
-    use crate::{KafkaMessage, KafkaRequest, RequestResponsePair};
+    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, RequestResponsePair};
 
     /// `TxnOffsetCommitRequestTopic` as declared by the `TxnOffsetCommit` API.
     #[non_exhaustive]
@@ -378,7 +378,7 @@ pub mod txn_offset_commit_request {
 
     impl KafkaRequest for TxnOffsetCommitRequest {
         const API_KEY: ApiKey = ApiKey::new(28);
-        const LATEST_VERSION_UNSTABLE: bool = false;
+        const API_DESCRIPTOR: &'static ApiDescriptor = &super::TXN_OFFSET_COMMIT_API_DESCRIPTOR;
     }
 
     impl RequestResponsePair for TxnOffsetCommitRequest {
@@ -983,7 +983,7 @@ pub mod txn_offset_commit_response {
 
 use kafka_wire_core::VersionRange;
 
-use crate::{MessageDescriptor, MessageDirection};
+use crate::{ApiDescriptor, MessageDescriptor, MessageDirection};
 
 pub use txn_offset_commit_request::TxnOffsetCommitRequest;
 pub use txn_offset_commit_response::TxnOffsetCommitResponse;
@@ -995,7 +995,6 @@ pub const TXN_OFFSET_COMMIT_REQUEST_DESCRIPTOR: MessageDescriptor = MessageDescr
     MessageDirection::Request,
     VersionRange::new(0, 6),
     Some(VersionRange::new(3, 6)),
-    false,
 );
 
 /// Static metadata for [`TxnOffsetCommitResponse`].
@@ -1003,6 +1002,15 @@ pub const TXN_OFFSET_COMMIT_RESPONSE_DESCRIPTOR: MessageDescriptor = MessageDesc
     28,
     "TxnOffsetCommitResponse",
     MessageDirection::Response,
+    VersionRange::new(0, 6),
+    Some(VersionRange::new(3, 6)),
+);
+
+/// Static pair metadata for the `TxnOffsetCommit` API.
+pub const TXN_OFFSET_COMMIT_API_DESCRIPTOR: ApiDescriptor = ApiDescriptor::new(
+    28,
+    &TXN_OFFSET_COMMIT_REQUEST_DESCRIPTOR,
+    &TXN_OFFSET_COMMIT_RESPONSE_DESCRIPTOR,
     VersionRange::new(0, 6),
     Some(VersionRange::new(3, 6)),
     false,

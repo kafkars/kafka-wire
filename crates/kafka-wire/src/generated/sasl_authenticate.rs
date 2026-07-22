@@ -16,7 +16,7 @@ pub mod sasl_authenticate_request {
         encoded_len_with,
     };
 
-    use crate::{KafkaMessage, KafkaRequest, RequestResponsePair};
+    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, RequestResponsePair};
 
     /// Request body for the `SaslAuthenticate` API.
     #[non_exhaustive]
@@ -36,7 +36,7 @@ pub mod sasl_authenticate_request {
 
     impl KafkaRequest for SaslAuthenticateRequest {
         const API_KEY: ApiKey = ApiKey::new(36);
-        const LATEST_VERSION_UNSTABLE: bool = false;
+        const API_DESCRIPTOR: &'static ApiDescriptor = &super::SASL_AUTHENTICATE_API_DESCRIPTOR;
     }
 
     impl RequestResponsePair for SaslAuthenticateRequest {
@@ -297,7 +297,7 @@ pub mod sasl_authenticate_response {
 
 use kafka_wire_core::VersionRange;
 
-use crate::{MessageDescriptor, MessageDirection};
+use crate::{ApiDescriptor, MessageDescriptor, MessageDirection};
 
 pub use sasl_authenticate_request::SaslAuthenticateRequest;
 pub use sasl_authenticate_response::SaslAuthenticateResponse;
@@ -309,7 +309,6 @@ pub const SASL_AUTHENTICATE_REQUEST_DESCRIPTOR: MessageDescriptor = MessageDescr
     MessageDirection::Request,
     VersionRange::new(0, 2),
     Some(VersionRange::new(2, 2)),
-    false,
 );
 
 /// Static metadata for [`SaslAuthenticateResponse`].
@@ -317,6 +316,15 @@ pub const SASL_AUTHENTICATE_RESPONSE_DESCRIPTOR: MessageDescriptor = MessageDesc
     36,
     "SaslAuthenticateResponse",
     MessageDirection::Response,
+    VersionRange::new(0, 2),
+    Some(VersionRange::new(2, 2)),
+);
+
+/// Static pair metadata for the `SaslAuthenticate` API.
+pub const SASL_AUTHENTICATE_API_DESCRIPTOR: ApiDescriptor = ApiDescriptor::new(
+    36,
+    &SASL_AUTHENTICATE_REQUEST_DESCRIPTOR,
+    &SASL_AUTHENTICATE_RESPONSE_DESCRIPTOR,
     VersionRange::new(0, 2),
     Some(VersionRange::new(2, 2)),
     false,

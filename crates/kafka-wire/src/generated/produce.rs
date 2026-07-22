@@ -16,7 +16,7 @@ pub mod produce_request {
         encode_into_with, encoded_len_with,
     };
 
-    use crate::{KafkaMessage, KafkaRequest, RequestResponsePair};
+    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, RequestResponsePair};
 
     /// `TopicProduceData` as declared by the `Produce` API.
     #[non_exhaustive]
@@ -326,7 +326,7 @@ pub mod produce_request {
 
     impl KafkaRequest for ProduceRequest {
         const API_KEY: ApiKey = ApiKey::new(0);
-        const LATEST_VERSION_UNSTABLE: bool = false;
+        const API_DESCRIPTOR: &'static ApiDescriptor = &super::PRODUCE_API_DESCRIPTOR;
     }
 
     impl RequestResponsePair for ProduceRequest {
@@ -1390,7 +1390,7 @@ pub mod produce_response {
 
 use kafka_wire_core::VersionRange;
 
-use crate::{MessageDescriptor, MessageDirection};
+use crate::{ApiDescriptor, MessageDescriptor, MessageDirection};
 
 pub use produce_request::ProduceRequest;
 pub use produce_response::ProduceResponse;
@@ -1402,7 +1402,6 @@ pub const PRODUCE_REQUEST_DESCRIPTOR: MessageDescriptor = MessageDescriptor::new
     MessageDirection::Request,
     VersionRange::new(3, 13),
     Some(VersionRange::new(9, 13)),
-    false,
 );
 
 /// Static metadata for [`ProduceResponse`].
@@ -1410,6 +1409,15 @@ pub const PRODUCE_RESPONSE_DESCRIPTOR: MessageDescriptor = MessageDescriptor::ne
     0,
     "ProduceResponse",
     MessageDirection::Response,
+    VersionRange::new(3, 13),
+    Some(VersionRange::new(9, 13)),
+);
+
+/// Static pair metadata for the `Produce` API.
+pub const PRODUCE_API_DESCRIPTOR: ApiDescriptor = ApiDescriptor::new(
+    0,
+    &PRODUCE_REQUEST_DESCRIPTOR,
+    &PRODUCE_RESPONSE_DESCRIPTOR,
     VersionRange::new(3, 13),
     Some(VersionRange::new(9, 13)),
     false,

@@ -16,7 +16,7 @@ pub mod add_partitions_to_txn_request {
         encoded_len_with,
     };
 
-    use crate::{KafkaMessage, KafkaRequest, RequestResponsePair};
+    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, RequestResponsePair};
 
     /// `AddPartitionsToTxnTopic` as declared by the `AddPartitionsToTxn` API.
     #[non_exhaustive]
@@ -324,7 +324,7 @@ pub mod add_partitions_to_txn_request {
 
     impl KafkaRequest for AddPartitionsToTxnRequest {
         const API_KEY: ApiKey = ApiKey::new(24);
-        const LATEST_VERSION_UNSTABLE: bool = false;
+        const API_DESCRIPTOR: &'static ApiDescriptor = &super::ADD_PARTITIONS_TO_TXN_API_DESCRIPTOR;
     }
 
     impl RequestResponsePair for AddPartitionsToTxnRequest {
@@ -1112,7 +1112,7 @@ pub mod add_partitions_to_txn_response {
 
 use kafka_wire_core::VersionRange;
 
-use crate::{MessageDescriptor, MessageDirection};
+use crate::{ApiDescriptor, MessageDescriptor, MessageDirection};
 
 pub use add_partitions_to_txn_request::AddPartitionsToTxnRequest;
 pub use add_partitions_to_txn_response::AddPartitionsToTxnResponse;
@@ -1124,7 +1124,6 @@ pub const ADD_PARTITIONS_TO_TXN_REQUEST_DESCRIPTOR: MessageDescriptor = MessageD
     MessageDirection::Request,
     VersionRange::new(0, 5),
     Some(VersionRange::new(3, 5)),
-    false,
 );
 
 /// Static metadata for [`AddPartitionsToTxnResponse`].
@@ -1132,6 +1131,15 @@ pub const ADD_PARTITIONS_TO_TXN_RESPONSE_DESCRIPTOR: MessageDescriptor = Message
     24,
     "AddPartitionsToTxnResponse",
     MessageDirection::Response,
+    VersionRange::new(0, 5),
+    Some(VersionRange::new(3, 5)),
+);
+
+/// Static pair metadata for the `AddPartitionsToTxn` API.
+pub const ADD_PARTITIONS_TO_TXN_API_DESCRIPTOR: ApiDescriptor = ApiDescriptor::new(
+    24,
+    &ADD_PARTITIONS_TO_TXN_REQUEST_DESCRIPTOR,
+    &ADD_PARTITIONS_TO_TXN_RESPONSE_DESCRIPTOR,
     VersionRange::new(0, 5),
     Some(VersionRange::new(3, 5)),
     false,

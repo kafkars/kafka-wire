@@ -16,7 +16,7 @@ pub mod share_acknowledge_request {
         encoded_len_with,
     };
 
-    use crate::{KafkaMessage, KafkaRequest, RequestResponsePair};
+    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, RequestResponsePair};
 
     /// `AcknowledgeTopic` as declared by the `ShareAcknowledge` API.
     #[non_exhaustive]
@@ -438,7 +438,7 @@ pub mod share_acknowledge_request {
 
     impl KafkaRequest for ShareAcknowledgeRequest {
         const API_KEY: ApiKey = ApiKey::new(79);
-        const LATEST_VERSION_UNSTABLE: bool = false;
+        const API_DESCRIPTOR: &'static ApiDescriptor = &super::SHARE_ACKNOWLEDGE_API_DESCRIPTOR;
     }
 
     impl RequestResponsePair for ShareAcknowledgeRequest {
@@ -1221,7 +1221,7 @@ pub mod share_acknowledge_response {
 
 use kafka_wire_core::VersionRange;
 
-use crate::{MessageDescriptor, MessageDirection};
+use crate::{ApiDescriptor, MessageDescriptor, MessageDirection};
 
 pub use share_acknowledge_request::ShareAcknowledgeRequest;
 pub use share_acknowledge_response::ShareAcknowledgeResponse;
@@ -1233,7 +1233,6 @@ pub const SHARE_ACKNOWLEDGE_REQUEST_DESCRIPTOR: MessageDescriptor = MessageDescr
     MessageDirection::Request,
     VersionRange::new(1, 2),
     Some(VersionRange::new(1, 2)),
-    false,
 );
 
 /// Static metadata for [`ShareAcknowledgeResponse`].
@@ -1241,6 +1240,15 @@ pub const SHARE_ACKNOWLEDGE_RESPONSE_DESCRIPTOR: MessageDescriptor = MessageDesc
     79,
     "ShareAcknowledgeResponse",
     MessageDirection::Response,
+    VersionRange::new(1, 2),
+    Some(VersionRange::new(1, 2)),
+);
+
+/// Static pair metadata for the `ShareAcknowledge` API.
+pub const SHARE_ACKNOWLEDGE_API_DESCRIPTOR: ApiDescriptor = ApiDescriptor::new(
+    79,
+    &SHARE_ACKNOWLEDGE_REQUEST_DESCRIPTOR,
+    &SHARE_ACKNOWLEDGE_RESPONSE_DESCRIPTOR,
     VersionRange::new(1, 2),
     Some(VersionRange::new(1, 2)),
     false,

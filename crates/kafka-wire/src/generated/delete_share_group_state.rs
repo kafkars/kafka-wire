@@ -16,7 +16,7 @@ pub mod delete_share_group_state_request {
         encoded_len_with,
     };
 
-    use crate::{KafkaMessage, KafkaRequest, RequestResponsePair};
+    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, RequestResponsePair};
 
     /// `DeleteStateData` as declared by the `DeleteShareGroupState` API.
     #[non_exhaustive]
@@ -274,7 +274,8 @@ pub mod delete_share_group_state_request {
 
     impl KafkaRequest for DeleteShareGroupStateRequest {
         const API_KEY: ApiKey = ApiKey::new(86);
-        const LATEST_VERSION_UNSTABLE: bool = false;
+        const API_DESCRIPTOR: &'static ApiDescriptor =
+            &super::DELETE_SHARE_GROUP_STATE_API_DESCRIPTOR;
     }
 
     impl RequestResponsePair for DeleteShareGroupStateRequest {
@@ -747,7 +748,7 @@ pub mod delete_share_group_state_response {
 
 use kafka_wire_core::VersionRange;
 
-use crate::{MessageDescriptor, MessageDirection};
+use crate::{ApiDescriptor, MessageDescriptor, MessageDirection};
 
 pub use delete_share_group_state_request::DeleteShareGroupStateRequest;
 pub use delete_share_group_state_response::DeleteShareGroupStateResponse;
@@ -759,7 +760,6 @@ pub const DELETE_SHARE_GROUP_STATE_REQUEST_DESCRIPTOR: MessageDescriptor = Messa
     MessageDirection::Request,
     VersionRange::new(0, 0),
     Some(VersionRange::new(0, 0)),
-    false,
 );
 
 /// Static metadata for [`DeleteShareGroupStateResponse`].
@@ -767,6 +767,15 @@ pub const DELETE_SHARE_GROUP_STATE_RESPONSE_DESCRIPTOR: MessageDescriptor = Mess
     86,
     "DeleteShareGroupStateResponse",
     MessageDirection::Response,
+    VersionRange::new(0, 0),
+    Some(VersionRange::new(0, 0)),
+);
+
+/// Static pair metadata for the `DeleteShareGroupState` API.
+pub const DELETE_SHARE_GROUP_STATE_API_DESCRIPTOR: ApiDescriptor = ApiDescriptor::new(
+    86,
+    &DELETE_SHARE_GROUP_STATE_REQUEST_DESCRIPTOR,
+    &DELETE_SHARE_GROUP_STATE_RESPONSE_DESCRIPTOR,
     VersionRange::new(0, 0),
     Some(VersionRange::new(0, 0)),
     false,

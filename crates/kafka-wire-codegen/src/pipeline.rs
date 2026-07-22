@@ -4,10 +4,12 @@ use std::collections::BTreeMap;
 
 use crate::{
     GenerationError, GenerationReport, GeneratorConfig,
+    corpus_validation::validate_source_corpus,
     format::format_rendered_rust_with_identity,
     group::group_sources,
     lockfile::ProtocolLock,
     manifest::render_manifest,
+    namespace::validate_generated_namespace,
     output::apply_tree,
     overrides::{HeaderOverrides, SchemaExceptionOverrides},
     provenance::semantic_inputs,
@@ -24,7 +26,9 @@ pub fn generate(config: &GeneratorConfig) -> Result<GenerationReport, Generation
     let schema_overrides = SchemaExceptionOverrides::read(config.workspace_root(), &lock)?;
     let exceptions = schema_overrides.exceptions();
     let sources = load_sources_with(config.workspace_root(), &lock, &exceptions)?;
+    validate_source_corpus(&sources)?;
     let grouped = group_sources(sources)?;
+    validate_generated_namespace(&grouped.api, &grouped.unkeyed)?;
     let overrides = HeaderOverrides::read(
         config.workspace_root(),
         &lock,
@@ -50,7 +54,7 @@ pub fn generate(config: &GeneratorConfig) -> Result<GenerationReport, Generation
         insert_unique(
             &mut rendered,
             &mut producers,
-            format!("{}.rs", group.module_name),
+            format!("{}.rs", group.module_name()),
             render_api(group, &lock.kafka.commit)?,
             &producer,
         )?;
@@ -140,7 +144,7 @@ fn validate_output_paths(groups: &[crate::group::ApiGroup]) -> Result<(), Genera
     for group in groups {
         claim_output_path(
             &mut claimed,
-            &format!("{}.rs", group.module_name),
+            &format!("{}.rs", group.module_name()),
             &api_producer(group),
         )?;
     }

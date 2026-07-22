@@ -16,7 +16,7 @@ pub mod offset_commit_request {
         encoded_len_with,
     };
 
-    use crate::{KafkaMessage, KafkaRequest, RequestResponsePair};
+    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, RequestResponsePair};
 
     /// `OffsetCommitRequestTopic` as declared by the `OffsetCommit` API.
     #[non_exhaustive]
@@ -372,7 +372,7 @@ pub mod offset_commit_request {
 
     impl KafkaRequest for OffsetCommitRequest {
         const API_KEY: ApiKey = ApiKey::new(8);
-        const LATEST_VERSION_UNSTABLE: bool = false;
+        const API_DESCRIPTOR: &'static ApiDescriptor = &super::OFFSET_COMMIT_API_DESCRIPTOR;
     }
 
     impl RequestResponsePair for OffsetCommitRequest {
@@ -959,7 +959,7 @@ pub mod offset_commit_response {
 
 use kafka_wire_core::VersionRange;
 
-use crate::{MessageDescriptor, MessageDirection};
+use crate::{ApiDescriptor, MessageDescriptor, MessageDirection};
 
 pub use offset_commit_request::OffsetCommitRequest;
 pub use offset_commit_response::OffsetCommitResponse;
@@ -971,7 +971,6 @@ pub const OFFSET_COMMIT_REQUEST_DESCRIPTOR: MessageDescriptor = MessageDescripto
     MessageDirection::Request,
     VersionRange::new(2, 10),
     Some(VersionRange::new(8, 10)),
-    false,
 );
 
 /// Static metadata for [`OffsetCommitResponse`].
@@ -979,6 +978,15 @@ pub const OFFSET_COMMIT_RESPONSE_DESCRIPTOR: MessageDescriptor = MessageDescript
     8,
     "OffsetCommitResponse",
     MessageDirection::Response,
+    VersionRange::new(2, 10),
+    Some(VersionRange::new(8, 10)),
+);
+
+/// Static pair metadata for the `OffsetCommit` API.
+pub const OFFSET_COMMIT_API_DESCRIPTOR: ApiDescriptor = ApiDescriptor::new(
+    8,
+    &OFFSET_COMMIT_REQUEST_DESCRIPTOR,
+    &OFFSET_COMMIT_RESPONSE_DESCRIPTOR,
     VersionRange::new(2, 10),
     Some(VersionRange::new(8, 10)),
     false,

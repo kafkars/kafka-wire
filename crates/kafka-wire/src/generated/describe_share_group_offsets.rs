@@ -16,7 +16,7 @@ pub mod describe_share_group_offsets_request {
         encoded_len_with,
     };
 
-    use crate::{KafkaMessage, KafkaRequest, RequestResponsePair};
+    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, RequestResponsePair};
 
     /// `DescribeShareGroupOffsetsRequestGroup` as declared by the `DescribeShareGroupOffsets` API.
     #[non_exhaustive]
@@ -315,7 +315,8 @@ pub mod describe_share_group_offsets_request {
 
     impl KafkaRequest for DescribeShareGroupOffsetsRequest {
         const API_KEY: ApiKey = ApiKey::new(90);
-        const LATEST_VERSION_UNSTABLE: bool = false;
+        const API_DESCRIPTOR: &'static ApiDescriptor =
+            &super::DESCRIBE_SHARE_GROUP_OFFSETS_API_DESCRIPTOR;
     }
 
     impl RequestResponsePair for DescribeShareGroupOffsetsRequest {
@@ -1007,7 +1008,7 @@ pub mod describe_share_group_offsets_response {
 
 use kafka_wire_core::VersionRange;
 
-use crate::{MessageDescriptor, MessageDirection};
+use crate::{ApiDescriptor, MessageDescriptor, MessageDirection};
 
 pub use describe_share_group_offsets_request::DescribeShareGroupOffsetsRequest;
 pub use describe_share_group_offsets_response::DescribeShareGroupOffsetsResponse;
@@ -1020,7 +1021,6 @@ pub const DESCRIBE_SHARE_GROUP_OFFSETS_REQUEST_DESCRIPTOR: MessageDescriptor =
         MessageDirection::Request,
         VersionRange::new(0, 1),
         Some(VersionRange::new(0, 1)),
-        false,
     );
 
 /// Static metadata for [`DescribeShareGroupOffsetsResponse`].
@@ -1031,5 +1031,14 @@ pub const DESCRIBE_SHARE_GROUP_OFFSETS_RESPONSE_DESCRIPTOR: MessageDescriptor =
         MessageDirection::Response,
         VersionRange::new(0, 1),
         Some(VersionRange::new(0, 1)),
-        false,
     );
+
+/// Static pair metadata for the `DescribeShareGroupOffsets` API.
+pub const DESCRIBE_SHARE_GROUP_OFFSETS_API_DESCRIPTOR: ApiDescriptor = ApiDescriptor::new(
+    90,
+    &DESCRIBE_SHARE_GROUP_OFFSETS_REQUEST_DESCRIPTOR,
+    &DESCRIBE_SHARE_GROUP_OFFSETS_RESPONSE_DESCRIPTOR,
+    VersionRange::new(0, 1),
+    Some(VersionRange::new(0, 1)),
+    false,
+);

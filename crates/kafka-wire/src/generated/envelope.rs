@@ -16,7 +16,7 @@ pub mod envelope_request {
         encoded_len_with,
     };
 
-    use crate::{KafkaMessage, KafkaRequest, RequestResponsePair};
+    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, RequestResponsePair};
 
     /// Request body for the `Envelope` API.
     #[non_exhaustive]
@@ -51,7 +51,7 @@ pub mod envelope_request {
 
     impl KafkaRequest for EnvelopeRequest {
         const API_KEY: ApiKey = ApiKey::new(58);
-        const LATEST_VERSION_UNSTABLE: bool = false;
+        const API_DESCRIPTOR: &'static ApiDescriptor = &super::ENVELOPE_API_DESCRIPTOR;
     }
 
     impl RequestResponsePair for EnvelopeRequest {
@@ -266,7 +266,7 @@ pub mod envelope_response {
 
 use kafka_wire_core::VersionRange;
 
-use crate::{MessageDescriptor, MessageDirection};
+use crate::{ApiDescriptor, MessageDescriptor, MessageDirection};
 
 pub use envelope_request::EnvelopeRequest;
 pub use envelope_response::EnvelopeResponse;
@@ -278,7 +278,6 @@ pub const ENVELOPE_REQUEST_DESCRIPTOR: MessageDescriptor = MessageDescriptor::ne
     MessageDirection::Request,
     VersionRange::new(0, 0),
     Some(VersionRange::new(0, 0)),
-    false,
 );
 
 /// Static metadata for [`EnvelopeResponse`].
@@ -286,6 +285,15 @@ pub const ENVELOPE_RESPONSE_DESCRIPTOR: MessageDescriptor = MessageDescriptor::n
     58,
     "EnvelopeResponse",
     MessageDirection::Response,
+    VersionRange::new(0, 0),
+    Some(VersionRange::new(0, 0)),
+);
+
+/// Static pair metadata for the `Envelope` API.
+pub const ENVELOPE_API_DESCRIPTOR: ApiDescriptor = ApiDescriptor::new(
+    58,
+    &ENVELOPE_REQUEST_DESCRIPTOR,
+    &ENVELOPE_RESPONSE_DESCRIPTOR,
     VersionRange::new(0, 0),
     Some(VersionRange::new(0, 0)),
     false,

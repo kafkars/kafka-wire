@@ -16,7 +16,7 @@ pub mod list_offsets_request {
         encoded_len_with,
     };
 
-    use crate::{KafkaMessage, KafkaRequest, RequestResponsePair};
+    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, RequestResponsePair};
 
     /// `ListOffsetsTopic` as declared by the `ListOffsets` API.
     #[non_exhaustive]
@@ -323,7 +323,7 @@ pub mod list_offsets_request {
 
     impl KafkaRequest for ListOffsetsRequest {
         const API_KEY: ApiKey = ApiKey::new(2);
-        const LATEST_VERSION_UNSTABLE: bool = false;
+        const API_DESCRIPTOR: &'static ApiDescriptor = &super::LIST_OFFSETS_API_DESCRIPTOR;
     }
 
     impl RequestResponsePair for ListOffsetsRequest {
@@ -902,7 +902,7 @@ pub mod list_offsets_response {
 
 use kafka_wire_core::VersionRange;
 
-use crate::{MessageDescriptor, MessageDirection};
+use crate::{ApiDescriptor, MessageDescriptor, MessageDirection};
 
 pub use list_offsets_request::ListOffsetsRequest;
 pub use list_offsets_response::ListOffsetsResponse;
@@ -914,7 +914,6 @@ pub const LIST_OFFSETS_REQUEST_DESCRIPTOR: MessageDescriptor = MessageDescriptor
     MessageDirection::Request,
     VersionRange::new(1, 11),
     Some(VersionRange::new(6, 11)),
-    false,
 );
 
 /// Static metadata for [`ListOffsetsResponse`].
@@ -922,6 +921,15 @@ pub const LIST_OFFSETS_RESPONSE_DESCRIPTOR: MessageDescriptor = MessageDescripto
     2,
     "ListOffsetsResponse",
     MessageDirection::Response,
+    VersionRange::new(1, 11),
+    Some(VersionRange::new(6, 11)),
+);
+
+/// Static pair metadata for the `ListOffsets` API.
+pub const LIST_OFFSETS_API_DESCRIPTOR: ApiDescriptor = ApiDescriptor::new(
+    2,
+    &LIST_OFFSETS_REQUEST_DESCRIPTOR,
+    &LIST_OFFSETS_RESPONSE_DESCRIPTOR,
     VersionRange::new(1, 11),
     Some(VersionRange::new(6, 11)),
     false,

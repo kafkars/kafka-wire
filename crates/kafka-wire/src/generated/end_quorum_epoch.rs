@@ -16,7 +16,7 @@ pub mod end_quorum_epoch_request {
         encoded_len_with,
     };
 
-    use crate::{KafkaMessage, KafkaRequest, RequestResponsePair};
+    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, RequestResponsePair};
 
     /// `TopicData` as declared by the `EndQuorumEpoch` API.
     #[non_exhaustive]
@@ -574,7 +574,7 @@ pub mod end_quorum_epoch_request {
 
     impl KafkaRequest for EndQuorumEpochRequest {
         const API_KEY: ApiKey = ApiKey::new(54);
-        const LATEST_VERSION_UNSTABLE: bool = false;
+        const API_DESCRIPTOR: &'static ApiDescriptor = &super::END_QUORUM_EPOCH_API_DESCRIPTOR;
     }
 
     impl RequestResponsePair for EndQuorumEpochRequest {
@@ -1271,7 +1271,7 @@ pub mod end_quorum_epoch_response {
 
 use kafka_wire_core::VersionRange;
 
-use crate::{MessageDescriptor, MessageDirection};
+use crate::{ApiDescriptor, MessageDescriptor, MessageDirection};
 
 pub use end_quorum_epoch_request::EndQuorumEpochRequest;
 pub use end_quorum_epoch_response::EndQuorumEpochResponse;
@@ -1283,7 +1283,6 @@ pub const END_QUORUM_EPOCH_REQUEST_DESCRIPTOR: MessageDescriptor = MessageDescri
     MessageDirection::Request,
     VersionRange::new(0, 1),
     Some(VersionRange::new(1, 1)),
-    false,
 );
 
 /// Static metadata for [`EndQuorumEpochResponse`].
@@ -1291,6 +1290,15 @@ pub const END_QUORUM_EPOCH_RESPONSE_DESCRIPTOR: MessageDescriptor = MessageDescr
     54,
     "EndQuorumEpochResponse",
     MessageDirection::Response,
+    VersionRange::new(0, 1),
+    Some(VersionRange::new(1, 1)),
+);
+
+/// Static pair metadata for the `EndQuorumEpoch` API.
+pub const END_QUORUM_EPOCH_API_DESCRIPTOR: ApiDescriptor = ApiDescriptor::new(
+    54,
+    &END_QUORUM_EPOCH_REQUEST_DESCRIPTOR,
+    &END_QUORUM_EPOCH_RESPONSE_DESCRIPTOR,
     VersionRange::new(0, 1),
     Some(VersionRange::new(1, 1)),
     false,

@@ -16,7 +16,7 @@ pub mod describe_topic_partitions_request {
         encoded_len_with,
     };
 
-    use crate::{KafkaMessage, KafkaRequest, RequestResponsePair};
+    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, RequestResponsePair};
 
     /// `TopicRequest` as declared by the `DescribeTopicPartitions` API.
     #[non_exhaustive]
@@ -278,7 +278,8 @@ pub mod describe_topic_partitions_request {
 
     impl KafkaRequest for DescribeTopicPartitionsRequest {
         const API_KEY: ApiKey = ApiKey::new(75);
-        const LATEST_VERSION_UNSTABLE: bool = false;
+        const API_DESCRIPTOR: &'static ApiDescriptor =
+            &super::DESCRIBE_TOPIC_PARTITIONS_API_DESCRIPTOR;
     }
 
     impl RequestResponsePair for DescribeTopicPartitionsRequest {
@@ -1045,7 +1046,7 @@ pub mod describe_topic_partitions_response {
 
 use kafka_wire_core::VersionRange;
 
-use crate::{MessageDescriptor, MessageDirection};
+use crate::{ApiDescriptor, MessageDescriptor, MessageDirection};
 
 pub use describe_topic_partitions_request::DescribeTopicPartitionsRequest;
 pub use describe_topic_partitions_response::DescribeTopicPartitionsResponse;
@@ -1057,7 +1058,6 @@ pub const DESCRIBE_TOPIC_PARTITIONS_REQUEST_DESCRIPTOR: MessageDescriptor = Mess
     MessageDirection::Request,
     VersionRange::new(0, 0),
     Some(VersionRange::new(0, 0)),
-    false,
 );
 
 /// Static metadata for [`DescribeTopicPartitionsResponse`].
@@ -1065,6 +1065,15 @@ pub const DESCRIBE_TOPIC_PARTITIONS_RESPONSE_DESCRIPTOR: MessageDescriptor = Mes
     75,
     "DescribeTopicPartitionsResponse",
     MessageDirection::Response,
+    VersionRange::new(0, 0),
+    Some(VersionRange::new(0, 0)),
+);
+
+/// Static pair metadata for the `DescribeTopicPartitions` API.
+pub const DESCRIBE_TOPIC_PARTITIONS_API_DESCRIPTOR: ApiDescriptor = ApiDescriptor::new(
+    75,
+    &DESCRIBE_TOPIC_PARTITIONS_REQUEST_DESCRIPTOR,
+    &DESCRIBE_TOPIC_PARTITIONS_RESPONSE_DESCRIPTOR,
     VersionRange::new(0, 0),
     Some(VersionRange::new(0, 0)),
     false,

@@ -16,7 +16,7 @@ pub mod describe_groups_request {
         encoded_len_with,
     };
 
-    use crate::{KafkaMessage, KafkaRequest, RequestResponsePair};
+    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, RequestResponsePair};
 
     /// Request body for the `DescribeGroups` API.
     #[non_exhaustive]
@@ -38,7 +38,7 @@ pub mod describe_groups_request {
 
     impl KafkaRequest for DescribeGroupsRequest {
         const API_KEY: ApiKey = ApiKey::new(15);
-        const LATEST_VERSION_UNSTABLE: bool = false;
+        const API_DESCRIPTOR: &'static ApiDescriptor = &super::DESCRIBE_GROUPS_API_DESCRIPTOR;
     }
 
     impl RequestResponsePair for DescribeGroupsRequest {
@@ -739,7 +739,7 @@ pub mod describe_groups_response {
 
 use kafka_wire_core::VersionRange;
 
-use crate::{MessageDescriptor, MessageDirection};
+use crate::{ApiDescriptor, MessageDescriptor, MessageDirection};
 
 pub use describe_groups_request::DescribeGroupsRequest;
 pub use describe_groups_response::DescribeGroupsResponse;
@@ -751,7 +751,6 @@ pub const DESCRIBE_GROUPS_REQUEST_DESCRIPTOR: MessageDescriptor = MessageDescrip
     MessageDirection::Request,
     VersionRange::new(0, 6),
     Some(VersionRange::new(5, 6)),
-    false,
 );
 
 /// Static metadata for [`DescribeGroupsResponse`].
@@ -759,6 +758,15 @@ pub const DESCRIBE_GROUPS_RESPONSE_DESCRIPTOR: MessageDescriptor = MessageDescri
     15,
     "DescribeGroupsResponse",
     MessageDirection::Response,
+    VersionRange::new(0, 6),
+    Some(VersionRange::new(5, 6)),
+);
+
+/// Static pair metadata for the `DescribeGroups` API.
+pub const DESCRIBE_GROUPS_API_DESCRIPTOR: ApiDescriptor = ApiDescriptor::new(
+    15,
+    &DESCRIBE_GROUPS_REQUEST_DESCRIPTOR,
+    &DESCRIBE_GROUPS_RESPONSE_DESCRIPTOR,
     VersionRange::new(0, 6),
     Some(VersionRange::new(5, 6)),
     false,

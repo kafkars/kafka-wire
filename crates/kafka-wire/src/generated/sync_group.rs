@@ -16,7 +16,7 @@ pub mod sync_group_request {
         encoded_len_with,
     };
 
-    use crate::{KafkaMessage, KafkaRequest, RequestResponsePair};
+    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, RequestResponsePair};
 
     /// `SyncGroupRequestAssignment` as declared by the `SyncGroup` API.
     #[non_exhaustive]
@@ -180,7 +180,7 @@ pub mod sync_group_request {
 
     impl KafkaRequest for SyncGroupRequest {
         const API_KEY: ApiKey = ApiKey::new(14);
-        const LATEST_VERSION_UNSTABLE: bool = false;
+        const API_DESCRIPTOR: &'static ApiDescriptor = &super::SYNC_GROUP_API_DESCRIPTOR;
     }
 
     impl RequestResponsePair for SyncGroupRequest {
@@ -516,7 +516,7 @@ pub mod sync_group_response {
 
 use kafka_wire_core::VersionRange;
 
-use crate::{MessageDescriptor, MessageDirection};
+use crate::{ApiDescriptor, MessageDescriptor, MessageDirection};
 
 pub use sync_group_request::SyncGroupRequest;
 pub use sync_group_response::SyncGroupResponse;
@@ -528,7 +528,6 @@ pub const SYNC_GROUP_REQUEST_DESCRIPTOR: MessageDescriptor = MessageDescriptor::
     MessageDirection::Request,
     VersionRange::new(0, 5),
     Some(VersionRange::new(4, 5)),
-    false,
 );
 
 /// Static metadata for [`SyncGroupResponse`].
@@ -536,6 +535,15 @@ pub const SYNC_GROUP_RESPONSE_DESCRIPTOR: MessageDescriptor = MessageDescriptor:
     14,
     "SyncGroupResponse",
     MessageDirection::Response,
+    VersionRange::new(0, 5),
+    Some(VersionRange::new(4, 5)),
+);
+
+/// Static pair metadata for the `SyncGroup` API.
+pub const SYNC_GROUP_API_DESCRIPTOR: ApiDescriptor = ApiDescriptor::new(
+    14,
+    &SYNC_GROUP_REQUEST_DESCRIPTOR,
+    &SYNC_GROUP_RESPONSE_DESCRIPTOR,
     VersionRange::new(0, 5),
     Some(VersionRange::new(4, 5)),
     false,

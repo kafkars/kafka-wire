@@ -2,7 +2,10 @@
 
 use crate::{group::ApiGroup, provenance::generated_banner};
 
-use super::{api::descriptor_name, text::RustText};
+use super::{
+    api::{api_descriptor_name, descriptor_name},
+    text::RustText,
+};
 
 pub(crate) fn render_registry(groups: &[ApiGroup], commit: &str) -> String {
     let mut rust = RustText::default();
@@ -11,7 +14,7 @@ pub(crate) fn render_registry(groups: &[ApiGroup], commit: &str) -> String {
     rust.line("//! Static message registry for Apache Kafka commit");
     rust.line(format!("//! `{commit}`."));
     rust.blank();
-    rust.line("use crate::MessageDescriptor;");
+    rust.line("use crate::{ApiDescriptor, MessageDescriptor};");
     rust.blank();
 
     // Each descriptor is named where it is used rather than imported first. The
@@ -24,6 +27,13 @@ pub(crate) fn render_registry(groups: &[ApiGroup], commit: &str) -> String {
     rust.line("pub const MESSAGE_DESCRIPTORS: &[MessageDescriptor] = &[");
     for source in groups.iter().flat_map(ApiGroup::messages) {
         rust.line(format!("    super::{},", descriptor_name(&source.message)));
+    }
+    rust.line("];");
+    rust.blank();
+    rust.line("/// All validated API pairs, sorted by API key.");
+    rust.line("pub const API_DESCRIPTORS: &[ApiDescriptor] = &[");
+    for group in groups {
+        rust.line(format!("    super::{},", api_descriptor_name(group)));
     }
     rust.line("];");
     rust.finish()

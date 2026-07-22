@@ -16,7 +16,7 @@ pub mod create_acls_request {
         encoded_len_with,
     };
 
-    use crate::{KafkaMessage, KafkaRequest, RequestResponsePair};
+    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, RequestResponsePair};
 
     /// `AclCreation` as declared by the `CreateAcls` API.
     #[non_exhaustive]
@@ -216,7 +216,7 @@ pub mod create_acls_request {
 
     impl KafkaRequest for CreateAclsRequest {
         const API_KEY: ApiKey = ApiKey::new(30);
-        const LATEST_VERSION_UNSTABLE: bool = false;
+        const API_DESCRIPTOR: &'static ApiDescriptor = &super::CREATE_ACLS_API_DESCRIPTOR;
     }
 
     impl RequestResponsePair for CreateAclsRequest {
@@ -595,7 +595,7 @@ pub mod create_acls_response {
 
 use kafka_wire_core::VersionRange;
 
-use crate::{MessageDescriptor, MessageDirection};
+use crate::{ApiDescriptor, MessageDescriptor, MessageDirection};
 
 pub use create_acls_request::CreateAclsRequest;
 pub use create_acls_response::CreateAclsResponse;
@@ -607,7 +607,6 @@ pub const CREATE_ACLS_REQUEST_DESCRIPTOR: MessageDescriptor = MessageDescriptor:
     MessageDirection::Request,
     VersionRange::new(1, 3),
     Some(VersionRange::new(2, 3)),
-    false,
 );
 
 /// Static metadata for [`CreateAclsResponse`].
@@ -615,6 +614,15 @@ pub const CREATE_ACLS_RESPONSE_DESCRIPTOR: MessageDescriptor = MessageDescriptor
     30,
     "CreateAclsResponse",
     MessageDirection::Response,
+    VersionRange::new(1, 3),
+    Some(VersionRange::new(2, 3)),
+);
+
+/// Static pair metadata for the `CreateAcls` API.
+pub const CREATE_ACLS_API_DESCRIPTOR: ApiDescriptor = ApiDescriptor::new(
+    30,
+    &CREATE_ACLS_REQUEST_DESCRIPTOR,
+    &CREATE_ACLS_RESPONSE_DESCRIPTOR,
     VersionRange::new(1, 3),
     Some(VersionRange::new(2, 3)),
     false,

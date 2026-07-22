@@ -15,7 +15,7 @@ pub mod unregister_broker_request {
         KafkaDecode, KafkaEncode, TaggedFields, VersionRange, encode_into_with, encoded_len_with,
     };
 
-    use crate::{KafkaMessage, KafkaRequest, RequestResponsePair};
+    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, RequestResponsePair};
 
     /// Request body for the `UnregisterBroker` API.
     #[non_exhaustive]
@@ -35,7 +35,7 @@ pub mod unregister_broker_request {
 
     impl KafkaRequest for UnregisterBrokerRequest {
         const API_KEY: ApiKey = ApiKey::new(64);
-        const LATEST_VERSION_UNSTABLE: bool = false;
+        const API_DESCRIPTOR: &'static ApiDescriptor = &super::UNREGISTER_BROKER_API_DESCRIPTOR;
     }
 
     impl RequestResponsePair for UnregisterBrokerRequest {
@@ -260,7 +260,7 @@ pub mod unregister_broker_response {
 
 use kafka_wire_core::VersionRange;
 
-use crate::{MessageDescriptor, MessageDirection};
+use crate::{ApiDescriptor, MessageDescriptor, MessageDirection};
 
 pub use unregister_broker_request::UnregisterBrokerRequest;
 pub use unregister_broker_response::UnregisterBrokerResponse;
@@ -272,7 +272,6 @@ pub const UNREGISTER_BROKER_REQUEST_DESCRIPTOR: MessageDescriptor = MessageDescr
     MessageDirection::Request,
     VersionRange::new(0, 0),
     Some(VersionRange::new(0, 0)),
-    false,
 );
 
 /// Static metadata for [`UnregisterBrokerResponse`].
@@ -280,6 +279,15 @@ pub const UNREGISTER_BROKER_RESPONSE_DESCRIPTOR: MessageDescriptor = MessageDesc
     64,
     "UnregisterBrokerResponse",
     MessageDirection::Response,
+    VersionRange::new(0, 0),
+    Some(VersionRange::new(0, 0)),
+);
+
+/// Static pair metadata for the `UnregisterBroker` API.
+pub const UNREGISTER_BROKER_API_DESCRIPTOR: ApiDescriptor = ApiDescriptor::new(
+    64,
+    &UNREGISTER_BROKER_REQUEST_DESCRIPTOR,
+    &UNREGISTER_BROKER_RESPONSE_DESCRIPTOR,
     VersionRange::new(0, 0),
     Some(VersionRange::new(0, 0)),
     false,

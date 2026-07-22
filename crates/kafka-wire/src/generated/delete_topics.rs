@@ -16,7 +16,7 @@ pub mod delete_topics_request {
         encoded_len_with,
     };
 
-    use crate::{KafkaMessage, KafkaRequest, RequestResponsePair};
+    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, RequestResponsePair};
 
     /// `DeleteTopicState` as declared by the `DeleteTopics` API.
     #[non_exhaustive]
@@ -156,7 +156,7 @@ pub mod delete_topics_request {
 
     impl KafkaRequest for DeleteTopicsRequest {
         const API_KEY: ApiKey = ApiKey::new(20);
-        const LATEST_VERSION_UNSTABLE: bool = false;
+        const API_DESCRIPTOR: &'static ApiDescriptor = &super::DELETE_TOPICS_API_DESCRIPTOR;
     }
 
     impl RequestResponsePair for DeleteTopicsRequest {
@@ -609,7 +609,7 @@ pub mod delete_topics_response {
 
 use kafka_wire_core::VersionRange;
 
-use crate::{MessageDescriptor, MessageDirection};
+use crate::{ApiDescriptor, MessageDescriptor, MessageDirection};
 
 pub use delete_topics_request::DeleteTopicsRequest;
 pub use delete_topics_response::DeleteTopicsResponse;
@@ -621,7 +621,6 @@ pub const DELETE_TOPICS_REQUEST_DESCRIPTOR: MessageDescriptor = MessageDescripto
     MessageDirection::Request,
     VersionRange::new(1, 6),
     Some(VersionRange::new(4, 6)),
-    false,
 );
 
 /// Static metadata for [`DeleteTopicsResponse`].
@@ -629,6 +628,15 @@ pub const DELETE_TOPICS_RESPONSE_DESCRIPTOR: MessageDescriptor = MessageDescript
     20,
     "DeleteTopicsResponse",
     MessageDirection::Response,
+    VersionRange::new(1, 6),
+    Some(VersionRange::new(4, 6)),
+);
+
+/// Static pair metadata for the `DeleteTopics` API.
+pub const DELETE_TOPICS_API_DESCRIPTOR: ApiDescriptor = ApiDescriptor::new(
+    20,
+    &DELETE_TOPICS_REQUEST_DESCRIPTOR,
+    &DELETE_TOPICS_RESPONSE_DESCRIPTOR,
     VersionRange::new(1, 6),
     Some(VersionRange::new(4, 6)),
     false,

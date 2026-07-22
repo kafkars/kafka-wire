@@ -16,7 +16,7 @@ pub mod heartbeat_request {
         encoded_len_with,
     };
 
-    use crate::{KafkaMessage, KafkaRequest, RequestResponsePair};
+    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, RequestResponsePair};
 
     /// Request body for the `Heartbeat` API.
     #[non_exhaustive]
@@ -42,7 +42,7 @@ pub mod heartbeat_request {
 
     impl KafkaRequest for HeartbeatRequest {
         const API_KEY: ApiKey = ApiKey::new(12);
-        const LATEST_VERSION_UNSTABLE: bool = false;
+        const API_DESCRIPTOR: &'static ApiDescriptor = &super::HEARTBEAT_API_DESCRIPTOR;
     }
 
     impl RequestResponsePair for HeartbeatRequest {
@@ -302,7 +302,7 @@ pub mod heartbeat_response {
 
 use kafka_wire_core::VersionRange;
 
-use crate::{MessageDescriptor, MessageDirection};
+use crate::{ApiDescriptor, MessageDescriptor, MessageDirection};
 
 pub use heartbeat_request::HeartbeatRequest;
 pub use heartbeat_response::HeartbeatResponse;
@@ -314,7 +314,6 @@ pub const HEARTBEAT_REQUEST_DESCRIPTOR: MessageDescriptor = MessageDescriptor::n
     MessageDirection::Request,
     VersionRange::new(0, 4),
     Some(VersionRange::new(4, 4)),
-    false,
 );
 
 /// Static metadata for [`HeartbeatResponse`].
@@ -322,6 +321,15 @@ pub const HEARTBEAT_RESPONSE_DESCRIPTOR: MessageDescriptor = MessageDescriptor::
     12,
     "HeartbeatResponse",
     MessageDirection::Response,
+    VersionRange::new(0, 4),
+    Some(VersionRange::new(4, 4)),
+);
+
+/// Static pair metadata for the `Heartbeat` API.
+pub const HEARTBEAT_API_DESCRIPTOR: ApiDescriptor = ApiDescriptor::new(
+    12,
+    &HEARTBEAT_REQUEST_DESCRIPTOR,
+    &HEARTBEAT_RESPONSE_DESCRIPTOR,
     VersionRange::new(0, 4),
     Some(VersionRange::new(4, 4)),
     false,

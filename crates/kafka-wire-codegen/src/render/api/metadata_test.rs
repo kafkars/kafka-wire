@@ -1,16 +1,17 @@
-//! Request negotiation policy survives the complete IR-to-Rust rendering path.
+//! Pair negotiation policy survives the complete IR-to-Rust rendering path.
 //!
-//! Scenario: render every enabled API pair, compare each request constant and
-//! every descriptor with its normalized source flag, and pin the one unstable
-//! request currently present so the proof cannot pass over an empty set.
+//! Scenario: render every enabled API pair, prove each request points to its
+//! pair descriptor, compare that descriptor with normalized request policy,
+//! and pin the one unstable API so the proof cannot pass over an empty set.
 
 use std::path::{Path, PathBuf};
 
-use kafka_wire_schema::MessageKind;
-
 use crate::{group::group_sources, lockfile::ProtocolLock, source::load_sources};
 
-use super::{descriptor::descriptor_name, file::render_api};
+use super::{
+    descriptor::{api_descriptor_name, descriptor_name},
+    file::render_api,
+};
 
 fn repository_root() -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR"))
@@ -20,7 +21,7 @@ fn repository_root() -> PathBuf {
 }
 
 #[test]
-fn every_unstable_source_flag_reaches_typed_and_reflected_metadata() {
+fn every_unstable_source_flag_reaches_pair_metadata() {
     let root = repository_root();
     let lock = ProtocolLock::read(&root.join("spec/protocol.lock"))
         .unwrap_or_else(|error| panic!("read protocol lock: {error}"));
@@ -33,39 +34,41 @@ fn every_unstable_source_flag_reaches_typed_and_reflected_metadata() {
     for group in &grouped.api {
         let rendered = render_api(group, &lock.kafka.commit)
             .unwrap_or_else(|error| panic!("render API key {}: {error}", group.api_key));
+        let pair_descriptor = api_descriptor_name(group);
+        let marker = format!("pub const {pair_descriptor}: ApiDescriptor");
+        let reflected = rendered.split_once(&marker).map_or_else(
+            || panic!("{} has no pair descriptor", group.name.protocol_stem()),
+            |(_, tail)| tail.split_once(");").map_or(tail, |(body, _)| body),
+        );
+        let reflected_flag = format!("{},", group.latest_version_unstable);
+        assert!(
+            reflected.trim_end().ends_with(&reflected_flag),
+            "{} pair descriptor dropped latestVersionUnstable={}",
+            group.name.protocol_stem(),
+            group.latest_version_unstable,
+        );
+
         for source in group.messages() {
             let message = &source.message;
             let descriptor = descriptor_name(message);
             let marker = format!("pub const {descriptor}: MessageDescriptor");
-            let reflected = rendered.split_once(&marker).map_or_else(
-                || panic!("{} has no descriptor", message.name.protocol()),
-                |(_, tail)| tail.split_once(");").map_or(tail, |(body, _)| body),
-            );
-            let reflected_flag = format!("{},", message.latest_version_unstable);
             assert!(
-                reflected.trim_end().ends_with(&reflected_flag),
-                "{} descriptor dropped latestVersionUnstable={}",
-                message.name.protocol(),
-                message.latest_version_unstable,
+                rendered.contains(&marker),
+                "{} has no directional descriptor",
+                message.name.protocol()
             );
-
-            if message.kind == MessageKind::Request {
-                let typed = format!(
-                    "const LATEST_VERSION_UNSTABLE: bool = {};",
-                    message.latest_version_unstable
-                );
-                assert!(
-                    rendered.contains(&typed),
-                    "{} request impl dropped latestVersionUnstable={}",
-                    message.name.protocol(),
-                    message.latest_version_unstable,
-                );
-                if message.latest_version_unstable {
-                    unstable.push(message.name.protocol().to_owned());
-                }
-            }
+        }
+        let typed =
+            format!("const API_DESCRIPTOR: &'static ApiDescriptor = &super::{pair_descriptor};");
+        assert!(
+            rendered.contains(&typed),
+            "{} request does not point to its pair descriptor",
+            group.request.message.name.protocol(),
+        );
+        if group.latest_version_unstable {
+            unstable.push(group.name.protocol_stem().to_owned());
         }
     }
 
-    assert_eq!(unstable, ["InitProducerIdRequest"]);
+    assert_eq!(unstable, ["InitProducerId"]);
 }

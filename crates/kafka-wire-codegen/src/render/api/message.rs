@@ -10,6 +10,7 @@ use crate::{
 
 use super::{
     codec::{render_decode, render_encode},
+    descriptor::api_descriptor_name,
     imports::spell,
     prose::sentence,
     structs::render_declared_structs,
@@ -173,29 +174,28 @@ fn render_request_metadata(rust: &mut RustText, message: &Message, group: &ApiGr
         group.api_key
     ));
     rust.line(format!(
-        "const LATEST_VERSION_UNSTABLE: bool = {};",
-        message.latest_version_unstable
+        "const API_DESCRIPTOR: &'static {} = &super::{};",
+        spell(message, "ApiDescriptor"),
+        api_descriptor_name(group)
     ));
     rust.close("");
     rust.blank();
 
-    if let Some(response) = &group.response {
-        rust.open(format!(
-            "impl {} for {}",
-            spell(message, "RequestResponsePair"),
-            message.name.rust_type()
-        ));
-        // The one reference that crosses a module boundary, and it reads the
-        // file-level flat re-export rather than the response's own module: the
-        // re-export is what `kafka_wire::ProduceResponse` already resolves
-        // to, so the pairing names exactly the type a caller names.
-        rust.line(format!(
-            "type Response = super::{};",
-            response.message.name.rust_type()
-        ));
-        rust.close("");
-        rust.blank();
-    }
+    rust.open(format!(
+        "impl {} for {}",
+        spell(message, "RequestResponsePair"),
+        message.name.rust_type()
+    ));
+    // The one reference that crosses a module boundary, and it reads the
+    // file-level flat re-export rather than the response's own module: the
+    // re-export is what `kafka_wire::ProduceResponse` already resolves
+    // to, so the pairing names exactly the type a caller names.
+    rust.line(format!(
+        "type Response = super::{};",
+        group.response.message.name.rust_type()
+    ));
+    rust.close("");
+    rust.blank();
 }
 
 fn option_range(

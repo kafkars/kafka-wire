@@ -16,7 +16,7 @@ pub mod add_offsets_to_txn_request {
         encoded_len_with,
     };
 
-    use crate::{KafkaMessage, KafkaRequest, RequestResponsePair};
+    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, RequestResponsePair};
 
     /// Request body for the `AddOffsetsToTxn` API.
     #[non_exhaustive]
@@ -42,7 +42,7 @@ pub mod add_offsets_to_txn_request {
 
     impl KafkaRequest for AddOffsetsToTxnRequest {
         const API_KEY: ApiKey = ApiKey::new(25);
-        const LATEST_VERSION_UNSTABLE: bool = false;
+        const API_DESCRIPTOR: &'static ApiDescriptor = &super::ADD_OFFSETS_TO_TXN_API_DESCRIPTOR;
     }
 
     impl RequestResponsePair for AddOffsetsToTxnRequest {
@@ -275,7 +275,7 @@ pub mod add_offsets_to_txn_response {
 
 use kafka_wire_core::VersionRange;
 
-use crate::{MessageDescriptor, MessageDirection};
+use crate::{ApiDescriptor, MessageDescriptor, MessageDirection};
 
 pub use add_offsets_to_txn_request::AddOffsetsToTxnRequest;
 pub use add_offsets_to_txn_response::AddOffsetsToTxnResponse;
@@ -287,7 +287,6 @@ pub const ADD_OFFSETS_TO_TXN_REQUEST_DESCRIPTOR: MessageDescriptor = MessageDesc
     MessageDirection::Request,
     VersionRange::new(0, 4),
     Some(VersionRange::new(3, 4)),
-    false,
 );
 
 /// Static metadata for [`AddOffsetsToTxnResponse`].
@@ -295,6 +294,15 @@ pub const ADD_OFFSETS_TO_TXN_RESPONSE_DESCRIPTOR: MessageDescriptor = MessageDes
     25,
     "AddOffsetsToTxnResponse",
     MessageDirection::Response,
+    VersionRange::new(0, 4),
+    Some(VersionRange::new(3, 4)),
+);
+
+/// Static pair metadata for the `AddOffsetsToTxn` API.
+pub const ADD_OFFSETS_TO_TXN_API_DESCRIPTOR: ApiDescriptor = ApiDescriptor::new(
+    25,
+    &ADD_OFFSETS_TO_TXN_REQUEST_DESCRIPTOR,
+    &ADD_OFFSETS_TO_TXN_RESPONSE_DESCRIPTOR,
     VersionRange::new(0, 4),
     Some(VersionRange::new(3, 4)),
     false,

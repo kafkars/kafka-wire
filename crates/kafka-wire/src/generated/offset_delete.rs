@@ -15,7 +15,7 @@ pub mod offset_delete_request {
         KafkaDecode, KafkaEncode, StrBytes, VersionRange, encode_into_with, encoded_len_with,
     };
 
-    use crate::{KafkaMessage, KafkaRequest, RequestResponsePair};
+    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, RequestResponsePair};
 
     /// `OffsetDeleteRequestTopic` as declared by the `OffsetDelete` API.
     #[non_exhaustive]
@@ -222,7 +222,7 @@ pub mod offset_delete_request {
 
     impl KafkaRequest for OffsetDeleteRequest {
         const API_KEY: ApiKey = ApiKey::new(47);
-        const LATEST_VERSION_UNSTABLE: bool = false;
+        const API_DESCRIPTOR: &'static ApiDescriptor = &super::OFFSET_DELETE_API_DESCRIPTOR;
     }
 
     impl RequestResponsePair for OffsetDeleteRequest {
@@ -617,7 +617,7 @@ pub mod offset_delete_response {
 
 use kafka_wire_core::VersionRange;
 
-use crate::{MessageDescriptor, MessageDirection};
+use crate::{ApiDescriptor, MessageDescriptor, MessageDirection};
 
 pub use offset_delete_request::OffsetDeleteRequest;
 pub use offset_delete_response::OffsetDeleteResponse;
@@ -629,7 +629,6 @@ pub const OFFSET_DELETE_REQUEST_DESCRIPTOR: MessageDescriptor = MessageDescripto
     MessageDirection::Request,
     VersionRange::new(0, 0),
     None,
-    false,
 );
 
 /// Static metadata for [`OffsetDeleteResponse`].
@@ -637,6 +636,15 @@ pub const OFFSET_DELETE_RESPONSE_DESCRIPTOR: MessageDescriptor = MessageDescript
     47,
     "OffsetDeleteResponse",
     MessageDirection::Response,
+    VersionRange::new(0, 0),
+    None,
+);
+
+/// Static pair metadata for the `OffsetDelete` API.
+pub const OFFSET_DELETE_API_DESCRIPTOR: ApiDescriptor = ApiDescriptor::new(
+    47,
+    &OFFSET_DELETE_REQUEST_DESCRIPTOR,
+    &OFFSET_DELETE_RESPONSE_DESCRIPTOR,
     VersionRange::new(0, 0),
     None,
     false,

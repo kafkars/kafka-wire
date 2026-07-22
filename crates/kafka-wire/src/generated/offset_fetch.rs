@@ -16,7 +16,7 @@ pub mod offset_fetch_request {
         encoded_len_with,
     };
 
-    use crate::{KafkaMessage, KafkaRequest, RequestResponsePair};
+    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, RequestResponsePair};
 
     /// `OffsetFetchRequestTopic` as declared by the `OffsetFetch` API.
     #[non_exhaustive]
@@ -500,7 +500,7 @@ pub mod offset_fetch_request {
 
     impl KafkaRequest for OffsetFetchRequest {
         const API_KEY: ApiKey = ApiKey::new(9);
-        const LATEST_VERSION_UNSTABLE: bool = false;
+        const API_DESCRIPTOR: &'static ApiDescriptor = &super::OFFSET_FETCH_API_DESCRIPTOR;
     }
 
     impl RequestResponsePair for OffsetFetchRequest {
@@ -1626,7 +1626,7 @@ pub mod offset_fetch_response {
 
 use kafka_wire_core::VersionRange;
 
-use crate::{MessageDescriptor, MessageDirection};
+use crate::{ApiDescriptor, MessageDescriptor, MessageDirection};
 
 pub use offset_fetch_request::OffsetFetchRequest;
 pub use offset_fetch_response::OffsetFetchResponse;
@@ -1638,7 +1638,6 @@ pub const OFFSET_FETCH_REQUEST_DESCRIPTOR: MessageDescriptor = MessageDescriptor
     MessageDirection::Request,
     VersionRange::new(1, 10),
     Some(VersionRange::new(6, 10)),
-    false,
 );
 
 /// Static metadata for [`OffsetFetchResponse`].
@@ -1646,6 +1645,15 @@ pub const OFFSET_FETCH_RESPONSE_DESCRIPTOR: MessageDescriptor = MessageDescripto
     9,
     "OffsetFetchResponse",
     MessageDirection::Response,
+    VersionRange::new(1, 10),
+    Some(VersionRange::new(6, 10)),
+);
+
+/// Static pair metadata for the `OffsetFetch` API.
+pub const OFFSET_FETCH_API_DESCRIPTOR: ApiDescriptor = ApiDescriptor::new(
+    9,
+    &OFFSET_FETCH_REQUEST_DESCRIPTOR,
+    &OFFSET_FETCH_RESPONSE_DESCRIPTOR,
     VersionRange::new(1, 10),
     Some(VersionRange::new(6, 10)),
     false,

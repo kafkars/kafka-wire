@@ -16,7 +16,7 @@ pub mod alter_replica_log_dirs_request {
         encoded_len_with,
     };
 
-    use crate::{KafkaMessage, KafkaRequest, RequestResponsePair};
+    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, RequestResponsePair};
 
     /// `AlterReplicaLogDir` as declared by the `AlterReplicaLogDirs` API.
     #[non_exhaustive]
@@ -317,7 +317,8 @@ pub mod alter_replica_log_dirs_request {
 
     impl KafkaRequest for AlterReplicaLogDirsRequest {
         const API_KEY: ApiKey = ApiKey::new(34);
-        const LATEST_VERSION_UNSTABLE: bool = false;
+        const API_DESCRIPTOR: &'static ApiDescriptor =
+            &super::ALTER_REPLICA_LOG_DIRS_API_DESCRIPTOR;
     }
 
     impl RequestResponsePair for AlterReplicaLogDirsRequest {
@@ -829,7 +830,7 @@ pub mod alter_replica_log_dirs_response {
 
 use kafka_wire_core::VersionRange;
 
-use crate::{MessageDescriptor, MessageDirection};
+use crate::{ApiDescriptor, MessageDescriptor, MessageDirection};
 
 pub use alter_replica_log_dirs_request::AlterReplicaLogDirsRequest;
 pub use alter_replica_log_dirs_response::AlterReplicaLogDirsResponse;
@@ -841,7 +842,6 @@ pub const ALTER_REPLICA_LOG_DIRS_REQUEST_DESCRIPTOR: MessageDescriptor = Message
     MessageDirection::Request,
     VersionRange::new(1, 2),
     Some(VersionRange::new(2, 2)),
-    false,
 );
 
 /// Static metadata for [`AlterReplicaLogDirsResponse`].
@@ -849,6 +849,15 @@ pub const ALTER_REPLICA_LOG_DIRS_RESPONSE_DESCRIPTOR: MessageDescriptor = Messag
     34,
     "AlterReplicaLogDirsResponse",
     MessageDirection::Response,
+    VersionRange::new(1, 2),
+    Some(VersionRange::new(2, 2)),
+);
+
+/// Static pair metadata for the `AlterReplicaLogDirs` API.
+pub const ALTER_REPLICA_LOG_DIRS_API_DESCRIPTOR: ApiDescriptor = ApiDescriptor::new(
+    34,
+    &ALTER_REPLICA_LOG_DIRS_REQUEST_DESCRIPTOR,
+    &ALTER_REPLICA_LOG_DIRS_RESPONSE_DESCRIPTOR,
     VersionRange::new(1, 2),
     Some(VersionRange::new(2, 2)),
     false,

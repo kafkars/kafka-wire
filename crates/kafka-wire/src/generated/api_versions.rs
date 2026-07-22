@@ -16,7 +16,7 @@ pub mod api_versions_request {
         encoded_len_with,
     };
 
-    use crate::{KafkaMessage, KafkaRequest, RequestResponsePair};
+    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, RequestResponsePair};
 
     /// Request body for the `ApiVersions` API.
     #[non_exhaustive]
@@ -54,7 +54,7 @@ pub mod api_versions_request {
 
     impl KafkaRequest for ApiVersionsRequest {
         const API_KEY: ApiKey = ApiKey::new(18);
-        const LATEST_VERSION_UNSTABLE: bool = false;
+        const API_DESCRIPTOR: &'static ApiDescriptor = &super::API_VERSIONS_API_DESCRIPTOR;
     }
 
     impl RequestResponsePair for ApiVersionsRequest {
@@ -811,7 +811,7 @@ pub mod api_versions_response {
 
 use kafka_wire_core::VersionRange;
 
-use crate::{MessageDescriptor, MessageDirection};
+use crate::{ApiDescriptor, MessageDescriptor, MessageDirection};
 
 pub use api_versions_request::ApiVersionsRequest;
 pub use api_versions_response::ApiVersionsResponse;
@@ -823,7 +823,6 @@ pub const API_VERSIONS_REQUEST_DESCRIPTOR: MessageDescriptor = MessageDescriptor
     MessageDirection::Request,
     VersionRange::new(0, 5),
     Some(VersionRange::new(3, 5)),
-    false,
 );
 
 /// Static metadata for [`ApiVersionsResponse`].
@@ -831,6 +830,15 @@ pub const API_VERSIONS_RESPONSE_DESCRIPTOR: MessageDescriptor = MessageDescripto
     18,
     "ApiVersionsResponse",
     MessageDirection::Response,
+    VersionRange::new(0, 5),
+    Some(VersionRange::new(3, 5)),
+);
+
+/// Static pair metadata for the `ApiVersions` API.
+pub const API_VERSIONS_API_DESCRIPTOR: ApiDescriptor = ApiDescriptor::new(
+    18,
+    &API_VERSIONS_REQUEST_DESCRIPTOR,
+    &API_VERSIONS_RESPONSE_DESCRIPTOR,
     VersionRange::new(0, 5),
     Some(VersionRange::new(3, 5)),
     false,

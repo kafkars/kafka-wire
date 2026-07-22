@@ -43,14 +43,21 @@ fn every_enabled_versioned_message_has_one_typed_dispatch_arm() {
             );
             continue;
         };
-        let arm = format!(
-            "round_trip::<kafka_wire::{}>(body, select_version(version_selector, {first}, {last}))",
+        let arm =
+            format!("if let Some(version) = select_version(version_selector, {first}, {last})",);
+        let call = format!(
+            "round_trip::<kafka_wire::{}>(body, version)",
             message.name.rust_type()
         );
+        assert!(
+            rendered.contains(&arm),
+            "{} did not receive its exact version bounds",
+            message.name.protocol()
+        );
         assert_eq!(
-            rendered.matches(&arm).count(),
+            rendered.matches(&call).count(),
             1,
-            "{} did not receive exactly one dispatch arm",
+            "{} did not receive exactly one typed dispatch call",
             message.name.protocol()
         );
         expected += 1;
@@ -60,5 +67,30 @@ fn every_enabled_versioned_message_has_one_typed_dispatch_arm() {
         expected > 150,
         "the dispatch covered only {expected} messages"
     );
-    assert_eq!(rendered.matches("=> round_trip::<").count(), expected);
+    assert_eq!(
+        rendered.matches("round_trip::<kafka_wire::").count(),
+        expected
+    );
+    assert_eq!(
+        rendered
+            .matches("if let Some(version) = select_version")
+            .count(),
+        expected
+    );
+}
+
+#[test]
+fn selector_arithmetic_represents_the_full_i16_version_domain() {
+    let root = repository_root();
+    let lock = ProtocolLock::read(&root.join("spec/protocol.lock"))
+        .unwrap_or_else(|error| panic!("read protocol lock: {error}"));
+    let grouped = group_sources(
+        load_sources(&root, &lock).unwrap_or_else(|error| panic!("load pinned corpus: {error}")),
+    )
+    .unwrap_or_else(|error| panic!("group pinned corpus: {error}"));
+    let rendered = render_fuzz_dispatch(&grouped.api, &lock.kafka.commit)
+        .unwrap_or_else(|error| panic!("render fuzz dispatch: {error}"));
+
+    assert!(rendered.contains("i32::from(last).checked_sub(i32::from(first))"));
+    assert!(!rendered.contains("unwrap_or"));
 }

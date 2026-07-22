@@ -24,8 +24,6 @@ pub struct MessageDescriptor {
     pub supported_versions: VersionRange,
     /// Flexible versions intersected with supported versions.
     pub flexible_versions: Option<VersionRange>,
-    /// Whether the highest version is excluded from default negotiation.
-    pub latest_version_unstable: bool,
 }
 
 impl MessageDescriptor {
@@ -36,12 +34,48 @@ impl MessageDescriptor {
         direction: MessageDirection,
         supported_versions: VersionRange,
         flexible_versions: Option<VersionRange>,
-        latest_version_unstable: bool,
     ) -> Self {
         Self {
             api_key: ApiKey::new(api_key),
             name,
             direction,
+            supported_versions,
+            flexible_versions,
+        }
+    }
+}
+
+/// Static metadata shared by one validated request/response API pair.
+#[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
+pub struct ApiDescriptor {
+    /// Numeric Kafka API key.
+    pub api_key: ApiKey,
+    /// Directional request metadata.
+    pub request: &'static MessageDescriptor,
+    /// Directional response metadata.
+    pub response: &'static MessageDescriptor,
+    /// Inclusive versions supported by both directions.
+    pub supported_versions: VersionRange,
+    /// Flexible versions supported by both directions.
+    pub flexible_versions: Option<VersionRange>,
+    /// Whether the highest supported version is excluded from default negotiation.
+    pub latest_version_unstable: bool,
+}
+
+impl ApiDescriptor {
+    /// Creates static metadata from one compiler-validated API pair.
+    pub const fn new(
+        api_key: i16,
+        request: &'static MessageDescriptor,
+        response: &'static MessageDescriptor,
+        supported_versions: VersionRange,
+        flexible_versions: Option<VersionRange>,
+        latest_version_unstable: bool,
+    ) -> Self {
+        Self {
+            api_key: ApiKey::new(api_key),
+            request,
+            response,
             supported_versions,
             flexible_versions,
             latest_version_unstable,

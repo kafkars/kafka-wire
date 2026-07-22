@@ -16,7 +16,7 @@ pub mod begin_quorum_epoch_request {
         encoded_len_with,
     };
 
-    use crate::{KafkaMessage, KafkaRequest, RequestResponsePair};
+    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, RequestResponsePair};
 
     /// `TopicData` as declared by the `BeginQuorumEpoch` API.
     #[non_exhaustive]
@@ -448,7 +448,7 @@ pub mod begin_quorum_epoch_request {
 
     impl KafkaRequest for BeginQuorumEpochRequest {
         const API_KEY: ApiKey = ApiKey::new(53);
-        const LATEST_VERSION_UNSTABLE: bool = false;
+        const API_DESCRIPTOR: &'static ApiDescriptor = &super::BEGIN_QUORUM_EPOCH_API_DESCRIPTOR;
     }
 
     impl RequestResponsePair for BeginQuorumEpochRequest {
@@ -1154,7 +1154,7 @@ pub mod begin_quorum_epoch_response {
 
 use kafka_wire_core::VersionRange;
 
-use crate::{MessageDescriptor, MessageDirection};
+use crate::{ApiDescriptor, MessageDescriptor, MessageDirection};
 
 pub use begin_quorum_epoch_request::BeginQuorumEpochRequest;
 pub use begin_quorum_epoch_response::BeginQuorumEpochResponse;
@@ -1166,7 +1166,6 @@ pub const BEGIN_QUORUM_EPOCH_REQUEST_DESCRIPTOR: MessageDescriptor = MessageDesc
     MessageDirection::Request,
     VersionRange::new(0, 1),
     Some(VersionRange::new(1, 1)),
-    false,
 );
 
 /// Static metadata for [`BeginQuorumEpochResponse`].
@@ -1174,6 +1173,15 @@ pub const BEGIN_QUORUM_EPOCH_RESPONSE_DESCRIPTOR: MessageDescriptor = MessageDes
     53,
     "BeginQuorumEpochResponse",
     MessageDirection::Response,
+    VersionRange::new(0, 1),
+    Some(VersionRange::new(1, 1)),
+);
+
+/// Static pair metadata for the `BeginQuorumEpoch` API.
+pub const BEGIN_QUORUM_EPOCH_API_DESCRIPTOR: ApiDescriptor = ApiDescriptor::new(
+    53,
+    &BEGIN_QUORUM_EPOCH_REQUEST_DESCRIPTOR,
+    &BEGIN_QUORUM_EPOCH_RESPONSE_DESCRIPTOR,
     VersionRange::new(0, 1),
     Some(VersionRange::new(1, 1)),
     false,

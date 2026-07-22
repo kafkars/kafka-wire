@@ -16,7 +16,7 @@ pub mod streams_group_topology_description_update_request {
         encoded_len_with,
     };
 
-    use crate::{KafkaMessage, KafkaRequest, RequestResponsePair};
+    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, RequestResponsePair};
 
     /// `TopologyDescription` as declared by the `StreamsGroupTopologyDescriptionUpdate` API.
     #[non_exhaustive]
@@ -579,7 +579,8 @@ pub mod streams_group_topology_description_update_request {
 
     impl KafkaRequest for StreamsGroupTopologyDescriptionUpdateRequest {
         const API_KEY: ApiKey = ApiKey::new(93);
-        const LATEST_VERSION_UNSTABLE: bool = false;
+        const API_DESCRIPTOR: &'static ApiDescriptor =
+            &super::STREAMS_GROUP_TOPOLOGY_DESCRIPTION_UPDATE_API_DESCRIPTOR;
     }
 
     impl RequestResponsePair for StreamsGroupTopologyDescriptionUpdateRequest {
@@ -828,7 +829,7 @@ pub mod streams_group_topology_description_update_response {
 
 use kafka_wire_core::VersionRange;
 
-use crate::{MessageDescriptor, MessageDirection};
+use crate::{ApiDescriptor, MessageDescriptor, MessageDirection};
 
 pub use streams_group_topology_description_update_request::StreamsGroupTopologyDescriptionUpdateRequest;
 pub use streams_group_topology_description_update_response::StreamsGroupTopologyDescriptionUpdateResponse;
@@ -841,7 +842,6 @@ pub const STREAMS_GROUP_TOPOLOGY_DESCRIPTION_UPDATE_REQUEST_DESCRIPTOR: MessageD
         MessageDirection::Request,
         VersionRange::new(0, 0),
         Some(VersionRange::new(0, 0)),
-        false,
     );
 
 /// Static metadata for [`StreamsGroupTopologyDescriptionUpdateResponse`].
@@ -850,6 +850,16 @@ pub const STREAMS_GROUP_TOPOLOGY_DESCRIPTION_UPDATE_RESPONSE_DESCRIPTOR: Message
         93,
         "StreamsGroupTopologyDescriptionUpdateResponse",
         MessageDirection::Response,
+        VersionRange::new(0, 0),
+        Some(VersionRange::new(0, 0)),
+    );
+
+/// Static pair metadata for the `StreamsGroupTopologyDescriptionUpdate` API.
+pub const STREAMS_GROUP_TOPOLOGY_DESCRIPTION_UPDATE_API_DESCRIPTOR: ApiDescriptor =
+    ApiDescriptor::new(
+        93,
+        &STREAMS_GROUP_TOPOLOGY_DESCRIPTION_UPDATE_REQUEST_DESCRIPTOR,
+        &STREAMS_GROUP_TOPOLOGY_DESCRIPTION_UPDATE_RESPONSE_DESCRIPTOR,
         VersionRange::new(0, 0),
         Some(VersionRange::new(0, 0)),
         false,

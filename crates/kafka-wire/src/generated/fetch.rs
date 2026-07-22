@@ -16,7 +16,7 @@ pub mod fetch_request {
         VersionRange, encode_into_with, encoded_len_with,
     };
 
-    use crate::{KafkaMessage, KafkaRequest, RequestResponsePair};
+    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, RequestResponsePair};
 
     /// `ReplicaState` as declared by the `Fetch` API.
     #[non_exhaustive]
@@ -725,7 +725,7 @@ pub mod fetch_request {
 
     impl KafkaRequest for FetchRequest {
         const API_KEY: ApiKey = ApiKey::new(1);
-        const LATEST_VERSION_UNSTABLE: bool = false;
+        const API_DESCRIPTOR: &'static ApiDescriptor = &super::FETCH_API_DESCRIPTOR;
     }
 
     impl RequestResponsePair for FetchRequest {
@@ -2244,7 +2244,7 @@ pub mod fetch_response {
 
 use kafka_wire_core::VersionRange;
 
-use crate::{MessageDescriptor, MessageDirection};
+use crate::{ApiDescriptor, MessageDescriptor, MessageDirection};
 
 pub use fetch_request::FetchRequest;
 pub use fetch_response::FetchResponse;
@@ -2256,7 +2256,6 @@ pub const FETCH_REQUEST_DESCRIPTOR: MessageDescriptor = MessageDescriptor::new(
     MessageDirection::Request,
     VersionRange::new(4, 18),
     Some(VersionRange::new(12, 18)),
-    false,
 );
 
 /// Static metadata for [`FetchResponse`].
@@ -2264,6 +2263,15 @@ pub const FETCH_RESPONSE_DESCRIPTOR: MessageDescriptor = MessageDescriptor::new(
     1,
     "FetchResponse",
     MessageDirection::Response,
+    VersionRange::new(4, 18),
+    Some(VersionRange::new(12, 18)),
+);
+
+/// Static pair metadata for the `Fetch` API.
+pub const FETCH_API_DESCRIPTOR: ApiDescriptor = ApiDescriptor::new(
+    1,
+    &FETCH_REQUEST_DESCRIPTOR,
+    &FETCH_RESPONSE_DESCRIPTOR,
     VersionRange::new(4, 18),
     Some(VersionRange::new(12, 18)),
     false,

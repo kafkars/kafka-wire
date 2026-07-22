@@ -16,7 +16,7 @@ pub mod add_raft_voter_request {
         encoded_len_with,
     };
 
-    use crate::{KafkaMessage, KafkaRequest, RequestResponsePair};
+    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, RequestResponsePair};
 
     /// `Listener` as declared by the `AddRaftVoter` API.
     #[non_exhaustive]
@@ -181,7 +181,7 @@ pub mod add_raft_voter_request {
 
     impl KafkaRequest for AddRaftVoterRequest {
         const API_KEY: ApiKey = ApiKey::new(80);
-        const LATEST_VERSION_UNSTABLE: bool = false;
+        const API_DESCRIPTOR: &'static ApiDescriptor = &super::ADD_RAFT_VOTER_API_DESCRIPTOR;
     }
 
     impl RequestResponsePair for AddRaftVoterRequest {
@@ -443,7 +443,7 @@ pub mod add_raft_voter_response {
 
 use kafka_wire_core::VersionRange;
 
-use crate::{MessageDescriptor, MessageDirection};
+use crate::{ApiDescriptor, MessageDescriptor, MessageDirection};
 
 pub use add_raft_voter_request::AddRaftVoterRequest;
 pub use add_raft_voter_response::AddRaftVoterResponse;
@@ -455,7 +455,6 @@ pub const ADD_RAFT_VOTER_REQUEST_DESCRIPTOR: MessageDescriptor = MessageDescript
     MessageDirection::Request,
     VersionRange::new(0, 1),
     Some(VersionRange::new(0, 1)),
-    false,
 );
 
 /// Static metadata for [`AddRaftVoterResponse`].
@@ -463,6 +462,15 @@ pub const ADD_RAFT_VOTER_RESPONSE_DESCRIPTOR: MessageDescriptor = MessageDescrip
     80,
     "AddRaftVoterResponse",
     MessageDirection::Response,
+    VersionRange::new(0, 1),
+    Some(VersionRange::new(0, 1)),
+);
+
+/// Static pair metadata for the `AddRaftVoter` API.
+pub const ADD_RAFT_VOTER_API_DESCRIPTOR: ApiDescriptor = ApiDescriptor::new(
+    80,
+    &ADD_RAFT_VOTER_REQUEST_DESCRIPTOR,
+    &ADD_RAFT_VOTER_RESPONSE_DESCRIPTOR,
     VersionRange::new(0, 1),
     Some(VersionRange::new(0, 1)),
     false,

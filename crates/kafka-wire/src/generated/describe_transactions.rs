@@ -16,7 +16,7 @@ pub mod describe_transactions_request {
         encoded_len_with,
     };
 
-    use crate::{KafkaMessage, KafkaRequest, RequestResponsePair};
+    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, RequestResponsePair};
 
     /// Request body for the `DescribeTransactions` API.
     #[non_exhaustive]
@@ -36,7 +36,7 @@ pub mod describe_transactions_request {
 
     impl KafkaRequest for DescribeTransactionsRequest {
         const API_KEY: ApiKey = ApiKey::new(65);
-        const LATEST_VERSION_UNSTABLE: bool = false;
+        const API_DESCRIPTOR: &'static ApiDescriptor = &super::DESCRIBE_TRANSACTIONS_API_DESCRIPTOR;
     }
 
     impl RequestResponsePair for DescribeTransactionsRequest {
@@ -537,7 +537,7 @@ pub mod describe_transactions_response {
 
 use kafka_wire_core::VersionRange;
 
-use crate::{MessageDescriptor, MessageDirection};
+use crate::{ApiDescriptor, MessageDescriptor, MessageDirection};
 
 pub use describe_transactions_request::DescribeTransactionsRequest;
 pub use describe_transactions_response::DescribeTransactionsResponse;
@@ -549,7 +549,6 @@ pub const DESCRIBE_TRANSACTIONS_REQUEST_DESCRIPTOR: MessageDescriptor = MessageD
     MessageDirection::Request,
     VersionRange::new(0, 0),
     Some(VersionRange::new(0, 0)),
-    false,
 );
 
 /// Static metadata for [`DescribeTransactionsResponse`].
@@ -557,6 +556,15 @@ pub const DESCRIBE_TRANSACTIONS_RESPONSE_DESCRIPTOR: MessageDescriptor = Message
     65,
     "DescribeTransactionsResponse",
     MessageDirection::Response,
+    VersionRange::new(0, 0),
+    Some(VersionRange::new(0, 0)),
+);
+
+/// Static pair metadata for the `DescribeTransactions` API.
+pub const DESCRIBE_TRANSACTIONS_API_DESCRIPTOR: ApiDescriptor = ApiDescriptor::new(
+    65,
+    &DESCRIBE_TRANSACTIONS_REQUEST_DESCRIPTOR,
+    &DESCRIBE_TRANSACTIONS_RESPONSE_DESCRIPTOR,
     VersionRange::new(0, 0),
     Some(VersionRange::new(0, 0)),
     false,

@@ -2,7 +2,10 @@
 
 use crate::{group::ApiGroup, provenance::generated_banner, source::MessageSource};
 
-use super::{api::descriptor_name, text::RustText};
+use super::{
+    api::{api_descriptor_name, descriptor_name},
+    text::RustText,
+};
 
 pub(crate) fn render_module_file(
     groups: &[ApiGroup],
@@ -27,10 +30,7 @@ pub(crate) fn render_module_file(
     rust.line("#![allow(clippy::too_many_lines)]");
     rust.blank();
 
-    let mut modules = groups
-        .iter()
-        .map(|group| group.module_name.as_str())
-        .collect::<Vec<_>>();
+    let mut modules = groups.iter().map(ApiGroup::module_name).collect::<Vec<_>>();
     modules.push("registry");
     modules.push("header_version");
     if !unkeyed.is_empty() {
@@ -55,11 +55,12 @@ pub(crate) fn render_module_file(
 /// files must name exactly the same set — the root list is what makes those
 /// names public — and a second traversal is a second chance to disagree.
 ///
-/// Each message contributes three names: its descriptor, its type, and the
-/// module the module-scoped naming rule scopes its nested structs to. The module has to be
-/// re-exported, not merely emitted — a nested struct is reachable only through
-/// it now, and a `pub mod` nothing re-exports is both unreachable to a caller
-/// and an `unreachable_pub` warning on checked-in output.
+/// Each message contributes three names: its directional descriptor, its type,
+/// and the module the module-scoped naming rule scopes its nested structs to. Each group adds its
+/// pair descriptor. The message module has to be re-exported, not merely
+/// emitted — a nested struct is reachable only through it now, and a `pub mod`
+/// nothing re-exports is both unreachable to a caller and an `unreachable_pub`
+/// warning on checked-in output.
 pub(crate) fn module_exports(
     groups: &[ApiGroup],
     unkeyed: &[MessageSource],
@@ -77,13 +78,17 @@ pub(crate) fn module_exports(
                     ]
                 })
                 .collect::<Vec<_>>();
+            items.push(api_descriptor_name(group));
             items.sort_unstable();
-            (group.module_name.clone(), items)
+            (group.module_name().to_owned(), items)
         })
         .collect::<Vec<_>>();
     exports.push((
         "registry".to_owned(),
-        vec!["MESSAGE_DESCRIPTORS".to_owned()],
+        vec![
+            "API_DESCRIPTORS".to_owned(),
+            "MESSAGE_DESCRIPTORS".to_owned(),
+        ],
     ));
     exports.push((
         "header_version".to_owned(),
