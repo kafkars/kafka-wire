@@ -102,7 +102,7 @@ fn lower_nested_field(
     let name = FieldName::try_new(raw.name).map_err(|error| LowerError::Identifier {
         path: path.to_path_buf(),
         kind: "field",
-        name: error.input.clone(),
+        name: error.input().to_owned(),
         reason: error.to_string(),
     })?;
 

@@ -31,6 +31,15 @@ impl RustIdent {
     }
 
     fn from_normalized(source: &str, normalized: String) -> Result<Self, RustIdentError> {
+        if let Some(character) = source.chars().find(|character| {
+            character.is_control() || matches!(character, '\u{2028}' | '\u{2029}')
+        }) {
+            return Err(RustIdentError::DisallowedCharacter {
+                input: source.to_owned(),
+                character,
+            });
+        }
+
         if parses_as_ident(&normalized) {
             return Ok(Self(normalized));
         }
@@ -47,7 +56,7 @@ impl RustIdent {
             }
         }
 
-        Err(RustIdentError {
+        Err(RustIdentError::Invalid {
             input: source.to_owned(),
             normalized,
         })
@@ -80,12 +89,32 @@ fn parses_as_ident(candidate: &str) -> bool {
 
 /// An upstream name cannot become a valid emitted Rust identifier.
 #[derive(Clone, Debug, Error, Eq, PartialEq)]
-#[error("`{input}` normalizes to invalid Rust identifier `{normalized}`")]
-pub struct RustIdentError {
-    /// Upstream spelling.
-    pub input: String,
-    /// Case-normalized spelling rejected by the Rust parser.
-    pub normalized: String,
+pub enum RustIdentError {
+    /// Case normalization did not produce a Rust identifier.
+    #[error("`{input}` normalizes to invalid Rust identifier `{normalized}`")]
+    Invalid {
+        /// Upstream spelling.
+        input: String,
+        /// Case-normalized spelling rejected by the Rust parser.
+        normalized: String,
+    },
+    /// The upstream spelling contains a character that can escape generated text.
+    #[error("`{input}` contains disallowed identifier character {character:?}")]
+    DisallowedCharacter {
+        /// Upstream spelling.
+        input: String,
+        /// Control or Unicode line-separator character.
+        character: char,
+    },
+}
+
+impl RustIdentError {
+    /// Returns the rejected upstream spelling.
+    pub fn input(&self) -> &str {
+        match self {
+            Self::Invalid { input, .. } | Self::DisallowedCharacter { input, .. } => input,
+        }
+    }
 }
 
 /// Protocol and Rust spellings for a message.

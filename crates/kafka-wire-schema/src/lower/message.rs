@@ -25,7 +25,7 @@ pub fn lower_message(raw: RawMessage, source: PathBuf) -> Result<Message, LowerE
     let name = MessageName::try_new(raw.name).map_err(|error| LowerError::Identifier {
         path: source.clone(),
         kind: "message",
-        name: error.input.clone(),
+        name: error.input().to_owned(),
         reason: error.to_string(),
     })?;
 
@@ -96,7 +96,7 @@ fn lower_common_struct(
     let name = StructRef::try_qualify(owner, raw.name).map_err(|error| LowerError::Identifier {
         path: source.to_path_buf(),
         kind: "common struct",
-        name: error.input.clone(),
+        name: error.input().to_owned(),
         reason: error.to_string(),
     })?;
 
