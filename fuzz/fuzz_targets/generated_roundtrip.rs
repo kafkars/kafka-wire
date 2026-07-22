@@ -3,6 +3,7 @@
 #![no_main]
 
 use kafka_wire_core::{ApiVersion, Bytes, DecodeLimits, KafkaDecode, KafkaEncode};
+use kafka_wire::ProtocolEq;
 use libfuzzer_sys::fuzz_target;
 
 #[path = "../../crates/kafka-wire/src/generated/fuzz_roundtrip.rs"]
@@ -19,7 +20,7 @@ fuzz_target!(|data: &[u8]| {
 
 fn round_trip<T>(body: &[u8], version: ApiVersion)
 where
-    T: KafkaDecode + KafkaEncode + std::fmt::Debug + PartialEq,
+    T: KafkaDecode + KafkaEncode + ProtocolEq + std::fmt::Debug,
 {
     let bytes = Bytes::copy_from_slice(body);
     if let Ok(value) = T::decode_from_bytes(bytes, version, DecodeLimits::default()) {
@@ -28,7 +29,10 @@ where
             .unwrap_or_else(|error| panic!("decoded value failed to encode: {error}"));
         let decoded = T::decode_from_bytes(encoded.clone(), version, DecodeLimits::default())
             .unwrap_or_else(|error| panic!("encoded value failed to decode: {error}"));
-        assert_eq!(decoded, value, "decode-encode-decode changed the value");
+        assert!(
+            decoded.protocol_eq(&value),
+            "decode-encode-decode changed protocol state"
+        );
         let canonical = decoded
             .encode_to_bytes(version)
             .unwrap_or_else(|error| panic!("round-tripped value failed to encode: {error}"));
