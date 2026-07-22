@@ -3,24 +3,23 @@
 //! General representability and recursive descent belong to `validation`; this
 //! module owns only the tag-ownership phase and its richer diagnostic.
 
-use kafka_wire_schema::{Field, Message};
+use kafka_wire_schema::Message;
 
-use crate::render::{field, text::RustText};
+use crate::render::{field, tag_plan::KnownTagPlan, text::RustText};
 
 use super::{
     imports::{ExternalSymbol as S, spell},
-    tagged::known_tags,
     tagged_proof::RenderedKnownTags,
 };
 
 pub(super) fn render_known_tag_ownership(
     rust: &mut RustText,
-    fields: &[Field],
+    plans: &[KnownTagPlan<'_>],
     message: &Message,
     owner_name: &str,
 ) -> RenderedKnownTags {
     let mut rendered = RenderedKnownTags::default();
-    if known_tags(fields).is_empty() {
+    if plans.is_empty() {
         return rendered;
     }
     rust.open(format!(
@@ -29,10 +28,11 @@ pub(super) fn render_known_tag_ownership(
         spell(message, S::Result),
         spell(message, S::EncodeError),
     ));
-    for (tag, _, field) in known_tags(fields) {
-        rendered.record(tag);
+    for plan in plans {
+        let tag = plan.tag();
         let collision = format!("self.unknown_tagged_fields.contains_tag({tag})");
-        let condition = field::presence_condition(field, message)
+        let condition = plan
+            .owner_condition(message)
             .map_or(collision.clone(), |presence| {
                 format!("{} && {collision}", field::as_conjunct(&presence))
             });
@@ -47,6 +47,7 @@ pub(super) fn render_known_tag_ownership(
         rust.line("version,");
         rust.close(");");
         rust.close("");
+        rendered.record(plan);
     }
     rust.line(format!("{}(())", spell(message, S::Ok)));
     rust.close("");

@@ -9,7 +9,7 @@ use crate::{
     GenerationError, group::ApiGroup, provenance::generated_banner, source::MessageSource,
 };
 
-use super::{api::declared_structs, field, invariant, text::RustText};
+use super::{api::declared_structs, field, invariant, tag_plan::known_tag_plans, text::RustText};
 
 struct TagBoundary {
     rust_type: String,
@@ -140,22 +140,16 @@ fn collect_owner_boundaries(
     else {
         return Ok(());
     };
-    for field in fields.iter().filter(|field| field.tag.is_some()) {
-        let tag = field
-            .tag
-            .ok_or_else(|| GenerationError::InternalInvariant {
-                message: message.name.protocol().to_owned(),
-                invariant: format!("tagged field {} lost its tag", field.name.protocol()),
-            })?;
-        let active = field.versions.intersection(&message.valid_versions);
-        let (active_start, _) = invariant::bounded(message, &active, "known tag versions")?;
+    for plan in known_tag_plans(fields, message) {
+        let (active_start, _) =
+            invariant::bounded(message, plan.active_versions(), "known tag versions")?;
         if active_start > flexible_start {
             boundaries.push(TagBoundary {
                 rust_type: rust_type.to_owned(),
                 owner: owner.to_owned(),
                 before: active_start - 1,
                 active: active_start,
-                tag,
+                tag: plan.tag(),
             });
         }
     }

@@ -10,6 +10,7 @@ mod module_file;
 mod registry;
 mod tag_boundaries;
 mod tag_claims;
+mod tag_plan;
 mod text;
 mod verification;
 

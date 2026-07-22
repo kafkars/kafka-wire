@@ -10,7 +10,7 @@ use crate::{
     GenerationError, group::ApiGroup, provenance::generated_banner, source::MessageSource,
 };
 
-use super::{api::declared_structs, field, invariant, text::RustText};
+use super::{api::declared_structs, field, invariant, tag_plan::known_tag_plans, text::RustText};
 
 struct TagClaim {
     rust_type: String,
@@ -130,20 +130,14 @@ fn collect_owner_claims(
     message: &Message,
     claims: &mut Vec<TagClaim>,
 ) -> Result<(), GenerationError> {
-    for field in fields.iter().filter(|field| field.tag.is_some()) {
-        let tag = field
-            .tag
-            .ok_or_else(|| GenerationError::InternalInvariant {
-                message: message.name.protocol().to_owned(),
-                invariant: format!("tagged field {} lost its tag", field.name.protocol()),
-            })?;
-        let active = field.versions.intersection(&message.valid_versions);
-        let (version, _) = invariant::bounded(message, &active, "known tag versions")?;
+    for plan in known_tag_plans(fields, message) {
+        let (version, _) =
+            invariant::bounded(message, plan.active_versions(), "known tag versions")?;
         claims.push(TagClaim {
             rust_type: rust_type.to_owned(),
             owner: owner.to_owned(),
             version,
-            tag,
+            tag: plan.tag(),
         });
     }
     Ok(())

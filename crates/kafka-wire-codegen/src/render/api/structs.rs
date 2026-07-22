@@ -10,7 +10,11 @@ use kafka_wire_schema::{Field, FieldType, Message, VersionSet};
 
 use crate::{
     GenerationError,
-    render::{field, invariant, text::RustText},
+    render::{
+        field, invariant,
+        tag_plan::{KnownTagPlan, known_tag_plans},
+        text::RustText,
+    },
 };
 
 use super::codec::{render_construction, render_reads, render_struct_encode};
@@ -19,7 +23,7 @@ use super::imports::{ExternalSymbol as S, spell};
 use super::prose::sentence;
 use super::protocol_eq::render_protocol_eq;
 use super::tagged::render_tagged_decode;
-use super::tagged_proof::verify_known_tag_rendering;
+use super::tagged_proof::{RenderedKnownTags, verify_known_tag_rendering};
 use super::validation::{Owner, render_validation};
 
 /// Renders one whole schema as a standalone struct.
@@ -172,7 +176,10 @@ fn render_struct_with(
         Identity::Message => Owner::Message,
         Identity::Nested => Owner::Struct(rust_type),
     };
-    let validated_tags = render_validation(rust, rust_type, fields, message, owner, flexible);
+    let tag_plans = known_tag_plans(fields, message);
+    let validated_tags = render_validation(
+        rust, rust_type, fields, message, owner, flexible, &tag_plans,
+    );
 
     if !derive_default {
         rust.open(format!(
@@ -202,9 +209,19 @@ fn render_struct_with(
 
     render_protocol_eq(rust, rust_type, fields, message, flexible);
 
-    render_struct_decode(rust, rust_type, fields, message, identity, flexible)?;
-    let claimed_tags = render_struct_encode(rust, rust_type, fields, message, flexible)?;
-    verify_known_tag_rendering(fields, message, rust_type, &validated_tags, &claimed_tags)?;
+    let decoded_tags = render_struct_decode(
+        rust, rust_type, fields, message, identity, flexible, &tag_plans,
+    )?;
+    let encoded_tags =
+        render_struct_encode(rust, rust_type, fields, message, flexible, &tag_plans)?;
+    verify_known_tag_rendering(
+        &tag_plans,
+        message,
+        rust_type,
+        &decoded_tags,
+        &validated_tags,
+        &encoded_tags,
+    )?;
     Ok(())
 }
 
@@ -294,7 +311,8 @@ fn render_struct_decode(
     message: &Message,
     identity: Identity,
     flexible: bool,
-) -> Result<(), GenerationError> {
+    tag_plans: &[KnownTagPlan<'_>],
+) -> Result<RenderedKnownTags, GenerationError> {
     rust.open(format!(
         "impl {} for {rust_type}",
         spell(message, S::KafkaDecode)
@@ -324,13 +342,15 @@ fn render_struct_decode(
     }
     rust.blank();
     render_reads(rust, fields, message)?;
-    if flexible {
-        render_tagged_decode(rust, fields, message)?;
-    }
+    let rendered = if flexible {
+        render_tagged_decode(rust, tag_plans, message)?
+    } else {
+        RenderedKnownTags::default()
+    };
     rust.blank();
     render_construction(rust, fields, flexible, message);
     rust.close("");
     rust.close("");
     rust.blank();
-    Ok(())
+    Ok(rendered)
 }

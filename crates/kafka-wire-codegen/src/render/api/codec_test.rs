@@ -9,7 +9,7 @@ use std::path::PathBuf;
 
 use kafka_wire_schema::{SourceFile, lower_message, parse_jsonc};
 
-use crate::render::text::RustText;
+use crate::render::{tag_plan::known_tag_plans, text::RustText};
 
 use super::codec::render_decode;
 
@@ -32,8 +32,10 @@ fn sibling_names_cannot_alias_compiler_owned_decode_locals() {
     let raw = parse_jsonc(&file).unwrap_or_else(|error| panic!("parse fixture: {error}"));
     let message = lower_message(raw, PathBuf::from(file.path()))
         .unwrap_or_else(|error| panic!("lower fixture: {error}"));
+    let tag_plans = known_tag_plans(&message.fields, &message);
     let mut rust = RustText::default();
-    render_decode(&mut rust, &message).unwrap_or_else(|error| panic!("render fixture: {error}"));
+    render_decode(&mut rust, &message, &tag_plans)
+        .unwrap_or_else(|error| panic!("render fixture: {error}"));
     let rendered = rust.finish();
 
     assert!(rendered.contains("let __kw_field_0 = decoder.read_i32()?;"));

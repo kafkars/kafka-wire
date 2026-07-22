@@ -1,22 +1,38 @@
-//! Structural proof that both generated tag-ownership paths match the IR.
+//! Structural proof that every generated known-tag phase matches one typed plan.
 //!
-//! Validation and encoding render separately, so this module compares the tag
-//! IDs each renderer actually emitted rather than trusting shared source text.
+//! Each emitter records tag identity and activation versions beside the Rust
+//! statement it writes. This module rejects any omitted or divergent phase.
 
-use kafka_wire_schema::{Field, Message};
+use kafka_wire_schema::{Message, VersionSet};
 
-use crate::{GenerationError, render::api::tagged::known_tags};
+use crate::{GenerationError, render::tag_plan::KnownTagPlan};
 
-/// Tag IDs recorded beside one generated construct.
+/// One proof fact emitted beside a phase-specific Rust statement.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub(super) struct RenderedTag {
+    pub(super) tag: u32,
+    pub(super) active_versions: VersionSet,
+}
+
+impl RenderedTag {
+    fn from_plan(plan: &KnownTagPlan<'_>) -> Self {
+        Self {
+            tag: plan.tag(),
+            active_versions: plan.active_versions().clone(),
+        }
+    }
+}
+
+/// Ordered proof facts recorded by one generated phase.
 #[derive(Debug, Default, Eq, PartialEq)]
 pub(super) struct RenderedKnownTags {
-    tags: Vec<u32>,
+    pub(super) tags: Vec<RenderedTag>,
 }
 
 impl RenderedKnownTags {
-    /// Records one tag at the statement that renders it.
-    pub(super) fn record(&mut self, tag: u32) {
-        self.tags.push(tag);
+    /// Records the exact plan at the statement that renders it.
+    pub(super) fn record(&mut self, plan: &KnownTagPlan<'_>) {
+        self.tags.push(RenderedTag::from_plan(plan));
     }
 
     /// Returns whether this renderer emitted no tag-specific construct.
@@ -24,31 +40,51 @@ impl RenderedKnownTags {
         self.tags.is_empty()
     }
 
-    pub(super) fn matches(&self, expected: &[u32]) -> bool {
+    pub(super) fn matches(&self, expected: &[RenderedTag]) -> bool {
         self.tags == expected
     }
 }
 
-/// Requires IR ownership, validation checks, and runtime claims to be identical.
+/// Claim and measurement statements emitted by the encoding phase.
+#[derive(Debug, Default, Eq, PartialEq)]
+pub(super) struct RenderedTagEncoding {
+    claims: RenderedKnownTags,
+    measurements: RenderedKnownTags,
+}
+
+impl RenderedTagEncoding {
+    pub(super) fn record_claim(&mut self, plan: &KnownTagPlan<'_>) {
+        self.claims.record(plan);
+    }
+
+    pub(super) fn record_measurement(&mut self, plan: &KnownTagPlan<'_>) {
+        self.measurements.record(plan);
+    }
+}
+
+/// Requires the IR plan and every emitted tag phase to be identical.
 pub(super) fn verify_known_tag_rendering(
-    fields: &[Field],
+    plans: &[KnownTagPlan<'_>],
     message: &Message,
     owner: &str,
+    decoded: &RenderedKnownTags,
     validated: &RenderedKnownTags,
-    claimed: &RenderedKnownTags,
+    encoded: &RenderedTagEncoding,
 ) -> Result<(), GenerationError> {
-    let expected = known_tags(fields)
-        .into_iter()
-        .map(|(tag, _, _)| tag)
-        .collect::<Vec<_>>();
-    if validated.matches(&expected) && claimed.matches(&expected) {
+    let expected = plans.iter().map(RenderedTag::from_plan).collect::<Vec<_>>();
+    if decoded.matches(&expected)
+        && validated.matches(&expected)
+        && encoded.claims.matches(&expected)
+        && encoded.measurements.matches(&expected)
+    {
         return Ok(());
     }
     Err(GenerationError::InternalInvariant {
         message: message.name.protocol().to_owned(),
         invariant: format!(
-            "known-tag rendering diverged for {owner}: IR {expected:?}, validation {:?}, claims {:?}",
-            validated.tags, claimed.tags
+            "known-tag rendering diverged for {owner}: IR {expected:?}, decode {:?}, validation \
+             {:?}, claims {:?}, measurements {:?}",
+            decoded.tags, validated.tags, encoded.claims.tags, encoded.measurements.tags
         ),
     })
 }

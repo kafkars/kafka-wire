@@ -127,7 +127,7 @@ impl<const N: usize> KnownTags<N> {
     }
 
     pub(super) fn sort_and_validate(&mut self) -> Result<(), TaggedFieldsError> {
-        self.fields[..self.len].sort_by_key(|field| field.tag);
+        self.fields[..self.len].sort_unstable_by_key(|field| field.tag);
         for pair in self.fields().windows(2) {
             if pair[0].tag == pair[1].tag {
                 return Err(TaggedFieldsError::Duplicate { tag: pair[0].tag });

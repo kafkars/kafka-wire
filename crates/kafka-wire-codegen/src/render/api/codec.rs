@@ -4,17 +4,21 @@ use kafka_wire_schema::{FieldType, Message};
 
 use crate::{
     GenerationError,
-    render::{field, text::RustText},
+    render::{field, tag_plan::KnownTagPlan, text::RustText},
 };
 
 use super::imports::{ExternalSymbol as S, spell};
 use super::{
     tagged::{is_tagged, render_tagged_decode, render_tagged_encode},
     tagged_payload::render_known_tag_helpers,
-    tagged_proof::RenderedKnownTags,
+    tagged_proof::{RenderedKnownTags, RenderedTagEncoding},
 };
 
-pub(super) fn render_decode(rust: &mut RustText, message: &Message) -> Result<(), GenerationError> {
+pub(super) fn render_decode(
+    rust: &mut RustText,
+    message: &Message,
+    tag_plans: &[KnownTagPlan<'_>],
+) -> Result<RenderedKnownTags, GenerationError> {
     rust.open(format!(
         "impl {} for {}",
         spell(message, S::KafkaDecode),
@@ -31,9 +35,11 @@ pub(super) fn render_decode(rust: &mut RustText, message: &Message) -> Result<()
     rust.blank();
 
     render_reads(rust, &message.fields, message)?;
-    if !message.effective_flexible_versions().is_empty() {
-        render_tagged_decode(rust, &message.fields, message)?;
-    }
+    let rendered = if message.effective_flexible_versions().is_empty() {
+        RenderedKnownTags::default()
+    } else {
+        render_tagged_decode(rust, tag_plans, message)?
+    };
 
     rust.blank();
     let has_tagged_fields = !message.effective_flexible_versions().is_empty();
@@ -41,19 +47,21 @@ pub(super) fn render_decode(rust: &mut RustText, message: &Message) -> Result<()
     rust.close("");
     rust.close("");
     rust.blank();
-    Ok(())
+    Ok(rendered)
 }
 
 pub(super) fn render_encode(
     rust: &mut RustText,
     message: &Message,
-) -> Result<RenderedKnownTags, GenerationError> {
+    tag_plans: &[KnownTagPlan<'_>],
+) -> Result<RenderedTagEncoding, GenerationError> {
     render_struct_encode(
         rust,
         message.name.rust_type(),
         &message.fields,
         message,
         !message.effective_flexible_versions().is_empty(),
+        tag_plans,
     )
 }
 
@@ -64,8 +72,10 @@ pub(super) fn render_struct_encode(
     fields: &[kafka_wire_schema::Field],
     message: &Message,
     flexible: bool,
-) -> Result<RenderedKnownTags, GenerationError> {
-    let rendered = render_validated_encode_body(rust, rust_type, fields, message, flexible)?;
+    tag_plans: &[KnownTagPlan<'_>],
+) -> Result<RenderedTagEncoding, GenerationError> {
+    let rendered =
+        render_validated_encode_body(rust, rust_type, fields, message, flexible, tag_plans)?;
     rust.open(format!(
         "impl {} for {}",
         spell(message, S::KafkaEncode),
@@ -133,7 +143,8 @@ fn render_validated_encode_body(
     fields: &[kafka_wire_schema::Field],
     message: &Message,
     flexible: bool,
-) -> Result<RenderedKnownTags, GenerationError> {
+    tag_plans: &[KnownTagPlan<'_>],
+) -> Result<RenderedTagEncoding, GenerationError> {
     let uses_version = flexible
         || fields
             .iter()
@@ -142,9 +153,9 @@ fn render_validated_encode_body(
     let mut body = RustText::default();
     render_writes(&mut body, fields, message)?;
     let rendered = if flexible {
-        render_tagged_encode(&mut body, fields, message)
+        render_tagged_encode(&mut body, tag_plans, message)
     } else {
-        RenderedKnownTags::default()
+        RenderedTagEncoding::default()
     };
     body.blank();
     body.line(format!("{}(())", spell(message, S::Ok)));
@@ -152,7 +163,7 @@ fn render_validated_encode_body(
     let version = if uses_version { "version" } else { "_version" };
 
     rust.open(format!("impl {rust_type}"));
-    render_known_tag_helpers(rust, fields, message)?;
+    render_known_tag_helpers(rust, tag_plans, message)?;
     rust.line(format!(
         "fn encode_validated<T: {}>(",
         spell(message, S::EncodeTarget)

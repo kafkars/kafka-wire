@@ -5,11 +5,16 @@
 
 #![allow(clippy::expect_used)]
 
+use std::collections::BTreeSet;
+
 use kafka_wire_schema::{ApiName, FieldName, MessageName};
 
 use crate::{
-    GenerationError, group::group_sources, lockfile::ProtocolLock,
-    namespace::validate_generated_namespace, source::load_sources,
+    GenerationError,
+    group::group_sources,
+    lockfile::ProtocolLock,
+    namespace::{handwritten_root_types, validate_generated_namespace},
+    source::load_sources,
 };
 
 #[test]
@@ -133,6 +138,51 @@ fn generated_exports_cannot_shadow_private_crate_root_modules() {
             && first.contains("handwritten private crate-root module")
             && second.contains("generated struct module")
     ));
+}
+
+#[test]
+fn a_generated_export_cannot_shadow_the_test_only_root_module() {
+    let (groups, mut unkeyed) = corpus();
+    let source = unkeyed
+        .first_mut()
+        .expect("pinned corpus must contain an unkeyed schema");
+    source.message.name = MessageName::new("TaggedClaimsTest");
+
+    let error = validate_generated_namespace(&groups, &unkeyed)
+        .expect_err("a generated root module cannot shadow the test module");
+    assert!(matches!(
+        error,
+        GenerationError::GeneratedSymbolCollision {
+            symbol,
+            first,
+            second,
+            ..
+        } if symbol == "tagged_claims_test"
+            && first.contains("handwritten private crate-root module")
+            && second.contains("generated struct module")
+    ));
+}
+
+#[test]
+fn every_crate_root_module_is_reserved_before_generation() {
+    let facade = syn::parse_file(include_str!("../../kafka-wire/src/lib.rs"))
+        .expect("kafka-wire's crate facade must parse as Rust");
+    let declared = facade
+        .items
+        .iter()
+        .filter_map(|item| match item {
+            syn::Item::Mod(module) => Some(module.ident.to_string()),
+            _ => None,
+        })
+        .collect::<BTreeSet<_>>();
+    let reserved = handwritten_root_types()
+        .into_iter()
+        .filter_map(|(symbol, producer)| {
+            (producer == "handwritten private crate-root module").then_some(symbol)
+        })
+        .collect::<BTreeSet<_>>();
+
+    assert_eq!(reserved, declared);
 }
 
 fn corpus() -> (

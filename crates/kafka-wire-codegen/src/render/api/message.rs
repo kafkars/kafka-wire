@@ -5,7 +5,7 @@ use kafka_wire_schema::{FieldType, Message, MessageKind};
 use crate::{
     GenerationError,
     group::ApiGroup,
-    render::{field, invariant, text::RustText},
+    render::{field, invariant, tag_plan::known_tag_plans, text::RustText},
 };
 
 use super::{
@@ -90,6 +90,7 @@ pub(super) fn render_message(
         !message.effective_flexible_versions().is_empty(),
     );
     render_metadata_impls(rust, message, group)?;
+    let tag_plans = known_tag_plans(&message.fields, message);
     let validated_tags = render_validation(
         rust,
         message.name.rust_type(),
@@ -97,15 +98,17 @@ pub(super) fn render_message(
         message,
         Owner::Message,
         !message.effective_flexible_versions().is_empty(),
+        &tag_plans,
     );
-    render_decode(rust, message)?;
-    let claimed_tags = render_encode(rust, message)?;
+    let decoded_tags = render_decode(rust, message, &tag_plans)?;
+    let encoded_tags = render_encode(rust, message, &tag_plans)?;
     verify_known_tag_rendering(
-        &message.fields,
+        &tag_plans,
         message,
         message.name.rust_type(),
+        &decoded_tags,
         &validated_tags,
-        &claimed_tags,
+        &encoded_tags,
     )?;
     Ok(())
 }

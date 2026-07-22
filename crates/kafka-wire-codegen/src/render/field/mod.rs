@@ -30,6 +30,4 @@ pub(crate) use types::{
 };
 pub(crate) use usage::{encoded_value_uses_version, inline_write_uses_version};
 pub(crate) use validate::validate_supported;
-pub(crate) use version::{
-    absence_condition, as_conjunct, presence_condition, tagged_presence_condition,
-};
+pub(crate) use version::{absence_condition, as_conjunct, condition_for, presence_condition};

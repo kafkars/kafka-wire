@@ -5,7 +5,7 @@
 
 use kafka_wire_schema::{Field, FieldType, Message};
 
-use crate::render::{field, text::RustText};
+use crate::render::{field, tag_plan::KnownTagPlan, text::RustText};
 
 use super::imports::{ExternalSymbol as S, spell};
 use super::tagged_proof::RenderedKnownTags;
@@ -37,9 +37,10 @@ pub(super) fn render_validation(
     message: &Message,
     owner: Owner<'_>,
     flexible: bool,
+    tag_plans: &[KnownTagPlan<'_>],
 ) -> RenderedKnownTags {
     rust.open(format!("impl {rust_type}"));
-    let rendered = render_known_tag_ownership(rust, fields, message, &owner.name());
+    let rendered = render_known_tag_ownership(rust, tag_plans, message, &owner.name());
     if !validation_uses_self(fields, message, flexible) {
         rust.line("#[allow(clippy::unused_self)]");
     }
