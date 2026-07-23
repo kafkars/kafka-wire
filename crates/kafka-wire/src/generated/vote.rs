@@ -16,7 +16,10 @@ pub mod vote_request {
         encoded_len_with,
     };
 
-    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, ProtocolEq, RequestResponsePair};
+    use crate::{
+        ApiDescriptor, KafkaMessage, KafkaRequest, ProtocolEq, RequestResponsePair,
+        RetainedFootprint, RetainedSize,
+    };
 
     /// `TopicData` as declared by the `Vote` API.
     #[non_exhaustive]
@@ -75,6 +78,15 @@ pub mod vote_request {
                     &self.unknown_tagged_fields,
                     &other.unknown_tagged_fields,
                 )
+        }
+    }
+
+    impl RetainedSize for TopicData {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.topic_name))
+                .saturating_add(RetainedSize::retained_size(&self.partitions))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
         }
     }
 
@@ -243,6 +255,21 @@ pub mod vote_request {
         }
     }
 
+    impl RetainedSize for PartitionData {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.partition_index))
+                .saturating_add(RetainedSize::retained_size(&self.replica_epoch))
+                .saturating_add(RetainedSize::retained_size(&self.replica_id))
+                .saturating_add(RetainedSize::retained_size(&self.replica_directory_id))
+                .saturating_add(RetainedSize::retained_size(&self.voter_directory_id))
+                .saturating_add(RetainedSize::retained_size(&self.last_offset_epoch))
+                .saturating_add(RetainedSize::retained_size(&self.last_offset))
+                .saturating_add(RetainedSize::retained_size(&self.pre_vote))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
+        }
+    }
+
     impl KafkaDecode for PartitionData {
         fn decode(
             decoder: &mut Decoder,
@@ -393,6 +420,16 @@ pub mod vote_request {
         }
     }
 
+    impl RetainedSize for VoteRequest {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.cluster_id))
+                .saturating_add(RetainedSize::retained_size(&self.voter_id))
+                .saturating_add(RetainedSize::retained_size(&self.topics))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
+        }
+    }
+
     impl KafkaMessage for VoteRequest {
         const NAME: &'static str = "VoteRequest";
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(0, 2);
@@ -528,7 +565,7 @@ pub mod vote_response {
         encode_into_with, encoded_len_with,
     };
 
-    use crate::{KafkaMessage, KafkaResponse, ProtocolEq};
+    use crate::{KafkaMessage, KafkaResponse, ProtocolEq, RetainedFootprint, RetainedSize};
 
     /// `TopicData` as declared by the `Vote` API.
     #[non_exhaustive]
@@ -587,6 +624,15 @@ pub mod vote_response {
                     &self.unknown_tagged_fields,
                     &other.unknown_tagged_fields,
                 )
+        }
+    }
+
+    impl RetainedSize for TopicData {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.topic_name))
+                .saturating_add(RetainedSize::retained_size(&self.partitions))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
         }
     }
 
@@ -739,6 +785,18 @@ pub mod vote_response {
         }
     }
 
+    impl RetainedSize for PartitionData {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.partition_index))
+                .saturating_add(RetainedSize::retained_size(&self.error_code))
+                .saturating_add(RetainedSize::retained_size(&self.leader_id))
+                .saturating_add(RetainedSize::retained_size(&self.leader_epoch))
+                .saturating_add(RetainedSize::retained_size(&self.vote_granted))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
+        }
+    }
+
     impl KafkaDecode for PartitionData {
         fn decode(
             decoder: &mut Decoder,
@@ -885,6 +943,16 @@ pub mod vote_response {
         }
     }
 
+    impl RetainedSize for NodeEndpoint {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.node_id))
+                .saturating_add(RetainedSize::retained_size(&self.host))
+                .saturating_add(RetainedSize::retained_size(&self.port))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
+        }
+    }
+
     impl KafkaDecode for NodeEndpoint {
         fn decode(
             decoder: &mut Decoder,
@@ -988,6 +1056,16 @@ pub mod vote_response {
                     &self.unknown_tagged_fields,
                     &other.unknown_tagged_fields,
                 )
+        }
+    }
+
+    impl RetainedSize for VoteResponse {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.error_code))
+                .saturating_add(RetainedSize::retained_size(&self.topics))
+                .saturating_add(RetainedSize::retained_size(&self.node_endpoints))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
         }
     }
 

@@ -15,7 +15,10 @@ pub mod list_config_resources_request {
         KafkaDecode, KafkaEncode, TaggedFields, VersionRange, encode_into_with, encoded_len_with,
     };
 
-    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, ProtocolEq, RequestResponsePair};
+    use crate::{
+        ApiDescriptor, KafkaMessage, KafkaRequest, ProtocolEq, RequestResponsePair,
+        RetainedFootprint, RetainedSize,
+    };
 
     /// Request body for the `ListConfigResources` API.
     #[non_exhaustive]
@@ -34,6 +37,14 @@ pub mod list_config_resources_request {
                     &self.unknown_tagged_fields,
                     &other.unknown_tagged_fields,
                 )
+        }
+    }
+
+    impl RetainedSize for ListConfigResourcesRequest {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.resource_types))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
         }
     }
 
@@ -168,7 +179,7 @@ pub mod list_config_resources_response {
         encoded_len_with,
     };
 
-    use crate::{KafkaMessage, KafkaResponse, ProtocolEq};
+    use crate::{KafkaMessage, KafkaResponse, ProtocolEq, RetainedFootprint, RetainedSize};
 
     /// `ConfigResource` as declared by the `ListConfigResources` API.
     #[non_exhaustive]
@@ -234,6 +245,15 @@ pub mod list_config_resources_response {
                     &self.unknown_tagged_fields,
                     &other.unknown_tagged_fields,
                 )
+        }
+    }
+
+    impl RetainedSize for ConfigResource {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.resource_name))
+                .saturating_add(RetainedSize::retained_size(&self.resource_type))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
         }
     }
 
@@ -343,6 +363,16 @@ pub mod list_config_resources_response {
                     &self.unknown_tagged_fields,
                     &other.unknown_tagged_fields,
                 )
+        }
+    }
+
+    impl RetainedSize for ListConfigResourcesResponse {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.throttle_time_ms))
+                .saturating_add(RetainedSize::retained_size(&self.error_code))
+                .saturating_add(RetainedSize::retained_size(&self.config_resources))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
         }
     }
 

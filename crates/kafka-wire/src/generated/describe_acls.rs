@@ -16,7 +16,10 @@ pub mod describe_acls_request {
         encoded_len_with,
     };
 
-    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, ProtocolEq, RequestResponsePair};
+    use crate::{
+        ApiDescriptor, KafkaMessage, KafkaRequest, ProtocolEq, RequestResponsePair,
+        RetainedFootprint, RetainedSize,
+    };
 
     /// Request body for the `DescribeAcls` API.
     #[non_exhaustive]
@@ -68,6 +71,20 @@ pub mod describe_acls_request {
                     &self.unknown_tagged_fields,
                     &other.unknown_tagged_fields,
                 )
+        }
+    }
+
+    impl RetainedSize for DescribeAclsRequest {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.resource_type_filter))
+                .saturating_add(RetainedSize::retained_size(&self.resource_name_filter))
+                .saturating_add(RetainedSize::retained_size(&self.pattern_type_filter))
+                .saturating_add(RetainedSize::retained_size(&self.principal_filter))
+                .saturating_add(RetainedSize::retained_size(&self.host_filter))
+                .saturating_add(RetainedSize::retained_size(&self.operation))
+                .saturating_add(RetainedSize::retained_size(&self.permission_type))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
         }
     }
 
@@ -227,7 +244,7 @@ pub mod describe_acls_response {
         encoded_len_with,
     };
 
-    use crate::{KafkaMessage, KafkaResponse, ProtocolEq};
+    use crate::{KafkaMessage, KafkaResponse, ProtocolEq, RetainedFootprint, RetainedSize};
 
     /// `DescribeAclsResource` as declared by the `DescribeAcls` API.
     #[non_exhaustive]
@@ -304,6 +321,17 @@ pub mod describe_acls_response {
                     &self.unknown_tagged_fields,
                     &other.unknown_tagged_fields,
                 )
+        }
+    }
+
+    impl RetainedSize for DescribeAclsResource {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.resource_type))
+                .saturating_add(RetainedSize::retained_size(&self.resource_name))
+                .saturating_add(RetainedSize::retained_size(&self.pattern_type))
+                .saturating_add(RetainedSize::retained_size(&self.acls))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
         }
     }
 
@@ -475,6 +503,17 @@ pub mod describe_acls_response {
         }
     }
 
+    impl RetainedSize for AclDescription {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.principal))
+                .saturating_add(RetainedSize::retained_size(&self.host))
+                .saturating_add(RetainedSize::retained_size(&self.operation))
+                .saturating_add(RetainedSize::retained_size(&self.permission_type))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
+        }
+    }
+
     impl KafkaDecode for AclDescription {
         fn decode(
             decoder: &mut Decoder,
@@ -612,6 +651,17 @@ pub mod describe_acls_response {
                     &self.unknown_tagged_fields,
                     &other.unknown_tagged_fields,
                 )
+        }
+    }
+
+    impl RetainedSize for DescribeAclsResponse {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.throttle_time_ms))
+                .saturating_add(RetainedSize::retained_size(&self.error_code))
+                .saturating_add(RetainedSize::retained_size(&self.error_message))
+                .saturating_add(RetainedSize::retained_size(&self.resources))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
         }
     }
 

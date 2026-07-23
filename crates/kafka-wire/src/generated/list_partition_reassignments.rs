@@ -16,7 +16,10 @@ pub mod list_partition_reassignments_request {
         encoded_len_with,
     };
 
-    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, ProtocolEq, RequestResponsePair};
+    use crate::{
+        ApiDescriptor, KafkaMessage, KafkaRequest, ProtocolEq, RequestResponsePair,
+        RetainedFootprint, RetainedSize,
+    };
 
     /// `ListPartitionReassignmentsTopics` as declared by the `ListPartitionReassignments` API.
     #[non_exhaustive]
@@ -72,6 +75,15 @@ pub mod list_partition_reassignments_request {
                     &self.unknown_tagged_fields,
                     &other.unknown_tagged_fields,
                 )
+        }
+    }
+
+    impl RetainedSize for ListPartitionReassignmentsTopics {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.name))
+                .saturating_add(RetainedSize::retained_size(&self.partition_indexes))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
         }
     }
 
@@ -194,6 +206,15 @@ pub mod list_partition_reassignments_request {
                     &self.unknown_tagged_fields,
                     &other.unknown_tagged_fields,
                 )
+        }
+    }
+
+    impl RetainedSize for ListPartitionReassignmentsRequest {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.timeout_ms))
+                .saturating_add(RetainedSize::retained_size(&self.topics))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
         }
     }
 
@@ -341,7 +362,7 @@ pub mod list_partition_reassignments_response {
         encoded_len_with,
     };
 
-    use crate::{KafkaMessage, KafkaResponse, ProtocolEq};
+    use crate::{KafkaMessage, KafkaResponse, ProtocolEq, RetainedFootprint, RetainedSize};
 
     /// `OngoingTopicReassignment` as declared by the `ListPartitionReassignments` API.
     #[non_exhaustive]
@@ -400,6 +421,15 @@ pub mod list_partition_reassignments_response {
                     &self.unknown_tagged_fields,
                     &other.unknown_tagged_fields,
                 )
+        }
+    }
+
+    impl RetainedSize for OngoingTopicReassignment {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.name))
+                .saturating_add(RetainedSize::retained_size(&self.partitions))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
         }
     }
 
@@ -551,6 +581,17 @@ pub mod list_partition_reassignments_response {
         }
     }
 
+    impl RetainedSize for OngoingPartitionReassignment {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.partition_index))
+                .saturating_add(RetainedSize::retained_size(&self.replicas))
+                .saturating_add(RetainedSize::retained_size(&self.adding_replicas))
+                .saturating_add(RetainedSize::retained_size(&self.removing_replicas))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
+        }
+    }
+
     impl KafkaDecode for OngoingPartitionReassignment {
         fn decode(
             decoder: &mut Decoder,
@@ -690,6 +731,17 @@ pub mod list_partition_reassignments_response {
                     &self.unknown_tagged_fields,
                     &other.unknown_tagged_fields,
                 )
+        }
+    }
+
+    impl RetainedSize for ListPartitionReassignmentsResponse {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.throttle_time_ms))
+                .saturating_add(RetainedSize::retained_size(&self.error_code))
+                .saturating_add(RetainedSize::retained_size(&self.error_message))
+                .saturating_add(RetainedSize::retained_size(&self.topics))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
         }
     }
 

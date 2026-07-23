@@ -15,7 +15,10 @@ pub mod describe_cluster_request {
         KafkaDecode, KafkaEncode, TaggedFields, VersionRange, encode_into_with, encoded_len_with,
     };
 
-    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, ProtocolEq, RequestResponsePair};
+    use crate::{
+        ApiDescriptor, KafkaMessage, KafkaRequest, ProtocolEq, RequestResponsePair,
+        RetainedFootprint, RetainedSize,
+    };
 
     /// Request body for the `DescribeCluster` API.
     #[non_exhaustive]
@@ -56,6 +59,18 @@ pub mod describe_cluster_request {
                     &self.unknown_tagged_fields,
                     &other.unknown_tagged_fields,
                 )
+        }
+    }
+
+    impl RetainedSize for DescribeClusterRequest {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(
+                    &self.include_cluster_authorized_operations,
+                ))
+                .saturating_add(RetainedSize::retained_size(&self.endpoint_type))
+                .saturating_add(RetainedSize::retained_size(&self.include_fenced_brokers))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
         }
     }
 
@@ -205,7 +220,7 @@ pub mod describe_cluster_response {
         encoded_len_with,
     };
 
-    use crate::{KafkaMessage, KafkaResponse, ProtocolEq};
+    use crate::{KafkaMessage, KafkaResponse, ProtocolEq, RetainedFootprint, RetainedSize};
 
     /// `DescribeClusterBroker` as declared by the `DescribeCluster` API.
     #[non_exhaustive]
@@ -277,6 +292,18 @@ pub mod describe_cluster_response {
                     &self.unknown_tagged_fields,
                     &other.unknown_tagged_fields,
                 )
+        }
+    }
+
+    impl RetainedSize for DescribeClusterBroker {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.broker_id))
+                .saturating_add(RetainedSize::retained_size(&self.host))
+                .saturating_add(RetainedSize::retained_size(&self.port))
+                .saturating_add(RetainedSize::retained_size(&self.rack))
+                .saturating_add(RetainedSize::retained_size(&self.is_fenced))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
         }
     }
 
@@ -429,6 +456,23 @@ pub mod describe_cluster_response {
                     &self.unknown_tagged_fields,
                     &other.unknown_tagged_fields,
                 )
+        }
+    }
+
+    impl RetainedSize for DescribeClusterResponse {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.throttle_time_ms))
+                .saturating_add(RetainedSize::retained_size(&self.error_code))
+                .saturating_add(RetainedSize::retained_size(&self.error_message))
+                .saturating_add(RetainedSize::retained_size(&self.endpoint_type))
+                .saturating_add(RetainedSize::retained_size(&self.cluster_id))
+                .saturating_add(RetainedSize::retained_size(&self.controller_id))
+                .saturating_add(RetainedSize::retained_size(&self.brokers))
+                .saturating_add(RetainedSize::retained_size(
+                    &self.cluster_authorized_operations,
+                ))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
         }
     }
 

@@ -16,7 +16,10 @@ pub mod alter_replica_log_dirs_request {
         encoded_len_with,
     };
 
-    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, ProtocolEq, RequestResponsePair};
+    use crate::{
+        ApiDescriptor, KafkaMessage, KafkaRequest, ProtocolEq, RequestResponsePair,
+        RetainedFootprint, RetainedSize,
+    };
 
     /// `AlterReplicaLogDir` as declared by the `AlterReplicaLogDirs` API.
     #[non_exhaustive]
@@ -75,6 +78,15 @@ pub mod alter_replica_log_dirs_request {
                     &self.unknown_tagged_fields,
                     &other.unknown_tagged_fields,
                 )
+        }
+    }
+
+    impl RetainedSize for AlterReplicaLogDir {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.path))
+                .saturating_add(RetainedSize::retained_size(&self.topics))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
         }
     }
 
@@ -236,6 +248,15 @@ pub mod alter_replica_log_dirs_request {
         }
     }
 
+    impl RetainedSize for AlterReplicaLogDirTopic {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.name))
+                .saturating_add(RetainedSize::retained_size(&self.partitions))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
+        }
+    }
+
     impl KafkaDecode for AlterReplicaLogDirTopic {
         fn decode(
             decoder: &mut Decoder,
@@ -352,6 +373,14 @@ pub mod alter_replica_log_dirs_request {
                     &self.unknown_tagged_fields,
                     &other.unknown_tagged_fields,
                 )
+        }
+    }
+
+    impl RetainedSize for AlterReplicaLogDirsRequest {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.dirs))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
         }
     }
 
@@ -489,7 +518,7 @@ pub mod alter_replica_log_dirs_response {
         encoded_len_with,
     };
 
-    use crate::{KafkaMessage, KafkaResponse, ProtocolEq};
+    use crate::{KafkaMessage, KafkaResponse, ProtocolEq, RetainedFootprint, RetainedSize};
 
     /// `AlterReplicaLogDirTopicResult` as declared by the `AlterReplicaLogDirs` API.
     #[non_exhaustive]
@@ -548,6 +577,15 @@ pub mod alter_replica_log_dirs_response {
                     &self.unknown_tagged_fields,
                     &other.unknown_tagged_fields,
                 )
+        }
+    }
+
+    impl RetainedSize for AlterReplicaLogDirTopicResult {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.topic_name))
+                .saturating_add(RetainedSize::retained_size(&self.partitions))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
         }
     }
 
@@ -709,6 +747,15 @@ pub mod alter_replica_log_dirs_response {
         }
     }
 
+    impl RetainedSize for AlterReplicaLogDirPartitionResult {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.partition_index))
+                .saturating_add(RetainedSize::retained_size(&self.error_code))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
+        }
+    }
+
     impl KafkaDecode for AlterReplicaLogDirPartitionResult {
         fn decode(
             decoder: &mut Decoder,
@@ -812,6 +859,15 @@ pub mod alter_replica_log_dirs_response {
                     &self.unknown_tagged_fields,
                     &other.unknown_tagged_fields,
                 )
+        }
+    }
+
+    impl RetainedSize for AlterReplicaLogDirsResponse {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.throttle_time_ms))
+                .saturating_add(RetainedSize::retained_size(&self.results))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
         }
     }
 

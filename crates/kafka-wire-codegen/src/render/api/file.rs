@@ -133,7 +133,12 @@ fn render_imports(rust: &mut RustText, message: &kafka_wire_schema::Message) {
     );
     rust.blank();
 
-    let mut local = vec![S::KafkaMessage, S::ProtocolEq];
+    let mut local = vec![
+        S::KafkaMessage,
+        S::ProtocolEq,
+        S::RetainedFootprint,
+        S::RetainedSize,
+    ];
     match message.kind {
         kafka_wire_schema::MessageKind::Request => {
             local.push(S::ApiDescriptor);

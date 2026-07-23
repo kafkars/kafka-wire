@@ -16,7 +16,10 @@ pub mod assign_replicas_to_dirs_request {
         encoded_len_with,
     };
 
-    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, ProtocolEq, RequestResponsePair};
+    use crate::{
+        ApiDescriptor, KafkaMessage, KafkaRequest, ProtocolEq, RequestResponsePair,
+        RetainedFootprint, RetainedSize,
+    };
 
     /// `DirectoryData` as declared by the `AssignReplicasToDirs` API.
     #[non_exhaustive]
@@ -75,6 +78,15 @@ pub mod assign_replicas_to_dirs_request {
                     &self.unknown_tagged_fields,
                     &other.unknown_tagged_fields,
                 )
+        }
+    }
+
+    impl RetainedSize for DirectoryData {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.id))
+                .saturating_add(RetainedSize::retained_size(&self.topics))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
         }
     }
 
@@ -221,6 +233,15 @@ pub mod assign_replicas_to_dirs_request {
         }
     }
 
+    impl RetainedSize for TopicData {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.topic_id))
+                .saturating_add(RetainedSize::retained_size(&self.partitions))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
+        }
+    }
+
     impl KafkaDecode for TopicData {
         fn decode(
             decoder: &mut Decoder,
@@ -358,6 +379,14 @@ pub mod assign_replicas_to_dirs_request {
         }
     }
 
+    impl RetainedSize for PartitionData {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.partition_index))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
+        }
+    }
+
     impl KafkaDecode for PartitionData {
         fn decode(
             decoder: &mut Decoder,
@@ -466,6 +495,16 @@ pub mod assign_replicas_to_dirs_request {
                     &self.unknown_tagged_fields,
                     &other.unknown_tagged_fields,
                 )
+        }
+    }
+
+    impl RetainedSize for AssignReplicasToDirsRequest {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.broker_id))
+                .saturating_add(RetainedSize::retained_size(&self.broker_epoch))
+                .saturating_add(RetainedSize::retained_size(&self.directories))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
         }
     }
 
@@ -599,7 +638,7 @@ pub mod assign_replicas_to_dirs_response {
         encoded_len_with,
     };
 
-    use crate::{KafkaMessage, KafkaResponse, ProtocolEq};
+    use crate::{KafkaMessage, KafkaResponse, ProtocolEq, RetainedFootprint, RetainedSize};
 
     /// `DirectoryData` as declared by the `AssignReplicasToDirs` API.
     #[non_exhaustive]
@@ -658,6 +697,15 @@ pub mod assign_replicas_to_dirs_response {
                     &self.unknown_tagged_fields,
                     &other.unknown_tagged_fields,
                 )
+        }
+    }
+
+    impl RetainedSize for DirectoryData {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.id))
+                .saturating_add(RetainedSize::retained_size(&self.topics))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
         }
     }
 
@@ -804,6 +852,15 @@ pub mod assign_replicas_to_dirs_response {
         }
     }
 
+    impl RetainedSize for TopicData {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.topic_id))
+                .saturating_add(RetainedSize::retained_size(&self.partitions))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
+        }
+    }
+
     impl KafkaDecode for TopicData {
         fn decode(
             decoder: &mut Decoder,
@@ -944,6 +1001,15 @@ pub mod assign_replicas_to_dirs_response {
         }
     }
 
+    impl RetainedSize for PartitionData {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.partition_index))
+                .saturating_add(RetainedSize::retained_size(&self.error_code))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
+        }
+    }
+
     impl KafkaDecode for PartitionData {
         fn decode(
             decoder: &mut Decoder,
@@ -1044,6 +1110,16 @@ pub mod assign_replicas_to_dirs_response {
                     &self.unknown_tagged_fields,
                     &other.unknown_tagged_fields,
                 )
+        }
+    }
+
+    impl RetainedSize for AssignReplicasToDirsResponse {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.throttle_time_ms))
+                .saturating_add(RetainedSize::retained_size(&self.error_code))
+                .saturating_add(RetainedSize::retained_size(&self.directories))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
         }
     }
 

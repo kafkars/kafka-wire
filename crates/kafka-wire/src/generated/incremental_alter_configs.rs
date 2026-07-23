@@ -16,7 +16,10 @@ pub mod incremental_alter_configs_request {
         encoded_len_with,
     };
 
-    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, ProtocolEq, RequestResponsePair};
+    use crate::{
+        ApiDescriptor, KafkaMessage, KafkaRequest, ProtocolEq, RequestResponsePair,
+        RetainedFootprint, RetainedSize,
+    };
 
     /// `AlterConfigsResource` as declared by the `IncrementalAlterConfigs` API.
     #[non_exhaustive]
@@ -78,6 +81,16 @@ pub mod incremental_alter_configs_request {
                     &self.unknown_tagged_fields,
                     &other.unknown_tagged_fields,
                 )
+        }
+    }
+
+    impl RetainedSize for AlterConfigsResource {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.resource_type))
+                .saturating_add(RetainedSize::retained_size(&self.resource_name))
+                .saturating_add(RetainedSize::retained_size(&self.configs))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
         }
     }
 
@@ -254,6 +267,16 @@ pub mod incremental_alter_configs_request {
         }
     }
 
+    impl RetainedSize for AlterableConfig {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.name))
+                .saturating_add(RetainedSize::retained_size(&self.config_operation))
+                .saturating_add(RetainedSize::retained_size(&self.value))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
+        }
+    }
+
     impl KafkaDecode for AlterableConfig {
         fn decode(
             decoder: &mut Decoder,
@@ -370,6 +393,15 @@ pub mod incremental_alter_configs_request {
                     &self.unknown_tagged_fields,
                     &other.unknown_tagged_fields,
                 )
+        }
+    }
+
+    impl RetainedSize for IncrementalAlterConfigsRequest {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.resources))
+                .saturating_add(RetainedSize::retained_size(&self.validate_only))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
         }
     }
 
@@ -510,7 +542,7 @@ pub mod incremental_alter_configs_response {
         encoded_len_with,
     };
 
-    use crate::{KafkaMessage, KafkaResponse, ProtocolEq};
+    use crate::{KafkaMessage, KafkaResponse, ProtocolEq, RetainedFootprint, RetainedSize};
 
     /// `AlterConfigsResourceResponse` as declared by the `IncrementalAlterConfigs` API.
     #[non_exhaustive]
@@ -584,6 +616,17 @@ pub mod incremental_alter_configs_response {
                     &self.unknown_tagged_fields,
                     &other.unknown_tagged_fields,
                 )
+        }
+    }
+
+    impl RetainedSize for AlterConfigsResourceResponse {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.error_code))
+                .saturating_add(RetainedSize::retained_size(&self.error_message))
+                .saturating_add(RetainedSize::retained_size(&self.resource_type))
+                .saturating_add(RetainedSize::retained_size(&self.resource_name))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
         }
     }
 
@@ -706,6 +749,15 @@ pub mod incremental_alter_configs_response {
                     &self.unknown_tagged_fields,
                     &other.unknown_tagged_fields,
                 )
+        }
+    }
+
+    impl RetainedSize for IncrementalAlterConfigsResponse {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.throttle_time_ms))
+                .saturating_add(RetainedSize::retained_size(&self.responses))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
         }
     }
 

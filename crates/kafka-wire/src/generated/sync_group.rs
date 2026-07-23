@@ -16,7 +16,10 @@ pub mod sync_group_request {
         encoded_len_with,
     };
 
-    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, ProtocolEq, RequestResponsePair};
+    use crate::{
+        ApiDescriptor, KafkaMessage, KafkaRequest, ProtocolEq, RequestResponsePair,
+        RetainedFootprint, RetainedSize,
+    };
 
     /// `SyncGroupRequestAssignment` as declared by the `SyncGroup` API.
     #[non_exhaustive]
@@ -72,6 +75,15 @@ pub mod sync_group_request {
                     &self.unknown_tagged_fields,
                     &other.unknown_tagged_fields,
                 )
+        }
+    }
+
+    impl RetainedSize for SyncGroupRequestAssignment {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.member_id))
+                .saturating_add(RetainedSize::retained_size(&self.assignment))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
         }
     }
 
@@ -203,6 +215,20 @@ pub mod sync_group_request {
                     &self.unknown_tagged_fields,
                     &other.unknown_tagged_fields,
                 )
+        }
+    }
+
+    impl RetainedSize for SyncGroupRequest {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.group_id))
+                .saturating_add(RetainedSize::retained_size(&self.generation_id))
+                .saturating_add(RetainedSize::retained_size(&self.member_id))
+                .saturating_add(RetainedSize::retained_size(&self.group_instance_id))
+                .saturating_add(RetainedSize::retained_size(&self.protocol_type))
+                .saturating_add(RetainedSize::retained_size(&self.protocol_name))
+                .saturating_add(RetainedSize::retained_size(&self.assignments))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
         }
     }
 
@@ -406,7 +432,7 @@ pub mod sync_group_response {
         encoded_len_with,
     };
 
-    use crate::{KafkaMessage, KafkaResponse, ProtocolEq};
+    use crate::{KafkaMessage, KafkaResponse, ProtocolEq, RetainedFootprint, RetainedSize};
 
     /// Response body for the `SyncGroup` API.
     #[non_exhaustive]
@@ -437,6 +463,18 @@ pub mod sync_group_response {
                     &self.unknown_tagged_fields,
                     &other.unknown_tagged_fields,
                 )
+        }
+    }
+
+    impl RetainedSize for SyncGroupResponse {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.throttle_time_ms))
+                .saturating_add(RetainedSize::retained_size(&self.error_code))
+                .saturating_add(RetainedSize::retained_size(&self.protocol_type))
+                .saturating_add(RetainedSize::retained_size(&self.protocol_name))
+                .saturating_add(RetainedSize::retained_size(&self.assignment))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
         }
     }
 

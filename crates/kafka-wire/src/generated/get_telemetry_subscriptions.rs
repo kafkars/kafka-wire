@@ -16,7 +16,10 @@ pub mod get_telemetry_subscriptions_request {
         encoded_len_with,
     };
 
-    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, ProtocolEq, RequestResponsePair};
+    use crate::{
+        ApiDescriptor, KafkaMessage, KafkaRequest, ProtocolEq, RequestResponsePair,
+        RetainedFootprint, RetainedSize,
+    };
 
     /// Request body for the `GetTelemetrySubscriptions` API.
     #[non_exhaustive]
@@ -35,6 +38,14 @@ pub mod get_telemetry_subscriptions_request {
                     &self.unknown_tagged_fields,
                     &other.unknown_tagged_fields,
                 )
+        }
+    }
+
+    impl RetainedSize for GetTelemetrySubscriptionsRequest {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.client_instance_id))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
         }
     }
 
@@ -159,7 +170,7 @@ pub mod get_telemetry_subscriptions_response {
         encoded_len_with,
     };
 
-    use crate::{KafkaMessage, KafkaResponse, ProtocolEq};
+    use crate::{KafkaMessage, KafkaResponse, ProtocolEq, RetainedFootprint, RetainedSize};
 
     /// Response body for the `GetTelemetrySubscriptions` API.
     #[non_exhaustive]
@@ -205,6 +216,24 @@ pub mod get_telemetry_subscriptions_response {
                     &self.unknown_tagged_fields,
                     &other.unknown_tagged_fields,
                 )
+        }
+    }
+
+    impl RetainedSize for GetTelemetrySubscriptionsResponse {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.throttle_time_ms))
+                .saturating_add(RetainedSize::retained_size(&self.error_code))
+                .saturating_add(RetainedSize::retained_size(&self.client_instance_id))
+                .saturating_add(RetainedSize::retained_size(&self.subscription_id))
+                .saturating_add(RetainedSize::retained_size(
+                    &self.accepted_compression_types,
+                ))
+                .saturating_add(RetainedSize::retained_size(&self.push_interval_ms))
+                .saturating_add(RetainedSize::retained_size(&self.telemetry_max_bytes))
+                .saturating_add(RetainedSize::retained_size(&self.delta_temporality))
+                .saturating_add(RetainedSize::retained_size(&self.requested_metrics))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
         }
     }
 

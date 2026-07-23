@@ -16,7 +16,10 @@ pub mod describe_groups_request {
         encoded_len_with,
     };
 
-    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, ProtocolEq, RequestResponsePair};
+    use crate::{
+        ApiDescriptor, KafkaMessage, KafkaRequest, ProtocolEq, RequestResponsePair,
+        RetainedFootprint, RetainedSize,
+    };
 
     /// Request body for the `DescribeGroups` API.
     #[non_exhaustive]
@@ -41,6 +44,17 @@ pub mod describe_groups_request {
                     &self.unknown_tagged_fields,
                     &other.unknown_tagged_fields,
                 )
+        }
+    }
+
+    impl RetainedSize for DescribeGroupsRequest {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.groups))
+                .saturating_add(RetainedSize::retained_size(
+                    &self.include_authorized_operations,
+                ))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
         }
     }
 
@@ -198,7 +212,7 @@ pub mod describe_groups_response {
         encoded_len_with,
     };
 
-    use crate::{KafkaMessage, KafkaResponse, ProtocolEq};
+    use crate::{KafkaMessage, KafkaResponse, ProtocolEq, RetainedFootprint, RetainedSize};
 
     /// `DescribedGroup` as declared by the `DescribeGroups` API.
     #[non_exhaustive]
@@ -308,6 +322,21 @@ pub mod describe_groups_response {
                     &self.unknown_tagged_fields,
                     &other.unknown_tagged_fields,
                 )
+        }
+    }
+
+    impl RetainedSize for DescribedGroup {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.error_code))
+                .saturating_add(RetainedSize::retained_size(&self.error_message))
+                .saturating_add(RetainedSize::retained_size(&self.group_id))
+                .saturating_add(RetainedSize::retained_size(&self.group_state))
+                .saturating_add(RetainedSize::retained_size(&self.protocol_type))
+                .saturating_add(RetainedSize::retained_size(&self.protocol_data))
+                .saturating_add(RetainedSize::retained_size(&self.members))
+                .saturating_add(RetainedSize::retained_size(&self.authorized_operations))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
         }
     }
 
@@ -535,6 +564,19 @@ pub mod describe_groups_response {
         }
     }
 
+    impl RetainedSize for DescribedGroupMember {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.member_id))
+                .saturating_add(RetainedSize::retained_size(&self.group_instance_id))
+                .saturating_add(RetainedSize::retained_size(&self.client_id))
+                .saturating_add(RetainedSize::retained_size(&self.client_host))
+                .saturating_add(RetainedSize::retained_size(&self.member_metadata))
+                .saturating_add(RetainedSize::retained_size(&self.member_assignment))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
+        }
+    }
+
     impl KafkaDecode for DescribedGroupMember {
         fn decode(
             decoder: &mut Decoder,
@@ -698,6 +740,15 @@ pub mod describe_groups_response {
                     &self.unknown_tagged_fields,
                     &other.unknown_tagged_fields,
                 )
+        }
+    }
+
+    impl RetainedSize for DescribeGroupsResponse {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.throttle_time_ms))
+                .saturating_add(RetainedSize::retained_size(&self.groups))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
         }
     }
 

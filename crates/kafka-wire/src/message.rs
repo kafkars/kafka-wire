@@ -6,6 +6,7 @@ use kafka_wire_core::{
 };
 
 use crate::ApiDescriptor;
+use crate::RetainedSize;
 
 /// Equality under Kafka's wire semantics.
 ///
@@ -97,7 +98,7 @@ impl<T: ProtocolEq> ProtocolEq for Vec<T> {
 /// )?;
 /// # Ok::<(), kafka_wire_core::EncodeError>(())
 /// ```
-pub trait KafkaMessage: KafkaEncode + KafkaDecode {
+pub trait KafkaMessage: KafkaEncode + KafkaDecode + RetainedSize {
     /// Upstream protocol name.
     const NAME: &'static str;
     /// Inclusive supported version range.

@@ -16,7 +16,10 @@ pub mod streams_group_topology_description_update_request {
         encoded_len_with,
     };
 
-    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, ProtocolEq, RequestResponsePair};
+    use crate::{
+        ApiDescriptor, KafkaMessage, KafkaRequest, ProtocolEq, RequestResponsePair,
+        RetainedFootprint, RetainedSize,
+    };
 
     /// `TopologyDescription` as declared by the `StreamsGroupTopologyDescriptionUpdate` API.
     #[non_exhaustive]
@@ -78,6 +81,15 @@ pub mod streams_group_topology_description_update_request {
                     &self.unknown_tagged_fields,
                     &other.unknown_tagged_fields,
                 )
+        }
+    }
+
+    impl RetainedSize for TopologyDescription {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.subtopologies))
+                .saturating_add(RetainedSize::retained_size(&self.global_stores))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
         }
     }
 
@@ -234,6 +246,15 @@ pub mod streams_group_topology_description_update_request {
         }
     }
 
+    impl RetainedSize for TopologyDescriptionSubtopology {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.subtopology_id))
+                .saturating_add(RetainedSize::retained_size(&self.nodes))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
+        }
+    }
+
     impl KafkaDecode for TopologyDescriptionSubtopology {
         fn decode(
             decoder: &mut Decoder,
@@ -385,6 +406,19 @@ pub mod streams_group_topology_description_update_request {
                     &self.unknown_tagged_fields,
                     &other.unknown_tagged_fields,
                 )
+        }
+    }
+
+    impl RetainedSize for TopologyDescriptionNode {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.name))
+                .saturating_add(RetainedSize::retained_size(&self.node_type))
+                .saturating_add(RetainedSize::retained_size(&self.source_topics))
+                .saturating_add(RetainedSize::retained_size(&self.sink_topic))
+                .saturating_add(RetainedSize::retained_size(&self.stores))
+                .saturating_add(RetainedSize::retained_size(&self.successors))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
         }
     }
 
@@ -554,6 +588,15 @@ pub mod streams_group_topology_description_update_request {
         }
     }
 
+    impl RetainedSize for TopologyDescriptionGlobalStore {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.source))
+                .saturating_add(RetainedSize::retained_size(&self.processor))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
+        }
+    }
+
     impl KafkaDecode for TopologyDescriptionGlobalStore {
         fn decode(
             decoder: &mut Decoder,
@@ -657,6 +700,17 @@ pub mod streams_group_topology_description_update_request {
                     &self.unknown_tagged_fields,
                     &other.unknown_tagged_fields,
                 )
+        }
+    }
+
+    impl RetainedSize for StreamsGroupTopologyDescriptionUpdateRequest {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.group_id))
+                .saturating_add(RetainedSize::retained_size(&self.member_id))
+                .saturating_add(RetainedSize::retained_size(&self.topology_epoch))
+                .saturating_add(RetainedSize::retained_size(&self.topology_description))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
         }
     }
 
@@ -798,7 +852,7 @@ pub mod streams_group_topology_description_update_response {
         encoded_len_with,
     };
 
-    use crate::{KafkaMessage, KafkaResponse, ProtocolEq};
+    use crate::{KafkaMessage, KafkaResponse, ProtocolEq, RetainedFootprint, RetainedSize};
 
     /// Response body for the `StreamsGroupTopologyDescriptionUpdate` API.
     #[non_exhaustive]
@@ -823,6 +877,16 @@ pub mod streams_group_topology_description_update_response {
                     &self.unknown_tagged_fields,
                     &other.unknown_tagged_fields,
                 )
+        }
+    }
+
+    impl RetainedSize for StreamsGroupTopologyDescriptionUpdateResponse {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.throttle_time_ms))
+                .saturating_add(RetainedSize::retained_size(&self.error_code))
+                .saturating_add(RetainedSize::retained_size(&self.error_message))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
         }
     }
 

@@ -16,7 +16,10 @@ pub mod offset_commit_request {
         encoded_len_with,
     };
 
-    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, ProtocolEq, RequestResponsePair};
+    use crate::{
+        ApiDescriptor, KafkaMessage, KafkaRequest, ProtocolEq, RequestResponsePair,
+        RetainedFootprint, RetainedSize,
+    };
 
     /// `OffsetCommitRequestTopic` as declared by the `OffsetCommit` API.
     #[non_exhaustive]
@@ -78,6 +81,16 @@ pub mod offset_commit_request {
                     &self.unknown_tagged_fields,
                     &other.unknown_tagged_fields,
                 )
+        }
+    }
+
+    impl RetainedSize for OffsetCommitRequestTopic {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.name))
+                .saturating_add(RetainedSize::retained_size(&self.topic_id))
+                .saturating_add(RetainedSize::retained_size(&self.partitions))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
         }
     }
 
@@ -275,6 +288,17 @@ pub mod offset_commit_request {
         }
     }
 
+    impl RetainedSize for OffsetCommitRequestPartition {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.partition_index))
+                .saturating_add(RetainedSize::retained_size(&self.committed_offset))
+                .saturating_add(RetainedSize::retained_size(&self.committed_leader_epoch))
+                .saturating_add(RetainedSize::retained_size(&self.committed_metadata))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
+        }
+    }
+
     impl KafkaDecode for OffsetCommitRequestPartition {
         fn decode(
             decoder: &mut Decoder,
@@ -421,6 +445,21 @@ pub mod offset_commit_request {
                     &self.unknown_tagged_fields,
                     &other.unknown_tagged_fields,
                 )
+        }
+    }
+
+    impl RetainedSize for OffsetCommitRequest {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.group_id))
+                .saturating_add(RetainedSize::retained_size(
+                    &self.generation_id_or_member_epoch,
+                ))
+                .saturating_add(RetainedSize::retained_size(&self.member_id))
+                .saturating_add(RetainedSize::retained_size(&self.group_instance_id))
+                .saturating_add(RetainedSize::retained_size(&self.retention_time_ms))
+                .saturating_add(RetainedSize::retained_size(&self.topics))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
         }
     }
 
@@ -615,7 +654,7 @@ pub mod offset_commit_response {
         encoded_len_with,
     };
 
-    use crate::{KafkaMessage, KafkaResponse, ProtocolEq};
+    use crate::{KafkaMessage, KafkaResponse, ProtocolEq, RetainedFootprint, RetainedSize};
 
     /// `OffsetCommitResponseTopic` as declared by the `OffsetCommit` API.
     #[non_exhaustive]
@@ -677,6 +716,16 @@ pub mod offset_commit_response {
                     &self.unknown_tagged_fields,
                     &other.unknown_tagged_fields,
                 )
+        }
+    }
+
+    impl RetainedSize for OffsetCommitResponseTopic {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.name))
+                .saturating_add(RetainedSize::retained_size(&self.topic_id))
+                .saturating_add(RetainedSize::retained_size(&self.partitions))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
         }
     }
 
@@ -853,6 +902,15 @@ pub mod offset_commit_response {
         }
     }
 
+    impl RetainedSize for OffsetCommitResponsePartition {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.partition_index))
+                .saturating_add(RetainedSize::retained_size(&self.error_code))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
+        }
+    }
+
     impl KafkaDecode for OffsetCommitResponsePartition {
         fn decode(
             decoder: &mut Decoder,
@@ -950,6 +1008,15 @@ pub mod offset_commit_response {
                     &self.unknown_tagged_fields,
                     &other.unknown_tagged_fields,
                 )
+        }
+    }
+
+    impl RetainedSize for OffsetCommitResponse {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.throttle_time_ms))
+                .saturating_add(RetainedSize::retained_size(&self.topics))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
         }
     }
 

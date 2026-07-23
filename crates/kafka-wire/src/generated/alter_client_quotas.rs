@@ -16,7 +16,10 @@ pub mod alter_client_quotas_request {
         encoded_len_with,
     };
 
-    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, ProtocolEq, RequestResponsePair};
+    use crate::{
+        ApiDescriptor, KafkaMessage, KafkaRequest, ProtocolEq, RequestResponsePair,
+        RetainedFootprint, RetainedSize,
+    };
 
     /// `EntryData` as declared by the `AlterClientQuotas` API.
     #[non_exhaustive]
@@ -78,6 +81,15 @@ pub mod alter_client_quotas_request {
                     &self.unknown_tagged_fields,
                     &other.unknown_tagged_fields,
                 )
+        }
+    }
+
+    impl RetainedSize for EntryData {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.entity))
+                .saturating_add(RetainedSize::retained_size(&self.ops))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
         }
     }
 
@@ -253,6 +265,15 @@ pub mod alter_client_quotas_request {
         }
     }
 
+    impl RetainedSize for EntityData {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.entity_type))
+                .saturating_add(RetainedSize::retained_size(&self.entity_name))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
+        }
+    }
+
     impl KafkaDecode for EntityData {
         fn decode(
             decoder: &mut Decoder,
@@ -417,6 +438,16 @@ pub mod alter_client_quotas_request {
         }
     }
 
+    impl RetainedSize for OpData {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.key))
+                .saturating_add(RetainedSize::retained_size(&self.value))
+                .saturating_add(RetainedSize::retained_size(&self.remove))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
+        }
+    }
+
     impl KafkaDecode for OpData {
         fn decode(
             decoder: &mut Decoder,
@@ -525,6 +556,15 @@ pub mod alter_client_quotas_request {
                     &self.unknown_tagged_fields,
                     &other.unknown_tagged_fields,
                 )
+        }
+    }
+
+    impl RetainedSize for AlterClientQuotasRequest {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.entries))
+                .saturating_add(RetainedSize::retained_size(&self.validate_only))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
         }
     }
 
@@ -662,7 +702,7 @@ pub mod alter_client_quotas_response {
         encoded_len_with,
     };
 
-    use crate::{KafkaMessage, KafkaResponse, ProtocolEq};
+    use crate::{KafkaMessage, KafkaResponse, ProtocolEq, RetainedFootprint, RetainedSize};
 
     /// `EntryData` as declared by the `AlterClientQuotas` API.
     #[non_exhaustive]
@@ -735,6 +775,16 @@ pub mod alter_client_quotas_response {
                     &self.unknown_tagged_fields,
                     &other.unknown_tagged_fields,
                 )
+        }
+    }
+
+    impl RetainedSize for EntryData {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.error_code))
+                .saturating_add(RetainedSize::retained_size(&self.error_message))
+                .saturating_add(RetainedSize::retained_size(&self.entity))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
         }
     }
 
@@ -907,6 +957,15 @@ pub mod alter_client_quotas_response {
         }
     }
 
+    impl RetainedSize for EntityData {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.entity_type))
+                .saturating_add(RetainedSize::retained_size(&self.entity_name))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
+        }
+    }
+
     impl KafkaDecode for EntityData {
         fn decode(
             decoder: &mut Decoder,
@@ -1020,6 +1079,15 @@ pub mod alter_client_quotas_response {
                     &self.unknown_tagged_fields,
                     &other.unknown_tagged_fields,
                 )
+        }
+    }
+
+    impl RetainedSize for AlterClientQuotasResponse {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.throttle_time_ms))
+                .saturating_add(RetainedSize::retained_size(&self.entries))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
         }
     }
 

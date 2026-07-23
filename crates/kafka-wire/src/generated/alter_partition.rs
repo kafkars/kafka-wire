@@ -16,7 +16,10 @@ pub mod alter_partition_request {
         encoded_len_with,
     };
 
-    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, ProtocolEq, RequestResponsePair};
+    use crate::{
+        ApiDescriptor, KafkaMessage, KafkaRequest, ProtocolEq, RequestResponsePair,
+        RetainedFootprint, RetainedSize,
+    };
 
     /// `TopicData` as declared by the `AlterPartition` API.
     #[non_exhaustive]
@@ -75,6 +78,15 @@ pub mod alter_partition_request {
                     &self.unknown_tagged_fields,
                     &other.unknown_tagged_fields,
                 )
+        }
+    }
+
+    impl RetainedSize for TopicData {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.topic_id))
+                .saturating_add(RetainedSize::retained_size(&self.partitions))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
         }
     }
 
@@ -249,6 +261,19 @@ pub mod alter_partition_request {
                     &self.unknown_tagged_fields,
                     &other.unknown_tagged_fields,
                 )
+        }
+    }
+
+    impl RetainedSize for PartitionData {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.partition_index))
+                .saturating_add(RetainedSize::retained_size(&self.leader_epoch))
+                .saturating_add(RetainedSize::retained_size(&self.new_isr))
+                .saturating_add(RetainedSize::retained_size(&self.new_isr_with_epochs))
+                .saturating_add(RetainedSize::retained_size(&self.leader_recovery_state))
+                .saturating_add(RetainedSize::retained_size(&self.partition_epoch))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
         }
     }
 
@@ -428,6 +453,15 @@ pub mod alter_partition_request {
         }
     }
 
+    impl RetainedSize for BrokerState {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.broker_id))
+                .saturating_add(RetainedSize::retained_size(&self.broker_epoch))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
+        }
+    }
+
     impl KafkaDecode for BrokerState {
         fn decode(
             decoder: &mut Decoder,
@@ -539,6 +573,16 @@ pub mod alter_partition_request {
                     &self.unknown_tagged_fields,
                     &other.unknown_tagged_fields,
                 )
+        }
+    }
+
+    impl RetainedSize for AlterPartitionRequest {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.broker_id))
+                .saturating_add(RetainedSize::retained_size(&self.broker_epoch))
+                .saturating_add(RetainedSize::retained_size(&self.topics))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
         }
     }
 
@@ -671,7 +715,7 @@ pub mod alter_partition_response {
         encoded_len_with,
     };
 
-    use crate::{KafkaMessage, KafkaResponse, ProtocolEq};
+    use crate::{KafkaMessage, KafkaResponse, ProtocolEq, RetainedFootprint, RetainedSize};
 
     /// `TopicData` as declared by the `AlterPartition` API.
     #[non_exhaustive]
@@ -730,6 +774,15 @@ pub mod alter_partition_response {
                     &self.unknown_tagged_fields,
                     &other.unknown_tagged_fields,
                 )
+        }
+    }
+
+    impl RetainedSize for TopicData {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.topic_id))
+                .saturating_add(RetainedSize::retained_size(&self.partitions))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
         }
     }
 
@@ -891,6 +944,20 @@ pub mod alter_partition_response {
         }
     }
 
+    impl RetainedSize for PartitionData {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.partition_index))
+                .saturating_add(RetainedSize::retained_size(&self.error_code))
+                .saturating_add(RetainedSize::retained_size(&self.leader_id))
+                .saturating_add(RetainedSize::retained_size(&self.leader_epoch))
+                .saturating_add(RetainedSize::retained_size(&self.isr))
+                .saturating_add(RetainedSize::retained_size(&self.leader_recovery_state))
+                .saturating_add(RetainedSize::retained_size(&self.partition_epoch))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
+        }
+    }
+
     impl KafkaDecode for PartitionData {
         fn decode(
             decoder: &mut Decoder,
@@ -1012,6 +1079,16 @@ pub mod alter_partition_response {
                     &self.unknown_tagged_fields,
                     &other.unknown_tagged_fields,
                 )
+        }
+    }
+
+    impl RetainedSize for AlterPartitionResponse {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.throttle_time_ms))
+                .saturating_add(RetainedSize::retained_size(&self.error_code))
+                .saturating_add(RetainedSize::retained_size(&self.topics))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
         }
     }
 

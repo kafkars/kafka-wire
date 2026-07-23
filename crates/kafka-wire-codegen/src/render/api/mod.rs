@@ -7,8 +7,10 @@ mod file;
 mod header;
 mod imports;
 mod message;
+mod metadata;
 mod prose;
 mod protocol_eq;
+mod retained_size;
 mod structs;
 mod symbol;
 mod tagged;
@@ -23,6 +25,8 @@ mod codec_test;
 mod imports_test;
 #[cfg(test)]
 mod metadata_test;
+#[cfg(test)]
+mod retained_size_test;
 #[cfg(test)]
 mod structs_test;
 #[cfg(test)]

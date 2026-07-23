@@ -155,7 +155,7 @@ pub(crate) const LIB: &str = "//! Compile probe for the whole pinned protocol co
      \n\
      pub use kafka_wire::{\n\
      \x20   ApiDescriptor, KafkaMessage, KafkaRequest, KafkaResponse, MessageDescriptor,\n\
-     \x20   MessageDirection, ProtocolEq, RequestResponsePair,\n\
+     \x20   MessageDirection, ProtocolEq, RequestResponsePair, RetainedFootprint, RetainedSize,\n\
      };\n\
      \n\
      pub mod adversarial_decode;\n\

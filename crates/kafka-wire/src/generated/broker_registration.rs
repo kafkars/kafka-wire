@@ -16,7 +16,10 @@ pub mod broker_registration_request {
         encoded_len_with,
     };
 
-    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, ProtocolEq, RequestResponsePair};
+    use crate::{
+        ApiDescriptor, KafkaMessage, KafkaRequest, ProtocolEq, RequestResponsePair,
+        RetainedFootprint, RetainedSize,
+    };
 
     /// `Listener` as declared by the `BrokerRegistration` API.
     #[non_exhaustive]
@@ -78,6 +81,17 @@ pub mod broker_registration_request {
                     &self.unknown_tagged_fields,
                     &other.unknown_tagged_fields,
                 )
+        }
+    }
+
+    impl RetainedSize for Listener {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.name))
+                .saturating_add(RetainedSize::retained_size(&self.host))
+                .saturating_add(RetainedSize::retained_size(&self.port))
+                .saturating_add(RetainedSize::retained_size(&self.security_protocol))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
         }
     }
 
@@ -230,6 +244,16 @@ pub mod broker_registration_request {
         }
     }
 
+    impl RetainedSize for Feature {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.name))
+                .saturating_add(RetainedSize::retained_size(&self.min_supported_version))
+                .saturating_add(RetainedSize::retained_size(&self.max_supported_version))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
+        }
+    }
+
     impl KafkaDecode for Feature {
         fn decode(
             decoder: &mut Decoder,
@@ -374,6 +398,22 @@ pub mod broker_registration_request {
                     &self.unknown_tagged_fields,
                     &other.unknown_tagged_fields,
                 )
+        }
+    }
+
+    impl RetainedSize for BrokerRegistrationRequest {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.broker_id))
+                .saturating_add(RetainedSize::retained_size(&self.cluster_id))
+                .saturating_add(RetainedSize::retained_size(&self.incarnation_id))
+                .saturating_add(RetainedSize::retained_size(&self.listeners))
+                .saturating_add(RetainedSize::retained_size(&self.features))
+                .saturating_add(RetainedSize::retained_size(&self.rack))
+                .saturating_add(RetainedSize::retained_size(&self.is_migrating_zk_broker))
+                .saturating_add(RetainedSize::retained_size(&self.log_dirs))
+                .saturating_add(RetainedSize::retained_size(&self.previous_broker_epoch))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
         }
     }
 
@@ -561,7 +601,7 @@ pub mod broker_registration_response {
         KafkaDecode, KafkaEncode, TaggedFields, VersionRange, encode_into_with, encoded_len_with,
     };
 
-    use crate::{KafkaMessage, KafkaResponse, ProtocolEq};
+    use crate::{KafkaMessage, KafkaResponse, ProtocolEq, RetainedFootprint, RetainedSize};
 
     /// Response body for the `BrokerRegistration` API.
     #[non_exhaustive]
@@ -597,6 +637,16 @@ pub mod broker_registration_response {
                     &self.unknown_tagged_fields,
                     &other.unknown_tagged_fields,
                 )
+        }
+    }
+
+    impl RetainedSize for BrokerRegistrationResponse {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.throttle_time_ms))
+                .saturating_add(RetainedSize::retained_size(&self.error_code))
+                .saturating_add(RetainedSize::retained_size(&self.broker_epoch))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
         }
     }
 

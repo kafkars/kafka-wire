@@ -16,7 +16,10 @@ pub mod describe_transactions_request {
         encoded_len_with,
     };
 
-    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, ProtocolEq, RequestResponsePair};
+    use crate::{
+        ApiDescriptor, KafkaMessage, KafkaRequest, ProtocolEq, RequestResponsePair,
+        RetainedFootprint, RetainedSize,
+    };
 
     /// Request body for the `DescribeTransactions` API.
     #[non_exhaustive]
@@ -35,6 +38,14 @@ pub mod describe_transactions_request {
                     &self.unknown_tagged_fields,
                     &other.unknown_tagged_fields,
                 )
+        }
+    }
+
+    impl RetainedSize for DescribeTransactionsRequest {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.transactional_ids))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
         }
     }
 
@@ -158,7 +169,7 @@ pub mod describe_transactions_response {
         encoded_len_with,
     };
 
-    use crate::{KafkaMessage, KafkaResponse, ProtocolEq};
+    use crate::{KafkaMessage, KafkaResponse, ProtocolEq, RetainedFootprint, RetainedSize};
 
     /// `TransactionState` as declared by the `DescribeTransactions` API.
     #[non_exhaustive]
@@ -241,6 +252,21 @@ pub mod describe_transactions_response {
                     &self.unknown_tagged_fields,
                     &other.unknown_tagged_fields,
                 )
+        }
+    }
+
+    impl RetainedSize for TransactionState {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.error_code))
+                .saturating_add(RetainedSize::retained_size(&self.transactional_id))
+                .saturating_add(RetainedSize::retained_size(&self.transaction_state))
+                .saturating_add(RetainedSize::retained_size(&self.transaction_timeout_ms))
+                .saturating_add(RetainedSize::retained_size(&self.transaction_start_time_ms))
+                .saturating_add(RetainedSize::retained_size(&self.producer_id))
+                .saturating_add(RetainedSize::retained_size(&self.producer_epoch))
+                .saturating_add(RetainedSize::retained_size(&self.topics))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
         }
     }
 
@@ -402,6 +428,15 @@ pub mod describe_transactions_response {
         }
     }
 
+    impl RetainedSize for TopicData {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.topic))
+                .saturating_add(RetainedSize::retained_size(&self.partitions))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
+        }
+    }
+
     impl KafkaDecode for TopicData {
         fn decode(
             decoder: &mut Decoder,
@@ -505,6 +540,15 @@ pub mod describe_transactions_response {
                     &self.unknown_tagged_fields,
                     &other.unknown_tagged_fields,
                 )
+        }
+    }
+
+    impl RetainedSize for DescribeTransactionsResponse {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.throttle_time_ms))
+                .saturating_add(RetainedSize::retained_size(&self.transaction_states))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
         }
     }
 

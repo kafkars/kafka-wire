@@ -16,7 +16,10 @@ pub mod share_group_describe_request {
         encoded_len_with,
     };
 
-    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, ProtocolEq, RequestResponsePair};
+    use crate::{
+        ApiDescriptor, KafkaMessage, KafkaRequest, ProtocolEq, RequestResponsePair,
+        RetainedFootprint, RetainedSize,
+    };
 
     /// Request body for the `ShareGroupDescribe` API.
     #[non_exhaustive]
@@ -41,6 +44,17 @@ pub mod share_group_describe_request {
                     &self.unknown_tagged_fields,
                     &other.unknown_tagged_fields,
                 )
+        }
+    }
+
+    impl RetainedSize for ShareGroupDescribeRequest {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.group_ids))
+                .saturating_add(RetainedSize::retained_size(
+                    &self.include_authorized_operations,
+                ))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
         }
     }
 
@@ -167,7 +181,7 @@ pub mod share_group_describe_response {
         encoded_len_with,
     };
 
-    use crate::{KafkaMessage, KafkaResponse, ProtocolEq};
+    use crate::{KafkaMessage, KafkaResponse, ProtocolEq, RetainedFootprint, RetainedSize};
 
     /// `TopicPartitions` as declared by the `ShareGroupDescribe` API.
     #[non_exhaustive]
@@ -226,6 +240,16 @@ pub mod share_group_describe_response {
                     &self.unknown_tagged_fields,
                     &other.unknown_tagged_fields,
                 )
+        }
+    }
+
+    impl RetainedSize for TopicPartitions {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.topic_id))
+                .saturating_add(RetainedSize::retained_size(&self.topic_name))
+                .saturating_add(RetainedSize::retained_size(&self.partitions))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
         }
     }
 
@@ -369,6 +393,14 @@ pub mod share_group_describe_response {
                     &self.unknown_tagged_fields,
                     &other.unknown_tagged_fields,
                 )
+        }
+    }
+
+    impl RetainedSize for Assignment {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.topic_partitions))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
         }
     }
 
@@ -553,6 +585,22 @@ pub mod share_group_describe_response {
         }
     }
 
+    impl RetainedSize for DescribedGroup {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.error_code))
+                .saturating_add(RetainedSize::retained_size(&self.error_message))
+                .saturating_add(RetainedSize::retained_size(&self.group_id))
+                .saturating_add(RetainedSize::retained_size(&self.group_state))
+                .saturating_add(RetainedSize::retained_size(&self.group_epoch))
+                .saturating_add(RetainedSize::retained_size(&self.assignment_epoch))
+                .saturating_add(RetainedSize::retained_size(&self.assignor_name))
+                .saturating_add(RetainedSize::retained_size(&self.members))
+                .saturating_add(RetainedSize::retained_size(&self.authorized_operations))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
+        }
+    }
+
     impl KafkaDecode for DescribedGroup {
         fn decode(
             decoder: &mut Decoder,
@@ -733,6 +781,20 @@ pub mod share_group_describe_response {
         }
     }
 
+    impl RetainedSize for Member {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.member_id))
+                .saturating_add(RetainedSize::retained_size(&self.rack_id))
+                .saturating_add(RetainedSize::retained_size(&self.member_epoch))
+                .saturating_add(RetainedSize::retained_size(&self.client_id))
+                .saturating_add(RetainedSize::retained_size(&self.client_host))
+                .saturating_add(RetainedSize::retained_size(&self.subscribed_topic_names))
+                .saturating_add(RetainedSize::retained_size(&self.assignment))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
+        }
+    }
+
     impl KafkaDecode for Member {
         fn decode(
             decoder: &mut Decoder,
@@ -851,6 +913,15 @@ pub mod share_group_describe_response {
                     &self.unknown_tagged_fields,
                     &other.unknown_tagged_fields,
                 )
+        }
+    }
+
+    impl RetainedSize for ShareGroupDescribeResponse {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.throttle_time_ms))
+                .saturating_add(RetainedSize::retained_size(&self.groups))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
         }
     }
 

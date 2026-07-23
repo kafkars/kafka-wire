@@ -16,7 +16,10 @@ pub mod api_versions_request {
         encoded_len_with,
     };
 
-    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, ProtocolEq, RequestResponsePair};
+    use crate::{
+        ApiDescriptor, KafkaMessage, KafkaRequest, ProtocolEq, RequestResponsePair,
+        RetainedFootprint, RetainedSize,
+    };
 
     /// Request body for the `ApiVersions` API.
     #[non_exhaustive]
@@ -59,6 +62,17 @@ pub mod api_versions_request {
                     &self.unknown_tagged_fields,
                     &other.unknown_tagged_fields,
                 )
+        }
+    }
+
+    impl RetainedSize for ApiVersionsRequest {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.client_software_name))
+                .saturating_add(RetainedSize::retained_size(&self.client_software_version))
+                .saturating_add(RetainedSize::retained_size(&self.cluster_id))
+                .saturating_add(RetainedSize::retained_size(&self.node_id))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
         }
     }
 
@@ -209,7 +223,7 @@ pub mod api_versions_response {
         encoded_len_with,
     };
 
-    use crate::{KafkaMessage, KafkaResponse, ProtocolEq};
+    use crate::{KafkaMessage, KafkaResponse, ProtocolEq, RetainedFootprint, RetainedSize};
 
     /// `ApiVersion` as declared by the `ApiVersions` API.
     #[non_exhaustive]
@@ -268,6 +282,16 @@ pub mod api_versions_response {
                     &self.unknown_tagged_fields,
                     &other.unknown_tagged_fields,
                 )
+        }
+    }
+
+    impl RetainedSize for ApiVersion {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.api_key))
+                .saturating_add(RetainedSize::retained_size(&self.min_version))
+                .saturating_add(RetainedSize::retained_size(&self.max_version))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
         }
     }
 
@@ -414,6 +438,16 @@ pub mod api_versions_response {
         }
     }
 
+    impl RetainedSize for SupportedFeatureKey {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.name))
+                .saturating_add(RetainedSize::retained_size(&self.min_version))
+                .saturating_add(RetainedSize::retained_size(&self.max_version))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
+        }
+    }
+
     impl KafkaDecode for SupportedFeatureKey {
         fn decode(
             decoder: &mut Decoder,
@@ -557,6 +591,16 @@ pub mod api_versions_response {
         }
     }
 
+    impl RetainedSize for FinalizedFeatureKey {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.name))
+                .saturating_add(RetainedSize::retained_size(&self.max_version_level))
+                .saturating_add(RetainedSize::retained_size(&self.min_version_level))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
+        }
+    }
+
     impl KafkaDecode for FinalizedFeatureKey {
         fn decode(
             decoder: &mut Decoder,
@@ -693,6 +737,20 @@ pub mod api_versions_response {
                     &self.unknown_tagged_fields,
                     &other.unknown_tagged_fields,
                 )
+        }
+    }
+
+    impl RetainedSize for ApiVersionsResponse {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.error_code))
+                .saturating_add(RetainedSize::retained_size(&self.api_keys))
+                .saturating_add(RetainedSize::retained_size(&self.throttle_time_ms))
+                .saturating_add(RetainedSize::retained_size(&self.supported_features))
+                .saturating_add(RetainedSize::retained_size(&self.finalized_features_epoch))
+                .saturating_add(RetainedSize::retained_size(&self.finalized_features))
+                .saturating_add(RetainedSize::retained_size(&self.zk_migration_ready))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
         }
     }
 

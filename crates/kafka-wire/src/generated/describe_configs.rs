@@ -16,7 +16,10 @@ pub mod describe_configs_request {
         encoded_len_with,
     };
 
-    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, ProtocolEq, RequestResponsePair};
+    use crate::{
+        ApiDescriptor, KafkaMessage, KafkaRequest, ProtocolEq, RequestResponsePair,
+        RetainedFootprint, RetainedSize,
+    };
 
     /// `DescribeConfigsResource` as declared by the `DescribeConfigs` API.
     #[non_exhaustive]
@@ -86,6 +89,16 @@ pub mod describe_configs_request {
                     &self.unknown_tagged_fields,
                     &other.unknown_tagged_fields,
                 )
+        }
+    }
+
+    impl RetainedSize for DescribeConfigsResource {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.resource_type))
+                .saturating_add(RetainedSize::retained_size(&self.resource_name))
+                .saturating_add(RetainedSize::retained_size(&self.configuration_keys))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
         }
     }
 
@@ -237,6 +250,16 @@ pub mod describe_configs_request {
                     &self.unknown_tagged_fields,
                     &other.unknown_tagged_fields,
                 )
+        }
+    }
+
+    impl RetainedSize for DescribeConfigsRequest {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.resources))
+                .saturating_add(RetainedSize::retained_size(&self.include_synonyms))
+                .saturating_add(RetainedSize::retained_size(&self.include_documentation))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
         }
     }
 
@@ -392,7 +415,7 @@ pub mod describe_configs_response {
         encoded_len_with,
     };
 
-    use crate::{KafkaMessage, KafkaResponse, ProtocolEq};
+    use crate::{KafkaMessage, KafkaResponse, ProtocolEq, RetainedFootprint, RetainedSize};
 
     /// `DescribeConfigsResult` as declared by the `DescribeConfigs` API.
     #[non_exhaustive]
@@ -473,6 +496,18 @@ pub mod describe_configs_response {
                     &self.unknown_tagged_fields,
                     &other.unknown_tagged_fields,
                 )
+        }
+    }
+
+    impl RetainedSize for DescribeConfigsResult {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.error_code))
+                .saturating_add(RetainedSize::retained_size(&self.error_message))
+                .saturating_add(RetainedSize::retained_size(&self.resource_type))
+                .saturating_add(RetainedSize::retained_size(&self.resource_name))
+                .saturating_add(RetainedSize::retained_size(&self.configs))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
         }
     }
 
@@ -685,6 +720,21 @@ pub mod describe_configs_response {
                     &self.unknown_tagged_fields,
                     &other.unknown_tagged_fields,
                 )
+        }
+    }
+
+    impl RetainedSize for DescribeConfigsResourceResult {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.name))
+                .saturating_add(RetainedSize::retained_size(&self.value))
+                .saturating_add(RetainedSize::retained_size(&self.read_only))
+                .saturating_add(RetainedSize::retained_size(&self.config_source))
+                .saturating_add(RetainedSize::retained_size(&self.is_sensitive))
+                .saturating_add(RetainedSize::retained_size(&self.synonyms))
+                .saturating_add(RetainedSize::retained_size(&self.config_type))
+                .saturating_add(RetainedSize::retained_size(&self.documentation))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
         }
     }
 
@@ -906,6 +956,16 @@ pub mod describe_configs_response {
         }
     }
 
+    impl RetainedSize for DescribeConfigsSynonym {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.name))
+                .saturating_add(RetainedSize::retained_size(&self.value))
+                .saturating_add(RetainedSize::retained_size(&self.source))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
+        }
+    }
+
     impl KafkaDecode for DescribeConfigsSynonym {
         fn decode(
             decoder: &mut Decoder,
@@ -1022,6 +1082,15 @@ pub mod describe_configs_response {
                     &self.unknown_tagged_fields,
                     &other.unknown_tagged_fields,
                 )
+        }
+    }
+
+    impl RetainedSize for DescribeConfigsResponse {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.throttle_time_ms))
+                .saturating_add(RetainedSize::retained_size(&self.results))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
         }
     }
 

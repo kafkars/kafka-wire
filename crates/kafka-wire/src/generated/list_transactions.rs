@@ -16,7 +16,10 @@ pub mod list_transactions_request {
         encoded_len_with,
     };
 
-    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, ProtocolEq, RequestResponsePair};
+    use crate::{
+        ApiDescriptor, KafkaMessage, KafkaRequest, ProtocolEq, RequestResponsePair,
+        RetainedFootprint, RetainedSize,
+    };
 
     /// Request body for the `ListTransactions` API.
     #[non_exhaustive]
@@ -59,6 +62,17 @@ pub mod list_transactions_request {
                     &self.unknown_tagged_fields,
                     &other.unknown_tagged_fields,
                 )
+        }
+    }
+
+    impl RetainedSize for ListTransactionsRequest {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.state_filters))
+                .saturating_add(RetainedSize::retained_size(&self.producer_id_filters))
+                .saturating_add(RetainedSize::retained_size(&self.duration_filter))
+                .saturating_add(RetainedSize::retained_size(&self.transactional_id_pattern))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
         }
     }
 
@@ -223,7 +237,7 @@ pub mod list_transactions_response {
         encoded_len_with,
     };
 
-    use crate::{KafkaMessage, KafkaResponse, ProtocolEq};
+    use crate::{KafkaMessage, KafkaResponse, ProtocolEq, RetainedFootprint, RetainedSize};
 
     /// `TransactionState` as declared by the `ListTransactions` API.
     #[non_exhaustive]
@@ -282,6 +296,16 @@ pub mod list_transactions_response {
                     &self.unknown_tagged_fields,
                     &other.unknown_tagged_fields,
                 )
+        }
+    }
+
+    impl RetainedSize for TransactionState {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.transactional_id))
+                .saturating_add(RetainedSize::retained_size(&self.producer_id))
+                .saturating_add(RetainedSize::retained_size(&self.transaction_state))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
         }
     }
 
@@ -394,6 +418,17 @@ pub mod list_transactions_response {
                     &self.unknown_tagged_fields,
                     &other.unknown_tagged_fields,
                 )
+        }
+    }
+
+    impl RetainedSize for ListTransactionsResponse {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.throttle_time_ms))
+                .saturating_add(RetainedSize::retained_size(&self.error_code))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_state_filters))
+                .saturating_add(RetainedSize::retained_size(&self.transaction_states))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
         }
     }
 

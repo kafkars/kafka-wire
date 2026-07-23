@@ -16,7 +16,10 @@ pub mod init_producer_id_request {
         encoded_len_with,
     };
 
-    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, ProtocolEq, RequestResponsePair};
+    use crate::{
+        ApiDescriptor, KafkaMessage, KafkaRequest, ProtocolEq, RequestResponsePair,
+        RetainedFootprint, RetainedSize,
+    };
 
     /// Request body for the `InitProducerId` API.
     #[non_exhaustive]
@@ -67,6 +70,19 @@ pub mod init_producer_id_request {
                     &self.unknown_tagged_fields,
                     &other.unknown_tagged_fields,
                 )
+        }
+    }
+
+    impl RetainedSize for InitProducerIdRequest {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.transactional_id))
+                .saturating_add(RetainedSize::retained_size(&self.transaction_timeout_ms))
+                .saturating_add(RetainedSize::retained_size(&self.producer_id))
+                .saturating_add(RetainedSize::retained_size(&self.producer_epoch))
+                .saturating_add(RetainedSize::retained_size(&self.enable2_pc))
+                .saturating_add(RetainedSize::retained_size(&self.keep_prepared_txn))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
         }
     }
 
@@ -258,7 +274,7 @@ pub mod init_producer_id_response {
         KafkaDecode, KafkaEncode, TaggedFields, VersionRange, encode_into_with, encoded_len_with,
     };
 
-    use crate::{KafkaMessage, KafkaResponse, ProtocolEq};
+    use crate::{KafkaMessage, KafkaResponse, ProtocolEq, RetainedFootprint, RetainedSize};
 
     /// Response body for the `InitProducerId` API.
     #[non_exhaustive]
@@ -312,6 +328,21 @@ pub mod init_producer_id_response {
                     &self.unknown_tagged_fields,
                     &other.unknown_tagged_fields,
                 )
+        }
+    }
+
+    impl RetainedSize for InitProducerIdResponse {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.throttle_time_ms))
+                .saturating_add(RetainedSize::retained_size(&self.error_code))
+                .saturating_add(RetainedSize::retained_size(&self.producer_id))
+                .saturating_add(RetainedSize::retained_size(&self.producer_epoch))
+                .saturating_add(RetainedSize::retained_size(&self.ongoing_txn_producer_id))
+                .saturating_add(RetainedSize::retained_size(
+                    &self.ongoing_txn_producer_epoch,
+                ))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
         }
     }
 

@@ -16,7 +16,10 @@ pub mod broker_heartbeat_request {
         encode_into_with, encoded_len_with,
     };
 
-    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, ProtocolEq, RequestResponsePair};
+    use crate::{
+        ApiDescriptor, KafkaMessage, KafkaRequest, ProtocolEq, RequestResponsePair,
+        RetainedFootprint, RetainedSize,
+    };
 
     /// Request body for the `BrokerHeartbeat` API.
     #[non_exhaustive]
@@ -71,6 +74,20 @@ pub mod broker_heartbeat_request {
                     &self.unknown_tagged_fields,
                     &other.unknown_tagged_fields,
                 )
+        }
+    }
+
+    impl RetainedSize for BrokerHeartbeatRequest {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.broker_id))
+                .saturating_add(RetainedSize::retained_size(&self.broker_epoch))
+                .saturating_add(RetainedSize::retained_size(&self.current_metadata_offset))
+                .saturating_add(RetainedSize::retained_size(&self.want_fence))
+                .saturating_add(RetainedSize::retained_size(&self.want_shut_down))
+                .saturating_add(RetainedSize::retained_size(&self.offline_log_dirs))
+                .saturating_add(RetainedSize::retained_size(&self.cordoned_log_dirs))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
         }
     }
 
@@ -311,7 +328,7 @@ pub mod broker_heartbeat_response {
         KafkaDecode, KafkaEncode, TaggedFields, VersionRange, encode_into_with, encoded_len_with,
     };
 
-    use crate::{KafkaMessage, KafkaResponse, ProtocolEq};
+    use crate::{KafkaMessage, KafkaResponse, ProtocolEq, RetainedFootprint, RetainedSize};
 
     /// Response body for the `BrokerHeartbeat` API.
     #[non_exhaustive]
@@ -355,6 +372,18 @@ pub mod broker_heartbeat_response {
                     &self.unknown_tagged_fields,
                     &other.unknown_tagged_fields,
                 )
+        }
+    }
+
+    impl RetainedSize for BrokerHeartbeatResponse {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.throttle_time_ms))
+                .saturating_add(RetainedSize::retained_size(&self.error_code))
+                .saturating_add(RetainedSize::retained_size(&self.is_caught_up))
+                .saturating_add(RetainedSize::retained_size(&self.is_fenced))
+                .saturating_add(RetainedSize::retained_size(&self.should_shut_down))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
         }
     }
 

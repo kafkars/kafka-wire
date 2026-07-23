@@ -4,6 +4,11 @@
 
 use std::collections::BTreeMap;
 
+mod root;
+
+pub(crate) use root::handwritten_root_types;
+use root::handwritten_root_values;
+
 use crate::{
     GenerationError,
     group::ApiGroup,
@@ -16,7 +21,6 @@ const GENERATED_TYPE_NAMESPACE: &str = "the generated module type namespace";
 const GENERATED_VALUE_NAMESPACE: &str = "the generated module value namespace";
 const ROOT_TYPE_NAMESPACE: &str = "the kafka-wire crate-root type namespace";
 const ROOT_VALUE_NAMESPACE: &str = "the kafka-wire crate-root value namespace";
-const PRIVATE_ROOT_MODULE: &str = "handwritten private crate-root module";
 
 /// Proves every emitted symbol has one producer in each scope it enters.
 pub(crate) fn validate_generated_namespace(
@@ -208,33 +212,4 @@ fn claim(
     }
     claimed.insert(symbol.to_owned(), producer.to_owned());
     Ok(())
-}
-
-pub(crate) fn handwritten_root_types() -> BTreeMap<String, String> {
-    [
-        ("ApiDescriptor", "handwritten crate facade"),
-        ("KafkaMessage", "handwritten crate facade"),
-        ("KafkaRequest", "handwritten crate facade"),
-        ("KafkaResponse", "handwritten crate facade"),
-        ("MessageDescriptor", "handwritten crate facade"),
-        ("MessageDirection", "handwritten crate facade"),
-        ("OutboundFrameLimits", "handwritten crate facade"),
-        ("ProtocolEq", "handwritten crate facade"),
-        ("RequestResponsePair", "handwritten crate facade"),
-        ("descriptor", PRIVATE_ROOT_MODULE),
-        ("frame", PRIVATE_ROOT_MODULE),
-        ("generated", PRIVATE_ROOT_MODULE),
-        ("message", PRIVATE_ROOT_MODULE),
-        ("tagged_claims_test", PRIVATE_ROOT_MODULE),
-    ]
-    .into_iter()
-    .map(|(symbol, producer)| (symbol.to_owned(), producer.to_owned()))
-    .collect()
-}
-
-fn handwritten_root_values() -> BTreeMap<String, String> {
-    ["encode_request", "response_header_version_for"]
-        .into_iter()
-        .map(|symbol| (symbol.to_owned(), "handwritten crate facade".to_owned()))
-        .collect()
 }

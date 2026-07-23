@@ -16,7 +16,10 @@ pub mod write_txn_markers_request {
         encoded_len_with,
     };
 
-    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, ProtocolEq, RequestResponsePair};
+    use crate::{
+        ApiDescriptor, KafkaMessage, KafkaRequest, ProtocolEq, RequestResponsePair,
+        RetainedFootprint, RetainedSize,
+    };
 
     /// `WritableTxnMarker` as declared by the `WriteTxnMarkers` API.
     #[non_exhaustive]
@@ -87,6 +90,19 @@ pub mod write_txn_markers_request {
                     &self.unknown_tagged_fields,
                     &other.unknown_tagged_fields,
                 )
+        }
+    }
+
+    impl RetainedSize for WritableTxnMarker {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.producer_id))
+                .saturating_add(RetainedSize::retained_size(&self.producer_epoch))
+                .saturating_add(RetainedSize::retained_size(&self.transaction_result))
+                .saturating_add(RetainedSize::retained_size(&self.topics))
+                .saturating_add(RetainedSize::retained_size(&self.coordinator_epoch))
+                .saturating_add(RetainedSize::retained_size(&self.transaction_version))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
         }
     }
 
@@ -250,6 +266,15 @@ pub mod write_txn_markers_request {
         }
     }
 
+    impl RetainedSize for WritableTxnMarkerTopic {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.name))
+                .saturating_add(RetainedSize::retained_size(&self.partition_indexes))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
+        }
+    }
+
     impl KafkaDecode for WritableTxnMarkerTopic {
         fn decode(
             decoder: &mut Decoder,
@@ -350,6 +375,14 @@ pub mod write_txn_markers_request {
                     &self.unknown_tagged_fields,
                     &other.unknown_tagged_fields,
                 )
+        }
+    }
+
+    impl RetainedSize for WriteTxnMarkersRequest {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.markers))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
         }
     }
 
@@ -478,7 +511,7 @@ pub mod write_txn_markers_response {
         encoded_len_with,
     };
 
-    use crate::{KafkaMessage, KafkaResponse, ProtocolEq};
+    use crate::{KafkaMessage, KafkaResponse, ProtocolEq, RetainedFootprint, RetainedSize};
 
     /// `WritableTxnMarkerResult` as declared by the `WriteTxnMarkers` API.
     #[non_exhaustive]
@@ -537,6 +570,15 @@ pub mod write_txn_markers_response {
                     &self.unknown_tagged_fields,
                     &other.unknown_tagged_fields,
                 )
+        }
+    }
+
+    impl RetainedSize for WritableTxnMarkerResult {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.producer_id))
+                .saturating_add(RetainedSize::retained_size(&self.topics))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
         }
     }
 
@@ -685,6 +727,15 @@ pub mod write_txn_markers_response {
         }
     }
 
+    impl RetainedSize for WritableTxnMarkerTopicResult {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.name))
+                .saturating_add(RetainedSize::retained_size(&self.partitions))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
+        }
+    }
+
     impl KafkaDecode for WritableTxnMarkerTopicResult {
         fn decode(
             decoder: &mut Decoder,
@@ -827,6 +878,15 @@ pub mod write_txn_markers_response {
         }
     }
 
+    impl RetainedSize for WritableTxnMarkerPartitionResult {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.partition_index))
+                .saturating_add(RetainedSize::retained_size(&self.error_code))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
+        }
+    }
+
     impl KafkaDecode for WritableTxnMarkerPartitionResult {
         fn decode(
             decoder: &mut Decoder,
@@ -927,6 +987,14 @@ pub mod write_txn_markers_response {
                     &self.unknown_tagged_fields,
                     &other.unknown_tagged_fields,
                 )
+        }
+    }
+
+    impl RetainedSize for WriteTxnMarkersResponse {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.markers))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
         }
     }
 

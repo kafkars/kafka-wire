@@ -22,6 +22,7 @@ use super::declarations::{RenderableStruct, declared_structs};
 use super::imports::{ExternalSymbol as S, spell};
 use super::prose::sentence;
 use super::protocol_eq::render_protocol_eq;
+use super::retained_size::render_retained_size;
 use super::tagged::render_tagged_decode;
 use super::tagged_proof::{RenderedKnownTags, verify_known_tag_rendering};
 use super::validation::{Owner, render_validation};
@@ -208,6 +209,7 @@ fn render_struct_with(
     }
 
     render_protocol_eq(rust, rust_type, fields, message, flexible);
+    render_retained_size(rust, rust_type, fields, message, flexible);
 
     let decoded_tags = render_struct_decode(
         rust, rust_type, fields, message, identity, flexible, &tag_plans,

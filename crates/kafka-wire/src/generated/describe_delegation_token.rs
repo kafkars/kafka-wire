@@ -16,7 +16,10 @@ pub mod describe_delegation_token_request {
         encoded_len_with,
     };
 
-    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, ProtocolEq, RequestResponsePair};
+    use crate::{
+        ApiDescriptor, KafkaMessage, KafkaRequest, ProtocolEq, RequestResponsePair,
+        RetainedFootprint, RetainedSize,
+    };
 
     /// `DescribeDelegationTokenOwner` as declared by the `DescribeDelegationToken` API.
     #[non_exhaustive]
@@ -72,6 +75,15 @@ pub mod describe_delegation_token_request {
                     &self.unknown_tagged_fields,
                     &other.unknown_tagged_fields,
                 )
+        }
+    }
+
+    impl RetainedSize for DescribeDelegationTokenOwner {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.principal_type))
+                .saturating_add(RetainedSize::retained_size(&self.principal_name))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
         }
     }
 
@@ -194,6 +206,14 @@ pub mod describe_delegation_token_request {
                     &self.unknown_tagged_fields,
                     &other.unknown_tagged_fields,
                 )
+        }
+    }
+
+    impl RetainedSize for DescribeDelegationTokenRequest {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.owners))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
         }
     }
 
@@ -341,7 +361,7 @@ pub mod describe_delegation_token_response {
         encoded_len_with,
     };
 
-    use crate::{KafkaMessage, KafkaResponse, ProtocolEq};
+    use crate::{KafkaMessage, KafkaResponse, ProtocolEq, RetainedFootprint, RetainedSize};
 
     /// `DescribedDelegationToken` as declared by the `DescribeDelegationToken` API.
     #[non_exhaustive]
@@ -444,6 +464,27 @@ pub mod describe_delegation_token_response {
                     &self.unknown_tagged_fields,
                     &other.unknown_tagged_fields,
                 )
+        }
+    }
+
+    impl RetainedSize for DescribedDelegationToken {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.principal_type))
+                .saturating_add(RetainedSize::retained_size(&self.principal_name))
+                .saturating_add(RetainedSize::retained_size(
+                    &self.token_requester_principal_type,
+                ))
+                .saturating_add(RetainedSize::retained_size(
+                    &self.token_requester_principal_name,
+                ))
+                .saturating_add(RetainedSize::retained_size(&self.issue_timestamp))
+                .saturating_add(RetainedSize::retained_size(&self.expiry_timestamp))
+                .saturating_add(RetainedSize::retained_size(&self.max_timestamp))
+                .saturating_add(RetainedSize::retained_size(&self.token_id))
+                .saturating_add(RetainedSize::retained_size(&self.hmac))
+                .saturating_add(RetainedSize::retained_size(&self.renewers))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
         }
     }
 
@@ -665,6 +706,15 @@ pub mod describe_delegation_token_response {
         }
     }
 
+    impl RetainedSize for DescribedDelegationTokenRenewer {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.principal_type))
+                .saturating_add(RetainedSize::retained_size(&self.principal_name))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
+        }
+    }
+
     impl KafkaDecode for DescribedDelegationTokenRenewer {
         fn decode(
             decoder: &mut Decoder,
@@ -781,6 +831,16 @@ pub mod describe_delegation_token_response {
                     &self.unknown_tagged_fields,
                     &other.unknown_tagged_fields,
                 )
+        }
+    }
+
+    impl RetainedSize for DescribeDelegationTokenResponse {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.error_code))
+                .saturating_add(RetainedSize::retained_size(&self.tokens))
+                .saturating_add(RetainedSize::retained_size(&self.throttle_time_ms))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
         }
     }
 

@@ -16,7 +16,10 @@ pub mod create_delegation_token_request {
         encoded_len_with,
     };
 
-    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, ProtocolEq, RequestResponsePair};
+    use crate::{
+        ApiDescriptor, KafkaMessage, KafkaRequest, ProtocolEq, RequestResponsePair,
+        RetainedFootprint, RetainedSize,
+    };
 
     /// `CreatableRenewers` as declared by the `CreateDelegationToken` API.
     #[non_exhaustive]
@@ -72,6 +75,15 @@ pub mod create_delegation_token_request {
                     &self.unknown_tagged_fields,
                     &other.unknown_tagged_fields,
                 )
+        }
+    }
+
+    impl RetainedSize for CreatableRenewers {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.principal_type))
+                .saturating_add(RetainedSize::retained_size(&self.principal_name))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
         }
     }
 
@@ -206,6 +218,17 @@ pub mod create_delegation_token_request {
                     &self.unknown_tagged_fields,
                     &other.unknown_tagged_fields,
                 )
+        }
+    }
+
+    impl RetainedSize for CreateDelegationTokenRequest {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.owner_principal_type))
+                .saturating_add(RetainedSize::retained_size(&self.owner_principal_name))
+                .saturating_add(RetainedSize::retained_size(&self.renewers))
+                .saturating_add(RetainedSize::retained_size(&self.max_lifetime_ms))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
         }
     }
 
@@ -382,7 +405,7 @@ pub mod create_delegation_token_response {
         encoded_len_with,
     };
 
-    use crate::{KafkaMessage, KafkaResponse, ProtocolEq};
+    use crate::{KafkaMessage, KafkaResponse, ProtocolEq, RetainedFootprint, RetainedSize};
 
     /// Response body for the `CreateDelegationToken` API.
     #[non_exhaustive]
@@ -437,6 +460,28 @@ pub mod create_delegation_token_response {
                     &self.unknown_tagged_fields,
                     &other.unknown_tagged_fields,
                 )
+        }
+    }
+
+    impl RetainedSize for CreateDelegationTokenResponse {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.error_code))
+                .saturating_add(RetainedSize::retained_size(&self.principal_type))
+                .saturating_add(RetainedSize::retained_size(&self.principal_name))
+                .saturating_add(RetainedSize::retained_size(
+                    &self.token_requester_principal_type,
+                ))
+                .saturating_add(RetainedSize::retained_size(
+                    &self.token_requester_principal_name,
+                ))
+                .saturating_add(RetainedSize::retained_size(&self.issue_timestamp_ms))
+                .saturating_add(RetainedSize::retained_size(&self.expiry_timestamp_ms))
+                .saturating_add(RetainedSize::retained_size(&self.max_timestamp_ms))
+                .saturating_add(RetainedSize::retained_size(&self.token_id))
+                .saturating_add(RetainedSize::retained_size(&self.hmac))
+                .saturating_add(RetainedSize::retained_size(&self.throttle_time_ms))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
         }
     }
 

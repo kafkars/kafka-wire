@@ -32,6 +32,8 @@ pub(crate) enum ExternalSymbol {
     KafkaRequest,
     KafkaResponse,
     ProtocolEq,
+    RetainedFootprint,
+    RetainedSize,
     RequestResponsePair,
     Result,
     Option,
@@ -72,6 +74,8 @@ impl ExternalSymbol {
         Self::KafkaRequest,
         Self::KafkaResponse,
         Self::ProtocolEq,
+        Self::RetainedFootprint,
+        Self::RetainedSize,
         Self::RequestResponsePair,
     ];
 
@@ -103,6 +107,8 @@ impl ExternalSymbol {
             Self::KafkaRequest => "KafkaRequest",
             Self::KafkaResponse => "KafkaResponse",
             Self::ProtocolEq => "ProtocolEq",
+            Self::RetainedFootprint => "RetainedFootprint",
+            Self::RetainedSize => "RetainedSize",
             Self::RequestResponsePair => "RequestResponsePair",
             Self::Result => "Result",
             Self::Option => "Option",
@@ -124,6 +130,8 @@ impl ExternalSymbol {
             | Self::KafkaRequest
             | Self::KafkaResponse
             | Self::ProtocolEq
+            | Self::RetainedFootprint
+            | Self::RetainedSize
             | Self::RequestResponsePair => Some("crate"),
             Self::ApiKey
             | Self::ApiVersion

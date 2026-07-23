@@ -78,6 +78,11 @@ impl TaggedFields {
         self.fields.len()
     }
 
+    /// Returns the reserved entry capacity retained by this field set.
+    pub fn capacity(&self) -> usize {
+        self.fields.capacity()
+    }
+
     /// Returns whether no fields are present.
     pub fn is_empty(&self) -> bool {
         self.fields.is_empty()

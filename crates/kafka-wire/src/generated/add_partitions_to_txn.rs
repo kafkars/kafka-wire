@@ -16,7 +16,10 @@ pub mod add_partitions_to_txn_request {
         encoded_len_with,
     };
 
-    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, ProtocolEq, RequestResponsePair};
+    use crate::{
+        ApiDescriptor, KafkaMessage, KafkaRequest, ProtocolEq, RequestResponsePair,
+        RetainedFootprint, RetainedSize,
+    };
 
     /// `AddPartitionsToTxnTopic` as declared by the `AddPartitionsToTxn` API.
     #[non_exhaustive]
@@ -72,6 +75,15 @@ pub mod add_partitions_to_txn_request {
                     &self.unknown_tagged_fields,
                     &other.unknown_tagged_fields,
                 )
+        }
+    }
+
+    impl RetainedSize for AddPartitionsToTxnTopic {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.name))
+                .saturating_add(RetainedSize::retained_size(&self.partitions))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
         }
     }
 
@@ -243,6 +255,18 @@ pub mod add_partitions_to_txn_request {
         }
     }
 
+    impl RetainedSize for AddPartitionsToTxnTransaction {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.transactional_id))
+                .saturating_add(RetainedSize::retained_size(&self.producer_id))
+                .saturating_add(RetainedSize::retained_size(&self.producer_epoch))
+                .saturating_add(RetainedSize::retained_size(&self.verify_only))
+                .saturating_add(RetainedSize::retained_size(&self.topics))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
+        }
+    }
+
     impl KafkaDecode for AddPartitionsToTxnTransaction {
         fn decode(
             decoder: &mut Decoder,
@@ -375,6 +399,22 @@ pub mod add_partitions_to_txn_request {
                     &self.unknown_tagged_fields,
                     &other.unknown_tagged_fields,
                 )
+        }
+    }
+
+    impl RetainedSize for AddPartitionsToTxnRequest {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.transactions))
+                .saturating_add(RetainedSize::retained_size(
+                    &self.v3_and_below_transactional_id,
+                ))
+                .saturating_add(RetainedSize::retained_size(&self.v3_and_below_producer_id))
+                .saturating_add(RetainedSize::retained_size(
+                    &self.v3_and_below_producer_epoch,
+                ))
+                .saturating_add(RetainedSize::retained_size(&self.v3_and_below_topics))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
         }
     }
 
@@ -607,7 +647,7 @@ pub mod add_partitions_to_txn_response {
         encoded_len_with,
     };
 
-    use crate::{KafkaMessage, KafkaResponse, ProtocolEq};
+    use crate::{KafkaMessage, KafkaResponse, ProtocolEq, RetainedFootprint, RetainedSize};
 
     /// `AddPartitionsToTxnTopicResult` as declared by the `AddPartitionsToTxn` API.
     #[non_exhaustive]
@@ -666,6 +706,15 @@ pub mod add_partitions_to_txn_response {
                     &self.unknown_tagged_fields,
                     &other.unknown_tagged_fields,
                 )
+        }
+    }
+
+    impl RetainedSize for AddPartitionsToTxnTopicResult {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.name))
+                .saturating_add(RetainedSize::retained_size(&self.results_by_partition))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
         }
     }
 
@@ -827,6 +876,15 @@ pub mod add_partitions_to_txn_response {
         }
     }
 
+    impl RetainedSize for AddPartitionsToTxnPartitionResult {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.partition_index))
+                .saturating_add(RetainedSize::retained_size(&self.partition_error_code))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
+        }
+    }
+
     impl KafkaDecode for AddPartitionsToTxnPartitionResult {
         fn decode(
             decoder: &mut Decoder,
@@ -970,6 +1028,15 @@ pub mod add_partitions_to_txn_response {
         }
     }
 
+    impl RetainedSize for AddPartitionsToTxnResult {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.transactional_id))
+                .saturating_add(RetainedSize::retained_size(&self.topic_results))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
+        }
+    }
+
     impl KafkaDecode for AddPartitionsToTxnResult {
         fn decode(
             decoder: &mut Decoder,
@@ -1087,6 +1154,19 @@ pub mod add_partitions_to_txn_response {
                     &self.unknown_tagged_fields,
                     &other.unknown_tagged_fields,
                 )
+        }
+    }
+
+    impl RetainedSize for AddPartitionsToTxnResponse {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.throttle_time_ms))
+                .saturating_add(RetainedSize::retained_size(&self.error_code))
+                .saturating_add(RetainedSize::retained_size(&self.results_by_transaction))
+                .saturating_add(RetainedSize::retained_size(
+                    &self.results_by_topic_v3_and_below,
+                ))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
         }
     }
 

@@ -16,7 +16,10 @@ pub mod consumer_group_heartbeat_request {
         encoded_len_with,
     };
 
-    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, ProtocolEq, RequestResponsePair};
+    use crate::{
+        ApiDescriptor, KafkaMessage, KafkaRequest, ProtocolEq, RequestResponsePair,
+        RetainedFootprint, RetainedSize,
+    };
 
     /// `TopicPartitions` as declared by the `ConsumerGroupHeartbeat` API.
     #[non_exhaustive]
@@ -72,6 +75,15 @@ pub mod consumer_group_heartbeat_request {
                     &self.unknown_tagged_fields,
                     &other.unknown_tagged_fields,
                 )
+        }
+    }
+
+    impl RetainedSize for TopicPartitions {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.topic_id))
+                .saturating_add(RetainedSize::retained_size(&self.partitions))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
         }
     }
 
@@ -226,6 +238,23 @@ pub mod consumer_group_heartbeat_request {
                     &self.unknown_tagged_fields,
                     &other.unknown_tagged_fields,
                 )
+        }
+    }
+
+    impl RetainedSize for ConsumerGroupHeartbeatRequest {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.group_id))
+                .saturating_add(RetainedSize::retained_size(&self.member_id))
+                .saturating_add(RetainedSize::retained_size(&self.member_epoch))
+                .saturating_add(RetainedSize::retained_size(&self.instance_id))
+                .saturating_add(RetainedSize::retained_size(&self.rack_id))
+                .saturating_add(RetainedSize::retained_size(&self.rebalance_timeout_ms))
+                .saturating_add(RetainedSize::retained_size(&self.subscribed_topic_names))
+                .saturating_add(RetainedSize::retained_size(&self.subscribed_topic_regex))
+                .saturating_add(RetainedSize::retained_size(&self.server_assignor))
+                .saturating_add(RetainedSize::retained_size(&self.topic_partitions))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
         }
     }
 
@@ -418,7 +447,7 @@ pub mod consumer_group_heartbeat_response {
         encoded_len_with,
     };
 
-    use crate::{KafkaMessage, KafkaResponse, ProtocolEq};
+    use crate::{KafkaMessage, KafkaResponse, ProtocolEq, RetainedFootprint, RetainedSize};
 
     /// `TopicPartitions` as declared by the `ConsumerGroupHeartbeat` API.
     #[non_exhaustive]
@@ -474,6 +503,15 @@ pub mod consumer_group_heartbeat_response {
                     &self.unknown_tagged_fields,
                     &other.unknown_tagged_fields,
                 )
+        }
+    }
+
+    impl RetainedSize for TopicPartitions {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.topic_id))
+                .saturating_add(RetainedSize::retained_size(&self.partitions))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
         }
     }
 
@@ -617,6 +655,14 @@ pub mod consumer_group_heartbeat_response {
         }
     }
 
+    impl RetainedSize for Assignment {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.topic_partitions))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
+        }
+    }
+
     impl KafkaDecode for Assignment {
         fn decode(
             decoder: &mut Decoder,
@@ -735,6 +781,20 @@ pub mod consumer_group_heartbeat_response {
                     &self.unknown_tagged_fields,
                     &other.unknown_tagged_fields,
                 )
+        }
+    }
+
+    impl RetainedSize for ConsumerGroupHeartbeatResponse {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.throttle_time_ms))
+                .saturating_add(RetainedSize::retained_size(&self.error_code))
+                .saturating_add(RetainedSize::retained_size(&self.error_message))
+                .saturating_add(RetainedSize::retained_size(&self.member_id))
+                .saturating_add(RetainedSize::retained_size(&self.member_epoch))
+                .saturating_add(RetainedSize::retained_size(&self.heartbeat_interval_ms))
+                .saturating_add(RetainedSize::retained_size(&self.assignment))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
         }
     }
 

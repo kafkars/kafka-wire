@@ -16,7 +16,10 @@ pub mod fetch_request {
         VersionRange, encode_into_with, encoded_len_with,
     };
 
-    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, ProtocolEq, RequestResponsePair};
+    use crate::{
+        ApiDescriptor, KafkaMessage, KafkaRequest, ProtocolEq, RequestResponsePair,
+        RetainedFootprint, RetainedSize,
+    };
 
     /// `ReplicaState` as declared by the `Fetch` API.
     #[non_exhaustive]
@@ -82,6 +85,15 @@ pub mod fetch_request {
                     &self.unknown_tagged_fields,
                     &other.unknown_tagged_fields,
                 )
+        }
+    }
+
+    impl RetainedSize for ReplicaState {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.replica_id))
+                .saturating_add(RetainedSize::retained_size(&self.replica_epoch))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
         }
     }
 
@@ -222,6 +234,16 @@ pub mod fetch_request {
                     &self.unknown_tagged_fields,
                     &other.unknown_tagged_fields,
                 )
+        }
+    }
+
+    impl RetainedSize for FetchTopic {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.topic))
+                .saturating_add(RetainedSize::retained_size(&self.topic_id))
+                .saturating_add(RetainedSize::retained_size(&self.partitions))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
         }
     }
 
@@ -459,6 +481,21 @@ pub mod fetch_request {
         }
     }
 
+    impl RetainedSize for FetchPartition {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.partition))
+                .saturating_add(RetainedSize::retained_size(&self.current_leader_epoch))
+                .saturating_add(RetainedSize::retained_size(&self.fetch_offset))
+                .saturating_add(RetainedSize::retained_size(&self.last_fetched_epoch))
+                .saturating_add(RetainedSize::retained_size(&self.log_start_offset))
+                .saturating_add(RetainedSize::retained_size(&self.partition_max_bytes))
+                .saturating_add(RetainedSize::retained_size(&self.replica_directory_id))
+                .saturating_add(RetainedSize::retained_size(&self.high_watermark))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
+        }
+    }
+
     impl KafkaDecode for FetchPartition {
         fn decode(
             decoder: &mut Decoder,
@@ -683,6 +720,16 @@ pub mod fetch_request {
         }
     }
 
+    impl RetainedSize for ForgottenTopic {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.topic))
+                .saturating_add(RetainedSize::retained_size(&self.topic_id))
+                .saturating_add(RetainedSize::retained_size(&self.partitions))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
+        }
+    }
+
     impl KafkaDecode for ForgottenTopic {
         fn decode(
             decoder: &mut Decoder,
@@ -870,6 +917,25 @@ pub mod fetch_request {
                     &self.unknown_tagged_fields,
                     &other.unknown_tagged_fields,
                 )
+        }
+    }
+
+    impl RetainedSize for FetchRequest {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.cluster_id))
+                .saturating_add(RetainedSize::retained_size(&self.replica_id))
+                .saturating_add(RetainedSize::retained_size(&self.replica_state))
+                .saturating_add(RetainedSize::retained_size(&self.max_wait_ms))
+                .saturating_add(RetainedSize::retained_size(&self.min_bytes))
+                .saturating_add(RetainedSize::retained_size(&self.max_bytes))
+                .saturating_add(RetainedSize::retained_size(&self.isolation_level))
+                .saturating_add(RetainedSize::retained_size(&self.session_id))
+                .saturating_add(RetainedSize::retained_size(&self.session_epoch))
+                .saturating_add(RetainedSize::retained_size(&self.topics))
+                .saturating_add(RetainedSize::retained_size(&self.forgotten_topics_data))
+                .saturating_add(RetainedSize::retained_size(&self.rack_id))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
         }
     }
 
@@ -1187,7 +1253,7 @@ pub mod fetch_response {
         VersionRange, encode_into_with, encoded_len_with,
     };
 
-    use crate::{KafkaMessage, KafkaResponse, ProtocolEq};
+    use crate::{KafkaMessage, KafkaResponse, ProtocolEq, RetainedFootprint, RetainedSize};
 
     /// `FetchableTopicResponse` as declared by the `Fetch` API.
     #[non_exhaustive]
@@ -1249,6 +1315,16 @@ pub mod fetch_response {
                     &self.unknown_tagged_fields,
                     &other.unknown_tagged_fields,
                 )
+        }
+    }
+
+    impl RetainedSize for FetchableTopicResponse {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.topic))
+                .saturating_add(RetainedSize::retained_size(&self.topic_id))
+                .saturating_add(RetainedSize::retained_size(&self.partitions))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
         }
     }
 
@@ -1543,6 +1619,24 @@ pub mod fetch_response {
         }
     }
 
+    impl RetainedSize for PartitionData {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.partition_index))
+                .saturating_add(RetainedSize::retained_size(&self.error_code))
+                .saturating_add(RetainedSize::retained_size(&self.high_watermark))
+                .saturating_add(RetainedSize::retained_size(&self.last_stable_offset))
+                .saturating_add(RetainedSize::retained_size(&self.log_start_offset))
+                .saturating_add(RetainedSize::retained_size(&self.diverging_epoch))
+                .saturating_add(RetainedSize::retained_size(&self.current_leader))
+                .saturating_add(RetainedSize::retained_size(&self.snapshot_id))
+                .saturating_add(RetainedSize::retained_size(&self.aborted_transactions))
+                .saturating_add(RetainedSize::retained_size(&self.preferred_read_replica))
+                .saturating_add(RetainedSize::retained_size(&self.records))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
+        }
+    }
+
     impl KafkaDecode for PartitionData {
         fn decode(
             decoder: &mut Decoder,
@@ -1826,6 +1920,15 @@ pub mod fetch_response {
         }
     }
 
+    impl RetainedSize for EpochEndOffset {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.epoch))
+                .saturating_add(RetainedSize::retained_size(&self.end_offset))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
+        }
+    }
+
     impl KafkaDecode for EpochEndOffset {
         fn decode(
             decoder: &mut Decoder,
@@ -1967,6 +2070,15 @@ pub mod fetch_response {
                     &self.unknown_tagged_fields,
                     &other.unknown_tagged_fields,
                 )
+        }
+    }
+
+    impl RetainedSize for LeaderIdAndEpoch {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.leader_id))
+                .saturating_add(RetainedSize::retained_size(&self.leader_epoch))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
         }
     }
 
@@ -2114,6 +2226,15 @@ pub mod fetch_response {
         }
     }
 
+    impl RetainedSize for SnapshotId {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.end_offset))
+                .saturating_add(RetainedSize::retained_size(&self.epoch))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
+        }
+    }
+
     impl KafkaDecode for SnapshotId {
         fn decode(
             decoder: &mut Decoder,
@@ -2245,6 +2366,15 @@ pub mod fetch_response {
                     &self.unknown_tagged_fields,
                     &other.unknown_tagged_fields,
                 )
+        }
+    }
+
+    impl RetainedSize for AbortedTransaction {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.producer_id))
+                .saturating_add(RetainedSize::retained_size(&self.first_offset))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
         }
     }
 
@@ -2388,6 +2518,17 @@ pub mod fetch_response {
         }
     }
 
+    impl RetainedSize for NodeEndpoint {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.node_id))
+                .saturating_add(RetainedSize::retained_size(&self.host))
+                .saturating_add(RetainedSize::retained_size(&self.port))
+                .saturating_add(RetainedSize::retained_size(&self.rack))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
+        }
+    }
+
     impl KafkaDecode for NodeEndpoint {
         fn decode(
             decoder: &mut Decoder,
@@ -2500,6 +2641,18 @@ pub mod fetch_response {
                     &self.unknown_tagged_fields,
                     &other.unknown_tagged_fields,
                 )
+        }
+    }
+
+    impl RetainedSize for FetchResponse {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.throttle_time_ms))
+                .saturating_add(RetainedSize::retained_size(&self.error_code))
+                .saturating_add(RetainedSize::retained_size(&self.session_id))
+                .saturating_add(RetainedSize::retained_size(&self.responses))
+                .saturating_add(RetainedSize::retained_size(&self.node_endpoints))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
         }
     }
 

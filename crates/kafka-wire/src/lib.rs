@@ -7,13 +7,17 @@ mod descriptor;
 mod frame;
 mod generated;
 mod message;
+mod retained;
 
+#[cfg(test)]
+mod retained_test;
 #[cfg(test)]
 mod tagged_claims_test;
 
 pub use descriptor::{ApiDescriptor, MessageDescriptor, MessageDirection};
 pub use frame::{OutboundFrameLimits, encode_request, response_header_version_for};
 pub use message::{KafkaMessage, KafkaRequest, KafkaResponse, ProtocolEq, RequestResponsePair};
+pub use retained::{RetainedFootprint, RetainedSize};
 
 // The generated half of the flat facade: one `pub use` naming every generated
 // item, emitted by `kafka-wire-codegen` and hashed in MANIFEST.json beside the

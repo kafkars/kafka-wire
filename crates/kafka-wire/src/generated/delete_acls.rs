@@ -16,7 +16,10 @@ pub mod delete_acls_request {
         encoded_len_with,
     };
 
-    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, ProtocolEq, RequestResponsePair};
+    use crate::{
+        ApiDescriptor, KafkaMessage, KafkaRequest, ProtocolEq, RequestResponsePair,
+        RetainedFootprint, RetainedSize,
+    };
 
     /// `DeleteAclsFilter` as declared by the `DeleteAcls` API.
     #[non_exhaustive]
@@ -102,6 +105,20 @@ pub mod delete_acls_request {
                     &self.unknown_tagged_fields,
                     &other.unknown_tagged_fields,
                 )
+        }
+    }
+
+    impl RetainedSize for DeleteAclsFilter {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.resource_type_filter))
+                .saturating_add(RetainedSize::retained_size(&self.resource_name_filter))
+                .saturating_add(RetainedSize::retained_size(&self.pattern_type_filter))
+                .saturating_add(RetainedSize::retained_size(&self.principal_filter))
+                .saturating_add(RetainedSize::retained_size(&self.host_filter))
+                .saturating_add(RetainedSize::retained_size(&self.operation))
+                .saturating_add(RetainedSize::retained_size(&self.permission_type))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
         }
     }
 
@@ -241,6 +258,14 @@ pub mod delete_acls_request {
         }
     }
 
+    impl RetainedSize for DeleteAclsRequest {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.filters))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
+        }
+    }
+
     impl KafkaMessage for DeleteAclsRequest {
         const NAME: &'static str = "DeleteAclsRequest";
         const SUPPORTED_VERSIONS: VersionRange = VersionRange::new(1, 3);
@@ -372,7 +397,7 @@ pub mod delete_acls_response {
         encoded_len_with,
     };
 
-    use crate::{KafkaMessage, KafkaResponse, ProtocolEq};
+    use crate::{KafkaMessage, KafkaResponse, ProtocolEq, RetainedFootprint, RetainedSize};
 
     /// `DeleteAclsFilterResult` as declared by the `DeleteAcls` API.
     #[non_exhaustive]
@@ -445,6 +470,16 @@ pub mod delete_acls_response {
                     &self.unknown_tagged_fields,
                     &other.unknown_tagged_fields,
                 )
+        }
+    }
+
+    impl RetainedSize for DeleteAclsFilterResult {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.error_code))
+                .saturating_add(RetainedSize::retained_size(&self.error_message))
+                .saturating_add(RetainedSize::retained_size(&self.matching_acls))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
         }
     }
 
@@ -647,6 +682,22 @@ pub mod delete_acls_response {
         }
     }
 
+    impl RetainedSize for DeleteAclsMatchingAcl {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.error_code))
+                .saturating_add(RetainedSize::retained_size(&self.error_message))
+                .saturating_add(RetainedSize::retained_size(&self.resource_type))
+                .saturating_add(RetainedSize::retained_size(&self.resource_name))
+                .saturating_add(RetainedSize::retained_size(&self.pattern_type))
+                .saturating_add(RetainedSize::retained_size(&self.principal))
+                .saturating_add(RetainedSize::retained_size(&self.host))
+                .saturating_add(RetainedSize::retained_size(&self.operation))
+                .saturating_add(RetainedSize::retained_size(&self.permission_type))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
+        }
+    }
+
     impl KafkaDecode for DeleteAclsMatchingAcl {
         fn decode(
             decoder: &mut Decoder,
@@ -797,6 +848,15 @@ pub mod delete_acls_response {
                     &self.unknown_tagged_fields,
                     &other.unknown_tagged_fields,
                 )
+        }
+    }
+
+    impl RetainedSize for DeleteAclsResponse {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.throttle_time_ms))
+                .saturating_add(RetainedSize::retained_size(&self.filter_results))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
         }
     }
 

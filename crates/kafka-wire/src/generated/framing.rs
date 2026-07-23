@@ -16,7 +16,7 @@ pub mod aborted_txn {
         KafkaDecode, KafkaEncode, VersionRange, encode_into_with, encoded_len_with,
     };
 
-    use crate::{KafkaMessage, ProtocolEq};
+    use crate::{KafkaMessage, ProtocolEq, RetainedFootprint, RetainedSize};
 
     /// `AbortedTxn` as declared by the `AbortedTxn` API.
     #[non_exhaustive]
@@ -57,6 +57,16 @@ pub mod aborted_txn {
                 && ProtocolEq::protocol_eq(&self.first_offset, &other.first_offset)
                 && ProtocolEq::protocol_eq(&self.last_offset, &other.last_offset)
                 && ProtocolEq::protocol_eq(&self.last_stable_offset, &other.last_stable_offset)
+        }
+    }
+
+    impl RetainedSize for AbortedTxn {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.producer_id))
+                .saturating_add(RetainedSize::retained_size(&self.first_offset))
+                .saturating_add(RetainedSize::retained_size(&self.last_offset))
+                .saturating_add(RetainedSize::retained_size(&self.last_stable_offset))
         }
     }
 
@@ -138,7 +148,7 @@ pub mod consumer_protocol_assignment {
         KafkaDecode, KafkaEncode, StrBytes, VersionRange, encode_into_with, encoded_len_with,
     };
 
-    use crate::{KafkaMessage, ProtocolEq};
+    use crate::{KafkaMessage, ProtocolEq, RetainedFootprint, RetainedSize};
 
     /// `TopicPartition` as declared by the `ConsumerProtocolAssignment` API.
     #[non_exhaustive]
@@ -176,6 +186,14 @@ pub mod consumer_protocol_assignment {
         fn protocol_eq(&self, other: &Self) -> bool {
             ProtocolEq::protocol_eq(&self.topic, &other.topic)
                 && ProtocolEq::protocol_eq(&self.partitions, &other.partitions)
+        }
+    }
+
+    impl RetainedSize for TopicPartition {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.topic))
+                .saturating_add(RetainedSize::retained_size(&self.partitions))
         }
     }
 
@@ -291,6 +309,14 @@ pub mod consumer_protocol_assignment {
         }
     }
 
+    impl RetainedSize for ConsumerProtocolAssignment {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.assigned_partitions))
+                .saturating_add(RetainedSize::retained_size(&self.user_data))
+        }
+    }
+
     impl KafkaDecode for ConsumerProtocolAssignment {
         fn decode(
             decoder: &mut Decoder,
@@ -369,7 +395,7 @@ pub mod consumer_protocol_subscription {
         KafkaDecode, KafkaEncode, StrBytes, VersionRange, encode_into_with, encoded_len_with,
     };
 
-    use crate::{KafkaMessage, ProtocolEq};
+    use crate::{KafkaMessage, ProtocolEq, RetainedFootprint, RetainedSize};
 
     /// `TopicPartition` as declared by the `ConsumerProtocolSubscription` API.
     #[non_exhaustive]
@@ -407,6 +433,14 @@ pub mod consumer_protocol_subscription {
         fn protocol_eq(&self, other: &Self) -> bool {
             ProtocolEq::protocol_eq(&self.topic, &other.topic)
                 && ProtocolEq::protocol_eq(&self.partitions, &other.partitions)
+        }
+    }
+
+    impl RetainedSize for TopicPartition {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.topic))
+                .saturating_add(RetainedSize::retained_size(&self.partitions))
         }
     }
 
@@ -545,6 +579,17 @@ pub mod consumer_protocol_subscription {
         }
     }
 
+    impl RetainedSize for ConsumerProtocolSubscription {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.topics))
+                .saturating_add(RetainedSize::retained_size(&self.user_data))
+                .saturating_add(RetainedSize::retained_size(&self.owned_partitions))
+                .saturating_add(RetainedSize::retained_size(&self.generation_id))
+                .saturating_add(RetainedSize::retained_size(&self.rack_id))
+        }
+    }
+
     impl KafkaDecode for ConsumerProtocolSubscription {
         fn decode(
             decoder: &mut Decoder,
@@ -654,7 +699,7 @@ pub mod control_record_type_schema {
         KafkaDecode, KafkaEncode, VersionRange, encode_into_with, encoded_len_with,
     };
 
-    use crate::{KafkaMessage, ProtocolEq};
+    use crate::{KafkaMessage, ProtocolEq, RetainedFootprint, RetainedSize};
 
     /// `ControlRecordTypeSchema` as declared by the `ControlRecordTypeSchema` API.
     #[non_exhaustive]
@@ -686,6 +731,12 @@ pub mod control_record_type_schema {
     impl ProtocolEq for ControlRecordTypeSchema {
         fn protocol_eq(&self, other: &Self) -> bool {
             ProtocolEq::protocol_eq(&self.type_, &other.type_)
+        }
+    }
+
+    impl RetainedSize for ControlRecordTypeSchema {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY.saturating_add(RetainedSize::retained_size(&self.type_))
         }
     }
 
@@ -759,7 +810,7 @@ pub mod default_principal_data {
         encoded_len_with,
     };
 
-    use crate::{KafkaMessage, ProtocolEq};
+    use crate::{KafkaMessage, ProtocolEq, RetainedFootprint, RetainedSize};
 
     /// `DefaultPrincipalData` as declared by the `DefaultPrincipalData` API.
     #[non_exhaustive]
@@ -809,6 +860,16 @@ pub mod default_principal_data {
                     &self.unknown_tagged_fields,
                     &other.unknown_tagged_fields,
                 )
+        }
+    }
+
+    impl RetainedSize for DefaultPrincipalData {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.type_))
+                .saturating_add(RetainedSize::retained_size(&self.name))
+                .saturating_add(RetainedSize::retained_size(&self.token_authenticated))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
         }
     }
 
@@ -897,7 +958,7 @@ pub mod end_txn_marker {
         KafkaDecode, KafkaEncode, VersionRange, encode_into_with, encoded_len_with,
     };
 
-    use crate::{KafkaMessage, ProtocolEq};
+    use crate::{KafkaMessage, ProtocolEq, RetainedFootprint, RetainedSize};
 
     /// `EndTxnMarker` as declared by the `EndTxnMarker` API.
     #[non_exhaustive]
@@ -929,6 +990,13 @@ pub mod end_txn_marker {
     impl ProtocolEq for EndTxnMarker {
         fn protocol_eq(&self, other: &Self) -> bool {
             ProtocolEq::protocol_eq(&self.coordinator_epoch, &other.coordinator_epoch)
+        }
+    }
+
+    impl RetainedSize for EndTxnMarker {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.coordinator_epoch))
         }
     }
 
@@ -1001,7 +1069,7 @@ pub mod k_raft_version_record {
         KafkaDecode, KafkaEncode, TaggedFields, VersionRange, encode_into_with, encoded_len_with,
     };
 
-    use crate::{KafkaMessage, ProtocolEq};
+    use crate::{KafkaMessage, ProtocolEq, RetainedFootprint, RetainedSize};
 
     /// `KRaftVersionRecord` as declared by the `KRaftVersionRecord` API.
     #[non_exhaustive]
@@ -1048,6 +1116,15 @@ pub mod k_raft_version_record {
                     &self.unknown_tagged_fields,
                     &other.unknown_tagged_fields,
                 )
+        }
+    }
+
+    impl RetainedSize for KRaftVersionRecord {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.version))
+                .saturating_add(RetainedSize::retained_size(&self.k_raft_version))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
         }
     }
 
@@ -1134,7 +1211,7 @@ pub mod leader_change_message {
         encoded_len_with,
     };
 
-    use crate::{KafkaMessage, ProtocolEq};
+    use crate::{KafkaMessage, ProtocolEq, RetainedFootprint, RetainedSize};
 
     /// `Voter` as declared by the `LeaderChangeMessage` API.
     #[non_exhaustive]
@@ -1197,6 +1274,15 @@ pub mod leader_change_message {
                     &self.unknown_tagged_fields,
                     &other.unknown_tagged_fields,
                 )
+        }
+    }
+
+    impl RetainedSize for Voter {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.voter_id))
+                .saturating_add(RetainedSize::retained_size(&self.voter_directory_id))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
         }
     }
 
@@ -1343,6 +1429,17 @@ pub mod leader_change_message {
         }
     }
 
+    impl RetainedSize for LeaderChangeMessage {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.version))
+                .saturating_add(RetainedSize::retained_size(&self.leader_id))
+                .saturating_add(RetainedSize::retained_size(&self.voters))
+                .saturating_add(RetainedSize::retained_size(&self.granting_voters))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
+        }
+    }
+
     impl KafkaDecode for LeaderChangeMessage {
         fn decode(
             decoder: &mut Decoder,
@@ -1444,7 +1541,7 @@ pub mod request_header {
         encoded_len_with,
     };
 
-    use crate::{KafkaMessage, ProtocolEq};
+    use crate::{KafkaMessage, ProtocolEq, RetainedFootprint, RetainedSize};
 
     /// `RequestHeader` as declared by the `RequestHeader` API.
     #[non_exhaustive]
@@ -1509,6 +1606,17 @@ pub mod request_header {
                     &self.unknown_tagged_fields,
                     &other.unknown_tagged_fields,
                 )
+        }
+    }
+
+    impl RetainedSize for RequestHeader {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.request_api_key))
+                .saturating_add(RetainedSize::retained_size(&self.request_api_version))
+                .saturating_add(RetainedSize::retained_size(&self.correlation_id))
+                .saturating_add(RetainedSize::retained_size(&self.client_id))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
         }
     }
 
@@ -1600,7 +1708,7 @@ pub mod response_header {
         KafkaDecode, KafkaEncode, TaggedFields, VersionRange, encode_into_with, encoded_len_with,
     };
 
-    use crate::{KafkaMessage, ProtocolEq};
+    use crate::{KafkaMessage, ProtocolEq, RetainedFootprint, RetainedSize};
 
     /// `ResponseHeader` as declared by the `ResponseHeader` API.
     #[non_exhaustive]
@@ -1644,6 +1752,14 @@ pub mod response_header {
                     &self.unknown_tagged_fields,
                     &other.unknown_tagged_fields,
                 )
+        }
+    }
+
+    impl RetainedSize for ResponseHeader {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.correlation_id))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
         }
     }
 
@@ -1726,7 +1842,7 @@ pub mod snapshot_footer_record {
         KafkaDecode, KafkaEncode, TaggedFields, VersionRange, encode_into_with, encoded_len_with,
     };
 
-    use crate::{KafkaMessage, ProtocolEq};
+    use crate::{KafkaMessage, ProtocolEq, RetainedFootprint, RetainedSize};
 
     /// `SnapshotFooterRecord` as declared by the `SnapshotFooterRecord` API.
     #[non_exhaustive]
@@ -1770,6 +1886,14 @@ pub mod snapshot_footer_record {
                     &self.unknown_tagged_fields,
                     &other.unknown_tagged_fields,
                 )
+        }
+    }
+
+    impl RetainedSize for SnapshotFooterRecord {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.version))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
         }
     }
 
@@ -1852,7 +1976,7 @@ pub mod snapshot_header_record {
         KafkaDecode, KafkaEncode, TaggedFields, VersionRange, encode_into_with, encoded_len_with,
     };
 
-    use crate::{KafkaMessage, ProtocolEq};
+    use crate::{KafkaMessage, ProtocolEq, RetainedFootprint, RetainedSize};
 
     /// `SnapshotHeaderRecord` as declared by the `SnapshotHeaderRecord` API.
     #[non_exhaustive]
@@ -1902,6 +2026,17 @@ pub mod snapshot_header_record {
                     &self.unknown_tagged_fields,
                     &other.unknown_tagged_fields,
                 )
+        }
+    }
+
+    impl RetainedSize for SnapshotHeaderRecord {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.version))
+                .saturating_add(RetainedSize::retained_size(
+                    &self.last_contained_log_timestamp,
+                ))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
         }
     }
 
@@ -1988,7 +2123,7 @@ pub mod voters_record {
         encoded_len_with,
     };
 
-    use crate::{KafkaMessage, ProtocolEq};
+    use crate::{KafkaMessage, ProtocolEq, RetainedFootprint, RetainedSize};
 
     /// `Voter` as declared by the `VotersRecord` API.
     #[non_exhaustive]
@@ -2057,6 +2192,17 @@ pub mod voters_record {
                     &self.unknown_tagged_fields,
                     &other.unknown_tagged_fields,
                 )
+        }
+    }
+
+    impl RetainedSize for Voter {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.voter_id))
+                .saturating_add(RetainedSize::retained_size(&self.voter_directory_id))
+                .saturating_add(RetainedSize::retained_size(&self.endpoints))
+                .saturating_add(RetainedSize::retained_size(&self.k_raft_version_feature))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
         }
     }
 
@@ -2210,6 +2356,16 @@ pub mod voters_record {
         }
     }
 
+    impl RetainedSize for Endpoint {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.name))
+                .saturating_add(RetainedSize::retained_size(&self.host))
+                .saturating_add(RetainedSize::retained_size(&self.port))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
+        }
+    }
+
     impl KafkaDecode for Endpoint {
         fn decode(
             decoder: &mut Decoder,
@@ -2350,6 +2506,15 @@ pub mod voters_record {
         }
     }
 
+    impl RetainedSize for KRaftVersionFeature {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.min_supported_version))
+                .saturating_add(RetainedSize::retained_size(&self.max_supported_version))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
+        }
+    }
+
     impl KafkaDecode for KRaftVersionFeature {
         fn decode(
             decoder: &mut Decoder,
@@ -2475,6 +2640,15 @@ pub mod voters_record {
                     &self.unknown_tagged_fields,
                     &other.unknown_tagged_fields,
                 )
+        }
+    }
+
+    impl RetainedSize for VotersRecord {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.version))
+                .saturating_add(RetainedSize::retained_size(&self.voters))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
         }
     }
 

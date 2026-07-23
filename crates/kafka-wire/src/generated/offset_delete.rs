@@ -15,7 +15,10 @@ pub mod offset_delete_request {
         KafkaDecode, KafkaEncode, StrBytes, VersionRange, encode_into_with, encoded_len_with,
     };
 
-    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, ProtocolEq, RequestResponsePair};
+    use crate::{
+        ApiDescriptor, KafkaMessage, KafkaRequest, ProtocolEq, RequestResponsePair,
+        RetainedFootprint, RetainedSize,
+    };
 
     /// `OffsetDeleteRequestTopic` as declared by the `OffsetDelete` API.
     #[non_exhaustive]
@@ -56,6 +59,14 @@ pub mod offset_delete_request {
         fn protocol_eq(&self, other: &Self) -> bool {
             ProtocolEq::protocol_eq(&self.name, &other.name)
                 && ProtocolEq::protocol_eq(&self.partitions, &other.partitions)
+        }
+    }
+
+    impl RetainedSize for OffsetDeleteRequestTopic {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.name))
+                .saturating_add(RetainedSize::retained_size(&self.partitions))
         }
     }
 
@@ -170,6 +181,13 @@ pub mod offset_delete_request {
         }
     }
 
+    impl RetainedSize for OffsetDeleteRequestPartition {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.partition_index))
+        }
+    }
+
     impl KafkaDecode for OffsetDeleteRequestPartition {
         fn decode(
             decoder: &mut Decoder,
@@ -248,6 +266,14 @@ pub mod offset_delete_request {
         fn protocol_eq(&self, other: &Self) -> bool {
             ProtocolEq::protocol_eq(&self.group_id, &other.group_id)
                 && ProtocolEq::protocol_eq(&self.topics, &other.topics)
+        }
+    }
+
+    impl RetainedSize for OffsetDeleteRequest {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.group_id))
+                .saturating_add(RetainedSize::retained_size(&self.topics))
         }
     }
 
@@ -362,7 +388,7 @@ pub mod offset_delete_response {
         KafkaDecode, KafkaEncode, StrBytes, VersionRange, encode_into_with, encoded_len_with,
     };
 
-    use crate::{KafkaMessage, KafkaResponse, ProtocolEq};
+    use crate::{KafkaMessage, KafkaResponse, ProtocolEq, RetainedFootprint, RetainedSize};
 
     /// `OffsetDeleteResponseTopic` as declared by the `OffsetDelete` API.
     #[non_exhaustive]
@@ -403,6 +429,14 @@ pub mod offset_delete_response {
         fn protocol_eq(&self, other: &Self) -> bool {
             ProtocolEq::protocol_eq(&self.name, &other.name)
                 && ProtocolEq::protocol_eq(&self.partitions, &other.partitions)
+        }
+    }
+
+    impl RetainedSize for OffsetDeleteResponseTopic {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.name))
+                .saturating_add(RetainedSize::retained_size(&self.partitions))
         }
     }
 
@@ -520,6 +554,14 @@ pub mod offset_delete_response {
         }
     }
 
+    impl RetainedSize for OffsetDeleteResponsePartition {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.partition_index))
+                .saturating_add(RetainedSize::retained_size(&self.error_code))
+        }
+    }
+
     impl KafkaDecode for OffsetDeleteResponsePartition {
         fn decode(
             decoder: &mut Decoder,
@@ -604,6 +646,15 @@ pub mod offset_delete_response {
             ProtocolEq::protocol_eq(&self.error_code, &other.error_code)
                 && ProtocolEq::protocol_eq(&self.throttle_time_ms, &other.throttle_time_ms)
                 && ProtocolEq::protocol_eq(&self.topics, &other.topics)
+        }
+    }
+
+    impl RetainedSize for OffsetDeleteResponse {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.error_code))
+                .saturating_add(RetainedSize::retained_size(&self.throttle_time_ms))
+                .saturating_add(RetainedSize::retained_size(&self.topics))
         }
     }
 

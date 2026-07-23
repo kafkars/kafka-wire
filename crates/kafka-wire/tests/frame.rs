@@ -12,7 +12,8 @@ use std::sync::atomic::{AtomicUsize, Ordering};
 use bytes::BytesMut;
 use kafka_wire::{
     ApiDescriptor, ApiVersionsRequest, KafkaMessage, KafkaRequest, MessageDescriptor,
-    MessageDirection, OutboundFrameLimits, encode_request, response_header_version_for,
+    MessageDirection, OutboundFrameLimits, RetainedFootprint, RetainedSize, encode_request,
+    response_header_version_for,
 };
 use kafka_wire_core::{
     ApiKey, ApiVersion, DecodeError, Decoder, EncodeError, EncodeTarget, Encoder, KafkaDecode,
@@ -48,6 +49,12 @@ static COUNTED_API_DESCRIPTOR: ApiDescriptor = ApiDescriptor::new(
 );
 
 struct CountedRequest;
+
+impl RetainedSize for CountedRequest {
+    fn retained_size(&self) -> RetainedFootprint {
+        RetainedFootprint::EMPTY
+    }
+}
 
 impl KafkaDecode for CountedRequest {
     fn decode(_decoder: &mut Decoder, _version: ApiVersion) -> Result<Self, DecodeError> {

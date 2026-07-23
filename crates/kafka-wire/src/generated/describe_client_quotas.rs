@@ -16,7 +16,10 @@ pub mod describe_client_quotas_request {
         encoded_len_with,
     };
 
-    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, ProtocolEq, RequestResponsePair};
+    use crate::{
+        ApiDescriptor, KafkaMessage, KafkaRequest, ProtocolEq, RequestResponsePair,
+        RetainedFootprint, RetainedSize,
+    };
 
     /// `ComponentData` as declared by the `DescribeClientQuotas` API.
     #[non_exhaustive]
@@ -86,6 +89,16 @@ pub mod describe_client_quotas_request {
                     &self.unknown_tagged_fields,
                     &other.unknown_tagged_fields,
                 )
+        }
+    }
+
+    impl RetainedSize for ComponentData {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.entity_type))
+                .saturating_add(RetainedSize::retained_size(&self.match_type))
+                .saturating_add(RetainedSize::retained_size(&self.match_))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
         }
     }
 
@@ -205,6 +218,15 @@ pub mod describe_client_quotas_request {
                     &self.unknown_tagged_fields,
                     &other.unknown_tagged_fields,
                 )
+        }
+    }
+
+    impl RetainedSize for DescribeClientQuotasRequest {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.components))
+                .saturating_add(RetainedSize::retained_size(&self.strict))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
         }
     }
 
@@ -343,7 +365,7 @@ pub mod describe_client_quotas_response {
         encoded_len_with,
     };
 
-    use crate::{KafkaMessage, KafkaResponse, ProtocolEq};
+    use crate::{KafkaMessage, KafkaResponse, ProtocolEq, RetainedFootprint, RetainedSize};
 
     /// `EntryData` as declared by the `DescribeClientQuotas` API.
     #[non_exhaustive]
@@ -405,6 +427,15 @@ pub mod describe_client_quotas_response {
                     &self.unknown_tagged_fields,
                     &other.unknown_tagged_fields,
                 )
+        }
+    }
+
+    impl RetainedSize for EntryData {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.entity))
+                .saturating_add(RetainedSize::retained_size(&self.values))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
         }
     }
 
@@ -580,6 +611,15 @@ pub mod describe_client_quotas_response {
         }
     }
 
+    impl RetainedSize for EntityData {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.entity_type))
+                .saturating_add(RetainedSize::retained_size(&self.entity_name))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
+        }
+    }
+
     impl KafkaDecode for EntityData {
         fn decode(
             decoder: &mut Decoder,
@@ -740,6 +780,15 @@ pub mod describe_client_quotas_response {
         }
     }
 
+    impl RetainedSize for ValueData {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.key))
+                .saturating_add(RetainedSize::retained_size(&self.value))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
+        }
+    }
+
     impl KafkaDecode for ValueData {
         fn decode(
             decoder: &mut Decoder,
@@ -863,6 +912,17 @@ pub mod describe_client_quotas_response {
                     &self.unknown_tagged_fields,
                     &other.unknown_tagged_fields,
                 )
+        }
+    }
+
+    impl RetainedSize for DescribeClientQuotasResponse {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.throttle_time_ms))
+                .saturating_add(RetainedSize::retained_size(&self.error_code))
+                .saturating_add(RetainedSize::retained_size(&self.error_message))
+                .saturating_add(RetainedSize::retained_size(&self.entries))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
         }
     }
 

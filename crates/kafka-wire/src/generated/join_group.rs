@@ -16,7 +16,10 @@ pub mod join_group_request {
         encoded_len_with,
     };
 
-    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, ProtocolEq, RequestResponsePair};
+    use crate::{
+        ApiDescriptor, KafkaMessage, KafkaRequest, ProtocolEq, RequestResponsePair,
+        RetainedFootprint, RetainedSize,
+    };
 
     /// `JoinGroupRequestProtocol` as declared by the `JoinGroup` API.
     #[non_exhaustive]
@@ -72,6 +75,15 @@ pub mod join_group_request {
                     &self.unknown_tagged_fields,
                     &other.unknown_tagged_fields,
                 )
+        }
+    }
+
+    impl RetainedSize for JoinGroupRequestProtocol {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.name))
+                .saturating_add(RetainedSize::retained_size(&self.metadata))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
         }
     }
 
@@ -222,6 +234,21 @@ pub mod join_group_request {
                     &self.unknown_tagged_fields,
                     &other.unknown_tagged_fields,
                 )
+        }
+    }
+
+    impl RetainedSize for JoinGroupRequest {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.group_id))
+                .saturating_add(RetainedSize::retained_size(&self.session_timeout_ms))
+                .saturating_add(RetainedSize::retained_size(&self.rebalance_timeout_ms))
+                .saturating_add(RetainedSize::retained_size(&self.member_id))
+                .saturating_add(RetainedSize::retained_size(&self.group_instance_id))
+                .saturating_add(RetainedSize::retained_size(&self.protocol_type))
+                .saturating_add(RetainedSize::retained_size(&self.protocols))
+                .saturating_add(RetainedSize::retained_size(&self.reason))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
         }
     }
 
@@ -436,7 +463,7 @@ pub mod join_group_response {
         encoded_len_with,
     };
 
-    use crate::{KafkaMessage, KafkaResponse, ProtocolEq};
+    use crate::{KafkaMessage, KafkaResponse, ProtocolEq, RetainedFootprint, RetainedSize};
 
     /// `JoinGroupResponseMember` as declared by the `JoinGroup` API.
     #[non_exhaustive]
@@ -495,6 +522,16 @@ pub mod join_group_response {
                     &self.unknown_tagged_fields,
                     &other.unknown_tagged_fields,
                 )
+        }
+    }
+
+    impl RetainedSize for JoinGroupResponseMember {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.member_id))
+                .saturating_add(RetainedSize::retained_size(&self.group_instance_id))
+                .saturating_add(RetainedSize::retained_size(&self.metadata))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
         }
     }
 
@@ -666,6 +703,22 @@ pub mod join_group_response {
                     &self.unknown_tagged_fields,
                     &other.unknown_tagged_fields,
                 )
+        }
+    }
+
+    impl RetainedSize for JoinGroupResponse {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.throttle_time_ms))
+                .saturating_add(RetainedSize::retained_size(&self.error_code))
+                .saturating_add(RetainedSize::retained_size(&self.generation_id))
+                .saturating_add(RetainedSize::retained_size(&self.protocol_type))
+                .saturating_add(RetainedSize::retained_size(&self.protocol_name))
+                .saturating_add(RetainedSize::retained_size(&self.leader))
+                .saturating_add(RetainedSize::retained_size(&self.skip_assignment))
+                .saturating_add(RetainedSize::retained_size(&self.member_id))
+                .saturating_add(RetainedSize::retained_size(&self.members))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
         }
     }
 

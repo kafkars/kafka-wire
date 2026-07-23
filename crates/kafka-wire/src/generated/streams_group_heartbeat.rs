@@ -16,7 +16,10 @@ pub mod streams_group_heartbeat_request {
         encoded_len_with,
     };
 
-    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, ProtocolEq, RequestResponsePair};
+    use crate::{
+        ApiDescriptor, KafkaMessage, KafkaRequest, ProtocolEq, RequestResponsePair,
+        RetainedFootprint, RetainedSize,
+    };
 
     /// `KeyValue` as declared by the `StreamsGroupHeartbeat` API.
     #[non_exhaustive]
@@ -72,6 +75,15 @@ pub mod streams_group_heartbeat_request {
                     &self.unknown_tagged_fields,
                     &other.unknown_tagged_fields,
                 )
+        }
+    }
+
+    impl RetainedSize for KeyValue {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.key))
+                .saturating_add(RetainedSize::retained_size(&self.value))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
         }
     }
 
@@ -215,6 +227,17 @@ pub mod streams_group_heartbeat_request {
                     &self.unknown_tagged_fields,
                     &other.unknown_tagged_fields,
                 )
+        }
+    }
+
+    impl RetainedSize for TopicInfo {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.name))
+                .saturating_add(RetainedSize::retained_size(&self.partitions))
+                .saturating_add(RetainedSize::retained_size(&self.replication_factor))
+                .saturating_add(RetainedSize::retained_size(&self.topic_configs))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
         }
     }
 
@@ -364,6 +387,15 @@ pub mod streams_group_heartbeat_request {
         }
     }
 
+    impl RetainedSize for Endpoint {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.host))
+                .saturating_add(RetainedSize::retained_size(&self.port))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
+        }
+    }
+
     impl KafkaDecode for Endpoint {
         fn decode(
             decoder: &mut Decoder,
@@ -501,6 +533,16 @@ pub mod streams_group_heartbeat_request {
         }
     }
 
+    impl RetainedSize for TaskOffset {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.subtopology_id))
+                .saturating_add(RetainedSize::retained_size(&self.partition))
+                .saturating_add(RetainedSize::retained_size(&self.offset))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
+        }
+    }
+
     impl KafkaDecode for TaskOffset {
         fn decode(
             decoder: &mut Decoder,
@@ -635,6 +677,15 @@ pub mod streams_group_heartbeat_request {
                     &self.unknown_tagged_fields,
                     &other.unknown_tagged_fields,
                 )
+        }
+    }
+
+    impl RetainedSize for TaskIds {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.subtopology_id))
+                .saturating_add(RetainedSize::retained_size(&self.partitions))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
         }
     }
 
@@ -778,6 +829,15 @@ pub mod streams_group_heartbeat_request {
                     &self.unknown_tagged_fields,
                     &other.unknown_tagged_fields,
                 )
+        }
+    }
+
+    impl RetainedSize for Topology {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.epoch))
+                .saturating_add(RetainedSize::retained_size(&self.subtopologies))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
         }
     }
 
@@ -951,6 +1011,20 @@ pub mod streams_group_heartbeat_request {
                     &self.unknown_tagged_fields,
                     &other.unknown_tagged_fields,
                 )
+        }
+    }
+
+    impl RetainedSize for Subtopology {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.subtopology_id))
+                .saturating_add(RetainedSize::retained_size(&self.source_topics))
+                .saturating_add(RetainedSize::retained_size(&self.source_topic_regex))
+                .saturating_add(RetainedSize::retained_size(&self.state_changelog_topics))
+                .saturating_add(RetainedSize::retained_size(&self.repartition_sink_topics))
+                .saturating_add(RetainedSize::retained_size(&self.repartition_source_topics))
+                .saturating_add(RetainedSize::retained_size(&self.copartition_groups))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
         }
     }
 
@@ -1145,6 +1219,16 @@ pub mod streams_group_heartbeat_request {
         }
     }
 
+    impl RetainedSize for CopartitionGroup {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.source_topics))
+                .saturating_add(RetainedSize::retained_size(&self.source_topic_regex))
+                .saturating_add(RetainedSize::retained_size(&self.repartition_source_topics))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
+        }
+    }
+
     impl KafkaDecode for CopartitionGroup {
         fn decode(
             decoder: &mut Decoder,
@@ -1336,6 +1420,32 @@ pub mod streams_group_heartbeat_request {
                     &self.unknown_tagged_fields,
                     &other.unknown_tagged_fields,
                 )
+        }
+    }
+
+    impl RetainedSize for StreamsGroupHeartbeatRequest {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.group_id))
+                .saturating_add(RetainedSize::retained_size(&self.member_id))
+                .saturating_add(RetainedSize::retained_size(&self.member_epoch))
+                .saturating_add(RetainedSize::retained_size(
+                    &self.endpoint_information_epoch,
+                ))
+                .saturating_add(RetainedSize::retained_size(&self.instance_id))
+                .saturating_add(RetainedSize::retained_size(&self.rack_id))
+                .saturating_add(RetainedSize::retained_size(&self.rebalance_timeout_ms))
+                .saturating_add(RetainedSize::retained_size(&self.topology))
+                .saturating_add(RetainedSize::retained_size(&self.active_tasks))
+                .saturating_add(RetainedSize::retained_size(&self.standby_tasks))
+                .saturating_add(RetainedSize::retained_size(&self.warmup_tasks))
+                .saturating_add(RetainedSize::retained_size(&self.process_id))
+                .saturating_add(RetainedSize::retained_size(&self.user_endpoint))
+                .saturating_add(RetainedSize::retained_size(&self.client_tags))
+                .saturating_add(RetainedSize::retained_size(&self.task_offsets))
+                .saturating_add(RetainedSize::retained_size(&self.task_end_offsets))
+                .saturating_add(RetainedSize::retained_size(&self.shutdown_application))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
         }
     }
 
@@ -1640,7 +1750,7 @@ pub mod streams_group_heartbeat_response {
         encoded_len_with,
     };
 
-    use crate::{KafkaMessage, KafkaResponse, ProtocolEq};
+    use crate::{KafkaMessage, KafkaResponse, ProtocolEq, RetainedFootprint, RetainedSize};
 
     /// `Status` as declared by the `StreamsGroupHeartbeat` API.
     #[non_exhaustive]
@@ -1696,6 +1806,15 @@ pub mod streams_group_heartbeat_response {
                     &self.unknown_tagged_fields,
                     &other.unknown_tagged_fields,
                 )
+        }
+    }
+
+    impl RetainedSize for Status {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.status_code))
+                .saturating_add(RetainedSize::retained_size(&self.status_detail))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
         }
     }
 
@@ -1830,6 +1949,15 @@ pub mod streams_group_heartbeat_response {
                     &self.unknown_tagged_fields,
                     &other.unknown_tagged_fields,
                 )
+        }
+    }
+
+    impl RetainedSize for TopicPartition {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.topic))
+                .saturating_add(RetainedSize::retained_size(&self.partitions))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
         }
     }
 
@@ -1973,6 +2101,15 @@ pub mod streams_group_heartbeat_response {
         }
     }
 
+    impl RetainedSize for TaskIds {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.subtopology_id))
+                .saturating_add(RetainedSize::retained_size(&self.partitions))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
+        }
+    }
+
     impl KafkaDecode for TaskIds {
         fn decode(
             decoder: &mut Decoder,
@@ -2110,6 +2247,15 @@ pub mod streams_group_heartbeat_response {
                     &self.unknown_tagged_fields,
                     &other.unknown_tagged_fields,
                 )
+        }
+    }
+
+    impl RetainedSize for Endpoint {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.host))
+                .saturating_add(RetainedSize::retained_size(&self.port))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
         }
     }
 
@@ -2254,6 +2400,16 @@ pub mod streams_group_heartbeat_response {
                     &self.unknown_tagged_fields,
                     &other.unknown_tagged_fields,
                 )
+        }
+    }
+
+    impl RetainedSize for EndpointToPartitions {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.user_endpoint))
+                .saturating_add(RetainedSize::retained_size(&self.active_partitions))
+                .saturating_add(RetainedSize::retained_size(&self.standby_partitions))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
         }
     }
 
@@ -2457,6 +2613,37 @@ pub mod streams_group_heartbeat_response {
                     &self.unknown_tagged_fields,
                     &other.unknown_tagged_fields,
                 )
+        }
+    }
+
+    impl RetainedSize for StreamsGroupHeartbeatResponse {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.throttle_time_ms))
+                .saturating_add(RetainedSize::retained_size(&self.error_code))
+                .saturating_add(RetainedSize::retained_size(&self.error_message))
+                .saturating_add(RetainedSize::retained_size(&self.member_id))
+                .saturating_add(RetainedSize::retained_size(&self.member_epoch))
+                .saturating_add(RetainedSize::retained_size(&self.heartbeat_interval_ms))
+                .saturating_add(RetainedSize::retained_size(
+                    &self.acceptable_recovery_lag_legacy,
+                ))
+                .saturating_add(RetainedSize::retained_size(&self.task_offset_interval_ms))
+                .saturating_add(RetainedSize::retained_size(&self.acceptable_recovery_lag))
+                .saturating_add(RetainedSize::retained_size(&self.status))
+                .saturating_add(RetainedSize::retained_size(&self.active_tasks))
+                .saturating_add(RetainedSize::retained_size(&self.standby_tasks))
+                .saturating_add(RetainedSize::retained_size(&self.warmup_tasks))
+                .saturating_add(RetainedSize::retained_size(
+                    &self.topology_description_required,
+                ))
+                .saturating_add(RetainedSize::retained_size(
+                    &self.endpoint_information_epoch,
+                ))
+                .saturating_add(RetainedSize::retained_size(
+                    &self.partitions_by_user_endpoint,
+                ))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
         }
     }
 

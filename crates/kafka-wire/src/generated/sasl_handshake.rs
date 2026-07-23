@@ -15,7 +15,10 @@ pub mod sasl_handshake_request {
         KafkaDecode, KafkaEncode, StrBytes, VersionRange, encode_into_with, encoded_len_with,
     };
 
-    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, ProtocolEq, RequestResponsePair};
+    use crate::{
+        ApiDescriptor, KafkaMessage, KafkaRequest, ProtocolEq, RequestResponsePair,
+        RetainedFootprint, RetainedSize,
+    };
 
     /// Request body for the `SaslHandshake` API.
     #[non_exhaustive]
@@ -28,6 +31,12 @@ pub mod sasl_handshake_request {
     impl ProtocolEq for SaslHandshakeRequest {
         fn protocol_eq(&self, other: &Self) -> bool {
             ProtocolEq::protocol_eq(&self.mechanism, &other.mechanism)
+        }
+    }
+
+    impl RetainedSize for SaslHandshakeRequest {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY.saturating_add(RetainedSize::retained_size(&self.mechanism))
         }
     }
 
@@ -128,7 +137,7 @@ pub mod sasl_handshake_response {
         KafkaDecode, KafkaEncode, StrBytes, VersionRange, encode_into_with, encoded_len_with,
     };
 
-    use crate::{KafkaMessage, KafkaResponse, ProtocolEq};
+    use crate::{KafkaMessage, KafkaResponse, ProtocolEq, RetainedFootprint, RetainedSize};
 
     /// Response body for the `SaslHandshake` API.
     #[non_exhaustive]
@@ -144,6 +153,14 @@ pub mod sasl_handshake_response {
         fn protocol_eq(&self, other: &Self) -> bool {
             ProtocolEq::protocol_eq(&self.error_code, &other.error_code)
                 && ProtocolEq::protocol_eq(&self.mechanisms, &other.mechanisms)
+        }
+    }
+
+    impl RetainedSize for SaslHandshakeResponse {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.error_code))
+                .saturating_add(RetainedSize::retained_size(&self.mechanisms))
         }
     }
 

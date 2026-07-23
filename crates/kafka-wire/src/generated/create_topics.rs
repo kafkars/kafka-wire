@@ -16,7 +16,10 @@ pub mod create_topics_request {
         encoded_len_with,
     };
 
-    use crate::{ApiDescriptor, KafkaMessage, KafkaRequest, ProtocolEq, RequestResponsePair};
+    use crate::{
+        ApiDescriptor, KafkaMessage, KafkaRequest, ProtocolEq, RequestResponsePair,
+        RetainedFootprint, RetainedSize,
+    };
 
     /// `CreatableTopic` as declared by the `CreateTopics` API.
     #[non_exhaustive]
@@ -87,6 +90,18 @@ pub mod create_topics_request {
                     &self.unknown_tagged_fields,
                     &other.unknown_tagged_fields,
                 )
+        }
+    }
+
+    impl RetainedSize for CreatableTopic {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.name))
+                .saturating_add(RetainedSize::retained_size(&self.num_partitions))
+                .saturating_add(RetainedSize::retained_size(&self.replication_factor))
+                .saturating_add(RetainedSize::retained_size(&self.assignments))
+                .saturating_add(RetainedSize::retained_size(&self.configs))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
         }
     }
 
@@ -273,6 +288,15 @@ pub mod create_topics_request {
         }
     }
 
+    impl RetainedSize for CreatableReplicaAssignment {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.partition_index))
+                .saturating_add(RetainedSize::retained_size(&self.broker_ids))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
+        }
+    }
+
     impl KafkaDecode for CreatableReplicaAssignment {
         fn decode(
             decoder: &mut Decoder,
@@ -431,6 +455,15 @@ pub mod create_topics_request {
         }
     }
 
+    impl RetainedSize for CreatableTopicConfig {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.name))
+                .saturating_add(RetainedSize::retained_size(&self.value))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
+        }
+    }
+
     impl KafkaDecode for CreatableTopicConfig {
         fn decode(
             decoder: &mut Decoder,
@@ -558,6 +591,16 @@ pub mod create_topics_request {
                     &self.unknown_tagged_fields,
                     &other.unknown_tagged_fields,
                 )
+        }
+    }
+
+    impl RetainedSize for CreateTopicsRequest {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.topics))
+                .saturating_add(RetainedSize::retained_size(&self.timeout_ms))
+                .saturating_add(RetainedSize::retained_size(&self.validate_only))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
         }
     }
 
@@ -698,7 +741,7 @@ pub mod create_topics_response {
         VersionRange, encode_into_with, encoded_len_with,
     };
 
-    use crate::{KafkaMessage, KafkaResponse, ProtocolEq};
+    use crate::{KafkaMessage, KafkaResponse, ProtocolEq, RetainedFootprint, RetainedSize};
 
     /// `CreatableTopicResult` as declared by the `CreateTopics` API.
     #[non_exhaustive]
@@ -813,6 +856,21 @@ pub mod create_topics_response {
                     &self.unknown_tagged_fields,
                     &other.unknown_tagged_fields,
                 )
+        }
+    }
+
+    impl RetainedSize for CreatableTopicResult {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.name))
+                .saturating_add(RetainedSize::retained_size(&self.topic_id))
+                .saturating_add(RetainedSize::retained_size(&self.error_code))
+                .saturating_add(RetainedSize::retained_size(&self.error_message))
+                .saturating_add(RetainedSize::retained_size(&self.topic_config_error_code))
+                .saturating_add(RetainedSize::retained_size(&self.num_partitions))
+                .saturating_add(RetainedSize::retained_size(&self.replication_factor))
+                .saturating_add(RetainedSize::retained_size(&self.configs))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
         }
     }
 
@@ -1072,6 +1130,18 @@ pub mod create_topics_response {
         }
     }
 
+    impl RetainedSize for CreatableTopicConfigs {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.name))
+                .saturating_add(RetainedSize::retained_size(&self.value))
+                .saturating_add(RetainedSize::retained_size(&self.read_only))
+                .saturating_add(RetainedSize::retained_size(&self.config_source))
+                .saturating_add(RetainedSize::retained_size(&self.is_sensitive))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
+        }
+    }
+
     impl KafkaDecode for CreatableTopicConfigs {
         fn decode(
             decoder: &mut Decoder,
@@ -1178,6 +1248,15 @@ pub mod create_topics_response {
                     &self.unknown_tagged_fields,
                     &other.unknown_tagged_fields,
                 )
+        }
+    }
+
+    impl RetainedSize for CreateTopicsResponse {
+        fn retained_size(&self) -> RetainedFootprint {
+            RetainedFootprint::EMPTY
+                .saturating_add(RetainedSize::retained_size(&self.throttle_time_ms))
+                .saturating_add(RetainedSize::retained_size(&self.topics))
+                .saturating_add(RetainedSize::retained_size(&self.unknown_tagged_fields))
         }
     }
 
