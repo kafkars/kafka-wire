@@ -60,3 +60,33 @@ pub(crate) fn decode_all(
     }
     Ok(records)
 }
+
+/// Counts the visible payload spans retained by decoded records.
+pub(crate) fn retained_payload_bytes(
+    records: &[Record],
+    limit: usize,
+) -> Result<usize, RecordError> {
+    let mut length = 0_usize;
+    for record in records {
+        length = add_retained(length, record.key.as_ref().map_or(0, Bytes::len), limit)?;
+        length = add_retained(length, record.value.as_ref().map_or(0, Bytes::len), limit)?;
+        for header in &record.headers {
+            length = add_retained(length, header.key.len(), limit)?;
+            length = add_retained(length, header.value.as_ref().map_or(0, Bytes::len), limit)?;
+        }
+    }
+    if length > limit {
+        return Err(RecordError::RetainedPayloadLimitExceeded { length, limit });
+    }
+    Ok(length)
+}
+
+fn add_retained(current: usize, added: usize, limit: usize) -> Result<usize, RecordError> {
+    let length = current
+        .checked_add(added)
+        .ok_or(RecordError::RetainedPayloadLimitExceeded {
+            length: usize::MAX,
+            limit,
+        })?;
+    Ok(length)
+}

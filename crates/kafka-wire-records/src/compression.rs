@@ -47,27 +47,31 @@ const ZSTD_MAX_WINDOW_LOG: u32 = 31;
 
 impl Compression {
     /// Decompresses one records payload.
-    pub(crate) fn decompress(self, payload: Bytes, limit: usize) -> Result<Bytes, RecordError> {
+    pub(crate) fn decompress(
+        self,
+        payload: Bytes,
+        per_batch_limit: usize,
+    ) -> Result<Bytes, RecordError> {
         match self {
-            Self::None => checked_uncompressed(payload, limit),
+            Self::None => checked_uncompressed(payload, per_batch_limit),
             Self::Gzip => read_bounded(
                 "gzip",
                 flate2::read::GzDecoder::new(payload.as_ref()),
-                limit,
+                per_batch_limit,
             ),
-            Self::Snappy => decompress_xerial(payload.as_ref(), limit),
+            Self::Snappy => decompress_xerial(payload.as_ref(), per_batch_limit),
             Self::Lz4 => read_bounded(
                 "lz4",
                 lz4_flex::frame::FrameDecoder::new(payload.as_ref()),
-                limit,
+                per_batch_limit,
             ),
             Self::Zstd => {
                 let mut decoder = zstd::stream::read::Decoder::new(payload.as_ref())
                     .map_err(|error| Self::failed("zstd", &error))?;
                 decoder
-                    .window_log_max(zstd_window_log(limit))
+                    .window_log_max(zstd_window_log(per_batch_limit))
                     .map_err(|error| Self::failed("zstd", &error))?;
-                read_bounded("zstd", decoder, limit)
+                read_bounded("zstd", decoder, per_batch_limit)
             }
         }
     }
@@ -98,16 +102,21 @@ fn checked_uncompressed(payload: Bytes, limit: usize) -> Result<Bytes, RecordErr
 
 fn read_bounded(
     codec: &'static str,
-    reader: impl std::io::Read,
+    mut reader: impl std::io::Read,
     limit: usize,
 ) -> Result<Bytes, RecordError> {
-    let observed = limit.saturating_add(1);
-    let mut reader = reader.take(u64::try_from(observed).unwrap_or(u64::MAX));
-    let mut out = Vec::new();
+    let mut out = Vec::with_capacity(limit.min(8 * 1_024));
     reader
+        .by_ref()
+        .take(u64::try_from(limit).unwrap_or(u64::MAX))
         .read_to_end(&mut out)
         .map_err(|error| Compression::failed(codec, &error))?;
-    if out.len() > limit {
+    let mut overflow = [0_u8; 1];
+    if reader
+        .read(&mut overflow)
+        .map_err(|error| Compression::failed(codec, &error))?
+        != 0
+    {
         return Err(RecordError::DecompressionLimitExceeded { codec, limit });
     }
     Ok(Bytes::from(out))

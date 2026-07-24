@@ -15,6 +15,7 @@
 
 mod attributes;
 mod batch;
+mod batch_decode;
 mod batch_encode;
 #[cfg(test)]
 mod batch_encode_test;
@@ -30,6 +31,7 @@ mod record_set;
 
 pub use attributes::{Compression, TimestampType};
 pub use batch::{MAGIC_V2, RecordBatch};
+pub use batch_decode::RecordBatchDecode;
 pub use error::RecordError;
 pub use limits::{MAX_PROTOCOL_BATCH_BYTES, RecordDecodeLimits, RecordEncodeLimits};
 pub use record::{Record, RecordHeader};

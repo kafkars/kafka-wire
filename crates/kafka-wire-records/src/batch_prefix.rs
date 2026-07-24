@@ -13,6 +13,11 @@ const PREFIX_BYTES: usize = 12;
 /// Bytes from `partition_leader_epoch` through `records_count`.
 const HEADER_AFTER_LENGTH: usize = 49;
 
+pub(super) enum BatchPrefix {
+    Complete(Bytes),
+    PartialTrailing { bytes: usize },
+}
+
 pub(super) fn exact_batch(bytes: &Bytes, max_batch_bytes: usize) -> Result<Bytes, RecordError> {
     if bytes.len() < PREFIX_BYTES {
         return Err(DecodeError::UnexpectedEnd {
@@ -47,4 +52,40 @@ pub(super) fn exact_batch(bytes: &Bytes, max_batch_bytes: usize) -> Result<Bytes
         });
     }
     Ok(bytes.slice(..end))
+}
+
+pub(super) fn classify_next_batch(
+    bytes: &Bytes,
+    max_batch_bytes: usize,
+) -> Result<BatchPrefix, RecordError> {
+    if bytes.len() < PREFIX_BYTES {
+        return Ok(BatchPrefix::PartialTrailing { bytes: bytes.len() });
+    }
+
+    let batch_length = i32::from_be_bytes([bytes[8], bytes[9], bytes[10], bytes[11]]);
+    let declared = usize::try_from(batch_length).map_err(|_| RecordError::NegativeBatchLength {
+        length: batch_length,
+    })?;
+    if declared < HEADER_AFTER_LENGTH {
+        return Err(RecordError::TruncatedBatch {
+            declared,
+            available: bytes.len() - PREFIX_BYTES,
+        });
+    }
+    let total = PREFIX_BYTES
+        .checked_add(declared)
+        .ok_or(RecordError::BatchLimitExceeded {
+            length: usize::MAX,
+            limit: max_batch_bytes,
+        })?;
+    if total > max_batch_bytes {
+        return Err(RecordError::BatchLimitExceeded {
+            length: total,
+            limit: max_batch_bytes,
+        });
+    }
+    if total > bytes.len() {
+        return Ok(BatchPrefix::PartialTrailing { bytes: bytes.len() });
+    }
+    Ok(BatchPrefix::Complete(bytes.slice(..total)))
 }

@@ -13,13 +13,7 @@
 //! * the CRC is CRC32C (Castagnoli, the `iSCSI` polynomial) over everything
 //!   *after* the CRC field, not over the batch and not over the records alone.
 
-use bytes::{Buf as _, Bytes};
-use kafka_wire_core::Decoder;
-
-use crate::attributes::{Attributes, Compression, TimestampType};
-use crate::batch_prefix::exact_batch;
-use crate::error::RecordError;
-use crate::limits::RecordDecodeLimits;
+use crate::attributes::{Compression, TimestampType};
 use crate::record::Record;
 
 /// The only magic byte this crate implements.
@@ -66,86 +60,4 @@ pub struct RecordBatch {
     pub base_sequence: i32,
     /// The records themselves.
     pub records: Vec<Record>,
-}
-
-impl RecordBatch {
-    /// Reads and removes one batch from the front of `bytes`.
-    ///
-    /// The order matters. A CRC checked after parsing would let a corrupt length
-    /// drive an allocation or a nonsense field reach a caller before anything
-    /// noticed, so the checksum runs against the raw bytes first and the fields
-    /// are only read once they are known to be the bytes Kafka wrote.
-    ///
-    /// Bytes after the declared batch remain in `bytes`, ready for the next
-    /// call. A failure leaves the cursor unchanged.
-    pub fn decode(bytes: &mut Bytes, limits: RecordDecodeLimits) -> Result<Self, RecordError> {
-        let batch_bytes = exact_batch(bytes, limits.max_batch_bytes)?;
-        let end = batch_bytes.len();
-        let mut decoder = Decoder::new(batch_bytes.clone(), limits.wire_for_container(end))?;
-        let base_offset = decoder.read_i64()?;
-        let _validated_batch_length = decoder.read_i32()?;
-
-        let partition_leader_epoch = decoder.read_i32()?;
-        let magic = decoder.read_i8()?;
-        if magic != MAGIC_V2 {
-            return Err(RecordError::UnsupportedMagic { magic });
-        }
-        let crc = decoder.read_u32()?;
-        let actual = crc32c::crc32c(&batch_bytes[CRC_COVERAGE_START..]);
-        if actual != crc {
-            return Err(RecordError::CorruptBatch {
-                declared: crc,
-                actual,
-            });
-        }
-
-        let attributes = Attributes::decode(decoder.read_i16()?)?;
-        let last_offset_delta = decoder.read_i32()?;
-        let base_timestamp = decoder.read_i64()?;
-        let max_timestamp = decoder.read_i64()?;
-        let producer_id = decoder.read_i64()?;
-        let producer_epoch = decoder.read_i16()?;
-        let base_sequence = decoder.read_i32()?;
-        let records_count_offset = decoder.offset();
-        let records_count_wire = decoder.read_i32()?;
-        let records_count =
-            usize::try_from(records_count_wire).map_err(|_| RecordError::NegativeRecordCount {
-                count: records_count_wire,
-            })?;
-        decoder.check_collection_limit(
-            "record batch records",
-            records_count,
-            records_count_offset,
-        )?;
-
-        let payload = decoder.take_bytes(end - (CRC_COVERAGE_START + 40))?;
-        let payload = attributes
-            .compression
-            .decompress(payload, limits.max_decompressed_records_bytes)?;
-        let payload_len = payload.len();
-        let records = crate::record_set::decode_all(
-            payload,
-            records_count,
-            limits.wire_for_container(payload_len),
-        )?;
-
-        let batch = Self {
-            base_offset,
-            last_offset_delta,
-            partition_leader_epoch,
-            compression: attributes.compression,
-            timestamp_type: attributes.timestamp_type,
-            is_transactional: attributes.is_transactional,
-            is_control: attributes.is_control,
-            has_delete_horizon: attributes.has_delete_horizon,
-            base_timestamp,
-            max_timestamp,
-            producer_id,
-            producer_epoch,
-            base_sequence,
-            records,
-        };
-        bytes.advance(end);
-        Ok(batch)
-    }
 }

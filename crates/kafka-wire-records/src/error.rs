@@ -54,6 +54,15 @@ pub enum RecordError {
         limit: usize,
     },
 
+    /// Decoded record payload spans exceeded the caller's retained-byte budget.
+    #[error("decoded record payload length {length} exceeds retained-byte limit {limit}")]
+    RetainedPayloadLimitExceeded {
+        /// Exact visible key, value, and header byte span.
+        length: usize,
+        /// Remaining retained-payload capacity.
+        limit: usize,
+    },
+
     /// The batch declared a magic byte this crate does not implement.
     ///
     /// v0 and v1 are the pre-KIP-98 message sets, which have a different frame
