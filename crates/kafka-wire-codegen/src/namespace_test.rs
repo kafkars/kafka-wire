@@ -13,7 +13,7 @@ use crate::{
     GenerationError,
     group::group_sources,
     lockfile::ProtocolLock,
-    namespace::{handwritten_root_types, validate_generated_namespace},
+    namespace::{handwritten_root_types, handwritten_root_values, validate_generated_namespace},
     source::load_sources,
 };
 
@@ -183,6 +183,45 @@ fn every_crate_root_module_is_reserved_before_generation() {
         .collect::<BTreeSet<_>>();
 
     assert_eq!(reserved, declared);
+}
+
+#[test]
+fn every_handwritten_crate_root_export_is_reserved_before_generation() {
+    let facade = syn::parse_file(include_str!("../../kafka-wire/src/lib.rs"))
+        .expect("kafka-wire's crate facade must parse as Rust");
+    let mut declared = BTreeSet::new();
+    for item in facade.items {
+        if let syn::Item::Use(export) = item
+            && matches!(export.vis, syn::Visibility::Public(_))
+        {
+            collect_use_exports(&export.tree, &mut declared);
+        }
+    }
+    let reserved = handwritten_root_types()
+        .into_iter()
+        .chain(handwritten_root_values())
+        .filter_map(|(symbol, producer)| (producer == "handwritten crate facade").then_some(symbol))
+        .collect::<BTreeSet<_>>();
+
+    assert_eq!(reserved, declared);
+}
+
+fn collect_use_exports(tree: &syn::UseTree, exports: &mut BTreeSet<String>) {
+    match tree {
+        syn::UseTree::Name(name) => {
+            exports.insert(name.ident.to_string());
+        }
+        syn::UseTree::Rename(rename) => {
+            exports.insert(rename.rename.to_string());
+        }
+        syn::UseTree::Path(path) => collect_use_exports(&path.tree, exports),
+        syn::UseTree::Group(group) => {
+            for item in &group.items {
+                collect_use_exports(item, exports);
+            }
+        }
+        syn::UseTree::Glob(_) => panic!("the handwritten facade must name every export"),
+    }
 }
 
 fn corpus() -> (

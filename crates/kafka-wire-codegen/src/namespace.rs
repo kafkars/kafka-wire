@@ -6,8 +6,7 @@ use std::collections::BTreeMap;
 
 mod root;
 
-pub(crate) use root::handwritten_root_types;
-use root::handwritten_root_values;
+pub(crate) use root::{handwritten_root_types, handwritten_root_values};
 
 use crate::{
     GenerationError,

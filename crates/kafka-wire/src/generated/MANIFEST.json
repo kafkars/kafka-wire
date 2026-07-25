@@ -4,11 +4,11 @@
   "ir_version": 1,
   "upstream_repository": "https://github.com/apache/kafka",
   "upstream_commit": "678c0e07e4733c5a592e52046dc2c4e1625587f1",
-  "semantic_inputs_sha256": "68ebcacf9a0858d6efd8845d678c25a2e95958f43ca54199610778fb80ed34e8",
+  "semantic_inputs_sha256": "e85fb653b823c9d533c1c7cc50b3ada0a61220ba914705add0fc7eb226341cf5",
   "protocol_lock_sha256": "ba0a2510be56dbe225a9346c4fc6df5d3c48d33bec9ef92b4959f038659a0de2",
   "headers_override_sha256": "2831709c06549001fd4c59d3f58b33fcded5f7e0505d31a2777caa3657210c95",
   "schema_exceptions_sha256": "d10311cc6f570d1bfd13c6cf0194cf1f139f12226553d9a3ba2ac05c81d0583d",
-  "compiler_source_sha256": "a5afa7998f4520c3d27533d3777476516b2d93133d8051f953a805c6327753a5",
+  "compiler_source_sha256": "fdcbd041d1e0491be50b0c2efb6b19f92d2996968fa895e3cc54e5266d697edf",
   "rustfmt_sha256": "1d4b22e8a230b0627ce08efc3f2d5a0f7b4400ccc45d40f6fb95a7bc9ea46a82",
   "rustfmt_identity": "version=rustfmt 1.8.0-stable (6b00bc3880 2025-06-23); edition=2024",
   "files": [

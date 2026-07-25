@@ -3,6 +3,7 @@
 //! Callers use this flat facade. Internal module placement and generated file
 //! names are not part of the public API.
 
+mod consumer_protocol;
 mod descriptor;
 mod frame;
 mod generated;
@@ -10,10 +11,16 @@ mod message;
 mod retained;
 
 #[cfg(test)]
+mod consumer_protocol_test;
+#[cfg(test)]
 mod retained_test;
 #[cfg(test)]
 mod tagged_claims_test;
 
+pub use consumer_protocol::{
+    decode_consumer_protocol_assignment, decode_consumer_protocol_subscription,
+    encode_consumer_protocol_assignment, encode_consumer_protocol_subscription,
+};
 pub use descriptor::{ApiDescriptor, MessageDescriptor, MessageDirection};
 pub use frame::{OutboundFrameLimits, encode_request, response_header_version_for};
 pub use message::{KafkaMessage, KafkaRequest, KafkaResponse, ProtocolEq, RequestResponsePair};

@@ -17,6 +17,8 @@ pub(crate) fn handwritten_root_types() -> BTreeMap<String, String> {
         ("RequestResponsePair", "handwritten crate facade"),
         ("RetainedFootprint", "handwritten crate facade"),
         ("RetainedSize", "handwritten crate facade"),
+        ("consumer_protocol", PRIVATE_ROOT_MODULE),
+        ("consumer_protocol_test", PRIVATE_ROOT_MODULE),
         ("descriptor", PRIVATE_ROOT_MODULE),
         ("frame", PRIVATE_ROOT_MODULE),
         ("generated", PRIVATE_ROOT_MODULE),
@@ -30,9 +32,16 @@ pub(crate) fn handwritten_root_types() -> BTreeMap<String, String> {
     .collect()
 }
 
-pub(super) fn handwritten_root_values() -> BTreeMap<String, String> {
-    ["encode_request", "response_header_version_for"]
-        .into_iter()
-        .map(|symbol| (symbol.to_owned(), "handwritten crate facade".to_owned()))
-        .collect()
+pub(crate) fn handwritten_root_values() -> BTreeMap<String, String> {
+    [
+        "decode_consumer_protocol_assignment",
+        "decode_consumer_protocol_subscription",
+        "encode_consumer_protocol_assignment",
+        "encode_consumer_protocol_subscription",
+        "encode_request",
+        "response_header_version_for",
+    ]
+    .into_iter()
+    .map(|symbol| (symbol.to_owned(), "handwritten crate facade".to_owned()))
+    .collect()
 }
