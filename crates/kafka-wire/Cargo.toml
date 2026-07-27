@@ -6,11 +6,11 @@ rust-version.workspace = true
 license.workspace = true
 repository.workspace = true
 description = "Generated, version-aware Kafka wire messages"
-publish = false
+publish = ["crates-io"]
 
 [dependencies]
 bytes.workspace = true
-kafka-wire-core = { path = "../kafka-wire-core" }
+kafka-wire-core = { version = "0.1.0", path = "../kafka-wire-core" }
 
 [dev-dependencies]
 bytes.workspace = true

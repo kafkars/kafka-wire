@@ -5,7 +5,8 @@ edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
 repository.workspace = true
-publish = false
+description = "Kafka record-batch encoding, decoding, and compression primitives"
+publish = ["crates-io"]
 
 [dependencies]
 bytes.workspace = true
@@ -14,7 +15,7 @@ flate2 = "1"
 lz4_flex = { version = "0.11", default-features = false, features = ["frame"] }
 snap = "1"
 zstd = "0.13"
-kafka-wire-core = { path = "../kafka-wire-core" }
+kafka-wire-core = { version = "0.1.0", path = "../kafka-wire-core" }
 thiserror.workspace = true
 
 [lints]
