@@ -7,6 +7,9 @@ license.workspace = true
 repository.workspace = true
 description = "Kafka record-batch encoding, decoding, and compression primitives"
 publish = ["crates-io"]
+readme = "README.md"
+keywords = ["kafka", "record-batch", "compression"]
+categories = ["encoding", "network-programming"]
 
 [dependencies]
 bytes.workspace = true

@@ -7,6 +7,9 @@ license.workspace = true
 repository.workspace = true
 publish = ["crates-io"]
 description = "Sans-I/O Kafka wire primitives."
+readme = "README.md"
+keywords = ["kafka", "wire-format", "encoding"]
+categories = ["encoding", "network-programming"]
 
 [dependencies]
 bytes.workspace = true

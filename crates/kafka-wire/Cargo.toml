@@ -7,6 +7,9 @@ license.workspace = true
 repository.workspace = true
 description = "Generated, version-aware Kafka wire messages"
 publish = ["crates-io"]
+readme = "README.md"
+keywords = ["kafka", "wire-format", "serialization"]
+categories = ["encoding", "network-programming"]
 
 [dependencies]
 bytes.workspace = true
