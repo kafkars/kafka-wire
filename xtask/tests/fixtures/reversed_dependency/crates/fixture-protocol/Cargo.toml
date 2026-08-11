@@ -1,0 +1,8 @@
+# The permitted direction: the protocol crate may depend on the wire kernel.
+[package]
+name = "fixture-protocol"
+version = "0.0.0"
+edition = "2024"
+
+[dependencies]
+fixture-wire = { path = "../fixture-wire" }

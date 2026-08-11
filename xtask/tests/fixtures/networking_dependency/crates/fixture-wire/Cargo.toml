@@ -1,0 +1,13 @@
+# A core wire kernel must not take on a third-party networking crate: doing so
+# hands it the socket capability the source test forbids, from behind a
+# dependency edge the capability test never reads. This manifest smuggles in
+# `socket2` on purpose so the dependency test's external allowlist has a
+# violation to reject; `bytes` is allowlisted and must be left alone.
+[package]
+name = "fixture-wire"
+version = "0.0.0"
+edition = "2024"
+
+[dependencies]
+bytes = "1"
+socket2 = "0.5"

@@ -1,0 +1,9 @@
+# The wire kernel must sit below the protocol crate. This manifest reverses the
+# edge on purpose so the dependency test has a violation to reject.
+[package]
+name = "fixture-wire"
+version = "0.0.0"
+edition = "2024"
+
+[dependencies]
+fixture-protocol = { path = "../fixture-protocol" }
