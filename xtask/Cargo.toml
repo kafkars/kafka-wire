@@ -19,5 +19,10 @@ serde_json.workspace = true
 sha2.workspace = true
 toml.workspace = true
 
+[dev-dependencies]
+# Architecture tests parse Rust paths rather than matching source substrings.
+syn = { workspace = true, features = ["visit"] }
+walkdir.workspace = true
+
 [lints]
 workspace = true

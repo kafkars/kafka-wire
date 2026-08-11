@@ -1,4 +1,4 @@
-//! Command orchestration across generator and executable architecture check crates.
+//! Command orchestration across generation and repository verification.
 
 use std::process::Command as Process;
 

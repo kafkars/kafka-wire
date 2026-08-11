@@ -1,0 +1,320 @@
+schema = 1
+
+[paths]
+rust_roots = ["crates", "xtask"]
+generated_roots = ["crates/kafka-wire/src/generated"]
+generated_manifest = "crates/kafka-wire/src/generated/MANIFEST.json"
+# Architecture fixtures are deliberately broken inputs, not reviewed workspace source.
+excluded_roots = ["xtask/tests/fixtures"]
+
+[budgets.facade]
+target = 80
+soft = 120
+hard = 180
+
+[budgets.implementation]
+target = 240
+soft = 360
+hard = 500
+
+# Generated files carry no handwritten design target. Their Rust still has
+# readers, but its stable semantic seam is one API key and its readability is a
+# renderer-level responsibility; an arbitrary line split would make that shape
+# worse rather than clearer. What remains here is a ceiling far above any real
+# message, so runaway output is still loud while ordinary upstream growth stays
+# below the configured threshold. Recording dozens of baselines for ordinary
+# large messages would be noise that hid exactly the signal this ratchet exists
+# to give. The ceiling is deliberately far above ordinary generated output;
+# this table is the only numeric source of truth.
+[budgets.generated]
+target = 2500
+soft = 2500
+hard = 3000
+
+[budgets.test]
+target = 300
+soft = 500
+hard = 700
+
+[budgets.auxiliary]
+target = 300
+soft = 500
+hard = 700
+
+# Files already above their design target, frozen at the size recorded here.
+# A recorded file may shrink freely; growing past `lines` fails until the entry
+# is deliberately raised. An entry that falls back to target fails until removed.
+[[budgets.baseline]]
+path = "crates/kafka-wire-schema/src/ir/version.rs"
+lines = 297
+reason = "One coherent proof of version-range parsing, normalization, disjointness, and interval subtraction; splitting it would separate a range from the rules that make it valid. `difference` joined the algebra when a field turned out to be nullable across only part of its presence: the codec for the versions where it is not nullable has to be chosen over exactly the remainder, and that remainder is a set operation, not a predicate the renderer can improvise. The open-ended subtraction fix replaced a bounded version walk with the interval operation this public algebra promises, adding the two-sided fragment calculation that preserves an unbounded tail."
+
+[[budgets.baseline]]
+path = "crates/kafka-wire-schema/tests/vendored_corpus.rs"
+lines = 307
+reason = "One instrument: the corpus walk and the census it reports. Corpus location and the reviewed exception data moved to `tests/support` once `struct_corpus.rs` became a second consumer; what remains is the census vocabulary, which is one per-phase mapping and has no seam."
+
+[[budgets.baseline]]
+path = "crates/kafka-wire-schema/tests/validation_field.rs"
+lines = 334
+reason = "One proof that every field-level diagnostic fires exactly when it should. Each case is a rejected/repaired pair, so the file is 16 indivisible two-sided cases rather than a list that has a natural seam."
+
+[[budgets.baseline]]
+path = "crates/kafka-wire-codegen/src/render/field/validate_test.rs"
+lines = 322
+reason = "The refusal half of the field-emission table, and its length is the negative space itself: every construct the backend does not implement appears here once, paired with the accepting shape it departs from, so a rule that stops firing and a rule that fires too widely both fail. Splitting it would put a refusal in one file and its paired positive in another, which is the one arrangement that lets the boundary drift unnoticed. It shrinks as the backend grows — known tagged fields, inline nullable structs, and partial-version nullability each turned a refusal into a positive — but it grew here for the opposite and better reason: one diagnostic that covered three unrelated declarations became three, so the negative space is now described as precisely as the positive."
+
+[[budgets.baseline]]
+path = "crates/kafka-wire-codegen/src/render/field/types.rs"
+lines = 284
+reason = "One instrument: every question answered by reading a field's type — the Rust it is declared as, the expression that initializes it, whether that initializer is Rust's own default, and whether the module must import the type at all. The import census looks like a separable concept and is not: it exists because two protocol types answer to one Rust type, and a compile probe caught exactly what happens when the census and the `type_name` arm that makes it true live far enough apart to disagree. `records` had to be named beside `bytes` in a third place for the same reason, which is the argument for keeping all four questions where one reader sees them at once. The derive census had to learn nullability for the same reason: `Option`'s Rust default is `None`, so it disagreed with the initializer this file renders two functions above it. Raised for module-scoped naming: every wire type this file names in a type or initializer position — StrBytes, Uuid, Bytes — is now asked how the emitting module must spell it, because a module can declare a struct under upstream's own name that shadows the import. That check cannot be lifted to the caller: the whole point is that no type-position escapes it, and the positions are exactly the four questions this file already holds together, so threading it through them is the same instrument answering the same questions against one more scope. Raised for recursive protocol equality: nested struct defaults, including nullable ones, now route through `ProtocolEq` here rather than Rust's floating-point `PartialEq`, keeping declaration, initialization, and default omission in one type-owned table."
+
+[[budgets.baseline]]
+path = "crates/kafka-wire-codegen/src/render/field/codec.rs"
+lines = 378
+reason = "One decision per shape: which Decoder or Encoder method carries a field, an array's length prefix, or an array element. All three compose the same two axes — compact versus legacy, nullable versus not — so a split among them would duplicate that composition and let it drift. Apache Kafka's own bytes proved the coupling is load-bearing: a length-prefixed array element follows the regime too, and reading one as legacy inside a compact array mis-parses the length. Computing the axes moved to `regime.rs` when nullability became a window rather than a boolean; what stays is applying them, which is the part that must agree across all three shapes. The nullable-struct arms belong here for the opposite reason: their presence marker is a raw int8 in BOTH regimes, so they are the one shape that deliberately consults neither axis. The emitter symbol closure now qualifies Some, None, and Vec at the exact nullable and array expressions that use them; moving those spellings elsewhere would reopen the shadowing gap this table closes."
+
+[[budgets.baseline]]
+path = "crates/kafka-wire/src/generated/streams_group_heartbeat.rs"
+lines = 2956
+reason = "This remains one generated API pair, the semantic seam required by the generated-file ceiling. Closing emitter-prelude shadowing spells Result, Option, Vec, Default, and their variants with absolute paths; rustfmt consequently wraps some signatures and moves this largest upstream schema just above the ordinary generated ceiling. Recursive `ProtocolEq` implementations add one explicit field walk per generated type so nested NaNs and signed zero preserve their wire identity during default omission and fuzz comparison. Recursive `RetainedSize` implementations add one explicit field walk per generated type so admission limits include nested container capacity and byte spans. Splitting the API pair would weaken navigation and provenance, while shortening those paths or hiding either proof would reopen reviewed defects."
+
+[[budgets.baseline]]
+path = "crates/kafka-wire/src/generated/framing.rs"
+lines = 2745
+reason = "This remains one generated framing corpus, the semantic seam required by the generated-file ceiling. Recursive `ProtocolEq` implementations preserve wire identity, and recursive `RetainedSize` implementations expose nested admission weight. The output remains below the generated hard ceiling; splitting one provenance unit or weakening either proof would obscure the protocol boundary."
+
+[[budgets.baseline]]
+path = "crates/kafka-wire/src/generated/fetch.rs"
+lines = 2905
+reason = "This remains one generated API pair, the semantic seam required by the generated-file ceiling. Recursive `ProtocolEq` implementations preserve nested floating-point wire identity, active tagged fields reserve their numeric IDs, and recursive `RetainedSize` implementations expose nested admission weight. The output remains below the generated hard ceiling; splitting one API pair or weakening these proofs would obscure the protocol boundary."
+
+[[budgets.baseline]]
+path = "crates/kafka-wire/src/generated/streams_group_describe.rs"
+lines = 2902
+reason = "This remains one generated API pair, the semantic seam required by the generated-file ceiling. Recursive `ProtocolEq` implementations preserve wire identity, and recursive `RetainedSize` implementations expose nested admission weight. The output remains below the generated hard ceiling; splitting one API pair or weakening either proof would obscure the protocol boundary."
+
+[[budgets.baseline]]
+path = "crates/kafka-wire-codegen/src/render/api/structs.rs"
+lines = 383
+reason = "One instrument: everything it takes to turn a declared struct into Rust — collecting declarations from the two places upstream spells them, the definition and default, the flexible identity a nested struct needs so `Self::is_flexible` resolves, and the codecs. Splitting the codecs back out would separate a struct's tagged-field section from the member that decides it carries one, which is the coupling this file exists to hold. It also decides whether a schema states its flexible window inherently or as a KafkaMessage, which is the one thing separating a nested struct from a header. It carries the declared upstream spelling alongside the Rust one because the module-scoped naming rule emits nested structs under upstream's spelling, so the doc comment is where a reader greps a generated type back to the schema that declared it. Raised for module-scoped naming twice over: every wire type in a signature or a constant is now spelled through the module-scope check, and the flexible-window block moved into `render_identity` when the definition crossed clippy's function-length gate. That split is the one place the two identities genuinely differ — KafkaMessage for a standalone schema, an inherent constant for a nested struct — so it is a seam and not a slice, and it cost a doc comment to say so."
+
+[[budgets.baseline]]
+path = "crates/kafka-wire-codegen/src/render/api/codec.rs"
+lines = 411
+reason = "One instrument: the encode and decode bodies, and the field walk both messages and structs share. The array arms grew when a version gate was wrapped around them — Apache Kafka's vectors showed an ungated array reads a later version's field out of earlier bytes — and that gate has to sit beside the scalar gate it mirrors, or the two drift. It also owns which local a decoded field binds to, because upstream declares a field named Version whose local would otherwise shadow the ApiVersion parameter. The tagged-field section went to a sibling rather than growing this file further; what stayed is the pair of skips that route a tagged field there, which must sit in the walks they exclude it from or a field would be written twice. The reserved-local list lives here for the same reason: it names every identifier these bodies bind, and an adversarial review found `unknown_tagged_fields` missing from it. The null guard joined the write walk when a field could be nullable in only some of its versions: it has to be emitted immediately before the write it qualifies, for messages and nested structs alike, and the owner name it reports is the same one the tagged section reports. It also decides how an array element becomes a closure, which is a readability decision about the OUTPUT rather than a correctness one — and the only place in this generator where that is true, so it belongs beside the emission it shapes. Raised for module-scoped naming: the impl headers, both codec signatures, the two EncodeError constructors and the `Decoder::read_*` shorthand all name types that a message module may shadow with a struct of upstream's own spelling, so each is spelled through the module-scope check rather than as a literal. Sharing the signature openers with `structs.rs` was considered and rejected — it moves lines between two files without removing a decision, and it would put a message's signature further from the body it opens, which is the coupling this file exists to hold. Raised for the typed known-tag plan proof: the decode and encode entry points now return versioned evidence that their private tagged phases consumed the same IR plan as validation, so an omitted or mis-gated arm fails generation rather than compiling plausible output."
+
+[[budgets.baseline]]
+path = "crates/kafka-wire-conformance/src/subject.rs"
+lines = 438
+reason = "One list: every enabled message, declared once and expanded into the enum and the decode, encode, facts, and flexibility dispatches. The length is the corpus, not a second concept — one line per enabled message — and splitting it would let a message reach one dispatch and not another, which is the failure this macro exists to make impossible. It grew by exactly the messages three constructs unblocked: twenty for known tagged fields, ten for nullable structs, eight for partial-version nullability, and the last two once the reviewed schema exceptions reached the generation path."
+
+[[budgets.baseline]]
+path = "crates/kafka-wire-conformance/tests/broker_authored_defaults.rs"
+lines = 418
+reason = "One proof: every field of every message and struct, compared between Apache Kafka's own generated-class defaults and this repository's lowered IR — two independent readings of one schema. The length is the two-directional comparison (a struct or field either side declares and the other does not, plus each matched field's value) together with the reviewed divergences that qualify a few of them, in the same self-auditing shape `broker_authored_bytes.rs` uses: an allowlist entry that stops naming a real disagreement fails. The input-acquisition half — reading Kafka's transcript and lowering the vendored corpus — already moved to `tests/defaults_corpus`, which is the one seam here; splitting the comparison from the diagnostics it emits would separate a disagreement from the vocabulary that reports it, which is the coupling this file exists to hold."
+
+[[budgets.baseline]]
+path = "xtask/tests/capability_boundaries.rs"
+lines = 369
+reason = "One instrument: the capability detector and the complete set of adversarial evasions it must reject. Closing the six proven M1 holes added a permanent probe/assertion pair per hole (Unix sockets outside std::net, a char-literal desync in the token fallback, a parent glob leaving a child bare, and #[path] module trees pulling non-.rs or out-of-src code). Each pair calls the same private detector against the same fixtures, so any split would separate a regression from the detector it exercises rather than isolate a second concept; the detector stays with its boundary test."
+
+[[budgets.baseline]]
+path = "xtask/tests/dependency_boundaries.rs"
+lines = 375
+reason = "One manifest-graph audit: dependency direction, external capability allowlists, versioned path edges, and registry publication roles are all properties of the same complete workspace package map. The publication contract deliberately joined this detector so a package cannot become publishable without its runtime dependency edges becoming registry-resolvable in the same proof; splitting those checks would parse a second graph and allow the two package censuses to drift."
+
+# The core crates carry an external allowlist as well as an internal one: the
+# capability test reads source, but a networking or process crate pulled in as
+# a dependency (socket2, mio, libc) would grant the same power from behind an
+# edge that test never opens. Listing every permitted third-party crate makes
+# adding one a deliberate, reviewed act rather than a silent capability gain.
+[[dependency_rules]]
+package = "kafka-wire-core"
+allowed_internal = []
+allowed_external = ["bytes", "thiserror"]
+
+[[dependency_rules]]
+package = "kafka-wire-schema"
+allowed_internal = []
+
+[[dependency_rules]]
+package = "kafka-wire-codegen"
+allowed_internal = ["kafka-wire-schema"]
+
+[[dependency_rules]]
+package = "kafka-wire"
+allowed_internal = ["kafka-wire-core"]
+allowed_external = ["bytes"]
+
+# The four compression codecs are the reason the crate boundary matters. Two of
+# them link C, and none belongs in the graph of a sans-I/O wire kernel.
+#
+# A record batch references no API message — messages reference batches — so this
+# sits BESIDE `kafka-wire`, not beneath it. Beneath would drag four
+# compression codecs, two of them C-linked, into the graph of a crate whose whole
+# purpose is a small sans-I/O runtime; above would force all 94 generated modules
+# on a caller that only wants to read a log segment.
+[[dependency_rules]]
+package = "kafka-wire-records"
+allowed_internal = ["kafka-wire-core"]
+allowed_external = ["bytes", "crc32c", "flate2", "lz4_flex", "snap", "thiserror", "zstd"]
+
+# The conformance corpus judges the protocol crates, so it must be able to reach
+# them; nothing may reach it. It is excluded from the workspace default members
+# and no other rule lists it, so this edge stays one-way by construction.
+#
+# `kafka-wire-schema` is a dev-only edge: the defaults comparison reads this
+# repository's lowered IR to hold Apache Kafka's reported defaults against it.
+# Reaching the semantic front end that fed the corpus is still judging — the IR
+# is one of the two independent readings being compared — not building the
+# protocol crate on top of the schema, which the direction above still forbids.
+[[dependency_rules]]
+package = "kafka-wire-conformance"
+allowed_internal = ["kafka-wire", "kafka-wire-records", "kafka-wire-schema", "kafka-wire-core"]
+
+# `kafka-wire-records` is here for one command and one reason. Compression encode
+# cannot be judged by byte identity — no two implementations of DEFLATE or zstd
+# make the same internal choices — so it is judged by whether Kafka can READ what
+# this repository wrote, which requires writing it. `records --refresh` therefore
+# re-encodes a batch with this crate and hands the result to the Java oracle. That
+# is courier work, not protocol semantics: xtask decides nothing about the bytes,
+# and `kafka-wire-conformance` still owns whether the answer is acceptable.
+[[dependency_rules]]
+package = "xtask"
+allowed_internal = ["kafka-wire-codegen", "kafka-wire-records"]
+
+# `std::os::unix::net` is a fully capable socket that sits outside `std::net`;
+# banning only `std::net` left a proven Unix-domain exfiltration path open.
+# `std::os::unix::fs` and `std::os::wasi` are the sibling platform escapes.
+[[capability_rules]]
+root = "crates/kafka-wire-core/src"
+forbidden = [
+  "std::fs",
+  "std::net",
+  "std::os::unix::net",
+  "std::os::unix::fs",
+  "std::os::wasi",
+  "std::process",
+  "tokio",
+  "async_std",
+]
+
+[[capability_rules]]
+root = "crates/kafka-wire/src"
+forbidden = [
+  "std::fs",
+  "std::net",
+  "std::os::unix::net",
+  "std::os::unix::fs",
+  "std::os::wasi",
+  "std::process",
+  "kafka_wire_schema",
+  "kafka_wire_codegen",
+  "tokio",
+  "async_std",
+]
+
+# Scoped to `src` rather than the whole crate, unlike `kafka-wire-conformance`: the
+# batch corpus under `spec/records/` is checked in and its test reads it, exactly
+# as the message corpus is read. The codec itself touches nothing.
+[[capability_rules]]
+root = "crates/kafka-wire-records/src"
+forbidden = [
+  "std::fs",
+  "std::net",
+  "std::os::unix::net",
+  "std::os::unix::fs",
+  "std::os::wasi",
+  "std::process",
+  "kafka_wire_schema",
+  "kafka_wire_codegen",
+  "kafka_wire",
+  "tokio",
+  "async_std",
+]
+
+[[capability_rules]]
+root = "crates/kafka-wire-schema/src"
+forbidden = ["std::net", "std::process", "tokio", "async_std"]
+
+# The conformance corpus is checked in precisely so that verifying it needs no
+# Java, no container, and no network. Banning process spawning across this whole
+# crate — tests included — is what makes that structural rather than a habit:
+# `cargo test` cannot regrow a dependency on the oracle jar without failing here.
+# `std::fs` is deliberately absent from this list; reading `spec/vectors/` is the
+# crate's entire job.
+[[capability_rules]]
+root = "crates/kafka-wire-conformance"
+forbidden = ["std::net", "std::process", "tokio", "async_std"]
+
+# `std::process` is owned rather than banned here: rustfmt is the sole authority
+# over generated layout, so exactly one file may spawn it. See the owner rule below.
+[[capability_rules]]
+root = "crates/kafka-wire-codegen/src"
+forbidden = ["std::net", "tokio", "async_std"]
+
+# Capability tokens are fully-qualified path prefixes, matched against the paths
+# each file actually names after use-tree and alias resolution. A token matches a
+# path that equals it or lives beneath it, so `std::fs` covers `std::fs::File`
+# however it was imported. Substring fragments such as `fs::` no longer belong
+# here: they could not see through a use group and matched prose as readily as code.
+[[capability_owner_rules]]
+root = "crates/kafka-wire-schema/src"
+token = "std::fs"
+allowed = ["crates/kafka-wire-schema/src/source/file.rs"]
+
+[[capability_owner_rules]]
+root = "crates/kafka-wire-codegen/src"
+token = "std::fs"
+# Sibling `_test.rs` owners may build on-disk failure fixtures only for the
+# filesystem domain they mirror; production access remains in the modules below.
+allowed = [
+  "crates/kafka-wire-codegen/src/lockfile.rs",
+  "crates/kafka-wire-codegen/src/output.rs",
+  "crates/kafka-wire-codegen/src/output_ownership.rs",
+  "crates/kafka-wire-codegen/src/output_staging.rs",
+  "crates/kafka-wire-codegen/src/output_test.rs",
+  "crates/kafka-wire-codegen/src/overrides.rs",
+  "crates/kafka-wire-codegen/src/overrides_test.rs",
+  "crates/kafka-wire-codegen/src/source.rs",
+]
+
+[[capability_owner_rules]]
+root = "crates/kafka-wire-codegen/src"
+token = "std::process"
+allowed = ["crates/kafka-wire-codegen/src/format.rs"]
+
+[[capability_owner_rules]]
+root = "xtask/src"
+token = "std::process::Command"
+# `fetch.rs` is the repository's only network capability. It is listed here so
+# the reach for HTTPS is a declared owner rather than an unnoticed spread of
+# process spawning, and so adding a second fetcher fails this boundary test.
+#
+# `vectors/oracle.rs` is the only file that may launch the Java byte oracle. It
+# spawns a JVM, never the network, and it is reached only from the human-invoked
+# `cargo xtask vectors --refresh`. Listing it here is what keeps
+# `cargo xtask vectors --check` — the half CI runs — provably Java-free: a second
+# file reaching for a subprocess under `vectors/` fails this boundary test.
+#
+# `records/oracle.rs` is the same arrangement for the record-batch corpus. It is
+# a second file rather than a reuse of the first because the two drive different
+# Java programs — a message oracle cannot author a batch — and listing both keeps
+# each one's reach declared.
+#
+# `defaults/oracle.rs` is the third: it drives the same `Oracle.java` the vector
+# oracle does, but through its `--defaults` mode and from its own human-invoked
+# command, so it is a separate file whose reach is declared here rather than a
+# subprocess spawned from somewhere under `defaults/` that this list never named.
+allowed = [
+  "xtask/src/commands.rs",
+  "xtask/src/defaults/oracle.rs",
+  "xtask/src/fetch.rs",
+  "xtask/src/records/oracle.rs",
+  "xtask/src/vectors/oracle.rs",
+]
+
+# Spawning is the whole reason `vectors/oracle.rs` is a separate file from
+# `vectors/oracle_lock.rs`, `vectors/refresh.rs`, and `vectors/check.rs`. The
+# rule above is what keeps that separation honest.

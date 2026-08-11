@@ -14,7 +14,7 @@ For each patch:
 5. Preserve the pinned Apache Kafka revision and generated-tree identity unless
    the patch is an explicit, reviewed corpus advance.
 
-Do not weaken a architecture check merely to make a change pass. A real exception needs
+Do not weaken an architecture check merely to make a change pass. A real exception needs
 a narrow rule, a written reason, an owner, and a removal condition.
 
 Participation is governed by [`CODE_OF_CONDUCT.md`](CODE_OF_CONDUCT.md).

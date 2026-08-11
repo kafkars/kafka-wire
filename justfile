@@ -12,6 +12,8 @@ generated-check:
 probe-check:
     cargo xtask generate-all --check-only
 
+architecture:
+    cargo architecture
 
 # Verify the broker-authored byte vectors. Pure Rust: no Java, no jar, no network.
 vectors-check:
@@ -43,7 +45,7 @@ test:
 doc:
     RUSTDOCFLAGS="-D warnings" cargo doc --workspace --all-features --no-deps
 
-check: generated-check probe-check vectors-check records-check fmt lint test doc
+check: generated-check probe-check architecture vectors-check records-check fmt lint test doc
 
 tree:
     find crates xtask spec -type f | sort
