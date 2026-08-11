@@ -1,0 +1,21 @@
+{
+  "schema": 1,
+  "generator": "kafka-wire-codegen 0.1.0",
+  "ir_version": 1,
+  "upstream_repository": "https://github.com/apache/kafka",
+  "upstream_commit": "678c0e07e4733c5a592e52046dc2c4e1625587f1",
+  "files": [
+    {
+      "path": "faithful.rs",
+      "sha256": "985e65aff01b5e9b8ce274afb2eca9b729d37e7d711d6c143669de11d88c3d1e"
+    },
+    {
+      "path": "edited.rs",
+      "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+    },
+    {
+      "path": "unprovenanced.rs",
+      "sha256": "84c750af3ab8cd734810a9830c7f533ab83b67eb78dab9f614dfb893a6f6917f"
+    }
+  ]
+}
