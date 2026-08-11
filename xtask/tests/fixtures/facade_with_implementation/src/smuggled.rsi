@@ -1,0 +1,10 @@
+// A fragment a facade includes, carrying implementation rather than a list.
+//
+// Resolving the include is only worth doing if what it brings in is judged. The
+// `pub use` here must be accepted and the function beside it must not.
+
+pub use crate::declared::VersionRange;
+
+pub fn smuggled_version() -> u16 {
+    4
+}
