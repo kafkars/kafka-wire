@@ -31,3 +31,7 @@ driver such as `kafka-driver` owns those policies.
 
 Apache-2.0. Apache Kafka is a trademark of the Apache Software Foundation. This
 project is independent and is not endorsed by the Apache Software Foundation.
+
+See [`CONTRIBUTING.md`](CONTRIBUTING.md),
+[`CODE_OF_CONDUCT.md`](CODE_OF_CONDUCT.md), and
+[`SECURITY.md`](SECURITY.md) for project participation and private reporting.
