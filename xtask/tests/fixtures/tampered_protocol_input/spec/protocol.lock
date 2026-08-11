@@ -1,0 +1,22 @@
+# A fixture lockfile whose second entry no longer describes the vendored bytes.
+# `FaithfulRequest.json` hashes correctly; `EditedRequest.json` does not, which
+# is what an upstream file edited after vendoring looks like.
+schema = 1
+
+[kafka]
+repository = "https://github.com/apache/kafka"
+commit = "678c0e07e4733c5a592e52046dc2c4e1625587f1"
+upstream_message_root = "clients/src/main/resources/common/message"
+vendored_root = "vendor"
+
+[[kafka.files]]
+path = "FaithfulRequest.json"
+sha256 = "881e4eaf8bf480487c8edd0c7271f00820e451ab46a0263cdd6b43771c99c3ae"
+
+[[kafka.files]]
+path = "EditedRequest.json"
+sha256 = "0000000000000000000000000000000000000000000000000000000000000000"
+
+[generator]
+ir_version = 1
+output = "crates/kafka-wire/src/generated"

@@ -1,0 +1,8 @@
+{
+  "apiKey": 18,
+  "type": "request",
+  "name": "FaithfulRequest",
+  "validVersions": "0-3",
+  "flexibleVersions": "3+",
+  "fields": []
+}
