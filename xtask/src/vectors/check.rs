@@ -79,7 +79,7 @@ pub(crate) fn check(workspace: &Path) -> Result<(), String> {
 }
 
 /// Compare one checked-in file against the cases its plan authors for it.
-fn judge_file(path: &str, plan: &Plan, version: i16, file: &VectorFile) -> Vec<String> {
+pub(crate) fn judge_file(path: &str, plan: &Plan, version: i16, file: &VectorFile) -> Vec<String> {
     let authored = plan
         .cases
         .iter()
@@ -101,8 +101,16 @@ fn judge_file(path: &str, plan: &Plan, version: i16, file: &VectorFile) -> Vec<S
         if case.name != vector.name {
             findings.push(format!("{at}: plan authors case `{}` here", case.name));
         }
+        if case.why != vector.why {
+            findings.push(format!("{at}: why has drifted from the plan"));
+        }
         if case.json_value != vector.json_value {
             findings.push(format!("{at}: json_value has drifted from the plan"));
+        }
+        if case.unknown_tagged_fields != vector.unknown_tagged_fields {
+            findings.push(format!(
+                "{at}: unknown_tagged_fields have drifted from the plan"
+            ));
         }
         if vector.message != plan.message
             || (plan.api_key.is_some() && vector.api_key != plan.api_key)

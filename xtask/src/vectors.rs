@@ -17,6 +17,11 @@ mod oracle;
 pub(crate) mod oracle_lock;
 mod refresh;
 
+#[cfg(test)]
+pub(crate) use check::judge_file;
+#[cfg(test)]
+pub(crate) use corpus::{Direction, Plan, PlanCase, SCHEMA, TaggedFieldPlan, Vector, VectorFile};
+
 use crate::cli::VectorsMode;
 
 pub(crate) fn run(mode: VectorsMode) -> Result<(), String> {

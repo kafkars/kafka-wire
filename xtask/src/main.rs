@@ -25,6 +25,8 @@ mod protocol_lock_test;
 #[cfg(test)]
 mod upstream_name_test;
 #[cfg(test)]
+mod vectors_check_test;
+#[cfg(test)]
 mod vendor_test;
 #[cfg(test)]
 mod vendor_transaction_test;

@@ -60,7 +60,7 @@ pub(crate) struct PlanCase {
 }
 
 /// One unknown tagged field, which no generated JSON converter can express.
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub(crate) struct TaggedFieldPlan {
     pub(crate) tag: u32,
     pub(crate) data_hex: String,
