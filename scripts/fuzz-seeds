@@ -12,10 +12,16 @@ case "$mode" in
         ;;
 esac
 
-root=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
-corpus="$root/fuzz/corpus/record_batch"
+root=$(cd -- "$(dirname -- "$0")/.." && pwd)
+record_corpus="$root/fuzz/corpus/record_batch"
+roundtrip_corpus="$root/fuzz/corpus/generated_roundtrip"
 stage=$(mktemp -d "${TMPDIR:-/tmp}/kafka-wire-fuzz-seeds.XXXXXX")
 trap 'rm -rf "$stage"' EXIT HUP INT TERM
+record_stage="$stage/record_batch"
+roundtrip_stage="$stage/generated_roundtrip"
+mapping="$stage/generated-dispatch.tsv"
+cases="$stage/generated-vectors.tsv"
+mkdir -p "$record_stage" "$roundtrip_stage"
 
 jq -r '.vectors[] | [.name, .hex] | @tsv' "$root/spec/records/vectors.json" |
 while IFS="$(printf '\t')" read -r name hex; do
@@ -25,13 +31,91 @@ while IFS="$(printf '\t')" read -r name hex; do
             exit 1
             ;;
     esac
-    printf '%s' "$hex" | xxd -r -p >"$stage/$name"
+    printf '%s' "$hex" | xxd -r -p >"$record_stage/$name"
 done
 
+awk '
+    /^[[:space:]]*[0-9]+ => \{/ {
+        selector = $1
+    }
+    /select_version\(version_selector,/ {
+        first = $0
+        sub(/^.*select_version\(version_selector, /, "", first)
+        sub(/,.*$/, "", first)
+    }
+    /round_trip::<kafka_wire::[A-Za-z0-9_]+>/ {
+        message = $0
+        sub(/^.*round_trip::<kafka_wire::/, "", message)
+        sub(/>.*/, "", message)
+        print message "\t" selector "\t" first
+    }
+' "$root/crates/kafka-wire/src/generated/fuzz_roundtrip.rs" >"$mapping"
+
+expected_messages=$(sed -n \
+    's/.*message_selector) % \([0-9][0-9]*\).*/\1/p' \
+    "$root/crates/kafka-wire/src/generated/fuzz_roundtrip.rs")
+actual_messages=$(wc -l <"$mapping" | tr -d ' ')
+if [ -z "$expected_messages" ] || [ "$actual_messages" -ne "$expected_messages" ]; then
+    printf 'generated dispatch mapping: expected %s messages, found %s\n' \
+        "${expected_messages:-unknown}" "$actual_messages" >&2
+    exit 1
+fi
+
+find "$root/spec/vectors" -type f -name '*.json' -print | LC_ALL=C sort |
+while IFS= read -r vector; do
+    jq -r '
+        .vectors as $vectors
+        | (($vectors
+            | map(select(.name | startswith("synthesized_populated_")))
+            | first) // $vectors[0])
+        | [.message, (.version | tostring), .hex]
+        | @tsv
+    ' "$vector"
+done >"$cases"
+
+while IFS="$(printf '\t')" read -r message version hex; do
+    case "$message" in
+        ''|*[!A-Za-z0-9_]*)
+            printf 'unsafe generated message name: %s\n' "$message" >&2
+            exit 1
+            ;;
+    esac
+    entry=$(awk -F '\t' -v message="$message" \
+        '$1 == message { print $2 ":" $3 }' "$mapping")
+    if [ -z "$entry" ]; then
+        printf 'generated message is absent from fuzz dispatch: %s\n' "$message" >&2
+        exit 1
+    fi
+    selector=${entry%%:*}
+    first=${entry#*:}
+    version_selector=$((version - first))
+    if [ "$version_selector" -lt 0 ]; then
+        printf 'version %s precedes generated range for %s\n' "$version" "$message" >&2
+        exit 1
+    fi
+    prefix=$(printf '%02x%02x%02x%02x' \
+        "$((selector % 256))" "$((selector / 256))" \
+        "$((version_selector % 256))" "$((version_selector / 256))")
+    printf '%s%s' "$prefix" "$hex" | xxd -r -p \
+        >"$roundtrip_stage/${message}_v${version}"
+done <"$cases"
+
+expected_cases=$(find "$root/spec/vectors" -type f -name '*.json' | wc -l | tr -d ' ')
+actual_cases=$(find "$roundtrip_stage" -type f | wc -l | tr -d ' ')
+if [ "$actual_cases" -ne "$expected_cases" ]; then
+    printf 'generated round-trip seeds: expected %s files, found %s\n' \
+        "$expected_cases" "$actual_cases" >&2
+    exit 1
+fi
+
 if [ "$mode" = "--check" ]; then
-    diff -qr "$stage" "$corpus"
+    diff -qr "$record_stage" "$record_corpus"
+    diff -qr "$roundtrip_stage" "$roundtrip_corpus"
     exit 0
 fi
 
-find "$corpus" -maxdepth 1 -type f -delete
-cp "$stage"/* "$corpus"/
+mkdir -p "$record_corpus" "$roundtrip_corpus"
+find "$record_corpus" -maxdepth 1 -type f -delete
+find "$roundtrip_corpus" -maxdepth 1 -type f -delete
+cp "$record_stage"/* "$record_corpus"/
+cp "$roundtrip_stage"/* "$roundtrip_corpus"/
