@@ -107,7 +107,7 @@ dependencies = [
 
 [[package]]
 name = "kafka-wire"
-version = "0.1.0"
+version = "0.1.0-rc.1"
 dependencies = [
  "bytes",
  "kafka-wire-core",
@@ -115,7 +115,7 @@ dependencies = [
 
 [[package]]
 name = "kafka-wire-core"
-version = "0.1.0"
+version = "0.1.0-rc.1"
 dependencies = [
  "bytes",
  "thiserror",
@@ -135,7 +135,7 @@ dependencies = [
 
 [[package]]
 name = "kafka-wire-records"
-version = "0.1.0"
+version = "0.1.0-rc.1"
 dependencies = [
  "bytes",
  "crc32c",
@@ -149,7 +149,7 @@ dependencies = [
 
 [[package]]
 name = "kafka-wire-schema"
-version = "0.1.0"
+version = "0.1.0-rc.1"
 dependencies = [
  "heck",
  "serde",

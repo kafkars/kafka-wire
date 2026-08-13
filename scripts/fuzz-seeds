@@ -1,0 +1,37 @@
+#!/bin/sh
+set -eu
+
+export LC_ALL=C
+
+mode=${1:-write}
+case "$mode" in
+    write|--check) ;;
+    *)
+        printf 'usage: %s [--check]\n' "$0" >&2
+        exit 2
+        ;;
+esac
+
+root=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+corpus="$root/fuzz/corpus/record_batch"
+stage=$(mktemp -d "${TMPDIR:-/tmp}/kafka-wire-fuzz-seeds.XXXXXX")
+trap 'rm -rf "$stage"' EXIT HUP INT TERM
+
+jq -r '.vectors[] | [.name, .hex] | @tsv' "$root/spec/records/vectors.json" |
+while IFS="$(printf '\t')" read -r name hex; do
+    case "$name" in
+        ''|*[!a-z0-9_]*)
+            printf 'unsafe RecordBatch vector name: %s\n' "$name" >&2
+            exit 1
+            ;;
+    esac
+    printf '%s' "$hex" | xxd -r -p >"$stage/$name"
+done
+
+if [ "$mode" = "--check" ]; then
+    diff -qr "$stage" "$corpus"
+    exit 0
+fi
+
+find "$corpus" -maxdepth 1 -type f -delete
+cp "$stage"/* "$corpus"/

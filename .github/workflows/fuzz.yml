@@ -1,0 +1,71 @@
+name: Fuzz
+
+on:
+  pull_request:
+    paths:
+      - .github/workflows/fuzz.yml
+      - Cargo.lock
+      - Cargo.toml
+      - crates/**
+      - fuzz/**
+      - scripts/fuzz-seeds
+      - spec/**
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/fuzz.yml
+      - Cargo.lock
+      - Cargo.toml
+      - crates/**
+      - fuzz/**
+      - scripts/fuzz-seeds
+      - spec/**
+  schedule:
+    - cron: "17 6 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: fuzz-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  CARGO_TERM_COLOR: always
+  RUST_BACKTRACE: "1"
+
+jobs:
+  fuzz:
+    name: build and smoke fuzz targets
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Check out kafka-wire
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Install pinned nightly toolchain
+        shell: bash
+        run: rustup toolchain install nightly-2026-08-01 --profile minimal
+
+      - name: Install pinned cargo-fuzz
+        shell: bash
+        run: cargo install cargo-fuzz --locked --version 0.13.2
+
+      - name: Verify checked RecordBatch seeds
+        shell: bash
+        run: scripts/fuzz-seeds --check
+
+      - name: Build every fuzz target
+        shell: bash
+        working-directory: fuzz
+        run: cargo +nightly-2026-08-01 fuzz build
+
+      - name: Run scheduled smoke campaigns
+        if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+        shell: bash
+        working-directory: fuzz
+        run: |
+          for target in jsonc schema_values wire_decode record_batch generated_roundtrip; do
+            cargo +nightly-2026-08-01 fuzz run "$target" -- -runs=256
+          done
