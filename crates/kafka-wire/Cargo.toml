@@ -13,7 +13,7 @@ categories = ["encoding", "network-programming"]
 
 [dependencies]
 bytes.workspace = true
-kafka-wire-core = { version = "0.1.0-rc.1", path = "../kafka-wire-core" }
+kafka-wire-core = { version = "0.1.0-rc.2", path = "../kafka-wire-core" }
 
 [dev-dependencies]
 bytes.workspace = true

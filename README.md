@@ -113,8 +113,8 @@ inputs and requires network access.
 
 ## Status
 
-Version 0.1.0-rc.1 is the first release candidate for Kafka clients and wire
-tooling. The public surfaces of the three runtime crates are compatibility-
+Version 0.1.0-rc.2 is the current release candidate for Kafka clients and wire
+tooling. The public surfaces of the three runtime crates remain compatibility-
 protected against v0.1.0-rc.1 while qualification through downstream clients
 continues. Compatible additions may still land before 0.1.0.
 

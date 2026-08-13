@@ -12,7 +12,7 @@ const PUBLIC_PACKAGES: [(&str, &str); 3] = [
     ("kafka-wire-core", "crates/kafka-wire-core/Cargo.toml"),
     ("kafka-wire-records", "crates/kafka-wire-records/Cargo.toml"),
 ];
-const RELEASE_VERSION: &str = "0.1.0-rc.1";
+const RELEASE_VERSION: &str = "0.1.0-rc.2";
 const REPOSITORY: &str = "https://github.com/kafkars/kafka-wire";
 
 #[test]

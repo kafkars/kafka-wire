@@ -6,6 +6,8 @@ v0.1.0-rc.1; compatible additions may still land before 0.1.0.
 
 ## Unreleased
 
+## 0.1.0-rc.2 - 2026-08-13
+
 ### Added
 
 - Kafka-authored control and delete-horizon RecordBatch fixtures.
