@@ -1,0 +1,74 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  CARGO_TERM_COLOR: always
+  RUST_BACKTRACE: "1"
+
+jobs:
+  validate:
+    name: validate (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    steps:
+      - name: Check out kafka-wire
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Install pinned Rust toolchain
+        shell: bash
+        run: rustup toolchain install 1.88.0 --profile minimal --component clippy,rustfmt
+
+      - name: Fetch locked dependencies
+        shell: bash
+        run: cargo fetch --locked
+
+      - name: Run the complete repository gate
+        shell: bash
+        env:
+          CARGO_NET_OFFLINE: "true"
+          RUSTDOCFLAGS: "-D warnings"
+        run: |
+          cargo xtask generated-check
+          cargo xtask generate-all --check-only
+          cargo architecture
+          cargo xtask vectors --check
+          cargo xtask records --check
+          cargo fmt --all --check
+          cargo clippy --workspace --all-targets --all-features -- -D warnings
+          cargo test --locked --offline --workspace --all-features
+          cargo doc --workspace --all-features --no-deps
+
+  package:
+    name: package release candidate
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Check out kafka-wire
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Install pinned Rust toolchain
+        shell: bash
+        run: rustup toolchain install 1.88.0 --profile minimal
+
+      - name: Fetch locked dependencies
+        shell: bash
+        run: cargo fetch --locked
+
+      - name: Qualify release archives
+        shell: bash
+        run: scripts/package-rc

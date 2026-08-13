@@ -1,0 +1,35 @@
+#!/bin/sh
+set -eu
+
+export CARGO_NET_OFFLINE=true
+export LC_ALL=C
+
+version=$(sed -n 's/^version = "\([^"]*\)"/\1/p' Cargo.toml)
+test -n "$version"
+
+stage=$(mktemp -d "${TMPDIR:-/tmp}/kafka-wire-rc.XXXXXX")
+trap 'rm -rf "$stage"' EXIT HUP INT TERM
+
+core="kafka-wire-core-$version"
+wire="kafka-wire-$version"
+records="kafka-wire-records-$version"
+core_patch="patch.crates-io.kafka-wire-core.path=\"crates/kafka-wire-core\""
+
+cargo package --locked --offline -p kafka-wire-core
+cargo package --locked --offline --no-verify -p kafka-wire --config "$core_patch"
+cargo package --locked --offline --no-verify -p kafka-wire-records --config "$core_patch"
+
+for package in "$core" "$wire" "$records"; do
+    tar -xzf "target/package/$package.crate" -C "$stage"
+    grep -Fq "version = \"$version\"" "$stage/$package/Cargo.toml"
+    grep -Fq 'repository = "https://github.com/kafkars/kafka-wire"' \
+        "$stage/$package/Cargo.toml"
+done
+
+extracted_patch="patch.crates-io.kafka-wire-core.path=\"$stage/$core\""
+cargo check --locked --offline --manifest-path "$stage/$wire/Cargo.toml" \
+    --config "$extracted_patch"
+cargo check --locked --offline --manifest-path "$stage/$records/Cargo.toml" \
+    --config "$extracted_patch"
+
+printf 'qualified %s, %s, and %s\n' "$core" "$wire" "$records"
