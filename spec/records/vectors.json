@@ -48,6 +48,16 @@
       "hex": "00000000000000000000003f0000002a0278e3789a0010000000000000018bcfe568000000018bcfe568000000000000003039000700000064000000011a000000046b310a76616c756500"
     },
     {
+      "name": "committed_transaction_control_batch",
+      "why": "A transaction marker is a real control record, not merely a user record under attribute bit 5. Kafka's control writer supplies the versioned COMMIT key and coordinator-epoch value while the header carries both transactional and control state.",
+      "hex": "0000000000000000000000420000002a02971ed5fa0030000000000000018bcfe568000000018bcfe5680000000000000030390007ffffffff000000012000000008000000010c00000000000b00"
+    },
+    {
+      "name": "tombstone_with_delete_horizon",
+      "why": "Compaction records the tombstone-retention deadline in baseTimestamp and sets attribute bit 6. Without a Kafka-authored horizon batch, an implementation could silently collapse that deadline into an ordinary record timestamp.",
+      "hex": "00000000000000000000003dffffffff02da36985d0040000000000000018bd01c56800000018bcfe56800ffffffffffffffffffffffffffff000000011600ffb9b70300046b310100"
+    },
+    {
       "name": "log_append_time",
       "why": "The timestamp-type attribute is bit 3. Under LogAppendTime Kafka stamps the batch rather than the record, so the bit and the timestamps must be read together.",
       "hex": "00000000000000000000003dffffffff0264f6ea410008000000000000018bcfe56800ffffffffffffffffffffffffffffffffffffffffffff0000000116000000010a76616c756500"

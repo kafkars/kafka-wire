@@ -23,9 +23,9 @@ source_repository = "https://github.com/apache/kafka"
 source_commit = "678c0e07e4733c5a592e52046dc2c4e1625587f1"
 gradle_task = ":clients:jar"
 jar_name = "kafka-clients-4.4.0-SNAPSHOT.jar"
-jar_sha256 = "ca6d2d9a366104a9abe7663f61f0805266063967e06c8afa927999dc3a50f9cc"
-jdk_version = "21.0.5"
-jdk_build = "Oracle GraalVM 21.0.5+9.1 (build 21.0.5+9-LTS-jvmci-23.1-b48)"
+jar_sha256 = "b85301d7e84cf11ab562618583621b7adeb8e0d135ecfd82eb5979becc07a20c"
+jdk_version = "21.0.12"
+jdk_build = "Oracle GraalVM 21.0.12+7.1 (build 21.0.12+7-LTS-jvmci-23.1-b96)"
 
 # Kafka's build.gradle sets `preserveFileTimestamps = true` and
 # `reproducibleFileOrder = false`, so rebuilding this commit produces a jar with
@@ -42,7 +42,7 @@ emits clients/build/libs/kafka-clients-4.4.0-SNAPSHOT.jar and skips the plain \
 so KAFKA_ORACLE_CLASSPATH must supply jackson-databind, jackson-core, and \
 jackson-annotations from the same resolved compile classpath.
 
-`jar_sha256` was re-recorded from f1e150c3 to 82a80dfc and later to ca6d2d9a \
+`jar_sha256` was re-recorded from f1e150c3 to 82a80dfc, ca6d2d9a, and b85301d7 \
 after rebuilds of this same commit produced differing digests — the timestamp \
 case above. Neither digest was re-recorded merely because the source tree was \
 clean at 678c0e07. For each rebuilt jar, `cargo xtask vectors --refresh` was run \

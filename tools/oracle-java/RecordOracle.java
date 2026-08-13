@@ -49,12 +49,15 @@ import org.apache.kafka.common.compress.Compression;
 import org.apache.kafka.common.header.Header;
 import org.apache.kafka.common.header.internals.RecordHeader;
 import org.apache.kafka.common.record.TimestampType;
+import org.apache.kafka.common.record.internal.ControlRecordType;
 import org.apache.kafka.common.record.internal.DefaultRecordBatch;
+import org.apache.kafka.common.record.internal.EndTransactionMarker;
 import org.apache.kafka.common.record.internal.MemoryRecords;
 import org.apache.kafka.common.record.internal.MemoryRecordsBuilder;
 import org.apache.kafka.common.record.internal.MutableRecordBatch;
 import org.apache.kafka.common.record.internal.Record;
 import org.apache.kafka.common.record.internal.RecordBatch;
+import org.apache.kafka.common.utils.internals.ByteBufferOutputStream;
 
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
@@ -252,18 +255,7 @@ public final class RecordOracle {
         ByteBuffer buffer = ByteBuffer.allocate(BUFFER_BYTES);
         // The fullest overload, with every field supplied. The shorter ones
         // default the log-append timestamp from the wall clock.
-        MemoryRecordsBuilder builder = MemoryRecords.builder(
-                buffer,
-                RecordBatch.MAGIC_VALUE_V2,
-                compression(text(batch, "compression", "none")),
-                timestampType(text(batch, "timestampType", "CreateTime")),
-                longAt(batch, "baseOffset", 0L),
-                RecordBatch.NO_TIMESTAMP,
-                longAt(batch, "producerId", RecordBatch.NO_PRODUCER_ID),
-                (short) intAt(batch, "producerEpoch", RecordBatch.NO_PRODUCER_EPOCH),
-                intAt(batch, "baseSequence", RecordBatch.NO_SEQUENCE),
-                boolAt(batch, "transactional"),
-                intAt(batch, "partitionLeaderEpoch", RecordBatch.NO_PARTITION_LEADER_EPOCH));
+        MemoryRecordsBuilder builder = builder(buffer, batch);
 
         long offset = longAt(batch, "baseOffset", 0L);
         int index = 0;
@@ -271,12 +263,23 @@ public final class RecordOracle {
             // Offsets must increase strictly, so a plan that does not state a
             // delta gets the record's position. Stating one is for the cases
             // that are about the delta itself.
-            builder.appendWithOffset(
-                    offset + intAt(record, "offsetDelta", index),
-                    longAt(record, "timestamp", 0L),
-                    bytes(record, "key"),
-                    bytes(record, "value"),
-                    headers(record));
+            long recordOffset = offset + intAt(record, "offsetDelta", index);
+            if (boolAt(batch, "control")) {
+                if (recordOffset != offset + index) {
+                    throw new OracleException("control record offsets must be consecutive");
+                }
+                ControlRecordType type = ControlRecordType.valueOf(required(record, "controlType").asText());
+                EndTransactionMarker marker = new EndTransactionMarker(
+                        type, required(record, "coordinatorEpoch").asInt());
+                builder.appendEndTxnMarker(longAt(record, "timestamp", 0L), marker);
+            } else {
+                builder.appendWithOffset(
+                        recordOffset,
+                        longAt(record, "timestamp", 0L),
+                        bytes(record, "key"),
+                        bytes(record, "value"),
+                        headers(record));
+            }
             index += 1;
         }
 
@@ -284,6 +287,30 @@ public final class RecordOracle {
         byte[] out = new byte[written.remaining()];
         written.get(out);
         return out;
+    }
+
+    /** Select Kafka's complete builder when a batch needs the control or horizon bits. */
+    private static MemoryRecordsBuilder builder(ByteBuffer buffer, JsonNode batch) {
+        Compression codec = compression(text(batch, "compression", "none"));
+        TimestampType timestamps = timestampType(text(batch, "timestampType", "CreateTime"));
+        long baseOffset = longAt(batch, "baseOffset", 0L);
+        long producerId = longAt(batch, "producerId", RecordBatch.NO_PRODUCER_ID);
+        short producerEpoch = (short) intAt(batch, "producerEpoch", RecordBatch.NO_PRODUCER_EPOCH);
+        int baseSequence = intAt(batch, "baseSequence", RecordBatch.NO_SEQUENCE);
+        boolean transactional = boolAt(batch, "transactional");
+        boolean control = boolAt(batch, "control");
+        int leaderEpoch = intAt(batch, "partitionLeaderEpoch", RecordBatch.NO_PARTITION_LEADER_EPOCH);
+        long deleteHorizonMs = longAt(batch, "deleteHorizonMs", RecordBatch.NO_TIMESTAMP);
+
+        if (!control && deleteHorizonMs == RecordBatch.NO_TIMESTAMP) {
+            return MemoryRecords.builder(buffer, RecordBatch.MAGIC_VALUE_V2, codec, timestamps,
+                    baseOffset, RecordBatch.NO_TIMESTAMP, producerId, producerEpoch, baseSequence,
+                    transactional, leaderEpoch);
+        }
+
+        return new MemoryRecordsBuilder(new ByteBufferOutputStream(buffer), RecordBatch.MAGIC_VALUE_V2,
+                codec, timestamps, baseOffset, RecordBatch.NO_TIMESTAMP, producerId, producerEpoch,
+                baseSequence, transactional, control, leaderEpoch, buffer.remaining(), deleteHorizonMs);
     }
 
     /** Lay out the header Kafka retains when compaction removes every record. */

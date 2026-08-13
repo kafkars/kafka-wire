@@ -75,7 +75,7 @@ fn every_uncompressed_batch_decodes_and_re_encodes_to_the_same_bytes() {
         failures.join("\n\n")
     );
     assert!(
-        checked >= 11,
+        checked >= 14,
         "only {checked} uncompressed batch(es) were checked; the corpus should carry more"
     );
 }
@@ -235,6 +235,21 @@ fn the_uncompressed_vectors_carry_the_shapes_that_discriminate() {
     assert_eq!(txn.base_sequence, 100);
     assert_eq!(txn.partition_leader_epoch, 42);
     assert!(!named("one_record_no_key").is_transactional);
+
+    // Control records and delete horizons are independent batch attributes.
+    let control = named("committed_transaction_control_batch");
+    assert!(control.is_control);
+    assert!(control.is_transactional);
+    assert_eq!(control.producer_id, 12345);
+    assert_eq!(control.producer_epoch, 7);
+    assert_eq!(control.partition_leader_epoch, 42);
+    assert_eq!(control.records.len(), 1);
+    let horizon = named("tombstone_with_delete_horizon");
+    assert!(horizon.has_delete_horizon);
+    assert!(!horizon.is_control);
+    assert_eq!(horizon.base_timestamp, 1_700_003_600_000);
+    assert_eq!(horizon.records[0].timestamp_delta, -3_600_000);
+    assert_eq!(horizon.records[0].value, None);
 
     // Header values are nullable; header keys are not.
     let headers = &named("headers_on_one_record").records[0].headers;
