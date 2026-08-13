@@ -31,9 +31,10 @@ kafka-wire-core       versions, strings, UUIDs, codecs, decode limits
 ```
 
 The caller owns sockets, correlation allocation, version negotiation, routing,
-retries, and deadlines. Peer-controlled lengths, nesting, retained allocation,
-decompression, and outbound frames are checked against explicit limits before
-they consume the corresponding resource.
+retries, and deadlines. Peer-controlled frame and field lengths, array counts,
+tagged fields, decompression, and outbound frames are bounded during parsing.
+Generated values expose recursive retained-footprint accounting for caller
+admission policy.
 
 ## Crates
 

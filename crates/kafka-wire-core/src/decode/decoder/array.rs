@@ -89,8 +89,8 @@ impl Decoder {
     /// Reads and validates a legacy nullable array length.
     ///
     /// The `int32` `-1` sentinel decodes to `None`; any other negative length is
-    /// malformed. A present length is bounded by the element budget and by the
-    /// bytes that remain before it can back a reservation.
+    /// malformed. A present length is bounded by the configured element budget
+    /// before it can back a reservation.
     pub fn read_nullable_array_len(&mut self) -> Result<Option<BoundedCount>, DecodeError> {
         let offset = self.offset();
         let length = self.read_i32()?;
@@ -116,7 +116,8 @@ impl Decoder {
     /// Reads and validates a compact nullable array length.
     ///
     /// The varint `0` sentinel decodes to `None`; otherwise the stored count is
-    /// `varint - 1`, bounded by the element budget and by the bytes that remain.
+    /// `varint - 1`, bounded by the configured element budget before it can back
+    /// a reservation.
     pub fn read_compact_nullable_array_len(&mut self) -> Result<Option<BoundedCount>, DecodeError> {
         let offset = self.offset();
         let encoded = self.read_unsigned_varint()?;
