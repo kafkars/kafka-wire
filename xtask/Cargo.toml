@@ -9,11 +9,11 @@ publish = false
 
 [dependencies]
 bytes.workspace = true
-kafka-wire-codegen = { path = "../crates/kafka-wire-codegen" }
+kafka-wire-codegen = { version = "0.1.0-rc.1", path = "../crates/kafka-wire-codegen" }
 # `records --refresh` asks Apache Kafka to read bytes THIS repository wrote, which
 # means it has to write them; the compressor that does lives here. xtask carries
 # those bytes to the oracle and holds no opinion about them.
-kafka-wire-records = { path = "../crates/kafka-wire-records" }
+kafka-wire-records = { version = "0.1.0-rc.1", path = "../crates/kafka-wire-records" }
 serde.workspace = true
 serde_json.workspace = true
 sha2.workspace = true

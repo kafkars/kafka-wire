@@ -13,9 +13,9 @@ publish = false
 
 [dependencies]
 bytes.workspace = true
-kafka-wire = { path = "../kafka-wire" }
-kafka-wire-records = { path = "../kafka-wire-records" }
-kafka-wire-core = { path = "../kafka-wire-core" }
+kafka-wire = { version = "0.1.0-rc.1", path = "../kafka-wire" }
+kafka-wire-records = { version = "0.1.0-rc.1", path = "../kafka-wire-records" }
+kafka-wire-core = { version = "0.1.0-rc.1", path = "../kafka-wire-core" }
 serde.workspace = true
 serde_json.workspace = true
 
@@ -24,7 +24,7 @@ serde_json.workspace = true
 # generator renders from. It is a test-only edge: the corpus judges the protocol
 # crate, and reaching the front end that fed it is judging, not building on it.
 [dev-dependencies]
-kafka-wire-schema = { path = "../kafka-wire-schema" }
+kafka-wire-schema = { version = "0.1.0-rc.1", path = "../kafka-wire-schema" }
 toml.workspace = true
 
 [lints]
