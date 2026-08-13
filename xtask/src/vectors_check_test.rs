@@ -39,6 +39,21 @@ fn changed_unknown_tagged_bytes_are_rejected() {
     );
 }
 
+#[test]
+fn framing_vector_cannot_invent_an_api_key() {
+    let (mut plan, mut file) = matching_pair();
+    plan.api_key = None;
+    plan.direction = Direction::Framing;
+    file.vectors[0].direction = Direction::Framing;
+
+    let findings = judge_file("spec/vectors/Example/v3.json", &plan, 3, &file);
+
+    assert_eq!(
+        findings,
+        ["spec/vectors/Example/v3.json [non_default]: message identity disagrees with the plan"]
+    );
+}
+
 fn matching_pair() -> (Plan, VectorFile) {
     let tagged_field = TaggedFieldPlan {
         tag: 7,

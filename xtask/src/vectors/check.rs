@@ -112,9 +112,7 @@ pub(crate) fn judge_file(path: &str, plan: &Plan, version: i16, file: &VectorFil
                 "{at}: unknown_tagged_fields have drifted from the plan"
             ));
         }
-        if vector.message != plan.message
-            || (plan.api_key.is_some() && vector.api_key != plan.api_key)
-        {
+        if vector.message != plan.message || vector.api_key != plan.api_key {
             findings.push(format!("{at}: message identity disagrees with the plan"));
         }
         if vector.direction != plan.direction || vector.version != version {
