@@ -1,4 +1,6 @@
-<h1 align="center">kafka-wire</h1>
+<p align="center">
+  <img src="./kafka-wire-logo.svg" alt="kafka-wire" width="720">
+</p>
 
 <p align="center"><strong>Generated Kafka messages and record batches for Rust.</strong></p>
 <p align="center">Sans-I/O. Version-aware. Bounded at every peer-controlled boundary.</p>
