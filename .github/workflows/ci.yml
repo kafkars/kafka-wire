@@ -55,6 +55,7 @@ jobs:
 
   package:
     name: package release candidate
+    needs: validate
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
@@ -72,3 +73,12 @@ jobs:
       - name: Qualify release archives
         shell: bash
         run: scripts/package-rc
+
+      - name: Retain qualified release archives
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: kafka-wire-release-candidate-${{ github.sha }}
+          path: target/package/*.crate
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 30

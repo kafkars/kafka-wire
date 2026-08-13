@@ -27,9 +27,20 @@ for package in "$core" "$wire" "$records"; do
 done
 
 extracted_patch="patch.crates-io.kafka-wire-core.path=\"$stage/$core\""
-cargo check --locked --offline --manifest-path "$stage/$wire/Cargo.toml" \
+RUSTDOCFLAGS="-D warnings"
+export RUSTDOCFLAGS
+
+cargo test --locked --offline --all-features --manifest-path "$stage/$core/Cargo.toml"
+cargo test --locked --offline --all-features --manifest-path "$stage/$wire/Cargo.toml" \
     --config "$extracted_patch"
-cargo check --locked --offline --manifest-path "$stage/$records/Cargo.toml" \
+cargo test --locked --offline --all-features --manifest-path "$stage/$records/Cargo.toml" \
     --config "$extracted_patch"
+
+cargo doc --locked --offline --all-features --no-deps \
+    --manifest-path "$stage/$core/Cargo.toml"
+cargo doc --locked --offline --all-features --no-deps \
+    --manifest-path "$stage/$wire/Cargo.toml" --config "$extracted_patch"
+cargo doc --locked --offline --all-features --no-deps \
+    --manifest-path "$stage/$records/Cargo.toml" --config "$extracted_patch"
 
 printf 'qualified %s, %s, and %s\n' "$core" "$wire" "$records"
