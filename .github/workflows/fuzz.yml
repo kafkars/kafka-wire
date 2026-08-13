@@ -2,24 +2,8 @@ name: Fuzz
 
 on:
   pull_request:
-    paths:
-      - .github/workflows/fuzz.yml
-      - Cargo.lock
-      - Cargo.toml
-      - crates/**
-      - fuzz/**
-      - scripts/fuzz-seeds
-      - spec/**
   push:
     branches: [main]
-    paths:
-      - .github/workflows/fuzz.yml
-      - Cargo.lock
-      - Cargo.toml
-      - crates/**
-      - fuzz/**
-      - scripts/fuzz-seeds
-      - spec/**
   schedule:
     - cron: "17 6 * * 1"
   workflow_dispatch:
@@ -43,33 +27,66 @@ jobs:
     steps:
       - name: Check out kafka-wire
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+
+      - name: Classify fuzz-sensitive changes
+        id: changes
+        shell: bash
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
+          EVENT_NAME: ${{ github.event_name }}
+          HEAD_SHA: ${{ github.sha }}
+        run: |
+          relevant=true
+          if [[ "$EVENT_NAME" == "pull_request" || "$EVENT_NAME" == "push" ]]; then
+            if [[ -n "$BASE_SHA" ]] && git cat-file -e "$BASE_SHA^{commit}" &&
+              git diff --quiet "$BASE_SHA" "$HEAD_SHA" -- \
+                .github/workflows/fuzz.yml Cargo.lock Cargo.toml crates fuzz \
+                scripts/fuzz-seeds spec; then
+              relevant=false
+            fi
+          fi
+          printf 'relevant=%s\n' "$relevant" >>"$GITHUB_OUTPUT"
+
+      - name: Report unchanged fuzz surface
+        if: steps.changes.outputs.relevant != 'true'
+        shell: bash
+        run: echo "No fuzz-sensitive paths changed; the required status is satisfied."
 
       - name: Install pinned nightly toolchain
+        if: steps.changes.outputs.relevant == 'true'
         shell: bash
         run: rustup toolchain install nightly-2026-08-01 --profile minimal
 
       - name: Install pinned cargo-fuzz
+        if: steps.changes.outputs.relevant == 'true'
         shell: bash
         run: cargo +nightly-2026-08-01 install cargo-fuzz --locked --version 0.13.2
 
       - name: Verify locked fuzz dependencies
+        if: steps.changes.outputs.relevant == 'true'
         shell: bash
         run: >-
           cargo +nightly-2026-08-01 metadata --locked
           --manifest-path fuzz/Cargo.toml --format-version 1 --no-deps
           > /dev/null
 
-      - name: Verify checked RecordBatch seeds
+      - name: Verify checked fuzz seeds
+        if: steps.changes.outputs.relevant == 'true'
         shell: bash
         run: scripts/fuzz-seeds --check
 
       - name: Build every fuzz target
+        if: steps.changes.outputs.relevant == 'true'
         shell: bash
         working-directory: fuzz
         run: cargo +nightly-2026-08-01 fuzz build
 
       - name: Run scheduled smoke campaigns
-        if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+        if: >-
+          steps.changes.outputs.relevant == 'true' &&
+          (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch')
         shell: bash
         working-directory: fuzz
         run: |
