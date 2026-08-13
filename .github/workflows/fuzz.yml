@@ -52,6 +52,13 @@ jobs:
         shell: bash
         run: cargo +nightly-2026-08-01 install cargo-fuzz --locked --version 0.13.2
 
+      - name: Verify locked fuzz dependencies
+        shell: bash
+        run: >-
+          cargo +nightly-2026-08-01 metadata --locked
+          --manifest-path fuzz/Cargo.toml --format-version 1 --no-deps
+          > /dev/null
+
       - name: Verify checked RecordBatch seeds
         shell: bash
         run: scripts/fuzz-seeds --check
