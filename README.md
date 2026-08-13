@@ -87,7 +87,8 @@ The generated tree is pinned to Apache Kafka commit
 
 - 201 pinned upstream schemas: 193 generated and 8 explicitly retired upstream
 - 1,392 Kafka-authored byte vectors across 638 files
-- 16 record-batch fixtures covering uncompressed, gzip, LZ4, Snappy, and Zstandard data
+- 18 record-batch fixtures covering uncompressed, gzip, LZ4, Snappy, and
+  Zstandard data, including control and delete-horizon batches
 - 99 generated files with per-input provenance and a checked tree manifest
 - adversarial generation probes, architecture boundaries, fuzz targets, lints, tests, and rustdoc
 
@@ -113,8 +114,9 @@ inputs and requires network access.
 ## Status
 
 Version 0.1.0-rc.1 is the first release candidate for Kafka clients and wire
-tooling. APIs may still change before 0.1.0 while the public package surface is
-qualified by downstream clients.
+tooling. The public surfaces of the three runtime crates are compatibility-
+protected against v0.1.0-rc.1 while qualification through downstream clients
+continues. Compatible additions may still land before 0.1.0.
 
 ## License
 
