@@ -20,11 +20,11 @@ resolver = "2"
 exclude = ["fuzz"]
 
 [workspace.package]
-version = "0.1.0"
+version = "0.1.0-rc.1"
 edition = "2024"
 rust-version = "1.88"
 license = "Apache-2.0"
-repository = "https://github.com/kafkars/wire"
+repository = "https://github.com/kafkars/kafka-wire"
 
 [workspace.dependencies]
 bytes = "1.10"

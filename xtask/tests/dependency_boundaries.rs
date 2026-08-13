@@ -53,6 +53,7 @@ fn dependency_violations(
     rules: &[DependencyRule],
     versioned_path_packages: &[&str],
 ) -> Vec<String> {
+    let package_version = env!("CARGO_PKG_VERSION");
     let rules_by_package = rules
         .iter()
         .map(|rule| (rule.package.as_str(), rule))
@@ -104,11 +105,11 @@ fn dependency_violations(
             if internal.contains(dependency) {
                 let expected_path = format!("../{dependency}");
                 if versioned_path_packages.contains(package.as_str())
-                    && !is_exact_versioned_path(specification, &expected_path, "0.1.0")
+                    && !is_exact_versioned_path(specification, &expected_path, package_version)
                 {
                     violations.push(format!(
                         "{package} dependency {dependency} must be exactly \
-                         {{ version = \"0.1.0\", path = \"{expected_path}\" }}"
+                         {{ version = \"{package_version}\", path = \"{expected_path}\" }}"
                     ));
                 }
                 if !permitted_internal.contains(dependency) {
@@ -318,10 +319,8 @@ fn a_packaged_internal_dependency_without_a_version_is_rejected() {
     let violations = dependency_violations(&root, &rules, &["fixture-wire"]);
 
     assert!(
-        violations.iter().any(|violation| violation.contains(
-            "fixture-wire dependency fixture-protocol must be exactly \
-             { version = \"0.1.0\", path = \"../fixture-protocol\" }"
-        )),
+        violations.iter().any(|violation| violation
+            .contains("fixture-wire dependency fixture-protocol must be exactly")),
         "the dependency detector accepted a packaged path-only edge: {violations:?}"
     );
 }

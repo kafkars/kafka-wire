@@ -12,6 +12,8 @@ const PUBLIC_PACKAGES: [(&str, &str); 3] = [
     ("kafka-wire-core", "crates/kafka-wire-core/Cargo.toml"),
     ("kafka-wire-records", "crates/kafka-wire-records/Cargo.toml"),
 ];
+const RELEASE_VERSION: &str = "0.1.0-rc.1";
+const REPOSITORY: &str = "https://github.com/kafkars/kafka-wire";
 
 #[test]
 fn public_package_metadata_and_policy_files_are_complete() {
@@ -20,11 +22,15 @@ fn public_package_metadata_and_policy_files_are_complete() {
     let workspace = parse(&root.join("Cargo.toml"));
     assert_eq!(
         workspace["workspace"]["package"]["version"].as_str(),
-        Some("0.1.0")
+        Some(RELEASE_VERSION)
     );
     assert_eq!(
         workspace["workspace"]["package"]["license"].as_str(),
         Some("Apache-2.0")
+    );
+    assert_eq!(
+        workspace["workspace"]["package"]["repository"].as_str(),
+        Some(REPOSITORY)
     );
 
     for (name, manifest_path) in PUBLIC_PACKAGES {

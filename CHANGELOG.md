@@ -1,10 +1,12 @@
 # Changelog
 
 All notable changes to the public Rust packages are recorded here. This project
-uses semantic versioning after publication; unreleased APIs may still change
-while the 0.1 beta is being qualified.
+uses semantic versioning after publication; release-candidate APIs may still
+change before 0.1.0.
 
 ## Unreleased
+
+## 0.1.0-rc.1 - 2026-08-13
 
 ### Added
 

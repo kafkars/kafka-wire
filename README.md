@@ -111,9 +111,9 @@ inputs and requires network access.
 
 ## Status
 
-Version 0.1 is a low-level beta for Kafka clients and wire tooling. The three
-runtime crates are not yet published, and unreleased APIs may change while the
-first public release is qualified.
+Version 0.1.0-rc.1 is the first release candidate for Kafka clients and wire
+tooling. APIs may still change before 0.1.0 while the public package surface is
+qualified by downstream clients.
 
 ## License
 

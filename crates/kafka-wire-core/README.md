@@ -8,7 +8,7 @@ API message names, networking, filesystem, process, thread, or async-runtime
 policy.
 
 Most applications should use `kafka-wire` or a higher-level Kafka client. See
-the [`kafka-wire` repository](https://github.com/kafkars/wire) for the
+the [`kafka-wire` repository](https://github.com/kafkars/kafka-wire) for the
 architecture and compatibility contract.
 
 Licensed under Apache-2.0.
