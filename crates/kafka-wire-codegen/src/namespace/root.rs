@@ -14,6 +14,7 @@ pub(crate) fn handwritten_root_types() -> BTreeMap<String, String> {
         ("MessageDirection", "handwritten crate facade"),
         ("OutboundFrameLimits", "handwritten crate facade"),
         ("ProtocolEq", "handwritten crate facade"),
+        ("RequestFrameMeasure", "handwritten crate facade"),
         ("RequestResponsePair", "handwritten crate facade"),
         ("RetainedFootprint", "handwritten crate facade"),
         ("RetainedSize", "handwritten crate facade"),
@@ -39,6 +40,7 @@ pub(crate) fn handwritten_root_values() -> BTreeMap<String, String> {
         "encode_consumer_protocol_assignment",
         "encode_consumer_protocol_subscription",
         "encode_request",
+        "measure_request",
         "response_header_version_for",
     ]
     .into_iter()

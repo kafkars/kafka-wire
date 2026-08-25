@@ -22,7 +22,10 @@ pub use consumer_protocol::{
     encode_consumer_protocol_assignment, encode_consumer_protocol_subscription,
 };
 pub use descriptor::{ApiDescriptor, MessageDescriptor, MessageDirection};
-pub use frame::{OutboundFrameLimits, encode_request, response_header_version_for};
+pub use frame::{
+    OutboundFrameLimits, RequestFrameMeasure, encode_request, measure_request,
+    response_header_version_for,
+};
 pub use message::{KafkaMessage, KafkaRequest, KafkaResponse, ProtocolEq, RequestResponsePair};
 pub use retained::{RetainedFootprint, RetainedSize};
 
