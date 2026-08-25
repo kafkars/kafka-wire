@@ -18,7 +18,7 @@ flate2 = "1"
 lz4_flex = { version = "0.11", default-features = false, features = ["frame"] }
 snap = "1"
 zstd = "0.13"
-kafka-wire-core = { version = "0.1.0-rc.2", path = "../kafka-wire-core" }
+kafka-wire-core = { version = "0.1.0-rc.3", path = "../kafka-wire-core" }
 thiserror.workspace = true
 
 [lints]

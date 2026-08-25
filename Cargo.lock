@@ -171,7 +171,7 @@ dependencies = [
 
 [[package]]
 name = "kafka-wire"
-version = "0.1.0-rc.2"
+version = "0.1.0-rc.3"
 dependencies = [
  "bytes",
  "kafka-wire-core",
@@ -179,7 +179,7 @@ dependencies = [
 
 [[package]]
 name = "kafka-wire-codegen"
-version = "0.1.0-rc.2"
+version = "0.1.0-rc.3"
 dependencies = [
  "kafka-wire-schema",
  "serde",
@@ -193,7 +193,7 @@ dependencies = [
 
 [[package]]
 name = "kafka-wire-conformance"
-version = "0.1.0-rc.2"
+version = "0.1.0-rc.3"
 dependencies = [
  "bytes",
  "kafka-wire",
@@ -207,7 +207,7 @@ dependencies = [
 
 [[package]]
 name = "kafka-wire-core"
-version = "0.1.0-rc.2"
+version = "0.1.0-rc.3"
 dependencies = [
  "bytes",
  "thiserror",
@@ -215,7 +215,7 @@ dependencies = [
 
 [[package]]
 name = "kafka-wire-records"
-version = "0.1.0-rc.2"
+version = "0.1.0-rc.3"
 dependencies = [
  "bytes",
  "crc32c",
@@ -229,7 +229,7 @@ dependencies = [
 
 [[package]]
 name = "kafka-wire-schema"
-version = "0.1.0-rc.2"
+version = "0.1.0-rc.3"
 dependencies = [
  "heck",
  "serde",
@@ -546,7 +546,7 @@ dependencies = [
 
 [[package]]
 name = "xtask"
-version = "0.1.0-rc.2"
+version = "0.1.0-rc.3"
 dependencies = [
  "bytes",
  "kafka-wire-codegen",

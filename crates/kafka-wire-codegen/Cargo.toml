@@ -9,7 +9,7 @@ description = "Deterministic Rust backend for pinned Kafka protocol schemas"
 publish = false
 
 [dependencies]
-kafka-wire-schema = { version = "0.1.0-rc.2", path = "../kafka-wire-schema" }
+kafka-wire-schema = { version = "0.1.0-rc.3", path = "../kafka-wire-schema" }
 serde.workspace = true
 serde_json.workspace = true
 sha2.workspace = true

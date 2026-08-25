@@ -6,6 +6,8 @@ v0.1.0-rc.1; compatible additions may still land before 0.1.0.
 
 ## Unreleased
 
+## 0.1.0-rc.3 - 2026-08-25
+
 ### Added
 
 - Exact request-frame premeasurement for transport-capacity reservation.
