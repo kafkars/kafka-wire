@@ -1,10 +1,26 @@
 # Changelog
 
 All notable changes to the public Rust packages are recorded here. The public
-surfaces of the three runtime crates are compatibility-protected against
-v0.1.0-rc.1; compatible additions may still land before 0.1.0.
+surfaces of the three runtime crates follow the supported `0.1.x` compatibility
+contract in [CONTRACT.md](CONTRACT.md).
 
 ## Unreleased
+
+## 0.1.0 - 2026-09-07
+
+### Changed
+
+- Establish the supported `0.1.x` contract for codecs, generated messages,
+  framing, record batches, compression, limits, and errors. Runtime behavior
+  and the pinned Kafka schema corpus are unchanged from 0.1.0-rc.3.
+- Clarify that the Zstandard decode budget also bounds the advertised history
+  window, which can exceed a small frame's decoded payload.
+- Document compatible generated-field evolution and preserve existing public
+  struct construction and exhaustive enum matching.
+- Qualify an independent consumer against extracted release archives and reuse
+  it for registry-only verification after publication.
+- Advance API compatibility protection to the final RC for this release and
+  the signed 0.1.0 baseline once its tag exists.
 
 ## 0.1.0-rc.3 - 2026-08-25
 

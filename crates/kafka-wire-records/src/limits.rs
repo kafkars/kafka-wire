@@ -20,6 +20,10 @@ pub struct RecordDecodeLimits {
     /// Maximum encoded size of one complete batch, including its 12-byte prefix.
     pub max_batch_bytes: usize,
     /// Maximum byte length of the records payload after decompression.
+    ///
+    /// Also sets the accepted Zstandard history window, rounded up to a power
+    /// of two within the codec's range. A frame advertising a larger window is
+    /// rejected even when its decoded payload would fit this limit.
     pub max_decompressed_records_bytes: usize,
     /// Wire limits used inside records; `max_array_elements` bounds both records
     /// per batch and headers per record before either collection allocates.

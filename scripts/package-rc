@@ -43,4 +43,6 @@ cargo doc --locked --offline --all-features --no-deps \
 cargo doc --locked --offline --all-features --no-deps \
     --manifest-path "$stage/$records/Cargo.toml" --config "$extracted_patch"
 
+scripts/check-consumer target/package
+
 printf 'qualified %s, %s, and %s\n' "$core" "$wire" "$records"

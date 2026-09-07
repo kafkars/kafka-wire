@@ -51,6 +51,13 @@ libraries into their dependency graph.
 
 ## Example
 
+```toml
+[dependencies]
+kafka-wire = "0.1.0"
+kafka-wire-core = "0.1.0"
+bytes = "1.10"
+```
+
 Encode an `ApiVersions` v3 request as a complete Kafka frame:
 
 ```rust
@@ -113,10 +120,14 @@ inputs and requires network access.
 
 ## Status
 
-Version 0.1.0-rc.3 is the current release candidate for Kafka clients and wire
-tooling. The public surfaces of the three runtime crates remain compatibility-
-protected against v0.1.0-rc.1 while qualification through downstream clients
-continues. Compatible additions may still land before 0.1.0.
+The three runtime crates share the supported `0.1.x` line. Their public API and
+wire behavior follow the [runtime contract](CONTRACT.md), including generated
+field evolution, enum matching, limits, and error recovery. Construct generated
+values with `Default` and assign fields; they are already `#[non_exhaustive]`.
+
+The [release procedure](RELEASING.md) qualifies the final archives and a separate
+consumer before publication, then repeats that consumer using only crates.io.
+Higher-level client qualification is separate from this wire contract.
 
 ## License
 

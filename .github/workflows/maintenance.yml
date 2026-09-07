@@ -57,12 +57,18 @@ jobs:
         shell: bash
         run: cargo +1.93.0 install cargo-semver-checks --locked --version 0.50.0
 
-      - name: Compare public crates with the signed RC baseline
+      - name: Compare public crates with the release baseline
         shell: bash
         run: |
+          baseline=v0.1.0
+          if ! git rev-parse --verify "refs/tags/$baseline" >/dev/null 2>&1; then
+            # Bootstrap only the first stable candidate; later releases fail closed.
+            test "$(sed -n 's/^version = "\([^"]*\)"/\1/p' Cargo.toml)" = 0.1.0
+            baseline=v0.1.0-rc.3
+          fi
           for package in kafka-wire-core kafka-wire kafka-wire-records; do
             cargo +1.93.0 semver-checks check-release \
               --package "$package" \
-              --baseline-rev v0.1.0-rc.1 \
+              --baseline-rev "$baseline" \
               --release-type patch
           done

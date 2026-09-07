@@ -1,0 +1,13 @@
+[package]
+name = "kafka-wire-release-consumer"
+version = "0.0.0"
+edition = "2024"
+rust-version = "1.88"
+publish = false
+
+[workspace]
+
+[dependencies]
+kafka-wire-core = "=0.1.0"
+kafka-wire = "=0.1.0"
+kafka-wire-records = "=0.1.0"

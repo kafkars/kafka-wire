@@ -2,16 +2,15 @@
 
 ## Supported versions
 
-There is no published stable release yet. Security fixes are made on `main` and
-the latest 0.1 release candidate while 0.1.0 is being qualified. After 0.1.0 is
-published, only the latest 0.1 release will receive security fixes until a
-newer supported line is announced here.
+Security fixes are made on `main` and the latest published `0.1.x` release.
+Older patches and prereleases should upgrade to that release. This support
+policy remains in effect until a newer supported line is announced here.
 
 | Version | Supported |
 | --- | --- |
 | `main` | Yes |
-| Latest published 0.1 release candidate | Yes |
-| Older prereleases | No |
+| Latest published `0.1.x` release | Yes |
+| Older patches and prereleases | No |
 
 ## Reporting a vulnerability
 

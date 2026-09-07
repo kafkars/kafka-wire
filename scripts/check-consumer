@@ -1,0 +1,46 @@
+#!/bin/sh
+# Reuse one external consumer before and after publication.
+set -eu
+export LC_ALL=C
+
+if [ "$#" -ne 1 ]; then
+    echo "usage: scripts/check-consumer <archive-directory>|--registry" >&2
+    exit 2
+fi
+root=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+version=$(sed -n 's/^version = "\([^"]*\)"/\1/p' "$root/Cargo.toml")
+test -n "$version"
+stage=$(mktemp -d "${TMPDIR:-/tmp}/kafka-wire-consumer.XXXXXX")
+trap 'rm -rf "$stage"' EXIT HUP INT TERM
+cp -R "$root/scripts/consumer" "$stage/consumer"
+cp "$root/rust-toolchain.toml" "$stage/rust-toolchain.toml"
+# A pristine fixture must match the release and resolve its own dependency graph.
+test ! -f "$stage/consumer/Cargo.lock"
+for package in kafka-wire-core kafka-wire kafka-wire-records; do
+    grep -Fxq "$package = \"=$version\"" "$stage/consumer/Cargo.toml"
+done
+if [ "$1" = --registry ]; then
+    unset CARGO_NET_OFFLINE
+else
+    archive_dir=$(CDPATH= cd -- "$1" && pwd)
+    export CARGO_NET_OFFLINE=true
+    printf '\n[patch.crates-io]\n' >> "$stage/consumer/Cargo.toml"
+    for package in kafka-wire-core kafka-wire kafka-wire-records; do
+        tar -xzf "$archive_dir/$package-$version.crate" -C "$stage"
+        printf '%s = { path = "../%s-%s" }\n' "$package" "$package" "$version" \
+            >> "$stage/consumer/Cargo.toml"
+    done
+fi
+# Running from the stage prevents the checkout's Cargo configuration leaking in.
+cd "$stage/consumer"
+cargo generate-lockfile
+cargo run --locked
+if [ "$1" = --registry ]; then
+    cargo metadata --locked --offline --format-version 1 > "$stage/metadata.json"
+    jq -e --arg version "$version" '
+        [.packages[] | select(.name == "kafka-wire-core" or
+            .name == "kafka-wire" or .name == "kafka-wire-records")] |
+        length == 3 and all(.[]; .version == $version and
+            .source == "registry+https://github.com/rust-lang/crates.io-index")
+    ' "$stage/metadata.json" > /dev/null
+fi
