@@ -10,6 +10,8 @@ contract in [CONTRACT.md](CONTRACT.md).
 
 ### Changed
 
+- Include the Apache Kafka attribution notice in the generated wire package
+  and verify its exact contents during archive qualification.
 - Establish the supported `0.1.x` contract for codecs, generated messages,
   framing, record batches, compression, limits, and errors. Runtime behavior
   and the pinned Kafka schema corpus are unchanged from 0.1.0-rc.3.

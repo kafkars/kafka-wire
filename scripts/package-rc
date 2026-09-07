@@ -26,6 +26,8 @@ for package in "$core" "$wire" "$records"; do
         "$stage/$package/Cargo.toml"
 done
 
+cmp NOTICE "$stage/$wire/NOTICE"
+
 extracted_patch="patch.crates-io.kafka-wire-core.path=\"$stage/$core\""
 RUSTDOCFLAGS="-D warnings"
 export RUSTDOCFLAGS
